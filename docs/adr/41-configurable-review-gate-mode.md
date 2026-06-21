@@ -14,13 +14,21 @@ superseded_by: []
 
 > **Naming.** This is **not** [ADR-14](14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 
-> **Verified on-box 2026-06-21 (phrasing — the code stop is at the write, not the card).** "dispatch refuses to advance a card out of `done`/awaiting-review without `review_status: approved`" (below) describes **board/process discipline**: there is no on-box code that refuses a card column-advance on approval state. The guarantee that matters — nothing canonical lands unapproved — is enforced at the **write**: a review-gated path resolves to `dry_run`/block in the decision core (`src/.memoria/mcp/decision.py:146`), regardless of card state. The same wording in ADR-03/77/78 should be read this way. The decision stands; only the locus of enforcement is corrected. Per AGENTS.md "Enforcement is a mechanism, not a label."
+> **Verified on-box 2026-06-21.** The hard stop is at the write, not the card
+> column. There is no on-box code that refuses a board column advance based on
+> `review_status`; the guarantee that matters is enforced by the policy decision
+> core, where a review-gated path resolves to `dry_run`/block
+> (`memoria/runtime/policy/decision.py`). The same wording in ADR-03/77/78 should be
+> read this way. The decision stands; only the locus of enforcement is corrected.
+> Per AGENTS.md, enforcement is a mechanism, not a label.
 
 ## What
 
 A single configurable `review_mode` setting with two values:
 
-- **`blocking`** (default, the only recommended operating mode). Current behavior, unchanged: dispatch refuses to advance a card out of `done`/awaiting-review without human `review_status: approved`.
+- **`blocking`** (default, the only recommended operating mode). Current behavior,
+  unchanged: writes into review-gated canonical paths resolve to `dry_run`/block
+  until the human approval path performs the promotion.
 - **`advisory`** (study-only). The `agent_recommendation` is still written and surfaced but does **not** structurally block — a card may advance/promote without approval. This deliberately removes the safety property.
 
 Three invariants make the mode evidence rather than just a weaker system: (1) the same six-signal instrumentation fires identically in both modes (commensurability is the point); (2) every logged event is stamped with its arm (`review_mode`), set live because the attribution is non-backfillable; (3) the default is `blocking` and advisory must be explicitly, narrowly enabled — per study, time-boxed, ideally within-subject.
@@ -33,7 +41,8 @@ Memoria is designed **blocking-only**, and that is correct as the operating post
 
 - **Deliberately downgrades the safety property in the advisory arm** — mitigated structurally by default `blocking`, explicit per-study opt-in, time-boxing, and a clear study scope so advisory can never silently become the standing config.
 - **Confound risk:** the operator may behave differently knowing an arm is the "weak" one — mitigated by within-subject design and, where feasible, allocating tasks without foreknowledge.
-- **Small implementation cost:** the dispatch rule that blocks non-approved cards becomes mode-conditional; one `review_mode` field is added (a `schema_version` bump).
+- **Small implementation cost:** the review-gated write decision becomes
+  mode-conditional; one `review_mode` field is added (a `schema_version` bump).
 - **Companion metric:** a clean false-promotion-rate measurement also needs a **promotion-reversal event** (distinct from supersession), logged in both arms — small, rides on the same instrumentation.
 
 ## When this matters

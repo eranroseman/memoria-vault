@@ -149,6 +149,7 @@ their result is recorded.
    ```bash
    python scripts/docs_doctor.py docs
    python scripts/status_doctor.py
+   python scripts/adr_code_doctor.py
    python scripts/check_test_refs.py
    node_modules/.bin/cspell lint --no-progress --no-must-find-files --gitignore docs/releasing docs/testing
    git diff --check
@@ -219,6 +220,10 @@ their result is recorded.
   Memoria-owned `qmd_filter_mcp.py` that preserves the existing qmd tool surface
   while filtering claim notes whose frontmatter has `superseded_by`, unless the
   caller passes `include_superseded=True` for historical lookup.
+- 2026-06-21 -- G4 first slice for #827/#833: corrected high-risk ADR mechanism
+  claims in ADR-10, ADR-41, ADR-55, and ADR-76, then added
+  `scripts/adr_code_doctor.py` to pin the concrete paths/commands/tests that proved
+  stale in the audits. The doctor runs in local L0 and CI lint.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file

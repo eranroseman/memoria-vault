@@ -14,18 +14,37 @@ superseded_by: []
 
 > *Terminology note (v0.1.0-alpha.2): the lifecycle chain is now `proposed → provisional → current → retracted → archived` ([ADR-50](50-universal-lifecycle-and-maturity.md)); the `dormant` value referenced below is retired. The supersession decision (a `superseded_by` pointer, distinct from lifecycle) is unchanged — and `retracted` now carries the invalidated-claim case this ADR motivates.*
 
+> **Verified on-box 2026-06-21.** The default query path now runs through
+> `src/.memoria/mcp/qmd_filter_mcp.py`, which preserves qmd's tool surface while
+> excluding claim notes with `superseded_by` unless the caller passes
+> `include_superseded: true` for historical lookup. The FAMA-style draft linter
+> remains a separate follow-up.
+
 ## Context
 
 The claim-note schema records how *developed* a claim is (`maturity`: seedling → budding → evergreen) and how *durable* a note is (`lifecycle`: proposed → current → dormant → archived), but nothing records that a claim has been **overturned by a newer one**. An `evergreen` claim that a later finding invalidated is structurally indistinguishable from one that still holds, so `query`/`write` can resurface a stale belief as current. This is precisely the failure the long-term-memory literature isolates: **Memora**'s FAMA metric exists to penalize reuse of obsolete/invalidated memory, and **ClawArena**'s finding is "revise, don't accumulate." That same literature shows supersession is the *least reliably automatable* memory capability — which argues it must be carried by **structure** (human-set, agent-maintained), the "bookkeeping, not intelligence" principle Memoria is founded on. Existing pieces don't cover it: `contradicts` ([ADR-8](08-typed-relations-frontmatter.md)) is symmetric disagreement between coexisting claims, not directional replacement over time; the contradictions dashboard ([ADR-9](09-contradictions-dashboard.md)) surfaces coexisting contradictions, not directional replacement over time; and `drift-watch` tracks structural/config drift, not claim staleness.
 
 ## Decision
 
-A claim note records that it has been overturned with a single typed relation, `superseded_by: [[newer-claim]]` (optional inverse `supersedes:` on the newer note for navigation). A claim's currency — **current vs. superseded** — is *derived from the presence of `superseded_by`*, not stored as a separate field, so there is one source of truth and no new controlled vocabulary. The link is **human-set**: the agent may propose a supersession candidate (e.g., ingest surfaces a paper that updates an existing claim) into the proposal namespace for review, but never writes the link itself. Downstream, `query` and `write` exclude superseded claims by default, and the Linter gains a FAMA-style detector that flags any draft or answer citing a superseded claim. This one relation is adopted as a **correctness-critical slice** of the [ADR-8](08-typed-relations-frontmatter.md) typed-relations namespace, which shipped on the same date.
+A claim note records that it has been overturned with a single typed relation,
+`superseded_by: [[newer-claim]]` (optional inverse `supersedes:` on the newer note
+for navigation). A claim's currency — **current vs. superseded** — is *derived from
+the presence of `superseded_by`*, not stored as a separate field, so there is one
+source of truth and no new controlled vocabulary. The link is **human-set**: the
+agent may propose a supersession candidate (e.g., ingest surfaces a paper that
+updates an existing claim) into the proposal namespace for review, but never writes
+the link itself. Downstream, `query` and `write` exclude superseded claims by
+default, and a later Linter slice should add a FAMA-style detector that flags any
+draft or answer citing a superseded claim. This one relation is adopted as a
+**correctness-critical slice** of the [ADR-8](08-typed-relations-frontmatter.md)
+typed-relations namespace, which shipped on the same date.
 
 ## Consequences
 
 - Drift becomes reliable **bookkeeping** (a human-set link at the moment of replacement) instead of unreliable inference — the one way the literature says this capability can be made dependable.
-- Enables (a) filtering superseded claims out of `query`/`write` and (b) a FAMA-style Linter check — closing a *correctness* gap, not just adding a query.
+- Enables filtering superseded claims out of `query`/`write` and leaves a clear
+  hook for a later FAMA-style Linter check — closing the current query-currency
+  gap without pretending the draft-citation detector has shipped.
 - Advances the supersession slice without committing to full typed relations (ADR-8) or the contradictions dashboard (ADR-9); it is a deliberate partial adoption of ADR-8's namespace.
 - Adds a small schema obligation to the claim-note template (a `schema_version` bump) and one maintenance step when a claim is replaced.
 - v1 treats supersession as whole-claim and binary; *partial* supersession (a claim overturned only in part) is not modeled and is left to a future refinement.
@@ -42,7 +61,7 @@ A claim note records that it has been overturned with a single typed relation, `
 
 ## Related
 
-- **Workflows affected:** [Distill](../how-to-guides/knowledge/write-a-claim-note.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md) (where the link is set), [Verify](../how-to-guides/project/verify-and-revise.md) and the Linter (FAMA-style check), [Query](../how-to-guides/knowledge/query-the-vault.md) / [Write](../how-to-guides/project/draft-with-writer.md) (filter superseded claims).
-- **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Note types](../reference/note-types.md) + `99-system/templates/claim-note.md`, the Linter's `structural-detectors.md` (in the starter vault).
+- **Workflows affected:** [Distill](../how-to-guides/knowledge/write-a-claim-note.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md) (where the link is set), [Query](../how-to-guides/knowledge/query-the-vault.md) / [Write](../how-to-guides/project/draft-with-writer.md) (filter superseded claims), and later [Verify](../how-to-guides/project/verify-and-revise.md) once the FAMA-style draft detector ships.
+- **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Note types](../reference/note-types.md), the claim template, and `src/.memoria/mcp/qmd_filter_mcp.py`.
 - **Related decisions / Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (adopts one relation from its namespace ahead of the rest); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
 - **Source discussion:** benchmark review — [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Change 1, and the benchmark detail); evidence from Memora/FAMA and ClawArena.

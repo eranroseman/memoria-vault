@@ -48,6 +48,8 @@ jobs:
         run: python scripts/check_test_refs.py
       - name: status-doctor
         run: python scripts/status_doctor.py
+      - name: adr-code-doctor
+        run: python scripts/adr_code_doctor.py
       - name: agents-doctor
         run: python scripts/agents_doctor.py
       - name: github-doctor
