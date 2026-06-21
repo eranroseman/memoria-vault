@@ -14,6 +14,8 @@ superseded_by: []
 
 > **Naming.** This is **not** [ADR-14](14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 
+> **Verified on-box 2026-06-21 (phrasing — the code stop is at the write, not the card).** "dispatch refuses to advance a card out of `done`/awaiting-review without `review_status: approved`" (below) describes **board/process discipline**: there is no on-box code that refuses a card column-advance on approval state. The guarantee that matters — nothing canonical lands unapproved — is enforced at the **write**: a review-gated path resolves to `dry_run`/block in the decision core (`src/.memoria/mcp/decision.py:146`), regardless of card state. The same wording in ADR-03/77/78 should be read this way. The decision stands; only the locus of enforcement is corrected. Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## What
 
 A single configurable `review_mode` setting with two values:

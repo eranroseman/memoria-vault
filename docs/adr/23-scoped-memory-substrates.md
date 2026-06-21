@@ -18,6 +18,25 @@ superseded_by: []
 > cross-project steering. A Project gate question, thesis, map, and gaps are
 > project memory: bounded to one inquiry and archived with it.
 
+> **Verified on-box 2026-06-21 (rationale correction — the decision stands, its
+> justification is re-founded).** The Context/Why below say the substrate
+> *boundaries* "keep one lane's in-flight reasoning from leaking into another's."
+> The split does not *enforce* that — it **describes** it. Enforcement lives in three
+> mechanisms, none of them the taxonomy: (1) cross-profile isolation = per-profile
+> directories (own session store + `MEMORY.md`) **plus** every profile denying
+> `session_search`/`moa`/`delegation` (`src/.memoria/profiles/memoria-*/config.yaml`)
+> **plus** the kanban card as the only shared channel; (2) durable-write access = the
+> policy gate's **per-lane path globs** (`src/.memoria/mcp/policy_hook.py:13`); (3) the
+> card as the structured cross-profile unit. Two consequences: the "keep durable out of
+> capped stores" clause is **placement correctness, not access control** (better served
+> by a write-time lint than a category); and substrate **#3 (Session history) is
+> currently disabled in all five profiles** (`session_search` denied), so the table
+> lists a dead entry — re-enable deliberately or drop it from the live set. Test that
+> proves isolation: "profile B cannot read profile A's session" (separate dirs +
+> denylist), runnable independent of this taxonomy. Keep the seven as a **reference /
+> routing table** for "where does X live?"; do not cite it as the access-control
+> mechanism. Per AGENTS.md "Enforcement is a mechanism, not a label."
+
 ## Context
 
 "Memory" in Memoria is not one thing, and treating it as one is the source of most "the agent forgot" and "the agent remembered something it shouldn't" failures. Every profile's read/write boundary depends on which substrate holds a given fact, yet the split was only described in [the memory model](../explanation/architecture/memory-model.md) and never recorded as a decision. Because the substrate boundaries are what keep one lane's in-flight reasoning from leaking into another's — and what keep durable knowledge out of size-capped, session-frozen stores — the split deserves a fixed anchor rather than living only in mutable prose.
