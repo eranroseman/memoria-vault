@@ -42,6 +42,12 @@ and at least one `contradicts` edge. The default materialization shape is a
 single generated project index note read by the custom Bases view; per-note
 stamps are reserved for cases where a later implementation cannot use the view.
 
+> **Implementation status (2026-06-21).** The deterministic gate logic ships in
+> Operations: thesis-rooted traversal, structural impact, maturity thresholds,
+> saturation, and index-note materialization are implemented and tested. The custom
+> `registerBasesView` surface remains the experimental part; the shipped Obsidian
+> surface is the `.base` dashboard plus Markdown project index notes.
+
 ## Consequences
 
 - Project becomes a first-class navigation destination rather than a promise
@@ -53,7 +59,7 @@ stamps are reserved for cases where a later implementation cannot use the view.
   argument subgraph that refuted it is preserved rather than treated as failure.
 - The implementation sequence is structural-first: schemas and templates, then
   graph/impact Operations, then gap/saturation logic, then the Obsidian surface.
-- The custom Bases view is a version-pinned pilot because `registerBasesView`
+- The custom Bases view remains a version-pinned pilot because `registerBasesView`
   exists in the published Obsidian API but remains a narrower extension surface
   than ordinary Markdown dashboards.
 

@@ -53,7 +53,7 @@ All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/ma
 
 ## Consequences
 
-- New artifacts: the coverage matrix, the installer and golden-path plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately (`99-system/eval/` is empty until then).
+- New artifacts: the coverage matrix, the installer and golden-path plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately under `system/eval/`.
 - The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
 - Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed plan.
 

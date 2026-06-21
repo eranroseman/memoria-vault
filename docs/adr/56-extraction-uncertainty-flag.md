@@ -32,6 +32,14 @@ Inbox `flag`** (a near-tie card: the two candidates side by side, honesty-card b
 The confidence floor lives in `.memoria/schemas/calibration.yaml` alongside the other
 calibrated thresholds (drift-bound; recalibrated on model/source changes).
 
+> **Implementation status (2026-06-21).** The current entity-resolution guard is
+> stricter than this ADR's flag route: ingest refuses fuzzy entity merges and
+> creates/links entities only by stable IDs; no-ID entities remain recorded by name
+> instead of being node-created or merged. The `entity_resolution.confidence_floor`
+> entry is reserved configuration and is not consumed by a model. The shipped
+> near-tie flag pattern exists for classification uncertainty, not yet for dedup or
+> license/venue typing.
+
 ## Consequences
 
 - Wrong-merge corruption — the one ungated path into canonical data — gets a human
