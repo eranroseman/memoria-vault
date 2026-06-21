@@ -1,6 +1,6 @@
 # memoria-copi — the one conversational agent (ADR-48); read-only, delegates writes
 # Per-profile Hermes config. Hermes reads model / mcp_servers / agent / terminal /
-# checkpoints / plugins from THIS file (ADR-27). The installer substitutes the
+# plugins from THIS file (ADR-27). The installer substitutes the
 # Python, vault, qmd, and model tokens at deploy time.
 model:
   provider: "{{MODEL_PROVIDER}}"
@@ -73,10 +73,6 @@ agent:
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.
 terminal:
   cwd: "{{VAULT_PATH}}"
-
-# Shadow-git snapshot before destructive writes — mode-independent reversibility.
-checkpoints:
-  enabled: true
 
 # Write gate (ADR-28): the policy gate is a Python PLUGIN, fail-closed in every mode.
 plugins:

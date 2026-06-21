@@ -77,7 +77,7 @@ local install (`~/.hermes/hermes-agent/website/docs/`), plus reads of
    profile-scoped.** Each profile is its own `HERMES_HOME`
    (`~/.hermes/profiles/<name>/`); `load_config()` reads
    `get_hermes_home()/config.yaml`. So `model`, `mcp_servers`, `hooks`,
-   `platform_toolsets`, `agent.disabled_toolsets`, `terminal`, `checkpoints` all
+   `platform_toolsets`, `agent.disabled_toolsets`, `terminal`, and plugins all
    belong in **one** per-profile `config.yaml`. A separate `mcp.json` is dead.
 
 4. **The shell-hook gate *does* fire in every run mode — the matcher was the
@@ -113,12 +113,14 @@ local install (`~/.hermes/hermes-agent/website/docs/`), plus reads of
    (PyYAML), preserving the `model`/`hooks` blocks.
 
 8. **Hermes ships native mechanisms Memoria was reinventing or mis-naming:**
-   `checkpoints` (shadow-git snapshots before `write_file`/`patch`/`rm`/… with
-   `/rollback`) is mode-independent reversibility; the terminal
-   `DANGEROUS_PATTERNS` + `command_allowlist` is a real command-approval layer;
-   and **"Tirith" is a command-string security scanner (`security.tirith_*`),
-   *not* the tool-permission/capability layer** — `policy-mcp.md` misnamed it. The
-   capability layer is `platform_toolsets` / `agent.disabled_toolsets`.
+   the terminal `DANGEROUS_PATTERNS` + `command_allowlist` is a real
+   command-approval layer; and **"Tirith" is a command-string security scanner
+   (`security.tirith_*`), *not* the tool-permission/capability layer** —
+   `policy-mcp.md` misnamed it. The capability layer is `platform_toolsets` /
+   `agent.disabled_toolsets`. Hermes `checkpoints` are real for native
+   `write_file`/`patch`/terminal writes, but Memoria's normal vault writes go
+   through the Obsidian MCP path, so profile `checkpoints.enabled` is inert for
+   Memoria and no longer ships.
 
 ## Decision
 
@@ -165,9 +167,11 @@ non-terminal lane has.** Concretely:
    (`seed_profile_env`, idempotent; re-run `--profiles-only` after adding keys).
    Already landed in PR #57.
 
-6. **Adopt Hermes-native safety features:** `checkpoints: {enabled: true}` for
-   mode-independent reversibility; `terminal.cwd` set to the vault to anchor stray
-   ops; correct the "Tirith = capability layer" docs error.
+6. **Adopt only the Hermes-native safety features that affect Memoria's path:**
+   `terminal.cwd` stays set to the vault to anchor stray ops, and the "Tirith =
+   capability layer" docs error is corrected. Do **not** ship
+   `checkpoints.enabled` unless Memoria gains a native file/terminal write path or
+   a test proves checkpoints fire for the actual Obsidian MCP write path.
 
 ## Consequences
 
@@ -178,9 +182,10 @@ non-terminal lane has.** Concretely:
   `disabled_toolsets` computation, not just a drift-check reference.
 - **The gate enforces in all run modes** once (1)+(2) land — no per-mode special
   casing, no custom bridge.
-- **Reversibility no longer depends on the hook firing**: `checkpoints` covers
-  even `code_execution`/`file` writes the obsidian hook can't see, on the lanes
-  that keep those tools.
+- **Reversibility comes from Memoria's own audit/golden mechanisms, not Hermes
+  checkpoints.** Policy writes record before/after hashes; shipped system files are
+  restorable from the golden copy. Hermes checkpoints are not claimed for MCP
+  writes.
 - **Optional defense-in-depth for Coder/Linter**: `terminal.backend: docker`
   sandboxes their `terminal`+`code_execution` in a container, with a vault
   bind-mount scoped to just their write zone (`40-workbench/*/06-code/` for Coder,
@@ -208,7 +213,8 @@ Installer (`scripts/install.sh`) and profile sources (`vault/.memoria/profiles/*
 2. Compute `agent.disabled_toolsets = all_hermes_toolsets − registry_allowlist`
    per lane and write it (PyYAML, preserving `model`/`hooks`). Coder/Linter keep
    `terminal`+`file`.
-3. Set `terminal.cwd: {{VAULT_PATH}}` and `checkpoints.enabled: true` per profile.
+3. Set `terminal.cwd: {{VAULT_PATH}}` per profile; do not emit `checkpoints` for
+   MCP-only lanes.
 4. Keep `seed_profile_env` (#57) and the `obsidian.*` matcher (#57).
 5. Re-run Tier-4 on `Memoria-test`: confirm `hermes -p <lane> mcp list` shows
    `obsidian`+`policy`; a write to an allowed zone produces an audit row; a write

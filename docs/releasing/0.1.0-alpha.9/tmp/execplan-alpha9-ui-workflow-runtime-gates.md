@@ -197,8 +197,8 @@ their result is recorded.
 - [x] 2026-06-21 -- Release parent #835, gate issues #836-#841, stage issues
   #842-#847, and milestone assignments created.
 - [x] 2026-06-21 -- Draft release README, release plan, and ExecPlan authored.
-- [ ] G2 -- Capability-boundary hardening implemented and verified.
-- [ ] G3 -- Supersession correctness implemented and verified.
+- [x] G2 -- Capability-boundary hardening implemented and verified.
+- [x] G3 -- Supersession correctness implemented and verified.
 - [ ] G4 -- ADR/docs reconciliation implemented and verified.
 - [ ] G5 -- Runtime-version decision recorded and verified.
 - [ ] G1/G6 -- UI workflow and docs integrity accepted.
@@ -224,6 +224,10 @@ their result is recorded.
   claims in ADR-10, ADR-41, ADR-55, and ADR-76, then added
   `scripts/adr_code_doctor.py` to pin the concrete paths/commands/tests that proved
   stale in the audits. The doctor runs in local L0 and CI lint.
+- 2026-06-21 -- #824 implementation path: remove inert `checkpoints.enabled` from all
+  five profile configs instead of claiming Hermes snapshots for MCP writes. ADR-27 now
+  says Memoria's reversibility evidence is audit hash pairs plus golden restore, and
+  `tests/test_profiles.py` pins that profiles do not ship dead checkpoints config.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file

@@ -646,7 +646,7 @@ install_profiles() {
     dst="$staging/$p"
     run cp -R "$src" "$dst"
     # Substitute placeholders in config.yaml — the single file Hermes reads for
-    # model / mcp_servers / hooks / agent / terminal / checkpoints (ADR-27; a
+    # model / mcp_servers / plugins / agent / terminal (ADR-27; a
     # standalone mcp.json is never loaded, so it is not shipped). POSIX paths are
     # already forward-slash, so no conversion is needed.
     #   - {{PYTHON}}     -> the venv interpreter, so the policy MCP server + the
