@@ -84,7 +84,10 @@ WRITE_KEYWORDS = {
 # profile ships the `file`/`terminal` toolsets, so any such call is config drift
 # (e.g. a Hermes update adding toolsets the denylist doesn't know) — fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
-# is never caught.
+# is never caught. This list MUST cover every tool in Hermes's file/terminal/
+# code_execution toolsets; `hermes_contract_doctor.py` fails the build if the
+# installed Hermes ships a direct-capability tool this set is missing (drift),
+# which is how `process` (terminal toolset, added below) was caught.
 DENY_DIRECT_TOOLS = frozenset(
     {
         "write_file",
@@ -92,9 +95,10 @@ DENY_DIRECT_TOOLS = frozenset(
         "read_file",
         "search_files",  # file toolset
         "terminal",
-        "run_command",  # terminal toolset
-        "code_execution",
-        "execute_code",  # code-exec toolset
+        "process",  # terminal toolset — sibling of `terminal`, runs/inspects processes
+        "run_command",  # legacy/alias name (not in installed Hermes; harmless)
+        "code_execution",  # legacy/alias name (the real tool is `execute_code`)
+        "execute_code",  # code_execution toolset
     }
 )
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
