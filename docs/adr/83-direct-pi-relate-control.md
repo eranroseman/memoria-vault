@@ -12,6 +12,12 @@ superseded_by: []
 
 # ADR-83: Direct PI relate control
 
+> **Verified on-box 2026-06-21 (accepted but not yet implemented).** This control is
+> `accepted` but **nothing is built**: there is no PI relate command in QuickAdd/Commander,
+> and the nearest scripts (`link-claim.js`, `create-linked-claim.js`) are different tools.
+> Forward-looking, like [ADR-60](60-cross-vault-knowledge-sharing.md) — do not read it as a
+> live capability. Tracked with the implementation-gap batch (#827).
+
 ## Context
 
 ADR-52 makes `links:` the authored connection layer: agents may propose typed
