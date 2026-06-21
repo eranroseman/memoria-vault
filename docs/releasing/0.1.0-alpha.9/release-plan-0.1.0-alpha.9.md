@@ -50,7 +50,7 @@ not in this file.
 | G2 | **Capability-boundary hardening.** #832 lands the interim egress/messaging hard-deny and deploy-freshness check; #823 mitigates the plugin-registration fail-open; #822 has a structural gate decision and test path. | S1 + S4 | [#837](https://github.com/eranroseman/memoria-vault/issues/837) |
 | G3 | **Supersession correctness.** #826 resolves the ADR-10 partial: query/write exclude superseded claims by default while explicit historical retrieval remains possible. | S1 + S3 | [#838](https://github.com/eranroseman/memoria-vault/issues/838) |
 | G4 | **ADR/docs reconciliation.** #827 lands the stale ADR text/code batch; #833 ships the first ADR-code drift-doctor slice or records an explicit deferral with rationale. | S0 + S1 | [#839](https://github.com/eranroseman/memoria-vault/issues/839) |
-| G5 | **Runtime-version decision.** #828 is decided: either verify Memoria-test on Hermes 0.17 under isolated `HERMES_HOME`, or document the stay-on-0.14 choice and rerun the required contract/cost checks for that path. | S2 + S4 | [#840](https://github.com/eranroseman/memoria-vault/issues/840) |
+| G5 | **Runtime-version decision.** #828 is decided: alpha.9 stays on the installed Hermes v0.14.0 runtime; the contract and cost doctors pass on that path, and 0.17 isolated-source findings remain below on-box truth until a later upgrade checkpoint. | S2 + S4 | [#840](https://github.com/eranroseman/memoria-vault/issues/840) |
 | G6 | **Documentation integrity.** Changed behavior is covered in how-to/reference/explanation docs, ADRs, and release docs; every alpha.9 `tmp/` file has a closeout disposition. | S0 + manual docs sweep | [#841](https://github.com/eranroseman/memoria-vault/issues/841) |
 
 ## 3. Validation -- stages
@@ -104,10 +104,11 @@ High-priority blocker in the
   existing contradictions dashboard and explicit review. Tracking:
   [#826](https://github.com/eranroseman/memoria-vault/issues/826) and
   [#829](https://github.com/eranroseman/memoria-vault/issues/829).
-- Limitation: Hermes 0.17 items remain below on-box truth until #828 is decided
-  and validated. Impact: isolated-source findings must not be described as
-  deployed runtime behavior. Workaround: label claims by evidence rung in docs
-  and ADRs. Tracking:
+- Limitation: alpha.9 stays on the installed **Hermes v0.14.0** runtime. Impact:
+  0.17 isolated-source findings remain below on-box truth and must not be described
+  as deployed behavior. Workaround: label claims by evidence rung in docs and ADRs;
+  run the upgrade as its own checkpoint with the contract and cost doctors before
+  adopting 0.17 behavior. Tracking:
   [#828](https://github.com/eranroseman/memoria-vault/issues/828).
 
 ## 7. Documentation integrity
@@ -146,8 +147,8 @@ alpha.9 must record runtime evidence for:
    changes; golden restore check is clean.
 3. **Policy gate:** the live deployed gate matches source, sees every tool call,
    and blocks known-deny capability invocations by name.
-4. **Hermes runtime:** #828 records either the isolated 0.17 verification path or
-   the stay-on-0.14 decision with rerun contract/cost checks.
+4. **Hermes runtime:** #828 records the stay-on-0.14 decision with rerun
+   contract/cost checks; no 0.17 behavior is claimed as deployed in alpha.9.
 5. **Obsidian GUI:** changed Commander, QuickAdd, Bases, Inbox, Zotero, fleeting,
    and claim workflows are opened and checked in a runtime or disposable vault.
 6. **No production vault mutation:** `memoria-private` remains hands-off; runtime
