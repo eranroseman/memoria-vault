@@ -45,6 +45,7 @@ These are the disconfirmations with no on-box probe — they require the PI's re
 
 - **Engines call an LLM API, not a local model.** `qwen2.5:7b` (local, Ollama) is the **test fixture** for wiring/smoke-tests; the live extraction/judging engines call an **LLM API**. Three consequences: (a) every on-box qwen measurement in §0a is a **pessimistic floor** — the production API is more capable, so "qwen does X" means "the floor is X"; (b) ingest cost is **API spend per document**, so self-consistency (5–10× per aspect) is a real money line, not local GPU time — budget it; (c) vault/claim text **leaves the machine** on every engine call, so the "keep the bits local" framing from the HCI papers does *not* describe the live system — treat the API boundary as part of the §0b.5 data-attack-surface. Auxiliary components (the NLI comparator, embeddings, MinHash dedup) can still run locally — that is independent of the main engine being an API.
 - **Retrieval already exists: `qmd`.** Memoria does not need a greenfield retriever — `qmd` is the shared **local hybrid search index (BM25 + vector + cross-encoder rerank)**, a read-only stdio MCP + CLI behind Co-PI/Librarian/Writer/Peer-reviewer vault search and the pre-file similarity gate (ADR-38; `docs/reference/search.md`). *No network call leaves the machine.* So §3.1, §4.1, and §4.3 below are **deltas to qmd**, not new components, and the retrieval **baseline-to-beat is qmd itself** (not an abstract "BM25+dense"). The cosine that §3.1 retires-as-arbiter is qmd's **vector half**; the reranker §4.1 questions is qmd's **existing cross-encoder**.
+- **What's already built vs proposed (read every "Amend" through this).** A recommendation against a *built* component is a change to deployed behaviour; against a *proposed* ADR it just shapes the unbuilt thing. **Built (accepted ADR + code):** `qmd` search (ADR-38), **`cluster_mcp`** (ADR-33: NetworkX graph communities + JSON-Canvas claim-debate map + **BERTopic over note bodies, already UMAP+HDBSCAN**), the **`memoria-policy-gate`** write-gate plugin (ADR-28/03/57), the **contradictions dashboard** (ADR-09) + **claim supersession** (ADR-10), deterministic ingest (ADR-30), telemetry (ADR-104/105/106), spaces (ADR-101). **Proposed / not built (shaping, not amending):** LTR-triage (89), claim-sentence-classification (90), discovery-relevance-scoring (92), keyphrase tags (93), record-linkage dedup (94), relation-vocab (98), MASSW-aspects (99), projection-engine (102/103). So §3.1's NLI feeds the *built* contradictions dashboard + supersession; §3.2/§3.5 amend the *built* gate plugin; §4.2's clustering is a *delta to `cluster_mcp`*, not greenfield; §4.x dedup/keyphrase/LTR are *proposed*, hence deferred.
 - **Content scope.** Primary content is academic papers (Zotero backbone, ADR-05/06/99) *plus* the PI's own claim/fleeting/project notes. Items tagged **[paper-only]** (§3.3 primary-vs-review weighting, §4.4 citation-intent) assume a DOI + citation graph and do **not** apply to non-paper notes. Everything else is content-agnostic.
 - **Single PI-supervision budget.** Memoria is one human; co-PI is never required. NLI threshold calibration, POTENTIAL review, novelty escalation, warrant-check failures, judge validation, exemplar corrections, lesson distillation, schema-migration spot-checks all draw on the *same* attention. Set **one annual label ceiling** and make every mechanism draw against it. Lever: design for **one PI action emitting many signals** (a single accept/reject resolves POTENTIAL *and* feeds the exemplar store *and* validates the judge *and* nudges the threshold); model **gate throughput**, not just label count.
 - **Need-push, not literature-pull.** §1's order is research-derived, **not** validated against observed alpha.9 pain. Fill `current-state-baseline.md` (gate false-approve / contradiction precision / retrieval recall on real runs) and re-rank against it before committing §1.
@@ -106,7 +107,7 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 **Concrete.** Fail-fast lint stage at the gate; reject any edge lacking a correct warrant sentence. Add a causal-faithfulness counterfactual offline test (inject a span into a decoy source; if the engine re-cites it, mark low-confidence — Wallat 2024).
 
-### 3.3 Epistemic status as first-class, auditable claim data — **Amend ADR-56, ADR-08, ADR-50**
+### 3.3 Epistemic status as first-class, auditable claim data — **Amend ADR-56, ADR-52, ADR-50**
 
 **What.** Every claim (and relation) carries: uncertainty flag, source-span provenance grade (complete/partial/broken), two-axis confidence (claim_strength vs extraction_fidelity), source-document-type **[paper-only]** (review/primary/preprint) + evidence-strength, and a `source_anchor` (page/section/figure). Contradiction/supersession privilege primary evidence over echoed consensus.
 
@@ -114,7 +115,7 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 **Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from closed-label self-consistency; backfill is an open question (§8).
 
-### 3.4 Supersession as a deterministic retrieval filter; time as a first-class field — **Amend ADR-10, ADR-09, ADR-92, ADR-65**
+### 3.4 Supersession as a deterministic retrieval filter; time as a first-class field — **Amend ADR-10, ADR-09; shape ADR-92**
 
 **What.** Supersession becomes a deterministic filter over an **append-only** `replaces` chain (`record_status: superseded`, `stale_after`), with **ISO temporal scope + tense + confidence** on every claim and **Temporal Coverage@k** on the scout; abstain when retrieved evidence is time-mismatched.
 
@@ -128,7 +129,7 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 **Why this is gated on measurement.** The router assumes PI review improves the result — the exact premise Jacobs 2021 puts in doubt (§0b.1). **So before building the router, instrument the calibration check: are PI-approved writes measurably more correct than raw engine writes?** If not, the fix is a different division of labor, not a better router. Build the measurement first.
 
-### 3.6 Constrained decoding as the engine-layer contract — **Amend ADR-30, ADR-42, ADR-90, ADR-99** · status: measured ✓
+### 3.6 Constrained decoding as the engine-layer contract — **Amend ADR-30, ADR-48, ADR-90, ADR-99** · status: measured ✓
 
 **What.** Every ingest engine = decomposed, per-aspect, schema-constrained prompts + a tiny deterministic resolver; the **MASSW five-aspect schema** with mandatory "N/A" for absent aspects (Zhang 2024); temperature=0; closed label sets shown explicitly.
 
@@ -142,8 +143,8 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 Adopt-grade in the literature, but not earned for this checkpoint (see §1 cut line). Listed for the roadmap.
 
-- **4.1 Retriever/scout — extend `qmd`, don't rebuild it** (extend ADR-37, 92, 98/99/100) — `qmd` is *already* the local hybrid BM25 + vector + cross-encoder-rerank index (§0c), so this is **not** a greenfield retriever. The deltas: (a) index the **contextual round** (atom as key, not stored unit — §0b.2) rather than whole notes; (b) **reasoning-trace query expansion** as a front-end to qmd; (c) **evaluate, don't add, the reranker** — qmd already cross-encoder-reranks, and off-the-shelf MS-MARCO cross-encoders *hurt* on reasoning-relevance (Wei 2026), so the real question is whether **qmd's rerank helps or hurts on Memoria's cross-paper reasoning queries** (measurable against qmd-rerank-off); (d) **offline hypothetical-question enrichment** added to the qmd index. Cap aggregated evidence at ~3 docs (Neekhra 2026). *Defer: retrieval quality matters most, but it's tuning qmd, post-alpha.9.* (ADR-65 superseded → 98/99/100.)
-- **4.2 Cheap non-LLM methods ahead of every model pass** (ADR-93, 94, 33) — MinHash-LSH dedup, PMI/class-TF-IDF keyphrases + cluster labels, per-aspect coding-then-clustering, random-walk-with-restart with path explanations. *Pull forward the dedup/keyphrase pieces if cheap.*
+- **4.1 Retriever/scout — extend `qmd`, don't rebuild it** (extend ADR-48, 92, 98/99/100) — `qmd` is *already* the local hybrid BM25 + vector + cross-encoder-rerank index (§0c), so this is **not** a greenfield retriever. The deltas: (a) index the **contextual round** (atom as key, not stored unit — §0b.2) rather than whole notes; (b) **reasoning-trace query expansion** as a front-end to qmd; (c) **evaluate, don't add, the reranker** — qmd already cross-encoder-reranks, and off-the-shelf MS-MARCO cross-encoders *hurt* on reasoning-relevance (Wei 2026), so the real question is whether **qmd's rerank helps or hurts on Memoria's cross-paper reasoning queries** (measurable against qmd-rerank-off); (d) **offline hypothetical-question enrichment** added to the qmd index. Cap aggregated evidence at ~3 docs (Neekhra 2026). *Defer: retrieval quality matters most, but it's tuning qmd, post-alpha.9.* (ADR-65 superseded → 98/99/100.)
+- **4.2 Cheap non-LLM methods ahead of every model pass** (proposed ADR-93, 94; **clustering = delta to the built ADR-33 `cluster_mcp`**) — MinHash-LSH dedup + PMI/class-TF-IDF keyphrases are *proposed/new* (93, 94). But **clustering already exists**: `cluster_mcp` runs NetworkX graph communities (greedy-modularity) **and** BERTopic (UMAP+HDBSCAN) over note bodies. So "per-aspect coding-then-clustering" is a **delta to `cluster_model_topics`** (cluster over one aspect's embeddings; distill notes to codes first), and "random-walk-with-restart with path explanations" is an **added traversal on `cluster_build_graph`'s existing graph** (which today uses greedy-modularity + degree-centrality), not a new clustering stack. *Pull forward the dedup/keyphrase pieces if cheap; evaluate the cluster_mcp deltas against its current output.*
 - **4.3 Two-stage normalize/dedup** (ADR-94) — **qmd's vector search** proposes the shortlist → small-LLM pick, keyed on canonical IDs (LLMs mint near-duplicate entities).
 - **4.4 Typed-relation vocabularies + constructive-necessity test** **[paper-only]** (ADR-98, 52, 79) — citation-intent + functional-role taxonomies; record explicit NONE rather than forcing a citation (which also surfaces a gap). Schema as deliberate lossy KR (Davis).
 - **4.5 Editable exemplar store — no training** (ADR-35, 23) — PI-confirmed exemplars in FAISS so a gate correction shifts future extractions; reject weight-internalized preferences (NanoResearch). *This is also the §0c "one-action-many-signals" lever.*
@@ -204,14 +205,14 @@ Recording these so they are not silently re-proposed:
 
 | Disposition | ADRs | Item | Status |
 |---|---|---|---|
-| Amend | 30, 42, 90, 99 | §3.6 constrained decoding | measured ✓ ship |
+| Amend | 30, 48, 90, 99 | §3.6 constrained decoding | measured ✓ ship |
 | Amend | 03, 57, 79 | §3.2 warrant checker | measured ✓ ship |
-| Amend | 56, 08, 50 | §3.3 epistemic status | ship (foundational) |
+| Amend | 56, 52, 50 | §3.3 epistemic status | ship (foundational) |
 | Retire+Amend | 09, 10, 94, 38 | §3.1 NLI + decomposed gate | measured-partial |
 | Amend | 70, 81, 41, 03 | §3.5 gate router + Jacobs check | **measure first** |
-| Amend | 10, 09, 92, 65 | §3.4 supersession + temporal | |
+| Amend | 10, 09, 92 | §3.4 supersession + temporal | |
 | Validate (caveated) | 03, 57, 32, 46, 28, 27, 01, 22, 24 | §2 skeleton | strong form contested |
-| New / extend | 37/65/92, 93/94/33, 98/52/79, 35/23, 100/61/95 | §4 (deferred past alpha.9) | |
+| New / extend | 48/92, 93/94/33, 98/52/79, 35/23, 100/61/95 | §4 (deferred past alpha.9) | |
 | Amend | 62, 104/105/106, 29, 80 | §5 evaluation (Jacobs check first) | |
 | Amend | 102/103, 84, 87, 71, 101 | §6 surfaces | |
 
