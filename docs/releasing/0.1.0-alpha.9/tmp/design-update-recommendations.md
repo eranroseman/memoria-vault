@@ -10,7 +10,7 @@ Three passes produced this doc, in increasing trust:
 
 1. **Literature review** — confirmation-biased (the corpus is the PI's own curated reading, scored with a confirm-only vocabulary). It claimed the literature "re-derives" Memoria's design. Treat that claim with suspicion.
 2. **Refutation pass** — attacked 14 load-bearing bets; **none survived intact**. The corpus endorses the *skeleton* (durable file state, verbatim warrants, batch surfacing, a *sparse* gate, deterministic external grounding, supersession-as-edge) and refutes most *strong claims layered on top*.
-3. **On-box measurement** — the contested, testable claims, run against the actual RTX 4060 Ti + qwen2.5:7b + local NLI. Where a claim was measured, the measurement wins over both the literature and the refutation.
+3. **On-box measurement** — the contested, testable claims, run against the actual RTX 4060 Ti with `qwen2.5:7b` (the local **test** model — the live engines call an LLM API, §0c) + a local NLI model. Where a claim was measured, the measurement wins over both the literature and the refutation; and because qwen is the weak test model, the numbers are **pessimistic floors** for production.
 
 **Trust order: measured > refuted > literature-pull.** Every item carries a disposition (**Validate / Amend / Retire / Tension / New**) and, where relevant, a **status** (`measured ✓`, `refuted on-box`, `measured-partial`, `untested`). Citations are short-form; full entries in `_papers/Exported Items.bib`.
 
@@ -26,7 +26,7 @@ Three passes produced this doc, in increasing trust:
 | NLI fixes it | 8/8 on the same trap; direction-stable; **<0.6 GB VRAM** | NLI clears the *easy* trap; HANS failure didn't materialize here |
 | NLI is clean | On same-topic / **different-variable** pairs it **confidently fabricates contradictions at 0.94–1.00** (small 6/12, ANLI 8/12) | NLI alone is a false-contradiction generator; a confidence threshold can't filter it |
 | Variable-match gate fixes that | Holistic LLM "same variable?" → **recall 1/6** (drops real contradictions). Decomposed (entity+attribute+direction) → **recall 4/6, FP dropped 6/7** | **Necessary, not sufficient**; bottleneck moves to direction/relationship extraction (negation, argument-order, value-conflict) |
-| Frozen qwen2.5:7b ≈ 0% schema compliance (CrossTrace) | MASSW aspect extraction **6/6 clean** (Ollama `format=schema`); verbatim warrant quotes **90% (18/20)** | **Refuted on our tasks.** §3.6 confirmed; **QLoRA budget dropped**; §3.2's substring checker catches the 10% |
+| Frozen small local model ≈ 0% schema compliance (CrossTrace) | On the **test** model (qwen2.5:7b + `format=schema`): MASSW aspect **6/6 clean**; verbatim warrant quotes **90% (18/20)** | **Refuted, doubly:** the test-model floor already clears it, and the live engine is an API (more capable, not fine-tuneable). §3.6 confirmed; **QLoRA budget dropped**; §3.2's checker catches the 10% |
 | NLI must fit beside qwen on 16 GB | <0.6 GB, and qwen is a test fixture not a co-resident | Fit was a phantom blocker — **dissolved** |
 
 Measurement caveat that applies to all of the above: hand fixtures (~20–30 pairs) + abstract/intro text. These are **smoke tests that answer go/no-go, not benchmarks.** Re-run on real vault claims (`current-state-baseline.md`) before any threshold is trusted.
@@ -43,6 +43,7 @@ These are the disconfirmations with no on-box probe — they require the PI's re
 
 ### 0c. Binding constraints (apply to everything in §1–§6)
 
+- **Engines call an LLM API, not a local model.** `qwen2.5:7b` (local, Ollama) is the **test fixture** for wiring/smoke-tests; the live extraction/judging engines call an **LLM API**. Three consequences: (a) every on-box qwen measurement in §0a is a **pessimistic floor** — the production API is more capable, so "qwen does X" means "the floor is X"; (b) ingest cost is **API spend per document**, so self-consistency (5–10× per aspect) is a real money line, not local GPU time — budget it; (c) vault/claim text **leaves the machine** on every engine call, so the "keep the bits local" framing from the HCI papers does *not* describe the live system — treat the API boundary as part of the §0b.5 data-attack-surface. Auxiliary components (the NLI comparator, embeddings, MinHash dedup) can still run locally — that is independent of the main engine being an API.
 - **Content scope.** Primary content is academic papers (Zotero backbone, ADR-05/06/99) *plus* the PI's own claim/fleeting/project notes. Items tagged **[paper-only]** (§3.3 primary-vs-review weighting, §4.4 citation-intent) assume a DOI + citation graph and do **not** apply to non-paper notes. Everything else is content-agnostic.
 - **Single PI-supervision budget.** Memoria is one human; co-PI is never required. NLI threshold calibration, POTENTIAL review, novelty escalation, warrant-check failures, judge validation, exemplar corrections, lesson distillation, schema-migration spot-checks all draw on the *same* attention. Set **one annual label ceiling** and make every mechanism draw against it. Lever: design for **one PI action emitting many signals** (a single accept/reject resolves POTENTIAL *and* feeds the exemplar store *and* validates the judge *and* nudges the threshold); model **gate throughput**, not just label count.
 - **Need-push, not literature-pull.** §1's order is research-derived, **not** validated against observed alpha.9 pain. Fill `current-state-baseline.md` (gate false-approve / contradiction precision / retrieval recall on real runs) and re-rank against it before committing §1.
@@ -81,8 +82,8 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 | MCP-only sandbox (no file/terminal/code-exec) | Greshake (2023), AgentDojo (2024), InjecAgent (2024), Lu (2024), Perez & Ribeiro (2022) | ⚠ necessary, **not sufficient** (data > code, §0b.5) | 32, 46, 28, 27 |
 | Vault-as-memory / durable artifacts | Chen (2026), Zhou (2026), PARNESS (2026), AgentRxiv (2025) | ✓ validated | 01, 46, 23 |
 | Atomic claims store | five memory benchmarks (atomic > raw-log) | ⚠ as *index*, not *stored unit* (§0b.2) | 90, 56, 99 |
-| Deterministic ingest + cheap local model | SciLitLLM (2025), Schick & Schütze (2021), Agrawal (2022) | ✓ **measured-confirmed** (6/6 + 90%, §0a) | 30, 108 |
-| Faithfulness over flash; local/cheap by choice | Bender (2021), Galactica (2022) | ✓ validated (and frozen-model now measured-sufficient) | 22, 24 |
+| Deterministic ingest; **LLM engine via API** (qwen2.5:7b for tests), auxiliary components local | SciLitLLM (2025), Schick & Schütze (2021), Agrawal (2022) | ✓ deterministic-ingest **measured-confirmed** on the test-model floor (6/6 + 90%, §0a); the "local model" gloss was the test split, **not** the live engine (§0c) | 30, 108 |
+| Faithfulness over flash | Bender (2021), Galactica (2022) | ✓ validated | 22, 24 |
 
 ---
 
@@ -108,7 +109,7 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 **What.** Every claim (and relation) carries: uncertainty flag, source-span provenance grade (complete/partial/broken), two-axis confidence (claim_strength vs extraction_fidelity), source-document-type **[paper-only]** (review/primary/preprint) + evidence-strength, and a `source_anchor` (page/section/figure). Contradiction/supersession privilege primary evidence over echoed consensus.
 
-**Why.** LM fluency is not knowledge (Bender 2021). Self-consistency disagreement can populate the uncertainty flag (Wang 2023) — but it is **not free** (it is the §3.6 sampling cost) and **not a confidence signal at 7B** (blind to stable fabrication), so use it **only on closed-label steps**. **Version-pin epistemic metadata** to the producing model + prompt — a qwen2.5→qwen3 swap silently shifts every value. The `(context, variables, relationship)` decomposition here is also what §3.1's gate consumes — build it once.
+**Why.** LM fluency is not knowledge (Bender 2021). Self-consistency disagreement can populate the uncertainty flag (Wang 2023) — but it is **not free** (it is the §3.6 sampling cost, now API spend not GPU time — §0c) and **not a reliable confidence signal** (blind to stable fabrication), so use it **only on closed-label steps**. **Version-pin epistemic metadata** to the producing model + prompt — and this matters *more* with an API engine, which the provider can silently update underneath you. The `(context, variables, relationship)` decomposition here is also what §3.1's gate consumes — build it once.
 
 **Concrete.** Extend the claim/source-note frontmatter schema; populate uncertainty from closed-label self-consistency; backfill is an open question (§8).
 
@@ -130,7 +131,7 @@ Cite the backing in the ADRs, but do **not** read this table as "no change neede
 
 **What.** Every ingest engine = decomposed, per-aspect, schema-constrained prompts + a tiny deterministic resolver; the **MASSW five-aspect schema** with mandatory "N/A" for absent aspects (Zhang 2024); temperature=0; closed label sets shown explicitly.
 
-**Why + measured.** Constrain the output, not the model (Schick & Schütze 2021). **On-box: frozen qwen2.5:7b + Ollama `format=schema` is 6/6 clean on MASSW aspect extraction — the CrossTrace "~0% compliance" Refute does not reproduce on our task, and no QLoRA is budgeted.** Two standing caveats: constrained decoding forces *valid, not correct* (re-validate content, budget for backtracking — LMQL/Beurer-Kellner 2023); self-consistency is a closed-label router, not a faithfulness signal (§3.3). Faithfulness comes from deterministic grounding (§3.2), not agreement.
+**Why + measured.** Constrain the output, not the model (Schick & Schütze 2021). **On-box, on the *test* model: qwen2.5:7b + Ollama `format=schema` is 6/6 clean on MASSW aspect extraction** — a pessimistic floor, since the live engine is a more-capable API (§0c). The CrossTrace "~0% compliance" Refute does not reproduce, and no QLoRA is budgeted (you don't fine-tune an API). Two standing caveats: constrained decoding forces *valid, not correct* (re-validate content, budget for backtracking — LMQL/Beurer-Kellner 2023); self-consistency is a closed-label router, not a faithfulness signal (§3.3). Faithfulness comes from deterministic grounding (§3.2), not agreement.
 
 **Concrete.** One prompt per aspect; gate-existence-before-extraction to kill hallucinated claims; counterfactual perturbation to confirm the extractor tracks text. Re-test compliance on full-body / messy-OCR inputs (`probe-qwen-compliance.py --body`) before relying past abstracts.
 
@@ -176,7 +177,7 @@ The **first build here is the Jacobs calibration check** (§3.5 / §0b.1) — ev
 
 Recording these so they are not silently re-proposed:
 
-- **QLoRA fine-tuning budget** — dropped; frozen + constrained decoding measured sufficient on our tasks (§3.6).
+- **QLoRA fine-tuning budget** — dropped; the live engine is an API (not fine-tuneable, and more capable than the test model that already cleared the task), and constrained decoding measured sufficient even on the qwen floor (§3.6, §0c).
 - **Holistic LLM "same variable?" gate** — dropped; recall 1/6 (§3.1). Use the decomposed gate only.
 - **"NLI cleanly replaces cosine"** — narrowed; NLI fabricates different-variable contradictions, needs the structured gate, and cosine stays as a control (§3.1).
 - **Atomic claim as the *stored* unit** — narrowed to *index* over the contextual round (§0b.2, §4.1).
@@ -220,6 +221,6 @@ Recording these so they are not silently re-proposed:
 - **Corpus:** 401 papers, `_papers/` (Zotero export `_papers/Exported Items.bib`).
 - **Pass 1 — review:** `_papers/REVIEW-SUMMARY.md` (executive summary, 9 themes, 11 category deep-dives).
 - **Pass 2 — refutation:** `_papers/REVIEW-REFUTATIONS.md` (14 bets attacked, 0 survived intact).
-- **Pass 3 — measurement:** `spike-nli-vs-cosine.py` (cosine/NLI/gate), `probe-qwen-compliance.py` (frozen-model aspect + warrant compliance), `current-state-baseline.md` (the PI-fills instrument).
+- **Pass 3 — measurement:** `spike-nli-vs-cosine.py` (cosine/NLI/gate), `probe-qwen-compliance.py` (aspect + warrant compliance on the qwen **test** model — a floor for the live API), `current-state-baseline.md` (the PI-fills instrument).
 - **Per-paper verdicts:** `_notes/paper-review-verdicts.json`.
 - **Docs already wired to the review:** PR #784 (`intellectual-foundations.md`, `why-pattern-provenance.md`, `bibliography.md`).

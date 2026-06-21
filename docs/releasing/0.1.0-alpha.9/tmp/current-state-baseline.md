@@ -20,7 +20,7 @@ The whole agenda assumes gate/contradictions/retrieval are where research time l
 | | | miss rate: known contradictions it didn't flag | seed a few known pairs, check |
 | **Retrieval / discovery** | What's actually failing — recall, ranking, or relevance? | recall@k on ~20 queries with a known target note | run queries, check target in top-k |
 | | | cosine "false same" rate (the spike, on real claims) | run `spike-nli-vs-cosine.py --models` over vault pairs |
-| **Ingest extraction** | Does the frozen model produce schema-valid + correct claims? | % schema-valid; % spot-checked-correct of those | dump last ~30 extractions |
+| **Ingest extraction** | Does the API engine produce schema-valid + correct claims? (qwen test-model floor was 6/6 schema-clean) | % schema-valid; % spot-checked-correct of those | dump last ~30 extractions |
 | **Baseline to beat** | Does the fancy path beat BM25 + long-context dump? | of ~10 real past questions, # the dumb baseline answers acceptably vs # the current system beats it | run both, compare |
 
 ## Supervision-budget check (the constraint nothing models)
@@ -33,7 +33,7 @@ The whole agenda assumes gate/contradictions/retrieval are where research time l
 
 After filling: re-rank §1 against the **largest observed failure**, not corpus leverage. Examples:
 - Gate false-approve rate high → §3.2 warrant checker + the Jacobs calibration check first.
-- Extraction schema-invalid often → §3.6 / QLoRA spike first.
+- Extraction schema-invalid often → §3.6 constrained-decoding contract first (not QLoRA — the engine is an API, not a fine-tuneable local model).
 - Contradiction precision low → keep auto-detection as *propose-only*, don't build the filter (§3.1/§3.4) yet.
 - Retrieval recall fine, relevance bad → §4.1 reranker; if recall fine and relevance fine → **NLI comparator is not the top priority**, regardless of §1's ordering.
 

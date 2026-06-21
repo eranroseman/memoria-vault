@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""§0 frozen-model probe — does frozen qwen2.5:7b clear Memoria's extraction tasks,
+"""§0 test-model probe — does qwen2.5:7b clear Memoria's extraction tasks,
 or is CrossTrace's "~0% structural compliance" real for us? (adjudicates the QLoRA budget)
+
+NB: qwen2.5:7b is the local TEST fixture; the live engines call an LLM API. This measures the
+weak-model FLOOR — the production API is more capable, so a pass here means production passes too.
 
 Needs Ollama running locally with qwen2.5:7b. No Python deps (urllib).
   python3 probe-qwen-compliance.py            # abstracts (default)
