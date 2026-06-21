@@ -62,7 +62,7 @@ record evidence in the stage sub-issues under
 
 | Stage | Proves | Stage issue |
 | --- | --- | --- |
-| S0 | `static-contract`: docs, status, test references, spelling, markdown structure, plugin provenance, and release-plan links are clean. | [#842](https://github.com/eranroseman/memoria-vault/issues/842) |
+| S0 | `static-contract`: docs, status, ADR-code mechanism claims, test references, spelling, markdown structure, plugin provenance, and release-plan links are clean. | [#842](https://github.com/eranroseman/memoria-vault/issues/842) |
 | S1 | `component`: `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests -q` is green, including any new policy, docs, status, or workflow-script tests. | [#843](https://github.com/eranroseman/memoria-vault/issues/843) |
 | S2 | `vault-assembly`: `~/Memoria-test` refreshes from `src/`; golden restore and plugin/config provenance checks pass after the alpha.9 changes. | [#844](https://github.com/eranroseman/memoria-vault/issues/844) |
 | S3 | `workflow-replay`: model-free replay proves capture, triage, delegated work, policy deny, and artifact assertions for changed alpha.9 paths. | [#845](https://github.com/eranroseman/memoria-vault/issues/845) |
@@ -134,7 +134,8 @@ Before the release candidate is approved, complete a fresh documentation sweep:
 
 Record findings in [#841](https://github.com/eranroseman/memoria-vault/issues/841)
 or a companion docs PR. Required checker summary: `docs_doctor`,
-`status_doctor`, `check_test_refs`, cspell, and any manual full-scope scan.
+`status_doctor`, `adr_code_doctor`, `check_test_refs`, cspell, and any manual
+full-scope scan.
 
 ## 8. Runtime readiness
 
@@ -194,4 +195,3 @@ The living implementation plan for this checkpoint is
 [`tmp/execplan-alpha9-ui-workflow-runtime-gates.md`](tmp/execplan-alpha9-ui-workflow-runtime-gates.md).
 Long-form audits and spike scripts remain in `tmp/` only until closeout
 disposition.
-

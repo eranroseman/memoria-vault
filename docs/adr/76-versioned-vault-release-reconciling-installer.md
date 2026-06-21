@@ -75,13 +75,12 @@ The runtime is a real, single-rooted `memoria` package (`src/`-layout, `pyprojec
 ### Load-bearing decision 2 — extract a genuine, tiny, standalone policy core
 
 The policy-gate runs in the MCP host's process, whose interpreter the installer
-does not pin. The small, dependency-free **policy core** (the `MUTATING_ACTIONS`
-set and path matching) this decision calls for **already exists** —
-`src/.memoria/memoria_runtime/policy/` (`__init__.py` + `paths.py`, stdlib-only),
-imported by the MCP servers (`policy_mcp.py:51`). What remains is the gate shim:
-today it reaches its decision *through* the MCP layer (`policy_hook → policy_mcp`)
-via a `sys.path` insert into `.memoria/mcp`. That chain is organic growth, not
-design.
+does not pin. The small, dependency-free **policy core** (the mutating-action set,
+path matching, lane loading, and review-gated decision logic) now lives under the
+installed package path `memoria/runtime/policy/`, imported by both the MCP servers
+and the gate hook. What remains for the full versioned-release spine is tightening
+the host import story so the gate shim imports the installed core directly and
+fails closed if that import is unavailable.
 
 The preferred implementation is for the gate to import the **single installed
 policy core** from the vault venv's package install, not a committed duplicate. The
