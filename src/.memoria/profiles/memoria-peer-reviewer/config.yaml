@@ -38,12 +38,12 @@ mcp_servers:
   qmd:
     # The shared qmd vector index (tobi/qmd) — local hybrid search over the vault
     # corpus; the verify-* skills use it for claim↔source embedding similarity
-    # (cite-check, claim-trace). Stdio serve mode (`qmd mcp`): models load on the
-    # first search (~19s cold) and stay warm for the session. Read-only — qmd
-    # never writes the vault. Requires a one-time index:
+    # (cite-check, claim-trace). Memoria serves it through qmd_filter_mcp.py so
+    # superseded claims are hidden by default (ADR-10). Read-only — qmd never
+    # writes the vault. Requires a one-time index:
     # `qmd collection add <vault> --name vault && qmd embed`.
-    command: "{{QMD}}"  # absolute path substituted at deploy (a conda package also ships a `qmd` binary — PATH is ambiguous)
-    args: ["mcp"]
+    command: "{{PYTHON}}"
+    args: ["{{VAULT_PATH}}/.memoria/mcp/qmd_filter_mcp.py", "--vault", "{{VAULT_PATH}}", "--qmd", "{{QMD}}"]
     timeout: 30
     connect_timeout: 45
   # academic (optional, not yet installed): hunter-heidenreich/academic-tools-mcp adds

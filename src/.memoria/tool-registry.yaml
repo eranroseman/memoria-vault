@@ -47,9 +47,9 @@ groups:
   discovery:   [paper_search.search_arxiv, paper_search.search_pubmed, paper_search.search_biorxiv, paper_search.search_medrxiv, paper_search.search_google_scholar, paper_search.search_semantic]
   # Read-only Zotero / Semantic Scholar citation context via the pyzotero MCP.
   zotero_read: [pyzotero.get_references, pyzotero.get_citations, pyzotero.find_related, pyzotero.search_semantic_scholar]
-  # Local hybrid search over the vault corpus via the qmd MCP (tobi/qmd; `qmd mcp`
-  # serve mode) — the shared vector index the skills reference. Read-only: qmd
-  # never writes the vault (its index lives outside it, in ~/.cache/qmd/).
+  # Local hybrid search over the vault corpus via Memoria's filtered qmd MCP
+  # wrapper. Read-only: qmd never writes the vault (its index lives outside it,
+  # in ~/.cache/qmd/). The wrapper hides superseded claim notes by default.
   qmd_read:    [qmd.search, qmd.vsearch, qmd.deep_search, qmd.get, qmd.status]
 
 profiles:

@@ -41,7 +41,13 @@ The active note auto-attaches; attach others when the question is about a specif
 
 **2. Interrogate the answer.**
 
-The Co-PI reads the vault directly and never writes (hybrid keyword + vector search over `qmd`, plus the typed graph — [The Co-PI](../../explanation/profiles/co-pi.md)). Push on it: "which note says that?", "what disagrees with this?". An assertion it can't ground in a note of yours is its synthesis, not your knowledge — treat it accordingly.
+The Co-PI reads the vault directly and never writes (hybrid keyword + vector
+search over Memoria's filtered `qmd` MCP, plus the typed graph — [The
+Co-PI](../../explanation/profiles/co-pi.md)). Current retrieval excludes claim
+notes that carry `superseded_by`; ask explicitly for historical/superseded claims
+when you are reconstructing what changed. Push on it: "which note says that?",
+"what disagrees with this?". An assertion it can't ground in a note of yours is
+its synthesis, not your knowledge — treat it accordingly.
 
 **3. Keep what's worth keeping — yourself.**
 
