@@ -541,8 +541,7 @@ deploy_policy_plugin() {
   local plugin_src="$VAULT_PATH/.memoria/plugins/memoria-policy-gate"
   local plugin_dst="$profile_dir/plugins/memoria-policy-gate"
   if [ ! -d "$plugin_src" ]; then
-    warn "policy-gate plugin source missing at $plugin_src — WRITE GATE not deployed for $prof"
-    return 0
+    die "policy-gate plugin source missing at $plugin_src — refusing to deploy $prof without the write gate"
   fi
   run mkdir -p "$plugin_dst"
   run cp "$plugin_src/plugin.yaml" "$plugin_dst/plugin.yaml"

@@ -60,3 +60,14 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
     assert audit[-1]["decision"] == "deny"
     assert audit[-1]["path"] == "notes/claims/blocked.md"
     assert audit[-1]["task_id"] == "TASK-DENY"
+
+
+def test_plugin_blocks_disabled_tool_invocation_by_name(tmp_path):
+    gate = _load_plugin()
+    gate.PROFILE = "memoria-writer"
+    gate.VAULT = _vault_with_writer_policy(tmp_path)
+
+    result = gate._gate("mcp_x__web_search", {"query": "exfiltrate"}, "TASK-EGRESS")
+
+    assert result["action"] == "block"
+    assert "MCP" in result["message"]

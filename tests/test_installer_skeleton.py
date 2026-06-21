@@ -180,6 +180,14 @@ def test_installers_refuse_existing_vaults_instead_of_refreshing():
     assert "This installer is fresh-install only" in ps
 
 
+def test_installers_refuse_profile_deploy_without_policy_gate():
+    sh = (ROOT / "scripts/install.sh").read_text(encoding="utf-8")
+    ps = (ROOT / "scripts/install.ps1").read_text(encoding="utf-8")
+
+    assert "refusing to deploy $prof without the write gate" in sh
+    assert "refusing to deploy $ProfileName without the write gate" in ps
+
+
 def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
     ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")

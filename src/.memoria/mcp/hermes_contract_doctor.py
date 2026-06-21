@@ -15,7 +15,8 @@ Usage:
     python src/.memoria/mcp/hermes_contract_doctor.py [--hermes <project_dir>] [--json]
 
 Exit 0 = contract holds (or Hermes not found → SKIPPED). Exit 1 = drift (missing
-direct-capability denial). Warnings (dead names, the #22 egress surface) never fail.
+direct-capability / egress denial, or stale deployed gate when --vault is given).
+Warnings are limited to harmless dead denylist names.
 """
 
 from __future__ import annotations
@@ -37,15 +38,10 @@ for _p in (_HERE, _HERE.parents[0], _HERE.parents[2]):  # mcp · src/.memoria ·
 # DENY_DIRECT_TOOLS is the single source of truth; import it, don't re-list it.
 import policy_hook
 
-# Hermes toolsets whose every tool MUST be hard-denied (the gate's stated contract:
-# "direct filesystem/shell access"). A tool here that is not in DENY_DIRECT_TOOLS is
-# a hard error — that is the `process`-class drift.
-DIRECT_CAPABILITY_FAMILIES = ("file", "terminal", "code_execution")
-
-# Egress / side-effect families. The gate does NOT hard-deny these; the sandbox
-# relies on `agent.disabled_toolsets` (schema-hiding on v0.14.0). Reported as the
-# known allow-by-default surface, not a failure — tracked for the default-deny work.
-EGRESS_FAMILIES = (
+COVERED_TOOL_FAMILIES = (
+    "file",
+    "terminal",
+    "code_execution",
     "web",
     "browser",
     "messaging",
@@ -92,29 +88,45 @@ def _tools_of(toolsets: dict, family: str) -> set[str]:
     return {t for t in (entry.get("tools") or []) if isinstance(t, str)}
 
 
-def run_contract_doctor(hermes_project: Path | str | None = None) -> dict:
+def _deployment_errors(vault: Path | str | None) -> list[str]:
+    if vault is None:
+        return []
+    deployed = Path(vault).expanduser() / ".memoria/mcp/policy_hook.py"
+    source = _HERE / "policy_hook.py"
+    if not deployed.is_file():
+        return [f"deployed policy_hook.py missing at {deployed}"]
+    if deployed.read_text(encoding="utf-8") != source.read_text(encoding="utf-8"):
+        return [f"deployed policy_hook.py is stale: {deployed} differs from {source}"]
+    return []
+
+
+def run_contract_doctor(
+    hermes_project: Path | str | None = None, vault: Path | str | None = None
+) -> dict:
     project = Path(hermes_project) if hermes_project else _default_hermes_project()
     toolsets = _load_toolsets(project)
+    deploy_errors = _deployment_errors(vault)
     if toolsets is None:
         return {
-            "ok": True,
+            "ok": not deploy_errors,
             "checked": False,
             "skipped": f"Hermes toolsets not importable at {project}",
             "hermes_project": str(project),
+            "errors": deploy_errors,
         }
 
     denied = set(policy_hook.DENY_DIRECT_TOOLS)
 
-    # ERROR: every direct-capability tool the installed Hermes ships must be denied.
-    direct_tools: set[str] = set()
-    for fam in DIRECT_CAPABILITY_FAMILIES:
-        direct_tools |= _tools_of(toolsets, fam)
-    missing = sorted(direct_tools - denied)
+    covered_tools: set[str] = set()
+    for fam in COVERED_TOOL_FAMILIES:
+        covered_tools |= _tools_of(toolsets, fam)
+    missing = sorted(covered_tools - denied)
     errors = [
-        f"direct-capability tool {t!r} (in a {','.join(DIRECT_CAPABILITY_FAMILIES)} "
+        f"covered tool {t!r} (in a {','.join(COVERED_TOOL_FAMILIES)} "
         f"toolset) is NOT in DENY_DIRECT_TOOLS — gate allows it"
         for t in missing
     ]
+    errors.extend(deploy_errors)
 
     # WARN: denylist entries that are not a real tool in ANY installed toolset.
     all_real_tools: set[str] = set()
@@ -122,28 +134,16 @@ def run_contract_doctor(hermes_project: Path | str | None = None) -> dict:
         all_real_tools |= {t for t in (entry.get("tools") or []) if isinstance(t, str)}
     dead = sorted(denied - all_real_tools)
 
-    # WARN: the egress/side-effect surface the gate does not deny (#22).
-    egress_allowed: dict[str, list[str]] = {}
-    for fam in EGRESS_FAMILIES:
-        allowed = sorted(_tools_of(toolsets, fam) - denied)
-        if allowed:
-            egress_allowed[fam] = allowed
-
     warnings = []
     if dead:
         warnings.append(f"dead denylist names (not real Hermes tools): {dead}")
-    if egress_allowed:
-        n = sum(len(v) for v in egress_allowed.values())
-        warnings.append(
-            f"{n} egress/side-effect tools are allow-by-default (rely on "
-            f"disabled_toolsets schema-hiding; see #22): {egress_allowed}"
-        )
 
     return {
         "ok": not errors,
         "checked": True,
         "hermes_project": str(project),
-        "direct_capability_tools": sorted(direct_tools),
+        "covered_tools": sorted(covered_tools),
+        "direct_capability_tools": sorted(covered_tools),
         "errors": errors,
         "warnings": warnings,
     }
@@ -154,21 +154,24 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--hermes", default=None, help="Hermes project dir (default: $HERMES_HOME/hermes-agent)"
     )
+    ap.add_argument("--vault", default=None, help="optional deployed vault to freshness-check")
     ap.add_argument("--json", action="store_true", help="emit the full report as JSON")
     args = ap.parse_args(argv)
 
-    report = run_contract_doctor(args.hermes)
+    report = run_contract_doctor(args.hermes, args.vault)
     if args.json:
         print(json.dumps(report, indent=2))
     elif not report.get("checked"):
         print(f"hermes-contract-doctor: SKIPPED — {report.get('skipped')}")
+        for e in report.get("errors", []):
+            print(f"hermes-contract-doctor: ERROR: {e}")
     else:
         for w in report.get("warnings", []):
             print(f"hermes-contract-doctor: WARN: {w}")
         if report["ok"]:
             print(
-                f"hermes-contract-doctor: OK — all {len(report['direct_capability_tools'])} "
-                f"direct-capability tools are hard-denied"
+                f"hermes-contract-doctor: OK — all {len(report['covered_tools'])} "
+                f"covered direct/egress tools are hard-denied"
             )
         else:
             for e in report["errors"]:

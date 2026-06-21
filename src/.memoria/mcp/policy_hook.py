@@ -11,7 +11,8 @@ The sandbox model is policy-via-MCP, MCP-only (D40/ADR-46): agents reach the
 vault, operations, and external APIs ONLY through MCP servers. Accordingly:
   - the `obsidian` MCP write tools (every profile's one vault-write path) are
     PATH-GATED -- mapped to a policy action and decided by the lane policy; and
-  - every direct-capability tool (`file`, `terminal`, code-exec families --
+  - every direct-capability tool (`file`, `terminal`, code-exec families plus
+    unaudited egress / messaging / browser / computer-use / media families --
     DENY_DIRECT_TOOLS) is HARD-DENIED for every lane. No Memoria profile ships
     those toolsets (`agent.disabled_toolsets`); a call reaching us anyway means
     config drift (e.g. a Hermes update adding a toolset the denylist doesn't
@@ -79,15 +80,15 @@ WRITE_KEYWORDS = {
     "rename": "move",
     "move": "move",
 }
-# Direct-capability tools hard-denied for EVERY lane (D40/ADR-46: agents reach
-# the vault, operations, and APIs ONLY through MCP — no exceptions). No Memoria
-# profile ships the `file`/`terminal` toolsets, so any such call is config drift
-# (e.g. a Hermes update adding toolsets the denylist doesn't know) — fail closed.
+# Direct-capability and unaudited-egress tools hard-denied for EVERY lane
+# (D40/ADR-46: agents reach the vault, operations, and APIs ONLY through MCP —
+# no exceptions). No Memoria profile ships these toolsets, so any such call is
+# config drift or prompt-injection bypassing schema-hiding — fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
 # is never caught. This list MUST cover every tool in Hermes's file/terminal/
-# code_execution toolsets; `hermes_contract_doctor.py` fails the build if the
-# installed Hermes ships a direct-capability tool this set is missing (drift),
-# which is how `process` (terminal toolset, added below) was caught.
+# code_execution plus egress/side-effect toolsets; `hermes_contract_doctor.py`
+# fails the build if the installed Hermes ships a covered tool this set is
+# missing (drift), which is how `process` (terminal toolset) was caught.
 DENY_DIRECT_TOOLS = frozenset(
     {
         "write_file",
@@ -99,6 +100,41 @@ DENY_DIRECT_TOOLS = frozenset(
         "run_command",  # legacy/alias name (not in installed Hermes; harmless)
         "code_execution",  # legacy/alias name (the real tool is `execute_code`)
         "execute_code",  # code_execution toolset
+        "web_extract",
+        "web_search",
+        "browser_back",
+        "browser_cdp",
+        "browser_click",
+        "browser_console",
+        "browser_dialog",
+        "browser_get_images",
+        "browser_navigate",
+        "browser_press",
+        "browser_scroll",
+        "browser_snapshot",
+        "browser_type",
+        "browser_vision",
+        "send_message",
+        "x_search",
+        "computer_use",
+        "delegate_task",
+        "image_generate",
+        "vision_analyze",
+        "video_analyze",
+        "video_generate",
+        "text_to_speech",
+        "ha_call_service",
+        "ha_get_state",
+        "ha_list_entities",
+        "ha_list_services",
+        "spotify_albums",
+        "spotify_devices",
+        "spotify_library",
+        "spotify_playback",
+        "spotify_playlists",
+        "spotify_queue",
+        "spotify_search",
+        "cronjob",
     }
 )
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
@@ -213,7 +249,7 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
     if base in DENY_DIRECT_TOOLS:
         return {
             "decision": "block",  # MCP-only sandbox (D40) -> fail closed
-            "reason": f"policy gate: '{tool_name}' is direct filesystem/shell access -- "
+            "reason": f"policy gate: '{tool_name}' is direct or unaudited external access -- "
             f"agents reach the vault only through MCP (D40/ADR-46); no lane "
             f"is permitted this toolset.",
         }
