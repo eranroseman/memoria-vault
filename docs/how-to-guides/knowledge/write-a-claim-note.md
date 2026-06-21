@@ -25,13 +25,14 @@ From a source note, click **Create linked claim** under **Worth distilling**. It
 
 If you prefer the palette, open the source note and run `Memoria: create linked claim note` ([Obsidian command palette](../../reference/obsidian-command-palette.md)). The command asks for the claim sentence, then performs the same linked-source write. Before filing, it runs the qmd pre-file similarity shadow check and writes neighbours to a `[!similarity]` callout/log when available; that report is advisory and never blocks note creation.
 
-For a standalone claim, use `Cmd/Ctrl-P` → **Memoria: write claim note** — a new note in `notes/claims/` from `system/templates/claim.md`, with the frontmatter pre-populated:
+For a standalone claim, use `Cmd/Ctrl-P` → **Memoria: write claim note**. The guided form asks for the title, maturity, supporting sources, topics, and claim statement, then writes a new note in `notes/claims/` from `system/templates/claim.md` with the frontmatter pre-populated:
 
 ```yaml
 type: claim
 lifecycle: current
 maturity: seedling
-sources: []
+sources:
+  - mamykina2010sense
 topics: []
 links:
   supports: []

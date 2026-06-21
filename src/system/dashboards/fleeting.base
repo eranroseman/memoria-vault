@@ -1,4 +1,9 @@
 # Fleeting captures — distill or archive (proposed → archived; ADR-50).
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 filters:
   and:
     - file.inFolder("notes/fleeting")
@@ -11,7 +16,6 @@ views:
       and:
         - 'lifecycle == "proposed"'
     order:
-      - file.name
-      - title
+      - formula.note
       - origin
       - file.ctime

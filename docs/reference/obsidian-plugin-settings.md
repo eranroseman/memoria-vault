@@ -52,8 +52,8 @@ Settings with a fixed required value. All others are personal preference. See [e
 | `commitMessage` / `autoCommitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large auto-commits visible. Set both keys so timed and manual commits match. |
 | `autoBackupAfterFileChange` | `false` | Produces hundreds of commits per session when Hermes is writing; use scheduled commits instead. |
 | `autoSaveInterval` | `30` | Scheduled commit every 30 min (the replacement for per-change backup). `0` disables it. |
-| `pullBeforePush` | `true` | Required; prevents conflicts on multi-machine setups. |
-| `autoPullOnBoot` | `true` | Required; catches stale vaults when switching machines. |
+| `pullBeforePush` | `true` | Required; prevents conflicts once a remote is configured. |
+| `autoPullOnBoot` | `false` | Required default; fresh sandboxes and local-only vaults have no upstream branch, so startup must not emit a git pull error. Users with a remote can enable boot pulls after setting an upstream. |
 | `post-commit` hook | enabled | Load-bearing — enqueues Peer-reviewer verification for committed `projects/**/*.md` drafts. Source lives in `.githooks/`, installer copies it into `.git/hooks/`; it is not a `data.json` setting. Do not disable. |
 
 The host running Obsidian or the sandboxed test runtime must have a real `git`
@@ -61,7 +61,7 @@ binary on `PATH`. Without it, obsidian-git, pre-commit schema validation,
 verify-on-commit, rollback, and history are degraded; the installer now fails
 clearly instead of silently skipping those paths.
 
-> **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by `autoPullOnBoot` + `pullBeforePush`. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
+> **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by manual pulls plus `pullBeforePush`; enable `autoPullOnBoot` only after the vault branch has an upstream. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
 
 **Push behavior by deployment** (the two keys that actually exist):
 
@@ -99,7 +99,7 @@ clearly instead of silently skipping those paths.
 | Setting | Required value | Constraint |
 | --- | --- | --- |
 | `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; space switching lives in dashboard nav rows. |
-| `pageHeader` | Create linked claim note, write claim note, extract claims, link claim. | Note-local actions sit beside the active note, where their active-note defaults are visible. |
+| `pageHeader` | Capture fleeting, create linked claim note, write claim note, extract claims, link claim. | Fast capture and note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 
 ### modalforms

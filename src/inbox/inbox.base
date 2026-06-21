@@ -5,9 +5,12 @@ filters:
     - file.inFolder("inbox")
     - 'file.ext == "md"'
 formulas:
+  note: 'link(file.path, title)'
   age_days: '(now() - file.ctime).days.round(0)'
   loudness_rank: 'if(loudness == "block", 0, if(loudness == "alert", 1, if(loudness == "notice", 2, 3)))'
 properties:
+  formula.note:
+    displayName: "Note"
   formula.age_days:
     displayName: "Age (days)"
   formula.loudness_rank:
@@ -27,7 +30,7 @@ views:
       - property: formula.age_days
         direction: DESC
     order:
-      - title
+      - formula.note
       - action
       - finding
       - certainty
@@ -43,7 +46,7 @@ views:
       - property: formula.loudness_rank
         direction: ASC
     order:
-      - title
+      - formula.note
       - finding
       - agent_recommendation
       - loudness
@@ -57,7 +60,7 @@ views:
         - 'loudness == "notice"'
         - 'type == "flag"'
     order:
-      - title
+      - formula.note
       - finding
       - formula.age_days
   - type: table
@@ -69,7 +72,7 @@ views:
       property: type
       direction: ASC
     order:
-      - title
+      - formula.note
       - lifecycle
       - action
       - finding

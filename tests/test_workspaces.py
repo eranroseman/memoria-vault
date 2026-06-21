@@ -13,6 +13,7 @@ APP = SRC / ".obsidian" / "app.json"
 CORE = SRC / ".obsidian" / "core-plugins.json"
 COMMUNITY_PLUGINS = SRC / ".obsidian" / "community-plugins.json"
 PORTALS = SRC / ".obsidian" / "plugins" / "portals" / "data.json"
+OBSIDIAN_GIT = SRC / ".obsidian" / "plugins" / "obsidian-git" / "data.json"
 
 SPACES = {
     "inbox": "spaces/inbox.md",
@@ -125,6 +126,19 @@ def test_inbox_space_owns_fleeting_triage_queue():
     assert "distill, attach, or archive" in text
 
 
+def test_space_guide_links_use_canonical_pages_routes():
+    for relpath in SPACES.values():
+        text = (SRC / relpath).read_text(encoding="utf-8")
+        guide_links = re.findall(
+            r"\]\((https://eranroseman\.github\.io/memoria-vault/how-to-guides/[^)]+)\)",
+            text,
+        )
+        assert guide_links, f"{relpath} has no guide links"
+        assert all(link.endswith(".html") for link in guide_links), relpath
+        assert not any(link.endswith("/") for link in guide_links), relpath
+        assert not any(link.endswith(".md") for link in guide_links), relpath
+
+
 def test_space_dashboards_use_non_hidden_location():
     for relpath in SPACES.values():
         assert not relpath.startswith("system/"), f"{relpath} would be hidden by Portals"
@@ -163,6 +177,7 @@ def test_commander_ribbon_keeps_global_actions_only():
         "Memoria: resolve inbox card",
     ]
     expected_page_header = [
+        "Memoria: capture fleeting",
         "Memoria: create linked claim note",
         "Memoria: write claim note",
         "Memoria: extract claims",
@@ -225,6 +240,13 @@ def test_portals_ships_curated_folder_navigation_with_core_fallback():
     assert "portals" in roster
     assert "workspaces-plus" not in roster
     assert json.loads(CORE.read_text(encoding="utf-8"))["file-explorer"] is True
+
+
+def test_obsidian_git_does_not_pull_on_boot_without_upstream():
+    data = json.loads(OBSIDIAN_GIT.read_text(encoding="utf-8"))
+    assert data["autoPullOnBoot"] is False
+    assert data["pullBeforePush"] is True
+    assert data["autoPushInterval"] == 0
 
 
 def test_buttons_plugin_is_still_bundled_but_home_has_no_buttons():

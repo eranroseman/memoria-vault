@@ -5,6 +5,11 @@ filters:
         - file.inFolder("projects")
         - file.inFolder("inbox")
     - 'lifecycle != "archived"'
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "Active projects"
@@ -16,7 +21,7 @@ views:
       property: output_mode
       direction: ASC
     order:
-      - title
+      - formula.note
       - lifecycle
       - output_mode
       - active_thesis
@@ -33,7 +38,7 @@ views:
       property: evidence_saturation
       direction: ASC
     order:
-      - title
+      - formula.note
       - evidence_saturation
       - argument_stage
       - computed_at
@@ -47,7 +52,7 @@ views:
       property: gap_type
       direction: ASC
     order:
-      - title
+      - formula.note
       - gap_type
       - impact
       - on_path

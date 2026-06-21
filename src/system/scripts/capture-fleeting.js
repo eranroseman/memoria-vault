@@ -8,6 +8,7 @@
 
 const FORM_NAME = "memoria-fleeting-capture";
 const FLEETING_FOLDER = "notes/fleeting/";
+const TEMPLATE_PATH = "system/templates/fleeting.md";
 const { exists, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
@@ -53,18 +54,18 @@ async function writeFleetingNote(app, data) {
   const stamp = date + "-" + String(now.getHours()).padStart(2, "0") + String(now.getMinutes()).padStart(2, "0") + String(now.getSeconds()).padStart(2, "0");
   const title = data.title || firstLineTitle(data.body);
   const path = await uniquePath(adapter, FLEETING_FOLDER + stamp + "-" + slug(title, "fleeting") + ".md");
-  const frontmatter = [
-    "---",
-    "title: " + yamlString(title),
-    "type: fleeting",
-    "lifecycle: proposed",
-    "origin: human",
-    "created: " + date,
-    "---",
-    "",
-  ].join("\n");
-  await adapter.write(path, frontmatter + data.body.trim() + "\n");
+  const template = await adapter.read(TEMPLATE_PATH);
+  await adapter.write(path, renderFleetingTemplate(template, title, date, data.body));
   return path;
+}
+
+function renderFleetingTemplate(template, title, date, body) {
+  return String(template)
+    .replace(/["']\{\{VALUE:title\}\}["']/g, yamlString(title))
+    .replace(/\{\{VALUE:title\}\}/g, yamlString(title))
+    .replace(/\{\{DATE:YYYY-MM-DD\}\}/g, date)
+    .replace(/\{\{VALUE:body\}\}/g, body.trim())
+    .trimEnd() + "\n";
 }
 
 function normalizeFormData(data) {

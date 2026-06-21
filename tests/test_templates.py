@@ -65,11 +65,24 @@ def test_fleeting_template_keeps_origin_comment_out_of_yaml():
     assert "origin: human #" not in fm
 
 
-def test_fleeting_template_does_not_write_instructions_into_notes():
+def test_fleeting_template_carries_triage_options_callout():
     body = (TEMPLATES / "fleeting.md").read_text(encoding="utf-8")
-    assert "# Capture" not in body
-    assert "Origin values are" not in body
-    assert "The thought, quote, or idea" not in body
+    assert "> [!suggestions] Triage options" in body
+    assert "Promote to a claim" in body
+    assert "Attach to an existing source, claim, hub, or project" in body
+    assert "Capture or delegate a source chase" in body
+    assert "Archive or delete it once the action is done" in body
+    for command in (
+        "QuickAdd: Memoria: write claim note",
+        "QuickAdd: Memoria: capture source from URL",
+        "QuickAdd: Memoria: delegate task",
+        "QuickAdd: Memoria: archive fleeting note",
+    ):
+        assert f"action {command}" in body
+    assert body.count("type command") == 4
+    assert "type template" not in body
+    assert "type text" not in body
+    assert "type calculate" not in body
 
 
 def test_proposal_cards_carry_honesty_body():
@@ -90,6 +103,26 @@ def test_source_template_exposes_linked_claim_button():
     body = (TEMPLATES / "source.md").read_text(encoding="utf-8")
     assert "action QuickAdd: Memoria: create linked claim note" in body
     assert body.index("```button") > body.index("# Worth distilling")
+
+
+def test_claim_template_carries_action_buttons():
+    body = (TEMPLATES / "claim.md").read_text(encoding="utf-8")
+    assert "> [!suggestions] Claim actions" in body
+    assert "Link this claim to nearby claims and sources" in body
+    assert "Capture another source" in body
+    assert "Delegate follow-up work" in body
+    assert "Archive the claim" in body
+    for command in (
+        "QuickAdd: Memoria: link claim",
+        "QuickAdd: Memoria: capture source from URL",
+        "QuickAdd: Memoria: delegate task",
+        "QuickAdd: Memoria: archive claim note",
+    ):
+        assert f"action {command}" in body
+    assert body.count("type command") == 4
+    assert "type template" not in body
+    assert "type text" not in body
+    assert "type calculate" not in body
 
 
 def test_templates_surface_identity_type_lifecycle_first():

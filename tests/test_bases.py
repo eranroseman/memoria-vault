@@ -110,13 +110,40 @@ def test_base_properties_exist_in_schemas():
         assert not unknown, f"{b}: references properties not in any schema: {sorted(unknown)}"
 
 
+def test_base_views_start_with_clickable_note_links():
+    """Every Base row should expose the underlying note as the first visible field."""
+    for b in _bases():
+        data = yaml.safe_load(b.read_text(encoding="utf-8"))
+        formulas = data.get("formulas") or {}
+        properties = data.get("properties") or {}
+        assert "note" in formulas, f"{b}: missing clickable note formula"
+        assert str(formulas["note"]).startswith("link(file.path,"), (
+            f"{b}: note formula must link to file.path"
+        )
+        assert properties["formula.note"]["displayName"] == "Note", (
+            f"{b}: note formula should display as Note"
+        )
+        for view in data.get("views", []):
+            order = view.get("order", [])
+            assert order and order[0] == "formula.note", (
+                f"{b}::{view.get('name')} should start with formula.note"
+            )
+            assert not {"title", "name", "file.name"} & set(order), (
+                f"{b}::{view.get('name')} uses a non-clickable identity column"
+            )
+
+
 def test_inbox_base_has_needs_me_view():
     inbox = SRC / "inbox" / "inbox.base"
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
     views = {v.get("name"): v for v in data.get("views", [])}
     names = set(views)
     assert "Needs me" in names  # the Inbox space embeds this view by name
+    assert data["formulas"]["note"] == "link(file.path, title)"
+    assert data["properties"]["formula.note"]["displayName"] == "Note"
     needs_me_order = views["Needs me"]["order"]
+    assert needs_me_order[0] == "formula.note"
+    assert "title" not in needs_me_order
     assert "action" in needs_me_order
     assert "finding" in needs_me_order
 
@@ -152,7 +179,10 @@ def test_fleeting_base_matches_capture_template_home():
     names = {v.get("name") for v in quickadd.get("views", [])}
     assert "To process" in names
     views = {v.get("name"): v for v in quickadd.get("views", [])}
-    assert "title" in views["To process"]["order"]
+    assert quickadd["formulas"]["note"] == "link(file.path, title)"
+    assert quickadd["properties"]["formula.note"]["displayName"] == "Note"
+    assert views["To process"]["order"][0] == "formula.note"
+    assert "title" not in views["To process"]["order"]
 
 
 def test_weekly_review_reuses_fleeting_queue_without_double_listing():

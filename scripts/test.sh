@@ -57,9 +57,9 @@ l0() {
   run python3 -m py_compile scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py
   run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
-  run bash -n scripts/install.sh scripts/install/*.sh scripts/test-l2.sh
+  run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/test-l2.sh
   if command -v shellcheck >/dev/null 2>&1; then
-    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh
+    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
   # Vault lint over the live tree. dashboard-field-drift and design-system-drift are
   # GATED: dashboard field drift is a silent failure, and design drift means the

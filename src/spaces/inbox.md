@@ -46,8 +46,8 @@ Capture and global actions live in the ribbon; the space switcher is the nav row
 
 Step-by-step for working this space:
 
-- [Triage fleeting notes](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/triage-fleeting-notes)
-- [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions)
-- [Work the review queue](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/work-the-review-queue)
-- [Run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/run-the-weekly-review)
-- [Return to work](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/return-to-work)
+- [Triage fleeting notes](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/triage-fleeting-notes.html)
+- [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions.html)
+- [Work the review queue](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/work-the-review-queue.html)
+- [Run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/run-the-weekly-review.html)
+- [Return to work](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/return-to-work.html)

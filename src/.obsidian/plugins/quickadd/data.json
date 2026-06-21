@@ -20,6 +20,44 @@
       }
     },
     {
+      "id": "bcd5d90f-6e74-4e56-9099-0b61205088d7",
+      "name": "Memoria: archive fleeting note",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: archive fleeting note",
+        "id": "a2dbb3f3-9000-4cae-a60d-09d5bdf9fe6b",
+        "commands": [
+          {
+            "name": "archive-fleeting",
+            "type": "UserScript",
+            "id": "b7cc34f4-7059-4bc7-9a9c-1a238709793a",
+            "path": "system/scripts/archive-fleeting.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "1e92b12b-1594-4744-9c7b-47ad726985fd",
+      "name": "Memoria: archive claim note",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: archive claim note",
+        "id": "86009e03-5790-47f1-9f22-c4f6d2df2b0d",
+        "commands": [
+          {
+            "name": "archive-claim",
+            "type": "UserScript",
+            "id": "8675649a-a713-4087-ab97-f02764f94a55",
+            "path": "system/scripts/archive-claim.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "2cc964f1-b720-468b-8d2e-b5b14a890127",
       "name": "Memoria: capture from Zotero selection",
       "type": "Macro",
@@ -414,32 +452,20 @@
     {
       "id": "c5a18ecf-087e-4546-bf96-8941743b8a42",
       "name": "Memoria: write claim note",
-      "type": "Template",
+      "type": "Macro",
       "command": true,
-      "templatePath": "system/templates/claim.md",
-      "fileNameFormat": {
-        "enabled": true,
-        "format": "{{VALUE:claim title}}"
-      },
-      "folder": {
-        "enabled": true,
-        "folders": [
-          "notes/claims"
-        ],
-        "chooseWhenCreatingNote": false,
-        "createInSameFolderAsActiveFile": false,
-        "chooseFromSubfolders": false
-      },
-      "appendLink": false,
-      "openFile": true,
-      "fileOpening": {
-        "location": "tab",
-        "direction": "vertical",
-        "mode": "default",
-        "focus": true
-      },
-      "fileExistsBehavior": {
-        "kind": "prompt"
+      "macro": {
+        "name": "Memoria: write claim note",
+        "id": "8c4ac065-2021-4106-9b9e-4b51438f5254",
+        "commands": [
+          {
+            "name": "write-claim",
+            "type": "UserScript",
+            "id": "a7097da1-aaca-438f-b685-6dccf941adfd",
+            "path": "system/scripts/write-claim.js",
+            "settings": {}
+          }
+        ]
       }
     },
     {

@@ -62,7 +62,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/obsidian-git/data.json": "a67512f4f835585907820839d966d151ebc91ea523812c9922c84f8a3367e17b",
+        "plugins/obsidian-git/data.json": "e501f0a2d6dda684d99923b8a6adef7d66cef0b40984944161e347c959a42de2",
         "plugins/obsidian-git/main.js": "d1bcc50f05646aed708330b80251de755894e3b3bdf7f81e231a03b88212bbb5",
         "plugins/obsidian-git/manifest.json": "26f0ef6849027ee315989f539a846a42bd3a88112f025ceee6e303ff2f64be85",
         "plugins/obsidian-git/styles.css": "f5ab93f4d5b4dd1bd1e577864c5c79087f7adfd448ac346e0489e5847ce6922d"
@@ -94,7 +94,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/quickadd/data.json": "ad09481153ec8a1bd90c6033342bdc030e92af196d7539333076fdc5242208fc",
+        "plugins/quickadd/data.json": "ead562ae8859453e15f7d6b3acd1b960d5e0ffea2ecf2d42a18eb8a79c7c6270",
         "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
         "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
         "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"
@@ -110,7 +110,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/cmdr/data.json": "545949397efaf52c60bde14504b18d76bbd4914af76ff95736c75d070ce3b78c",
+        "plugins/cmdr/data.json": "938fdefdf7c72ac3b93ed4c64acea13ce69f52f508685861f30c849e8a7c5006",
         "plugins/cmdr/main.js": "ebfce0b5dbaac7dd46c8b51cd397a811020d079ab0bf931a64e20049d7510637",
         "plugins/cmdr/manifest.json": "c6df5e0aa6d389695a87850eeeaf836775e2cd01579f4e277d82bc7a99fbe5e8",
         "plugins/cmdr/styles.css": "91765c55d9cddfbd3a62dc06bf18dc3ea6ecb879c89f939a1e50cebd3c31c28c"
@@ -126,7 +126,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/modalforms/data.json": "d5781453766d70f2e931b0454c4e43bf008e1be18f8dc0d49f8991f0454c5369",
+        "plugins/modalforms/data.json": "0ede17c1bcbdea747149d9141c69f445c5d81699c41c77404fadc73076bc6110",
         "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
         "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"

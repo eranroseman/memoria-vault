@@ -210,6 +210,7 @@
         {
           "name": "title",
           "label": "Claim title",
+          "description": "Short label for the note and Base row.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -218,6 +219,7 @@
         {
           "name": "maturity",
           "label": "Maturity",
+          "description": "Start at seedling unless the claim is already well supported.",
           "isRequired": true,
           "input": {
             "type": "select",
@@ -241,6 +243,7 @@
         {
           "name": "sources",
           "label": "Sources",
+          "description": "Pick the catalog paper(s) whose citekeys support this claim.",
           "isRequired": true,
           "input": {
             "type": "multiselect",
@@ -251,6 +254,7 @@
         {
           "name": "topics",
           "label": "Topics",
+          "description": "Optional vocabulary tags for retrieval and hub thresholds.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -288,6 +292,7 @@
         {
           "name": "claim",
           "label": "Claim statement",
+          "description": "One durable, source-grounded assertion in your own words.",
           "isRequired": true,
           "input": {
             "type": "textarea"

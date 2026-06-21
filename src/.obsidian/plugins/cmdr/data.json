@@ -41,6 +41,12 @@
   "statusBar": [],
   "pageHeader": [
     {
+      "id": "quickadd:choice:7c9406c9-ba8a-454f-a813-1f420795ed07",
+      "icon": "inbox",
+      "name": "Memoria: capture fleeting",
+      "mode": "any"
+    },
+    {
       "id": "quickadd:choice:d93115ab-346a-4f65-b107-4af5b9a6f8e1",
       "icon": "file-plus-2",
       "name": "Memoria: create linked claim note",
