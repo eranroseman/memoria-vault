@@ -19,7 +19,9 @@ Four passes, in increasing trust:
 
 ## 0. The state of play — read before §1
 
-### 0a. What we measured on-box (highest confidence)
+### 0a. KNOWN — measured on-box, in-domain (the only rows we actually know)
+
+_These ~6 rows are the document's only unbiased instrument. Everything outside them (§0b, §3–§6 rationale) is a **warning or a prior**, not knowledge. By volume the doc is mostly literature/refutation; by knowledge it is this table. Both the confirmation pass (built to confirm → confirmed) and the refutation pass (built to refute → refuted) are method artifacts; only measurement escapes that._
 
 Run on the RTX 4060 Ti with `qwen2.5:7b` — the local **test** model. The live engines call an **LLM API** (§0c), so these are **pessimistic floors**: a more-capable API does at least as well.
 
@@ -33,7 +35,9 @@ Run on the RTX 4060 Ti with `qwen2.5:7b` — the local **test** model. The live 
 
 Caveat for all of the above: hand fixtures (~20–30 pairs) + abstract/intro text — **go/no-go smoke tests, not benchmarks**. Re-run on real vault claims (`current-state-baseline.md`) before any threshold is trusted.
 
-### 0b. What the literature refutes but we couldn't test here (warnings, ranked by blast radius)
+### 0b. WARNINGS — others' measurements, not ours (not in-domain knowledge, ranked by blast radius)
+
+_These are real findings from other people's studies, in other domains — credible enough to watch, not validated for Memoria. Each one's remedy is to **convert it into an §0a row** by measuring in-domain (gate logs, vault corpus), not to read more papers. Until then they are warnings, not facts._
 
 1. **Human + machine ≯ machine — the gate's premise may be false.** Jacobs 2021 (N=220): clinician+ML ≈ clinician-alone, both far below ML-alone; a *wrong* output dragged the human *below* baseline. If this holds, "PI approves" doesn't improve correctness and the gate is theater. The **existential risk** — and now cheaply testable (§1, §5), because the gate plugin and telemetry are already built. **ADR-03/57/24.**
 2. **Atomic-as-stored-unit hurts QA** — the contextual round is the retrieval unit, the atom an index over it (LongMemEval, Hu 2026).
@@ -47,7 +51,7 @@ Caveat for all of the above: hand fixtures (~20–30 pairs) + abstract/intro tex
 - **Retrieval is `qmd` (deployed).** A shared **local hybrid index — BM25 + vector + cross-encoder rerank** — read-only MCP+CLI behind Co-PI/Librarian/Writer/Peer-reviewer and the pre-file gate (ADR-38; `docs/reference/search.md`). No network leaves the machine. §3.1/§4.1/§4.3 are **deltas to qmd**; the baseline-to-beat **is qmd**. The cosine §3.1 retires-as-arbiter is qmd's vector half; the reranker §1 tests is qmd's existing cross-encoder.
 - **Built vs proposed (the grounding map).** *Built (accepted ADR + code):* `qmd` (38), **`cluster_mcp`** (33: NetworkX communities + JSON-Canvas + **BERTopic/UMAP+HDBSCAN**), the **`memoria-policy-gate`** plugin (28/03/57), **contradictions dashboard** (09) + **supersession** (10), deterministic ingest (30), telemetry (104/105/106), spaces (101). *Proposed / not built (shaping, not amending):* LTR-triage (89), claim-sentence-classification (90), discovery-scoring (92), keyphrase (93), record-linkage dedup (94), relation-vocab (98), MASSW-aspects (99), projection-engine (102/103).
 - **Content scope.** Papers (Zotero, ADR-05/06/99) *plus* the PI's own notes. **[paper-only]** items (§3.3 primary-vs-review weighting, §4.4 citation-intent) need a DOI + citation graph and don't apply to non-paper notes.
-- **Single PI-supervision budget.** One human, no co-PI. NLI calibration, POTENTIAL review, novelty escalation, judge validation, exemplar corrections, schema spot-checks all draw on the *same* attention. Set one annual label ceiling; design for **one PI action emitting many signals**; model gate throughput, not just label count.
+- **Single PI-supervision budget — do the arithmetic, because it breaks the program.** One human, no co-PI. ~9 sinks draw the *same* attention: Jacobs ground-truth re-checks, NLI threshold calibration, judge-vs-PI validation, the POTENTIAL middle, novelty escalation, exemplar corrections, relationship-extraction fixtures, evidence-strength tagging, schema spot-checks. Two hard consequences the rest of this doc must respect: **(1) Jacobs-grade rigor is unreachable.** Jacobs was N=220; a single PI realistically labels dozens, not hundreds — so every in-domain measurement here is **low-power, directional-only**, and a clean "the gate helps / doesn't" verdict is *not* on offer. Design the measurements to ride on normal use (one approve/reject → many signals), never as standalone studies. **(2) The proposal queue is a budget line, and at low precision it dominates.** A propose-only feature at Mitchell's ~28% precision yields ~2–3 bad proposals per good one; a 50-flag/week queue ≈ 35 wasted reviews/week ≈ the whole budget. So **no propose-only capability ships without a measured precision floor _and_ a volume cap**; "propose-only" is not free — it is the most expensive default (see §3.1's re-tier).
 - **Need-push, not literature-pull.** §1's order is research-derived, not yet validated against observed alpha.9 pain. Fill `current-state-baseline.md` and re-rank before committing.
 - **Benchmarks are external.** Point estimates are one paper's setup; the *direction* survives, the *digits* must be re-measured in-domain.
 
@@ -55,25 +59,37 @@ Caveat for all of the above: hand fixtures (~20–30 pairs) + abstract/intro tex
 
 Two grounded facts collide: API ingest carries **cost + data-egress** on the highest-volume path, *and* the local test model already does structured extraction competently (6/6 aspects, 90% warrants). Together they reframe the qwen results as evidence that **local extraction is viable** — which matters precisely because API-on-every-ingest is expensive and sends vault text off-machine. This raises (does **not** decide): *should high-volume ingest extraction run on a local model, with the API reserved for low-volume hard judging?* Flagged as §8.1; not assumed here.
 
+### 0e. Error-cost model (N=1) — and the re-tier it forces
+
+This is **one researcher's** vault, and error costs are **not flat** — so engineering every capability to the same precision is over-building. The tiers:
+
+| Error class | Cost for an N=1 PI | Bar |
+|---|---|---|
+| **Faithfulness / provenance** — a claim cites a source that doesn't support it | **High — trust-destroying.** If the vault can't be trusted, it is worthless; the harm compounds silently. | **Keep rigorous** (§3.2). |
+| **Fabricated auto-applied edit/merge** — corrupts canonical state | **High — but already neutralized** by propose-only + the gate. | Structural, not precision. |
+| **Missed contradiction / stale claim resurfaces** | **Low — self-correcting.** The PI reads it, notices, moves on; nothing compounds. | **Soft-flag, not high precision.** |
+| **Over-linking / false contradiction flag** | **Low-to-moderate — but bills the scarce budget** (§0c proposal queue). | Cap volume; precision floor. |
+
+**The re-tier this forces:** the **faithfulness half** of §3 (the §3.2 warrant checker, citekey resolution, abstain-when-ungrounded) stays high-bar — it guards the high-cost error. The **contradiction-completeness half** (the §3.1 NLI + decomposed variable-match gate + MaxSAT apparatus) is **over-built for an error that's cheap to make and self-correcting**, and it bills the scarcest resource at low precision. So for alpha.9 it **collapses to a soft-flag** (§3.1); the precision apparatus is deferred until in-domain data shows the miss actually costs something. This deletes the most-engineered half of the agenda by design, not by caveat.
+
 ---
 
 ## 1. What to do for alpha.9 — re-pointed at deployed components
 
-Re-ordered after grounding. The first two are **cheap tests against already-built components** that can change everything downstream; ship the measured-green items alongside; defer the unbuilt.
+Re-ordered after the critiques. **#0 is the long pole — start it today**, because its data accrues over weeks and gates everything below it. Then the cheap deterministic ship-items and one cheap test. The big precision builds are **deferred by the §0e error-cost model**, not sequenced.
 
-**Near-term tests (cheap, deployed component, high information value):**
-1. **Evaluate `qmd`'s existing reranker.** qmd already cross-encoder-reranks, and off-the-shelf cross-encoders *hurt* on reasoning-relevance (Wei 2026) — the exact cross-paper queries Memoria depends on. Test qmd-rerank-on vs -off over ~20 real reasoning queries. Possible **quick win** (disable a hurting stage) or a real gap. (§4.1)
-2. **Instrument the Jacobs check on the built gate.** "Do PI-approved writes actually beat raw engine writes?" The gate plugin + telemetry planes already exist (ADR-28/104/105/106), so this is **wiring, not building** — and it's the existential question (§0b.1). (§3.5, §5)
+**0. START OBSERVING REAL USAGE TODAY (the actual #1).** Switch on **gate approve/reject logging + a periodic ground-truth re-check** (wiring the built gate plugin + telemetry, ADR-28/104/105/106), and **begin filling `current-state-baseline.md`** from real runs. This is the long pole: it's the only source of the in-domain data that (a) answers the existential Jacobs question (§0b.1) and (b) *re-ranks everything below* — until it returns, this §1 ordering is the literature-pull the doc tells you not to trust (§0c need-push). Everything else proceeds in parallel; this is the clock that must start now.
 
-**Ship (measured-green, cheap because they amend built components):**
-3. **Constrained-decoding engine contract** (§3.6) — *measured 6/6*; amends built ingest (ADR-30).
-4. **Model-free warrant checker** (§3.2) — *measured 90% verbatim*; a new check in the built gate plugin.
-5. **Epistemic-status claim fields** (§3.3) — extends the built uncertainty-flag (ADR-56); precondition for §3.1's gate.
+**Ship (cheap, deterministic, measured-green — amend built components):**
+1. **Constrained-decoding engine contract** (§3.6) — *measured 6/6*; amends built ingest (ADR-30).
+2. **Model-free warrant checker** (§3.2) — *measured 90% verbatim*; guards the **high-cost faithfulness error** (§0e); a new check in the built gate plugin.
+3. **Epistemic-status claim fields** (§3.3) — extends the built uncertainty-flag (ADR-56).
+4. **Contradiction soft-flag** (§3.1, re-tiered) — surface qmd's high-similarity pairs in the built dashboard as "possible conflict — check?"; **no NLI, no MaxSAT** for alpha.9 (§0e: the miss is low-cost).
 
-**Build with care (measured-partial):**
-6. **NLI relationship verdict + decomposed variable-match gate** on top of qmd (§3.1) — precision win, measured recall cost; propose-only.
+**One cheap test (instant, may be a quick win):**
+5. **Evaluate `qmd`'s existing reranker** — qmd already cross-encoder-reranks, and cross-encoders *hurt* on reasoning-relevance (Wei 2026); test rerank-on vs -off over ~20 real queries. Disable-a-hurting-stage win or a real gap. (§4.1)
 
-**Defer past alpha.9** (proposed/unbuilt, or earned only after the tests): qmd tuning beyond the reranker test (§4.1), the typed graph (must beat qmd — §0b.3), dedup/keyphrase/LTR (§4.2/§4.3, all proposed), the exemplar store (§4.5).
+**Deferred by §0e / §0c, not sequenced** (build only if in-domain data shows the cost): the full **NLI + decomposed-gate + MaxSAT** contradiction engine (§3.1 — gated on measured proposer precision *and* a measured cost-to-missing); the gate **router** (§3.5 — only after the Jacobs check returns); qmd tuning beyond the reranker test; the typed graph (must beat qmd, §0b.3); dedup/keyphrase/LTR (§4.2/§4.3, all proposed); the exemplar store (§4.5).
 
 **Explicitly NOT doing:** QLoRA (refuted); ripping out cosine wholesale (it's qmd's vector half — keep it as the retriever, retire only its *arbiter* role); auto-applied contradiction/supersession links (propose-only); **blanket self-consistency** (§3.6 — an API bill now, and the API is reliable enough at structure to skip it there).
 
@@ -94,13 +110,13 @@ Re-ordered after grounding. The first two are **cheap tests against already-buil
 
 ## 3. Sharpenings — amend the built components
 
-### 3.1 Contradiction / dedup / supersession: NLI on top of `qmd`, gated by structured variable-match — **Retire (cosine-as-arbiter) + Amend ADR-09, ADR-10, ADR-38 (built); shape ADR-94** · status: measured-partial
+### 3.1 Contradictions — a cheap soft-flag for alpha.9; the NLI/gate apparatus deferred — **Amend ADR-09, ADR-10 (built); the NLI build shapes ADR-94, deferred** · status: re-tiered by §0e
 
-**What.** This sits **on top of `qmd`, not instead of it**: qmd retrieves candidate pairs; a **local NLI comparator** (FEVER tri-class SUPPORTED/REFUTED/NOTENOUGHINFO, carrying its evidence sentence) gives the **relationship verdict** over those candidates; the verdict feeds the **built contradictions dashboard** (ADR-09) and **supersession** (ADR-10). A contradiction/dedup edge additionally requires a **decomposed variable-match** — `(entity, attribute, direction)` as *separate* fields (§3.3), entity+attribute match with direction-conflict — **never a holistic LLM "same variable?" call**. What's retired is qmd's **vector similarity as the contradiction *arbiter*** (the pre-file gate, ADR-38), not qmd as the retriever. Edges **proposed, never auto-applied**.
+**What (alpha.9).** A **soft-flag only.** `qmd` already surfaces high-similarity claim pairs; surface those to the **built contradictions dashboard** (ADR-09) as a low-confidence "**possible conflict — check?**" marker, with the pair and their source spans. No NLI model, no decomposed gate, no MaxSAT for alpha.9. Nothing auto-applies; the PI skims and dismisses cheaply. This is what the §0e error-cost model buys: a missed/late contradiction is **self-correcting and low-cost**, so it does not justify a precision engine.
 
-**Why + measured.** Cosine is negation-blind (0/8, §0a). NLI clears that trap (8/8) but **confidently mints false contradictions on different-variable pairs** (0.94–1.00) — a confidence threshold can't filter it, so the variable-match gate is a **precondition**. The gate measured: holistic recall 1/6 → decomposed 4/6, FP dropped 6/7; the residual losses (negation, argument-swap, same-attribute/different-value) are **relationship-extraction failures**, now the hard part. Prefer `MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli`; read `id2label` (never hardcode).
+**Why this is re-tiered down, not up.** The measurement (§0a) is real — cosine is negation-blind (0/8) and NLI on its own **confidently mints false contradictions** (0.94–1.00 on different-variable pairs), recoverable only by a decomposed variable-match gate that itself measured 4/6 recall and still leaks (negation, argument-swap). So the *full* fix is an NLI comparator + `(entity, attribute, direction)` extraction + MaxSAT — a large build whose residual is **relationship-extraction quality** (§8.5). Under §0e that build is **over-engineered for a low-cost error**, and under §0c its propose-only queue (~28% precision, Mitchell) would dominate the supervision budget. So it is **deferred**, not shipped — gated on in-domain data (proposer precision on real flags, §1) showing the miss actually costs something.
 
-**Concrete.** Local ANLI/FEVER NLI under MCP (<0.6 GB) over qmd candidates; verdict gated by decomposed variable-match; MaxSAT consistency only over *gated* edges (ConCoRD/Mitchell 2022); track **proposer precision** before any promotion (least-reliable capability); keep the HANS/trap + different-variable NEUTRAL fixtures as regression tests.
+**Deferred build (only if the data justifies it).** Local ANLI/FEVER NLI (`MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli`, read `id2label`) over qmd candidates → decomposed variable-match gate → MaxSAT over gated edges only (ConCoRD/Mitchell 2022); keep the HANS/trap + NEUTRAL fixtures as its regression set. Trigger: measured proposer precision high enough **and** a measured cost to missing contradictions. Cosine stays qmd's retriever throughout; only its *arbiter* role is retired (a soft-flag is not an arbiter).
 
 ### 3.2 Model-free warrant checker in the gate plugin — **Amend ADR-03, ADR-57, ADR-79 (built `memoria-policy-gate`)** · status: measured ✓
 
@@ -114,7 +130,7 @@ Re-ordered after grounding. The first two are **cheap tests against already-buil
 
 **What.** Every claim/relation carries: uncertainty flag, source-span provenance grade (complete/partial/broken), two-axis confidence, source-document-type **[paper-only]** (review/primary/preprint) + evidence-strength, a `source_anchor`. Contradiction/supersession privilege primary evidence over echoed consensus.
 
-**Why.** LM fluency is not knowledge (Bender 2021). The `(context, variables, relationship)` decomposition is what §3.1's gate consumes — build it once. **Version-pin epistemic metadata** to model + prompt — *more* important with an API the provider silently updates. Self-consistency can feed uncertainty, but **only on closed-label steps** and at API cost (§3.6).
+**Why.** LM fluency is not knowledge (Bender 2021). The uncertainty flag + provenance grade + source-type ship now (they serve the high-cost faithfulness tier, §0e/§3.2); the heavier `(context, variables, relationship)` decomposition is only needed by §3.1's **deferred** NLI gate, so build that slice only if/when that gate is. **Version-pin epistemic metadata** to model + prompt — *more* important with an API the provider silently updates. Self-consistency can feed uncertainty, but **only on closed-label steps** and at API cost (§3.6).
 
 **Concrete.** Extend the built claim/source-note frontmatter; backfill is open (§8).
 
@@ -177,13 +193,15 @@ Re-ordered after grounding. The first two are **cheap tests against already-buil
 
 ## 7. Refuted / dropped — so they aren't re-proposed
 
-- **QLoRA fine-tuning** — the live engine is an API (not fine-tuneable), and the test floor already clears the task (§3.6).
-- **Holistic LLM "same variable?" gate** — recall 1/6 (§3.1). Decomposed only.
-- **"NLI cleanly replaces cosine"** — narrowed; NLI fabricates different-variable contradictions, needs the structured gate; cosine stays as qmd's retriever.
-- **Greenfield retriever / clustering stack** — `qmd` and `cluster_mcp` already exist; these are deltas, not builds (§4.1/§4.2).
-- **Blanket self-consistency** — an API bill now, and the API is reliable enough at structure to skip it there (§3.6).
-- **Atomic-as-stored-unit** — narrowed to *index* (§0b.2). **Typed graph "at scale"** — must beat qmd (§0b.3).
-- **"Self-consistency is a free confidence signal"** / **"Least-privilege is sufficient security"** / **per-item gate** — all narrowed (§0).
+**Removal is a decision held to the same evidential bar as addition.** A drop on n=6–8 fixtures is no more certain than an *add* on them — at n=6 you cannot tell 100% from 70%. Each item below is tagged **[architecture]** (grounded in a structural fact — solid) or **[provisional, n≈6]** (grounded in a smoke test — re-confirm in-domain before treating as settled).
+
+- **QLoRA fine-tuning** — **[architecture]** the live engine is an API (not fine-tuneable); the n=6 result only corroborates (§3.6).
+- **High-precision contradiction engine for alpha.9** — **[architecture/error-cost]** deferred by §0e (the miss is low-cost), not by a measurement — solid as a *priority* call; the NLI numbers behind it are themselves [provisional, n≈6].
+- **Holistic LLM "same variable?" gate** — **[provisional, n≈6]** recall 1/6 on the fixture; directionally clear but re-confirm. Decomposed if ever built.
+- **"NLI cleanly replaces cosine"** — **[provisional, n≈6]** + literature (BRIGHT negation-blindness corroborates); cosine stays as qmd's retriever regardless.
+- **Greenfield retriever / clustering stack** — **[architecture]** `qmd` and `cluster_mcp` already exist; these are deltas (§4.1/§4.2).
+- **Blanket self-consistency** — **[architecture]** an API per-token bill now; reserve for genuine uncertainty (§3.6).
+- **Atomic-as-stored-unit** / **typed graph "at scale"** / **"least-privilege is sufficient"** / **per-item gate** — **[warning, §0b]** narrowed on *others'* measurements, not ours — provisional until in-domain.
 
 ---
 
@@ -206,7 +224,7 @@ Re-ordered after grounding. The first two are **cheap tests against already-buil
 | Amend (built) | 30 | §3.6 constrained decoding | measured ✓ ship |
 | Amend (built) | 03, 57, 79 | §3.2 warrant checker | measured ✓ ship |
 | Amend (built) + shape | 56; 90, 52, 50 | §3.3 epistemic status | ship |
-| Retire+Amend (built) | 09, 10, 38; shape 94 | §3.1 NLI on qmd + decomposed gate | measured-partial |
+| Amend (built) | 09, 10 | §3.1 contradiction **soft-flag** (NLI/gate apparatus deferred by §0e) | ship soft-flag; NLI deferred |
 | Amend (built) | 70, 81, 41, 03 | §3.5 gate router | **measure first** |
 | Amend (built) | 10, 09; shape 92 | §3.4 supersession + temporal | |
 | Validate (caveated) | 03, 57, 32, 46, 28, 27, 01, 22, 24 | §2 skeleton | strong form contested |
