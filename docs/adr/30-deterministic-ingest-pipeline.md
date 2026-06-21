@@ -31,6 +31,12 @@ superseded_by: []
 > writes → `review_status: requested`); the Tier-1 merge is grounded by the 867-paper
 > spike. Tracked in the v0.1 release plan as G10.
 
+> **Verified on-box 2026-06-21 (partial — the tag-suggestion layer is absent).** The
+> deterministic spine above is real, but the embedding/zero-shot **tag-suggestion layer**
+> that this ADR frames as Tier-1's value is **not built**: `classify` silently diverged to a
+> deterministic OpenAlex-topic mapping, and the full-text chain ships only Unpaywall → PMC →
+> local-PDF. The "Implemented and validated live" callout overstates this slice. Tracked in #827.
+
 ## Context
 
 Capture-from-Zotero → ingest is the system's primary intake path but the least-built part of it: the command-palette reference marks the API-POST capture commands as **designed, not shipped**, and the only operable path is a manual Librarian CLI session ([Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md)). The existing `obsidian-paper-note` skill is **fully LLM-orchestrated** — costly, non-reproducible, and fragile (its PDF dependency `ocr-and-documents` currently fails to install) for work that is overwhelmingly mechanical.

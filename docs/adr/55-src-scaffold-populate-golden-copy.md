@@ -12,6 +12,14 @@ superseded_by: []
 
 # ADR-55: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable
 
+> **Verified on-box 2026-06-21 (one part deliberately omitted).** The SHA-256 manifest +
+> `system/` deny + `restore` are built and tested (and are an AGENTS.md "done-right"
+> exemplar — named mechanism + a check). But the `golden_restore.py upgrade` three-way
+> reconcile this ADR specifies is **deliberately not shipped** —
+> `tests/test_golden_restore.py::test_upgrade_command_is_not_shipped` pins its absence. The
+> shipped decision (no upgrade command) is the truth; this ADR's prose is stale on that
+> point. Tracked in #827.
+
 ## Context
 
 The repo carried a top-level `vault/` — effectively a live-vault template — which
