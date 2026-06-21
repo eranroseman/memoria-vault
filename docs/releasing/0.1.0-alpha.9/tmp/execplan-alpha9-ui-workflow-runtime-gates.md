@@ -200,7 +200,7 @@ their result is recorded.
 - [x] G2 -- Capability-boundary hardening implemented and verified.
 - [x] G3 -- Supersession correctness implemented and verified.
 - [ ] G4 -- ADR/docs reconciliation implemented and verified.
-- [ ] G5 -- Runtime-version decision recorded and verified.
+- [x] G5 -- Runtime-version decision recorded and verified.
 - [ ] G1/G6 -- UI workflow and docs integrity accepted.
 - [ ] Closeout -- tmp disposition complete; release parent and milestone closed.
 
@@ -228,6 +228,14 @@ their result is recorded.
   five profile configs instead of claiming Hermes snapshots for MCP writes. ADR-27 now
   says Memoria's reversibility evidence is audit hash pairs plus golden restore, and
   `tests/test_profiles.py` pins that profiles do not ship dead checkpoints config.
+- 2026-06-21 -- #828/G5 decision: stay on the installed Hermes v0.14.0 runtime for
+  alpha.9 rather than upgrading mid-checkpoint. Evidence rerun on the stay-on path:
+  `hermes --version` reports `Hermes Agent v0.14.0 (2026.5.16)`;
+  `python src/.memoria/mcp/hermes_contract_doctor.py --vault /home/eranr/Memoria-test --json`
+  returned `ok: true` for 42 covered direct/egress tools; and
+  `python src/.memoria/mcp/board_export.py --cost-doctor` returned `ok: true` for the
+  checked profile session stores. 0.17 findings remain isolated-source claims until a
+  later upgrade checkpoint verifies them on-box.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file
