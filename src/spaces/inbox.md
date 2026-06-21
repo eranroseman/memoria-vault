@@ -4,6 +4,7 @@ type: space
 lifecycle: current
 dashboard: space
 space: inbox
+cssclasses: memoria-space
 ---
 
 # Inbox

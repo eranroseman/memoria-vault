@@ -92,7 +92,7 @@ def test_homepage_opens_inbox_space_on_startup():
     assert main["kind"] == "File"
     assert main["value"] == "spaces/inbox"
     assert main["openOnStartup"] is True
-    assert main["openMode"] == "Replace all open notes"
+    assert main["openMode"] == "Replace last note"
     assert main["view"] == "Reading view"
     assert main["pin"] is False
 
@@ -103,6 +103,7 @@ def test_space_dashboards_exist_and_link_to_each_other():
         assert path.is_file(), f"{relpath} missing"
         text = path.read_text(encoding="utf-8")
         assert f"space: {space}" in text
+        assert "cssclasses: memoria-space" in text
         assert "![[" in text, f"{relpath} does not embed any Bases views"
         for other, other_relpath in SPACES.items():
             if other == space:
@@ -142,6 +143,15 @@ def test_space_guide_links_use_canonical_pages_routes():
 def test_space_dashboards_use_non_hidden_location():
     for relpath in SPACES.values():
         assert not relpath.startswith("system/"), f"{relpath} would be hidden by Portals"
+
+
+def test_space_dashboards_hide_obsidian_properties_panel():
+    snippet = (SRC / ".obsidian" / "snippets" / "memoria-property-badges.css").read_text(
+        encoding="utf-8"
+    )
+    assert ".markdown-preview-view.memoria-space .metadata-container" in snippet
+    assert ".markdown-source-view.memoria-space .metadata-container" in snippet
+    assert "display: none;" in snippet
 
 
 def test_every_pinned_file_exists_under_src():

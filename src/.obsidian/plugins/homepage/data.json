@@ -5,7 +5,7 @@
       "value": "spaces/inbox",
       "kind": "File",
       "openOnStartup": true,
-      "openMode": "Replace all open notes",
+      "openMode": "Replace last note",
       "manualOpenMode": "Keep open notes",
       "view": "Reading view",
       "revertView": true,

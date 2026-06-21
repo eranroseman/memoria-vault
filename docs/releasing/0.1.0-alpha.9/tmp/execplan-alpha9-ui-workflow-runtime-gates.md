@@ -243,6 +243,14 @@ their result is recorded.
   docs-doctor scope, Project gate Bases status, ADR-106 cost-doctor contract wording,
   ADR-30 deferred tag/full-text/Tier-2 layers, ADR-56/78 implementation-status notes,
   ADR-81 `spaces/`, and stale #697/#736 readiness trackers.
+- 2026-06-21 -- G1/#807 source-side acceptance pass: space notes now carry a
+  `memoria-space` CSS class and the shipped snippet hides their Obsidian
+  Properties panel; Homepage opens the Inbox by replacing the active note instead
+  of rebuilding all tabs; the Zotero capture script parses common Better BibTeX
+  JSON-RPC result shapes instead of assuming one object map. Verified with focused
+  UI tests, full `scripts/test.sh all`, cspell, `~/Memoria-test` refresh, golden
+  restore check, and deployed-file inspection. Attended S5 still needs Obsidian GUI
+  confirmation.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file

@@ -410,6 +410,9 @@ def test_zotero_capture_uses_bbt_json_rpc_not_cayw():
     assert '"method":"item.citationkey"' in script
     assert '"params":["selected"]' in script
     assert "parseSelectedCitekeys(raw)" in script
+    assert "citekeysFromResult(first.result)" in script
+    assert "collectCitekeys(result, keys)" in script
+    assert "citationKey" in script
     assert "better-bibtex/cayw" not in script
     assert "format=biblatex" not in script
     assert "format=json" not in script
