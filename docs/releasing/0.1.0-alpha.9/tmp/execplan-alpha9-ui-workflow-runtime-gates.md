@@ -236,6 +236,13 @@ their result is recorded.
   `python src/.memoria/mcp/board_export.py --cost-doctor` returned `ok: true` for the
   checked profile session stores. 0.17 findings remain isolated-source claims until a
   later upgrade checkpoint verifies them on-box.
+- 2026-06-21 -- G4 second slice for #827: reconciled stale accepted-ADR prose where
+  code was already correct, including homepage `spaces/inbox`, the one-way
+  `agent_recommendation` rename, eval-task homes, native Obsidian MCP test coverage,
+  retraction as an Operations sweep, paused release-please workflow, ADR-73
+  docs-doctor scope, Project gate Bases status, ADR-106 cost-doctor contract wording,
+  ADR-30 deferred tag/full-text/Tier-2 layers, ADR-56/78 implementation-status notes,
+  ADR-81 `spaces/`, and stale #697/#736 readiness trackers.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file

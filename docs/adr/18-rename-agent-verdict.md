@@ -14,11 +14,11 @@ superseded_by: []
 
 > **Accepted / implemented in v0.1 (2026-06-01).** Renamed across the card schema,
 > dashboards, the Linter SOUL.md, and the docs in one coordinated pass. The old
-> name remains only in historical references and runtime compatibility readers.
+> name remains only in historical references.
 >
-> **Compatibility note (2026-06-16).** Runtime readers may retain a narrow
-> `agent_verdict` fallback while old board cards age out; new writes and public
-> schema/docs use `agent_recommendation`.
+> **Compatibility note (2026-06-21).** Runtime readers intentionally do **not**
+> fall back to `agent_verdict`; the migration is one-way and tests pin that legacy
+> fields are ignored. New writes and public schema/docs use `agent_recommendation`.
 
 ## What
 

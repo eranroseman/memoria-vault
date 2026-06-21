@@ -33,9 +33,12 @@ superseded_by: []
 
 > **Verified on-box 2026-06-21 (partial — the tag-suggestion layer is absent).** The
 > deterministic spine above is real, but the embedding/zero-shot **tag-suggestion layer**
-> that this ADR frames as Tier-1's value is **not built**: `classify` silently diverged to a
+> that this ADR frames as Tier-1's value is **not built**: `classify` intentionally runs a
 > deterministic OpenAlex-topic mapping, and the full-text chain ships only Unpaywall → PMC →
-> local-PDF. The "Implemented and validated live" callout overstates this slice. Tracked in #827.
+> local PDF. The "Implemented and validated live" callout applies to the spine, not to the
+> full Tier-1 value layer. Treat tag suggestion, S2ORC/CORE/arXiv/OCR extraction, and Tier-2
+> NLI/code-repo enrichment as deferred follow-up work unless a later ADR or issue implements
+> them.
 
 ## Context
 

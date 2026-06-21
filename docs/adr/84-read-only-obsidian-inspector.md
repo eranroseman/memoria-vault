@@ -53,4 +53,6 @@ surface and raise policy-gate complexity for a debugging pane.
 
 - **Supersedes:** [ADR-58](58-adjacent-tool-integrations.md).
 - **Related decisions / Depends on:** [ADR-32](32-external-access-over-mcp.md).
-- **Tracking issue:** [#697](https://github.com/eranroseman/memoria-vault/issues/697).
+- **Tracking issue:** [#697](https://github.com/eranroseman/memoria-vault/issues/697)
+  (implementation-ready tracker; closed after the plugin shipped and tests covered
+  the read-only surface).

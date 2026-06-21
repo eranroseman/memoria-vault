@@ -12,7 +12,7 @@ superseded_by: []
 
 # ADR-11: vault-eval as a maintenance capability
 
-> **Implementation status: shipped.** The gold set, the lane dispatcher (`operations/telemetry/eval/eval_dispatch.py`), the non-committing scratch contract, and the quarterly cron shipped first (0.1.0-alpha.1). The **scoring + observability** half landed with [#424](https://github.com/eranroseman/memoria-vault/issues/424): a deterministic scorer (`operations/telemetry/eval/eval_score.py` — the Linter's zero-LLM, report-only discipline, hosted with the sweeps engines beside the dispatcher) reads each card's machine-readable result block off the board, computes recall@k / support-rate / FAMA, appends per-run scores to `system/metrics/eval/runs.jsonl`, and the `eval-trend` dashboard renders the trend. The lane's rubric self-score on the card is recorded for comparison, never aggregated.
+> **Implementation status: shipped.** The gold set, the lane dispatcher (`operations/telemetry/eval/eval_dispatch.py`), the non-committing scratch contract, and the quarterly cron shipped first (0.1.0-alpha.1). The **scoring + observability** half landed with [#424](https://github.com/eranroseman/memoria-vault/issues/424): a deterministic scorer (`operations/telemetry/eval/eval_score.py` — the Linter's zero-LLM, report-only discipline, hosted with the sweeps engines beside the dispatcher) reads each card's machine-readable result block off the board, computes recall@k / support-rate / FAMA, appends per-run scores to `system/metrics/eval/runs.jsonl`, and the `eval-trend` dashboard renders the trend. The lane's rubric self-score on the card is recorded for comparison, never aggregated. The shipped source tree uses type-first homes (`src/system/eval/` and `src/system/metrics/eval/`) and now includes an `eval-task` note type; the older `99-system/eval/` path below is historical design prose.
 
 ## Context
 
@@ -25,8 +25,8 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 - **Dispatch (board).** A scheduled `eval` card (quarterly + on-demand) fans each gold task out through the workflow's real profile command — `find` → Librarian, `verify` → the Verifier's `cite-check`, and so on — so the run exercises *deployed* profiles, not mocks.
 - **Execution (Policy MCP).** Eval-context profile writes are non-committing: scoped to a scratch path and discarded after scoring, so a run never mutates the vault.
 - **Scoring + verdict (Linter).** The Linter scores each run (deterministic metrics — recall@k, support-rate, FAMA — reusing the Verifier's entailment for `verify`), records a per-workflow score, and guards gold-set integrity (a gold item whose target path no longer resolves is a broken-reference finding, like any other).
-- **Surfacing (observability).** Results append to `99-system/metrics/eval/` and trend on a dashboard. The verdict is **diagnostic, not gating** — unlike `drift-watch`'s structural FAIL, an eval dip informs the human; it does not pause scheduled work.
-- **Gold set (vault).** Gold tasks live in `99-system/eval/` as YAML; they become a dedicated note type only if the [expansion-threshold](README.md) is tripped.
+- **Surfacing (observability).** Results append to `system/metrics/eval/` and trend on a dashboard. The verdict is **diagnostic, not gating** — unlike `drift-watch`'s structural FAIL, an eval dip informs the human; it does not pause scheduled work.
+- **Gold set (vault).** Gold tasks live in `system/eval/` as `eval-task` notes.
 
 ## Consequences
 
@@ -43,11 +43,12 @@ Memoria runs `vault-eval` as a **diagnostic maintenance capability built from ex
 
 **A dedicated eval-runner profile** (not the Linter): rejected for now — eval is a health-reporting concern the Linter already covers, and a new profile violates the expansion-threshold (add a profile only when an existing one is consistently overloaded). Revisit if eval orchestration outgrows the Linter.
 
-**Gold tasks as a note type now**: rejected — premature; YAML in `99-system/eval/` suffices until ≥5 items force a type.
+**Gold tasks as a note type immediately**: originally rejected as premature; later
+implementation crossed the threshold and added the `eval-task` type in `system/eval/`.
 
 ## Related
 
 - **Workflows affected:** [Verify](../how-to-guides/project/verify-and-revise.md) (the eval reuses `cite-check`); the maintenance/`lint` surface (the Linter scores + reports).
-- **Files affected:** [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md), [On-disk layout](../reference/on-disk-layout.md) (`99-system/eval/`, `99-system/metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
+- **Files affected:** [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md), [On-disk layout](../reference/on-disk-layout.md) (`system/eval/`, `system/metrics/eval/`), the Linter's `structural-detectors.md` and a dashboard (in the starter vault).
 - **Related decisions / Depends on:** [ADR-10 claim supersession](10-claim-supersession.md) (the drift gold tasks exercise its FAMA check); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) and [ADR-8 typed relations](08-typed-relations-frontmatter.md) (shared observability lineage).
 - **Source discussion:** [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Observability + Integration); the `vault-eval` scaffold.

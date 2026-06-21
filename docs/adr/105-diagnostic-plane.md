@@ -49,6 +49,6 @@ The plane earns its place the first time an unattended `always-on` run ([ADR-63]
 ## Related
 
 - **Related decisions / Depends on:** [ADR-104 (telemetry three planes)](104-telemetry-three-planes.md) (the plane this details); [ADR-22 (build on the Hermes runtime)](22-build-on-hermes-runtime.md) and [ADR-46 (seven-layer architecture)](46-seven-layer-architecture.md) (why agent cognition is out of scope); [ADR-24 (single-researcher scope)](24-single-researcher-scope.md) (the one-user foot-gun argument).
-- **Tracking issue:** [#736](https://github.com/eranroseman/memoria-vault/issues/736) — implementation readiness.
+- **Tracking issue:** [#736](https://github.com/eranroseman/memoria-vault/issues/736) — implementation-readiness tracker; closed after `memoria/runtime/diagnostics.py` and its unit tests shipped.
 - **Design rationale:** [Telemetry architecture](../explanation/architecture/telemetry-architecture.md).
 - **Reference:** [Telemetry & logs](../reference/telemetry.md) (the content-free posture this plane is the sole exception to).

@@ -21,7 +21,7 @@ plus sibling run records — scope in the GitHub milestone, notes in `CHANGELOG.
 `v*` tag triggering `release.yml`. It was git-tracked, reviewable in PRs, self-contained,
 and offline-capable. But it hurt in three observed ways: the hand-maintained markdown
 state tables **drifted** (the template itself wished for a future `status-doctor` check;
-the `/release` skill and the v0.1 plan accumulated stale path/term references); there was
+the release scaffolding guidance and the v0.1 plan accumulated stale path/term references); there was
 **no live status surface** (you read a file to know where a release stood); and it took
 ~8 files per release with two places to keep aligned (plan gates ↔ milestone/issues).
 
@@ -47,7 +47,13 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
   to its tracking issue); **alpha.2+** uses the checklist model from the start.
 
 The live process this produced is documented in [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md) and
-scaffolded by the `/release` skill.
+scaffolded by the release playbook at `.agents/playbooks/release.md`.
+
+> **Status note (2026-06-21).** release-please is configured in manifest mode but
+> intentionally paused for pre-alpha: `.github/workflows/release-please.yml` is
+> `workflow_dispatch`-only and the manifest remains `0.0.0`. Until the first formal
+> tagged release, internal checkpoints use the release plan plus GitHub gate/stage
+> issues; release-please does not yet auto-open version PRs.
 
 ## Consequences
 
@@ -73,7 +79,7 @@ this decision is only about *where release state and versioning live*.
 - **VS Code GitHub extension.** Rejected as the system of record — it's a viewer/UI over
   whichever model you pick, never the model itself.
 - **release-please** (chosen for the notes/versioning half). Automates version + CHANGELOG +
-  Release PR; opinionated, replaces `release.yml`. It automates only versioning/notes, **not
+  Release PR once unpaused for formal releases; opinionated, replaces `release.yml`. It automates only versioning/notes, **not
   readiness** — which is why it pairs with the tracking-issue gates rather than replacing them.
 - **Tier 3 — Projects "Release" view + `scripts/release.sh` cut script.** Deferred: richest
   dashboard and a one-command cut, but the Projects field/view config isn't in git, it's the
@@ -82,7 +88,7 @@ this decision is only about *where release state and versioning live*.
 
 ## Related
 
-- **Live process:** [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md); the `/release` skill scaffolds it.
+- **Live process:** [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md); `.agents/playbooks/release.md` scaffolds it.
 - **Gate/stage model:** [ADR-29](29-testing-framework.md) (the layers/matrix the gates map to).
 - **Amended by:** [ADR-75: Use GitHub Project fields and release sub-issues for live
   work state](75-github-project-fields-and-release-sub-issues.md) — replaces the

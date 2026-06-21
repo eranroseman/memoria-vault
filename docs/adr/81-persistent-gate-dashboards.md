@@ -62,7 +62,7 @@ accepted decision ([ADR-83](83-direct-pi-relate-control.md)).
   not shipped as an empty promise.
 - Workspaces Plus is unnecessary, and the old QuickAdd `load-workspace.js` workaround
   is removed.
-- The Homepage plugin now points at `gates/inbox`, so launch opens the working gate
+- The Homepage plugin now points at `spaces/inbox`, so launch opens the working space
   rather than a separate control panel.
 - Portals adoption is gated by the vendored plugin artifact and provenance lock entry.
 - The missing direct "relate" control is an acknowledged alpha.7 limitation; links
@@ -86,7 +86,7 @@ metaphor.
 
 ## Related
 
-- **Files affected:** `src/gates/`, `src/home.md`, `src/.obsidian/workspaces.json`,
+- **Files affected:** `src/spaces/`, `src/home.md`, `src/.obsidian/workspaces.json`,
   `src/.obsidian/plugins/homepage/data.json`, `src/.obsidian/plugins/quickadd/data.json`,
   `src/.obsidian/plugins/cmdr/data.json`, `src/.obsidian/app.json`,
   `src/.obsidian/core-plugins.json`.

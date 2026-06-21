@@ -46,6 +46,13 @@ derived from the thesis lifecycle and output mode.
   ordinary claim note, that is an explicit promotion/migration step rather than a
   disguised lifecycle shortcut.
 
+> **Implementation status (2026-06-21).** The shipped validator approximates the
+> born-`current` guard by requiring promotion provenance (`promoted_at`) whenever a
+> thesis has `lifecycle: current`; no validator currently reads `initial_lifecycle`
+> to reconstruct historical birth state. The live invariant is therefore "current
+> requires promotion evidence," not a forensic check that the note was never born
+> current.
+
 ## Alternatives considered
 
 **Model thesis as a claim with extra status.** Rejected: it contradicts the claim

@@ -31,7 +31,10 @@ subject).
 2. **ADR references stay out of tutorial / how-to / reference body text and
    subheadings.** They are allowed inline within **explanation** pages and in an
    optional per-page footer **"Decisions"** section, always as **title-text links** —
-   never bare `(ADR-NN)` codes. Bare `(D##)` references are purged (link rot).
+   never bare `(ADR-NN)` codes. `docs-doctor` enforces the bare `(ADR-NN)` ban;
+   the Diátaxis placement rule remains a manual documentation convention.
+   Bare `(D##)` references are purged from published user-facing prose, but may
+   remain in ADR history where they are part of the decision record.
 3. **Complex operations get a procedural reference page and a separate rationale
    explanation page** (Diátaxis "work vs study"), cross-linked with Django's
    "link, don't repeat" discipline so each fact has one home. Simple operations may keep
