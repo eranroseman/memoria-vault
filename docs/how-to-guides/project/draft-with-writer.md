@@ -33,7 +33,12 @@ The done card surfaces in the Inbox with the draft's location in `projects/<slug
 
 **4. Don't draft past unsupported claims.**
 
-If the prose asserts something with no claim note behind it, stop: find the source, write the claim, or cut the assertion. The verify lane will flag it anyway ([Verify and revise a draft](verify-and-revise.md)) — it's faster to address now.
+If the prose asserts something with no current claim note behind it, stop: find
+the source, write the claim, or cut the assertion. The Writer's search path hides
+superseded claims by default; use them only when the task explicitly asks for
+historical contrast. The verify lane will flag unsupported or stale claim reuse
+anyway ([Verify and revise a draft](verify-and-revise.md)) — it's faster to
+address now.
 
 **5. Cite citekeys in-text.**
 

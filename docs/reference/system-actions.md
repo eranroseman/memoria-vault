@@ -74,7 +74,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Vault read / gated write | obsidian native MCP (all lanes) | File reads, search, and writes into the vault over the Local REST API plugin's MCP — every write passing the policy gate. |
-| Vault search | qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Hybrid BM25 + vector + rerank search over the vault corpus, local and read-only. |
+| Vault search | filtered qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Hybrid BM25 + vector + rerank search over the vault corpus, local and read-only; superseded claim notes are hidden unless historical lookup is explicit. |
 | Literature discovery | paper_search MCP (Librarian) | Searches arXiv, PubMed, Semantic Scholar, Google Scholar, and bioRxiv (Unpaywall email for OA lookups). |
 | Zotero reads | pyzotero MCP (Librarian, Peer-reviewer) | Read-only citekey resolution, metadata, and citation context from the local Zotero library — no write-back. |
 

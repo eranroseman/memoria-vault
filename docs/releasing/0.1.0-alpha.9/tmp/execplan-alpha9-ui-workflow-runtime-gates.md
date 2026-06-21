@@ -208,6 +208,17 @@ their result is recorded.
 - 2026-06-21 -- Treat #832 and #823 as release-blocking because the audits describe
   a live capability-boundary P0 and fail-open path. #822 remains the structural
   follow-through and must not delay the interim mitigation.
+- 2026-06-21 -- #832 closed via PR #849: egress/messaging/browser/computer-use/media
+  tools are hard-denied in the policy gate; the contract doctor now checks covered
+  egress tools and deployed `policy_hook.py` freshness; `~/Memoria-test` was
+  refreshed and the deployed writer gate blocked `mcp_x__web_search` by name.
+- 2026-06-21 -- #823 closed via PR #850: profile deployment refuses a missing policy
+  plugin source, shipped profile configs are test-pinned to enable
+  `memoria-policy-gate`, and a broken `policy_hook` import blocks failed-closed.
+- 2026-06-21 -- G3 implementation path chosen for #826: wrap the qmd MCP with a
+  Memoria-owned `qmd_filter_mcp.py` that preserves the existing qmd tool surface
+  while filtering claim notes whose frontmatter has `superseded_by`, unless the
+  caller passes `include_superseded=True` for historical lookup.
 - 2026-06-21 -- Keep #829 out of the milestone unless Part 0 baseline shows
   supervision attribution is the release-critical bottleneck.
 - 2026-06-21 -- Use GitHub sub-issues for gate/stage readiness and keep this file
@@ -249,4 +260,3 @@ their result is recorded.
 - **Still open:** fill with rolled-forward issues at checkpoint closeout.
 - **Routed to:** ADRs, docs, issue comments, and validation evidence under #835.
 - **Lessons:** fill after S5 and tmp disposition.
-
