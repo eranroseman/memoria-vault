@@ -45,7 +45,7 @@ still need a named plan.
 | 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | `workflow-replay` / L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) for attended runtime; [test-env harness](plans/test-env-harness-plan.md) for ADR-80 Phase 1 cassette replay wired into `scripts/e2e-smoke.sh` | semi | 🟡 (model-free path automated; live model/GUI tail manual) |
 | 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../adr/11-vault-eval-maintenance.md) vault-eval | — | ⛔ (harness empty) |
 | 21 | **Recovery / failure modes** — safe-mode, MCP-down, chain-break recovery | X | — | — | ⛔ |
-| 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | X | — | — | ⛔ |
+| 22 | **Security / adversarial** — lane-escape, prompt-injection, secret leak, fail-open-on-hook-error | `runtime-integration` + release gate / X | alpha.9 G2 [#837](https://github.com/eranroseman/memoria-vault/issues/837) + S4 [#846](https://github.com/eranroseman/memoria-vault/issues/846): interim egress hard-deny, plugin-registration fail-open mitigation, live disabled-tool invocation by name, and structural default-deny decision path | semi | 🟡 |
 | 23 | **Performance / scale** — Dataview at 500/2000 notes, `qmd` rebuild | X | — | — | ⛔ |
 | 24 | **Deployment modes** — local / mesh / VPS, Syncthing, `memories/` junction | X | — | — | ⛔ |
 | 25 | **Plan drift** — plans' own references resolve | L0 | `scripts/check_test_refs.py` (CI + `.githooks/pre-commit`) | ✅ | ✅ |
@@ -60,7 +60,7 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr
 2. **Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
 3. **Runtime integration / golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; `scripts/test-l2.sh` covers the opt-in live Hermes smoke; live GUI proof remains attended or nightly/manual.
 4. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
-5. **Security (#22)**, **Performance (#23)**, **Deployment (#24)** — stand up as the system hardens.
+5. **Security (#22)** — now tracked by alpha.9 G2/S4 for the live gate boundary; **Performance (#23)** and **Deployment (#24)** still need named plans.
 
 ## Related
 
