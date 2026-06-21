@@ -4,6 +4,11 @@ filters:
     - file.inFolder("system/patterns")
     - 'type == "pattern"'
     - 'lifecycle == "current"'
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "Library mode"
@@ -12,14 +17,14 @@ views:
         - 'mode == "library"'
         - 'mode == "both"'
     order:
-      - title
+      - formula.note
       - action
       - posture
       - output_target
   - type: table
     name: "All patterns"
     order:
-      - title
+      - formula.note
       - mode
       - action
       - posture

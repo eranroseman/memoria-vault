@@ -36,6 +36,8 @@ def _choices():
 
 def test_command_labels_are_direct_and_article_free():
     expected = {
+        "Memoria: archive claim note",
+        "Memoria: archive fleeting note",
         "Memoria: capture fleeting",
         "Memoria: capture from Zotero selection",
         "Memoria: capture source from URL",
@@ -226,14 +228,84 @@ def test_fleeting_capture_is_guided_and_queued_for_inbox_triage():
         "openForm(FORM_NAME)",
         'FORM_NAME = "memoria-fleeting-capture"',
         'FLEETING_FOLDER = "notes/fleeting/"',
-        '"type: fleeting"',
-        '"lifecycle: proposed"',
-        '"origin: human"',
+        'TEMPLATE_PATH = "system/templates/fleeting.md"',
+        "renderFleetingTemplate(template, title, date, data.body)",
         "Capture text is required.",
         "does not steal focus by opening itself",
     ):
         assert marker in script
+    template = (SRC / "system" / "templates" / "fleeting.md").read_text(encoding="utf-8")
+    for marker in ("type: fleeting", "lifecycle: proposed", "origin: human"):
+        assert marker in template
     assert "openFile" not in script
+
+
+def test_archive_fleeting_note_is_narrow_and_in_place():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: archive fleeting note"]
+    assert choice["type"] == "Macro"
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/archive-fleeting.js"
+
+    script = (SCRIPTS / "archive-fleeting.js").read_text(encoding="utf-8")
+    for marker in (
+        'file.path.startsWith("notes/fleeting/")',
+        'file.path.endsWith(".md")',
+        'fm.type || "") !== "fleeting"',
+        'fm.lifecycle = "archived"',
+        "fm.archived = todayIsoDate()",
+        "processFrontMatter",
+    ):
+        assert marker in script
+    assert "unlink" not in script
+    assert "trash" not in script
+    assert "delete" not in script
+
+
+def test_archive_claim_note_is_narrow_and_in_place():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: archive claim note"]
+    assert choice["type"] == "Macro"
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/archive-claim.js"
+
+    script = (SCRIPTS / "archive-claim.js").read_text(encoding="utf-8")
+    for marker in (
+        'file.path.startsWith("notes/claims/")',
+        'file.path.endsWith(".md")',
+        'fm.type || "") !== "claim"',
+        'fm.lifecycle = "archived"',
+        "fm.archived = todayIsoDate()",
+        "processFrontMatter",
+    ):
+        assert marker in script
+    assert "unlink" not in script
+    assert "trash" not in script
+
+
+def test_write_claim_note_uses_guided_form_and_template_renderer():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: write claim note"]
+    assert choice["type"] == "Macro"
+    assert "templatePath" not in choice
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/write-claim.js"
+
+    script = (SCRIPTS / "write-claim.js").read_text(encoding="utf-8")
+    for marker in (
+        'FORM_NAME = "memoria-claim-capture"',
+        'CLAIM_FOLDER = "notes/claims/"',
+        'TEMPLATE_PATH = "system/templates/claim.md"',
+        "openForm(FORM_NAME)",
+        "renderClaimTemplate(template, data, today, similarity)",
+        "preFileSimilarityShadow(app, cp, crypto",
+        'source: "quickadd.write-claim"',
+        'noteType: "claim"',
+        '[[catalog/papers/" + source + "|" + source + "]]',
+        "appendSimilarityTelemetry(app, similarity)",
+        "getLeaf(true).openFile(created)",
+    ):
+        assert marker in script
 
 
 def test_zotero_capture_writes_intake_log_where_readers_look():
@@ -253,6 +325,9 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     assert "writeCandidateCard(params, citekey, title)" in script
     assert "writePaperStub(params, citekey, title)" in script
+    assert "chooseCitekey(params, citekeys)" in script
+    assert "params.quickAddApi.suggester(options, options)" in script
+    assert "capturing the first" not in script
     assert '"inbox/candidate-zotero-" + slug(citekey, "source") + ".md"' in script
     assert '"catalog/papers/" + citekey + ".md"' in script
     for field in (
@@ -292,7 +367,7 @@ def test_zotero_capture_materializes_schema_valid_tier0_catalog_stub():
         assert marker in stub
 
 
-def test_exploration_trace_capture_is_project_local_and_noncanonical():
+def test_exploration_trace_capture_is_project_local_and_not_canonical():
     choices = {c["name"]: c for c in _choices()}
     choice = choices["Memoria: record exploration trace"]
     [cmd] = choice["macro"]["commands"]
@@ -331,6 +406,7 @@ def test_zotero_capture_uses_bbt_json_rpc_not_cayw():
     """
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     assert "better-bibtex/json-rpc" in script
+    # cspell:words citationkey
     assert '"method":"item.citationkey"' in script
     assert '"params":["selected"]' in script
     assert "parseSelectedCitekeys(raw)" in script

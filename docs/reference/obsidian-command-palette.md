@@ -18,14 +18,16 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 | Command | Output | Implementation |
 | --- | --- | --- |
 | `Memoria: capture fleeting` | Opens the `memoria-fleeting-capture` Modal Forms form, writes one raw item to `notes/fleeting/` (`lifecycle: proposed`, `origin: human`), and leaves processing to the Inbox queue. | QuickAdd Macro → `system/scripts/capture-fleeting.js` |
-| `Memoria: write claim note` | A new claim note from the claim template — **review-gated home** (`notes/claims/`): only the PI creates here. | QuickAdd Template → `system/templates/claim.md` |
+| `Memoria: archive fleeting note` | The **active** fleeting note (must be under `notes/fleeting/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-fleeting.js` |
+| `Memoria: write claim note` | Opens the `memoria-claim-capture` Modal Forms form, writes a standalone claim in the **review-gated home** (`notes/claims/`), runs the pre-file similarity shadow check, and opens the note. | QuickAdd Macro → `system/scripts/write-claim.js` |
+| `Memoria: archive claim note` | The **active** claim note (must be under `notes/claims/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-claim.js` |
 | `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
 | `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `src/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
 | `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your outcome (`current` = accept, `archived` = reject / done) and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
 
-Template-based note creation (claim, hub, …) starts from the templates in `system/templates/` — see [Note types](note-types.md). Fleeting capture uses a Modal Forms wrapper so the prompt carries the instructions instead of writing template guidance into the note body.
+Template-based note creation starts from the templates in `system/templates/` — see [Note types](note-types.md). Claim and fleeting capture use Modal Forms wrappers that render their templates, so the form prompts, note body, and note-local command buttons stay aligned.
 
 ---
 
@@ -69,7 +71,7 @@ not create board cards.
 
 | Command | Use | Implementation |
 | --- | --- | --- |
-| `Memoria: write claim note` | Create a standalone claim note from `system/templates/claim.md`. | QuickAdd Template |
+| `Memoria: write claim note` | Create a standalone claim note through the guided claim form. | QuickAdd Macro → `src/system/scripts/write-claim.js` |
 | `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
 | `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `src/system/scripts/refresh-project-gate.js` |
 | `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `src/system/scripts/supersede-thesis.js` |

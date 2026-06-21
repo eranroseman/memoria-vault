@@ -46,11 +46,11 @@ space: knowledge
 
 Step-by-step for working this space:
 
-- [Write a claim note](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/write-a-claim-note)
-- [Link related claims](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-related-claims)
-- [Advance a claim to evergreen](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/promote-a-claim)
-- [Build a hub](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/build-a-moc)
-- [Refactor claim notes](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/refactor-a-note)
-- [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/manage-vocabulary)
-- [Query the vault](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/query-the-vault)
-- [Run a pattern](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/run-a-pattern)
+- [Write a claim note](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/write-a-claim-note.html)
+- [Link related claims](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-related-claims.html)
+- [Advance a claim to evergreen](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/promote-a-claim.html)
+- [Build a hub](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/build-a-moc.html)
+- [Refactor claim notes](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/refactor-a-note.html)
+- [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/manage-vocabulary.html)
+- [Query the vault](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/query-the-vault.html)
+- [Run a pattern](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/run-a-pattern.html)

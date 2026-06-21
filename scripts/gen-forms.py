@@ -137,13 +137,40 @@ def generate() -> dict:
                 "Memoria claim capture",
                 "memoria-claim-capture",
                 [
-                    _field("title", "Claim title", {"type": "text"}, required=True),
                     _field(
-                        "maturity", "Maturity", _radio(claim["enums"]["maturity"]), required=True
+                        "title",
+                        "Claim title",
+                        {"type": "text"},
+                        description="Short label for the note and Base row.",
+                        required=True,
                     ),
-                    _field("sources", "Sources", _note_multi("catalog/papers"), required=True),
-                    _field("topics", "Topics", _fixed_multi(topics)),
-                    _field("claim", "Claim statement", {"type": "textarea"}, required=True),
+                    _field(
+                        "maturity",
+                        "Maturity",
+                        _radio(claim["enums"]["maturity"]),
+                        description="Start at seedling unless the claim is already well supported.",
+                        required=True,
+                    ),
+                    _field(
+                        "sources",
+                        "Sources",
+                        _note_multi("catalog/papers"),
+                        description="Pick the catalog paper(s) whose citekeys support this claim.",
+                        required=True,
+                    ),
+                    _field(
+                        "topics",
+                        "Topics",
+                        _fixed_multi(topics),
+                        description="Optional vocabulary tags for retrieval and hub thresholds.",
+                    ),
+                    _field(
+                        "claim",
+                        "Claim statement",
+                        {"type": "textarea"},
+                        description="One durable, source-grounded assertion in your own words.",
+                        required=True,
+                    ),
                 ],
             ),
             _form(

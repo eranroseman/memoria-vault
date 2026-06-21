@@ -23,7 +23,7 @@ Drive Memoria's capture and delegation entry points from `Cmd-P` (`Ctrl-P` on Wi
 **Capture and note creation** — the entry points that must fire from inside the editor:
 
 - `Memoria: capture fleeting` — guided fleeting capture form that writes one raw item to `notes/fleeting/`
-- `Memoria: write claim note` — claim note in `notes/claims/` from `system/templates/claim.md` (review-gated home: only you create here)
+- `Memoria: write claim note` — guided claim capture form that writes a claim note in `notes/claims/` (review-gated home: only you create here)
 - `Memoria: capture source from URL` — a capture card on the Librarian lane from a pasted URL
 - `Memoria: structured source capture` — a guided Modal Forms capture that writes a proposed source note plus Inbox candidate
 - `Memoria: capture from Zotero selection` — the same capture card, citekey pre-filled from the current Zotero selection
@@ -58,9 +58,9 @@ Commander places the high-frequency commands directly in Obsidian chrome: the le
 ribbon has capture fleeting, capture from Zotero selection, capture source from URL,
 delegate task, resolve inbox card, and open/reset navigation controls. Space switching
 happens through the nav row in `spaces/inbox.md`, `spaces/library.md`,
-`spaces/knowledge.md`, and `spaces/project.md`. The note page header has create linked
-claim note, write claim note, extract claims, and link claim, so active-note defaults
-are visible when you invoke them.
+`spaces/knowledge.md`, and `spaces/project.md`. The note page header has capture
+fleeting, create linked claim note, write claim note, extract claims, and link claim,
+so capture stays close while active-note defaults remain visible.
 
 **3. Use the Co-PI when shaping helps.**
 
@@ -80,7 +80,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 - The left ribbon exposes capture, delegate, resolve, and reset/navigation controls
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`, then surfaces it in the Inbox **Fleeting notes** queue
 - `Memoria: structured source capture` creates a proposed `notes/sources/` note and an Inbox `candidate` card
-- `Memoria: write claim note` creates a titled claim note in `notes/claims/` from the template — Properties populated, clean body, no template scaffolding
+- `Memoria: write claim note` opens the guided claim form and creates a titled claim note in `notes/claims/` — Properties populated, clean body, no template scaffolding
 - A task command (e.g. `Memoria: map corpus`) lands a card on the board: `hermes kanban list` shows it addressed to the right lane
 
 ## Related

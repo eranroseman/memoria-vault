@@ -1,4 +1,6 @@
 /*
+ * cspell:words citationkey citekeys
+ *
  * QuickAdd user script — "Memoria: capture from Zotero selection".
  *
  * Reads the item currently selected in Zotero (Better BibTeX JSON-RPC) and
@@ -48,14 +50,15 @@ module.exports = async (params) => {
     return;
   }
 
-  const citekey = citekeys[0];
+  const citekey = await chooseCitekey(params, citekeys);
   const title = "";
   if (!citekey) {
-    new Notice("Selected Zotero item has no citekey — pin a Better BibTeX key first.", 9000);
+    new Notice("Zotero capture cancelled.", 4000);
     return;
   }
-  if (citekeys.length > 1) {
-    new Notice(`${citekeys.length} items selected — capturing the first (${citekey}).`, 6000);
+  if (!String(citekey).trim()) {
+    new Notice("Selected Zotero item has no citekey — pin a Better BibTeX key first.", 9000);
+    return;
   }
 
   // 1b. Capture commits first — append the durability anchor to the intake log
@@ -143,6 +146,13 @@ function parseSelectedCitekeys(raw) {
   }
   const result = first.result || {};
   return Object.values(result).filter((key) => typeof key === "string" && key.trim()).map((key) => key.trim());
+}
+
+async function chooseCitekey(params, citekeys) {
+  if (citekeys.length === 1) return citekeys[0];
+  const options = [...new Set(citekeys)].sort();
+  const picked = await params.quickAddApi.suggester(options, options);
+  return picked || "";
 }
 
 async function writeCandidateCard(params, citekey, sourceTitle) {

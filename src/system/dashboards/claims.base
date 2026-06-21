@@ -4,9 +4,12 @@ filters:
     - file.inFolder("notes/claims")
     - 'lifecycle != "archived"'
 formulas:
+  note: 'link(file.path, title)'
   is_orphan: 'file.backlinks.isEmpty()'
   age_days: '(now() - file.ctime).days.round(0)'
 properties:
+  formula.note:
+    displayName: "Note"
   formula.is_orphan:
     displayName: "No inbound"
   formula.age_days:
@@ -21,7 +24,7 @@ views:
       property: maturity
       direction: DESC
     order:
-      - title
+      - formula.note
       - maturity
       - topics
       - sources
@@ -35,7 +38,7 @@ views:
       - property: file.ctime
         direction: ASC
     order:
-      - title
+      - formula.note
       - topics
       - sources
       - formula.age_days
@@ -49,7 +52,7 @@ views:
       - property: file.mtime
         direction: DESC
     order:
-      - title
+      - formula.note
       - links
       - topics
   - type: table
@@ -58,6 +61,6 @@ views:
       and:
         - 'lifecycle == "retracted"'
     order:
-      - title
+      - formula.note
       - superseded_by
       - sources

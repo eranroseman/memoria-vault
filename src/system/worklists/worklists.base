@@ -6,6 +6,11 @@ filters:
     - 'file.ext == "md"'
     - 'type == "worklist-item"'
     - 'lifecycle != "archived"'
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "By worklist"
@@ -13,7 +18,7 @@ views:
       property: worklist
       direction: ASC
     order:
-      - file.name
+      - formula.note
       - lifecycle
       - decision
       - worklist
@@ -27,7 +32,7 @@ views:
       property: decision
       direction: ASC
     order:
-      - file.name
+      - formula.note
       - lifecycle
       - decision
       - worklist
@@ -40,7 +45,7 @@ views:
       property: group
       direction: ASC
     order:
-      - file.name
+      - formula.note
       - lifecycle
       - decision
       - group

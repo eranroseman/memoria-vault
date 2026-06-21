@@ -4,6 +4,11 @@ filters:
   and:
     - 'file.ext == "md"'
     - 'lifecycle != "archived"'
+formulas:
+  note: 'link(file.path, if(type == "paper", title, name))'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "Papers"
@@ -11,7 +16,7 @@ views:
       and:
         - file.inFolder("catalog/papers")
     order:
-      - title
+      - formula.note
       - lifecycle
       - citekey
       - authors
@@ -23,7 +28,7 @@ views:
       and:
         - file.inFolder("catalog/people")
     order:
-      - name
+      - formula.note
       - orcid
       - affiliations
   - type: table
@@ -32,7 +37,7 @@ views:
       and:
         - file.inFolder("catalog/organizations")
     order:
-      - name
+      - formula.note
       - subtype
       - location
   - type: table
@@ -41,7 +46,7 @@ views:
       and:
         - file.inFolder("catalog/venues")
     order:
-      - name
+      - formula.note
       - subtype
       - issn
   - type: table
@@ -50,7 +55,7 @@ views:
       and:
         - file.inFolder("catalog/datasets")
     order:
-      - name
+      - formula.note
       - lifecycle
       - doi
       - license
@@ -60,7 +65,7 @@ views:
       and:
         - file.inFolder("catalog/repositories")
     order:
-      - name
+      - formula.note
       - url
       - language
       - license

@@ -4,8 +4,11 @@ filters:
     - file.inFolder("notes/sources")
     - 'lifecycle != "archived"'
 formulas:
+  note: 'link(file.path, title)'
   age_days: '(now() - file.ctime).days.round(0)'
 properties:
+  formula.note:
+    displayName: "Note"
   formula.age_days:
     displayName: "Age (days)"
 views:
@@ -21,7 +24,7 @@ views:
       - property: file.mtime
         direction: DESC
     order:
-      - title
+      - formula.note
       - lifecycle
       - entity
       - evidence_level
@@ -35,7 +38,7 @@ views:
       - property: file.ctime
         direction: ASC
     order:
-      - title
+      - formula.note
       - entity
       - formula.age_days
   - type: table
@@ -44,7 +47,7 @@ views:
       property: lifecycle
       direction: ASC
     order:
-      - title
+      - formula.note
       - lifecycle
       - entity
       - research_area

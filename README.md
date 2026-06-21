@@ -106,7 +106,7 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 ## Development
 
-After editing vault source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
+For fast UI/system-file iteration on the disposable sandbox, run `bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from `src/`, preserve runtime state, and restage the golden copy. After editing profile source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
 
 ## Citation
 

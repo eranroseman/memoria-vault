@@ -72,6 +72,26 @@ def test_fleeting_capture_form_carries_prompt_instructions():
     )
 
 
+def test_claim_capture_form_carries_prompt_instructions():
+    form = _forms_by_name()["memoria-claim-capture"]
+    fields = {field["name"]: field for field in form["fields"]}
+    assert fields["title"]["description"] == "Short label for the note and Base row."
+    assert (
+        fields["maturity"]["description"]
+        == "Start at seedling unless the claim is already well supported."
+    )
+    assert (
+        fields["sources"]["description"]
+        == "Pick the catalog paper(s) whose citekeys support this claim."
+    )
+    assert (
+        fields["claim"]["description"]
+        == "One durable, source-grounded assertion in your own words."
+    )
+    for required in ("title", "maturity", "sources", "claim"):
+        assert fields[required]["isRequired"] is True
+
+
 def test_modal_forms_data_is_generated_from_schema():
     import subprocess
 

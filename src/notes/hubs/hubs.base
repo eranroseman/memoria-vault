@@ -3,11 +3,16 @@ filters:
   and:
     - file.inFolder("notes/hubs")
     - 'lifecycle != "archived"'
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "Hubs index"
     order:
-      - title
+      - formula.note
       - lifecycle
       - topic
       - members

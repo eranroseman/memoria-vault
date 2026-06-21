@@ -4,8 +4,11 @@ filters:
     - file.inFolder("system/board")
     - 'type == "worker-card"'
 formulas:
+  note: 'link(file.path, title)'
   age_min: '(now() - date(as_of)).minutes.round(0)'
 properties:
+  formula.note:
+    displayName: "Note"
   formula.age_min:
     displayName: "Age (min)"
 views:
@@ -18,7 +21,7 @@ views:
       - property: status
         direction: ASC
     order:
-      - title
+      - formula.note
       - lane
       - status
       - formula.age_min

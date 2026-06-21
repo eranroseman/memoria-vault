@@ -4,6 +4,11 @@ filters:
     - file.inFolder("projects")
     - 'type == "project"'
     - 'lifecycle != "archived"'
+formulas:
+  note: 'link(file.path, title)'
+properties:
+  formula.note:
+    displayName: "Note"
 views:
   - type: table
     name: "Active projects"
@@ -11,7 +16,7 @@ views:
       property: output_mode
       direction: ASC
     order:
-      - title
+      - formula.note
       - lifecycle
       - output_mode
       - active_thesis
@@ -26,7 +31,7 @@ views:
         - 'output_mode == "thesis"'
         - 'refutation_sufficiency != true'
     order:
-      - title
+      - formula.note
       - active_thesis
       - argument_stage
       - evidence_saturation
