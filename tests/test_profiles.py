@@ -232,3 +232,10 @@ def test_no_profile_has_direct_world_access():
         assert not missing, (
             f"{cfg.parent.name}: direct-access toolsets not disabled: {sorted(missing)}"
         )
+
+
+def test_every_profile_enables_policy_gate_plugin():
+    for cfg in sorted(PROFILES.glob("*/config.yaml")):
+        data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
+        enabled = (data.get("plugins") or {}).get("enabled") or []
+        assert enabled == ["memoria-policy-gate"], f"{cfg.parent.name}: policy gate not enabled"

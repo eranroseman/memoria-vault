@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -71,3 +72,15 @@ def test_plugin_blocks_disabled_tool_invocation_by_name(tmp_path):
 
     assert result["action"] == "block"
     assert "MCP" in result["message"]
+
+
+def test_plugin_blocks_when_policy_hook_import_is_broken(tmp_path, monkeypatch):
+    gate = _load_plugin()
+    gate.PROFILE = "memoria-writer"
+    gate.VAULT = _vault_with_writer_policy(tmp_path)
+    monkeypatch.setitem(sys.modules, "policy_hook", None)
+
+    result = gate._gate("mcp_obsidian_vault_write", {"filepath": "inbox/a.md"}, "TASK-IMPORT")
+
+    assert result["action"] == "block"
+    assert "failed-closed" in result["message"]
