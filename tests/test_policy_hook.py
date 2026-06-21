@@ -33,6 +33,10 @@ def test_classify_maps_write_tools_and_ignores_read_or_direct_tools():
         "file__write_file",
         "read_file",
         "search_files",
+        "web_search",
+        "browser_navigate",
+        "send_message",
+        "delegate_task",
     ):
         assert classify(direct) is None
 
@@ -46,6 +50,10 @@ def test_direct_capability_tools_are_hard_denied():
         "file__write_file",
         "read_file",
         "search_files",
+        "web_search",
+        "browser_navigate",
+        "send_message",
+        "delegate_task",
     ):
         blocked = evaluate_pre(
             {

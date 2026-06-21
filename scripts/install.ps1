@@ -465,8 +465,7 @@ function Deploy-PolicyPlugin {
     param([string]$ProfileDir, [string]$ProfileName)
     $src = Join-Path $Vault '.memoria/plugins/memoria-policy-gate'
     if (-not (Test-Path $src)) {
-        Write-Warn "policy-gate plugin source missing at $src - WRITE GATE not deployed for $ProfileName"
-        return
+        Stop-Install "policy-gate plugin source missing at $src - refusing to deploy $ProfileName without the write gate"
     }
     $dst = Join-Path $ProfileDir 'plugins/memoria-policy-gate'
     if (-not $DryRun) {
