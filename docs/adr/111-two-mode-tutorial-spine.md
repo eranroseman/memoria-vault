@@ -20,9 +20,9 @@ solved with a **seeded completion corpus**. Both were rethought from the questio
 
 ## Context
 
-The current tutorials (`01-set-up-from-zero` … `07-find-new-sources`) walk the
+The previous tutorials (`01-set-up-from-zero` … `07-find-new-sources`) walked the
 note-type dependency graph in order: fleeting note → source → reading → claim → hub →
-project → verify → discover. That is Memoria's internal data model, sequenced. The
+project → verify → discover. That was Memoria's internal data model, sequenced. The
 step *titles* are already task-shaped, but the *spine* is the ontology, and two tells
 give it away:
 

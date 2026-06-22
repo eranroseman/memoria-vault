@@ -28,8 +28,8 @@ reference pages and schema files.
 | Calibration | `src/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
 | Obsidian plugin settings | `src/.obsidian/plugins/**` | runtime vault `.obsidian/plugins/**` | Memoria except local secrets | Shipped config; reconcile intentionally | plugin docs and status checks |
 | Local REST API secrets | example files only | runtime plugin `data.json` plus profile `.env` | PI machine | Never commit live secrets | setup docs |
-| Profile environment variables | `.env.EXAMPLE` in each profile | `~/.hermes/profiles/<profile>/.env` | PI machine | Never commit; seed from shared Hermes env | installer smoke |
-| Shared Hermes environment seed | not in repo | `~/.hermes/.env` | PI machine | Never commit; rerun profiles-only after changes | installer propagation |
+| Profile environment variables | `env_requires` in each profile's `distribution.yaml` (rendered by Hermes as `.env.EXAMPLE`) | `~/.hermes/profiles/<profile>/.env` or `%LOCALAPPDATA%\hermes\profiles\<profile>\.env` | PI machine | Never commit; seed from shared Hermes env | installer smoke |
+| Shared Hermes environment seed | not in repo | `~/.hermes/.env` or `%LOCALAPPDATA%\hermes\.env` | PI machine | Never commit; rerun profiles-only after changes | installer propagation |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
 | Cron wrappers | `src/.memoria/scripts/*.sh` | vault source and Hermes cron commands | Memoria | Edit source | shellcheck |
 
@@ -52,8 +52,8 @@ stale state.
 
 | Change | Command |
 | --- | --- |
-| Profile config, tools, MCP servers, or model overlay | `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` |
-| Secrets added or rotated in `~/.hermes/.env` | `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` |
+| Profile config, tools, MCP servers, or model overlay | `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` or `.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria-test"` |
+| Secrets added or rotated in the shared Hermes `.env` | `bash scripts/install.sh --profiles-only --vault ~/Memoria-test` or `.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria-test"` |
 | Schema or vault source config | reinstall or refresh the vault, then run the linter |
 | qmd index inputs | `bash scripts/qmd-codebase-index.sh --embed` |
 

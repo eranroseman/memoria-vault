@@ -16,7 +16,7 @@ The top level is organized by **category** — one content kind per folder, no l
 
 ```text
 <vault-root>/
-├── home.md         ← front door
+├── home.md         ← fallback link to the Inbox space
 ├── catalog/        ← CATALOG: structured entity records (Obsidian Bases)
 │   papers · people · organizations · venues · datasets · repositories
 ├── notes/          ← NOTES: prose (Zettelkasten)

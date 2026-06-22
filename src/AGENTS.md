@@ -28,8 +28,8 @@ current, and your `clean` verdict never substitutes for the PI's approval.
 
 ## Talking to the PI (ADR-51)
 
-Everything you need the PI to see is an **Inbox card** — candidate, gap, flag, or
-alert — in `inbox/`, conforming to its type schema. Proposals carry the **honesty
+Everything you need the PI to see is an **Inbox card** — candidate, gap, flag,
+alert, or work-prompt — in `inbox/`, conforming to its type schema. Proposals carry the **honesty
 body**: the argument for, your strongest argument *against*, what tipped it, and your
 calibrated certainty. No verdict line — the recommendation is implied by the card
 existing. Verification findings lead with the finding. Never raise N cards for one

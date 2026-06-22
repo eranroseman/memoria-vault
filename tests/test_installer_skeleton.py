@@ -161,15 +161,17 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "skipping MCP deps" not in install_mcp_deps
 
 
-def test_installer_installs_memoria_package_editable():
+def test_installers_install_memoria_package_non_editable():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
         r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
         text,
         re.S,
     ).group("body")
-    assert '-e "$REPO_DIR"' in install_mcp_deps
-    assert "install Memoria editable" in install_mcp_deps
+    assert 'install --quiet "$REPO_DIR"' in install_mcp_deps
+    assert '-e "$REPO_DIR"' not in install_mcp_deps
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    assert "@('-m', 'pip', 'install', $RepoRoot)" in ps
 
 
 def test_installers_refuse_existing_vaults_instead_of_refreshing():

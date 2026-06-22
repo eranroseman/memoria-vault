@@ -34,7 +34,7 @@ mcp_servers:
     # Upstream read-only Zotero MCP (Zotero 7 local API) + Semantic Scholar citation tools
     # (get_citations / get_references / find_related / search_semantic_scholar) — backs
     # DOI/metadata resolution + citation context for cite-check and claim-trace without a
-    # terminal grant. Install once: pip install "pyzotero[mcp]" (or uv tool install).
+    # terminal grant. Install once on PATH: python -m pip install --user zotero-mcp.
     command: "pyzotero-mcp"
     timeout: 30
     tools:

@@ -162,7 +162,7 @@ Worklist rows are `worklist-item` notes under `system/worklists/`. Their `lifecy
 | --- | --- |
 | Pre-commit hook | Every staged `.md` note must pass its type schema; exit 1 blocks the commit (`src/.memoria/operations/integrity/linter/precommit_check.py`). |
 | Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
-| Exemptions | `system/` infrastructure (everything except `system/patterns/`) and vault-root navigation pages (`home.md`, `research-focus.md`, `troubleshooting.md`) are untyped and exempt. |
+| Exemptions | Most `system/` infrastructure and vault-root navigation pages (`home.md`, `research-focus.md`, `troubleshooting.md`) are untyped and exempt. Typed system homes (`system/patterns/`, `system/eval/`, `system/worklists/`, `system/board/`) follow [Note types](note-types.md#system-types-4). |
 
 ---
 

@@ -20,7 +20,7 @@ The clean-install end-to-end the other plans *assume has already happened*: `scr
 ## 0. Preconditions
 
 - [ ] Clean clone of the repo at a known commit, on the branch under test.
-- [ ] Hermes ≥ 0.12 on `PATH`; Git on `PATH`; Python 3.11+; `uv`/`uvx` present (for `mcp-obsidian`).
+- [ ] Hermes ≥ 0.17 on `PATH`; Git on `PATH`; Python 3.11+; Local REST API native MCP configured in Obsidian.
 - [ ] No `~/Memoria-test` yet (start from nothing); no `memoria-*` profiles registered (`hermes profile list` empty or pre-recorded), so "newly created" is observable.
 - [ ] Headless gate green first (don't debug an install on top of a red repo).
 

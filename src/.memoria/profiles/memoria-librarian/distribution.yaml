@@ -2,7 +2,7 @@
 # block is what Hermes writes out as .env.EXAMPLE (scripts/install.ps1 then copies that
 # to .env on first install). Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-librarian
-version: 0.1.0-alpha.2
+version: 0.1.0-alpha.10
 description: "Memoria Librarian — finds, ingests, enriches, and draft-classifies evidence into inbox/ and catalog/."
 author: "Memoria"
 license: "MIT"

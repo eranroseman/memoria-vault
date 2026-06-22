@@ -44,12 +44,12 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 | Piece | Host | Path |
 |---|---|---|
 | **Dev repo** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
-| **Hermes runtime** | WSL2 | `~/.hermes/` — profiles, config, MCP venv |
-| **Obsidian + runtime vault** | Windows | `~/Memoria` |
+| **Hermes runtime** | Native Windows for production; Linux/WSL2 for test | `%LOCALAPPDATA%\hermes` or `~/.hermes/` — profiles, config, MCP venv |
+| **Obsidian + runtime vault** | Same host as the runtime for production | `~/Memoria` / `%USERPROFILE%\Memoria` |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Obsidian opens only the *runtime* vault (`~/Memoria`) — never this dev repo.
-- WSL2↔Windows bridge (ADR-31): Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over verified loopback HTTPS — `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA bundle. On WSL2, mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach the Windows loopback listener. `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or commit the key.
+- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over verified loopback HTTPS — `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA bundle. On WSL2 test runs against Windows Obsidian, mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach the Windows loopback listener. `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or commit the key.
 
 ---
 

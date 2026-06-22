@@ -1,19 +1,19 @@
 # Memoria
 
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20WSL2-blue)
 ![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Memoria turns your Obsidian vault into an active research workspace — an AI research team — a Co-PI you converse with and four background agents that read your notes, surface connections, pull in papers, and write alongside you, with a human approval gate before any change lands.
+Memoria turns your Obsidian vault into an active research workspace — an AI research team — a Co-PI you converse with and four background agents that read your notes, surface connections, pull in papers, and write alongside you.
 
-Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A policy gate audits every proposed write; nothing reaches your notes without your confirmation.
+Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A fail-closed policy gate audits lane writes, allows only lane-scoped staging/scratch paths, and keeps canonical synthesis review-gated.
 
 <!-- SCREENSHOT: Add a screenshot or GIF here showing the vault in action — e.g. an agent's audit callout in Obsidian.
      Suggested path: assets/screenshot.png
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 alpha — not yet validated end-to-end against a live Hermes on Ubuntu.** The installer passes `bash -n` and a full `--dry-run` pass. See the [v0.1.0-alpha.2 release plan](docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md) for current build state before installing.
+> **Status: v0.1 alpha.** Alpha checkpoints are internal milestones, not formal releases. See [Releasing](docs/releasing/README.md) for current checkpoint state before installing.
 
 ---
 
@@ -37,7 +37,7 @@ Canonical roster, postures, and write-scope ceilings for each agent: [Profile ca
 
 The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes, deploys the five `memoria-*` profiles, and sets you up to add your API keys — see [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
-Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. A policy MCP layer intercepts every proposed write — you confirm or reject before anything lands in your vault.
+Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. The policy gate blocks denied paths, logs allowed writes, and turns review-gated synthesis edits into proposals.
 
 ---
 
@@ -51,7 +51,7 @@ One line. Inspect the script first if you like — that's the recommended path.
 curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh | bash
 ```
 
-**Windows (PowerShell)** — gates WSL2, installs the GUI apps via winget, then runs `scripts/install.sh` in WSL2:
+**Windows (PowerShell)** — native Windows production path:
 
 ```powershell
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
@@ -69,7 +69,7 @@ For the full flag list (`--dry-run`, `--no-apps`, `--profiles-only`, and more), 
 
 ### Requirements
 
-- **Git** on your `PATH`; on **Windows**, WSL2 enabled ([Microsoft guide](https://learn.microsoft.com/windows/wsl/install)) — the installer installs nothing if WSL2 is absent. **Supported platforms:** Ubuntu/Debian (native Linux), WSL2 on Windows 11. macOS is not supported.
+- **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
 - A **`KILOCODE_API_KEY`** — get one at [kilo.ai](https://kilo.ai). The shipped model provider is `kilocode`; other providers can be swapped in the profile configs.
 - The installer provisions **Hermes** (+ the ACP extra) and **guides** the Obsidian/Zotero installs — you don't need them beforehand.
 
@@ -85,14 +85,14 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 
 | Path | What |
 | --- | --- |
-| `scripts/install.sh` / `scripts/install.ps1` | The bootstrap (`scripts/install.sh`) + thin Windows WSL2 launcher |
+| `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
 | `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), the decision record (`adr/`), design notes (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
 
 ## Documentation
 
 Start in [`docs/`](docs). New here? Begin with
-[Set up from zero](docs/tutorials/01-set-up-from-zero.md), or jump to the
+[Set up and pick your path](docs/tutorials/00-set-up-and-pick-your-path.md), or jump to the
 [Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) four-quadrant split:
@@ -112,7 +112,7 @@ For fast UI/system-file iteration on the disposable sandbox, run `bash scripts/r
 
 If you use Memoria in your research, please cite it ([CITATION.cff](CITATION.cff)):
 
-> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents* (v0.1.0-alpha.2). <https://github.com/eranroseman/memoria-vault>
+> Roseman, E. (2026). *Memoria: a phase-gated research vault with bounded AI agents*. <https://github.com/eranroseman/memoria-vault>
 
 ## Contributing
 

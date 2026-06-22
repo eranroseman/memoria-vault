@@ -30,6 +30,8 @@ OPENALEX_API_KEY=...                  # openalex.org/settings/api — required s
 S2_API_KEY=...                        # Semantic Scholar, optional (the var is S2_API_KEY, not SEMANTIC_SCHOLAR_API_KEY)
 NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_API_KEY, not PUBMED_API_KEY)
 NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the Crossref mailto / Unpaywall email param
+MEMORIA_TELEGRAM_BOT_TOKEN=...        # optional urgent alert/block pushes
+MEMORIA_TELEGRAM_CHAT_ID=...          # optional urgent alert/block pushes
 # Zotero needs no key — pyzotero reads the local desktop API (http://localhost:23119, read-only)
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
@@ -69,9 +71,18 @@ The `policy` server's entry should point at the vault venv's Python and an absol
 The research lanes reach external services over MCP, not direct HTTP (their `web` toolset is disabled — see [ADR-32](../../adr/32-external-access-over-mcp.md)). Two of those servers are upstream `pip` installs; the rest ship in the vault. Install them where Hermes can launch them:
 
 ```bash
-pip install paper-search-mcp          # Librarian: scholarly discovery across 20+ databases
-pip install "pyzotero[mcp]"           # Librarian + Peer-reviewer: read-only Zotero (local desktop API)
+<vault>/.memoria/.venv/bin/python -m pip install paper-search-mcp
+python -m pip install --user zotero-mcp
 ```
+
+```powershell
+& "<vault>\.memoria\.venv\Scripts\python.exe" -m pip install paper-search-mcp
+py -m pip install --user zotero-mcp
+```
+
+`paper_search` runs under the vault venv's Python. `pyzotero` is launched as the
+`pyzotero-mcp` executable, so install `zotero-mcp` somewhere on the PATH Hermes
+uses.
 
 **5. Seed the retraction dataset.**
 

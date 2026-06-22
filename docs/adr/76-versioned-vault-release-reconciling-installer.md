@@ -37,7 +37,7 @@ load-bearing; everything else follows from them.
 
 **Accepted scope.** This records the deployment *spine* as decided; the work is
 staged (see *Migration* and *Guard* below) and scheduling lives in the tracking
-issue. The import-hygiene package half (step 2 — `src/`-layout, editable install,
+issue. The import-hygiene package half (step 2 — package-root install,
 console scripts, deleting the `sys.path`/`__file__` bootstraps) and the in-process
 policy core (decision 2) are cleared to proceed on their own merits. The
 tarball/signing/copy-install distribution half (decision 1's no-checkout path)
@@ -70,7 +70,7 @@ configuration mismatch is expected customization or conflict. It generalizes
 [ADR-55](55-src-scaffold-populate-golden-copy.md) without pretending all files have
 the same lifecycle.
 
-The runtime is a real, single-rooted `memoria` package (`src/`-layout, `pyproject.toml` as the one source of truth for build, dependency tiers, pytest, ruff, and `[project.scripts]` console entry points; the three `requirements*.txt` collapse into named groups). **It is installed editable (`pip install -e .`) by default on the PI's machine** — editable is the principled default, not a debugging fallback: it delivers the entire import-hygiene payoff (one import root, console scripts on the venv `bin/`, deletion of the conftest `sys.path` block and the runtime `__file__`/`sys.path` bootstraps — 17 sites across 13 files at the time of writing — full type-checker/editor support) **while keeping deployed code plainly inspectable at the release root**. A non-editable copy-install is used only on the eventual no-checkout operator path. No prebuilt `.whl` is shipped; the wheel is built in CI solely as a packaging-correctness check (it exercises `package_data` and `__init__.py` gaps that editable installs do not).
+The runtime is a real, single-rooted `memoria` package (`pyproject.toml` as the one source of truth for build, dependency tiers, pytest, ruff, and `[project.scripts]` console entry points; the three `requirements*.txt` collapse into named groups). Deployed installs use `pip install <release_root>` into the vault venv, not editable mode: the one-line installer may clone to a staging directory and delete it after the vault is populated, so an editable install would leave a dangling import root. Contributor dev setup may still use `pip install -e .` for editor/type-checker convenience. No prebuilt `.whl` is shipped; the wheel is built in CI solely as a packaging-correctness check (it exercises `package_data` and `__init__.py` gaps that editable installs do not).
 
 ### Load-bearing decision 2 — extract a genuine, tiny, standalone policy core
 
@@ -103,7 +103,7 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
 1. **Landed (alpha.4) ✅:** a repo-root `pyproject.toml` carried pytest and ruff
    tooling, and the `conftest.py` `sys.path` block was removed.
 2. **Package spine (alpha.8, #727):** add the `[project]` table, introduce the
-   `memoria.*` import root, install the checkout editable by default, and migrate the
+   `memoria.*` import root, install the release root into the vault venv, and migrate the
    dependency-free policy path first. Legacy loose-module `pythonpath` entries remain
    until their modules move behind the package root in later slices.
 3. **Shared runtime helpers (alpha.8, #728):** centralize dependency-light
@@ -132,10 +132,10 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
 Context for the cadence review, not a gate — pick this up when **any** holds:
 
 - **Distribution:** Memoria ships to operators who cannot run from a Git checkout — the tarball delivery and copy-install path become live (the git-tag path needs none of this).
-- **Support burden:** the `sys.path`/`__file__` bootstrapping (17 sites across 13 files) or the three-way `requirements*.txt` split becomes a recurring source of import/CI breakage — the package + editable-install half (step 2) is the relief and can land first.
+- **Support burden:** the `sys.path`/`__file__` bootstrapping (17 sites across 13 files) or the three-way `requirements*.txt` split becomes a recurring source of import/CI breakage — the package-install half (step 2) is the relief and can land first.
 - **Boundary risk:** any incident or near-miss where the gate and servers could run divergent policy — the policy-core extraction moves to the front.
 
-**Guard:** the step-1 tooling `pyproject.toml` and the step-2 packaging (editable install, deleting the conftest/`__file__` import hacks) are safe to pursue on their own merits. Do **not** stand up tarball publishing, signing, or a copy-install path before a no-checkout audience is real — git-tag is the correct posture until then, and the rest costs nothing to defer.
+**Guard:** the step-1 tooling `pyproject.toml` and the step-2 packaging (package install, deleting the conftest/`__file__` import hacks) are safe to pursue on their own merits. Do **not** stand up tarball publishing or signing before a no-checkout audience is real — git-tag is the correct posture until then, and the rest costs nothing to defer.
 
 ## Alternatives considered
 
