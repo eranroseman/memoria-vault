@@ -139,6 +139,7 @@ status.
 | [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
 | [109](109-project-management-native-views.md) | Project management uses native views over project notes | accepted |
 | [110](110-ruff-format-python-layout.md) | Ruff: formatter owns layout (line-length 100), curated lint ruleset | accepted |
+| [111](111-two-mode-tutorial-spine.md) | Two-mode tutorial spine, seeded by a half-built corpus | proposed |
 
 <!-- ADR-INDEX:END -->
 

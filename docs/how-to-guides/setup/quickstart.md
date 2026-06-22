@@ -7,13 +7,13 @@ nav_order: 1
 
 # Quickstart
 
-Five steps from zero to a working vault with the Co-PI answering. For the full walkthrough with explanations, see [Tutorial 01: Set up from zero](../../tutorials/01-set-up-from-zero.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
+Five steps from zero to a working vault with the Co-PI answering. For the full walkthrough with explanations, see [Tutorial 00: Set up and pick your path](../../tutorials/00-set-up-and-pick-your-path.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
 
 ## Prerequisites
 
 - Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
-- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 03: Bring in a paper](../../tutorials/03-bring-in-a-paper.md))
+- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 01: Bring in your first source](../../tutorials/01-bring-in-your-first-source.md))
 
 ## Steps
 

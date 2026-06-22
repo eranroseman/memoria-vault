@@ -88,4 +88,4 @@ Each trades a little breadth for much less shell to build and maintain:
 - **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../../adr/26-repo-as-install-unit.md) (the repo is the install unit).
 - **Explanation:** [Distribution model](distribution-model.md), [Why Hermes](../rationale/why-hermes.md) (the runtime the installer provisions).
-- **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Tutorial 01: Set up from zero](../../tutorials/01-set-up-from-zero.md).
+- **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Tutorial 00: Set up and pick your path](../../tutorials/00-set-up-and-pick-your-path.md).

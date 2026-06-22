@@ -50,7 +50,6 @@ Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-w
 ## Related
 
 - After keeping a candidate: [Capture and ingest a source](capture-and-ingest.md)
-- The full guided loop: [Tutorial 07: Find new sources](../../tutorials/07-find-new-sources.md)
-- Scaling to a topic batch: [Tutorial 04: Build a reading batch](../../tutorials/04-build-a-reading-batch.md)
+- The full guided loop: [Tutorial 05: Close the loop](../../tutorials/05-close-the-loop.md)
 - The profile behind the search: [The Librarian](../../explanation/profiles/librarian.md)
 - A defensible, protocol-driven search instead: [Run a systematic review](run-a-systematic-review.md)
