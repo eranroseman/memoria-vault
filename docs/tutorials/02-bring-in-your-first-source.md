@@ -17,13 +17,13 @@ parent: Tutorials
 
 Accumulate is a **habit**, and a habit is learned one rep at a time. This is the rep: take something *you* are reading and turn it into a durable, traceable record. The sample vault hands you worked source notes to study, but the move only sticks when you do it on your own material — so this tutorial brings in a source of yours.
 
-If you loaded the sample vault in Tutorial 01, you'll see its source notes (the PREDIMED note, the Lyon Diet Heart note, and others) already filled in `notes/sources/`. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
+The sample vault you loaded in Tutorial 01 brought worked source notes (the PREDIMED note, the Lyon Diet Heart note, and others) — open the **Library** space and they show in the Reading pipeline, already filled. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
 
 ## Step 1 — Capture your source
 
 Pick a paper you actually want to read for your own goal, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl-P` → **Memoria: capture source from URL** → paste the URL. A resolvable DOI ingests immediately; a bare URL asks you for the DOI or citekey. That puts a capture card on the Librarian's `catalog` lane.
 
-> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route, and telling the Co-PI "bring in this paper: `<DOI>`", feeds the same `catalog` lane.
+> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route — or just telling the Co-PI to bring in a `<DOI>` — feeds the same `catalog` lane.
 
 ---
 
@@ -34,13 +34,13 @@ Within a couple of minutes the deterministic ingest operation, driven by the Lib
 - Created the **Catalog entity**: `catalog/papers/<citekey>.md` with `type: paper`, merged metadata (title, DOI, authors, year, venue — per-field provenance from Semantic Scholar, OpenAlex, Crossref, and PubMed/NCBI), and a **`relationships`** block with `authored_by`, `published_in`, and `cites` edges into person, venue, and paper entities it finds or creates alongside.
 - Created a **proposed source note stub** in `notes/sources/` so the reading queue can see it.
 
-Open `catalog/papers/<citekey>.md` and look at the `relationships` block — those are the knowledge graph's *given* edges, built by the operation. Your own links come later, on notes you author. Compare it to a sample paper entity if you loaded the sample: same shape, real metadata. Full pipeline reference: [Ingest routing](../reference/ingest.md).
+Open the **Library** space, find your new paper in its **Catalog** view (`catalog.base`), and look at the `relationships` block — those are the knowledge graph's *given* edges, built by the operation. Your own links come later, on notes you author. Compare it to a sample paper entity: same shape, real metadata. Full pipeline reference: [Ingest routing](../reference/ingest.md).
 
 ---
 
 ## Step 3 — Judge the candidate card
 
-Capture doesn't end with a silent import: a **`candidate` card** lands in your Inbox proposing the keep. Open the Inbox space's **Needs me** view, or open the file in `inbox/`.
+Capture doesn't end with a silent import: a **`candidate` card** lands in your Inbox proposing the keep. Open the Inbox space's **Needs me** view.
 
 The card carries an *argument, never a verdict*: an `action`, the case for and against, what tipped it, and a certainty level. Read the `argument_against` field first — it's the information-bearing one. Then decide. Resolve the card from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. For this tutorial, keep it (`current` = accepted); a skipped card resolves straight to `archived` and the Catalog entry stays as a record. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md).
 
@@ -48,9 +48,9 @@ The card carries an *argument, never a verdict*: an `action`, the case for and a
 
 ## Step 4 — Read it, then write the source note in your own words
 
-Read the paper, or at minimum its abstract and conclusions, with `catalog/papers/<citekey>.md` open in a split pane for the metadata and relationships. Watch for one or two things worth keeping — not a summary of everything.
+Read the paper, or at minimum its abstract and conclusions, with its Catalog entity open in a split pane (from the **Library** space's **Catalog** view) for the metadata and relationships. Watch for one or two things worth keeping — not a summary of everything.
 
-Then open the proposed stub in `notes/sources/`. The source note is *your* reading record — the literature note, in your words, never the agent's. Under the hood it carries frontmatter like:
+Then open the proposed source note from the **Library** space's Reading pipeline. The source note is *your* reading record — the literature note, in your words, never the agent's. Under the hood it carries frontmatter like:
 
 ```yaml
 type: source
@@ -66,7 +66,7 @@ Fill the three body sections the template gives you. This is where the sample no
 
 1. **In my words** — what the paper claims, on what evidence. Write it fresh; don't paste the abstract. (Look at how the PREDIMED note states the trial, the arms, and the result in plain sentences.)
 2. **Worth distilling** — one or two candidate claims you might extract later. Each bullet is a future claim note. Use the **Create linked claim** button when a sentence is ready.
-3. **Tensions** — where this paper disagrees with anything your vault already holds. If you loaded the sample, does your source touch the same causal-vs-confounded tension its cluster holds? Note it.
+3. **Tensions** — where this paper disagrees with anything your vault already holds. Does your source touch the same causal-vs-confounded tension the sample's cluster holds? Note it.
 
 Save, then set the source note to `lifecycle: provisional`: read, captured in your words, but not yet distilled into claims. Once you distill the claims you need (next tutorial), you'll advance it to `current`.
 

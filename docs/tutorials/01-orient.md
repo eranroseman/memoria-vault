@@ -17,13 +17,13 @@ parent: Tutorials
 
 Memoria is a loop, not a pipeline: you **accumulate** (turn what you read into durable, connected, traceable knowledge) and you **produce** (write something defensible from it). Built for real, a corpus dense enough to write from is weeks of reading — too long to wait before you see the point. So you start at the end: you open a project over a corpus that's *already built* and read its map, so you know the shape of what you're aiming at before you lift a finger to build it.
 
-You do all of this in conversation with **one** agent, the **Co-PI**, in the Agent Client pane (`Cmd/Ctrl-P` → **Agent Client: Open chat view**). It questions your thinking and explains the system, and it delegates durable work to background lanes — but you never address a lane directly. Everything in these tutorials, you do with the Co-PI.
+You converse with **one** agent, the **Co-PI**, in the Agent Client pane (`Cmd/Ctrl-P` → **Agent Client: Open chat view**): it questions your thinking, explains the system, and can carry out work for you too. But the durable tasks — mapping, drafting, verifying, capturing — each have a **direct command** in the palette, and that command is the quickest, most precise way to run them; each hands its work to a background lane you never address directly. So you reach for the command first, and turn to the Co-PI whenever you'd rather think it through or simply ask.
 
 ## Step 1 — Load the sample vault
 
 Press `Cmd/Ctrl-P` → **Memoria: load sample vault**. It copies a small, labeled starter corpus on one neutral topic — **whether a Mediterranean diet protects the heart** — into your `catalog/` and `notes/`. Every note it adds is tagged `sample: true`, so it stays visibly separate from your own work, and you can retire it in one command when you're done (Tutorial 06).
 
-The sample is **optional and skippable**: an experienced researcher with a paper already in hand can skip it and start from their own material in Tutorial 02. But it is what lets you reach the writing payoff *today* instead of after weeks of reading, so it is the recommended path — and it's the corpus the rest of this tutorial reads.
+The sample is **removable** — you archive it in one command at the end (Tutorial 06) — but it is not skippable *here*: these tutorials are written *around* it, and Orient itself needs a loaded corpus to map. An experienced researcher who wants to start straight from their own material should follow the [how-to guides](../how-to-guides/README.md) instead of this arc. For everyone else, the sample is what lets you reach the writing payoff *today* instead of after weeks of reading — and it's the corpus the rest of this tutorial reads.
 
 > One honest note: a cluster this dense is weeks of reading, compressed. It's a teaching scaffold. You'll finish a few of its deliberately-unfinished pieces to learn the moves, then repeat them on your own sources.
 
@@ -35,7 +35,7 @@ A project is where producing happens — and opening one is how you name what yo
 
 > *A verified 200-word section on whether a Mediterranean diet protects the heart.*
 
-(If you skipped the sample to bring your own topic, write the equivalent for it — one writable deliverable, not a vague area like "learn about X.")
+(Write one concrete, writable deliverable, not a vague area like "learn about X.")
 
 The command scaffolds `projects/<slug>/`. Open any file under it and run **Memoria: refresh project gate** — it reads your graph's maturity, saturation, and open gaps into `project-gate-index.md`. Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md). This goal is the line you'll come back to in Tutorial 04 when you draft.
 
@@ -43,9 +43,7 @@ The command scaffolds `projects/<slug>/`. Open any file under it and run **Memor
 
 ## Step 3 — Read the map
 
-Now see what the corpus can support. Ask the Co-PI in its pane:
-
-> "Map my corpus on Mediterranean diet and cardiovascular health — what does it cover well, and where is it thin?"
+Now see what the corpus can support. Run `Cmd/Ctrl-P` → **Memoria: map corpus** — or ask the Co-PI to map it, if you'd like help framing the scope first.
 
 That raises a **`map`** task for the Librarian's map lane, which builds the typed graph and topic clusters and returns a coverage read through the **Inbox** ([The Librarian](../explanation/profiles/librarian.md)). Open the **Inbox space** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how every piece was made — that's the next four tutorials — so let it give you the tour:
 
