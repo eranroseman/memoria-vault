@@ -31,5 +31,5 @@ The command archives live sample notes labeled `sample: true`. They stay on disk
 
 ## Related
 
-- Tutorial sample contents: [The sample vault](../../tutorials/sample-vault/)
+- Sample vault contents: [The sample vault](../../reference/sample-vault.md)
 - Command details: [Obsidian command palette](../../reference/obsidian-command-palette.md)
