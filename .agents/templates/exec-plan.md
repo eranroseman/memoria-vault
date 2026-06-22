@@ -29,7 +29,7 @@
 <!-- The minimum a stateless reader needs to orient. -->
 
 - **Task:** {{ one line }}
-- **Worktree / branch:** `~/mv-<name>` · `feat/<name>`
+- **Worktree / branch:** `~/mv/<name>` · `feat/<name>`
 - **Related ADRs:** {{ ADR-NN — link to `docs/adr/<NN>-*.md`, or — }}
 - **Related issues / milestone:** {{ #NN, vX.Y or — }}
 - **Started:** {{ YYYY-MM-DD }} · **Last updated:** {{ YYYY-MM-DD }}
@@ -65,8 +65,8 @@
 
    ```bash
    git fetch origin
-   git worktree add ~/mv-{{ name }} -b feat/{{ name }} origin/main
-   cd ~/mv-{{ name }}
+   git worktree add ~/mv/{{ name }} -b feat/{{ name }} origin/main
+   cd ~/mv/{{ name }}
    ```
 
 2. {{ next exact command }}
