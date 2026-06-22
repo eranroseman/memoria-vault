@@ -1,9 +1,9 @@
 ---
-title: "Tutorial 02: Build claims and connect them"
+title: "Tutorial 03: Build claims and connect them"
 parent: Tutorials
 ---
 
-# Tutorial 02: Build claims and connect them
+# Tutorial 03: Build claims and connect them
 
 **You will end with:** the sample's half-built cluster finished — one stubbed claim grounded in its source and one missing link made — plus a claim of your own distilled from your source and wired into the graph. A connected cluster dense enough to write from.
 
@@ -11,7 +11,7 @@ parent: Tutorials
 
 **You will use:** the Obsidian command palette, the Co-PI pane, and the sample vault's claims.
 
-**Prerequisite:** [Tutorial 01: Bring in your first source](01-bring-in-your-first-source.md) complete.
+**Prerequisite:** [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) complete.
 
 ---
 
@@ -45,7 +45,7 @@ Open the half-built source note **`sofi2010-meta-analysis`** beside it. Its **In
 
 ## Step 3 — Distill a claim from your own source, cold
 
-Now the rep that matters. Open your own source note from Tutorial 01 and look at its **Worth distilling** bullets. Pick the one that is closest to a single defensible sentence.
+Now the rep that matters. Open your own source note from Tutorial 02 and look at its **Worth distilling** bullets. Pick the one that is closest to a single defensible sentence.
 
 With the source note active, `Cmd/Ctrl-P` → **Memoria: create linked claim note**. That spawns a claim already carrying your source in `sources`. Fill it the way the worked claim taught you:
 
@@ -76,8 +76,8 @@ A vault with 50 sources and 5 claims is a reading list. The difference is the de
 
 ## What's next
 
-[Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) — open a Project, map the corpus for coverage, and draft your goal section with citations bound to these claims.
+[Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) — open a Project, map the corpus for coverage, and draft your goal section with citations bound to these claims.
 
 ---
 
-← [Tutorial 01: Bring in your first source](01-bring-in-your-first-source.md) · [Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) →
+← [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) · [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) →

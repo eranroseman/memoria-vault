@@ -1,9 +1,9 @@
 ---
-title: "Tutorial 04: Verify it holds"
+title: "Tutorial 05: Verify it holds"
 parent: Tutorials
 ---
 
-# Tutorial 04: Verify it holds
+# Tutorial 05: Verify it holds
 
 **You will end with:** an independent verification pass over your draft, the finding-first cards it raises read and acted on, and a short section you would defend in front of someone who disagrees with you.
 
@@ -11,7 +11,7 @@ parent: Tutorials
 
 **You will use:** the Co-PI pane and the Inbox.
 
-**Prerequisite:** [Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) complete — a ~200-word draft under `projects/<slug>/` with in-text citekeys, and the gap card from the map kept in your Inbox.
+**Prerequisite:** [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) complete — a ~200-word draft under `projects/<slug>/` with in-text citekeys, and the gap card from the map kept in your Inbox.
 
 This is the second **Produce** tutorial. Drafting got the words down; verification asks whether they hold. The point is not to bless the draft — it is to put an *adversary* between you and shipping, so the weaknesses surface here instead of in review.
 
@@ -79,8 +79,8 @@ One check you never run: the retraction sweep runs on cron behind you and raises
 
 ## What's next
 
-[Tutorial 05: Close the loop](05-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to Accumulate, and meet the weekly review that keeps the whole loop turning.
+[Tutorial 06: Close the loop and make it your own](06-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to Accumulate, and meet the weekly review that keeps the whole loop turning.
 
 ---
 
-← [Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) · [Tutorial 05: Close the loop](05-close-the-loop.md) →
+← [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) · [Tutorial 06: Close the loop and make it your own](06-close-the-loop.md) →

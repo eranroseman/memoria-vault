@@ -7,13 +7,13 @@ nav_order: 1
 
 # Quickstart
 
-Four steps from zero to an installed vault. For the full walkthrough with explanations, see [Tutorial 00: Set up and pick your path](../../tutorials/00-set-up-and-pick-your-path.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
+Four steps from zero to an installed vault. For the full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md). Once you're installed, learn Memoria itself with [Tutorial 01: See what you're building](../../tutorials/01-orient.md).
 
 ## Prerequisites
 
 - Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
-- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 01](../../tutorials/01-bring-in-your-first-source.md)).
+- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 02](../../tutorials/02-bring-in-your-first-source.md)).
 
 ## Steps
 
@@ -68,5 +68,5 @@ those commands as the day-1 path for the space you are in.
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
 - API keys and profile secrets: [Set up Hermes](set-up-hermes.md)
-- First source walkthrough: [Tutorial 01](../../tutorials/01-bring-in-your-first-source.md)
+- First source walkthrough: [Tutorial 02](../../tutorials/02-bring-in-your-first-source.md)
 - Optional bibliographic backbone: [Set up Zotero](../zotero/set-up-zotero.md)

@@ -1,9 +1,9 @@
 ---
-title: "Tutorial 01: Bring in your first source"
+title: "Tutorial 02: Bring in your first source"
 parent: Tutorials
 ---
 
-# Tutorial 01: Bring in your first source
+# Tutorial 02: Bring in your first source
 
 **You will end with:** one source of your own in the Catalog, its candidate card judged in the Inbox, and one proposed source note filled in your own words — your first independent Accumulate rep, sitting alongside the sample's worked examples.
 
@@ -11,13 +11,13 @@ parent: Tutorials
 
 **You will use:** the Obsidian command palette, the Inbox, and the Co-PI pane.
 
-**Prerequisite:** [Tutorial 00: Set up and pick your path](00-set-up-and-pick-your-path.md) complete.
+**Prerequisite:** [Tutorial 01: See what you're building](01-orient.md) complete — the sample vault loaded and a project opened over it.
 
 ---
 
 Accumulate is a **habit**, and a habit is learned one rep at a time. This is the rep: take something *you* are reading and turn it into a durable, traceable record. The sample vault hands you worked source notes to study, but the move only sticks when you do it on your own material — so this tutorial brings in a source of yours.
 
-If you loaded the sample vault, you'll see its source notes (the PREDIMED note, the Lyon Diet Heart note, and others) already filled in `notes/sources/`. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
+If you loaded the sample vault in Tutorial 01, you'll see its source notes (the PREDIMED note, the Lyon Diet Heart note, and others) already filled in `notes/sources/`. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
 
 ## Step 1 — Capture your source
 
@@ -91,8 +91,8 @@ The paper is a vault citizen; the source note is your intellectual claim on it. 
 
 ## What's next
 
-[Tutorial 02: Build claims and connect them](02-build-claims-and-connect-them.md) — study a worked claim in the sample, finish its half-built claims and links, then distill a claim from your own source and wire it into the cluster.
+[Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) — study a worked claim in the sample, finish its half-built claims and links, then distill a claim from your own source and wire it into the cluster.
 
 ---
 
-← [Tutorial 00: Set up and pick your path](00-set-up-and-pick-your-path.md) · [Tutorial 02: Build claims and connect them](02-build-claims-and-connect-them.md) →
+← [Tutorial 01: See what you're building](01-orient.md) · [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) →

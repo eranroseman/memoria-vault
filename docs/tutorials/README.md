@@ -7,33 +7,30 @@ permalink: /tutorials/
 
 # Tutorials
 
-Step-by-step learning paths through Memoria. Each tutorial teaches by doing: you follow concrete steps in Obsidian — and in conversation with the Co-PI — and end with something real in your vault.
+One guided arc that takes you from a working vault to a **verified, cited paragraph you'd defend** — in a single sitting. Each step teaches by doing: you follow concrete steps in Obsidian, in conversation with the Co-PI, and end with something real in your vault.
 
-You converse with **one** agent throughout: the Co-PI, in the Agent Client pane. It questions your thinking, explains the system, and delegates durable work to the background lanes. You never address a background agent directly.
+**Before you start:** these assume Memoria is installed and the Co-PI is answering. If it isn't, run the [Quickstart](../how-to-guides/setup/quickstart.md) first — installing Memoria is a one-time setup, separate from learning to use it.
+
+You converse with **one** agent throughout: the Co-PI, in the Agent Client pane. It questions your thinking, explains the system, and delegates durable work to background lanes — you never address a lane directly.
 
 ## How the path is shaped
 
-Real use of Memoria is not a pipeline you run once; it is a loop you keep turning. You alternate between two modes:
+Memoria is a loop, not a pipeline: producing and accumulating feed each other. But built for real, a corpus dense enough to write from is weeks of reading — too long to wait before the point is visible. So the arc **starts at the destination**: you open a project over a small **sample vault** that is already part-built, read its coverage map, and only then build toward it — finishing the sample's deliberately-unfinished pieces and threading in a source of your own. By the end you have turned the loop once and graduated onto your own library and project. That is how one sitting reaches a payoff that normally takes weeks to earn.
 
-- **Accumulate** — turn what you read into durable, connected, traceable knowledge. Continuous, low-stakes, the everyday habit.
-- **Produce** — write something defensible from what you know. Periodic, high-stakes, the payoff.
+## The arc
 
-These tutorials walk you through both, then close the loop. Done for real, that loop takes months — so you don't start from an empty vault. You start from a small **sample vault** that is already part-built, and the work is to *finish* it and then extend it with a source of your own. That is how a one-sitting tutorial can reach a payoff that normally takes weeks of reading to earn.
-
-## The path
-
-| # | Tutorial | Mode | What you'll do | What you end with |
-| --- | --- | --- | --- | --- |
-| 00 | [Set up and pick your path](00-set-up-and-pick-your-path.md) | Setup | Run the installer, add API keys, meet the Co-PI. Choose your start — load the **sample vault** or begin with your own source — and write a one-line goal. | A working vault, a written goal, and (recommended) the sample vault loaded |
-| 01 | [Bring in your first source](01-bring-in-your-first-source.md) | Accumulate | Capture a real source of your own from the palette; judge its candidate card; write its source note in your own words. | Your own Catalog entity and a source note, alongside the sample's worked examples |
-| 02 | [Build claims and connect them](02-build-claims-and-connect-them.md) | Accumulate | Study a worked claim in the sample, finish its half-built claims and links, then distill your own source and wire it into the cluster. | A connected claim cluster — dense enough to write from |
-| 03 | [Draft a section from your claims](03-draft-a-section-from-your-claims.md) | Produce | Open a Project, map the corpus for coverage, draft a short section from your claims with bound citations. | Your goal from step 00, in cited prose |
-| 04 | [Verify it holds](04-verify-it-holds.md) | Produce | Ask for a verification pass; read the finding-first cards; fix or trust. | A draft you would defend |
-| 05 | [Close the loop](05-close-the-loop.md) | Capstone | Watch the draft surface a gap; let it re-trigger discovery; meet the weekly review that keeps the loop alive. | A loop you keep turning, and a clean handoff to your own vault |
+| # | Tutorial | What you'll do | What you end with |
+| --- | --- | --- | --- |
+| 01 | [See what you're building](01-orient.md) | Load the sample, open a project, and read its narrated coverage map — a dense cluster and the one gap it doesn't cover. | A project naming your goal, and the destination in view |
+| 02 | [Bring in your first source](02-bring-in-your-first-source.md) | Capture a real source of your own; judge its candidate card; write its source note in your own words. | Your own Catalog entity and source note |
+| 03 | [Build claims and connect them](03-build-claims-and-connect-them.md) | Study a worked claim, finish the sample's half-built claim and link, then distill your own source and wire it in. | A connected claim cluster, dense enough to write from |
+| 04 | [Draft a section from your claims](04-draft-a-section-from-your-claims.md) | Decide what the section can stand behind, then draft it with citations bound to sources you hold. | Your goal from 01, in cited prose |
+| 05 | [Verify it holds](05-verify-it-holds.md) | Ask for a verification pass; read the finding-first cards; fix or trust. | A draft you would defend |
+| 06 | [Close the loop and make it your own](06-close-the-loop.md) | Hand the gap back to discovery — one full turn of the loop — then graduate: archive the sample, import your library, open your real project. | A loop you keep turning, on your own material |
 
 ## The sample vault
 
-The sample vault is a small, **labeled** starter corpus on one neutral topic — adherence to a Mediterranean diet and cardiovascular health. It is deliberately **half-built**: some sources are fully worked into claims and links, others are left for you to finish in step 02. Everything in it traces to a real, citable paper — nothing is fabricated, because learning to fake provenance is exactly the habit Memoria exists to prevent.
+The sample vault is a small, **labeled** starter corpus on one neutral topic — adherence to a Mediterranean diet and cardiovascular health. It is deliberately **half-built**: some sources are fully worked into claims and links, others are left for you to finish in Tutorial 03. Everything in it traces to a real, citable paper — nothing is fabricated, because learning to fake provenance is exactly the habit Memoria exists to prevent.
 
 It is **optional and removable**: an experienced researcher can skip it and start with their own source, and once you are done **Memoria: remove sample vault** archives the labeled sample notes without breaking any links. See [the sample vault](sample-vault/README.md) for what it contains and how to load it.
 
