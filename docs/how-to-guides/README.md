@@ -29,7 +29,7 @@ Installing profiles, configuring environments, rebuilding indexes, and recoverin
 
 | Section | Use it for |
 | --- | --- |
-| [Setup](setup/) | One-time machine, vault, Obsidian, Hermes, messaging, and second-vault setup |
+| [Setup](setup/) | One-time machine, vault, Obsidian, Hermes, optional sample, and second-vault setup |
 | [Using Obsidian](using-obsidian/) | Day-to-day Obsidian controls: home, dashboards, workspaces, ACP, and the command palette |
 | [Using Hermes Agent](hermes-agent/) | Profile configuration and terminal chat sessions |
 | [Inbox](inbox/) | Triage, review queues, weekly review, and returning to work |
