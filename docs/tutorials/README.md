@@ -35,7 +35,7 @@ These tutorials walk you through both, then close the loop. Done for real, that 
 
 The sample vault is a small, **labeled** starter corpus on one neutral topic — adherence to a Mediterranean diet and cardiovascular health. It is deliberately **half-built**: some sources are fully worked into claims and links, others are left for you to finish in step 02. Everything in it traces to a real, citable paper — nothing is fabricated, because learning to fake provenance is exactly the habit Memoria exists to prevent.
 
-It is **optional and removable**: an experienced researcher can skip it and start with their own source, and once you are done you can archive it without breaking any links. See [the sample vault](sample-vault/README.md) for what it contains and how to load it.
+It is **optional and removable**: an experienced researcher can skip it and start with their own source, and once you are done **Memoria: remove sample vault** archives the labeled sample notes without breaking any links. See [the sample vault](sample-vault/README.md) for what it contains and how to load it.
 
 ---
 

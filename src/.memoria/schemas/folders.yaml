@@ -41,6 +41,14 @@ transient_prefixes:
 
 # the full installer skeleton (content dirs get .gitkeep; ADR-55)
 skeleton:
+  - .memoria/samples
+  - .memoria/samples/mediterranean-diet
+  - .memoria/samples/mediterranean-diet/catalog
+  - .memoria/samples/mediterranean-diet/catalog/papers
+  - .memoria/samples/mediterranean-diet/notes
+  - .memoria/samples/mediterranean-diet/notes/claims
+  - .memoria/samples/mediterranean-diet/notes/hubs
+  - .memoria/samples/mediterranean-diet/notes/sources
   - catalog/papers
   - catalog/people
   - catalog/organizations

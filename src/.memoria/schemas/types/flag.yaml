@@ -19,4 +19,5 @@ optional:
   citekey: str
   raised_by: str
   loudness: enum:loudness
+  sample: bool
   created: date

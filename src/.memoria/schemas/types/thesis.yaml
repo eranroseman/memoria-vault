@@ -25,4 +25,5 @@ optional:
   refutation_sufficiency_at: date
   promoted_at: date
   promoted_by: str
+  sample: bool
   created: date

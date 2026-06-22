@@ -12,4 +12,5 @@ optional:
   url: str
   license: str
   relationships: map
+  sample: bool
   created: date

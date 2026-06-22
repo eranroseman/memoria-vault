@@ -6,6 +6,6 @@ is retracted or superseded (ADR-09/ADR-52). [Dashboard rationale](https://eranro
 ```dataview
 TABLE file.link AS Claim, links.contradicts AS Contradicts, maturity
 FROM "notes/claims"
-WHERE lifecycle = "current" AND links.contradicts
+WHERE lifecycle = "current" AND sample != true AND links.contradicts
 SORT file.mtime DESC
 ```

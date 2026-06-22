@@ -58,6 +58,44 @@
       }
     },
     {
+      "id": "2c8b92c4-9bf8-4be0-88cf-9b02fdc4a8e0",
+      "name": "Memoria: load sample vault",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: load sample vault",
+        "id": "ce5187a2-4041-48a5-8c4e-ef4c2eeafae5",
+        "commands": [
+          {
+            "name": "load-sample-vault",
+            "type": "UserScript",
+            "id": "33c16640-5dbb-44c4-8b3a-c0c1ac8925c1",
+            "path": "system/scripts/load-sample-vault.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "b89103a0-9b13-43fd-bf2e-453831130c10",
+      "name": "Memoria: remove sample vault",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: remove sample vault",
+        "id": "0bcf48ed-7106-40a1-a296-6a418cf7bc2c",
+        "commands": [
+          {
+            "name": "remove-sample-vault",
+            "type": "UserScript",
+            "id": "9e3223d6-f451-4b6d-8a30-0a553f82bd28",
+            "path": "system/scripts/remove-sample-vault.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "2cc964f1-b720-468b-8d2e-b5b14a890127",
       "name": "Memoria: capture from Zotero selection",
       "type": "Macro",

@@ -16,4 +16,5 @@ optional:
   group: str
   rank: int
   reason: str
+  sample: bool
   created: date

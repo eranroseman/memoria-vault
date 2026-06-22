@@ -3,6 +3,7 @@ filters:
   and:
     - file.inFolder("notes/sources")
     - 'lifecycle != "archived"'
+    - 'sample != true'
 formulas:
   note: 'link(file.path, title)'
   age_days: '(now() - file.ctime).days.round(0)'

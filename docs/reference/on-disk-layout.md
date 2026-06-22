@@ -72,6 +72,8 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 │   └── memoria-{copi,librarian,writer,peer-reviewer,engineer}/
 │       ├── SOUL.md · config.yaml · distribution.yaml · skills/
 ├── lane-overrides/          the five lane ceilings: copi/librarian/writer/peer-reviewer/engineer.yaml
+├── samples/                 optional bundled tutorial corpora, loaded by QuickAdd commands
+│   └── mediterranean-diet/    hidden source for Memoria: load sample vault
 ├── plugins/memoria-policy-gate/   the fail-closed write-gate Hermes plugin
 ├── scripts/                 cron wrappers (sweeps, lint, board-export, retraction refresh)
 ├── tool-registry.yaml       authoritative per-profile tool allowlist

@@ -10,4 +10,5 @@ required:
   origin: enum:origin
 optional:
   title: str
+  sample: bool
   created: date

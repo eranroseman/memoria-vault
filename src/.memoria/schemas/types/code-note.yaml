@@ -20,4 +20,5 @@ optional:
   run_command: str
   dependencies: list
   repository: str
+  sample: bool
   created: date

@@ -11,4 +11,5 @@ optional:
   subtype: str # lab · university · company · funder …
   location: str
   relationships: map
+  sample: bool
   created: date

@@ -80,11 +80,11 @@ Here the tutorials fork. Done for real, accumulating a corpus dense enough to wr
 
 **Recommended — load the sample vault.** A small, labeled starter corpus on one neutral topic: **whether a Mediterranean diet protects the heart**. It is deliberately *half-built* — a few sources are fully worked into claims and links, and a few pieces are left unfinished on purpose. You finish them (that *is* the core lesson) and then extend the corpus with a source of your own. Loading it lets you reach the Produce payoff today instead of after weeks of reading.
 
-To load it, copy the repository's top-level `sample-vault/` notes into your vault. (How the installer offers to copy them is being finalized; for now, copy the folder in by hand.) The full contents and how to remove it later: [the sample vault](sample-vault/README.md).
+To load it, press `Cmd/Ctrl-P` and run **Memoria: load sample vault**. The command copies the bundled sample into `catalog/` and `notes/`; every sample note is labeled `sample: true` so it stays visibly separate from your own work. The full contents and how to remove it later: [the sample vault](sample-vault/README.md).
 
 **Or — start with your own source.** If you already have a paper you're reading and a question you're chasing, skip the sample and bring your own. The sample is **optional and skippable** — an experienced researcher loses nothing by starting from their own material.
 
-> One honest note about the sample: a cluster that dense is weeks of reading, compressed. You finish a few reps on it to learn the moves, then repeat them on your own sources. It is a teaching scaffold, and when you're done you can archive it without breaking a single link.
+> One honest note about the sample: a cluster that dense is weeks of reading, compressed. You finish a few reps on it to learn the moves, then repeat them on your own sources. It is a teaching scaffold, and when you're done **Memoria: remove sample vault** archives it without breaking a single link.
 
 Whichever you pick, you converse with the same Co-PI and learn the same loop. The next tutorial has you bring in a source of **your own** either way; the sample sits alongside as worked examples to copy the shape from.
 

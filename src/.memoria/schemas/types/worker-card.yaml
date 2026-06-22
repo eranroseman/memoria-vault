@@ -17,4 +17,5 @@ optional:
   retry_count: int
   reason: str
   expected_outputs: str
+  sample: bool
   created: date

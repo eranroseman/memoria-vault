@@ -10,4 +10,5 @@ required:
   title: str
   space: enum:space
 optional:
+  sample: bool
   created: date

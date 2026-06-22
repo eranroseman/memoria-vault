@@ -41,6 +41,8 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: capture fleeting",
         "Memoria: capture from Zotero selection",
         "Memoria: capture source from URL",
+        "Memoria: load sample vault",
+        "Memoria: remove sample vault",
         "Memoria: structured source capture",
         "Memoria: delegate task",
         "Memoria: catalog source",

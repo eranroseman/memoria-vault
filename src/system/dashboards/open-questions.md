@@ -6,6 +6,6 @@ yet. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanati
 ```dataview
 TABLE file.link AS Claim, maturity, topics
 FROM "notes/claims"
-WHERE lifecycle = "current" AND length(file.inlinks) = 0
+WHERE lifecycle = "current" AND sample != true AND length(file.inlinks) = 0
 SORT file.mtime ASC
 ```

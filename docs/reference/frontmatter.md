@@ -59,7 +59,7 @@ The schema validates field presence and kind; display order is a shipped-vault c
 3. Type-specific state: `maturity`, `certainty`, `agent_recommendation`, `loudness`, `origin`, or `ingest_status`.
 4. Primary references: `citekey`, `entity`, `target`, `task_id`, `url`, `doi`.
 5. Classification and relations: `research_area`, `methodology`, `topics`, `sources`, `links`, `relationships`.
-6. Provenance and housekeeping: owned namespaces such as `_enrichment` / `_proposed_classification`, then `created`, `updated`, `enriched_date`, and version fields.
+6. Provenance and housekeeping: owned namespaces such as `_enrichment` / `_proposed_classification`, then labels such as `sample`, timestamps such as `created`, `updated`, `enriched_date`, and version fields.
 
 Obsidian does not have a global property-order schema file, so the shipped templates, emitters, and Bases carry this convention directly. The `memoria-property-badges.css` snippet colors the scan-critical state fields (`lifecycle`, `ingest_status`, `loudness`, and verification status) when Obsidian exposes editable property values; the field order still carries the meaning when snippets are disabled.
 
@@ -150,6 +150,7 @@ Worklist rows are `worklist-item` notes under `system/worklists/`. Their `lifecy
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
 | `title` / `name` | `str` | Notes and cards use `title`; catalog entities use `name` (papers carry both `citekey` and `title`). |
 | `created` | `date` | Optional everywhere. |
+| `sample` | `bool` | Optional label for bundled tutorial notes loaded from `.memoria/samples/`; dashboards exclude `sample: true` from active-corpus views, and **Memoria: remove sample vault** archives those notes. |
 | `research_area`, `methodology`, `topics` | `list` | Controlled-vocabulary classification (papers, sources, claims); values live in [Vocabulary](vocabulary.md). |
 | `ingest_status` | `enum` | Paper ingest floor/progress: `tier0`, `enriched`, `complete`, or `needs-human`. |
 

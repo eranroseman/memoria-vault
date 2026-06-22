@@ -11,4 +11,5 @@ required:
 optional:
   members: list
   links: map
+  sample: bool
   created: date

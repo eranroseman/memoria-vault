@@ -100,6 +100,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 | `gated_prefixes` (agent writes degrade to `dry_run`) | `notes/claims/` · `notes/hubs/` |
 | `transient_prefixes` (items converge to `archived` and leave active views) | `inbox/` |
 | `categories` (legal vault-root folders) | `catalog` · `notes` · `projects` · `inbox` · `spaces` · `system` |
+| `skeleton` sample bundle | `.memoria/samples/mediterranean-diet/` holds optional tutorial notes until **Memoria: load sample vault** copies them into live homes |
 
 ---
 

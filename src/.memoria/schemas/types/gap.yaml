@@ -26,4 +26,5 @@ optional:
   evidence_saturation: enum:evidence_saturation
   argument_stage: enum:argument_stage
   computed_at: date
+  sample: bool
   created: date

@@ -15,4 +15,5 @@ optional:
   links: map # supports / contradicts / … (ADR-52); supports entries may carry an optional warrant
   topics: list
   superseded_by: str
+  sample: bool
   created: date

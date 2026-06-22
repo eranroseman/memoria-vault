@@ -11,4 +11,5 @@ optional:
   subtype: str # journal · conference · publisher …
   issn: str
   relationships: map
+  sample: bool
   created: date

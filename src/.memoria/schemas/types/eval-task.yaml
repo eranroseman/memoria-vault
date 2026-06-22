@@ -13,5 +13,6 @@ required:
   workflow: str # the capability under test (find · extract · link · verify · …)
   lane: enum:lane
 optional:
+  sample: bool
   created: date
   references: list # citekeys the task presupposes in the catalog (ingest them first)
