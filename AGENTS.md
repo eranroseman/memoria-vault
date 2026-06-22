@@ -109,22 +109,23 @@ there's normally no reason to switch or reset inside a task worktree.
 git push -u origin <branch>
 gh pr create --base main --fill
 gh pr checks <n> --watch
-gh pr merge <n> --squash --delete-branch
 ```
 
-After merge, leave the task worktree, remove it, and fast-forward the dedicated
-main checkout. `main` is already checked out at `~/memoria-vault`, so trying to
-check it out inside the linked task worktree will fail:
+Run the merge from the dedicated main checkout, not the task worktree, then
+remove the task worktree and fast-forward:
 
 ```bash
 cd ~/memoria-vault
+gh pr merge <n> --squash --delete-branch
 git worktree remove ~/mv-<session>  # refuses if the task worktree is dirty
 git status --short                  # must be empty before resync
 git fetch origin
 git merge --ff-only origin/main
 ```
 
-**Known quirk:** `gh pr merge` may print `fatal: Not possible to fast-forward` — the merge still **succeeds server-side**. Verify with `gh pr view <n> --json state -q .state`, then resync. Don't re-attempt the merge.
+**Known quirk:** if `gh pr merge` still prints `fatal: Not possible to fast-forward`,
+the merge may have **succeeded server-side**. Verify with
+`gh pr view <n> --json state -q .state`, then resync. Don't re-attempt the merge.
 
 If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranroseman/memoria-vault/pulls/<n>/update-branch`), then wait for checks to re-run.
 
