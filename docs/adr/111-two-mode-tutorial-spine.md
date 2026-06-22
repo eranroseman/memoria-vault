@@ -2,12 +2,12 @@
 topic: decisions
 id: 111
 title: "Two-mode tutorial spine, seeded by a half-built corpus"
-status: proposed
+status: superseded
 date_proposed: 2026-06-22
-date_resolved:
+date_resolved: 2026-06-22
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [112]
 nav_exclude: true
 ---
 
