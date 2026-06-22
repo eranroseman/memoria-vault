@@ -5,7 +5,7 @@ The policy gate (`policy_hook.DENY_DIRECT_TOOLS`) is a hand-maintained denylist 
 over time (the `terminal` toolset gained `process`), so the list silently drifts and
 the gate's "fail closed on direct-capability tools" promise rots. This doctor pins the
 contract: it reads the toolset registry from the **installed** Hermes and fails when a
-file/terminal/code_execution tool is not hard-denied.
+file/terminal/code_execution/history/egress tool is not hard-denied.
 
 It is the generalisation of the ADR-106 cost doctor and the executable form of the
 AGENTS.md rule "build on the installed version; upgrade by verifying." Run it in the
@@ -42,6 +42,7 @@ COVERED_TOOL_FAMILIES = (
     "file",
     "terminal",
     "code_execution",
+    "session_search",
     "web",
     "browser",
     "messaging",

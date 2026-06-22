@@ -57,6 +57,24 @@ def test_egress_tools_are_blocked_regression():
         assert _decide(f"mcp_x__{tool}").get("decision") == "block"
 
 
+def test_acp_exposed_local_history_tools_are_blocked_or_lane_scoped():
+    assert "session_search" in _m.DENY_DIRECT_TOOLS
+    assert _decide("session_search").get("decision") == "block"
+    assert _decide("mcp_x__session_search").get("decision") == "block"
+
+    assert _decide("memory", profile="memoria-copi") == {}
+    for profile in (
+        "memoria-librarian",
+        "memoria-writer",
+        "memoria-peer-reviewer",
+        "memoria-engineer",
+    ):
+        decision = _decide("memory", profile=profile)
+        assert decision.get("decision") == "block", f"gate did not block memory for {profile}"
+        assert "profile-scoped" in decision.get("reason", "")
+        assert _decide("mcp_x__memory", profile=profile).get("decision") == "block"
+
+
 def test_contract_doctor_fails_when_installed_egress_tool_is_not_denied(tmp_path, monkeypatch):
     hermes = tmp_path / "hermes-agent"
     hermes.mkdir()

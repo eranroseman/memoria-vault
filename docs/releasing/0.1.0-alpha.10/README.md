@@ -6,16 +6,18 @@ has_children: true
 
 # v0.1.0-alpha.10
 
-The next internal checkpoint after alpha.9. Scope is not finalized yet; the
-first known carryover is
-[#859](https://github.com/eranroseman/memoria-vault/issues/859), covering
-measurement-led memory work and Hermes cleanup.
+The internal checkpoint after alpha.9. The original carryover,
+[#859](https://github.com/eranroseman/memoria-vault/issues/859), is closed with
+the measurement-led memory and Hermes cleanup disposition. Runtime readiness
+closed after the CoPI and Writer Obsidian MCP smokes passed against
+`~/Memoria-test`.
 
-Live readiness state will belong to the release parent issue and its gate/stage
-sub-issues once they exist. Scope belongs to the `0.1.0-alpha.10` milestone plus
-the Memoria Issue Tracker.
+Readiness state belongs to the release parent issue
+[#875](https://github.com/eranroseman/memoria-vault/issues/875) and its
+gate/stage issues. Scope belongs to the
+[`0.1.0-alpha.10`](https://github.com/eranroseman/memoria-vault/milestone/11)
+milestone plus the Memoria Issue Tracker.
 
 | File | Holds |
 |---|---|
-| `release-plan-0.1.0-alpha.10.md` | Draft release plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure. |
-| `tmp/` | Temporary alpha.10 carryover notes and probes; delete or move before closeout. |
+| `release-plan-0.1.0-alpha.10.md` | Completed checkpoint plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure. |
