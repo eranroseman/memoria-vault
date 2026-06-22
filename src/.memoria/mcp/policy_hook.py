@@ -14,9 +14,10 @@ vault, operations, and external APIs ONLY through MCP servers. Accordingly:
   - every direct-capability tool (`file`, `terminal`, code-exec families plus
     unaudited egress / messaging / browser / computer-use / media families --
     DENY_DIRECT_TOOLS) is HARD-DENIED for every lane. No Memoria profile ships
-    those toolsets (`agent.disabled_toolsets`); a call reaching us anyway means
-    config drift (e.g. a Hermes update adding a toolset the denylist doesn't
-    know), so the gate fails closed rather than trusting the capability layer.
+    those toolsets in `platform_toolsets` (and `agent.disabled_toolsets` strips
+    known direct-world fallbacks); a call reaching us anyway means config drift
+    or prompt injection, so the gate fails closed rather than trusting the
+    capability layer.
 The capability layer is the first wall; this hook is the second, in-process one.
 
 This one script handles BOTH the gate and the audit completion, branching on

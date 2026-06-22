@@ -75,6 +75,8 @@ def test_l2_smoke_profile_uses_filesystem_obsidian_shim(tmp_path):
         str(vault),
     ]
     assert config["plugins"]["enabled"] == ["memoria-policy-gate"]
+    assert set(config["platform_toolsets"]["cli"]) == {"skills", "todo", "obsidian"}
+    assert config["agent"]["tool_use_enforcement"] is True
     assert "file" in config["agent"]["disabled_toolsets"]
     assert (profile_stage / "SOUL.md").is_file()
 

@@ -34,6 +34,7 @@ DISABLED_TOOLSETS = [
     "x_search",
     "yuanbao",
 ]
+SMOKE_PLATFORM_TOOLSETS = ["skills", "todo", "obsidian"]
 
 
 def prepare_vault(root: Path, vault: Path) -> None:
@@ -93,7 +94,12 @@ def write_profile(
                 "timeout": 30,
             }
         },
-        "agent": {"disabled_toolsets": DISABLED_TOOLSETS},
+        "platform_toolsets": {
+            "cli": SMOKE_PLATFORM_TOOLSETS,
+            "cron": SMOKE_PLATFORM_TOOLSETS,
+            "api_server": SMOKE_PLATFORM_TOOLSETS,
+        },
+        "agent": {"tool_use_enforcement": True, "disabled_toolsets": DISABLED_TOOLSETS},
         "terminal": {"cwd": str(vault)},
         "checkpoints": {"enabled": False},
         "plugins": {"enabled": ["memoria-policy-gate"]},

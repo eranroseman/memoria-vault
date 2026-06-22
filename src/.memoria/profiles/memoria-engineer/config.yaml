@@ -16,6 +16,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+    tools:
+      include: [check_permission, complete_write]
   obsidian:
     # Native MCP from the Local REST API plugin over HTTPS (loopback). Replaces uvx
     # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
@@ -29,14 +31,56 @@ mcp_servers:
     headers:
       Authorization: "Bearer ${OBSIDIAN_API_KEY}"
 
-# Policy sandbox (D40/ADR-46): agents reach the vault, operations, and APIs ONLY
-# through MCP — no exceptions. Keep toolsets = skills, todo; disabled_toolsets =
-# every Hermes toolset NOT in the keep-set. The v0.1.0-alpha.1 Coder kept terminal+file
-# (ADR-27 §4); the Engineer does not — code scaffolds go through the gated
-# obsidian MCP into projects/*/code/, and the external coding agent it hands
-# off to is third-party code that gets EXECUTION isolation when introduced (D40).
-# Update if Hermes adds toolsets.
+# Progressive tool catalog: keep MCP-heavy profiles cheap without hiding tools forever.
+tools:
+  tool_search:
+    enabled: auto
+
+# Worker lanes are stateless; Co-PI is the only Memoria profile with Hermes memory.
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+  provider: ""
+
+skills:
+  write_approval: true
+  guard_agent_created: true
+
+curator:
+  enabled: false
+
+# Policy sandbox (D40/ADR-46): agents reach the vault, operations, and APIs only
+# through MCP. The Engineer is MCP-only too; external coding agents get execution
+# isolation outside this profile.
+platform_toolsets:
+  cli: &memoria_engineer_toolsets [skills, todo, policy, obsidian]
+  cron: *memoria_engineer_toolsets
+  api_server: *memoria_engineer_toolsets
+  telegram: *memoria_engineer_toolsets
+  discord: *memoria_engineer_toolsets
+  slack: *memoria_engineer_toolsets
+  whatsapp: *memoria_engineer_toolsets
+  whatsapp_cloud: *memoria_engineer_toolsets
+  signal: *memoria_engineer_toolsets
+  bluebubbles: *memoria_engineer_toolsets
+  email: *memoria_engineer_toolsets
+  homeassistant: *memoria_engineer_toolsets
+  mattermost: *memoria_engineer_toolsets
+  matrix: *memoria_engineer_toolsets
+  dingtalk: *memoria_engineer_toolsets
+  feishu: *memoria_engineer_toolsets
+  wecom: *memoria_engineer_toolsets
+  wecom_callback: *memoria_engineer_toolsets
+  qqbot: *memoria_engineer_toolsets
+  yuanbao: *memoria_engineer_toolsets
+  teams: *memoria_engineer_toolsets
+  google_chat: *memoria_engineer_toolsets
+
+# Backstop only: platform_toolsets is the primary allowlist; this strips known
+# direct-world families if a runtime path falls back to Hermes defaults.
 agent:
+  tool_use_enforcement: true
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.

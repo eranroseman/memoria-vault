@@ -30,7 +30,7 @@ Known scope:
 - Fill the #859 baseline and record a scope/defer/kill decision per candidate.
 - Land only Hermes hygiene the reconciled eval confirmed feasible on-box and that
   #859 keeps: config migration to the v0.17 schema (remove stale `ollama`),
-  positive `enabled_toolsets`, cheap auxiliary slots, and per-lane
+  positive `platform_toolsets`, cheap auxiliary slots, and per-lane
   `reasoning_effort`.
 
 Pilots, not committed scope: `post_llm_call` cost-capture relocation (ADR-106),
@@ -48,7 +48,7 @@ closed. Create the parent and gates when scope is shaped.
 | --- | --- | --- | --- |
 | G1 | #859 baseline filled; scope/defer/kill recorded per candidate. | S0 + issue evidence | — |
 | G2 | Hermes 0.17 upgrade acceptance complete (redeploy + live deny + MCP smoke). | S1 runtime evidence | — |
-| G3 | Confirmed Hermes hygiene landed for items G1 keeps (config migration, `enabled_toolsets`, auxiliary slots, `reasoning_effort`). | S1 + deny-path tests | — |
+| G3 | Confirmed Hermes hygiene landed for items G1 keeps (config migration, `platform_toolsets`, auxiliary slots, `reasoning_effort`). | S1 + deny-path tests | — |
 | G4 | Cost-capture decision recorded; Bitwarden/multiplex/security-audit pilots resolved for items G1 keeps. | S1 test-vault evidence | — |
 
 ## 3. Validation -- stages
@@ -56,7 +56,7 @@ closed. Create the parent and gates when scope is shaped.
 | Stage | Proves |
 | --- | --- |
 | S0 | `static-contract`: release docs, links, spelling, status, and test-ref checks are clean. |
-| S1 | `runtime`: profiles redeploy to `~/Memoria-test`, contract/cost doctors pass, one direct-tool deny and one Obsidian/MCP smoke pass succeed; deny-path tests confirm `enabled_toolsets` closure. |
+| S1 | `runtime`: profiles redeploy to `~/Memoria-test`, contract/cost doctors pass, one direct-tool deny and one Obsidian/MCP smoke pass succeed; deny-path tests confirm `platform_toolsets` closure. |
 
 ## 4. Blockers
 
@@ -92,7 +92,7 @@ Before the checkpoint is approved, run the standard docs sweep: `docs_doctor`,
 
 Runtime evidence is required for the Hermes 0.17 upgrade acceptance (G2) and any
 hygiene/pilot work that changes installed behavior (G3/G4): profile redeploy,
-contract/cost doctors, `enabled_toolsets` deny-path tests, one live direct-tool
+contract/cost doctors, `platform_toolsets` deny-path tests, one live direct-tool
 deny, and one Obsidian/MCP smoke pass. All runtime work uses `~/Memoria-test`;
 never test against the production vault `~/Memoria`. Local `provider: custom` /
 `qwen2.5:7b` output is test-vault evidence — production runs Kilo.

@@ -16,7 +16,7 @@ superseded_by: []
 > scoped: this ADR supersedes **only [ADR-27](27-hermes-native-config-and-gate-enforcement.md)'s
 > shell-hook enforcement mechanism**, replacing it with the `memoria-policy-gate`
 > Python plugin. **ADR-27's config-model decisions are retained** — `mcp_servers` in
-> `config.yaml`, the `agent.disabled_toolsets` allowlist, and obsidian as each lane's
+> `config.yaml`, the profile-scoped toolset allowlist, and obsidian as each lane's
 > only write path all still stand (they are what make a single gated path
 > sufficient). ADR-27 is **not** fully superseded.
 
@@ -35,6 +35,11 @@ superseded_by: []
 > the capability layer." Read the Decision below with that correction: `disabled_toolsets`
 > is UX (keeps the model from seeing the tool); the plugin's hard-deny + default-deny is
 > the enforcement. Per AGENTS.md "Enforcement is a mechanism, not a label."
+>
+> **Hermes 0.17 correction (2026-06-22).** The primary UX/capability shaping layer
+> is now positive `platform_toolsets` per runtime platform, with
+> `agent.disabled_toolsets` retained only as a known direct-world backstop. The
+> enforcement statement above is unchanged: the plugin hard-deny is the boundary.
 
 ## Context
 
@@ -87,10 +92,11 @@ The `hooks:` block is removed from every profile `config.yaml`; the plugin is
 turned on per lane via `plugins.enabled` and deployed (with `{{PROFILE}}` /
 `{{VAULT_PATH}}` substituted) by the installer's `deploy_policy_plugin`.
 
-The capability layer from ADR-27 (`agent.disabled_toolsets`, obsidian = the only
-write path for the five non-terminal lanes) **stands** — it is what makes a single
-gated path sufficient. ADR-28 replaces only ADR-27's *enforcement mechanism* (shell
-hook → plugin); the config-model decisions in ADR-27 are unchanged.
+The capability layer from ADR-27 (`platform_toolsets`, obsidian = the only write
+path for the five current lanes, with `agent.disabled_toolsets` as a backstop)
+**stands** — it is what makes a single gated path sufficient. ADR-28 replaces only
+ADR-27's *enforcement mechanism* (shell hook → plugin); the config-model decisions
+in ADR-27 are unchanged.
 
 ## Why a plugin (over the alternatives)
 

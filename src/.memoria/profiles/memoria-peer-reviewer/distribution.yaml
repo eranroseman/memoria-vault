@@ -5,7 +5,7 @@ version: 0.1.0-alpha.2
 description: "Memoria Peer-reviewer — the independent verify gate: checks claims, citations, duplicates, and retractions and flags findings as Inbox cards (flag/gap); it never edits the work under review (ADR-48/D38)."
 author: "Memoria"
 license: "MIT"
-hermes_requires: ">=0.12.0"
+hermes_requires: ">=0.17.0"
 env_requires:
   - name: KILOCODE_API_KEY
     description: "Kilo Code API key (kilo.ai) - model access for the shipped provider: kilocode."

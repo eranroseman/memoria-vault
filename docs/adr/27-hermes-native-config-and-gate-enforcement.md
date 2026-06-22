@@ -15,8 +15,8 @@ superseded_by: [28]
 > **Partial supersession (2026-06-02, [ADR-28](28-write-gate-as-plugin.md)).** ADR-28
 > supersedes **only this ADR's *enforcement mechanism*** (shell hook → Python plugin);
 > the `superseded_by: [28]` frontmatter scopes to that mechanism, **not** to the ADR
-> as a whole. ADR-27's config-model decisions — `mcp_servers` in `config.yaml`, the
-> `agent.disabled_toolsets` allowlist, obsidian as the only write path — **all stand**.
+> as a whole. ADR-27's config-model decisions — `mcp_servers` in `config.yaml`,
+> a profile-scoped toolset allowlist, obsidian as the only write path — **all stand**.
 > Concretely, this ADR's
 > *enforcement mechanism* — the `pre_tool_call` **shell hook** with
 > `matcher: "obsidian.*"` — does **not** fire on live agent writes: Hermes registers
@@ -25,8 +25,13 @@ superseded_by: [28]
 > consent-gated and fail-open). ADR-27's validation rows were synthetic
 > (hand-set `task_id`s), not a live run. **ADR-28 replaces the shell hook with a
 > Python plugin** (the gate now enforces live). The rest of ADR-27 — `mcp_servers`
-> in `config.yaml`, the `agent.disabled_toolsets` allowlist, obsidian as the only
+> in `config.yaml`, the profile-scoped toolset allowlist, obsidian as the only
 > write path — **stands**; it is what makes one gated path sufficient.
+>
+> **Hermes 0.17 correction (2026-06-22).** The current allowlist is expressed with
+> positive `platform_toolsets` for every Memoria runtime platform. The old
+> computed `agent.disabled_toolsets = all − allowlist` model remains only as a
+> backstop for known direct-world toolsets if a Hermes path falls back to defaults.
 
 ## Context
 
@@ -133,14 +138,15 @@ non-terminal lane has.** Concretely:
    deploy time and stops relying on `mcp.json`. `policy` + `obsidian` therefore
    load, and obsidian becomes the agent's vault-write tool.
 
-2. **Each lane is locked to a toolset allowlist.** Because lanes span platforms
-   (`cli`, `acp`, gateway/cron), enforce it with the cross-platform
-   `agent.disabled_toolsets`, computed as **`all_toolsets − lane_allowlist`**
-   (from `tool-registry.yaml`). For the five non-terminal lanes this removes
-   `code_execution`, `file`, `terminal`, `delegation`, `browser`, etc., leaving
-   only `web`/`skills`/`todo` plus the obsidian + policy MCP tools. **With no
+2. **Each lane is locked to a positive toolset allowlist.** The source
+   `config.yaml` for every profile lists the permitted toolsets in
+   `platform_toolsets` for each runtime platform (`cli`, gateway platforms,
+   `cron`, and `api_server`), derived from `tool-registry.yaml`. The
+   `agent.disabled_toolsets` list is retained as a backstop for known
+   direct-world families only. For the five current lanes this removes
+   `code_execution`, `file`, `terminal`, `delegation`, `browser`, etc. **With no
    filesystem write tool, the agent's only way to write the vault is the
-   obsidian MCP path — which the `obsidian.*` hook gates.**
+   obsidian MCP path — which the policy plugin gates.**
 
 3. **Keep the shell-hook gate as the enforcement mechanism (ADR-03 stands).** It
    fires in CLI, gateway, cron, and ACP via the shared `AIAgent` dispatch. The
@@ -179,7 +185,7 @@ non-terminal lane has.** Concretely:
   source the installer merges from). The ledger row, `profiles.md`, and the
   bootstrap docs update accordingly.
 - **`tool-registry.yaml` becomes load-bearing**: it is the source for each lane's
-  `disabled_toolsets` computation, not just a drift-check reference.
+  positive `platform_toolsets` and MCP tool filters, not just a drift-check reference.
 - **The gate enforces in all run modes** once (1)+(2) land — no per-mode special
   casing, no custom bridge.
 - **Reversibility comes from Memoria's own audit/golden mechanisms, not Hermes
@@ -210,9 +216,8 @@ Installer (`scripts/install.sh`) and profile sources (`vault/.memoria/profiles/*
 1. Emit `mcp_servers` into each deployed `config.yaml` (merge from the profile's
    `mcp.json`; substitute `{{VAULT_PATH}}` and the venv interpreter; keep
    `${OBSIDIAN_API_KEY}` for env interpolation).
-2. Compute `agent.disabled_toolsets = all_hermes_toolsets − registry_allowlist`
-   per lane and write it (PyYAML, preserving `model`/`hooks`). Coder/Linter keep
-   `terminal`+`file`.
+2. Emit positive `platform_toolsets` per lane from `tool-registry.yaml`, with
+   `agent.disabled_toolsets` retained only as the known direct-world backstop.
 3. Set `terminal.cwd: {{VAULT_PATH}}` per profile; do not emit `checkpoints` for
    MCP-only lanes.
 4. Keep `seed_profile_env` (#57) and the `obsidian.*` matcher (#57).
@@ -238,10 +243,8 @@ choices, not the schedule.
   leaves `code_execution` and other write/act paths live. The allowlist
   (`all − allowed`) is the correct default-deny realization of `tool-registry.yaml`.
 - **`platform_toolsets` per platform instead of global `disabled_toolsets`.**
-  Viable and cleaner per-platform, but needs an entry per platform a lane uses
-  (`cli`, `acp`, gateway). The global `disabled_toolsets` is one place and
-  cross-platform, so it is preferred for the multi-platform lanes; `platform_toolsets`
-  may be layered later if finer per-surface control is wanted.
+  Accepted in Hermes 0.17. It is slightly more verbose, but it fails closed for
+  new toolsets on configured platforms; `disabled_toolsets` remains a backstop.
 - **Full Hermes-in-Docker for sandboxing.** Rejected as the primary fix: it
   contains blast radius but doesn't load obsidian or remove `code_execution`, and
   the vault bind-mount it requires re-opens ungated writes to the vault. Retained

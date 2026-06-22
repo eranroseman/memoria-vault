@@ -29,6 +29,31 @@ PROD_MODELS = {
     "memoria-librarian": "~anthropic/claude-haiku-latest",
     "memoria-engineer": "~anthropic/claude-haiku-latest",
 }
+PLATFORM_KEYS = {
+    "cli",
+    "cron",
+    "api_server",
+    "telegram",
+    "discord",
+    "slack",
+    "whatsapp",
+    "whatsapp_cloud",
+    "signal",
+    "bluebubbles",
+    "email",
+    "homeassistant",
+    "mattermost",
+    "matrix",
+    "dingtalk",
+    "feishu",
+    "wecom",
+    "wecom_callback",
+    "qqbot",
+    "yuanbao",
+    "teams",
+    "google_chat",
+}
+DIRECT_WORLD_TOOLSETS = {"file", "terminal", "code_execution", "browser", "web", "computer_use"}
 
 
 def test_exactly_the_five_agents_ship():
@@ -42,9 +67,11 @@ def test_profile_structure_complete():
         d = PROFILES / name
         for f in ("SOUL.md", "config.yaml", "distribution.yaml"):
             assert (d / f).is_file(), f"{name} missing {f}"
+        assert (d / ".no-bundled-skills").is_file(), f"{name} allows bundled skill seeding"
         dist = yaml.safe_load((d / "distribution.yaml").read_text(encoding="utf-8"))
         assert dist["name"] == name
         assert dist["version"] == "0.1.0-alpha.2"
+        assert dist["hermes_requires"] == ">=0.17.0"
 
 
 def test_configs_parse_and_reference_real_servers():
@@ -162,8 +189,12 @@ def test_copi_is_hard_read_only():
     assert lane["routing"]["invocation"] == "interactive_only"
     cfg = yaml.safe_load((PROFILES / "memoria-copi" / "config.yaml").read_text(encoding="utf-8"))
     # the Co-PI alone keeps the memory toolset (D46)
-    assert "memory" not in cfg["agent"]["disabled_toolsets"]
+    assert "memory" in set(cfg["platform_toolsets"]["cli"])
+    assert cfg["memory"]["memory_enabled"] is True
+    assert cfg["memory"]["user_profile_enabled"] is True
+    assert cfg["memory"]["write_approval"] is True
     assert "tasks" in cfg["mcp_servers"], "the Co-PI needs the delegation path"
+    assert "paper_search" not in cfg["mcp_servers"], "the Co-PI delegates discovery"
 
 
 def test_specialists_keep_memory_disabled():
@@ -171,6 +202,69 @@ def test_specialists_keep_memory_disabled():
     for name in EXPECTED - {"memoria-copi"}:
         cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
         assert "memory" in cfg["agent"]["disabled_toolsets"], f"{name} must not carry memory"
+        assert "memory" not in set(cfg["platform_toolsets"]["cli"])
+        assert cfg["memory"]["memory_enabled"] is False
+        assert cfg["memory"]["user_profile_enabled"] is False
+
+
+def _registry() -> dict:
+    return yaml.safe_load((SRC / ".memoria/tool-registry.yaml").read_text(encoding="utf-8"))
+
+
+def _expected_toolsets(profile: str) -> set[str]:
+    registry = _registry()
+    groups = registry["groups"]
+    allow = registry["profiles"][profile]["allow"]
+    out = set()
+    for entry in allow:
+        for tool in groups.get(entry, [entry]):
+            out.add(tool.split(".", 1)[0] if "." in tool else tool)
+    return out
+
+
+def _expected_mcp_tools(profile: str) -> dict[str, set[str]]:
+    registry = _registry()
+    groups = registry["groups"]
+    allow = registry["profiles"][profile]["allow"]
+    out: dict[str, set[str]] = {}
+    for entry in allow:
+        for tool in groups.get(entry, [entry]):
+            if "." not in tool:
+                continue
+            server, name = tool.split(".", 1)
+            out.setdefault(server, set()).add(name)
+    return out
+
+
+def test_platform_toolsets_match_registry_allowlist():
+    for name in EXPECTED:
+        cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
+        expected = _expected_toolsets(name)
+        assert set(cfg["platform_toolsets"]) == PLATFORM_KEYS
+        for platform, toolsets in cfg["platform_toolsets"].items():
+            assert set(toolsets) == expected, f"{name}/{platform}"
+        assert DIRECT_WORLD_TOOLSETS.isdisjoint(expected)
+        assert cfg["tools"]["tool_search"]["enabled"] == "auto"
+        assert cfg["agent"]["tool_use_enforcement"] is True
+
+
+def test_mcp_tool_filters_match_registry_allowlist():
+    for name in EXPECTED:
+        cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
+        expected = _expected_mcp_tools(name)
+        for server, tools in expected.items():
+            if server == "obsidian":
+                continue
+            actual = set(cfg["mcp_servers"][server]["tools"]["include"])
+            assert actual == tools, f"{name}/{server}"
+
+
+def test_worker_skills_and_curator_are_locked_down():
+    for name in EXPECTED:
+        cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
+        assert cfg["skills"]["write_approval"] is True
+        assert cfg["skills"]["guard_agent_created"] is True
+        assert cfg["curator"]["enabled"] is False
 
 
 def test_lane_scopes_avoid_gated_zones():
@@ -222,16 +316,16 @@ def test_acp_pane_is_copi_only():
 def test_no_profile_has_direct_world_access():
     """D40/ADR-46: agents reach the vault, engines, and APIs ONLY through MCP.
     Every profile must disable the direct-capability toolsets — no exceptions."""
-    import yaml
-
-    forbidden = {"file", "terminal", "code_execution", "browser", "web", "computer_use"}
     for cfg in sorted(PROFILES.glob("*/config.yaml")):
         data = yaml.safe_load(cfg.read_text(encoding="utf-8"))
         disabled = set((data.get("agent") or {}).get("disabled_toolsets") or [])
-        missing = forbidden - disabled
+        missing = DIRECT_WORLD_TOOLSETS - disabled
         assert not missing, (
             f"{cfg.parent.name}: direct-access toolsets not disabled: {sorted(missing)}"
         )
+        for platform, toolsets in data["platform_toolsets"].items():
+            leaked = DIRECT_WORLD_TOOLSETS & set(toolsets)
+            assert not leaked, f"{cfg.parent.name}/{platform}: direct toolsets enabled: {leaked}"
 
 
 def test_profiles_do_not_ship_inert_checkpoints():
