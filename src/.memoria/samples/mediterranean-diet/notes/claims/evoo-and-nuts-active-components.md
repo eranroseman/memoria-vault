@@ -24,7 +24,7 @@ The cardiovascular benefit of the Mediterranean diet in PREDIMED tracked with th
 
 # Connections
 
-<!-- HALF-BUILT: this claim is distilled but not yet linked. In Tutorial 02, add the typed
+<!-- HALF-BUILT: this claim is distilled but not yet linked. When you distill and connect claims, add the typed
      `supports` link to [[meddiet-reduces-major-cv-events|A Mediterranean diet reduces major cardiovascular events in high-risk adults]] — this claim is the mechanism behind it. -->
 
 This claim names a likely *mechanism* for the headline effect. The link that says so is left for you to make.

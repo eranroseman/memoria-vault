@@ -20,7 +20,7 @@ The cardiovascular benefit of the Mediterranean diet comes from the overall diet
 
 # Evidence
 
-<!-- STUB: this claim is asserted but ungrounded — finishing it is your work in Tutorial 02.
+<!-- STUB: this claim is asserted but ungrounded — finishing it is your work when you distill claims.
      Distill it from [[martinezgonzalez2019-critical-review|Martínez-González et al. 2019 — critical review of diet pattern vs. nutrient]]: add `martinezgonzalez2019` to `sources`
      above, then write one evidence line here that traces to it. Every line in this section must trace
      to a citekey in `sources` — that is the provenance guardrail. Until then this claim is unsupported. -->
