@@ -65,6 +65,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | File | What it covers |
 | --- | --- |
 | [External integrations](integrations.md) | External APIs and tools: enrichment, entity resolution, vault access, execution layer |
+| [Memoria configuration](configuration.md) | Configuration surfaces, source/installed ownership, redeploy triggers, and secret boundaries |
 | [On-disk layout](on-disk-layout.md) | Vault folder tree, `.memoria/` layout, skeleton notes, naming conventions |
 | [System artifacts](system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views |
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables |
