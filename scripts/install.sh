@@ -446,7 +446,7 @@ install_mcp_deps() {
   # report what WOULD happen rather than a misleading "missing file" skip.
   if [ "$DRY_RUN" -eq 1 ]; then
     VENV_PYTHON="$VAULT_PATH/.memoria/.venv/bin/python"
-    warn "(dry-run) would create venv at $VAULT_PATH/.memoria/.venv, pip install from $reqs, and install Memoria editable from $REPO_DIR"
+    warn "(dry-run) would create venv at $VAULT_PATH/.memoria/.venv, pip install from $reqs, and install Memoria from $REPO_DIR"
     return
   fi
   if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
@@ -476,8 +476,8 @@ install_mcp_deps() {
       warn "Falling back to: $PYTHON -m pip install --user --break-system-packages"
       run "$PYTHON" -m pip install --user --break-system-packages --quiet -r "$reqs" \
         || die "pip fallback failed. Install python3-venv (apt install python3-venv), then re-run."
-      run "$PYTHON" -m pip install --user --break-system-packages --quiet -e "$REPO_DIR" \
-        || die "editable Memoria install failed. Re-run from a clean checkout or install python3-venv."
+      run "$PYTHON" -m pip install --user --break-system-packages --quiet "$REPO_DIR" \
+        || die "Memoria package install failed. Re-run from a clean checkout or install python3-venv."
       VENV_PYTHON="$PYTHON"   # runtime uses the same interpreter the deps landed in
       ok "MCP dependencies installed (user site-packages, system override)"
       return
@@ -486,7 +486,7 @@ install_mcp_deps() {
   VENV_PYTHON="$venv/bin/python"
   run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
   run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
-  run "$VENV_PYTHON" -m pip install --quiet -e "$REPO_DIR" || die "editable Memoria install into the venv failed."
+  run "$VENV_PYTHON" -m pip install --quiet "$REPO_DIR" || die "Memoria package install into the venv failed."
   ok "MCP dependencies installed into $venv"
 
   # Optional heavy stack (ADR-33): the cluster MCP's topic modeling needs
@@ -920,7 +920,7 @@ main() {
   if [ "$PROFILES_ONLY" -eq 1 ]; then
     load_install_modules
     ensure_git_available
-    resolve_repo            # editable Memoria install (install_mcp_deps) needs REPO_DIR
+    resolve_repo            # Memoria package install (install_mcp_deps) needs REPO_DIR
     resolve_vault_for_profiles
     install_mcp_deps
     ensure_memoria_css_snippets

@@ -71,7 +71,7 @@ The timestamp should be recent. Open the file and confirm the new citekey appear
 The Librarian and Peer-reviewer resolve citekeys and item metadata through the read-only **`pyzotero` MCP**, which talks to Zotero's **local desktop API** — no Web API key, no cloud, no write access. Zotero exposes this at `http://localhost:23119` while it's running (Zotero 9; if it isn't already on, enable local API access under **Settings → Advanced**).
 
 - Zotero must be **running** for the MCP to reach it.
-- The MCP itself is installed during [Set up Hermes](../setup/set-up-hermes.md) (`pip install "pyzotero[mcp]"`).
+- The MCP itself is installed during [Set up Hermes](../setup/set-up-hermes.md) (`python -m pip install --user zotero-mcp`).
 - It is **read-only** — Memoria reads from Zotero but never writes back to it.
 
 ## Close the loop: install MarkDB-Connect (recommended)

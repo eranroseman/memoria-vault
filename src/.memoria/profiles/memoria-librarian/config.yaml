@@ -60,7 +60,7 @@ mcp_servers:
     # Use the search_* tools only; PDF retrieval + extraction is the ingest pipeline's
     # job (Marker via the ingest MCP), so the download_* / read_paper tools — and the
     # optional Sci-Hub fallback inside download_with_fallback — are NOT used.
-    # Install once: pip install paper-search-mcp.
+    # Install once in the vault venv: {{PYTHON}} -m pip install paper-search-mcp.
     command: "{{PYTHON}}"
     args: ["-m", "paper_search_mcp.server"]
     timeout: 60
@@ -73,7 +73,7 @@ mcp_servers:
     # Upstream read-only Zotero MCP (Zotero 7 local API at localhost:23119) — citekey /
     # metadata resolution for ingest reads. Memoria uses Zotero read-only (the local API
     # has no write path), so this fully replaces the pyzotero web-fetch skill — there is
-    # no Zotero write-back. Install once: pip install "pyzotero[mcp]".
+    # no Zotero write-back. Install once on PATH: python -m pip install --user zotero-mcp.
     command: "pyzotero-mcp"
     timeout: 30
     tools:

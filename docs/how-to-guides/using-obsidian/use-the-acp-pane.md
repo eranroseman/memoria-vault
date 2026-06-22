@@ -11,7 +11,7 @@ Talk to the Co-PI from inside Obsidian without switching to a terminal. This gui
 ## Prerequisites
 
 - Obsidian open with the vault
-- `agent-client` plugin installed and the Hermes gateway reachable ([Set up Hermes](../setup/set-up-hermes.md))
+- `agent-client` plugin installed and Hermes available; the bundled config launches `hermes -p memoria-copi acp` ([Set up Hermes](../setup/set-up-hermes.md))
 
 ## One agent in the pane — by design
 

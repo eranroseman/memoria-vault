@@ -25,7 +25,7 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 
 ## 0. Preconditions
 
-- [ ] Gate candidate installed; `hermes profile list` shows all 5 at `0.1.0-alpha.2`; policy plugin enabled per-lane.
+- [ ] Gate candidate installed; `hermes profile list` shows all 5 at `0.1.0-alpha.10`; policy plugin enabled per-lane.
 - [ ] `hermes gateway status` → running (the dispatcher polls only while the gateway is up).
 - [ ] Baseline captured: `hermes kanban list --json` _(confirm)_ and a copy of `system/logs/audit.jsonl` (for a clean before/after diff).
 - [ ] `cron_mode` defaults to `deny`; for **Variant A** dispatch one card by hand, for **Variant B** enable the Linter-operation lane cron explicitly.

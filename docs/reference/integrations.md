@@ -65,6 +65,7 @@ Used during enrichment to link paper notes to person, organization, and venue en
 | **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the Co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
 | **qmd** | Hybrid BM25 + vector search over the vault. Used by the Co-PI, Librarian map lane, Writer, Peer-reviewer, and QuickAdd pre-file similarity shadow reports. It is read-only; no standalone duplicate-sweep command ships today. |
 | **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
+| **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` Inbox cards. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). |
 
 ---
 
@@ -84,7 +85,7 @@ These are called during `find` to surface candidate sources.
 
 | Integration | Role |
 |---|---|
-| **Claude API** | Primary LLM for synthesis, classification proposals, and narrative composition. Model routing: Claude for synthesis; cheaper models for embed/classify/summarize tasks. |
+| **Kilo Code gateway** | Production model provider for the five shipped Hermes profiles. Profile defaults route Co-PI and Peer-reviewer to Opus, Writer to Sonnet, and Librarian/Engineer to Haiku. |
 | **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)); it writes scaffolds through the gated obsidian MCP into `projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
 
 ---

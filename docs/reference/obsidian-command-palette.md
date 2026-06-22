@@ -7,7 +7,7 @@ parent: Reference
 
 The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching uses the nav row in the four dashboard notes ([ADR-81](../adr/81-persistent-gate-dashboards.md)); the command palette is for actions, not workspace switching.
 
-**Action parity rule:** if an action creates a card, note, draft, report, capture, resolved Inbox item, or any other durable artifact, it must be reachable without asking the Co-PI ([ADR-72](../adr/72-command-surfacing.md)). The Co-PI conversation is a convenient route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but **every lane task is also directly reachable from the palette** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): one command per task, each creating a correctly-addressed card on the matching lane, plus the generic delegate fallback, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
+**Action parity rule:** if an action creates a card, note, draft, report, capture, resolved Inbox item, or any other durable artifact, it must be reachable without asking the Co-PI ([ADR-72](../adr/72-command-surfacing.md)). The Co-PI conversation is a convenient route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but durable actions are also reachable from the palette ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): direct commands for the six non-code lane tasks, the generic delegate fallback for code or unusual work, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
 
 The allowed Co-PI-only surface is conversation-bound, not action-bound: synchronous read-only sparring, source questioning, lens reading, memory-backed coaching, and `/personality` tuning. When that conversation should produce something durable, leave the pane and use the matching command or delegated card path.
 
@@ -35,7 +35,7 @@ Template-based note creation starts from the templates in `system/templates/` �
 
 ## Per-task lane commands
 
-One command per lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). All six lane tasks are reachable here without the Co-PI.
+One command per non-code lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). Code and unusual work use the generic delegate command.
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |

@@ -78,7 +78,7 @@ Each trades a little breadth for much less shell to build and maintain:
 
 ## Trade-offs
 
-- **Surface area** is still nontrivial (WSL2 orchestration, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
+- **Surface area** is still nontrivial (native Windows plus Linux/WSL installers, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
 - **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
 - **Partial automation can imply full automation** — the secrets steps are assisted, not automatic, so the UX must make that explicit.
 - **Fresh release installs replace in-place migration.** This keeps the bootstrap small and avoids half-migrated vault states; profile redeploy remains the narrow idempotent path.

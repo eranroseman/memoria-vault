@@ -70,7 +70,7 @@ def test_profile_structure_complete():
         assert (d / ".no-bundled-skills").is_file(), f"{name} allows bundled skill seeding"
         dist = yaml.safe_load((d / "distribution.yaml").read_text(encoding="utf-8"))
         assert dist["name"] == name
-        assert dist["version"] == "0.1.0-alpha.2"
+        assert dist["version"] == "0.1.0-alpha.10"
         assert dist["hermes_requires"] == ">=0.17.0"
 
 

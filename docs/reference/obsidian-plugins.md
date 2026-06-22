@@ -27,7 +27,7 @@ bundled. Updater automation remains deferred by
 | obsidian-local-rest-api | `obsidian-local-rest-api` | Exposes the vault to Hermes via its native MCP over verified loopback HTTPS (default port 27124). Required for the control plane. |
 | agent-client | `agent-client` | ACP inside Obsidian — routes human conversations with Hermes through a chat pane. |
 | dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
-| templater-obsidian | `templater-obsidian` | Runs frontmatter scripts the Linter's safe-fix mode relies on. |
+| templater-obsidian | `templater-obsidian` | Provides the template folder integration for manual template insertion. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
 | cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, and resolution do not require a palette round trip. |
 | modalforms | `modalforms` | Provides structured in-Obsidian forms for capture and Project flows, including controlled `research_area`, `methodology`, and `scope_topics` fields sourced from `system/vocabulary.md`. |
@@ -41,7 +41,7 @@ bundled. Updater automation remains deferred by
 
 ---
 
-## Recommended Obsidian plugins (9)
+## Recommended Obsidian plugin rows (9)
 
 Install when the friction is felt. Not required for core function.
 

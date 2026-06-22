@@ -1,7 +1,7 @@
 # Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
 # Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-peer-reviewer
-version: 0.1.0-alpha.2
+version: 0.1.0-alpha.10
 description: "Memoria Peer-reviewer — the independent verify gate: checks claims, citations, duplicates, and retractions and flags findings as Inbox cards (flag/gap); it never edits the work under review (ADR-48/D38)."
 author: "Memoria"
 license: "MIT"

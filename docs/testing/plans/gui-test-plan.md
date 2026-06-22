@@ -63,14 +63,14 @@ end (the boxes are clickable in Obsidian).
 | `Buttons` | Renders command buttons in shipped notes | command buttons render and invoke commands (Part C1) |
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
-| `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, resolve, and reset/navigation controls |
+| `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, and resolve controls |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Homepage` | Opens `spaces/inbox.md` on startup | `spaces/inbox.md` opens as the startup surface |
 | `Local REST API with MCP` | Exposes the vault to Hermes (verified HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
-| `Templater` | Frontmatter scripts (Linter safe-fix) | appears enabled; no load error |
+| `Templater` | Template folder integration for manual template insertion | appears enabled; no load error |
 | `Portals` | Curated folder portals for the left-side vault surface | a portal pane/command exists and loads without error |
 | `Memoria Inspector` | Read-only board, audit, and linter-status sidebar | the Memoria Inspector view opens and shows read-only status |
 

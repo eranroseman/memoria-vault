@@ -287,12 +287,13 @@ function Enable-MemoriaCssSnippets {
 }
 
 function Install-McpDeps {
+    param([string]$RepoRoot)
     Write-Header 'MCP server dependencies'
     $reqs = Join-Path $Vault '.memoria/mcp/requirements.txt'
     $venv = Join-Path $Vault '.memoria/.venv'
     $script:VenvPython = Join-Path $venv 'Scripts/python.exe'
     if ($DryRun) {
-        Write-Line "  + would create venv $venv and install $reqs"
+        Write-Line "  + would create venv $venv and install $reqs plus Memoria from $RepoRoot"
         return
     }
     if (-not (Test-Path $reqs)) { Write-Warn "No requirements file at $reqs"; return }
@@ -302,6 +303,7 @@ function Install-McpDeps {
     }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip')
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $reqs)
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', $RepoRoot)
     Write-Ok "MCP deps installed in $venv"
 }
 
@@ -579,7 +581,7 @@ function Invoke-Main {
         $repoRoot = Get-RepoRoot
         Copy-VaultSource -RepoRoot $repoRoot
         Enable-MemoriaCssSnippets -RepoRoot $repoRoot
-        Install-McpDeps
+        Install-McpDeps -RepoRoot $repoRoot
     } else {
         Assert-RequiredCommands
         $script:VenvPython = Join-Path $Vault '.memoria/.venv/Scripts/python.exe'
