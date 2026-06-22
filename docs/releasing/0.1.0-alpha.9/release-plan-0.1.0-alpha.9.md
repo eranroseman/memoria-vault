@@ -80,14 +80,15 @@ High-priority blocker in the
 ## 5. Out of scope (later)
 
 - The full NLI/decomposed-gate/MaxSAT contradiction engine is deferred unless
-  `current-state-baseline.md` proves contradiction misses are costly enough to
-  spend the supervision budget.
+  the alpha.10 carryover baseline in
+  [#859](https://github.com/eranroseman/memoria-vault/issues/859) proves
+  contradiction misses are costly enough to spend the supervision budget.
 - #829 remains a redesign item gated on observed approve/reject data. It does
   not block alpha.9 unless Part 0 of the baseline shows supervision attribution
   is the release-critical bottleneck.
 - Bitwarden adoption, auxiliary model routing, and `reasoning_effort` tuning from
-  the Hermes utilization audit are optional follow-ups unless #828 chooses a
-  runtime path that makes them necessary for alpha.9.
+  the Hermes utilization audit are carried by
+  [#859](https://github.com/eranroseman/memoria-vault/issues/859).
 - Cross-vault read-only sharing, native release tags, tarball/signing delivery,
   and projected-canvas work remain outside this checkpoint.
 
@@ -186,7 +187,7 @@ This checkpoint follows the untagged internal path:
 | --- | --- | --- |
 | Structural capability boundary | After #832 interim mitigation | Finish #822 default-deny/per-lane allowlist and keep contract-doctor coverage current. |
 | ADR drift prevention | After the first #833 slice | Expand the drift doctor from high-risk accepted ADRs to every accepted ADR with concrete mechanism claims. |
-| Measurement-led memory work | After `current-state-baseline.md` is filled | Decide whether contradiction, retrieval, ingest, or supervision attribution is the next real bottleneck. |
+| Measurement-led memory work | After the baseline in [#859](https://github.com/eranroseman/memoria-vault/issues/859) is filled | Decide whether contradiction, retrieval, ingest, or supervision attribution is the next real bottleneck. |
 | Runtime upgrade path | After #828 | Either graduate 0.17 features to on-box truth or document the 0.14 hardening path. |
 
 ## 12. Appendix -- working artifacts
