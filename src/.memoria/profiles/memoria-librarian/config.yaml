@@ -16,6 +16,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+    tools:
+      include: [check_permission, complete_write]
   ingest:
     # The deterministic ingest pipeline (ADR-30) — the Librarian can't exec scripts
     # (code_execution disabled), so the pipeline is reached over MCP. Read+compute
@@ -24,6 +26,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 180
+    tools:
+      include: [ingest_pipeline]
   obsidian:
     # Native MCP from the Local REST API plugin over HTTPS (loopback). Replaces uvx
     # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
@@ -41,11 +45,15 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120
+    tools:
+      include: [cluster_build_graph, cluster_model_topics, cluster_emit_canvas]
   patterns:
     # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 60
+    tools:
+      include: [patterns_list, patterns_run]
   paper_search:
     # Scholarly discovery across 20+ databases (openags/paper-search-mcp) — the MCP
     # backend for `find`, replacing the K-Dense paper-lookup/arxiv web-fetch skills.
@@ -59,6 +67,8 @@ mcp_servers:
     env:
       PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: "${NCBI_EMAIL}"
       PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: "${S2_API_KEY}"
+    tools:
+      include: [search_arxiv, search_pubmed, search_biorxiv, search_medrxiv, search_google_scholar, search_semantic]
   pyzotero:
     # Upstream read-only Zotero MCP (Zotero 7 local API at localhost:23119) — citekey /
     # metadata resolution for ingest reads. Memoria uses Zotero read-only (the local API
@@ -66,6 +76,8 @@ mcp_servers:
     # no Zotero write-back. Install once: pip install "pyzotero[mcp]".
     command: "pyzotero-mcp"
     timeout: 30
+    tools:
+      include: [get_references, get_citations, find_related, search_semantic_scholar]
   qmd:
     # The shared qmd vector index (tobi/qmd) — local hybrid search (BM25 + vector +
     # rerank) over the vault corpus; the similarity primitive the catalog/link/map
@@ -77,13 +89,58 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/qmd_filter_mcp.py", "--vault", "{{VAULT_PATH}}", "--qmd", "{{QMD}}"]
     timeout: 30
     connect_timeout: 45
+    tools:
+      include: [search, vsearch, deep_search, get, status]
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
-# ingest / paper_search / pyzotero via MCP). `web` is DISABLED: discovery -> paper_search
-# MCP, Zotero reads -> pyzotero MCP, enrich/extract -> ingest MCP (server-side), vault
-# search -> qmd (local). The Librarian now makes no direct API calls. disabled_toolsets =
-# every Hermes toolset NOT in the keep-set. Update if Hermes adds toolsets.
+# Progressive tool catalog: keep MCP-heavy profiles cheap without hiding tools forever.
+tools:
+  tool_search:
+    enabled: auto
+
+# Worker lanes are stateless; Co-PI is the only Memoria profile with Hermes memory.
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+  provider: ""
+
+skills:
+  write_approval: true
+  guard_agent_created: true
+
+curator:
+  enabled: false
+
+# Positive platform allowlist. `web` stays off: discovery goes through
+# paper_search MCP; enrichment/extract goes through ingest MCP; vault search is qmd.
+platform_toolsets:
+  cli: &memoria_librarian_toolsets [skills, todo, policy, ingest, obsidian, cluster, patterns, paper_search, pyzotero, qmd]
+  cron: *memoria_librarian_toolsets
+  api_server: *memoria_librarian_toolsets
+  telegram: *memoria_librarian_toolsets
+  discord: *memoria_librarian_toolsets
+  slack: *memoria_librarian_toolsets
+  whatsapp: *memoria_librarian_toolsets
+  whatsapp_cloud: *memoria_librarian_toolsets
+  signal: *memoria_librarian_toolsets
+  bluebubbles: *memoria_librarian_toolsets
+  email: *memoria_librarian_toolsets
+  homeassistant: *memoria_librarian_toolsets
+  mattermost: *memoria_librarian_toolsets
+  matrix: *memoria_librarian_toolsets
+  dingtalk: *memoria_librarian_toolsets
+  feishu: *memoria_librarian_toolsets
+  wecom: *memoria_librarian_toolsets
+  wecom_callback: *memoria_librarian_toolsets
+  qqbot: *memoria_librarian_toolsets
+  yuanbao: *memoria_librarian_toolsets
+  teams: *memoria_librarian_toolsets
+  google_chat: *memoria_librarian_toolsets
+
+# Backstop only: platform_toolsets is the primary allowlist; this strips known
+# direct-world families if a runtime path falls back to Hermes defaults.
 agent:
+  tool_use_enforcement: true
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.

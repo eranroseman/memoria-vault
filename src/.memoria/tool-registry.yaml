@@ -25,8 +25,8 @@
 #
 # Enforcement: the policy MCP / hook may read this to gate tool calls (TODO — today
 # writes are gated by path in the lane-overrides). Meanwhile it is the single
-# source of truth the Linter checks each profile's config.yaml/mcp.json against
-# for drift (a profile granted a toolset not in its registry entry is a finding).
+# source of truth the Linter checks each profile's config.yaml platform_toolsets
+# and MCP filters against for drift.
 
 version: 1
 

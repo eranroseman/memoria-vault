@@ -5,7 +5,7 @@ version: 0.1.0-alpha.2
 description: "Memoria Co-PI — the one conversational agent (ADR-48): reflective thinking-partner, system explainer, and delegation front. Read-only across the vault; every write goes out as a kanban card; carries the memory/goals/skills loop."
 author: "Memoria"
 license: "MIT"
-hermes_requires: ">=0.12.0"
+hermes_requires: ">=0.17.0"
 env_requires:
   - name: KILOCODE_API_KEY
     description: "Kilo Code API key (kilo.ai) - model access for the shipped provider: kilocode."

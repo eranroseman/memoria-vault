@@ -61,7 +61,7 @@ Used well:
 Used sub-optimally:
 
 - Subtractive `disabled_toolsets` is brittle when Hermes adds new tools. Prefer
-  positive `enabled_toolsets` if current Hermes behavior and policy tests confirm
+  positive `platform_toolsets` if current Hermes behavior and policy tests confirm
   it closes new tools by default.
 - Cost capture still leans on session/state inspection. Prefer plugin hook capture
   if `post_llm_call` exposes the needed usage and cost details on-box.
@@ -119,7 +119,7 @@ Recommended architecture:
 3. Pilot `gateway.multiplex_profiles: true` in `Memoria-test`.
 4. Set auxiliary model slots and per-lane `reasoning_effort`.
 5. Opt Memoria lane profiles out of bundled skill seeding.
-6. Evaluate positive `enabled_toolsets` with a live deny-path test.
+6. Evaluate positive `platform_toolsets` with a live deny-path test.
 7. Move cost capture into plugin hooks if local hook payloads provide stable
    usage/cost data.
 8. Add `hermes security audit` to release validation.

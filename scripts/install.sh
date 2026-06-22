@@ -698,9 +698,9 @@ install_profiles() {
       # explicitly so --profiles-only cannot leave stale host-side model wiring.
       run cp "$dst/config.yaml" "$HERMES_PROFILES_DIR/$p/config.yaml"
       # Capability layer (ADR-27): each profile's config.yaml already carries
-      # `agent.disabled_toolsets` (every toolset NOT in the lane's tool-registry
-      # allow-set), so the only vault-write path is the gated obsidian MCP. It
-      # ships in the source config — nothing to inject here.
+      # positive platform_toolsets plus a small disabled_toolsets backstop, so
+      # the only vault-write path is the gated obsidian MCP. It ships in the
+      # source config — nothing to inject here.
       # Bootstrap .env from .env.EXAMPLE on FIRST install only (never clobber creds).
       env_example="$HERMES_PROFILES_DIR/$p/.env.EXAMPLE"
       env_file="$HERMES_PROFILES_DIR/$p/.env"

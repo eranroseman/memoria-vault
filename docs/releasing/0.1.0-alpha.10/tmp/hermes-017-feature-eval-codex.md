@@ -61,7 +61,7 @@ Used well:
 Used sub-optimally:
 
 - Subtractive `disabled_toolsets` is brittle when Hermes adds new tools. Prefer
-  positive `enabled_toolsets` if current Hermes behavior and policy tests confirm
+  positive `platform_toolsets` if current Hermes behavior and policy tests confirm
   it closes new tools by default.
 - Cost capture still leans on session/state inspection. Prefer plugin hook capture
   if `post_llm_call` exposes the needed usage and cost details on-box.
@@ -121,7 +121,7 @@ Recommended architecture:
 5. Opt Memoria lane profiles out of bundled skill seeding.
 6. Spike `post_llm_call` cost capture in the Memoria policy plugin; source-level
    verification indicates the hook carries token and USD cost details.
-7. Evaluate positive `enabled_toolsets` with a live deny-path test before
+7. Evaluate positive `platform_toolsets` with a live deny-path test before
    replacing subtractive `disabled_toolsets`.
 8. Add `hermes security audit` to release validation.
 9. Keep broad direct tools disabled for core Memoria lanes.
@@ -153,7 +153,7 @@ Differences resolved:
 - Cost capture: source-level verification shows `post_llm_call` can carry token
   and USD cost details. Treat hook-based cost capture as a near-term spike, not a
   speculative future option.
-- Tool gating: source-level verification shows `enabled_toolsets` exists. Treat
+- Tool gating: source-level verification shows `platform_toolsets` exists. Treat
   it as the preferred direction, but switch only after an adversarial deny-path
   test proves new upstream toolsets stay closed by default.
 
@@ -164,7 +164,7 @@ Synthesized implementation order:
 3. Pilot gateway multiplexing in `Memoria-test`.
 4. Configure auxiliary models and per-lane `reasoning_effort`.
 5. Spike `post_llm_call` cost capture in the policy plugin.
-6. Spike `enabled_toolsets` with live deny-path tests.
+6. Spike `platform_toolsets` with live deny-path tests.
 7. Add `hermes security audit` to release validation.
 8. Promote only after contract doctor, cost doctor, one direct-tool deny, and
    one Obsidian/MCP smoke pass.

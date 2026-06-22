@@ -25,7 +25,7 @@ CLI surface (Codex):
 
 Source level (Claude) — these turn two conditional recommendations into confirmed:
 
-- `enabled_toolsets` (positive allowlist) **and** `disabled_toolsets` (subtractive)
+- `platform_toolsets` (positive allowlist) **and** `disabled_toolsets` (subtractive)
   are both first-class — `model_tools.py:277-397`, `toolsets.py`. The allowlist
   switch is feasible today, not pending a test.
 - Plugin lifecycle hooks are real and in-process: `register_hook("pre_tool_call" |
@@ -47,7 +47,7 @@ Source level (Claude) — these turn two conditional recommendations into confir
 | Kilo/provider routing | Yes, production | Keep Kilo as the production main provider. OpenRouter `provider_routing` is irrelevant unless a profile actually moves to OpenRouter. |
 | Auxiliary model slots | Partly | Route title generation, compression, MCP routing, approval, and curator work to cheap models. Config-only. |
 | `reasoning_effort` | Not effectively | Set per lane: low/none for deterministic work, high only for Writer/Peer-reviewer. Config-only. |
-| `enabled_toolsets` allowlist | No (subtractive instead) | Confirmed first-class (`model_tools.py:277-397`). Replace computed `disabled_toolsets`; closes new upstream toolsets by default. |
+| `platform_toolsets` allowlist | No (subtractive instead) | Confirmed first-class (`model_tools.py:277-397`). Replace computed `disabled_toolsets`; closes new upstream toolsets by default. |
 | `post_llm_call` cost hook | No (state.db join) | Confirmed to carry `cost_details.total`. Move ADR-106 cost capture into the gate plugin's hook; retire the brittle session-store join. |
 | Managed scope | No | Skip. Useful only to pin admin-owned non-secret config on a shared host. |
 | Bitwarden Secrets Manager | No | Adopt for shared profile secrets (Kilo, Obsidian, scholarly APIs, central gateway tokens). |
@@ -78,7 +78,7 @@ kanban as the durable queue.
 Used sub-optimally:
 
 - Subtractive `disabled_toolsets` is brittle when Hermes adds tools. Switch to
-  positive `enabled_toolsets` (confirmed first-class; no test gate needed).
+  positive `platform_toolsets` (confirmed first-class; no test gate needed).
 - Cost capture leans on session/`state.db` inspection. Move to the `post_llm_call`
   hook (confirmed to expose tokens + `cost_details.total`).
 - Auxiliary models and `reasoning_effort` are not yet first-class profile policy.
@@ -115,7 +115,7 @@ The shape barely changes — ADR-22's bet holds — with these decisions:
    (`pre_tool_call` gate, `post_tool_call` audit, `post_llm_call` cost,
    `on_session_end` diagnostics) — replacing plugin + `state.db` join + the
    separate ADR-105 plane.
-5. **`enabled_toolsets`** replaces the computed `disabled_toolsets`.
+5. **`platform_toolsets`** replaces the computed `disabled_toolsets`.
 6. **Native kanban judge** runs as the automated pre-filter into the human review
    gate (native `review` status).
 7. **Auxiliary routing + per-profile `reasoning_effort`** set from day one.
@@ -136,7 +136,7 @@ this install) come first; operational hygiene and pilots follow:
 
 1. **Move cost capture into a `post_llm_call` hook; retire the `state.db` join.**
    Confirmed: the hook carries tokens + `cost_details.total`.
-2. **Switch profile gating to `enabled_toolsets`.** Confirmed first-class; no
+2. **Switch profile gating to `platform_toolsets`.** Confirmed first-class; no
    deny-path test gate needed (run the existing policy tests to confirm closure).
 3. **Migrate Hermes config to the 0.17 schema**; remove stale `ollama` config from
    the default profile.

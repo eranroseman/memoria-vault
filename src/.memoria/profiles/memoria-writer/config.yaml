@@ -16,6 +16,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+    tools:
+      include: [check_permission, complete_write]
   obsidian:
     # Native MCP from the Local REST API plugin over HTTPS (loopback). Replaces uvx
     # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
@@ -39,11 +41,58 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/qmd_filter_mcp.py", "--vault", "{{VAULT_PATH}}", "--qmd", "{{QMD}}"]
     timeout: 30
     connect_timeout: 45
+    tools:
+      include: [search, vsearch, deep_search, get, status]
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian/policy via
-# MCP). disabled_toolsets = every Hermes toolset NOT in the keep-set, so the only
-# vault-write path is the gated obsidian MCP. Update if Hermes adds toolsets.
+# Progressive tool catalog: keep MCP-heavy profiles cheap without hiding tools forever.
+tools:
+  tool_search:
+    enabled: auto
+
+# Worker lanes are stateless; Co-PI is the only Memoria profile with Hermes memory.
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+  provider: ""
+
+skills:
+  write_approval: true
+  guard_agent_created: true
+
+curator:
+  enabled: false
+
+# Positive platform allowlist. Missing platform keys fall back to Hermes defaults,
+# so every supported runtime gets the same narrow Memoria surface.
+platform_toolsets:
+  cli: &memoria_writer_toolsets [skills, todo, policy, obsidian, qmd]
+  cron: *memoria_writer_toolsets
+  api_server: *memoria_writer_toolsets
+  telegram: *memoria_writer_toolsets
+  discord: *memoria_writer_toolsets
+  slack: *memoria_writer_toolsets
+  whatsapp: *memoria_writer_toolsets
+  whatsapp_cloud: *memoria_writer_toolsets
+  signal: *memoria_writer_toolsets
+  bluebubbles: *memoria_writer_toolsets
+  email: *memoria_writer_toolsets
+  homeassistant: *memoria_writer_toolsets
+  mattermost: *memoria_writer_toolsets
+  matrix: *memoria_writer_toolsets
+  dingtalk: *memoria_writer_toolsets
+  feishu: *memoria_writer_toolsets
+  wecom: *memoria_writer_toolsets
+  wecom_callback: *memoria_writer_toolsets
+  qqbot: *memoria_writer_toolsets
+  yuanbao: *memoria_writer_toolsets
+  teams: *memoria_writer_toolsets
+  google_chat: *memoria_writer_toolsets
+
+# Backstop only: platform_toolsets is the primary allowlist; this strips known
+# direct-world families if a runtime path falls back to Hermes defaults.
 agent:
+  tool_use_enforcement: true
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.

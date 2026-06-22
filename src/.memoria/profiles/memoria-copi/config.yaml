@@ -15,6 +15,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+    tools:
+      include: [check_permission, complete_write]
   obsidian:
     # Native MCP from the Local REST API plugin over loopback HTTPS (ADR-31).
     # OBSIDIAN_MCP_SSL_VERIFY points Hermes at the plugin's exported PEM cert/CA
@@ -31,26 +33,30 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120
+    tools:
+      include: [ingest_pipeline]
   cluster:
     # The clustering operation (ADR-33): typed graph + topics, read-only.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/cluster_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 120
+    tools:
+      include: [cluster_build_graph, cluster_model_topics]
   tasks:
     # The delegation path (ADR-48): every write the conversation produces goes out
     # as a kanban card via delegate_route_task, ceiling-validated per lane.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/tasks_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 60
+    tools:
+      include: [delegate_route_task]
   patterns:
     # The pattern runner (ADR-53): one audited chokepoint for every pattern run.
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/patterns_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 60
-  paper_search:
-    command: "{{PYTHON}}"
-    args: ["-m", "paper_search_mcp.server"]
-    timeout: 120
+    tools:
+      include: [patterns_list, patterns_run]
   qmd:
     # The shared qmd vector index (tobi/qmd) — local hybrid search (BM25 + vector +
     # rerank) over the vault corpus; the ask-*/explore-* skills use it for semantic
@@ -62,12 +68,58 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/qmd_filter_mcp.py", "--vault", "{{VAULT_PATH}}", "--qmd", "{{QMD}}"]
     timeout: 30
     connect_timeout: 45
+    tools:
+      include: [search, vsearch, deep_search, get, status]
 
-# Capability allowlist (ADR-27): the Co-PI keeps skills, todo, AND memory — it alone
-# carries the self-improving loop (memory · /goals · skills · /personality, D46).
-# Everything else stays disabled; the only write path would be the gated obsidian
-# MCP, and the copi lane-override denies every write.
+# Progressive tool catalog: keep MCP-heavy profiles cheap without hiding tools forever.
+tools:
+  tool_search:
+    enabled: auto
+
+# Co-PI alone carries the learning loop; writes still require operator approval.
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  write_approval: true
+  provider: ""
+
+skills:
+  write_approval: true
+  guard_agent_created: true
+
+curator:
+  enabled: false
+
+# Positive platform allowlist. Missing platform keys fall back to Hermes defaults,
+# so every supported runtime gets the same narrow Memoria surface.
+platform_toolsets:
+  cli: &memoria_copi_toolsets [skills, todo, memory, policy, obsidian, ingest, cluster, tasks, patterns, qmd]
+  cron: *memoria_copi_toolsets
+  api_server: *memoria_copi_toolsets
+  telegram: *memoria_copi_toolsets
+  discord: *memoria_copi_toolsets
+  slack: *memoria_copi_toolsets
+  whatsapp: *memoria_copi_toolsets
+  whatsapp_cloud: *memoria_copi_toolsets
+  signal: *memoria_copi_toolsets
+  bluebubbles: *memoria_copi_toolsets
+  email: *memoria_copi_toolsets
+  homeassistant: *memoria_copi_toolsets
+  mattermost: *memoria_copi_toolsets
+  matrix: *memoria_copi_toolsets
+  dingtalk: *memoria_copi_toolsets
+  feishu: *memoria_copi_toolsets
+  wecom: *memoria_copi_toolsets
+  wecom_callback: *memoria_copi_toolsets
+  qqbot: *memoria_copi_toolsets
+  yuanbao: *memoria_copi_toolsets
+  teams: *memoria_copi_toolsets
+  google_chat: *memoria_copi_toolsets
+
+# Backstop only: platform_toolsets is the primary allowlist; this strips known
+# direct-world families if a runtime path falls back to Hermes defaults.
 agent:
+  tool_use_enforcement: true
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.

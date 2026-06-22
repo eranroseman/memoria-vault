@@ -16,6 +16,8 @@ mcp_servers:
     command: "{{PYTHON}}"
     args: ["{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py", "--vault", "{{VAULT_PATH}}"]
     timeout: 30
+    tools:
+      include: [check_permission, complete_write]
   obsidian:
     # Native MCP from the Local REST API plugin over HTTPS (loopback). Replaces uvx
     # mcp-obsidian, which hardwired port 27124; the port lives in OBSIDIAN_MCP_PORT
@@ -35,6 +37,8 @@ mcp_servers:
     # terminal grant. Install once: pip install "pyzotero[mcp]" (or uv tool install).
     command: "pyzotero-mcp"
     timeout: 30
+    tools:
+      include: [get_references, get_citations, find_related, search_semantic_scholar]
   qmd:
     # The shared qmd vector index (tobi/qmd) — local hybrid search over the vault
     # corpus; the verify-* skills use it for claim↔source embedding similarity
@@ -46,21 +50,63 @@ mcp_servers:
     args: ["{{VAULT_PATH}}/.memoria/mcp/qmd_filter_mcp.py", "--vault", "{{VAULT_PATH}}", "--qmd", "{{QMD}}"]
     timeout: 30
     connect_timeout: 45
+    tools:
+      include: [search, vsearch, deep_search, get, status]
   # academic (optional, not yet installed): hunter-heidenreich/academic-tools-mcp adds
   # CrossRef + OpenCitations reference resolution (get_paper_references,
   # search_crossref_by_title) for deeper cite-check; arXiv 2603.17339 `citecheck` is an
   # alternative, purpose-built bibliographic-verification MCP. Enable either after
   # installing it and confirming its run command.
 
-# Capability allowlist (ADR-27): keep toolsets = skills, todo (+ obsidian / policy /
-# pyzotero via MCP). `web` is DISABLED: every external lookup (Zotero, Semantic
-# Scholar citation context) goes through the pyzotero MCP — gated, audited,
-# deterministic — so the agent makes no direct API calls and the only vault-write
-# path is the gated obsidian MCP. Retraction checks are NOT an agent capability:
-# they run as the cron-only sweep operation operations/integrity/retraction/retraction.py (ADR-46/D41).
-# disabled_toolsets = every Hermes toolset NOT in the keep-set. Update if Hermes
-# adds toolsets.
+# Progressive tool catalog: keep MCP-heavy profiles cheap without hiding tools forever.
+tools:
+  tool_search:
+    enabled: auto
+
+# Worker lanes are stateless; Co-PI is the only Memoria profile with Hermes memory.
+memory:
+  memory_enabled: false
+  user_profile_enabled: false
+  write_approval: true
+  provider: ""
+
+skills:
+  write_approval: true
+  guard_agent_created: true
+
+curator:
+  enabled: false
+
+# Positive platform allowlist. `web` stays off; Zotero/Semantic Scholar context
+# goes through pyzotero MCP, and retraction checks remain cron-only.
+platform_toolsets:
+  cli: &memoria_peer_reviewer_toolsets [skills, todo, policy, obsidian, pyzotero, qmd]
+  cron: *memoria_peer_reviewer_toolsets
+  api_server: *memoria_peer_reviewer_toolsets
+  telegram: *memoria_peer_reviewer_toolsets
+  discord: *memoria_peer_reviewer_toolsets
+  slack: *memoria_peer_reviewer_toolsets
+  whatsapp: *memoria_peer_reviewer_toolsets
+  whatsapp_cloud: *memoria_peer_reviewer_toolsets
+  signal: *memoria_peer_reviewer_toolsets
+  bluebubbles: *memoria_peer_reviewer_toolsets
+  email: *memoria_peer_reviewer_toolsets
+  homeassistant: *memoria_peer_reviewer_toolsets
+  mattermost: *memoria_peer_reviewer_toolsets
+  matrix: *memoria_peer_reviewer_toolsets
+  dingtalk: *memoria_peer_reviewer_toolsets
+  feishu: *memoria_peer_reviewer_toolsets
+  wecom: *memoria_peer_reviewer_toolsets
+  wecom_callback: *memoria_peer_reviewer_toolsets
+  qqbot: *memoria_peer_reviewer_toolsets
+  yuanbao: *memoria_peer_reviewer_toolsets
+  teams: *memoria_peer_reviewer_toolsets
+  google_chat: *memoria_peer_reviewer_toolsets
+
+# Backstop only: platform_toolsets is the primary allowlist; this strips known
+# direct-world families if a runtime path falls back to Hermes defaults.
 agent:
+  tool_use_enforcement: true
   disabled_toolsets: [browser, clarify, code_execution, computer_use, cronjob, delegation, file, homeassistant, image_gen, memory, messaging, moa, session_search, spotify, terminal, tts, video, video_gen, vision, web, x_search, yuanbao]
 
 # Profiles do not sandbox (ADR-27); anchor stray file ops inside the vault.

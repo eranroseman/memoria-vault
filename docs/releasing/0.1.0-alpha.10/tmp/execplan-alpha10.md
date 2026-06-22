@@ -82,7 +82,7 @@ rerank-on vs -off over ~20 real queries; sample approve/reject correctness).
 Fourth, land only confirmed-feasible Hermes hygiene (G3). The reconciled eval
 verified two items on-box, so they are no longer speculative: cost capture via
 the `post_llm_call` hook (carries tokens + `cost_details.total`) and the
-positive `enabled_toolsets` allowlist (`model_tools.py:277-397`). Pair those
+positive `platform_toolsets` allowlist (`hermes_cli/tools_config.py`). Pair those
 with the pure-hygiene config migration (`v23 -> v30`, remove stale `ollama`) and
 the config-only auxiliary slots + per-lane `reasoning_effort`.
 
@@ -130,7 +130,7 @@ deleted after their result is recorded.
 4. **Land G3 confirmed hygiene** (only items G1 keeps):
    - Migrate Hermes config to the 0.17 schema; remove stale `ollama` from the
      default profile (`hermes doctor` clean).
-   - Switch profile gating to `enabled_toolsets`; run the policy deny-path tests
+   - Switch profile gating to `platform_toolsets`; run the policy deny-path tests
      to confirm new upstream toolsets stay closed by default.
    - Set cheap auxiliary slots (title/compression/MCP-routing/approval/curator)
      and per-lane `reasoning_effort` (low/none deterministic, high only for
@@ -169,7 +169,7 @@ deleted after their result is recorded.
   deny + one Obsidian/MCP smoke pass succeed.
 - **Claim:** Given two weeks of observed use, when G1 is filled, then #859 records
   whether memory is the bottleneck and marks every candidate scope/defer/kill.
-- **Claim:** Given a disabled capability invoked by name, when `enabled_toolsets`
+- **Claim:** Given a disabled capability invoked by name, when `platform_toolsets`
   is active, then the gate blocks it and the deny-path tests confirm new upstream
   toolsets are closed by default — not merely hidden.
 - **Claim:** Given a model call completes, when the `post_llm_call` cost spike
@@ -197,7 +197,7 @@ deleted after their result is recorded.
 - [x] 2026-06-22 -- Draft release plan and this ExecPlan authored.
 - [ ] G2 -- Upgrade acceptance finished (profile redeploy + live deny + MCP smoke).
 - [ ] G1 -- #859 baseline filled and scope decision recorded.
-- [ ] G3 -- Confirmed Hermes hygiene landed (config migration, `enabled_toolsets`,
+- [ ] G3 -- Confirmed Hermes hygiene landed (config migration, `platform_toolsets`,
   auxiliary slots + `reasoning_effort`) for items G1 keeps.
 - [ ] G4 -- Cost-capture decision + Bitwarden/multiplex pilots + security audit
   for items G1 keeps.
