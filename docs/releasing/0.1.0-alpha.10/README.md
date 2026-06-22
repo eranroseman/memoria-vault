@@ -18,3 +18,4 @@ the Memoria Issue Tracker.
 | File | Holds |
 |---|---|
 | `release-plan-0.1.0-alpha.10.md` | Draft release plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure. |
+| `tmp/` | Temporary alpha.10 carryover notes and probes; delete or move before closeout. |

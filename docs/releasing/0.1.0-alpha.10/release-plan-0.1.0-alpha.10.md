@@ -13,7 +13,8 @@ nav_order: 2
 The first carryover is
 [#859](https://github.com/eranroseman/memoria-vault/issues/859): decide, from
 observed usage, whether measurement-led memory work or Hermes cleanup should be
-the next real bottleneck to address. It is not a formal release: no
+the next real bottleneck to address. Temporary carryover lives in
+[`tmp/`](tmp/). It is not a formal release: no
 release-please PR, no tag, and no GitHub Release.
 
 ## 1. Scope -- what this release is
@@ -90,4 +91,5 @@ ADRs/docs/issues, and delete completed `tmp/` files only after disposition.
 
 ## 12. Appendix
 
-No appendix yet.
+Temporary carryover notes and smoke probes live in [`tmp/`](tmp/) until alpha.10
+closeout.
