@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.9
-status: draft        # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan -- v0.1.0-alpha.9
 parent: Releasing
@@ -9,12 +9,11 @@ nav_order: 2
 
 # Release plan -- v0.1.0-alpha.9
 
-**Current status: draft internal checkpoint.** alpha.9 is the
+**Current status: complete internal checkpoint.** alpha.9 is the
 **UI/workflow and runtime-gate** checkpoint. It is not a formal release: no
-release-please PR, no tag, and no GitHub Release. The single biggest bar before
-candidate approval is proving that the Obsidian workflow fixes, the policy-gate
-capability boundary, and the ADR/code/docs reconciliation all match the running
-system rather than only the repository prose.
+release-please PR, no tag, and no GitHub Release. The checkpoint is complete:
+the Obsidian workflow fixes, policy-gate capability boundary, and ADR/code/docs
+reconciliation were validated against the running system.
 
 ## 1. Scope -- what this release is
 
@@ -192,7 +191,6 @@ This checkpoint follows the untagged internal path:
 
 ## 12. Appendix -- working artifacts
 
-The living implementation plan for this checkpoint is
-[`tmp/execplan-alpha9-ui-workflow-runtime-gates.md`](tmp/execplan-alpha9-ui-workflow-runtime-gates.md).
-Long-form audits and spike scripts remain in `tmp/` only until closeout
-disposition.
+alpha.9 working artifacts were handled at closeout: implemented findings
+landed in ADRs, docs, tests, PRs, or issue evidence, and the tracked `tmp/`
+files were deleted.
