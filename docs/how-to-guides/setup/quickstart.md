@@ -7,13 +7,13 @@ nav_order: 1
 
 # Quickstart
 
-Five steps from zero to a working vault with the Co-PI answering. For the full walkthrough with explanations, see [Tutorial 00: Set up and pick your path](../../tutorials/00-set-up-and-pick-your-path.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
+Four steps from zero to an installed vault. For the full walkthrough with explanations, see [Tutorial 00: Set up and pick your path](../../tutorials/00-set-up-and-pick-your-path.md), or [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md).
 
 ## Prerequisites
 
 - Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
-- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 01: Bring in your first source](../../tutorials/01-bring-in-your-first-source.md))
+- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 01](../../tutorials/01-bring-in-your-first-source.md)).
 
 ## Steps
 
@@ -53,8 +53,6 @@ cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
 
-**5. Bring in your first source.** In Obsidian: `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste a paper's URL (one with a resolvable DOI) — or open the Agent Client pane and tell the Co-PI "bring in this paper: `<DOI>`". The Librarian's lane does the rest and raises a candidate card in your Inbox.
-
 On a fresh vault, empty tables are normal. The Inbox, Library, Knowledge, and
 Project spaces each show a **First actions** callout above their Bases views; use
 those commands as the day-1 path for the space you are in.
@@ -62,13 +60,13 @@ those commands as the day-1 path for the space you are in.
 ## Verify
 
 - `hermes profile list` shows the five `memoria-*` profiles
-- `<vault>/catalog/papers/<citekey>.md` exists with `type: paper` and a `relationships` block
-- `<vault>/system/logs/audit.jsonl` shows at least one `allow_with_log` entry
-- A `candidate` card landed in `inbox/` (the **Needs me** view of `inbox.base`, shown on the Inbox space)
+- `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands
+- The runtime vault has a `.git/` directory after the initial commit
 
 ## Related
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
 - API keys and profile secrets: [Set up Hermes](set-up-hermes.md)
+- First source walkthrough: [Tutorial 01](../../tutorials/01-bring-in-your-first-source.md)
 - Optional bibliographic backbone: [Set up Zotero](../zotero/set-up-zotero.md)

@@ -14,7 +14,7 @@ The organizing principle: **each channel owns one mode.** Using one for another'
 | --- | --- | --- |
 | **Obsidian** | Desktop, focused, deliberate | Daily triage (the Inbox), reading, authoring, the Co-PI conversation in the ACP pane |
 | **CLI** (`hermes …`) | Desktop, occasional, precise | Forensic queries, profile administration, manual dispatch, backup |
-| **Telegram** | Mobile, async, lightweight | Fleeting capture, source-URL queuing, urgent push notifications |
+| **Telegram** | Mobile, async, lightweight | Urgent push notifications today; mobile capture is planned work |
 
 The three rows above are the human channels. The API server (port 8642) is listed separately below because it is *not* a human-operated channel — it is a programmatic integration surface that programs use and humans never operate directly:
 
@@ -53,17 +53,17 @@ The test for push vs dashboard routing: *does it change what the PI does in the 
 
 ---
 
-## Why Telegram has two distinct modes
+## Why Telegram stays narrow
 
-Telegram serves two purposes that are easy to conflate but that need to remain separate: push notification for urgent signals, and lightweight mobile capture.
+Telegram has two tempting jobs that are easy to conflate: push notification for
+urgent signals, and lightweight mobile capture. Only urgent push is shipped
+today; inbound mobile capture remains planned work ([#382](https://github.com/eranroseman/memoria-vault/issues/382)).
 
 The push notification mode carries the **Alert** and **Block** levels only — hard blockers, time-sensitive completions, high-severity drift alarms, cron failures. Wiring Telegram for per-card events or routine approvals teaches the human to ignore Telegram notifications — including the ones that actually matter.
 
-The mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, or quick corpus lookups while in motion. The key constraint is that the Telegram toolset is intentionally narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
+The planned mobile capture mode takes advantage of the phone's always-accessible nature: capture fleeting thoughts, queue URLs for ingest, or quick corpus lookups while in motion. The key constraint is that the Telegram toolset stays narrower than the CLI or desktop — mobile is for thinking and capture, not for code execution, web search, or programmatic operations that have desktop footguns.
 
 Confining Telegram to one messaging channel is also intentional. Each additional channel — Discord, Slack, WhatsApp — competes for attention and demands its own notification discipline. Until there is a concrete need that Telegram cannot serve, additional channels add noise without value.
-
-For Telegram configuration and the recommended per-profile toolset, see [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md).
 
 ---
 
@@ -75,7 +75,6 @@ The API server (port 8642) is the one-row integration surface in the table above
 
 ## Related
 
-- Messaging gateway setup: [Set up the messaging gateway](../../how-to-guides/setup/set-up-messaging.md)
 - Obsidian UI components: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
 - Policy MCP (what API calls go through): [Policy MCP](../../reference/policy-mcp.md)

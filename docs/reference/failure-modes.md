@@ -11,7 +11,7 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 
 | Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Raises `loudness: block`: blocks new delegation and review-gated promotion until acknowledged, surfaces on Home, and sends Telegram push when the bot environment is configured ([Set up messaging](../how-to-guides/setup/set-up-messaging.md)). |
+| `CRITICAL` | Raises `loudness: block`: blocks new delegation and review-gated promotion until acknowledged, surfaces on Home, and records a Telegram push attempt when the bot environment is configured ([Inbox card fields](inbox-card-fields.md)). |
 | `HIGH` | Surfaced on Home and in `drift-watch`. |
 | `MEDIUM` | Surfaced in `weekly-review`. |
 | `LOW` | Aggregated weekly. |

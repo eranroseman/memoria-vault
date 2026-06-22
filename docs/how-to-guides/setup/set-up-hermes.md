@@ -1,7 +1,7 @@
 ---
 title: Set up Hermes
 parent: Setup
-nav_order: 5
+nav_order: 4
 ---
 
 
@@ -95,10 +95,6 @@ Ask it "explain how this vault is organized". It should answer from the vault. F
 
 In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL (or tell the Co-PI "bring in this paper: `<DOI>`"). Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
 
-**8. Route the auxiliary models to cheap flash tiers (cost efficiency).**
-
-Auxiliary slots default to the profile's main model, so a Co-PI's title/compression calls would otherwise burn **Opus**. Add the `auxiliary:` block to your **global** `~/.hermes/config.yaml` (not per-profile) and restart Hermes. The exact block, the GLM/DeepSeek split, why it goes globally, and the cost traps to avoid are in [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile).
-
 ## Verify
 
 ```bash
@@ -118,6 +114,7 @@ Each line should carry a `"decision"` (`allow_with_log` for the Librarian's Cata
 ## Related
 
 - API key sources: [Set up Zotero § API keys for enrichment](../zotero/set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
+- Cost tuning: [Configure a profile § Auxiliary models](../hermes-agent/configuration.md#auxiliary-models-set-globally-not-per-profile)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - What the installer wires for you: [Installer (bootstrap)](../../reference/installer.md)
 - Profile design: [explanation/profiles/](../../explanation/profiles) (the Co-PI and the four lanes)

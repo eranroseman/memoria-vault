@@ -1,7 +1,7 @@
 ---
 title: Add a second vault
 parent: Setup
-nav_order: 9
+nav_order: 7
 ---
 
 # Add a second vault

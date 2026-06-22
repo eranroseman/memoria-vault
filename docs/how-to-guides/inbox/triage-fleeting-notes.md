@@ -54,7 +54,7 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 
 - Write a claim note: [Write a claim note](../knowledge/write-a-claim-note.md)
 - Weekly review (the Friday aggregator): [Run the weekly review](../inbox/run-the-weekly-review.md)
-- Mobile capture into this queue: [Set up messaging](../setup/set-up-messaging.md)
+- Command-palette capture: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 
 **Reference**
 
