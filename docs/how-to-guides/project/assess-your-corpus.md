@@ -59,5 +59,5 @@ Two standing dashboards answer the same questions continuously: `system/dashboar
 
 - Filling the gaps: [Find new sources](../library/find-new-sources.md)
 - Next step when dense: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
-- The guided walk: [Tutorial 05: Synthesize toward a writing project](../../tutorials/05-synthesize-toward-a-writing-project.md)
+- The guided walk: [Tutorial 03: Draft a section from your claims](../../tutorials/03-draft-a-section-from-your-claims.md)
 - The lane behind the map: [The Librarian](../../explanation/profiles/librarian.md)

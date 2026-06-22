@@ -12,7 +12,7 @@ Use this when a cluster has become more than a topic: you have a question, an in
 
 ## Steps
 
-**1. Build the synthesis surface.** Distill claims into `notes/claims/` and gather the cluster under a hub in `notes/hubs/` — [Tutorial 05: Synthesize toward a writing project](../../tutorials/05-synthesize-toward-a-writing-project.md) walks the whole arc.
+**1. Build the synthesis surface.** Distill claims into `notes/claims/` and gather the cluster under a hub in `notes/hubs/` — [Tutorial 03: Draft a section from your claims](../../tutorials/03-draft-a-section-from-your-claims.md) walks the whole arc.
 
 **2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title, slug, scope topics, PICO-style inquiry fields, FINER notes, and output mode. The command scaffolds `projects/<slug>/project.md`, `projects/<slug>/thesis.md`, and `code/`, `drafts/`, and `exports/` folders.
 
