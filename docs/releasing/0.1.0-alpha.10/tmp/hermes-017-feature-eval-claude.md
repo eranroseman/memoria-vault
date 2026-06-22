@@ -1,115 +1,159 @@
-# Hermes 0.17 feature evaluation + clean-slate recommendations
+# Hermes 0.17 feature evaluation — reconciled
 
-Fresh analysis (2026-06-22) of every relevant Hermes 0.17 capability vs Memoria,
-verified against the local install at `~/.hermes/hermes-agent` (v0.17.0).
+Reconciled report (2026-06-22) merging the Codex evaluation
+(`hermes-017-feature-eval-codex.md`) and the Claude source-verified variant.
+Codex contributes operational/deployment breadth and production-provider
+grounding; Claude contributes source-level verification that de-risks the two
+highest-value items. Verified against the local install at
+`~/.hermes/hermes-agent` (v0.17.0).
 
-> Companion to `hermes-017-feature-eval.md`. This report adds the source-level
-> verification behind the recommendations both reports share.
+## Local verification
 
-## Verified against the local install
+CLI surface (Codex):
+
+- `hermes --version` reports v0.17.0, up to date.
+- `hermes profile list` shows the five Memoria profiles installed.
+- `hermes -p memoria-copi config show` renders the local test profile as
+  `provider: custom` against local `qwen2.5:7b`. **Production Memoria uses Kilo**;
+  treat local model output as test-vault evidence, not the production target.
+- `hermes prompt-size --profile memoria-copi` reports 28 tools, ~49 KB of tool
+  schemas; `AGENTS.md` is truncated at the context-file limit.
+- `hermes_contract_doctor.py --json` → `ok: true` (warning: dead denylist names).
+- `board_export.py --cost-doctor` → `ok: true`.
+- `hermes doctor` flags the default profile's stale config: unknown provider
+  `ollama`, config version `v23 -> v30`.
+
+Source level (Claude) — these turn two conditional recommendations into confirmed:
 
 - `enabled_toolsets` (positive allowlist) **and** `disabled_toolsets` (subtractive)
-  are both first-class — `model_tools.py:277-397`, `toolsets.py`.
+  are both first-class — `model_tools.py:277-397`, `toolsets.py`. The allowlist
+  switch is feasible today, not pending a test.
 - Plugin lifecycle hooks are real and in-process: `register_hook("pre_tool_call" |
   "post_tool_call" | "pre_llm_call" | "post_llm_call" | "post_api_request" |
   "on_session_end")` — `plugins/observability/langfuse/__init__.py:1132`,
   `plugins/disk-cleanup/__init__.py:310`.
 - The post-LLM hook payload carries input/output/cache/reasoning tokens **and**
   runs `get_pricing_entry` / `estimate_usage_cost` → `cost_details.total` (USD).
-  This is confirmed, not conditional: the cost-hook migration is feasible today.
+  The cost-capture migration is confirmed feasible, not conditional.
 - Native kanban has an auxiliary-judge completion gate and a native `review`
   status — `hermes_cli/kanban_db.py:822-826,1060`, `VALID_STATUSES`.
 - `reasoning_effort` (`parse_reasoning_effort`) and the `auxiliary:` config block
   exist and are per-profile.
-- Contract/cost doctors already report `ok:true` on this version.
 
-## Used today, near-optimal — leave alone
+## Feature evaluation
 
-Kanban as the authoritative queue; profiles for agent isolation; MCP hosting from
-per-profile `config.yaml`; native Obsidian MCP over HTTP (ADR-31); plugin
-`pre/post_tool_call` gate (ADR-28); per-profile main-loop model routing.
+| Hermes 0.17 feature | Used by Memoria? | Assessment |
+| --- | --- | --- |
+| Kilo/provider routing | Yes, production | Keep Kilo as the production main provider. OpenRouter `provider_routing` is irrelevant unless a profile actually moves to OpenRouter. |
+| Auxiliary model slots | Partly | Route title generation, compression, MCP routing, approval, and curator work to cheap models. Config-only. |
+| `reasoning_effort` | Not effectively | Set per lane: low/none for deterministic work, high only for Writer/Peer-reviewer. Config-only. |
+| `enabled_toolsets` allowlist | No (subtractive instead) | Confirmed first-class (`model_tools.py:277-397`). Replace computed `disabled_toolsets`; closes new upstream toolsets by default. |
+| `post_llm_call` cost hook | No (state.db join) | Confirmed to carry `cost_details.total`. Move ADR-106 cost capture into the gate plugin's hook; retire the brittle session-store join. |
+| Managed scope | No | Skip. Useful only to pin admin-owned non-secret config on a shared host. |
+| Bitwarden Secrets Manager | No | Adopt for shared profile secrets (Kilo, Obsidian, scholarly APIs, central gateway tokens). |
+| Multi-profile gateway multiplexing | No | Pilot in `Memoria-test`. Reduces service sprawl; not a policy boundary. |
+| Dashboard/profile switcher | Not core | Inspection/admin only, not source of truth. |
+| MCP catalog/OAuth/tool filters | Partly | Add explicit include filters for upstream MCPs with mutating/irrelevant tools. |
+| Late MCP refresh / HTTP keepalive | Implicit | Good for Obsidian MCP reliability; stop assuming startup is the only discovery point. |
+| Tool Search | Auto/implicit | Leave `auto`; forcing on adds round trips. |
+| Cron lifecycle / no-agent jobs | Partly | Move deterministic sweeps/heartbeats to no-agent cron; agent cron only for narrative work. |
+| Kanban workers, judge, review status | Yes | Keep kanban as the queue. Use native judge/`review` status as an automated pre-filter, never a replacement for human approval. |
+| Built-in memory + write approval | Partly | Co-PI preferences and durable runtime lessons only, write approval on. Canonical knowledge stays in the vault. |
+| External memory providers/Honcho | No | Not for core Memoria. Optional later for personalization. |
+| Skills opt-out / curator | Partly | Lane profiles opt out of bundled skill seeding; keep lane skills only. |
+| Nous Tool Gateway | No | Keep off. Scholarly discovery stays through curated MCPs. |
+| Billing/insights/cost columns | Yes | Cost doctor passes; keep cost telemetry as a release gate when cloud models are active. |
+| Web/X search | No | Disabled for core literature work; use paper-search, Zotero, deterministic ingest. |
+| Deliverable mode/artifacts | Not core | Useful for messaging delivery; kanban artifacts suffice for Obsidian-first. |
+| Image/TTS/voice/computer-use/media | No | Skip; no core-requirement gain today. |
+| ADR-105 diagnostic plane (hand-rolled) | Yes, bespoke | Fold into the gate plugin's `post_tool_call`/`post_llm_call`/`on_session_end` hooks; keep the redaction policy. |
+| `hermes security audit` | No | Add to release/runbook checks for third-party MCP + Python dependency drift. |
 
-## Used sub-optimally — the real wins
+## Usage quality
 
-1. **Toolset gating is subtractive (`disabled_toolsets`) — flip to `enabled_toolsets`.**
-   Computing `disabled = all - allow` means every upstream toolset addition (0.17
-   added `computer_use`, more `kanban_*`, `cronjob`) silently widens the schema
-   surface until the contract doctor catches it. A positive allowlist closes new
-   toolsets by default and shrinks the contract doctor to "is the hard-deny still
-   complete." `enabled_toolsets` is verified first-class in `model_tools.py:277-397`.
-   Contradicts the current ADR-27 mechanism.
+Used well: profiles for lane separation; native Obsidian MCP over loopback HTTPS;
+Memoria MCP servers for deterministic ops; policy plugin as the hard write gate;
+kanban as the durable queue.
 
-2. **Cost capture joins the internal `state.db` — move it to a `post_llm_call` hook.**
-   ADR-106 reverse-engineers `~/.hermes/profiles/<lane>/state.db`; the upgrade
-   notes flag it as brittle (re-run the cost doctor every upgrade, ~1/13 miss from
-   session rotation). The post-LLM hook delivers per-call tokens + computed USD
-   (`cost_details.total`) in-process, fail-closed, upgrade-stable. Capture it in
-   the same plugin that already runs the gate. Collapses ADR-106's "brittle join
-   vs deferred proxy daemon" dilemma — the hook is neither.
+Used sub-optimally:
 
-3. **No auxiliary-model routing (#859).** Title/compression/MCP-arg/judge calls run
-   on each profile's main model. Route them to a cheap tier via the `auxiliary:`
-   block. Config-only cost win.
+- Subtractive `disabled_toolsets` is brittle when Hermes adds tools. Switch to
+  positive `enabled_toolsets` (confirmed first-class; no test gate needed).
+- Cost capture leans on session/`state.db` inspection. Move to the `post_llm_call`
+  hook (confirmed to expose tokens + `cost_details.total`).
+- Auxiliary models and `reasoning_effort` are not yet first-class profile policy.
+- Bundled skills were seeded broadly; lane profiles should stay narrower.
+- Default profile carries stale config (`ollama`, `v23 -> v30`).
 
-4. **No per-profile `reasoning_effort` (#859).** Librarian/engineer (mechanical,
-   Haiku) don't need extended reasoning; peer-reviewer does. Config-only.
+Not used, should be piloted: Bitwarden for shared secrets; gateway multiplexing in
+`Memoria-test`; native kanban judge/review as a pre-filter; `hermes security audit`.
 
-5. **ADR-105 diagnostic plane is hand-rolled.** Emit content-light observability
-   from the existing gate plugin's `post_tool_call` / `post_llm_call` /
-   `on_session_end` hooks instead of a separate plane. Keep the redaction policy.
-
-## Not used — should evaluate
-
-- **Native kanban auxiliary-judge + `review` status.** Use the judge as an
-  automated *pre-filter* feeding the human approval gate (not a replacement — the
-  human gate is a hard requirement). The judge catches obvious failures so fewer
-  cards reach review.
-- **`hermes security audit`** (OSV supply-chain scan of venv + pinned MCP servers).
-  Memoria ships third-party MCP servers (paper_search, pyzotero) with no current
-  supply-chain check — add to the release runbook.
-- **`insights` / session analytics** — overlaps with the bespoke cost pipeline;
-  look before extending it.
-
-## Not used — correctly excluded (confirm, don't adopt)
-
-`write_file` / `terminal` / `execute_code` / `read_file` / `patch` (MCP-only
-sandbox, ADR-46 — still the exact toolsets the hard-deny must cover; 0.17 didn't
-rename them); `browser_*`, `computer_use`, messaging gateways, `delegate_task`,
-`cronjob` tool, `homeassistant_*`, `spotify_*`, external memory providers,
-desktop/dashboard GUIs, proxy, ACP-as-front, webhooks, Bitwarden (manual `.env`
-until multi-machine sharing is real — YAGNI); Hermes checkpoints (snapshot only
-native writes, not MCP — irrelevant to our write path).
+Not used, correctly excluded: direct file/terminal/browser/computer-use/media,
+broad web/X search, and messaging tools for core lane profiles; external memory
+providers for canonical knowledge; Tool Gateway for scholarly discovery; Hermes
+checkpoints (snapshot only native writes, not MCP — irrelevant to our write path).
 
 Watch: 0.17 makes "new plugins/memory backends must be standalone, must not modify
 core files" a hard upstream constraint. `memoria-policy-gate` already complies.
 
 ## Clean-slate architecture (requirements-first)
 
-Requirements: every feature PI-accessible directly from Obsidian; no agent gets
-file/terminal/code execution; human approval gate before canonical; durable
-multi-agent queue; auditable fail-closed writes; cost/disposition captured.
+Requirements: PI works from Obsidian; durable knowledge is Markdown + schemas in
+the vault; every canonical write is gated and auditable; agents get no direct
+file/terminal/code execution for vault work; multi-agent work is queued and
+recoverable; cost and disposition are captured.
 
-The shape barely changes — ADR-22's bet holds — but four wiring decisions flip:
+The shape barely changes — ADR-22's bet holds — with these decisions:
 
-1. **One Memoria plugin owns gate + audit + cost + diagnostics** via four hooks
+1. `memoria-copi` is the only conversational agent: read-only, delegates durable
+   work to kanban.
+2. Librarian, Writer, Peer-reviewer, Engineer are lane profiles with only lane
+   skills, lane MCPs, and lane write ceilings.
+3. Canonical knowledge stays in the vault; Hermes memory stores only preferences
+   and runtime lessons, write approval on.
+4. **One Memoria plugin owns gate + audit + cost + diagnostics** via four hooks
    (`pre_tool_call` gate, `post_tool_call` audit, `post_llm_call` cost,
-   `on_session_end` diagnostics), instead of plugin + `state.db` join + separate
-   ADR-105 plane.
-2. **`enabled_toolsets`** replaces the computed `disabled_toolsets`.
-3. **Native kanban judge** runs as the automated pre-filter into the human review
+   `on_session_end` diagnostics) — replacing plugin + `state.db` join + the
+   separate ADR-105 plane.
+5. **`enabled_toolsets`** replaces the computed `disabled_toolsets`.
+6. **Native kanban judge** runs as the automated pre-filter into the human review
    gate (native `review` status).
-4. **Auxiliary routing + per-profile `reasoning_effort`** set from day one.
+7. **Auxiliary routing + per-profile `reasoning_effort`** set from day one.
+8. Bitwarden supplies shared secrets across profiles; it does not define policy.
+9. Gateway multiplexing is an operational deployment mode, not an isolation
+   mechanism.
+10. Deterministic jobs run as no-agent cron where possible; LLM work becomes
+    kanban cards.
 
 Everything else (kanban queue, profiles, native Obsidian MCP, MCP-only sandbox,
 deterministic ingest ADR-30, human approval gate) survives unchanged — the
 strongest evidence ADR-22 was correct.
 
-## Recommendations, ranked
+## Ranked recommendations
 
-1. Move cost capture into a `post_llm_call` hook; retire the `state.db` join.
-2. Switch profile gating to `enabled_toolsets`.
-3. Adopt auxiliary routing + per-profile `reasoning_effort` (the easy #859 items).
-4. Use the native kanban judge as a pre-filter before the human gate.
-5. Add `hermes security audit` to the release runbook.
-6. Fold ADR-105 diagnostics into the gate plugin's hooks.
-7. Leave everything in "correctly excluded" denied — 0.17 didn't change why.
+Confirmed-feasible engineering wins (kill upgrade-brittleness; both verified on
+this install) come first; operational hygiene and pilots follow:
+
+1. **Move cost capture into a `post_llm_call` hook; retire the `state.db` join.**
+   Confirmed: the hook carries tokens + `cost_details.total`.
+2. **Switch profile gating to `enabled_toolsets`.** Confirmed first-class; no
+   deny-path test gate needed (run the existing policy tests to confirm closure).
+3. **Migrate Hermes config to the 0.17 schema**; remove stale `ollama` config from
+   the default profile.
+4. **Set auxiliary model slots + per-lane `reasoning_effort`** (the easy #859 items).
+5. **Adopt Bitwarden for shared profile secrets** (Kilo, Obsidian, scholarly API
+   keys); keep per-profile `.env` for the bootstrap token and profile-specific
+   values. Risk: `BWS_ACCESS_TOKEN` becomes the high-value bootstrap secret and
+   startup depends on Bitwarden/network unless a local fallback remains.
+6. **Pilot `gateway.multiplex_profiles: true` in `Memoria-test`.** Risk: one
+   gateway crash affects every served profile; not a security boundary.
+7. **Use the native kanban judge as a pre-filter** before the human gate.
+8. **Opt Memoria lane profiles out of bundled skill seeding.**
+9. **Fold ADR-105 diagnostics into the gate plugin's hooks.**
+10. **Add `hermes security audit` to release validation.**
+11. **Keep broad direct tools disabled for core Memoria lanes** — 0.17 didn't
+    change why.
+
+After any change: re-run `hermes_contract_doctor.py` and `board_export.py
+--cost-doctor`, and promote only after one direct-tool deny and one Obsidian/MCP
+smoke pass.
