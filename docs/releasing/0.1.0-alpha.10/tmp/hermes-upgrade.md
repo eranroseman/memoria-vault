@@ -20,10 +20,13 @@ Upgrade acceptance:
 
 - `hermes --version` reports the new installed version. Done on 2026-06-22.
 - `python src/.memoria/mcp/hermes_contract_doctor.py --vault /home/eranr/Memoria-test --json`
-  passes.
-- `python src/.memoria/mcp/board_export.py --cost-doctor` passes.
-- Profiles redeploy cleanly to `~/Memoria-test`.
-- One live direct-tool deny and one Obsidian/MCP smoke pass succeed.
+  passes. Done on 2026-06-22 with `ok: true`; warning preserved: dead
+  denylist names `code_execution`, `run_command`, `send_message`.
+- `python src/.memoria/mcp/board_export.py --cost-doctor` passes. Done on
+  2026-06-22 with `ok: true` for `memoria-copi`, `memoria-librarian`, and
+  `memoria-writer`.
+- Profiles redeploy cleanly to `~/Memoria-test`. Not rerun yet.
+- One live direct-tool deny and one Obsidian/MCP smoke pass succeed. Not rerun yet.
 
 Open question from alpha.9 cleanup: after the upgrade, decide whether #859's
 Hermes cleanup items still matter: Bitwarden, auxiliary routing, `reasoning_effort`,
