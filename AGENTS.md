@@ -59,11 +59,11 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 ```bash
 git fetch origin
-git worktree add ~/mv-<session> -b agent/<session> origin/main
-cd ~/mv-<session>          # all edits, commits, PRs from here
+git worktree add ~/mv/<session> -b agent/<session> origin/main
+cd ~/mv/<session>          # all edits, commits, PRs from here
 ```
 
-Keep worktrees on ext4 (`~/…`), never under `/mnt/c`.
+Keep all session worktrees under one parent on ext4 — `~/mv/<session>` — never under `/mnt/c`. The canonical main checkout stays at `~/memoria-vault`; `~/mv/` holds only task worktrees, so a single `~/mv/` is easy to list and prune.
 
 Prefer a worktree **per branch** even working solo: switching becomes `cd`, and a `reset --hard` in one worktree can't reach another's uncommitted work (§4).
 
@@ -117,7 +117,7 @@ remove the task worktree and fast-forward:
 ```bash
 cd ~/memoria-vault
 gh pr merge <n> --squash --delete-branch
-git worktree remove ~/mv-<session>  # refuses if the task worktree is dirty
+git worktree remove ~/mv/<session>  # refuses if the task worktree is dirty
 git status --short                  # must be empty before resync
 git fetch origin
 git merge --ff-only origin/main
