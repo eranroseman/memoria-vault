@@ -11,13 +11,13 @@ parent: Tutorials
 
 **You will use:** the Obsidian command palette, the Inbox, and the Co-PI pane.
 
-**Prerequisite:** [Tutorial 00: Set up and pick your path](00-set-up-and-pick-your-path.md) complete.
+**Prerequisite:** [Tutorial 00: See what you're building](00-orient.md) complete — the sample vault loaded and a project opened over it.
 
 ---
 
 Accumulate is a **habit**, and a habit is learned one rep at a time. This is the rep: take something *you* are reading and turn it into a durable, traceable record. The sample vault hands you worked source notes to study, but the move only sticks when you do it on your own material — so this tutorial brings in a source of yours.
 
-If you loaded the sample vault, you'll see its source notes (the PREDIMED note, the Lyon Diet Heart note, and others) already filled in `notes/sources/`. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
+If you loaded the sample vault in Tutorial 00, you'll see its source notes (the PREDIMED note, the Lyon Diet Heart note, and others) already filled in `notes/sources/`. Keep one open in a split pane as you go — they are the *shape* you're aiming at, not something to copy verbatim.
 
 ## Step 1 — Capture your source
 
@@ -95,4 +95,4 @@ The paper is a vault citizen; the source note is your intellectual claim on it. 
 
 ---
 
-← [Tutorial 00: Set up and pick your path](00-set-up-and-pick-your-path.md) · [Tutorial 02: Build claims and connect them](02-build-claims-and-connect-them.md) →
+← [Tutorial 00: See what you're building](00-orient.md) · [Tutorial 02: Build claims and connect them](02-build-claims-and-connect-them.md) →

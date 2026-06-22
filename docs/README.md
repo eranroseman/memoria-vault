@@ -23,7 +23,7 @@ If you need exact values, field names, or configuration formats, see [Reference]
 
 | I want to…                                  | Go here                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| **Get set up for the first time**           | [Tutorial 00 — Set up and pick your path](tutorials/00-set-up-and-pick-your-path.md)                                |
+| **Get set up for the first time**           | [Quickstart — set up your vault](how-to-guides/setup/quickstart.md)                                |
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand why something works this way** | [Explanation](explanation/README.md)                                                              |

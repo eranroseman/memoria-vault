@@ -79,8 +79,8 @@ One check you never run: the retraction sweep runs on cron behind you and raises
 
 ## What's next
 
-[Tutorial 05: Close the loop](05-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to Accumulate, and meet the weekly review that keeps the whole loop turning.
+[Tutorial 05: Close the loop and make it your own](05-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to Accumulate, and meet the weekly review that keeps the whole loop turning.
 
 ---
 
-← [Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) · [Tutorial 05: Close the loop](05-close-the-loop.md) →
+← [Tutorial 03: Draft a section from your claims](03-draft-a-section-from-your-claims.md) · [Tutorial 05: Close the loop and make it your own](05-close-the-loop.md) →
