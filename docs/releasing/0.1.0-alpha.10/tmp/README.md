@@ -13,5 +13,6 @@ alpha.10 closes.
 | `spike-nli-vs-cosine.py` | Carried forward as a smoke probe. |
 | `hermes-clean-slate-design.md` / `hermes-014-utilization-audit.md` | Reduced to #859 and `hermes-upgrade.md`; closed gate findings already landed in alpha.9. |
 | Hermes 0.17 recommendations | Captured in `hermes-017-recommendations.md`; includes Kilo provider, Bitwarden, and gateway multiplexing recommendations. |
+| Hermes 0.17 feature evaluation | Captured in `hermes-017-feature-eval.md`; full report behind the recommendations. |
 | ADR enforcement / implementation audits | Not carried forward; alpha.9 landed the fixes and drift-doctor slice. |
 | alpha.9 ExecPlan | Not carried forward; checkpoint closed. |
