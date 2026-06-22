@@ -119,11 +119,55 @@ Recommended architecture:
 3. Pilot `gateway.multiplex_profiles: true` in `Memoria-test`.
 4. Set auxiliary model slots and per-lane `reasoning_effort`.
 5. Opt Memoria lane profiles out of bundled skill seeding.
-6. Evaluate positive `enabled_toolsets` with a live deny-path test.
-7. Move cost capture into plugin hooks if local hook payloads provide stable
-   usage/cost data.
+6. Spike `post_llm_call` cost capture in the Memoria policy plugin; source-level
+   verification indicates the hook carries token and USD cost details.
+7. Evaluate positive `enabled_toolsets` with a live deny-path test before
+   replacing subtractive `disabled_toolsets`.
 8. Add `hermes security audit` to release validation.
 9. Keep broad direct tools disabled for core Memoria lanes.
+
+## Reconciliation with source-verified report
+
+After comparing this report with
+`docs/releasing/0.1.0-alpha.10/tmp/hermes-017-feature-eval-claude.md`, keep the
+product/operations recommendations from this report and adopt the stronger
+source-backed implementation findings from the companion report.
+
+Agreements:
+
+- Keep profiles, kanban, native Obsidian MCP, MCP-only lane access, and the
+  Memoria policy plugin.
+- Add auxiliary model routing and per-lane `reasoning_effort`.
+- Use native kanban judge/review only as a pre-filter before human approval.
+- Add `hermes security audit`.
+- Keep broad direct tools denied for core lanes.
+
+Differences resolved:
+
+- Bitwarden: adopt it for shared multi-profile secrets. This supersedes any
+  recommendation to keep manual `.env` management until multi-machine sharing.
+- Gateway multiplexing: pilot it in `Memoria-test` for gateway operations. It
+  reduces process sprawl but does not replace profile, MCP, or policy isolation.
+- Kilo: keep Kilo as the production provider; OpenRouter provider routing is not
+  relevant unless a profile moves to OpenRouter.
+- Cost capture: source-level verification shows `post_llm_call` can carry token
+  and USD cost details. Treat hook-based cost capture as a near-term spike, not a
+  speculative future option.
+- Tool gating: source-level verification shows `enabled_toolsets` exists. Treat
+  it as the preferred direction, but switch only after an adversarial deny-path
+  test proves new upstream toolsets stay closed by default.
+
+Synthesized implementation order:
+
+1. Migrate Hermes config to v0.17 schema.
+2. Configure Bitwarden in `Memoria-test` and verify profile startup.
+3. Pilot gateway multiplexing in `Memoria-test`.
+4. Configure auxiliary models and per-lane `reasoning_effort`.
+5. Spike `post_llm_call` cost capture in the policy plugin.
+6. Spike `enabled_toolsets` with live deny-path tests.
+7. Add `hermes security audit` to release validation.
+8. Promote only after contract doctor, cost doctor, one direct-tool deny, and
+   one Obsidian/MCP smoke pass.
 
 ## Detailed recommendations
 
