@@ -57,5 +57,5 @@ The retraction sweep runs on cron behind you and raises Inbox `alert` cards on h
 
 - Previous step: [Draft with the Writer](draft-with-writer.md)
 - Next step: [Export a draft](export-a-draft.md)
-- The guided first pass: [Tutorial 04: Verify it holds](../../tutorials/04-verify-it-holds.md)
+- The guided first pass: [Tutorial 05: Verify it holds](../../tutorials/05-verify-it-holds.md)
 - The adversarial lane: [The Peer-reviewer](../../explanation/profiles/peer-reviewer.md)

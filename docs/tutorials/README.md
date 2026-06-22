@@ -21,16 +21,16 @@ Memoria is a loop, not a pipeline: producing and accumulating feed each other. B
 
 | # | Tutorial | What you'll do | What you end with |
 | --- | --- | --- | --- |
-| 00 | [See what you're building](00-orient.md) | Load the sample, open a project, and read its narrated coverage map — a dense cluster and the one gap it doesn't cover. | A project naming your goal, and the destination in view |
-| 01 | [Bring in your first source](01-bring-in-your-first-source.md) | Capture a real source of your own; judge its candidate card; write its source note in your own words. | Your own Catalog entity and source note |
-| 02 | [Build claims and connect them](02-build-claims-and-connect-them.md) | Study a worked claim, finish the sample's half-built claim and link, then distill your own source and wire it in. | A connected claim cluster, dense enough to write from |
-| 03 | [Draft a section from your claims](03-draft-a-section-from-your-claims.md) | Decide what the section can stand behind, then draft it with citations bound to sources you hold. | Your goal from 00, in cited prose |
-| 04 | [Verify it holds](04-verify-it-holds.md) | Ask for a verification pass; read the finding-first cards; fix or trust. | A draft you would defend |
-| 05 | [Close the loop and make it your own](05-close-the-loop.md) | Hand the gap back to discovery — one full turn of the loop — then graduate: archive the sample, import your library, open your real project. | A loop you keep turning, on your own material |
+| 01 | [See what you're building](01-orient.md) | Load the sample, open a project, and read its narrated coverage map — a dense cluster and the one gap it doesn't cover. | A project naming your goal, and the destination in view |
+| 02 | [Bring in your first source](02-bring-in-your-first-source.md) | Capture a real source of your own; judge its candidate card; write its source note in your own words. | Your own Catalog entity and source note |
+| 03 | [Build claims and connect them](03-build-claims-and-connect-them.md) | Study a worked claim, finish the sample's half-built claim and link, then distill your own source and wire it in. | A connected claim cluster, dense enough to write from |
+| 04 | [Draft a section from your claims](04-draft-a-section-from-your-claims.md) | Decide what the section can stand behind, then draft it with citations bound to sources you hold. | Your goal from 01, in cited prose |
+| 05 | [Verify it holds](05-verify-it-holds.md) | Ask for a verification pass; read the finding-first cards; fix or trust. | A draft you would defend |
+| 06 | [Close the loop and make it your own](06-close-the-loop.md) | Hand the gap back to discovery — one full turn of the loop — then graduate: archive the sample, import your library, open your real project. | A loop you keep turning, on your own material |
 
 ## The sample vault
 
-The sample vault is a small, **labeled** starter corpus on one neutral topic — adherence to a Mediterranean diet and cardiovascular health. It is deliberately **half-built**: some sources are fully worked into claims and links, others are left for you to finish in Tutorial 02. Everything in it traces to a real, citable paper — nothing is fabricated, because learning to fake provenance is exactly the habit Memoria exists to prevent.
+The sample vault is a small, **labeled** starter corpus on one neutral topic — adherence to a Mediterranean diet and cardiovascular health. It is deliberately **half-built**: some sources are fully worked into claims and links, others are left for you to finish in Tutorial 03. Everything in it traces to a real, citable paper — nothing is fabricated, because learning to fake provenance is exactly the habit Memoria exists to prevent.
 
 It is **optional and removable**: an experienced researcher can skip it and start with their own source, and once you are done **Memoria: remove sample vault** archives the labeled sample notes without breaking any links. See [the sample vault](sample-vault/README.md) for what it contains and how to load it.
 

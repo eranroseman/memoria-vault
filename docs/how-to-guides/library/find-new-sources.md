@@ -33,7 +33,7 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 
 **`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, shown on the Inbox space), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Judge each one the same way as any captured candidate — read `argument_against` first, then keep (`current`) or skip (`archived`) ([Capture and ingest a source](capture-and-ingest.md)). Work them in one sitting:
 
-- **Keep:** the paper enters the Tutorial 03 flow (Catalog entity, reading queue, proposed source note).
+- **Keep:** the paper enters the Tutorial 04 flow (Catalog entity, reading queue, proposed source note).
 - **Skip:** skipping generously offered candidates is the system working, not failing.
 
 Resolving a card flips it in place ([Work the review queue](../inbox/work-the-review-queue.md)). Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
@@ -50,6 +50,6 @@ Every `gap` card you agree with — from a `map` or `verify` pass — is a pre-w
 ## Related
 
 - After keeping a candidate: [Capture and ingest a source](capture-and-ingest.md)
-- The full guided loop: [Tutorial 05: Close the loop](../../tutorials/05-close-the-loop.md)
+- The full guided loop: [Tutorial 06: Close the loop](../../tutorials/06-close-the-loop.md)
 - The profile behind the search: [The Librarian](../../explanation/profiles/librarian.md)
 - A defensible, protocol-driven search instead: [Run a systematic review](run-a-systematic-review.md)
