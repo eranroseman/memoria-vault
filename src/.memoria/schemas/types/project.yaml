@@ -27,4 +27,5 @@ optional:
   computed_at: date
   refutation_sufficiency: bool
   refutation_sufficiency_at: date
+  sample: bool
   created: date

@@ -9,6 +9,14 @@ SKELETON_DIRS=(
   .memoria/lane-overrides
   .memoria/profiles/memoria-librarian/cron
   .memoria/profiles/memoria-librarian/skills
+  .memoria/samples
+  .memoria/samples/mediterranean-diet
+  .memoria/samples/mediterranean-diet/catalog
+  .memoria/samples/mediterranean-diet/catalog/papers
+  .memoria/samples/mediterranean-diet/notes
+  .memoria/samples/mediterranean-diet/notes/claims
+  .memoria/samples/mediterranean-diet/notes/hubs
+  .memoria/samples/mediterranean-diet/notes/sources
   catalog/papers
   catalog/people
   catalog/organizations

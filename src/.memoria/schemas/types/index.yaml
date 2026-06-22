@@ -8,4 +8,5 @@ required:
   lifecycle: enum:lifecycle
   title: str
 optional:
+  sample: bool
   created: date

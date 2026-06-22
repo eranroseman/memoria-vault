@@ -19,4 +19,5 @@ optional:
   lane: str # which lane finished
   raised_by: str
   loudness: enum:loudness
+  sample: bool
   created: date

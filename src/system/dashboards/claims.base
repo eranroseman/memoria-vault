@@ -3,6 +3,7 @@ filters:
   and:
     - file.inFolder("notes/claims")
     - 'lifecycle != "archived"'
+    - 'sample != true'
 formulas:
   note: 'link(file.path, title)'
   is_orphan: 'file.backlinks.isEmpty()'

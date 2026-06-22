@@ -3,6 +3,7 @@ filters:
   and:
     - file.inFolder("notes/hubs")
     - 'lifecycle != "archived"'
+    - 'sample != true'
 formulas:
   note: 'link(file.path, title)'
 properties:

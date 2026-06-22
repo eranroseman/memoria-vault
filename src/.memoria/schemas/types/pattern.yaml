@@ -17,4 +17,5 @@ optional:
   model_hint: str
   version: str
   adapted_from: str
+  sample: bool
   created: date

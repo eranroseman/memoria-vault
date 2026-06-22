@@ -4,6 +4,7 @@ filters:
   and:
     - 'file.ext == "md"'
     - 'lifecycle != "archived"'
+    - 'sample != true'
 formulas:
   note: 'link(file.path, if(type == "paper", title, name))'
 properties:

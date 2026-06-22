@@ -17,7 +17,7 @@ SORT type ASC
 ```dataview
 TABLE file.link AS Entity, type
 FROM "catalog"
-WHERE file.ctime >= date(today) - dur(7 days)
+WHERE sample != true AND file.ctime >= date(today) - dur(7 days)
 SORT file.ctime DESC
 ```
 
@@ -26,7 +26,7 @@ SORT file.ctime DESC
 ```dataview
 TABLE file.link AS Note, type, lifecycle
 FROM "notes"
-WHERE file.ctime >= date(today) - dur(7 days) AND type != "fleeting"
+WHERE sample != true AND file.ctime >= date(today) - dur(7 days) AND type != "fleeting"
 SORT file.ctime DESC
 ```
 

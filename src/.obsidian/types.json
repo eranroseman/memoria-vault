@@ -19,6 +19,7 @@
     "updated": "date",
     "enriched_date": "date",
     "full_text_reviewed": "checkbox",
+    "sample": "checkbox",
     "action": "text",
     "adapted_from": "text",
     "argument_against": "text",

@@ -19,4 +19,5 @@ optional:
   relationships: map # given edges — cited_by, authored_by, published_in… (ADR-52)
   research_area: list
   methodology: list
+  sample: bool
   created: date

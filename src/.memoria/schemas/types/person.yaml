@@ -11,4 +11,5 @@ optional:
   orcid: str
   affiliations: list
   relationships: map
+  sample: bool
   created: date

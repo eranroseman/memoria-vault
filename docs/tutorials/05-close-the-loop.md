@@ -53,9 +53,9 @@ The full ritual: [Run the weekly review](../how-to-guides/inbox/run-the-weekly-r
 
 ## Step 4 — Archive the sample vault (when you're ready)
 
-The sample vault did its job: it gave you a dense cluster to learn the moves on, in one sitting, instead of weeks of reading. When you're done with it, you don't delete it — you **archive** it. Set the sample notes to `lifecycle: archived`.
+The sample vault did its job: it gave you a dense cluster to learn the moves on, in one sitting, instead of weeks of reading. When you're done with it, you don't delete it — you **archive** it. Run **Memoria: remove sample vault**.
 
-`archived` is a **state, not a deletion**. Archived notes drop out of active views — the Inbox, the dashboards, the coverage maps — but they stay on disk, and **no link breaks**: any wikilink still resolves, so a claim of your own that referenced a sample claim does not turn red. The sample → own-vault handoff is therefore not a cliff. You built part of the cluster yourself, you extended it with your own source, and now the scaffold quietly steps back, leaving your work standing. How the sample vault is meant to be removed: [the sample vault](sample-vault/README.md).
+`archived` is a **state, not a deletion**. The remove command finds live notes labeled `sample: true`, flips them to `lifecycle: archived`, and stamps `archived:`. Archived notes drop out of active views — the Inbox, the dashboards, the coverage maps — but they stay on disk, and **no link breaks**: any wikilink still resolves, so a claim of your own that referenced a sample claim does not turn red. The sample → own-vault handoff is therefore not a cliff. You built part of the cluster yourself, you extended it with your own source, and now the scaffold quietly steps back, leaving your work standing. Details: [the sample vault](sample-vault/README.md).
 
 ---
 
@@ -78,7 +78,7 @@ The one thing these tutorials *cannot* teach by doing is the real-time rhythm �
 
 - A gap turned back into a discovery task — your first full, self-sustaining turn of the loop
 - The weekly review named as the ritual that keeps the loop alive without babysitting
-- The sample vault archivable on a clean handoff — a state, not a deletion, with no broken links
+- The sample vault archived on a clean handoff — a state, not a deletion, with no broken links
 - The four recurring jobs — capture, synthesize, verify, discover — as a loop you re-enter in any order, on your own material
 
 You have completed the tutorial sequence. From here, the vault is yours.

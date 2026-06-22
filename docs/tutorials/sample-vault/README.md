@@ -8,7 +8,7 @@ nav_order: 99
 
 A small, labeled starter corpus used by the tutorials so you can reach the *Produce* payoff in one sitting instead of after weeks of reading. Its topic is neutral and broadly legible: **adherence to a Mediterranean diet and cardiovascular health**.
 
-The note files live in the repository's top-level `sample-vault/` folder — real Obsidian notes with wikilinks, separate from the product vault. (How the installer offers to copy them into your vault is being finalized; for now you can copy the folder in by hand.)
+The sample ships inside the installed vault as a hidden bundle at `.memoria/samples/mediterranean-diet/`. It is not live knowledge until you run **Memoria: load sample vault**, which copies the bundled `catalog/` and `notes/` files into the live vault and leaves the hidden bundle intact.
 
 ## What is in it
 
@@ -27,9 +27,9 @@ The cluster is not all agreement. It deliberately holds a **tension** — the st
 
 ## How to use it
 
-- **Load it** at step 00 by copying the top-level `sample-vault/` notes into your vault — or skip it and start with your own source, since it is optional.
+- **Load it** at step 00 with **Memoria: load sample vault** — or skip it and start with your own source, since it is optional.
 - **Study** the worked sources and claims to see the shape of a distilled, connected note.
 - **Finish** the half-built source and the claim stub in step 02, and make the unmade link, then add a source of your own.
-- **Remove it** when you are done: archive the notes (`lifecycle: archived`) — they drop out of active views without breaking links, since archiving is a state, not a deletion.
+- **Remove it** when you are done with **Memoria: remove sample vault**. The command archives live notes labeled `sample: true`; they drop out of active views without breaking links, since archiving is a state, not a deletion.
 
 This vault is a teaching scaffold. In real use, a cluster this dense is weeks of reading; here it is pre-built so you can learn the moves on it and then repeat them on your own material.
