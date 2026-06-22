@@ -25,7 +25,23 @@ Everything traces to a **real, citable paper** (PREDIMED, the Lyon Diet Heart St
 
 The cluster is not all agreement. It deliberately holds a **tension** — the strong causal reading of the trial evidence sits against the observational caution that diet effects may be confounded by overall healthy lifestyle — and the hub names a **gap** the corpus does not yet cover (primary prevention in low-risk people, and whether the benefit transports beyond Mediterranean populations). In step 03 the map surfaces that gap; in step 05 it becomes your first turn of the compounding loop.
 
-## How to use it
+## Add it to your vault
+
+1. Open Obsidian in your Memoria vault.
+2. Press `Cmd/Ctrl-P`.
+3. Run **Memoria: load sample vault**.
+4. Open the Library or Knowledge space; the sample notes now appear in `catalog/` and `notes/` with `sample: true`.
+
+The command is local and offline. It copies the bundled sample from `.memoria/samples/mediterranean-diet/` and skips any destination file that already exists, so it does not overwrite your notes.
+
+## Remove it from active views
+
+1. Press `Cmd/Ctrl-P`.
+2. Run **Memoria: remove sample vault**.
+
+The command archives live `catalog/` and `notes/` files labeled `sample: true`. Archived sample notes stay on disk, so wikilinks still resolve, but they drop out of the active dashboards.
+
+## How to use it in the tutorials
 
 - **Load it** at step 00 with **Memoria: load sample vault** — or skip it and start with your own source, since it is optional.
 - **Study** the worked sources and claims to see the shape of a distilled, connected note.
