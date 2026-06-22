@@ -68,7 +68,7 @@ From each profile's `config.yaml` (`mcp_servers` — the only place Hermes loads
 | `cluster` (typed graph + topics, read-only) | ✓ | ✓ | — | — | — |
 | `tasks` (`delegate_route_task`) | ✓ | — | — | — | — |
 | `patterns` (the pattern runner) | ✓ | ✓ | — | — | — |
-| `paper_search` (scholarly discovery, 20+ databases) | ✓ | ✓ | — | — | — |
+| `paper_search` (scholarly discovery, 20+ databases) | — | ✓ | — | — | — |
 | `pyzotero` (read-only Zotero 7 local API) | — | ✓ | — | ✓ | — |
 | `qmd` (filtered local hybrid search over the vault corpus, read-only) | ✓ | ✓ | ✓ | ✓ | — |
 
@@ -97,13 +97,15 @@ For the full per-skill map (names and lanes) see the [Hermes CLI](hermes-cli.md)
 `src/.memoria/tool-registry.yaml` is the authoritative per-profile **tool** allowlist (default-deny). Two layers, deliberately separate: the registry governs _which tools_ a profile may invoke; the lane-override governs _which paths_ those tools may write. Notably:
 
 - `memoria-copi` is the only profile granted `memory` (the self-improving loop — see [Memory substrates](memory.md)) and `tasks`; it is the only one **withheld** `vault_write`.
+- No profile is granted `session_search`; session history is not a lane recall substrate for alpha.10.
 - **No** profile is granted a direct-world toolset (`terminal`, `file`, `code_execution`, `browser`, `web`, `computer_use`) — every agent reaches the vault, operations, and APIs only through MCP ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)); enforced by `test_no_profile_has_direct_world_access`.
 
 Enforcement is split deliberately:
 
 | Contract | Runtime status | Drift check |
 | --- | --- | --- |
-| Direct-world toolsets are absent from shipped profile config | Enforced by rendered Hermes profile configuration and disabled toolsets | `tests/test_profiles.py` |
+| Direct-world toolsets are absent from shipped profile config | Enforced by rendered Hermes `platform_toolsets`, with disabled toolsets as a backstop | `tests/test_profiles.py` |
+| Direct ACP fallback tools cannot bypass profile shaping | Enforced by the `memoria-policy-gate` hard-deny; `memory` is profile-scoped to Co-PI and `session_search` is denied everywhere | `tests/test_policy_gate_completeness.py` |
 | Obsidian write tools obey lane path scopes | Enforced at runtime by the fail-closed `memoria-policy-gate` plugin | Policy and lane-scope tests |
 | Registry allowlist matches profile skill metadata and profile config | Checked as a source-of-truth contract | `tests/test_profiles.py` |
 | General tool-call gating from `tool-registry.yaml` inside the policy MCP/hook | Not built yet; the registry header tracks this as TODO | Registry drift tests only |

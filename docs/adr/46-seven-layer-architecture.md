@@ -21,7 +21,7 @@ superseded_by: []
 > only through [MCP]" (Decision, below) is bound by the **gate's deny rules** —
 > `policy_hook.DENY_DIRECT_TOOLS` hard-denies `file`/`terminal`/`code_execution` and the
 > decision core default-denies unknown tools at dispatch (the [ADR-28](28-write-gate-as-plugin.md)
-> mechanism; on v0.14.0 `disabled_toolsets` alone is schema-hiding only). The strict
+> mechanism; profile toolsets are schema/capability shaping only). The strict
 > layer-dependency contract *describes* the agent write-path; the gate is what stops a
 > direct write. Per AGENTS.md "Enforcement is a mechanism, not a label."
 

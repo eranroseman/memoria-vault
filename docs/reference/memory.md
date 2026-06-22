@@ -7,7 +7,7 @@ parent: Reference
 
 Where each type of state lives across the Memoria + Hermes stack: substrate, provider, scope, lifespan, backing store, and what it holds. Listed by how much the PI touches them.
 
-**The Co-PI is the sole carrier of the Hermes memory loop**: only `memoria-copi` keeps the `memory` toolset (plus `/goals`, skills, `/personality`) — it alone accumulates working preferences and environment facts across sessions. The four specialist lanes ship with `memory` in `agent.disabled_toolsets`: a dispatched worker gets everything it needs from the handoff payload and the vault, so per-lane memory would only drift. See the per-profile allowlists in `src/.memoria/tool-registry.yaml`.
+**The Co-PI is the sole carrier of the Hermes memory loop**: only `memoria-copi` keeps the `memory` toolset (plus `/goals`, skills, `/personality`) — it alone accumulates working preferences and environment facts across sessions. The four specialist lanes omit `memory` from their positive `platform_toolsets` and keep it in the disabled-toolset backstop: a dispatched worker gets everything it needs from the handoff payload and the vault, so per-lane memory would only drift. See the per-profile allowlists in `src/.memoria/tool-registry.yaml`.
 
 ---
 

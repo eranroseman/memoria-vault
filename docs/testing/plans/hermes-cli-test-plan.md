@@ -53,7 +53,7 @@ Override with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or
 | Prereq | Check |
 |---|---|
 | Hermes ≥ 0.12 installed; 5 `memoria-*` profiles registered | `hermes profile list` shows all five |
-| Obsidian open with Local REST API HTTPS on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` and `OBSIDIAN_MCP_SSL_VERIFY` set | `curl --cacert "$OBSIDIAN_MCP_SSL_VERIFY" -s https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON |
+| Obsidian open on the test vault with Local REST API HTTPS on `127.0.0.1:27124`, `OBSIDIAN_API_KEY` and `OBSIDIAN_MCP_SSL_VERIFY` set | Start `obsidian ~/Memoria-test`, then `curl --cacert "$OBSIDIAN_MCP_SSL_VERIFY" -s https://127.0.0.1:27124/ -H "Authorization: Bearer $OBSIDIAN_API_KEY"` returns JSON. If Hermes gets TLS/401 errors, refresh the exported PEM/API key from Obsidian and re-run `--profiles-only`. |
 | Hermes gateway on `:8642` (needed for `kanban dispatch`) | `hermes gateway status` |
 | Zotero running with Better BibTeX; `.memoria/memoria.bib` present | file exists, contains the F1 citekeys |
 | `OPENALEX_API_KEY` set per profile `.env`; `KILOCODE_API_KEY` only needed when testing production model wiring | `hermes profile show memoria-librarian` lists the keys (values redacted) |

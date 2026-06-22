@@ -101,6 +101,7 @@ DENY_DIRECT_TOOLS = frozenset(
         "run_command",  # legacy/alias name (not in installed Hermes; harmless)
         "code_execution",  # legacy/alias name (the real tool is `execute_code`)
         "execute_code",  # code_execution toolset
+        "session_search",
         "web_extract",
         "web_search",
         "browser_back",
@@ -138,6 +139,9 @@ DENY_DIRECT_TOOLS = frozenset(
         "cronjob",
     }
 )
+PROFILE_SCOPED_DIRECT_TOOLS = {
+    "memory": frozenset({"memoria-copi"}),
+}
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
 # Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
@@ -253,6 +257,13 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
             "reason": f"policy gate: '{tool_name}' is direct or unaudited external access -- "
             f"agents reach the vault only through MCP (D40/ADR-46); no lane "
             f"is permitted this toolset.",
+        }
+    if base in PROFILE_SCOPED_DIRECT_TOOLS and profile not in PROFILE_SCOPED_DIRECT_TOOLS[base]:
+        allowed = ", ".join(sorted(PROFILE_SCOPED_DIRECT_TOOLS[base]))
+        return {
+            "decision": "block",
+            "reason": f"policy gate: '{tool_name}' is a profile-scoped direct tool; "
+            f"allowed only for {allowed}.",
         }
     action = classify(tool_name)
     if action is None:
