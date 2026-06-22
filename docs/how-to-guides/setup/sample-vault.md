@@ -6,7 +6,7 @@ nav_order: 5
 
 # Load and remove the sample vault
 
-Use the sample vault when you want the tutorials to start from a small worked corpus instead of an empty vault. It is optional; skip it if you want to start with your own source.
+Load the sample vault to follow the [tutorials](../../tutorials/README.md), which are built around a small worked corpus instead of an empty vault. It is removable — archive it when you're done (below). To work straight from your own material instead, skip the tutorial arc and use the other how-to guides.
 
 ## Prerequisites
 

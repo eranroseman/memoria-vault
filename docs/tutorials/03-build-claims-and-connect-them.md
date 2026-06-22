@@ -21,7 +21,7 @@ So you learn it in three fades. First you **study** a finished claim. Then you *
 
 ## Step 1 — Study a worked claim
 
-Open the sample claim **"A Mediterranean diet reduces major cardiovascular events…"** (`meddiet-reduces-major-cv-events`) in `notes/claims/`. Read its three sections and notice what makes it a claim, not a summary:
+Open the **Knowledge** space and find the sample claim **"A Mediterranean diet reduces major cardiovascular events…"** (`meddiet-reduces-major-cv-events`) in its **Claims** view (`claims.base`). Read its three sections and notice what makes it a claim, not a summary:
 
 - **Claim** — one sentence. Not a paragraph, not a topic. One assertion you could defend or be wrong about.
 - **Evidence** — every line ends in a citekey (`[estruch2018]`, `[delorgeril1999]`) that appears in the note's `sources` field. This is the **provenance guardrail**: a claim with an evidence line that traces to no source is the exact failure Memoria exists to prevent. If you can't cite it, it isn't a claim yet — it's a hunch (a fleeting note).
