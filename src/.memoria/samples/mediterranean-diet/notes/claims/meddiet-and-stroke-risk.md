@@ -20,7 +20,7 @@ Higher adherence to a Mediterranean diet is associated with lower risk of stroke
 
 # Evidence
 
-<!-- STUB: this claim is asserted but ungrounded — finishing it is your work in Tutorial 02.
+<!-- STUB: this claim is asserted but ungrounded — finishing it is your work when you distill claims.
      Distill it from [[sofi2010-meta-analysis|Sofi et al. 2010 — updated meta-analysis of Mediterranean-diet adherence]]: add `sofi2010` to `sources` above, then write
      one evidence line here that traces to it. Every line in this section must trace to a citekey
      in `sources` — that is the provenance guardrail. Until then this claim is unsupported. -->

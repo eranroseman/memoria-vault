@@ -30,7 +30,7 @@ Underneath that headline tension sits a fuller evidence base. The hypothesis its
 
 # Members
 
-The claims in `members` are the worked members. Several pieces are deliberately unfinished, and finishing them is Tutorial 02:
+The claims in `members` are the worked members. Several pieces are deliberately unfinished, and finishing them is the distill-and-connect step:
 
 - [[meddiet-and-stroke-risk|Higher Mediterranean-diet adherence is associated with lower stroke risk]] — a claim stub, asserted but ungrounded until you distill it from [[sofi2010-meta-analysis|Sofi et al. 2010 — updated meta-analysis of Mediterranean-diet adherence]].
 - [[pattern-not-single-nutrient|The benefit comes from the dietary pattern, not a single nutrient]] — a claim stub, ungrounded until you distill it from [[martinezgonzalez2019-critical-review|Martínez-González et al. 2019 — critical review of diet pattern vs. nutrient]].
@@ -38,4 +38,4 @@ The claims in `members` are the worked members. Several pieces are deliberately 
 
 # The gap
 
-Every claim here is about **high-risk or already-sick adults in Mediterranean and European populations** (Spanish and French trials, a Greek cohort). The corpus says nothing about **primary prevention in low-risk people**, or whether the benefit **transports to other populations and diets**. That hole is intentional: in Tutorial 03 the map will surface it, and in Tutorial 05 it becomes the gap that sends you back out to find new sources — your first turn of the compounding loop.
+Every claim here is about **high-risk or already-sick adults in Mediterranean and European populations** (Spanish and French trials, a Greek cohort). The corpus says nothing about **primary prevention in low-risk people**, or whether the benefit **transports to other populations and diets**. That hole is intentional: the coverage map surfaces it when you first map the corpus, and at the end it becomes the gap that sends you back out to find new sources — your first turn of the compounding loop.

@@ -14,7 +14,7 @@ created: 2026-06-22
 
 # In my words
 
-<!-- HALF-BUILT: this source is captured but not yet distilled — this is your work in Tutorial 02.
+<!-- HALF-BUILT: this source is captured but not yet distilled — this is your work when you distill claims.
      Read the abstract, then write 2–3 sentences here in your own words: what did this meta-analysis
      pool, and what did a higher adherence score predict? -->
 
@@ -22,7 +22,7 @@ Sofi and colleagues pooled prospective cohort studies to estimate what a higher 
 
 # Worth distilling
 
-<!-- Leave this for Tutorial 02: when you distill, each bullet becomes an atomic claim note.
+<!-- Leave this until you distill: each bullet becomes an atomic claim note.
      One candidate claim is already stubbed for you: [[meddiet-and-stroke-risk|Higher Mediterranean-diet adherence is associated with lower stroke risk]]. -->
 
 # Tensions
