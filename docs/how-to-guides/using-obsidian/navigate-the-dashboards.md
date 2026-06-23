@@ -6,90 +6,96 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Each space dashboard under `spaces/` gathers the views for one working mode. The five read-only system dashboards under `system/dashboards/` answer narrower operational questions. This guide maps situations to the right surface. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
+Memoria has a few different surfaces, and it is easy to lose track of which one answers which question. This guide maps everyday situations to the exact place to look.
 
-## Where the dashboards open
+You move around Memoria from the **navigator rail** on the left. It has two parts:
 
-The three spaces — **Library**, **Knowledge**, and **Project** — are durable dashboard notes. The **Inbox** queue and **Maintenance** collection are cadence surfaces reached from the rail's *Now*. Obsidian restores your last session on launch; switch among surfaces from the left-pane rail. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
+- **Now** — what is waiting for you right now. Three entries: **Needs you** (your action queue), **Drift** (integrity flags), and **Fleet** (the health of the background workers).
+- **Places** — the three working **spaces** you switch between: **Library** (sources you are reading), **Knowledge** (claims you are synthesizing), and **Project** (drafts you are steering toward output).
 
-Everything else opens manually: follow links from a space dashboard, or use `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
+Two more surfaces hang off *Now*. The **Inbox** is your action queue — open it from *Now → Needs you*; its main view is **Needs me**. **Maintenance** is a separate weekly surface for structural cleanup; it holds Drift watch, Loose ends, the Board, and a "new this week" digest.
+
+Behind those surfaces sit **5 read-only system dashboards** under `system/dashboards/`. They are Dataview-backed views that report state and never change anything. The space surfaces themselves are built from Obsidian Bases (database-style views over your notes). For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
+
+A few orientation notes: Obsidian restores your last session on launch, so you reopen wherever you left off. The saved **Memoria** workspace is only a reset layout, not a place you navigate to; see [Use the reset workspace](use-workspaces.md). And `home.md` is just the launch screen a brand-new vault shows first — it is not a navigation hub, so do not treat it as your home base.
+
+To open anything that is not on the rail, follow a link from a space, or press `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
 ---
 
-## Situation → dashboard
+## Situation → where to look
 
 ### "What needs attention right now?"
 
-**Inbox** — `spaces/inbox.md`.
+Open the **Inbox** (`spaces/inbox.md`) from *Now → Needs you*.
 
-Glance at the start of every session. Empty means nothing urgent; under 30 seconds to read.
+The Inbox is your action queue: items that Memoria has parked for a decision from you. Glance at it at the start of every session. Empty means nothing is waiting; a full read takes under 30 seconds.
 
 ### "What work is in flight? What's stuck?"
 
-**Maintenance** — Board section.
+Open **Maintenance** from *Now*, then read its **Board** section.
 
-A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
+The Board shows the background workers — Memoria calls them **lanes** — and the work moving through them as **cards** (one card per unit of work). A card that has sat in the same lane for days is probably stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
 ### "What should I read and distill next?"
 
-**Library** — `spaces/library.md`.
+Open the **Library** space (`spaces/library.md`) from *Places*.
 
-Oldest-first — clear the oldest items first. See [Classify a source](../library/classify-a-source.md).
+Library is where sources you are reading live. It lists items oldest-first, so clear the oldest ones first. See [Classify a source](../library/classify-a-source.md).
 
 ### "Which papers are worth a discussion pass?"
 
-**Discuss queue** — Library space.
+Open the **Library** space, then its **Discuss queue** view.
 
-Open a paper from this queue, then open the Agent Client pane — the active note auto-attaches. See [Discuss a paper](../library/discuss-a-paper.md).
+This queue lists papers ready for a back-and-forth with the conversational agent (the **Co-PI**). Open a paper from the queue, then open the Agent Client pane — the active note attaches itself automatically. See [Discuss a paper](../library/discuss-a-paper.md).
 
 ### "What open questions has my synthesis raised?"
 
-**Open questions** — Knowledge space.
+Open the **Knowledge** space, then its **Open questions** view.
 
-Review during the weekly review or when starting a new topic cluster — connect each unconnected claim to a hub or to related claims.
+Knowledge is where your **claims** live — the individual statements you are building an argument from. A **hub** is a topic note that gathers related claims in one place. Review Open questions during the weekly review, or when starting a new topic cluster, and connect each loose claim either to a hub or to related claims.
 
 ### "Are any of my claims contradicted by other claims?"
 
-**Contradictions** — Knowledge space.
+Open the **Knowledge** space, then its **Contradictions** view.
 
-Check before advancing a claim to `evergreen` or submitting a draft — unresolved contradictions mean the argument isn't settled.
+This view lists pairs of claims that disagree with each other. Check it before you promote a claim to `evergreen` (the most settled maturity level) or submit a draft. An unresolved contradiction means the argument is not settled yet.
 
 ### "Is this project ready to draft?"
 
-**Project** — `spaces/project.md`.
+Open the **Project** space (`spaces/project.md`) from *Places*.
 
-Refresh the gate from a project file, then read the active thesis, refutation stamp,
-graph maturity, saturation state, and gap findings.
+Project steers a piece of work toward output. Refresh it from a project file, then read the project's readiness signals: the active thesis, the **refutation stamp** (a record of whether the thesis survived being argued against), how mature the claim graph is, the **saturation** state (whether new sources are still adding anything, or you have read enough), and any remaining gap findings.
 
 ### "Something seems wrong but I can't see why"
 
-**Drift watch** — Maintenance.
+Open **Maintenance** from *Now*, then read its **Drift watch** view. You can also reach drift flags directly from *Now → Drift*.
 
-Open when agents behave unexpectedly or queries return wrong results. A FAIL verdict pauses scheduled work until resolved ([Run the Linter](../operate/run-the-linter.md)).
+Drift watch flags integrity problems — the kind of thing that makes agents behave oddly or queries return wrong results. It shows a `PASS` / `REVIEW` / `FAIL` band. A `FAIL` pauses scheduled work until you resolve it ([Run the Linter](../operate/run-the-linter.md)).
 
-### "Are my agents performing well? Is API cost increasing?"
+### "Are my workers performing well? Is API cost increasing?"
 
-**Fleet Health** — open manually.
+Open **Fleet health** (`system/dashboards/fleet-health.md`), reachable from *Now → Fleet*.
 
-Check monthly or when a lane seems slow or degraded. Not for daily use — meaningful only after a week or more of accumulated data.
+This dashboard scores each lane (background worker) on trust and cost. Check it monthly, or when a lane seems slow or degraded. It is not a daily surface — the numbers only mean something after a week or more of accumulated data.
 
 ### "What did the policy MCP allow or deny?"
 
-**Audit Log** — open manually.
+Open the **Audit log** (`system/dashboards/audit-log.md`) manually.
 
-Open when a write didn't happen as expected ([Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)), or after a lane-override change to confirm the new policy behaves as intended.
+This dashboard lists recent writes and whether the policy layer allowed or denied each one. Open it when a write did not happen as you expected ([Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)), or after changing a lane's policy override to confirm the new rule behaves as intended.
 
 ### "What do I need to do this week?"
 
-**Weekly review** — use Maintenance on Fridays.
+Open **Maintenance** from *Now* on Fridays for the weekly review.
 
-The [Run the weekly review](../inbox/run-the-weekly-review.md) guide walks through it step by step.
+Maintenance gathers the week's structural cleanup in one place. The [Run the weekly review](../inbox/run-the-weekly-review.md) guide walks through it step by step.
 
 ### "What low-stakes structural debt has piled up?"
 
-**Loose Ends** — Maintenance.
+Open **Maintenance** from *Now*, then read its **Loose ends** view.
 
-More than five items is a cleanup signal.
+Loose ends collects small structural tidy-ups that are safe to defer. More than five items waiting is a signal to do a cleanup pass.
 
 ## Related
 
