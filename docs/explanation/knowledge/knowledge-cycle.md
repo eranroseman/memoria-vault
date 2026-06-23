@@ -57,6 +57,7 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 **Explanation**
 
 - The ritual that keeps the cycle from stalling: [The weekly-review dashboard](../dashboards/structural-health/weekly-review.md)
+- The cycle's tempo over your first weeks of real use: [Your first month](your-first-month.md)
 - The epistemic roles of note types: [Note types and epistemic roles](note-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)

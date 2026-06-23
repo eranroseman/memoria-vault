@@ -56,3 +56,4 @@ It is **removable** but not skippable here: these tutorials are written around i
 - [What Memoria is](../explanation/overview/what-memoria-is.md) — system identity, what it is and isn't
 - [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md) — the loop these tutorials turn, and the six delegable tasks
 - [The Co-PI](../explanation/profiles/co-pi.md) — the one agent you talk to, and why it delegates every write
+- [Your first month](../explanation/knowledge/your-first-month.md) — the real-time rhythm to run on your own material once the arc is done

@@ -48,7 +48,7 @@ You have now done every recurring job Memoria exists to support. They are not st
 
 A paper in hand → capture; a deadline → synthesize and draft; a draft → verify; a thin spot → discover. None is the "first" step, because it is a loop, not a line ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)).
 
-The one thing these tutorials *cannot* teach by doing is the real-time rhythm — capture as you read over weeks, distill once ~10 sources accumulate, map and draft when a deadline appears, let gaps pull the next batch. That months-long cadence is a habit, not a few sessions, and it lives in the forthcoming **"Your first month"** practice guide. The tutorials taught you the moves; that guide is where you learn the tempo.
+The one thing these tutorials *cannot* teach by doing is the real-time rhythm — capture as you read over weeks, distill once ~10 sources accumulate, map and draft when a deadline appears, let gaps pull the next batch. That months-long cadence is a habit, not a few sessions, and it lives in the **[Your first month](../explanation/knowledge/your-first-month.md)** practice guide. The tutorials taught you the moves; that guide is where you learn the tempo.
 
 ---
 
@@ -66,8 +66,7 @@ You have completed the tutorials. The scaffold is gone, and the vault is yours.
 
 - [How-to guides](../how-to-guides/README.md) — each recurring task in depth, for when you hit it for real on your own vault.
 - [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md) — the loop you just turned, and the delegable jobs that serve it, explained as a system rather than a walk.
-
-The "Your first month" practice guide (forthcoming) will carry the real-time rhythm these tutorials compressed.
+- [Your first month](../explanation/knowledge/your-first-month.md) — the real-time rhythm these tutorials compressed: what to do when, over your first weeks of real use.
 
 ---
 
