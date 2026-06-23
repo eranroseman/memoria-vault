@@ -142,6 +142,7 @@ status.
 | [111](111-two-mode-tutorial-spine.md) | Two-mode tutorial spine, seeded by a half-built corpus | superseded → ADR-112 |
 | [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | accepted |
 | [113](113-copi-guided-onboarding.md) | Co-PI-guided onboarding (deferred) | proposed |
+| [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
 
 <!-- ADR-INDEX:END -->
 
