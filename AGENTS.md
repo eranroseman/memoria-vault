@@ -14,7 +14,21 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 - **Cover the whole scope.** Read, verify, and audit completely — every file and line in scope, no sampling or grep-standing-in-for-a-read. Verify a sub-agent's claimed coverage before reporting done.
 - **Zero tolerated contradictions.** Docs must agree with each other and with the implementation — a stale page or a doc describing unbuilt behavior is a defect to fix, not log. Sweep the full surface with [`source-of-truth-map`](.agents/system/source-of-truth-map.md) + [`change-impact-map`](.agents/system/change-impact-map.md); no doc outranks another — research to the true source of truth and fix the stale side. Mirrors are allowed only as consumer views: they must name the owning source, avoid restating more contract detail than the reader needs, and be generated or covered by a drift check whenever they repeat machine-readable contracts (counts, rosters, fields, scopes, commands, lifecycle values, or required checks).
 - **Verify hard conclusions independently.** For an uncertain runtime/architecture call, re-diagnose with a fresh agent (prefer two) and live-test the allowed/denied/fail-closed path before declaring done — don't ship solo reasoning. Ground Hermes claims in the `~/.hermes` docs first.
-- **Enforcement is a mechanism, not a label.** A boundary is real only where code stops the disallowed path — a gate hook, a path glob, profile/dir isolation — not where a classification, config key, or denylist merely *describes* it. Before relying on a control or simplifying it away, find the line that enforces it and test the adversarial path: a `disabled_toolsets` entry only hides a tool from the model (`registry.dispatch` still runs any registered tool by name) — the policy plugin's hard-deny is the boundary. An ADR may *describe* a boundary, but it must name the enforcing mechanism and a check that proves it; the doc asserting a guarantee is never the thing that holds it. Done right: ADR-55 (test-pinned `system/**` deny + golden-restore SHA manifest), ADR-74 (provenance doctor in the required lint), ADR-80 (a live negative deny-assertion that proves the gate fires), ADR-105 (redaction golden-corpus self-test). Done wrong (corrected in place): ADR-28/23/60/04/46/41.
+- **Enforcement is a mechanism, not a label.** A boundary is real only where code
+  stops the disallowed path — a gate hook, a path glob, profile/dir isolation.
+  A classification, config key, or denylist only describes intent until an
+  enforcing line rejects the operation.
+  - Before relying on a control or simplifying it away, find the enforcing line
+    and test the adversarial path.
+  - A `disabled_toolsets` entry only hides a tool from the model
+    (`registry.dispatch` still runs any registered tool by name); the policy
+    plugin's hard-deny is the boundary.
+  - An ADR may describe a boundary, but it must name the enforcing mechanism and
+    a check that proves it. Done right: ADR-55 (test-pinned `system/**` deny +
+    golden-restore SHA manifest), ADR-74 (provenance doctor in the required
+    lint), ADR-80 (a live negative deny-assertion that proves the gate fires),
+    ADR-105 (redaction golden-corpus self-test). Done wrong (corrected in
+    place): ADR-28/23/60/04/46/41.
 
 ---
 
@@ -49,7 +63,22 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Obsidian opens only the *runtime* vault (`~/Memoria`) — never this dev repo.
-- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over verified loopback HTTPS — `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA bundle. Obsidian must open the runtime vault on the same OS/filesystem host as the vault path: Linux/WSL test vaults such as `~/Memoria-test` use Linux Obsidian on the native path, never Windows Obsidian through `\\wsl.localhost\...`; Windows Obsidian verifies only Windows-hosted vaults. If Hermes is deliberately split across WSL while Obsidian serves a Windows-hosted vault, mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach that Windows loopback listener. `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or commit the key.
+- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over
+  verified loopback HTTPS:
+  `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with
+  `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA
+  bundle.
+- Obsidian must open the runtime vault on the same OS/filesystem host as the
+  vault path. Linux/WSL test vaults such as `~/Memoria-test` use Linux Obsidian
+  on the native path, never Windows Obsidian through `\\wsl.localhost\...`.
+  Windows Obsidian verifies only Windows-hosted vaults.
+- If Hermes is deliberately split across WSL while Obsidian serves a
+  Windows-hosted vault, mirrored networking (`networkingMode=mirrored` in
+  `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach that Windows
+  loopback listener.
+- `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and
+  `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or
+  commit the key.
 
 ---
 
@@ -137,6 +166,10 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 
 All must pass before merge:
 
+The check-name roster is owned by
+[`.github/ruleset-contract.yaml`](.github/ruleset-contract.yaml). This table is
+a reader mirror guarded by `python scripts/agents_doctor.py`.
+
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
@@ -166,7 +199,7 @@ behavior.
 | Decision | Trigger |
 |---|---|
 | `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
-| `needs_human` | Trusted author on sensitive paths, or untrusted author on safe paths |
+| `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
 | `block` | Untrusted author on sensitive paths |
 
 Sensitive paths: `src/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
@@ -225,24 +258,10 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with gate/stage sub-issues; release-please owns version/notes |
 
 Skills and plugins are accelerators, not prerequisites. If a named command is
-unavailable, perform the equivalent checks directly:
-
-- Docs review: run `python scripts/docs_doctor.py docs`, check links, indexing,
-  terminology, and Diátaxis placement.
-- Code review: inspect the complete diff for regressions, simplification, error
-  handling, and missing tests.
-- Security review: trace trust boundaries, secrets, command/input handling,
-  network calls, and write scopes; run the relevant security tooling available
-  to the agent.
-- Verify: reproduce the changed behavior and run the narrow tests plus
-  `scripts/test.sh all` when the change warrants the full gate.
-
-Portable, tool-neutral versions of these procedures live in
-[`.agents/playbooks/`](.agents/playbooks/) with shared handoff and review
-templates under [`.agents/templates/`](.agents/templates/). Cross-cutting
-change maps and portable repository skills live under
-[`.agents/system/`](.agents/system/) and [`.agents/skills/`](.agents/skills/).
-They implement this file's policy; they do not override it.
+unavailable, use the matching portable playbook under
+[`.agents/playbooks/`](.agents/playbooks/) and the checks in
+[`.agents/system/`](.agents/system/). They implement this file's policy; they do
+not override it.
 
 **Passive, when installed:** the `security-guidance` plugin runs automatic
 security scans as you work — a per-edit pattern check plus an LLM review on
@@ -260,10 +279,13 @@ the manual security review and is a first line against the "never commit
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to LF. Working on ext4 avoids CRLF churn.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
 - **Profiles:** `src/.memoria/profiles/memoria-*/` — every profile has
-  `SOUL.md`, `config.yaml`, and `distribution.yaml`; profiles with bundled skills
-  also have `skills/` (the Engineer intentionally has none). Cron wrappers are
-  shared under `src/.memoria/scripts/`, not stored per profile. Keep shared
-  profile contracts in sync. No per-profile `mcp.json`.
+  `SOUL.md`, `config.yaml`, and `distribution.yaml`; optional `skills/` holds
+  profile-owned skills. `.no-bundled-skills` records that Memoria owns deployed
+  profile skills: the installer refreshes source `skills/` when present and
+  clears stale deployed skills when they are absent.
+  These are distinct from Hermes-global bundled skills under `~/.hermes/skills`.
+  Cron wrappers are shared under `src/.memoria/scripts/`, not stored per profile.
+  Keep shared profile contracts in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and the [release index](docs/releasing/README.md), which points to the current

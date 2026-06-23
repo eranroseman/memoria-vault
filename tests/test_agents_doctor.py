@@ -13,6 +13,23 @@ def test_change_impact_registry_has_paths_and_checks():
     assert all(row["paths"] and row["checks"] for row in data["areas"])
 
 
+def test_required_ci_checks_are_parsed_from_agents_table():
+    text = """## Required CI checks
+
+| Check | Validates |
+|---|---|
+| `lint` | Fast checks |
+| `python-selftest` | Tests |
+
+---
+"""
+    assert agents_doctor._required_ci_checks_from_agents(text) == ["lint", "python-selftest"]
+
+
+def test_agents_required_ci_table_matches_ruleset_contract():
+    assert agents_doctor._required_ci_errors() == []
+
+
 def test_optional_agent_client_docs_are_link_checked(tmp_path, monkeypatch):
     root = tmp_path
     (root / ".agents" / "system").mkdir(parents=True)
