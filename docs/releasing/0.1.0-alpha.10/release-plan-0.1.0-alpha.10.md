@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.10
-status: draft        # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan -- v0.1.0-alpha.10
 parent: Releasing
@@ -9,14 +9,15 @@ nav_order: 2
 
 # Release plan -- v0.1.0-alpha.10
 
-**Current status: draft internal checkpoint plan.** This plan covers the full
+**Current status: complete internal checkpoint record.** This plan covers the full
 post-alpha.9 change set, from the alpha.9 close commit
 `3ba5081f` / [#858](https://github.com/eranroseman/memoria-vault/pull/858)
-through current `main` at `0f9da419` /
-[#927](https://github.com/eranroseman/memoria-vault/pull/927). It replaces the
-earlier narrow Hermes-only alpha.10 framing. alpha.10 remains an internal
-checkpoint: no release-please PR, tag, or GitHub Release unless that decision
-changes before close.
+through `main` at `e56aba40` /
+[#928](https://github.com/eranroseman/memoria-vault/pull/928), plus the release
+execution fixes and evidence recorded in
+[v0.1.0-alpha.10 validation log](validation-log.md). It replaces the earlier narrow
+Hermes-only alpha.10 framing. alpha.10 remains an internal checkpoint: no
+release-please PR, tag, or GitHub Release was cut.
 
 ## 1. Scope -- what this release is
 
@@ -99,6 +100,13 @@ under the alpha.10 release parent, any open issue assigned to the
   host. Impact: CI can prove Source and Package Gates, but GUI and live MCP
   behavior require attended evidence. Workaround: record the manual Runtime and
   Product Gate checks in the release issue.
+- Limitation: The alpha.10 execution session could not observe live Obsidian GUI
+  rendering of the WSL test vault. Impact: Source, Package, Runtime, deployed
+  runtime doctors, and product-surface tests are green, but the attended
+  Obsidian rail/Bases render pass remains local-host evidence rather than
+  captured headless evidence. Workaround: keep the rendering requirement in the
+  release-candidate runbook and rerun it on a host that can open the test vault
+  natively.
 - Limitation: The sample vault is tutorial/test scaffolding, not user data
   migration. Impact: sample-vault correctness does not prove production-vault
   upgrade safety. Workaround: keep production validation separate and disposable.

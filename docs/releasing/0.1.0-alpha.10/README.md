@@ -6,7 +6,7 @@ has_children: true
 
 # v0.1.0-alpha.10
 
-The internal checkpoint after alpha.9. The release plan now covers the complete
+The completed internal checkpoint after alpha.9. The release plan covers the complete
 post-alpha.9 change set, from the alpha.9 close commit through current `main`:
 Hermes/runtime governance, tutorials and sample vault, Obsidian navigation
 surfaces, ADR-116/117/118/119 schema and dashboard work, and the
@@ -20,4 +20,5 @@ milestone plus the Memoria Issue Tracker.
 
 | File | Holds |
 |---|---|
-| `release-plan-0.1.0-alpha.10.md` | Draft checkpoint plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure for all changes after alpha.9. |
+| `release-plan-0.1.0-alpha.10.md` | Completed checkpoint plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure for all changes after alpha.9. |
+| `validation-log.md` | Curated execution evidence for the alpha.10 checkpoint. |
