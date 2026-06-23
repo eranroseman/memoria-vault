@@ -56,6 +56,7 @@ TYPE_HOME = {
     "flag": "inbox/",
     "alert": "inbox/",
     "space": "spaces/",
+    "queue": "spaces/",
     "pattern": "system/patterns/",
     "eval-task": "system/eval/",
 }

@@ -10,7 +10,7 @@ Each space dashboard under `spaces/` gathers the views for one working mode, and
 
 ## Where the dashboards open
 
-The shipped spaces — **Inbox**, **Library**, **Knowledge**, and **Project** — are dashboard notes with a nav row. The Homepage plugin opens Inbox on startup; use the nav row to move among spaces. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
+The three spaces — **Library**, **Knowledge**, and **Project** — are durable dashboard notes, and the **Inbox** queue is the transient triage surface reached from the rail's *Now*. Obsidian restores your last session on launch; switch among surfaces from the left-pane rail. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
 
 Everything else opens manually: follow links from a space dashboard, or use `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
@@ -63,7 +63,7 @@ graph maturity, saturation state, and gap findings.
 
 ### "Something seems wrong but I can't see why"
 
-**Drift watch** — Inbox space.
+**Drift watch** — Inbox queue.
 
 Open when agents behave unexpectedly or queries return wrong results. A FAIL verdict pauses scheduled work until resolved ([Run the Linter](../operate/run-the-linter.md)).
 

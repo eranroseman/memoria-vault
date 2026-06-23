@@ -56,9 +56,8 @@ The task commands default sensibly off the **active note** — `extract claims` 
 
 Commander places the high-frequency commands directly in Obsidian chrome: the left
 ribbon has capture fleeting, capture from Zotero selection, capture source from URL,
-delegate task, and resolve inbox card. Space switching
-happens through the nav row in `spaces/inbox.md`, `spaces/library.md`,
-`spaces/knowledge.md`, and `spaces/project.md`. The note page header has capture
+delegate task, and resolve inbox card. Switching among the three spaces and the
+Inbox queue happens through the left-pane rail. The note page header has capture
 fleeting, create linked claim note, write claim note, extract claims, and link claim,
 so capture stays close while active-note defaults remain visible.
 

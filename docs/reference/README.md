@@ -41,7 +41,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate |
 | [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration |
-| [Dashboards](dashboards.md) | The four space dashboards, thirteen support dashboards, and Bases views: source file, sort order, verdict band, trust score, eval metrics, queue counters |
+| [Dashboards](dashboards.md) | The three space dashboards plus the Inbox queue, thirteen support dashboards, and Bases views: source file, sort order, verdict band, trust score, eval metrics, queue counters |
 | [Pattern library](patterns.md) | The shipped patterns, the pattern-note schema, the `patterns_list`/`patterns_run` contract, gated-target dry-run, and provenance |
 | [Clustering](clustering.md) | The cluster MCP: graph build, claim-debate Canvas, BERTopic topics — parameters, outputs, and the opt-in stack |
 
@@ -81,4 +81,4 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Obsidian plugin data files](obsidian-plugin-data-files.md) | `data.json`, `.example`, generated, and secret-bearing config conventions |
 | [Zotero plugins](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison |
 | [Obsidian callouts](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema |
-| [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and the persistent space-dashboard navigation model |
+| [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and the navigation-rail space-switching model |

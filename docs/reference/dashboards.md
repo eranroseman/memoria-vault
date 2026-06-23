@@ -5,16 +5,18 @@ parent: Reference
 
 # Dashboards
 
-The primary dashboards are the four persistent space notes under `spaces/`
-(`src/spaces`): Inbox, Library, Knowledge, and Project. Supporting dashboards and
-Bases live under `system/dashboards/` (`src/system/dashboards`) and related data
-folders. Space switching is a wikilink nav row, not an Obsidian workspace swap. All
-dashboards are Dataview / Bases consumers: they render existing vault state and logs,
-never write, and a healthy vault shows action queues near-empty.
+The primary dashboards are the three durable space notes under `spaces/`
+(`src/spaces`): Library, Knowledge, and Project. The Inbox queue (`spaces/inbox.md`,
+`type: queue`) sits alongside them as a transient triage surface, reached from the
+navigation rail's **Now**. Supporting dashboards and Bases live under
+`system/dashboards/` (`src/system/dashboards`) and related data folders. Space
+switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
+All dashboards are Dataview / Bases consumers: they render existing vault state and
+logs, never write, and a healthy vault shows action queues near-empty.
 
-The daily glance starts in the Inbox launch surface, and **board-state is the Inbox board** — a thin page embedding `inbox.base`.
+The daily glance starts in the Inbox queue, and **board-state is the Inbox board** — a thin page embedding `inbox.base`.
 
-No standalone status-line widget ships in the current Obsidian surface. The Inbox space is the ambient glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` answer whether anything needs attention without adding a separate always-on widget.
+No standalone status-line widget ships in the current Obsidian surface. The Inbox queue is the ambient glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` answer whether anything needs attention without adding a separate always-on widget.
 
 ---
 
@@ -22,7 +24,7 @@ No standalone status-line widget ships in the current Obsidian surface. The Inbo
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Space | Inbox | `spaces/inbox.md` | Action-first space: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
+| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, saturation, and project gaps. |
@@ -40,7 +42,7 @@ No standalone status-line widget ships in the current Obsidian surface. The Inbo
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 | Agent-ops | Skill state | `system/dashboards/skill-state.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
-The **Surface** column names the space or support context where a dashboard is reached.
+The **Surface** column names the space, the queue, or the support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
 health** ([Dashboards](../explanation/dashboards/README.md)).

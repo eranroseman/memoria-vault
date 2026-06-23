@@ -32,6 +32,6 @@ SORT file.ctime DESC
 
 ## Fleeting backlog
 
-This is the same proposed fleeting queue embedded in the Inbox space. Distill, attach, or archive each note; do not review these again in **New this week — notes**.
+This is the same proposed fleeting queue embedded in the Inbox queue. Distill, attach, or archive each note; do not review these again in **New this week — notes**.
 
 ![[fleeting.base#To process]]

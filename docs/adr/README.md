@@ -41,7 +41,7 @@ status.
 | [10](10-claim-supersession.md) | Claim supersession relation | accepted |
 | [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
 | [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not a control-plane formatter | accepted |
-| [13](13-homepage-front-door.md) | Homepage front-door note, auto-opened by obsidian-homepage | accepted |
+| [13](13-homepage-front-door.md) | Homepage front-door note, auto-opened by obsidian-homepage | superseded → ADR-115 |
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | accepted |
 | [15](15-project-membership-from-topic-hint.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | accepted |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | accepted |
@@ -143,6 +143,7 @@ status.
 | [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | accepted |
 | [113](113-copi-guided-onboarding.md) | Co-PI-guided onboarding (deferred) | proposed |
 | [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
+| [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for session-restore + a welcome seed | accepted |
 | [115](115-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 
 <!-- ADR-INDEX:END -->

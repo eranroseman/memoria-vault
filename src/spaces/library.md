@@ -9,8 +9,6 @@ cssclasses: memoria-space
 
 # Library
 
-[[spaces/inbox|Inbox]] · **Library** · [[spaces/knowledge|Knowledge]] · [[spaces/project|Project]]
-
 > [!brief] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
 > the same source form, so all source notes follow the same schema.
 

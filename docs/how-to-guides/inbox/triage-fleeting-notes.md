@@ -17,7 +17,7 @@ Clear `notes/fleeting/`: promote each note to something durable, attach it to an
 
 **1. Open the fleeting queue.**
 
-Open the Inbox space (`spaces/inbox.md`) and use the **Fleeting notes** section. It embeds the **To process** view of `system/dashboards/fleeting.base`, which is the single queue for every fleeting note still at `lifecycle: proposed`. The Friday weekly review embeds the same queue only as a backstop.
+Open the Inbox queue (`spaces/inbox.md`) and use the **Fleeting notes** section. It embeds the **To process** view of `system/dashboards/fleeting.base`, which is the single queue for every fleeting note still at `lifecycle: proposed`. The Friday weekly review embeds the same queue only as a backstop.
 
 **2. Open each fleeting note and decide its fate.**
 

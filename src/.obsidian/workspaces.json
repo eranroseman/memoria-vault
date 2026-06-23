@@ -10,12 +10,12 @@
             "type": "tabs",
             "children": [
               {
-                "id": "memoria-main-inbox",
+                "id": "memoria-main-home",
                 "type": "leaf",
                 "state": {
                   "type": "markdown",
                   "state": {
-                    "file": "spaces/inbox.md",
+                    "file": "home.md",
                     "mode": "preview",
                     "source": false
                   }
@@ -84,7 +84,7 @@
         "direction": "horizontal",
         "width": 360
       },
-      "active": "memoria-main-inbox",
+      "active": "memoria-main-home",
       "lastOpenFiles": []
     }
   },

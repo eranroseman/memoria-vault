@@ -1,15 +1,12 @@
 ---
 title: Inbox
-type: space
+type: queue
 lifecycle: current
-dashboard: space
-space: inbox
+dashboard: queue
 cssclasses: memoria-space
 ---
 
 # Inbox
-
-**Inbox** · [[spaces/library|Library]] · [[spaces/knowledge|Knowledge]] · [[spaces/project|Project]]
 
 > [!brief] Inbox empty? That's the goal. New agent proposals, integrity flags, and
 > work prompts land here when they need a decision.
@@ -41,7 +38,7 @@ Raw captures waiting for a PI decision. Open each note, then distill, attach, or
 
 ![[board.base#By lane]]
 
-Capture and global actions live in the ribbon; the space switcher is the nav row above.
+Capture and global actions live in the ribbon; navigate spaces from the left-pane rail.
 
 ## Guides
 

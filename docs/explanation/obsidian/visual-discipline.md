@@ -26,7 +26,7 @@ Emoji in note *titles* break filename portability across operating systems — a
 
 The vault should feel like writing during normal operation. Chrome — tab bars, sidebars, status indicators — is noise during focused reading and writing, and becomes signal when something needs attention. Hiding it by default preserves the signal-to-noise ratio: when the sidebar opens, it *means* something is happening.
 
-Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the Inbox space's daily glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` stay visible without adding a separate always-on indicator.
+Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the Inbox queue's daily glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` stay visible without adding a separate always-on indicator.
 
 One Obsidian window per vault is a technical constraint as much as a discipline. The agent layer assumes a single active vault; multiple windows updating the same card through the policy MCP produce race conditions in the audit log and board state.
 

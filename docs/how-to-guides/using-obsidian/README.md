@@ -12,7 +12,7 @@ Driving Memoria from inside Obsidian — the command palette, the agent-client (
 
 | Guide | What it covers |
 | --- | --- |
-| [Vault homepage](use-the-vault-homepage.md) | Open the front door, navigate dashboards, update research focus |
+| [Vault launch screen](use-the-vault-homepage.md) | Land on the welcome note, switch spaces from the rail, update research focus |
 | [Navigate the dashboards](navigate-the-dashboards.md) | Which gate or supporting dashboard to open for each situation |
 | [Workspaces](use-workspaces.md) | Use the saved Memoria workspace as a reset layout |
 | [Agent-client pane](use-the-acp-pane.md) | Open the Co-PI pane, attach context, read responses, clear sessions |

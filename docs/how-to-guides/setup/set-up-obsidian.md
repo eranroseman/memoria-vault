@@ -18,7 +18,7 @@ Open the vault in Obsidian, activate the bundled plugins, and copy the REST API 
 
 **1. Open the vault.**
 
-In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. The Homepage plugin opens `spaces/inbox.md` as the front door.
+In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. On a fresh vault you land on the `home.md` welcome note; once you start working, Obsidian reopens your last session on the next launch.
 
 **2. Enable community plugins.**
 
@@ -40,7 +40,6 @@ The required plugins:
 | `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
 | `modalforms` | Provides structured capture forms with controlled vocabulary fields |
 | `obsidian-git` | Scheduled, version-controlled vault commits |
-| `homepage` | Opens `spaces/inbox.md` on launch |
 | `buttons` | Renders command buttons in note templates |
 | `portals` | Provides curated shortcuts to the space/Bases surfaces |
 | `memoria-inspector` | Shows the read-only Memoria Inspector sidebar |
@@ -86,9 +85,9 @@ Memoria's linting is the Linter **operation** — deterministic Python with a da
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - The left ribbon includes Memoria capture, delegate, and resolve buttons
 - Modal Forms lists the six Memoria capture forms
-- The Homepage plugin opens `spaces/inbox.md`
+- A fresh vault lands on the `home.md` welcome note
 
-Once Hermes is set up, the working loop is: use the space nav row to open **Library** for the reading pipeline, use `Memoria:` commands for actions, and open the Co-PI pane when you want conversational help.
+Once Hermes is set up, the working loop is: use the left-pane rail to open **Library** for the reading pipeline, use `Memoria:` commands for actions, and open the Co-PI pane when you want conversational help.
 
 ## Related
 

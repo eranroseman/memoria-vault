@@ -16,7 +16,7 @@ One principle runs through every page below: **the architecture is invisible dur
 
 | Page                                            | What it explains                                                                                                                 |
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [Home — the vault front door](home.md)          | The front door — why launch opens the Inbox space and keeps `home.md` as a plain fallback note.                           |
+| [Home — the vault front door](home.md)          | The front door — `home.md` as the first-run welcome note (the launch screen for a fresh vault); navigation is the left-pane rail.                           |
 | [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) and what each means.              |
 | [The agent-client pane](agent-client-pane.md) | The ACP chat pane — why one conversational Co-PI surface exists alongside the board.                                             |
 

@@ -2,12 +2,12 @@
 topic: decisions
 id: 13
 title: Homepage front-door note, auto-opened by obsidian-homepage
-status: accepted
+status: superseded
 date_proposed: 2026-05-29
 date_resolved: 2026-05-29
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [115]
 ---
 
 # ADR-13: Homepage front-door note, auto-opened by obsidian-homepage
