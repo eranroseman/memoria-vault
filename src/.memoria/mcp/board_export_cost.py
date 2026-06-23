@@ -90,10 +90,29 @@ def state_db_for_lane(lane: str, hermes_home: Path | str | None = None) -> Path:
     return _hermes_home(hermes_home) / "profiles" / lane / "state.db"
 
 
+def _connect_session_store(db_path: Path) -> sqlite3.Connection:
+    db_path = db_path.expanduser().resolve(strict=False)
+    read_only_uri = f"{db_path.as_uri()}?mode=ro"
+    con = None
+    try:
+        con = sqlite3.connect(read_only_uri, uri=True)
+        con.execute("SELECT count(*) FROM sqlite_master").fetchone()
+        return con
+    except sqlite3.OperationalError as exc:
+        if con is not None:
+            con.close()
+        if "unable to open database file" not in str(exc):
+            raise
+        # Sandboxed release checks may deny SQLite sidecar lock/shm files under
+        # ~/.hermes; immutable keeps this inspector read-only.
+        immutable_uri = f"{db_path.as_uri()}?mode=ro&immutable=1"
+        return sqlite3.connect(immutable_uri, uri=True)
+
+
 def validate_session_schema(db_path: Path) -> None:
     """Fail closed when Hermes' pinned session-store schema drifts."""
     try:
-        with sqlite3.connect(db_path) as con:
+        with _connect_session_store(db_path) as con:
             rows = con.execute("PRAGMA table_info(sessions)").fetchall()
     except sqlite3.DatabaseError as exc:
         raise CostDoctorError(f"cannot inspect Hermes session store {db_path}: {exc}") from exc
@@ -128,7 +147,7 @@ def read_session_row(db_path: Path, session_id: str) -> dict | None:
     validate_session_schema(db_path)
     fields = ", ".join(sorted(REQUIRED_SESSION_COLUMNS))
     try:
-        with sqlite3.connect(db_path) as con:
+        with _connect_session_store(db_path) as con:
             con.row_factory = sqlite3.Row
             row = con.execute(
                 # `fields` is a join of the hardcoded REQUIRED_SESSION_COLUMNS set;

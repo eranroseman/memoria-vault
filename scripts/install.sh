@@ -603,9 +603,9 @@ remove_legacy_profile_mcp_json() {
 verify_profile_obsidian_mcp() {
   local cfg="$1" prof="$2"
   [ -f "$cfg" ] || die "$prof config.yaml missing after staging."
-  grep -q 'url: "https://127\.0\.0\.1:${OBSIDIAN_MCP_PORT}/mcp"' "$cfg" \
+  grep -Eq '^[[:space:]]*url:[[:space:]]*"?https://127\.0\.0\.1:\$\{OBSIDIAN_MCP_PORT\}/mcp"?[[:space:]]*$' "$cfg" \
     || die "$prof config.yaml must use https://127.0.0.1:\${OBSIDIAN_MCP_PORT}/mcp for the Obsidian MCP."
-  grep -q 'ssl_verify: "${OBSIDIAN_MCP_SSL_VERIFY}"' "$cfg" \
+  grep -Eq '^[[:space:]]*ssl_verify:[[:space:]]*"?\$\{OBSIDIAN_MCP_SSL_VERIFY\}"?[[:space:]]*$' "$cfg" \
     || die "$prof config.yaml must set obsidian ssl_verify to \${OBSIDIAN_MCP_SSL_VERIFY}."
 }
 
