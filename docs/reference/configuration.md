@@ -48,8 +48,8 @@ Hermes profile runs read the profile-local `.env` rather than inheriting a
 global fallback.
 
 Memoria profiles do not use standalone `mcp.json`. MCP servers live in profile
-`config.yaml`; an installed `~/.hermes/profiles/memoria-*/mcp.json` is legacy
-stale state.
+`config.yaml`; profile redeploy removes any legacy
+`~/.hermes/profiles/memoria-*/mcp.json` stale state.
 
 ## Required redeploys
 

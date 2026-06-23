@@ -4,11 +4,17 @@
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
+import sys
 from pathlib import Path
 
 import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from memoria.runtime.jsonl import iter_jsonl
 
 DISABLED_TOOLSETS = [
     "browser",
@@ -135,11 +141,7 @@ def assert_smoke(vault: Path, artifact_rel: str, audit_before: int) -> None:
         raise AssertionError(f"{artifact_rel} is missing the l2_live_smoke marker")
 
     audit_path = vault / "system/logs/audit.jsonl"
-    rows = [
-        json.loads(line)
-        for line in audit_path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+    rows = list(iter_jsonl(audit_path))
     new_rows = rows[audit_before:]
     allow_rows = [
         row

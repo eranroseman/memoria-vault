@@ -105,10 +105,10 @@ Enforcement is split deliberately:
 | Contract | Runtime status | Drift check |
 | --- | --- | --- |
 | Direct-world toolsets are absent from shipped profile config | Enforced by rendered Hermes `platform_toolsets`, with disabled toolsets as a backstop | `tests/test_profiles.py` |
-| Direct ACP fallback tools cannot bypass profile shaping | Enforced by the `memoria-policy-gate` hard-deny; `memory` is profile-scoped to Co-PI and `session_search` is denied everywhere | `tests/test_policy_gate_completeness.py` |
+| Direct ACP fallback tools cannot bypass profile shaping | Enforced by the `memoria-policy-gate`; `memory` is granted only to Co-PI by the registry and `session_search` is denied everywhere | `tests/test_policy_gate_completeness.py` |
 | Obsidian write tools obey lane path scopes | Enforced at runtime by the fail-closed `memoria-policy-gate` plugin | Policy and lane-scope tests |
 | Registry allowlist matches profile skill metadata and profile config | Checked as a source-of-truth contract | `tests/test_profiles.py` |
-| General tool-call gating from `tool-registry.yaml` inside the policy MCP/hook | Not built yet; the registry header tracks this as TODO | Registry drift tests only |
+| General tool-call gating from `tool-registry.yaml` inside the policy hook | Enforced by the fail-closed `memoria-policy-gate` plugin before lane path checks | Policy gate and profile tests |
 
 ---
 

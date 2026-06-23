@@ -23,17 +23,16 @@
 #     bare Hermes built-in toolset name (skills, todo, terminal, file, ...).
 #   - Tool IDs: Hermes built-in toolset names + `<mcp-server>.<tool>` for MCP tools.
 #
-# Enforcement: the policy MCP / hook may read this to gate tool calls (TODO — today
-# writes are gated by path in the lane-overrides). Meanwhile it is the single
-# source of truth the Linter checks each profile's config.yaml platform_toolsets
-# and MCP filters against for drift.
+# Enforcement: the policy-gate plugin reads this on pre_tool_call and blocks
+# calls outside the profile allowlist. Path writes still narrow through the
+# lane-overrides.
 
 version: 1
 
 # Reusable capability groups -> concrete tool IDs.
 groups:
-  vault_read:  [obsidian.get_file_contents, obsidian.list_files, obsidian.search]
-  vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.delete_file]
+  vault_read:  [obsidian.get_file_contents, obsidian.get_content, obsidian.list_files, obsidian.search, obsidian.vault_read]
+  vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.vault_write, obsidian.delete_file]
   web:         [web_search, web_extract]          # "search_web" + "fetch_url" — defined for completeness, NEVER granted (see header)
   policy:      [policy.check_permission, policy.complete_write]
   tasks:       [tasks.delegate_route_task]

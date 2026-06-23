@@ -12,6 +12,12 @@ from typing import Any
 
 import yaml
 
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from memoria.runtime.jsonl import iter_jsonl
+
 STAGE_LABELS = {
     "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from src/)",
     "vault-assembly-2": "2. vault-assembly: golden copy + git hook wiring",
@@ -131,10 +137,7 @@ def assert_workflow_replay_artifacts(vault: Path) -> None:
         assert (vault / rel).is_file(), f"workflow replay artifact missing: {rel}"
     forbidden = vault / "notes/claims/blocked-by-harness.md"
     assert not forbidden.exists(), "workflow replay left forbidden claim behind"
-    audit = [
-        json.loads(line)
-        for line in (vault / "system/logs/audit.jsonl").read_text(encoding="utf-8").splitlines()
-    ]
+    audit = list(iter_jsonl(vault / "system/logs/audit.jsonl"))
     assert audit[-1]["decision"] == "deny", f"last audit decision was not deny: {audit[-1]}"
     assert audit[-1]["task_id"] == "HARNESS-DENY", (
         f"last audit task_id was not HARNESS-DENY: {audit[-1]}"
