@@ -7,6 +7,7 @@
 
 const WORKSPACE_NAME = "Memoria";
 const NAV_FILE = "_nav.md";
+const RAIL_SETTLE_MS = 500;
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -23,10 +24,17 @@ module.exports = async (params) => {
   }
 
   await workspaces.loadWorkspace(WORKSPACE_NAME);
+  await revealNavRail(app);
 
+  // ponytail: Portals can finish startup after QuickAdd; one delayed reveal wins the race.
+  await new Promise((resolve) => setTimeout(resolve, RAIL_SETTLE_MS));
+  await revealNavRail(app);
+};
+
+async function revealNavRail(app) {
   const navLeaf = app.workspace.getLeavesOfType?.("markdown")
     ?.find((leaf) => leaf.getViewState?.()?.state?.file === NAV_FILE);
   if (navLeaf && app.workspace.revealLeaf) {
     await app.workspace.revealLeaf(navLeaf);
   }
-};
+}

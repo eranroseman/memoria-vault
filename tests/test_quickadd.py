@@ -134,10 +134,13 @@ def test_startup_macro_restores_saved_memoria_shell():
     script = (SCRIPTS / "restore-memoria-shell.js").read_text(encoding="utf-8")
     assert 'WORKSPACE_NAME = "Memoria"' in script
     assert 'NAV_FILE = "_nav.md"' in script
+    assert "RAIL_SETTLE_MS = 500" in script
     assert "internalPlugins?.plugins?.workspaces?.instance" in script
     assert "loadWorkspace(WORKSPACE_NAME)" in script
     assert "getLeavesOfType" in script
+    assert "setTimeout(resolve, RAIL_SETTLE_MS)" in script
     assert "revealLeaf(navLeaf)" in script
+    assert script.count("await revealNavRail(app)") == 2
 
 
 def _lane_profile():
