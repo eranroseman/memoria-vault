@@ -7,7 +7,7 @@ nav_order: 7
 
 # Query the vault
 
-Ask the vault a research question and get a grounded answer in the Co-PI pane. Query is a deliberate Co-PI-only case because the product is synchronous, read-only dialogue: nothing is written, and anything worth keeping you author yourself. When you want a durable artifact instead of a conversation, use a direct command or delegated lane task.
+Ask the vault a research question and get a grounded answer in the Agent Client pane. Query is a deliberate Co-PI-only case because the product is synchronous, read-only dialogue: nothing is written, and anything worth keeping you author yourself. When you want a durable artifact instead of a conversation, use a direct command or delegated lane task.
 
 ## Which retrieval path?
 
@@ -31,13 +31,13 @@ Rule of thumb: converse when *you* should do the synthesizing; use a command or 
 
 **1. Ask in natural language.**
 
-Open the Co-PI pane (see [Agent-client pane](../using-obsidian/use-the-acp-pane.md)) and ask the question, not keywords:
+Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) and ask the question, not keywords:
 
 > "What predicts JITAI receptivity?"
 > "Which of my claims would the 2024 papers contradict?"
 > "What methods have my sources used to measure EMA compliance?"
 
-The active note auto-attaches; attach others when the question is about a specific cluster ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
+The active note auto-attaches; attach others when the question is about a specific cluster ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
 **2. Interrogate the answer.**
 
@@ -53,7 +53,7 @@ its synthesis, not your knowledge — treat it accordingly.
 
 - A genuine new synthesis → distill it properly: [Write a claim note](../knowledge/write-a-claim-note.md).
 - Context for a writing project → copy into your `projects/<slug>/` scratch.
-- A one-off answer → close the pane. The transcript auto-exports for review ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)); promote anything durable yourself instead of letting the raw transcript become a canonical note.
+- A one-off answer → close the pane. The transcript auto-exports for review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)); promote anything durable yourself instead of letting the raw transcript become a canonical note.
 
 ## Verify
 
@@ -65,4 +65,4 @@ its synthesis, not your knowledge — treat it accordingly.
 - Distilling a kept answer: [Write a claim note](../knowledge/write-a-claim-note.md)
 - The transcript's afterlife: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
 - The search engine underneath: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- The agent in the Co-PI pane: [The Co-PI](../../explanation/profiles/co-pi.md)
+- The agent in the Agent Client pane: [The Co-PI](../../explanation/profiles/co-pi.md)

@@ -11,7 +11,7 @@ parent: Tutorials
 
 **Time:** 30–45 minutes.
 
-**You'll use:** the Obsidian command palette, the Co-PI pane, and the sample vault's claims.
+**You'll use:** the Obsidian command palette, the Agent Client pane, and the sample vault's claims.
 
 **Prerequisite:** [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) complete.
 

@@ -303,7 +303,7 @@ def test_catalog_enrich_record_creates_proposed_source_notes():
     assert "source" in memoria["outputs"]
 
 
-def test_acp_pane_is_copi_only():
+def test_agent_client_pane_is_copi_only():
     import json
 
     data = json.loads(

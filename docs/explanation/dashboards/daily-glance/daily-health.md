@@ -18,7 +18,7 @@ The daily glance is the Inbox queue's always-visible system-health view. The bud
 ## What it shows
 
 What populates the glance — the Inbox queue's top views and the support dashboards
-behind them — is detailed in [Home — the vault front door](../../obsidian/home.md).
+behind them — is detailed in [Home welcome note](../../obsidian/home.md).
 The framing: each is an "is anything red?" check, not a place to do work — the
 deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
@@ -36,7 +36,7 @@ deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ## Why it's designed this way
 
-**Absorption beats a second front door.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox queue is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
+**Absorption beats a second launch surface.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox queue is owned by [Home welcome note](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
 
 **Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox queue glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 

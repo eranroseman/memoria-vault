@@ -17,7 +17,7 @@ Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is hu
 
 **1. Delegate a section.**
 
-Use `Cmd/Ctrl-P` → **Memoria: draft section**, or ask in the Co-PI pane if you want help shaping the handoff. Name the section, the framing, and the working set:
+Use `Cmd/Ctrl-P` → **Memoria: draft section**, or ask in the Agent Client pane if you want help shaping the handoff. Name the section, the framing, and the working set:
 
 > "Draft the introduction for `<deliverable>` from `projects/<slug>/chosen-framing.md`, using my claims on `<topic>`. Cite citekeys in-text."
 

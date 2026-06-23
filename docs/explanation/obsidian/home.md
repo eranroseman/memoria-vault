@@ -1,10 +1,10 @@
 ---
-title: Home — the vault front door
+title: Home welcome note
 parent: Obsidian
 nav_order: 1
 ---
 
-# Home — the vault front door
+# Home welcome note
 
 The vault-root `home.md` is a thin first-run welcome note — a "start here" screen for
 a fresh vault or a layout reset. On launch Obsidian restores your last session, so once
@@ -52,4 +52,4 @@ On a freshly cloned vault, before any data exists, the welcome note shows its "s
 - What Home links *to*: [the dashboards](../dashboards/README.md)
 - The visual restraint Home participates in: [Visual-style discipline](visual-discipline.md)
 - The plugin inventory behind these surfaces: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- The front-door decision history: [ADR-13](../../adr/13-homepage-front-door.md)
+- The welcome-note decision history: [ADR-13](../../adr/13-homepage-front-door.md)

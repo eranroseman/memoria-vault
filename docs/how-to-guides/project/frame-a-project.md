@@ -21,7 +21,7 @@ Generate competing argument structures and commit to one framing before drafting
 
 **1. Delegate competing outlines.**
 
-Use `Cmd/Ctrl-P` → **Memoria: draft section** when you already know the outline request, or use the Co-PI pane if you want to shape the alternatives conversationally:
+Use `Cmd/Ctrl-P` → **Memoria: draft section** when you already know the outline request, or use the Agent Client pane if you want to shape the alternatives conversationally:
 
 > "Outline the argument for `<research question>` two or three different ways — chronological, mechanism-of-action, and theory-first. Work from my claims on `<topic>`."
 
@@ -33,7 +33,7 @@ Don't commit immediately; the framing that still feels right after a break is us
 
 **3. Stress-test the leading framing with the Co-PI.**
 
-In the Co-PI pane: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../library/read-through-a-lens.md) — the same move pointed at your own outline). The Co-PI is read-only; copy anything useful into your notes yourself.
+In the Agent Client pane: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../library/read-through-a-lens.md) — the same move pointed at your own outline). The Co-PI is read-only; copy anything useful into your notes yourself.
 
 **4. Choose and record the framing.**
 

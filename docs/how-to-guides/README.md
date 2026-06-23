@@ -18,7 +18,7 @@ For the *why* behind any design choice, see [Explanation](../explanation). For e
 Memoria has two distinct modes of use, each with its own tooling:
 
 **Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Co-PI's agent-client pane, and the Inbox are your primary controls. The guides in the [Inbox](inbox), [Library](library), [Knowledge](knowledge), and [Project](project) spaces are written for this mode.
+Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Agent Client pane, and the Inbox are your primary controls. The guides in the [Inbox](inbox), [Library](library), [Knowledge](knowledge), and [Project](project) spaces are written for this mode.
 
 **Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
 Installing profiles, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup](setup), [Operate](operate), and [Troubleshooting](troubleshooting) are written for this mode.

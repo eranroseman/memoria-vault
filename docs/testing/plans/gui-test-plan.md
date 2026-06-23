@@ -227,7 +227,7 @@ Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 ## Part E — End-to-end GUI flows
 
-**E1. ACP pane.** Open the *Agent Client* pane → start a session with `memoria-copi` → ask a question.
+**E1. Agent Client pane.** Open the *Agent Client* pane → start a session with `memoria-copi` → ask a question.
 
 - ✓ Pass: a model response renders in the pane (model connectivity through the GUI).
 - [ ] **E1 Pass**
@@ -259,7 +259,7 @@ Then open `system/dashboards/audit-log.md`.
 | C / G4 | All 13 support dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
-| E1 | ACP pane returns a model response | | |
+| E1 | Agent Client pane returns a model response | | |
 | E2 | Denied write blocked; deny row in audit-log | | |
 | E3 | Board-state shows a card after cron tick | | |
 

@@ -6,7 +6,7 @@ nav_order: 1
 
 # The Co-PI
 
-The Co-PI is the one agent the PI converses with — the permanent presence in the ACP pane. Its mission has three verbs: **question** (sharpen the PI's thinking), **explain** (it knows the system and can account for what any part of Memoria is doing), and **delegate** (route work to the right background lane). Its product is the PI's sharpened thinking and well-routed work — never a file ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)).
+The Co-PI is the one agent the PI converses with — the permanent presence in the Agent Client pane. Its mission has three verbs: **question** (sharpen the PI's thinking), **explain** (it knows the system and can account for what any part of Memoria is doing), and **delegate** (route work to the right background lane). Its product is the PI's sharpened thinking and well-routed work — never a file ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)).
 
 ---
 

@@ -63,7 +63,7 @@ so capture stays close while active-note defaults remain visible.
 
 **3. Use the Co-PI when shaping helps.**
 
-The conversational route is additive, not primary: use the palette when you already know the lane, task, or assist verb. Use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational; if the result should become durable, the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit hook ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
+The conversational route is additive, not primary: use the palette when you already know the lane, task, or assist verb. Use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational; if the result should become durable, the Co-PI raises a ceiling-validated card on the right lane ([Agent Client pane](use-the-agent-client-pane.md)). Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit hook ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
 
 **4. Use the palette by type, not by scroll.**
 
@@ -85,5 +85,5 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 ## Related
 
 - Full command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md)
-- The conversational route: [Agent-client pane](use-the-acp-pane.md)
+- The conversational route: [Agent Client pane](use-the-agent-client-pane.md)
 - QuickAdd and the rest of the plugin set: [Obsidian plugins](../../reference/obsidian-plugins.md)

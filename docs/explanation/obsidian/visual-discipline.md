@@ -61,5 +61,5 @@ attention for the moments that deserve it.
 
 - The current ambient glance and dashboard inventory: [Dashboards](../dashboards/README.md)
 - The callout types and their fixed three-color palette: [Callouts](callouts.md)
-- The front door, which participates in the same restraint: [Home — the vault front door](home.md)
+- The welcome note, which participates in the same restraint: [Home welcome note](home.md)
 - Gate/reset layout reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

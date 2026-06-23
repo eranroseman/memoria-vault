@@ -11,7 +11,7 @@ Think a source through with the Co-PI before writing a claim. The Co-PI is the o
 ## Prerequisites
 
 - A source you've read, with a source note in `notes/sources/` ([Capture and ingest a source](capture-and-ingest.md))
-- The `agent-client` Obsidian plugin connected ([Agent-client pane](../using-obsidian/use-the-acp-pane.md))
+- The `agent-client` Obsidian plugin connected ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md))
 
 ## Steps
 
@@ -27,9 +27,9 @@ think through.
 
 Re-read your **In my words** and **Worth distilling** sections, and keep `catalog/papers/<citekey>.md` open for the source metadata while you consult the paper/PDF if you need the full text. Bring a position, not a blank page.
 
-**3. Open the Co-PI pane.**
+**3. Open the Agent Client pane.**
 
-Open the Co-PI pane (see [Agent-client pane](../using-obsidian/use-the-acp-pane.md)) with the source note active so it auto-attaches, then ask it to discuss the source.
+Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) with the source note active so it auto-attaches, then ask it to discuss the source.
 
 **4. Work the standard questions.**
 
@@ -51,7 +51,7 @@ Don't treat the questions as a checklist. When a question feels too abstract, as
 - **The paper yields one or more claims** → proceed to [write a claim note](../knowledge/write-a-claim-note.md), then advance the source note to `lifecycle: current`.
 - **No standalone claim right now** → add one line to the source note's **Worth distilling** section saying why ("confirms existing claims, adds no new argument"), and advance the lifecycle anyway — the discuss queue reads `provisional`, and the decision is the work.
 
-Closing the pane exports the transcript for later review ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
+Closing the pane exports the transcript for later review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)). If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
 
 ## Verify
 
@@ -72,5 +72,5 @@ Closing the pane exports the transcript for later review ([Agent-client pane](..
 
 **Explanation**
 
-- The agent in the Co-PI pane: [The Co-PI](../../explanation/profiles/co-pi.md)
+- The agent in the Agent Client pane: [The Co-PI](../../explanation/profiles/co-pi.md)
 - The queue this works down: [The discuss-queue dashboard](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)

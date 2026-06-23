@@ -17,7 +17,7 @@ Delegate analysis or figure code to the **Engineer** — the `code` lane. Code i
 
 **1. Delegate the code task.**
 
-Use `Cmd/Ctrl-P` → **Memoria: delegate task** → `code`, or ask in the Co-PI pane if you want help shaping the handoff. State the artifact and the claim it serves:
+Use `Cmd/Ctrl-P` → **Memoria: delegate task** → `code`, or ask in the Agent Client pane if you want help shaping the handoff. State the artifact and the claim it serves:
 
 > "Code task: produce the figure-3 receptivity curve for `projects/<slug>/`, from the data behind `[[receptivity-decreases-under-high-cognitive-load]]`."
 

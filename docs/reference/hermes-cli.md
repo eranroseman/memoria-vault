@@ -5,9 +5,9 @@ parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is Obsidian's spaces, Bases views, and `Memoria:` command palette. The Co-PI pane is the conversational route for shaping unclear work, not the first or only way to trigger tasks. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
+Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is Obsidian's spaces, Bases views, and `Memoria:` command palette. The Agent Client pane is the conversational route for shaping unclear work, not the first or only way to trigger tasks. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
 
-Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the Co-PI ACP pane).
+Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the Co-PI Agent Client pane).
 
 ---
 

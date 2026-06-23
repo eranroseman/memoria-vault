@@ -11,7 +11,7 @@ parent: Tutorials
 
 **Time:** 30–45 minutes.
 
-**You'll use:** Obsidian, the Co-PI pane, the project you opened in Tutorial 01, and the claim cluster you completed in Tutorial 03.
+**You'll use:** Obsidian, the Agent Client pane, the project you opened in Tutorial 01, and the claim cluster you completed in Tutorial 03.
 
 **Prerequisite:** [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) complete — the sample cluster finished (the `meddiet-and-stroke-risk` stub backed, the missing `supports` link made) and your own source distilled into at least one claim connected to the cluster.
 

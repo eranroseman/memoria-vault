@@ -13,7 +13,7 @@ Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md))
 ```text
 L1  PI          the human — the only actor who promotes to canonical
 L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Project Workspaces
-L3  Co-PI       the permanent conversational agent (ACP pane); read-only, delegates writes
+L3  Co-PI       the permanent conversational agent (Agent Client pane); read-only, delegates writes
 L4  Tasks       ephemeral agent lanes + the kanban board + cards
 L5  MCP         the policy boundary — agents reach operations and the Vault only through it
 L6  Operations     deterministic mechanisms: ingest · search · clustering · sweeps · Linter
