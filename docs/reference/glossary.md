@@ -31,6 +31,28 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 ---
 
+## Surfaces and navigation
+
+**Navigator rail** — the left-pane surface for everyday navigation (`_nav.md`, [ADR-116](../adr/116-obsidian-surface-architecture.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
+
+**Now** — the rail's top band: what is waiting on you right now — **Needs you** (your Inbox queue), **Drift** (open integrity flags), and **Fleet** (background-worker health).
+
+**Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
+
+**Space** — a navigation surface that is also a dashboard-as-note (`type: space`): Library, Knowledge, Project, each embedding Bases views over the vault. "Gate" is reserved for the approval gate, never a space ([ADR-101](../adr/101-navigation-spaces-gate-reserved-for-approval.md)).
+
+**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily surface of agent proposals and integrity flags, reached from **Now → Needs you**; main view **Needs me**. Clearing it to empty is the goal.
+
+**Maintenance** — the weekly structural-debt surface (`type: maintenance`): Drift watch, Loose ends, the worker board, and "new this week".
+
+**Rail health band** — the count the rail's **Now** shows for open `flag` / `alert` cards; non-zero means structural debt is waiting in Maintenance.
+
+**System dashboard** — one of the read-only, Dataview-backed notes in `system/dashboards/` (consolidated to five in [ADR-118](../adr/118-dashboard-consolidation.md)); the spaces and Maintenance carry the action surfaces.
+
+**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)).
+
+---
+
 ## Board and delegation
 
 **Card** — a task on the Hermes Kanban board. Carries `status`, `assignee`, retry count, and a handoff summary. Lives in `kanban.db`, projected into `system/board/`.

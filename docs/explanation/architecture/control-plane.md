@@ -6,13 +6,13 @@ nav_order: 3
 
 # The control plane
 
-Every unit of **agent** work is a card on the kanban board — the Tasks layer of the [seven-layer stack](README.md). A trigger (the PI, the Co-PI, or cron) creates a card; the dispatcher assigns it to a **lane**; the lane's agent runs it under propose-not-dispose — agents propose, only the PI disposes, a wall the policy MCP enforces ([Why the review gate is structural](../rationale/why-human-gate.md)); the result resurfaces as an Inbox signal. Engines run *off* the board — on cron/CI or behind an MCP facade, never as cards.
+Every unit of **agent** work is a card on the kanban board — the Tasks layer of the [seven-layer stack](README.md). A trigger (the PI, the Co-PI — Memoria's single conversational agent — or cron) creates a card; the dispatcher assigns it to a **lane** (a background worker on the board — see [Glossary](../../reference/glossary.md)); the lane's agent runs it under propose-not-dispose — agents propose, only the PI disposes, a wall the policy MCP enforces ([Why the review gate is structural](../rationale/why-human-gate.md)); the result resurfaces as an Inbox signal (a proposal card in your queue). Engines run *off* the board — on cron/CI or behind an MCP facade, never as cards.
 
 ---
 
 ## Lanes are the four background agents
 
-The board's lanes are exactly the four background agents, keyed by `assignee = memoria-<name>` — the roster and postures are owned by [Profiles](../profiles/README.md). Two lanes that might seem missing are absent by design:
+The board's lanes are exactly the four background agents, keyed by `assignee = memoria-<name>` — the roster and postures (each agent's fixed stance, e.g. faithful or skeptical) are owned by [Profiles](../profiles/README.md). Two lanes that might seem missing are absent by design:
 
 - **No Co-PI lane.** The Co-PI converses in the Agent Client pane and never appears on the board. It is read-only — when the conversation produces work that writes, the Co-PI **delegates** it: the tasks MCP's `delegate_route_task` creates a card on the board, assigned to the right lane. Delegation through the board is the Co-PI's *only* write path.
 - **No operation lanes.** Operations are deterministic and have no posture; they run on cron/CI or are invoked directly, never claimed as cards — the roster is in [Operations — the deterministic layer](../operations/README.md).

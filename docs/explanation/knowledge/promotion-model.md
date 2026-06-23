@@ -13,7 +13,7 @@ Promotion is the act of making content canonical — confirming a claim into `no
 
 ## What "canonical" means now
 
-The gated zones are `notes/claims/` 🔒 and `notes/hubs/` 🔒. Project notes add a gated thesis promotion path, and a composition's `deliverable` state remains later work. Content there is trusted: when the Peer-reviewer traces a draft's citations, it assumes the claims represent positions the PI actually holds; when the PI builds on a claim, they assume they once made it theirs. If those zones could be written without review, every downstream use of canonical content would become suspect.
+The gated zones are `notes/claims/` 🔒 and `notes/hubs/` 🔒. Project notes add a gated thesis promotion path, and a composition's `deliverable` state remains later work. Content there is trusted: when the Peer-reviewer (the background agent that checks drafts and citations — see [Glossary](../../reference/glossary.md)) traces a draft's citations, it assumes the claims represent positions the PI actually holds; when the PI builds on a claim, they assume they once made it theirs. If those zones could be written without review, every downstream use of canonical content would become suspect.
 
 Promotion is not a file move ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). A note is born in its type-home and stays there; what the gate controls is the **state transition** (a fleeting thought becoming a `current` claim, a proposed link becoming part of the graph) and the **write into a gated zone**. The policy gate enforces the boundary mechanically: agents write staging and ungated zones; gated-zone writes, promotions, the `retracted` decision, and the archive move are PI-only.
 
