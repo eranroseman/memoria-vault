@@ -25,9 +25,15 @@ def test_memoria_inspector_reads_only_operational_sources():
         "system/logs/board-state.jsonl",
         "system/logs/audit.jsonl",
         "system/metrics/lint-verdict-",
+        "system/metrics/lane-",
+        "system/dashboards/board-state",
+        "system/dashboards/audit-log",
+        "spaces/maintenance#Drift watch",
+        "system/dashboards/fleet-health",
         "registerView",
         "getRightLeaf",
         "adapter.read",
+        "openLinkText",
     ):
         assert marker in text
 

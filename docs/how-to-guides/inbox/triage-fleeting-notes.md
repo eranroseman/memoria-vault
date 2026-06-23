@@ -17,7 +17,7 @@ Clear `notes/fleeting/`: promote each note to something durable, attach it to an
 
 **1. Open the fleeting queue.**
 
-Open the Inbox queue (`spaces/inbox.md`) and use the **Fleeting notes** section. It embeds the **To process** view of `system/dashboards/fleeting.base`, which is the single queue for every fleeting note still at `lifecycle: proposed`. The Friday weekly review embeds the same queue only as a backstop.
+Open the Inbox queue (`spaces/inbox.md`) and use the **Fleeting notes** section. It embeds the **To process** view of `system/dashboards/fleeting.base`, which is the single queue for every fleeting note still at `lifecycle: proposed`.
 
 **2. Open each fleeting note and decide its fate.**
 
@@ -46,14 +46,14 @@ Set `lifecycle: archived` (or delete outright — a fleeting note has no provena
 
 **Chat exports are adjacent, not automatic fleeting notes.** Closed pane sessions are auto-exported to `system/exports/` for PI review. They do not enter the fleeting queue automatically; when a transcript contains a durable thought, create the fleeting note yourself and link back to the export if the context matters. See [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md).
 
-The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising fleeting backlog in the weekly review is a signal to run this triage before the next session.
+The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising fleeting backlog in the Inbox is a signal to run this triage before the next session.
 
 ## Related
 
 **How-to**
 
 - Write a claim note: [Write a claim note](../knowledge/write-a-claim-note.md)
-- Weekly review (the Friday aggregator): [Run the weekly review](../inbox/run-the-weekly-review.md)
+- Weekly review rhythm: [Run the weekly review](../inbox/run-the-weekly-review.md)
 - Command-palette capture: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 
 **Reference**

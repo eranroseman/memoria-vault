@@ -59,7 +59,7 @@ For a `contradicts` link, open the Knowledge space's **Contradictions** view. Th
 ## Verify
 
 - The `links:` keys stay within `supports` / `contradicts` (the Linter's `schema-check` flags anything else)
-- A `contradicts` pair appears on the contradictions dashboard
+- A `contradicts` pair appears in Knowledge's **Contradictions** view
 - Every link target resolves to a real claim note
 
 ## Related
@@ -76,5 +76,5 @@ For a `contradicts` link, open the Knowledge space's **Contradictions** view. Th
 
 **Explanation**
 
-- The consumer: [The contradictions dashboard](../../explanation/dashboards/synthesis-agenda/contradictions.md)
+- The consumer: [Contradictions](../../explanation/dashboards/synthesis-agenda/contradictions.md)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

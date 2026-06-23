@@ -19,7 +19,7 @@ Further views round out the forensic picture: **per-profile activity over the la
 
 ## What it is not
 
-**Not fleet-health or drift-watch.** The audit log is the raw event stream — one JSON object per write decision; the other two aggregate. For where each sits, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
+**Not fleet health or Drift watch.** The audit log is the raw event stream — one JSON object per write decision; the other two aggregate. For where each sits, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
 **Not editable.** The log is append-only by design: each mutating write is recorded with a hash pair so the action stays reversible, and editing the log would break that. This view flags a path whose recorded after-hash no longer matches the file; the Linter's `audit-unpaired-writes` detector flags a write whose pairing never completed. The hash-pairing mechanism and the full entry schema are owned by [Policy MCP](../../../reference/policy-mcp.md).
 
@@ -33,6 +33,6 @@ The dashboard reads the whole `audit.jsonl` and caps each *view* (e.g. 30 recent
 
 ## Related
 
-- [drift-watch dashboard](../structural-health/drift-watch.md) — structural drift findings (complementary layer)
+- [Drift watch](../structural-health/drift-watch.md) — structural drift findings (complementary layer)
 - [fleet-health dashboard](fleet-health.md) — trend aggregations that consume this stream
 - [Policy MCP](../../../reference/policy-mcp.md) — the decision protocol and action vocabulary the log records

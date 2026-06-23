@@ -54,7 +54,7 @@ Then resolve the alert card (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**).
 
 **6. Check for new tensions.**
 
-A retraction sometimes resolves — or creates — a contradiction. Glance at `system/dashboards/contradictions.md` after updating claims.
+A retraction sometimes resolves — or creates — a contradiction. Glance at Knowledge's **Contradictions** view after updating claims.
 
 ## Verify
 

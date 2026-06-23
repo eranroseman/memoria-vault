@@ -1,25 +1,25 @@
 ---
-title: drift-watch dashboard
+title: Drift watch
 parent: Structural health
 nav_order: 1
 grand_parent: Dashboards
 ---
 
-# `drift-watch` dashboard
+# Drift watch
 
 Surfaces active and imminent drift — the Linter's and the verification sweeps' **open findings** — as one consolidated view. Open it when something feels wrong but the system looks clean: a lint pass came back clear yet things still seem off.
 
 ## What it shows
 
-The dashboard (`system/dashboards/drift-watch.md`) lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the dashboard is a filtered view of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing operations are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit hook) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
+Maintenance's Drift watch view lists the open **`flag` and `alert` cards** — Inbox cards still in `proposed`, sorted loudest-first. Every detector finding becomes a card through the shared card-writer ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)), so the view is a filtered slice of the same queue everything else uses: a `flag` is a verification/integrity issue (leading with its `finding` and `agent_recommendation`), an `alert` is a drift or retraction notice. The producing operations are the **Linter** (schema validation, link/relationship resolvability, orphans, golden-copy drift — daily cron + the pre-commit hook) and the **verification sweeps** (retraction lookups, near-duplicate and broken-citation detection).
 
-Loudness is the headline: all open `flag` and `alert` cards count in the rail health band, and this view sorts the actionable list loudest-first. `block` cards pause new delegation and review-gated promotion until the PI resolves the card; quieter cards wait here and in the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
+Loudness is the headline: all open `flag` and `alert` cards count in the rail health band, and this view sorts the actionable list loudest-first. `block` cards pause new delegation and review-gated promotion until the PI resolves the card; quieter cards wait in Maintenance for the weekly review. (The four-level loudness model and the "next 30 minutes" test it follows are owned by [Interaction channels](../../architecture/human-channels.md).)
 
 ## What it is not
 
 **Not audit-log or fleet-health.** Drift-watch is the *structural* view — open integrity findings, headlined by the verdict band; audit-log is per-write forensics and fleet-health is the operational aggregate. For the full three-way distinction, see [Operational health](../operational-health/README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
-**Not for content hygiene.** Stale literature and unfinished-looking filenames surface in weekly-review and loose-ends, not here. Drift-watch is reserved for what the operations can *detect mechanically* — the "silent" failures the human wouldn't notice by reading content.
+**Not for content hygiene.** Stale literature and unfinished-looking filenames surface in the weekly review and Loose ends, not here. Drift watch is reserved for what the operations can *detect mechanically* — the "silent" failures the human wouldn't notice by reading content.
 
 ## When drift-watch becomes relevant
 
@@ -29,7 +29,7 @@ The Friday weekly review includes a drift-watch pass because a week of ordinary 
 
 ## Before it has real data
 
-Until the daily lint cron and the sweeps have run, this dashboard is empty — which on a fresh vault means "nothing checked yet," not "all clear." After the first pass, empty means clean: the queue of open findings converges to zero as the PI acts on or archives the cards. (Why an empty dashboard is the healthy state at all is the cross-cutting [empty-is-success principle](../README.md#why-the-dashboards-are-designed-the-way-they-are).)
+Until the daily lint cron and the sweeps have run, this view is empty — which on a fresh vault means "nothing checked yet," not "all clear." After the first pass, empty means clean: the queue of open findings converges to zero as the PI acts on or archives the cards. (Why an empty view is the healthy state at all is the cross-cutting [empty-is-success principle](../README.md#why-the-dashboards-are-designed-the-way-they-are).)
 
 ## Related
 

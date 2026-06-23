@@ -45,7 +45,7 @@ The fleet-health dashboard tracks your accept/reject ratio as a trust-score sign
 - No link-lane card remains at `lifecycle: proposed`
 - The latest `[!suggestions]` callout has been read, not mass-approved
 - Every approved proposal exists as a `links:` entry on the claim, in your hand
-- A `contradicts` approval now shows on `system/dashboards/contradictions.md`
+- A `contradicts` approval now shows in Knowledge's **Contradictions** view
 
 ## Related
 

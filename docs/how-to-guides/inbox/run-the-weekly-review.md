@@ -6,12 +6,12 @@ nav_order: 4
 
 # Run the weekly review
 
-Walk the Friday ritual: refresh your research focus, sweep the Inbox, work the weekly-review aggregator top to bottom, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
+Walk the Friday ritual: refresh your research focus, sweep the Inbox, use Maintenance's weekly sections, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
 
 ## Prerequisites
 
 - Obsidian open with the vault
-- `system/dashboards/weekly-review.md` open — the Friday aggregator: Notice-level findings, the week's new catalog entries and notes, and the same fleeting queue shown in the Inbox
+- `spaces/maintenance.md` open — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
 
 ## Steps
 
@@ -25,15 +25,15 @@ Open the Inbox queue's **Needs me** view of `inbox/inbox.base` (every card at `l
 
 **Step 3 — Notice-level findings (5 min).**
 
-The dashboard's top section lists cards at `loudness: notice` — things that didn't demand attention mid-week. Resolve each or consciously defer.
+Maintenance's **Loose ends** view lists cards at `loudness: notice` — things that didn't demand attention mid-week. Resolve each or consciously defer.
 
 **Step 4 — Review the week's movement (5–10 min).**
 
-The **New this week** sections list catalog entries and notes created in the last 7 days. Scan for anything that landed and stalled: a kept paper with no source note, a source stuck at `proposed`, a claim with no connections (cross-check `system/dashboards/open-questions.md`).
+The **New this week** sections list catalog entries and notes created in the last 7 days. Scan for anything that landed and stalled: a kept paper with no source note, a source stuck at `proposed`, or a claim with no connections (cross-check Knowledge's **Open questions** view).
 
 **Step 5 — Clear the fleeting backlog (10–15 min).**
 
-The dashboard embeds the same fleeting **To process** view shown in the Inbox. Promote, attach, or archive each note ([Triage fleeting notes](../inbox/triage-fleeting-notes.md)). Target: zero notes older than a week.
+Return to the Inbox queue's fleeting **To process** view. Promote, attach, or archive each note ([Triage fleeting notes](../inbox/triage-fleeting-notes.md)). Target: zero notes older than a week.
 
 **Step 6 — Advance settled claims (5 min).**
 
@@ -50,13 +50,13 @@ Use the fleet-health dashboard from the rail health band — per-lane trust scor
 ## Verify
 
 - The Inbox shows nothing at `lifecycle: proposed`
-- The fleeting queue is empty in both the Inbox and weekly-review dashboard
-- No HIGH or CRITICAL finding is outstanding on drift-watch
+- The fleeting queue is empty in the Inbox
+- No HIGH or CRITICAL finding is outstanding in Maintenance's Drift watch
 - `research-focus.md` reflects what you actually intend to read next week
 
 ## Related
 
 - The Inbox discipline: [Work the review queue](../inbox/work-the-review-queue.md)
 - Fleeting triage in depth: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
-- The detectors behind drift-watch: [Run the Linter](../operate/run-the-linter.md)
+- The detectors behind Maintenance drift watch: [Run the Linter](../operate/run-the-linter.md)
 - The dashboard inventory: [Dashboards](../../reference/dashboards.md)

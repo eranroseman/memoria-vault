@@ -80,4 +80,4 @@ dv.table(["Task", "Workflow", "Lane"], missing.map(t => [t.task, t.workflow, t.l
 ## Related
 
 - [[fleet-health|Fleet Health]] — *operational* health per lane; this dashboard is the *capability* trend.
-- [[drift-watch|Drift watch]] — structural health; gold-set rot (a broken gold reference) surfaces there.
+- [[spaces/maintenance#Drift watch|Drift watch]] — structural health; gold-set rot (a broken gold reference) surfaces there.

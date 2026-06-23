@@ -30,6 +30,19 @@ views:
       - evidence_saturation
       - computed_at
   - type: table
+    name: "Needs refutation stamp"
+    filters:
+      and:
+        - 'type == "project"'
+        - 'output_mode == "thesis"'
+        - 'refutation_sufficiency != true'
+    order:
+      - formula.note
+      - active_thesis
+      - argument_stage
+      - evidence_saturation
+      - computed_at
+  - type: table
     name: "Saturation"
     filters:
       and:

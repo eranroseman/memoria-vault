@@ -27,7 +27,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 **Not the Inbox's "Needs me" view.** The Inbox shows only the daily `proposed` action slice. Board-state shows the whole board — everything in flight, plus the worker layer.
 
-**Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is a Library-side cognitive-discipline view — sources read but not yet distilled. Board-state is the action-and-execution view — cards, regardless of content.
+**Not [Discuss queue](../synthesis-agenda/discuss-queue.md).** Discuss queue is a Library-side cognitive-discipline view — sources read but not yet distilled. Board state is the action-and-execution view — cards, regardless of content.
 
 ---
 

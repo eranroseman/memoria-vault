@@ -32,7 +32,7 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 | Agent Client pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
 | Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state\|Board State]] |
 | New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
-| Linter findings stale | Cron not running | freshness in [[drift-watch\|Drift Watch]] |
+| Linter findings stale | Cron not running | freshness in [[spaces/maintenance#Drift watch\|Drift Watch]] |
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |
 

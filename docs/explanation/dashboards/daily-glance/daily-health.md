@@ -22,7 +22,7 @@ on to real work.
 What populates the glance is intentionally small: non-structural `proposed` Inbox cards,
 open `flag`/`alert` cards, and fleet metric notes in `watch` or `act`. The framing:
 each is an "is anything red?" check, not a place to do work. Click through to the Inbox,
-Maintenance, board-state, drift-watch, or fleet-health surfaces to act.
+Maintenance, board-state, or fleet-health surfaces to act.
 
 ---
 
@@ -32,7 +32,7 @@ Maintenance, board-state, drift-watch, or fleet-health surfaces to act.
 
 **Not a task list.** It shows decisions waiting on the human; the human chooses which to address. The Inbox cards, not the glance line, are where state changes happen.
 
-**Not a substitute for the deeper dashboards.** It summarizes red signals; the full views live in Maintenance, `drift-watch`, `fleet-health`, and `audit-log`. It is a dashboard-of-dashboards: filtered subsets of those deeper views, reached by clicking through.
+**Not a substitute for the deeper dashboards.** It summarizes red signals; the full views live in Maintenance, `fleet-health`, and `audit-log`. It is a dashboard-of-dashboards: filtered subsets of those deeper views, reached by clicking through.
 
 ---
 
@@ -51,6 +51,6 @@ Maintenance, board-state, drift-watch, or fleet-health surfaces to act.
 ## Related
 
 - The board behind "Needs me": [The board-state dashboard](board-state.md)
-- The weekly-ritual companion: [The weekly-review dashboard](../structural-health/weekly-review.md)
-- What populates the drift signals: [drift-watch dashboard](../structural-health/drift-watch.md)
+- The weekly-ritual companion: [Run the weekly review](../../../how-to-guides/inbox/run-the-weekly-review.md)
+- What populates the drift signals: [Drift watch](../structural-health/drift-watch.md)
 - What populates the trust scores: [fleet-health dashboard](../operational-health/fleet-health.md)
