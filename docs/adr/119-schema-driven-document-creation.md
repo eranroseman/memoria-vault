@@ -41,6 +41,15 @@ Best practice and Memoria's own single-source-of-truth philosophy converge on th
 stop scattering and duplicating the contract — make the schema **complete and declarative**, and
 derive everything else from it.
 
+A per-type audit of all 26 schemas confirms the diagnosis. Alignment is mostly strong — the inbox
+honesty-card set (`candidate`/`gap`/`flag`/`alert`/`work-prompt`) and `claim`/`source`/`thesis` are
+exemplary — and the *systematic* gaps are exactly this fragment problem: only `project`, `thesis`,
+and `code-note` declare their `initial_lifecycle`/promotion gate (the other 23 leave the state
+machine implicit); `required_any` is declared in-schema while the conditional and referential rules
+(`thesis` `current` → `promoted_at`, `claim.sources` → citekeys, `source.entity` → a Catalog
+wikilink) live in the detectors; and `project` is over-required at creation. The audit also surfaced
+a handful of concrete per-type fixes, folded into the decision below.
+
 ## Decision
 
 Promote the type schema from a partial field-list-plus-validator to the **complete declarative
@@ -97,6 +106,28 @@ JSON Schema later** if external tooling (IDE autocomplete, form-generation libra
 justifies it. The decisive wins — completeness and the generic engine — are *format-independent*;
 JSON Schema models a document's internal shape, not the vault's placement/graph/referential layer,
 so a full migration would buy standard tooling for the easy half while the hard half stayed custom.
+
+### 6. Per-type cleanups (from the schema audit)
+
+Concrete fixes the all-26 audit surfaced, folded into the phases below:
+
+- **Drop `index`.** Its schema is title-only — it expresses none of its register purpose — it has
+  no creation path, and the register function (a list of hubs) is already the `hubs.base#Hubs index`
+  view. It is the one type whose schema simply does not match its purpose; remove the type, the
+  template, the schema, and the `notes/indexes/` folder. (This is the only fix *outside* the
+  schema-as-contract work — a type-roster decision, recorded here.)
+- **Make `source_type` an enum.** A free `str` today but controlled vocabulary in practice
+  (paper · preprint · dataset · book …); as a schema enum it validates at input and the generated
+  form renders a select. *(Phase 2.)*
+- **Declare `initial_lifecycle` and gated transitions uniformly** — three types declare them, 23 do
+  not; close the inconsistency as part of the state-machine work. *(Phase 3.)*
+- **Document the fine distinctions the schemas already encode** — `flag` vs `alert` (a pointed
+  finding with a verdict + target, vs a looser standing warning) and `candidate` vs `gap`
+  (accept-this vs fill-this). They are correct in the schemas but undocumented; add the prose (and,
+  for `candidate`/`gap`, consider one `proposal` type with a subtype — an ADR-51 question, not a
+  schema fault).
+- **Trim `project`'s required set at creation** — derive `slug`, default `question_version`, defer
+  PICO/FINER to shaping. *(Phase 5.)*
 
 ## Consequences
 
