@@ -1,0 +1,12 @@
+type: maintenance
+category: spaces
+gated: false
+enums:
+  lifecycle: [current, archived]
+required:
+  type: literal:maintenance
+  lifecycle: enum:lifecycle
+  title: str
+optional:
+  sample: bool
+  created: date

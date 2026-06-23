@@ -5,7 +5,7 @@ from operations.lib import schema
 
 def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 25
+    assert len(types) == 26
     expected = {
         "paper",
         "person",
@@ -28,6 +28,7 @@ def test_all_types_load():
         "work-prompt",
         "space",
         "queue",
+        "maintenance",
         "pattern",
         "eval-task",
         "worker-card",
