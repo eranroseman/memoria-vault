@@ -33,7 +33,7 @@ SYSTEM_PREFIXES = (
     "system/eval/",
     "system/scripts/",
 )
-SYSTEM_FILES = ("home.md", "system/vocabulary.md", "AGENTS.md")
+SYSTEM_FILES = ("home.md", "_nav.md", "system/vocabulary.md", "AGENTS.md")
 
 # Memoria-shipped Obsidian config the installer deploys (plugin-config drift,
 # ADR-67): the per-plugin settings files plus the plugin/snippet rosters. Only
