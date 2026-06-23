@@ -73,21 +73,24 @@ Two non-durable collections sit beside them, **split by cadence**:
 Operational-health (fleet, audit, eval, skill) stays a separate **pull-only** collection
 — Dataview over JSONL, deliberately outside the daily loop.
 
-### Primitive 3 — Rail (one left pane, three zones)
+### Primitive 3 — Rail (the left-pane navigation)
 
-The left pane is **one navigation spine**, not a rail-plus-Portals pair of competing
-taxonomies. Three zones, ordered by frequency:
+The left pane has two tabs — the **rail** (`_nav.md`) and **Portals** (the file browser):
 
-- **Now** — the two ambient signals: the action count (→ Queue) and a health band
-  (drift + fleet → Maintenance / ops). Answers *what needs me* and *is anything wrong*
-  without a click.
-- **Go** — the three durable spaces, by **intent**. Selecting opens that space.
-- **Find** — the object browser. **This is Portals**, demoted from a parallel
-  folder-taxonomy to the escape-hatch zone *under* intent navigation, scoped to the
-  current Place with `system/`/`.memoria/` hidden.
+- The **rail** carries **Now** — the two ambient signals: the action count (→ Queue) and a
+  health band (drift + fleet → Maintenance / ops), answering *what needs me* and *is
+  anything wrong* without a click — over **Go**, the three durable spaces by **intent**
+  (selecting opens that space).
+- **Portals** is the **object browser** — the curated file-explorer replacement that hides
+  `system/`/`.memoria/`. It answers *open a note*, navigating by folder.
 
-Navigation is **intent-first (Go) over object-second (Find)** in one spine. Portals stops
-being a second answer to "where do I navigate"; it implements the Find zone.
+Intent navigation (the rail's Go) and object browsing (Portals) are **complementary axes**,
+not competitors — kept as sibling tabs.
+
+> **Amendment (2026-06-23):** the original decision folded Portals into the rail as a single
+> stacked *Now / Go / Find* spine. That is **retired** — see Alternatives. The rail is Now +
+> Go; Portals stays its own tab, the arrangement
+> [#908](https://github.com/eranroseman/memoria-vault/pull/908) settled.
 
 ### Edges
 
@@ -105,40 +108,45 @@ no new machinery.
 - **Move:** drift-watch + loose-ends + board-state leave the Queue note for a new
   **Maintenance** collection; the rail's **Now** grows a health band to carry the
   "is anything wrong?" signal those views used to answer in the queue.
-- **Reframe:** Portals becomes the rail's **Find** zone; spaces are documented as view
-  collections; the Bases-over-notes / Dataview-over-JSONL engine split becomes an
-  enforced rule, not a convention.
+- **Reframe:** spaces are documented as view collections; the Bases-over-notes /
+  Dataview-over-JSONL engine split becomes an enforced rule, not a convention. (Portals
+  keeps its file-browser identity — the spine fold is retired; see Alternatives.)
 - **Keep:** the three spaces, the Co-PI pane, home-as-seed, the operational-health pull
   pages, and the queue-is-a-state principle ([ADR-115](115-inbox-queue-and-retired-homepage.md)).
 
 **Phasing** (sequencing lives in the milestone/issues, not here):
 
-1. **Views** — collapse the five Pattern-C pages to single-definition embeds. Mechanical;
-   fixes the drift-watch ordering defect for free.
+1. **Views** — collapse the five Pattern-C pages to single-definition embeds. *Shipped
+   ([#911](https://github.com/eranroseman/memoria-vault/pull/911)); fixed the drift-watch
+   ordering defect for free.*
 2. **Cadence split** — Queue = action only; new Maintenance collection for Linter debt;
-   add the health band to the rail's Now.
-3. **Spine** — fold Portals into the rail as the Find zone; make Go/Find one taxonomy.
-
-Phase 1 is pure cleanup and can ship alone; Phases 2–3 are the design change.
+   add the health band to the rail's Now. *The remaining design change.*
+3. ~~**Spine** — fold Portals into the rail as the Find zone.~~ **Retired** — the two-tab
+   rail + Portals arrangement stands (see Alternatives).
 
 ## Alternatives considered
 
-- **Keep Portals as a separate left-pane tab.** Rejected: it preserves two navigation
-  taxonomies (intent vs storage) for the same destinations — the overlap this decision
-  removes. Portals survives as the Find *implementation*, not a second model.
+- **Fold Portals into the rail as a stacked *Now / Go / Find* spine (the original Phase 3).**
+  Retired after review: stacking the file tree *under* the rail regresses its height (a
+  sibling tab gives it the full pane), and — decisively — stacking is only *visual*. The
+  intent-vs-storage overlap (Context #1) survives whether the two are tabs or stacked, so the
+  spine pays an ergonomic cost without delivering the consolidation that motivated it. The
+  two-tab arrangement settled in [#908](https://github.com/eranroseman/memoria-vault/pull/908)
+  stands; the two axes — intent navigation (the rail) and object browsing (Portals) — are
+  accepted as complementary, not collapsed.
 - **Keep the daily queue and maintenance views together (no cadence split).** Rejected:
   it keeps "decide now" and "review Friday" in one surface, which is the
   one-decision-per-dashboard violation, and leaves the queue unable to converge to empty.
 - **Let standalone dashboard pages keep their own Dataview queries (two engines by
   choice).** Rejected: the twins have already drifted in columns and sort order — proof
   that two definitions of one view is a defect surface, not a feature.
-- **Drop Portals for the core file explorer.** Rejected here (it loses `system/` hiding);
-  this ADR instead keeps Portals but demotes it to the Find zone.
+- **Drop Portals for the core file explorer.** Rejected: it loses `system/` hiding. Portals
+  stays as the object-browser tab.
 
 ## Related
 
-- **Refines:** [ADR-114](114-left-pane-navigator.md) (the rail gains a Find zone and a
-  Now health band), [ADR-115](115-inbox-queue-and-retired-homepage.md) (the queue splits
+- **Refines:** [ADR-114](114-left-pane-navigator.md) (the rail gains a Now health band; the
+  left pane keeps the rail + Portals two-tab layout), [ADR-115](115-inbox-queue-and-retired-homepage.md) (the queue splits
   off Maintenance by cadence), [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)
   (a space is defined as a collection of views), [ADR-70](70-navigation-gates-dashboards.md)
   (ambient health becomes the rail's Now band).
