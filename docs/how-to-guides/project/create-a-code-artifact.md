@@ -6,26 +6,32 @@ nav_order: 8
 
 # Create a code artifact
 
-Delegate analysis or figure code to the **Engineer** — the `code` lane. Code in Memoria is a research output with provenance: the Engineer coordinates (scaffolds the handoff to an external coding agent and owns the provenance/review gate over `projects/*/code/`); the substantive coding — and the git commits that land it — happen in the external agent (which has shared filesystem access) and your hand. The *why* — what claim or figure the code serves — is yours to state.
+This guide produces a code artifact: a small note plus its implementation (for example, the script that draws a figure), saved under `projects/<slug>/code/`.
+
+You delegate the work to the **Engineer**, a background worker (a **lane**) that prepares the code task and controls when changes are saved. The Engineer doesn't write the substantive code itself; it sets up a scaffold and hands the actual implementation to an external coding agent. You stay responsible for the *why*: what claim or figure the code serves.
+
+For the reasoning behind this split, see [Why implementation is delegated outward](../../explanation/rationale/why-not-autonomous.md).
 
 ## Prerequisites
 
-- A `projects/<slug>/` scratch folder with a `code/` subfolder — the Engineer's write scope is `projects/*/code/`
-- An external coding agent available (Claude Code, Aider, Codex, or similar) — substantive implementation is delegated outward by design ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md))
+- A `projects/<slug>/` scratch folder with a `code/` subfolder. The Engineer can only write inside `projects/*/code/`.
+- An external coding agent available (Claude Code, Aider, Codex, or similar). Memoria delegates the actual implementation outward by design ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
 
 ## Steps
 
 **1. Delegate the code task.**
 
-Use `Cmd/Ctrl-P` → **Memoria: delegate task** → `code`, or ask in the Agent Client pane if you want help shaping the handoff. State the artifact and the claim it serves:
+Open the command palette with `Cmd/Ctrl-P` and run **Memoria: delegate task**, then choose `code`. State the artifact and the claim it serves:
 
 > "Code task: produce the figure-3 receptivity curve for `projects/<slug>/`, from the data behind `[[receptivity-decreases-under-high-cognitive-load]]`."
 
-Both routes create a **`code`** task for the Engineer. The palette route is the direct path; the Co-PI route is useful when the artifact purpose or scope still needs conversation (see [Command palette](../../reference/obsidian-command-palette.md)).
+This creates a **`code`** task for the Engineer. If the purpose or scope still needs discussion, ask instead in the Agent Client pane (the **Co-PI**, your one conversational assistant) to shape the handoff first. Either route ends in the same `code` task (see [Command palette](../../reference/obsidian-command-palette.md)).
 
 **2. Let the Engineer scaffold.**
 
-The Engineer prepares the handoff in `projects/<slug>/code/` from `system/templates/code-note.md` — the provenance note (purpose, motivating claim, expected outputs) and the working structure. Like every Memoria agent it is MCP-only — no `terminal`, no `file` toolset — so it writes the scaffold through the gated vault MCP, confined to the narrowest write scope of any lane (`projects/*/code/`).
+The Engineer prepares the handoff in `projects/<slug>/code/`, using `system/templates/code-note.md`. The result is a provenance note (purpose, motivating claim, expected outputs) and a working structure for the implementation.
+
+The Engineer has no direct access to your terminal or filesystem. It writes only through Memoria's controlled vault interface, and only inside `projects/*/code/` — the narrowest write scope of any lane.
 
 **3. State the purpose yourself.**
 
@@ -43,11 +49,11 @@ describes. Place the implementation in the same code/ directory.
 
 **5. Review the implementation.**
 
-Apply the same gate as any research output: does the code do what the purpose says? Does the output match what the claim asserts? Run it and check.
+Review it as you would any research output. Run the code and check two things: does it do what the purpose says, and does its output match what the claim asserts?
 
 **6. Record the runbook and commit.**
 
-Fill in dependencies, the exact command to reproduce the output, and where outputs land. Commit the note and implementation together — the per-task commit the Engineer's gate expects over `projects/*/code/`:
+In the note, fill in the dependencies, the exact command to reproduce the output, and where outputs land. Then commit the note and implementation together in one changeset. This is the per-task commit the Engineer's approval gate expects over `projects/*/code/`:
 
 ```bash
 git add "projects/<slug>/code/"

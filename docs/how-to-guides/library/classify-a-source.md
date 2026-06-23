@@ -6,11 +6,17 @@ nav_order: 4
 
 # Classify a source
 
-Settle the `research_area` (and `methodology`) the ingest operation couldn't decide on its own ([Ingest routing](../../reference/ingest.md)). Three things land on you — the rest is applied automatically:
+Settle a paper's `research_area` (and `methodology`) when ingest couldn't decide on its own.
 
-- **Genuine ambiguity** — the operation left the field unset and raised one Inbox `flag` card with the top candidates and scores
-- **The Librarian's proposal** — the `_proposed_classification` block on the paper entity, promoted by you
-- **Corrections** — the automation applied something you disagree with; you edit the frontmatter, no card involved
+Classifying tags a paper with its field of study. When a source comes in, ingest fills these tags in automatically wherever the answer is clear. Most of the time you do nothing. This guide covers the cases where the work lands on you.
+
+Three situations bring you in:
+
+- **Genuine ambiguity.** Ingest couldn't pick a value, so it left the field blank and raised a card in your queue. (A `flag` card is one type of Inbox card; it reports a finding and lists the top candidates with scores, but never decides for you.)
+- **A draft to review.** The Librarian (the background worker that does library setup) often drafts a suggested classification. It parks the draft in a `_proposed_classification` block — a holding area in the paper's frontmatter, kept separate from the real fields until you accept it.
+- **A correction.** Ingest applied a value you disagree with. You edit the frontmatter directly; no card is involved.
+
+For what ingest decides and how, see [Ingest routing](../../reference/ingest.md).
 
 ## Prerequisites
 
@@ -18,34 +24,38 @@ Settle the `research_area` (and `methodology`) the ingest operation couldn't dec
 
 ## Steps
 
-**1. Handle any classify `flag` card first.**
+**1. Handle any `flag` card first.**
 
-If ingest hit genuine ambiguity, a flag card titled along the lines of "Ambiguous research area for `<citekey>`" sits in your Inbox. It carries the `finding` and the scored candidates — never a verdict. Pick the right value, write it into the paper entity's frontmatter yourself, then resolve the card ([Work the review queue](../inbox/work-the-review-queue.md)).
+Open your queue from the navigator rail on the left: **Now** → **Needs you** opens the **Inbox** queue; its **Needs me** view lists what's waiting. If ingest hit genuine ambiguity, you'll see a card titled something like "Ambiguous research area for `<citekey>`". It reports the `finding` and the scored candidates, but states no verdict — you choose. Pick the right value, write it into the paper's frontmatter at `catalog/papers/<citekey>.md`, then resolve the card ([Work the review queue](../inbox/work-the-review-queue.md)).
 
-**2. Open the paper entity and review what the automation applied.**
+**2. Open the paper and check what ingest applied.**
 
-In `catalog/papers/<citekey>.md`, check `research_area` and `methodology` against the paper itself. The thresholds (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`; every applied or flagged decision is one JSONL line in `system/logs/classify.jsonl`. If a value is wrong, **edit the frontmatter directly** — the audit line is what makes the automation correctable; there is nothing to approve.
+In `catalog/papers/<citekey>.md`, compare `research_area` and `methodology` against the paper itself. If a value is wrong, **edit the frontmatter directly** — there is nothing to approve.
 
-**3. Promote the `_proposed_classification` block.**
+Every decision, applied or flagged, is logged as one line in `system/logs/classify.jsonl`. That audit line is what makes a value safe to correct by hand. The thresholds ingest uses (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`.
 
-The Librarian's proposal (LLM hole #1; the `projects` sub-key comes deterministically from your optional [project hints](../setup/configure-project-hints.md)) is a sandboxed namespace in the entity's frontmatter, separate from the main fields. Review each proposed value, copy the ones you accept (edited for accuracy) into the main frontmatter, then delete the entire `_proposed_classification:` block — it is transient.
+**3. Accept the Librarian's draft, if there is one.**
 
-**4. Confirm the entity's lifecycle.**
+Look for a `_proposed_classification` block in the frontmatter. This is the Librarian's draft, parked in a holding area apart from the real fields. Read each proposed value. Copy the ones you accept — edited for accuracy — into the main frontmatter, then delete the whole `_proposed_classification:` block. The block is temporary and should not be left behind.
 
-A paper entity is created at `lifecycle: current` — Catalog facts don't queue (the thing that sits at `proposed` is the candidate *card* in your Inbox, not the entity). Settling the classification doesn't move the entity's lifecycle; confirm it reads `current` and resolve the candidate card:
+The `projects` sub-key inside the draft isn't a guess: it's derived from your optional [project hints](../setup/configure-project-hints.md).
+
+**4. Confirm the paper reads `lifecycle: current`.**
+
+A paper is created at `lifecycle: current` straight away — Catalog facts don't wait in a queue. (What sits at `proposed` is the candidate *card* in your queue, not the paper.) Classifying doesn't change the paper's lifecycle. Confirm it still reads `current`, then resolve the candidate card:
 
 ```yaml
 lifecycle: current
 ```
 
-**5. Carry the vocabulary into your source note.**
+**5. Reuse the same terms in your source note.**
 
-When you fill the source note in `notes/sources/`, reuse the same `research_area` / `methodology` terms — vocabulary drift between catalog and notes is what makes queries lie ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
+When you fill the source note in `notes/sources/`, use the same `research_area` / `methodology` values you settled here. Mismatched vocabulary between the catalog and your notes is what makes later queries miss results ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
 ## Verify
 
-- The paper entity carries `lifecycle: current`, a settled `research_area`, and no `_proposed_classification` block
-- No classify `flag` card for this citekey remains `proposed` in the Inbox
+- The paper reads `lifecycle: current`, has a settled `research_area`, and no longer has a `_proposed_classification` block
+- No `flag` card for this citekey is still at `proposed` in your queue
 - `system/logs/classify.jsonl` records the decision (applied or flagged) for this citekey
 
 ## Related
