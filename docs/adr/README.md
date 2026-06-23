@@ -146,6 +146,7 @@ status.
 | [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for session-restore + a welcome seed | accepted |
 | [115](115-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 | [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | accepted |
+| [117](117-type-naming-scheme.md) | Type naming scheme: kind-scoped singular nouns in ubiquitous language | accepted |
 
 <!-- ADR-INDEX:END -->
 
