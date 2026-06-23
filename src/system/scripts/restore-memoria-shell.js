@@ -6,6 +6,7 @@
  */
 
 const WORKSPACE_NAME = "Memoria";
+const NAV_FILE = "_nav.md";
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -22,4 +23,10 @@ module.exports = async (params) => {
   }
 
   await workspaces.loadWorkspace(WORKSPACE_NAME);
+
+  const navLeaf = app.workspace.getLeavesOfType?.("markdown")
+    ?.find((leaf) => leaf.getViewState?.()?.state?.file === NAV_FILE);
+  if (navLeaf && app.workspace.revealLeaf) {
+    await app.workspace.revealLeaf(navLeaf);
+  }
 };

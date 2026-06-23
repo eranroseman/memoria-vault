@@ -133,8 +133,11 @@ def test_startup_macro_restores_saved_memoria_shell():
 
     script = (SCRIPTS / "restore-memoria-shell.js").read_text(encoding="utf-8")
     assert 'WORKSPACE_NAME = "Memoria"' in script
+    assert 'NAV_FILE = "_nav.md"' in script
     assert "internalPlugins?.plugins?.workspaces?.instance" in script
     assert "loadWorkspace(WORKSPACE_NAME)" in script
+    assert "getLeavesOfType" in script
+    assert "revealLeaf(navLeaf)" in script
 
 
 def _lane_profile():
