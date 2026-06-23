@@ -6,11 +6,11 @@ has_children: true
 
 # v0.1.0-alpha.10
 
-The internal checkpoint after alpha.9. The original carryover,
-[#859](https://github.com/eranroseman/memoria-vault/issues/859), is closed with
-the measurement-led memory and Hermes cleanup disposition. Runtime readiness
-closed after the CoPI and Writer Obsidian MCP smokes passed against
-`~/Memoria-test`.
+The internal checkpoint after alpha.9. The release plan now covers the complete
+post-alpha.9 change set, from the alpha.9 close commit through current `main`:
+Hermes/runtime governance, tutorials and sample vault, Obsidian navigation
+surfaces, ADR-116/117/118/119 schema and dashboard work, and the
+promotion-gated verification process.
 
 Readiness state belongs to the release parent issue
 [#875](https://github.com/eranroseman/memoria-vault/issues/875) and its
@@ -20,4 +20,4 @@ milestone plus the Memoria Issue Tracker.
 
 | File | Holds |
 |---|---|
-| `release-plan-0.1.0-alpha.10.md` | Completed checkpoint plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure. |
+| `release-plan-0.1.0-alpha.10.md` | Draft checkpoint plan: scope, gates, stages, limitations, docs/runtime bars, and cut procedure for all changes after alpha.9. |

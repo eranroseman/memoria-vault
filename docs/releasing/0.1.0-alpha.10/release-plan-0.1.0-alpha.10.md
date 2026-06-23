@@ -1,6 +1,6 @@
 ---
 release: v0.1.0-alpha.10
-status: complete     # draft | candidate | complete | released
+status: draft        # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan -- v0.1.0-alpha.10
 parent: Releasing
@@ -9,110 +9,172 @@ nav_order: 2
 
 # Release plan -- v0.1.0-alpha.10
 
-**Current status: complete internal checkpoint.** alpha.10 began as a carryover
-checkpoint for
-[#859](https://github.com/eranroseman/memoria-vault/issues/859) and the in-place
-Hermes 0.17 upgrade. The upgrade landed on 2026-06-22 (0.14 -> 0.17; contract
-doctor and cost doctor pass) and a reconciled 0.17 feature evaluation confirmed
-which cleanup items are feasible on this install. #859 is closed with the
-baseline disposition: observed usage kept only low-risk Hermes hygiene in
-alpha.10 and deferred memory machinery/pilots. G2/S1 are closed after launching
-Obsidian against `~/Memoria-test`, refreshing the exported Local REST API cert,
-syncing the test-vault API key into the installed Memoria profiles, and passing
-the CoPI/Writer Obsidian MCP smokes. It is not a formal release: no
-release-please PR, no tag, and no GitHub Release.
+**Current status: draft internal checkpoint plan.** This plan covers the full
+post-alpha.9 change set, from the alpha.9 close commit
+`3ba5081f` / [#858](https://github.com/eranroseman/memoria-vault/pull/858)
+through current `main` at `0f9da419` /
+[#927](https://github.com/eranroseman/memoria-vault/pull/927). It replaces the
+earlier narrow Hermes-only alpha.10 framing. alpha.10 remains an internal
+checkpoint: no release-please PR, tag, or GitHub Release unless that decision
+changes before close.
 
 ## 1. Scope -- what this release is
 
-alpha.10 is the Hermes 0.17 upgrade checkpoint plus the completed #859
-measurement gate. Known scope:
+alpha.10 is the post-alpha.9 consolidation checkpoint. It gathers the runtime,
+onboarding, Obsidian surface, schema, and release-process work that landed after
+alpha.9 into one validation boundary.
 
-- Finished the Hermes 0.17 upgrade acceptance: profile redeploy, live direct-tool
-  deny, doctors, and CoPI/Writer Obsidian/MCP smokes pass.
-- #859 baseline is filled; scope/defer/kill disposition is recorded.
-- Landed Hermes hygiene kept by #859: config migration to the v0.17 schema,
-  positive `platform_toolsets`, cheap auxiliary slots, and per-lane
-  `reasoning_effort`.
+| Area | Merged changes after alpha.9 | Outcome |
+| --- | --- | --- |
+| Hermes/runtime governance | [#862](https://github.com/eranroseman/memoria-vault/pull/862), [#865](https://github.com/eranroseman/memoria-vault/pull/865)-[#873](https://github.com/eranroseman/memoria-vault/pull/873), [#874](https://github.com/eranroseman/memoria-vault/pull/874), [#882](https://github.com/eranroseman/memoria-vault/pull/882), [#883](https://github.com/eranroseman/memoria-vault/pull/883), [#886](https://github.com/eranroseman/memoria-vault/pull/886), [#904](https://github.com/eranroseman/memoria-vault/pull/904), [#905](https://github.com/eranroseman/memoria-vault/pull/905) | Hermes 0.17 was evaluated against on-box evidence; profiles now align to the 0.17 tool-policy shape; configuration, profile, and redeploy drift are documented; direct history tools were hardened. |
+| Onboarding, tutorials, and sample vault | [#884](https://github.com/eranroseman/memoria-vault/pull/884), [#887](https://github.com/eranroseman/memoria-vault/pull/887)-[#901](https://github.com/eranroseman/memoria-vault/pull/901), [#925](https://github.com/eranroseman/memoria-vault/pull/925), [#927](https://github.com/eranroseman/memoria-vault/pull/927) | The tutorial path was rebuilt around a destination-first arc, sample-vault support moved into the installer scaffold and reference docs, setup docs were simplified, and the sample retraction/supersession fixture was corrected. |
+| Obsidian surfaces and navigation | [#903](https://github.com/eranroseman/memoria-vault/pull/903), [#907](https://github.com/eranroseman/memoria-vault/pull/907)-[#914](https://github.com/eranroseman/memoria-vault/pull/914) | The left-pane rail became the primary navigation surface; Inbox became the queue; dashboard duplicates collapsed to Bases embeds; ADR-116 established View/Collection/Rail vocabulary and the Queue/Maintenance split. |
+| Type, dashboard, and form contracts | [#915](https://github.com/eranroseman/memoria-vault/pull/915)-[#924](https://github.com/eranroseman/memoria-vault/pull/924) | ADR-117/118/119 landed the document-type naming scheme, dashboard consolidation, schema-owned forms, and a complete declarative type/schema contract. |
+| Agent and release-process hygiene | [#860](https://github.com/eranroseman/memoria-vault/pull/860), [#861](https://github.com/eranroseman/memoria-vault/pull/861), [#864](https://github.com/eranroseman/memoria-vault/pull/864), [#885](https://github.com/eranroseman/memoria-vault/pull/885), [#893](https://github.com/eranroseman/memoria-vault/pull/893), [#906](https://github.com/eranroseman/memoria-vault/pull/906), [#910](https://github.com/eranroseman/memoria-vault/pull/910), [#926](https://github.com/eranroseman/memoria-vault/pull/926) | Worktree, PR, agent-guidance, audit, and verification-process drift were tightened; `scripts/verify` now defines the Source/Package/Runtime/Product/Release gate vocabulary. |
 
-Pilots, not committed scope: `post_llm_call` cost-capture relocation (ADR-106),
-Bitwarden shared secrets, `gateway.multiplex_profiles` in `Memoria-test`, and
-`hermes security audit` in release validation. The #859 baseline did not justify
-the NLI/MaxSAT contradiction engine, the warrant checker, or any new memory
-machinery for alpha.10.
+The checkpoint boundary is validation and documentation, not new feature work.
+It should prove that the post-alpha.9 repo, shipped vault tree, and test runtime
+are coherent after the navigation, schema, tutorial, and Hermes changes.
 
 ## 2. Definition of done -- gates
 
-v0.1.0-alpha.10 ships when every gate issue under the release parent
-[#875](https://github.com/eranroseman/memoria-vault/issues/875) is closed.
+v0.1.0-alpha.10 is complete when every gate below is closed in the release parent
+[#875](https://github.com/eranroseman/memoria-vault/issues/875) or its successor
+release issue, with evidence attached there. This file defines the gates; issue
+state is the source of truth.
 
-| Gate | Proves | Verified by | Issue |
-| --- | --- | --- | --- |
-| G1 | #859 baseline filled; scope/defer/kill recorded per candidate. | S0 + issue evidence | [#876](https://github.com/eranroseman/memoria-vault/issues/876) |
-| G2 | Hermes 0.17 upgrade acceptance complete (redeploy + live deny + MCP smoke). | S1 runtime evidence | [#877](https://github.com/eranroseman/memoria-vault/issues/877) |
-| G3 | Confirmed Hermes hygiene landed for items G1 keeps (config migration, positive `platform_toolsets`, auxiliary slots, `reasoning_effort`). | S1 + deny-path tests | [#878](https://github.com/eranroseman/memoria-vault/issues/878) |
-| G4 | Cost-capture decision recorded; Bitwarden/multiplex/security-audit pilots resolved for items G1 keeps. | S1 test-vault evidence | [#879](https://github.com/eranroseman/memoria-vault/issues/879) |
+| Gate | Proves | Verified by |
+| --- | --- | --- |
+| Source | The repository is internally coherent after #860-#927: formatting, lint, docs, ADR/code drift, agent guidance, links, spelling, schema, and changed-code tests are green. | `scripts/verify pr` on current `main`; CI checks green. |
+| Package | The shipped vault tree assembles cleanly and the model-free workflow replay still works after sample-vault, schema, dashboard, and surface changes. | `scripts/verify package`; installer/sample-vault assertions; fresh-vault integrity. |
+| Runtime | Hermes 0.17 policy/profile expectations, Local REST API/MCP wiring, and direct-tool deny paths still hold in `~/Memoria-test`. | `scripts/verify runtime` when local prerequisites are available; contract/cost doctors; live deny and Obsidian MCP smoke. |
+| Product | The user-facing experience is coherent: tutorials, sample vault, left rail, Inbox queue, Maintenance collection, Bases/dashboard embeds, schema-owned forms, and page-name/title expectations render and match docs. | Attended Obsidian pass plus targeted tutorial/sample-vault walkthrough. |
+| Release | alpha.10 can close as an internal checkpoint with no hidden state: blockers triaged, docs current, release scratch disposed, issue/milestone state updated, and no formal tag expected. | Release issue evidence, docs sweep, close-out sweep. |
 
 ## 3. Validation -- stages
 
+The automated release-candidate prefix is:
+
+```bash
+scripts/verify rc
+```
+
+`scripts/verify rc` covers Source, Package, and the opt-in Runtime smoke. If the
+local runtime cannot bind sockets or Hermes/Obsidian prerequisites are absent,
+record the skip reason and run the Runtime Gate manually on the test host.
+
 | Stage | Proves |
 | --- | --- |
-| S0 | `static-contract`: release docs, links, spelling, status, and test-ref checks are clean. |
-| S1 | `runtime`: profiles redeploy to `~/Memoria-test`, contract/cost doctors pass, one direct-tool deny and one Obsidian/MCP smoke pass succeed; deny-path tests confirm `platform_toolsets` closure. |
+| Source | `scripts/verify pr` passes on the final candidate commit. |
+| Package | `scripts/verify package` passes; the disposable vault builds, hooks work, plugin bundle is present, and the workflow replay reaches the expected artifacts. |
+| Runtime | Hermes profile redeploy, contract/cost doctors, direct-tool deny, and Obsidian MCP smoke are recorded against `~/Memoria-test`, not production. |
+| Product | Manual Obsidian checks cover the rail, Inbox queue, Maintenance collection, dashboard/Bases embeds, schema-owned forms, and the sample-vault tutorial path. |
+| Release | Gate evidence is linked from the release issue; no High-priority blocker remains; this plan and the release README are current. |
 
 ## 4. Blockers
 
-Not enumerated here. By definition the blockers are any open gate/stage
-sub-issue, plus any open High-priority blocker in the
+Not enumerated here. By definition the blockers are any open gate/stage issue
+under the alpha.10 release parent, any open issue assigned to the
+`0.1.0-alpha.10` milestone, plus any open High-priority blocker in the
 [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
 
 ## 5. Out of scope (later)
 
-- Full NLI/decomposed-gate/MaxSAT contradiction automation and the model-free
-  warrant checker remain out of scope; #859 did not show missed contradictions
-  or bad warrants as an alpha.10 bottleneck.
-- Hermes cleanup beyond the confirmed-feasible hygiene above stays out of scope
-  unless a later issue selects the item. The Bitwarden, gateway-multiplex, and
-  cost-hook items remain later pilots; promoting them to production is a separate
-  decision, not part of this checkpoint.
-- OpenRouter `provider_routing` and external memory providers stay excluded; Kilo
-  remains the production provider.
+- A formal public release, tag, release-please PR, signed artifact, or packaged
+  installer distribution.
+- New memory machinery: NLI/MaxSAT contradiction automation, model-free warrant
+  checking, external memory providers, or cross-vault sharing.
+- ADR-116 Phase 3 / Portals-as-primary-rail work, which was explicitly retired.
+- Production-vault migration. alpha.10 validation runs in `~/Memoria-test` or
+  disposable vaults.
+- Any new Hermes feature beyond the policy/config/profile changes already landed
+  and verified against the installed runtime.
 
 ## 6. Known limitations
 
-- Limitation: alpha.10 is an internal checkpoint, not a formal tagged release.
-  Impact: there is no release artifact. Workaround: use the closed release parent
-  [#875](https://github.com/eranroseman/memoria-vault/issues/875) and gate/stage
-  issues as the durable readiness record.
+- Limitation: alpha.10 is an internal checkpoint, not a tagged release. Impact:
+  there is no GitHub Release or release-please changelog entry. Workaround: use
+  this plan, merged PRs, and the release issue trail as the checkpoint record.
+- Limitation: Runtime acceptance still depends on a local Hermes/Obsidian test
+  host. Impact: CI can prove Source and Package Gates, but GUI and live MCP
+  behavior require attended evidence. Workaround: record the manual Runtime and
+  Product Gate checks in the release issue.
+- Limitation: The sample vault is tutorial/test scaffolding, not user data
+  migration. Impact: sample-vault correctness does not prove production-vault
+  upgrade safety. Workaround: keep production validation separate and disposable.
 
 ## 7. Documentation integrity
 
-Before the checkpoint is approved, run the standard docs sweep: `docs_doctor`,
-`status_doctor`, `check_test_refs`, cspell, and a manual scan for changed behavior.
+Before alpha.10 closes, complete a fresh docs sweep over changed behavior:
+
+1. **Coverage:** Hermes/profile policy, configuration surfaces, tutorials,
+   sample vault, left rail, Inbox/Maintenance split, dashboard/Bases embeds,
+   document types, schema-owned forms, and release verification gates have current
+   how-to/reference/explanation coverage.
+2. **Single source of truth:** ADR-116/117/118/119 own the architectural
+   decisions; docs describe current behavior without duplicating machine-readable
+   schema contracts unless a doctor covers the mirror.
+3. **Navigation/indexing:** tutorial, reference, explanation, releasing, and
+   testing indexes point to the new or renamed pages.
+4. **Terminology:** use View, Collection, Rail, Inbox queue, Maintenance
+   collection, document type, schema-owned form, Source Gate, Package Gate,
+   Runtime Gate, Product Gate, and Release Gate consistently.
+5. **Freshness:** Hermes claims are on-box verified; Obsidian claims match the
+   installed plugins and shipped vault tree; sample-vault instructions match the
+   installer scaffold.
+
+Required checker summary: `scripts/verify pr`, `python scripts/docs_doctor.py
+docs`, `python scripts/status_doctor.py`, `python scripts/check_test_refs.py`,
+and cspell.
 
 ## 8. Runtime readiness
 
-Runtime evidence is required for the Hermes 0.17 upgrade acceptance (G2) and any
-hygiene/pilot work that changes installed behavior (G3/G4): profile redeploy,
-contract/cost doctors, `platform_toolsets` deny-path tests, one live direct-tool
-deny, and one Obsidian/MCP smoke pass. All runtime work uses `~/Memoria-test`;
-never test against the production vault `~/Memoria`. Local `provider: custom` /
-`qwen2.5:7b` output is test-vault evidence — production runs Kilo.
+Runtime evidence is required because alpha.10 changed profiles, Hermes policy
+shape, Obsidian navigation surfaces, Bases/dashboard embeds, forms, and sample
+vault behavior.
+
+Record:
+
+1. `scripts/verify runtime` result or the exact skip reason plus manual
+   replacement evidence.
+2. Hermes version, profile redeploy status, and contract/cost doctor results.
+3. At least one live allowed Obsidian MCP write and one direct-tool deny through
+   the deployed policy gate.
+4. Obsidian rendering of the left rail, Inbox queue, Maintenance collection,
+   dashboard/Bases embeds, and schema-owned form surfaces.
+5. Sample-vault tutorial path opened from a clean scaffold.
+
+No runtime check may mutate the production vault.
 
 ## 9. Release close-out sweep
 
-Scratch disposition is complete: durable findings were folded into ADRs/docs and
-GitHub issues, and completed `tmp/` files were removed.
+Before closing the checkpoint:
+
+1. Review `docs/releasing/0.1.0-alpha.10/tmp/` if it exists; fold durable content
+   into ADRs/docs/issues, move unfinished work forward, then delete completed
+   scratch.
+2. Confirm all post-alpha.9 PRs listed in the scope table are represented in the
+   docs, ADRs, tests, or known limitations.
+3. Close or roll forward alpha.10 issues and milestone items.
+4. Leave the main checkout clean and fast-forwarded after merge.
 
 ## 10. Cut procedure
 
-1. Gate and stage issues under the release parent are closed.
-2. Documentation and runtime readiness checks for scoped work are complete.
-3. No tag or GitHub Release is cut for this internal checkpoint.
-4. This plan remains `status: complete`, `released: false`.
+This checkpoint follows the untagged internal path:
+
+1. Required CI is green on `main`; `scripts/verify rc` evidence is recorded or
+   Runtime Gate skip/manual replacement evidence is attached.
+2. Product Gate attended checks are complete for Obsidian, sample vault, and
+   tutorial changes.
+3. Documentation integrity, runtime readiness, and close-out sweeps are complete.
+4. Do not cut a tag or GitHub Release. Set this plan to `status: complete`,
+   `released: false` after the release parent issue is closed.
+5. Close the milestone, rolling unfinished issues to the next checkpoint.
 
 ## 11. Roadmap after this release
 
 | Phase | When | Goal |
 | --- | --- | --- |
-| Measurement-led memory work | Later evidence cycle | Reconsider only when logs show contradiction, retrieval, ingest, or supervision attribution as the bottleneck. |
-| Hermes cleanup | Later issue | Pick only the cleanup item that pays for itself. |
+| alpha.11 or next checkpoint | After alpha.10 close | Pick the next scope from observed Runtime/Product Gate gaps, not from speculative architecture. |
+| Runtime automation | When a stable self-hosted runner exists | Move more Runtime Gate checks from attended evidence into repeatable CI. |
+| Product quality eval | When gold tasks are ready | Add the Product Gate quality layer for classification, citation, and draft quality. |

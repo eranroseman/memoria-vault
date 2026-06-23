@@ -11,9 +11,9 @@ topic: releases
 One folder per version, `docs/releasing/<version>/`, holding the **prose** of that cut (scope,
 known limitations, documentation/runtime quality bars, close-out procedure, roadmap). Live state
 lives in GitHub. The reusable body is [Release plan — vX.Y.Z](release-plan-template.md);
-the latest completed checkpoint is [v0.1.0-alpha.10](0.1.0-alpha.10/), with earlier checkpoints
-under the same folder. Alpha checkpoints are internal milestones, not formal
-releases. The *live readiness state* lives outside the file — see below.
+the active checkpoint plan is [v0.1.0-alpha.10](0.1.0-alpha.10/), with earlier
+checkpoints under the same folder. Alpha checkpoints are internal milestones, not
+formal releases. The *live readiness state* lives outside the file — see below.
 
 ## Where each thing lives (single source of state)
 
