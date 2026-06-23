@@ -16,7 +16,7 @@ The top level is organized by **category** — one content kind per folder, no l
 
 ```text
 <vault-root>/
-├── home.md         ← first-run welcome note (the launch screen)
+├── home.md         ← launch/reset welcome note
 ├── catalog/        ← CATALOG: structured entity records (Obsidian Bases)
 │   papers · people · organizations · venues · datasets · repositories
 ├── notes/          ← NOTES: prose (Zettelkasten)

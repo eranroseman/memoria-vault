@@ -6,10 +6,10 @@ nav_order: 1
 
 # Home welcome note
 
-The vault-root `home.md` is a thin first-run welcome note — a "start here" screen for
-a fresh vault or a layout reset. On launch Obsidian restores your last session, so once
-you start working you return to whatever you had open — you don't pass back through it
-every day ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
+The vault-root `home.md` is a thin welcome note — a "start here" screen for the
+Memoria Obsidian shell. On launch QuickAdd asks Obsidian's core Workspaces plugin to
+restore that shell: `home.md` in the main pane, the pinned rail on the left, and the
+Co-PI pane on the right ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
 
 ---
 
@@ -35,7 +35,7 @@ wrong?"
 
 ## Why a note, not a plugin start-page
 
-The welcome note is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. The launch screen depends on no startup plugin: Obsidian natively restores your last session, and a fresh vault or layout reset seeds `home.md` from the saved Memoria workspace. `home.md` stays an ordinary, git-tracked note.
+The welcome note is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. Startup depends on the already-bundled QuickAdd startup macro and Obsidian's core Workspaces plugin to restore the saved **Memoria** shell. `home.md` stays an ordinary, git-tracked note.
 
 This is the same discipline applied to the dashboards themselves: the human-facing surface is always a plain note the system's own tools can see and check.
 

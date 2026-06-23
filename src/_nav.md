@@ -7,7 +7,7 @@ cssclasses: memoria-nav
 
 [[spaces/inbox|⬤ Needs you]] &nbsp; `$= dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && p.type != "flag" && p.type != "alert").length`
 
-[[spaces/maintenance|◆ Drift]] &nbsp; `$= dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && (p.type == "flag" || p.type == "alert")).length` &nbsp; [[system/dashboards/fleet-health|◆ Fleet]] &nbsp; `$= dv.pages('"system/metrics"').where(p => p.type == "lane-metric" && (p.band == "act" || p.band == "watch")).length`
+[[spaces/maintenance|Drift]] &nbsp; `$= (() => { const n = dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && (p.type == "flag" || p.type == "alert")).length; return n > 0 ? "◆ " + n : n })()` &nbsp; [[system/dashboards/fleet-health|Fleet]] &nbsp; `$= (() => { const n = dv.pages('"system/metrics"').where(p => p.type == "lane-metric" && (p.band == "act" || p.band == "watch")).length; return n > 0 ? "◆ " + n : n })()`
 
 ---
 
@@ -15,7 +15,7 @@ cssclasses: memoria-nav
 
 [[spaces/library|Library]] &nbsp; `$= dv.pages('"notes/sources"').where(p => p.lifecycle == "proposed" && p.sample != true).length` to read
 
-[[spaces/knowledge|Knowledge]] &nbsp; `$= dv.pages('"notes/claims"').where(p => p.lifecycle == "current" && (p.links?.contradicts ?? []).length > 0).length` ⚠
+[[spaces/knowledge|Knowledge]] &nbsp; `$= (() => { const n = dv.pages('"notes/claims"').where(p => p.lifecycle == "current" && (p.links?.contradicts ?? []).length > 0).length; return n > 0 ? n + " ⚠" : n })()`
 
 [[spaces/project|Project]] &nbsp; `$= dv.pages('"projects"').where(p => p.type == "project" && p.lifecycle == "current").length` active
 

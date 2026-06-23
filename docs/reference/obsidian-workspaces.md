@@ -25,24 +25,26 @@ not from **Places**. Each space dashboard embeds the relevant Bases views; the r
 owns switching, so the dashboards no longer carry a nav row. Clicking a rail link opens
 that dashboard in the active tab; it does not load a new workspace layout.
 
-On launch Obsidian natively restores your last session. On a fresh vault or layout reset,
-the **Memoria** workspace seeds `home.md`, a thin first-run welcome note — there is no
-forced landing surface.
+On launch QuickAdd runs the `Memoria: restore shell on startup` macro, which asks
+Obsidian's core Workspaces plugin to load the saved **Memoria** workspace. That makes
+normal startup, a fresh vault, and a layout reset land on the same shell: `home.md` in
+the main pane, the pinned rail on the left, and the Co-PI pane on the right. There is
+no Homepage plugin and no Inbox forced landing.
 
 ## Reset layout
 
 The **Memoria** workspace has one shared shell:
 
-- **Main pane** — `home.md`, the first-run welcome note, opened in reading view.
+- **Main pane** — `home.md`, the launch/reset welcome note, opened in reading view.
 - **Left sidebar** — two tabs: the `_nav.md` navigation rail (surface switching) and the
   Portals curated file browser, which replaces the core file explorer and hides `system/`
   and `.memoria/`. Primary movement happens through the rail and the Bases views on each
   space dashboard; Portals is for browsing the underlying notes.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
-The core Workspaces plugin stays enabled so you can restore this shell with Obsidian's
-own **Manage workspaces** command if panes get rearranged. Workspace switching is
-not exposed through QuickAdd commands or loader scripts.
+The core Workspaces plugin stays enabled so startup can restore this shell and so you
+can restore it manually with Obsidian's own **Manage workspaces** command if panes get
+rearranged. Space switching is not exposed through QuickAdd commands or loader scripts.
 
 Workspaces Plus was evaluated and rejected for the shipped path. It can register
 native workspace-switching commands, but Memoria models spaces as dashboard notes

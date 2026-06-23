@@ -13,7 +13,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 
 ```text
 <vault>/
-├── home.md                  first-run welcome note (fresh-vault launch screen)
+├── home.md                  launch/reset welcome note
 ├── _nav.md                  the navigation rail — pinned in the left pane, owns space-switching
 ├── research-focus.md        program memory — the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
@@ -105,7 +105,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria** that seeds `src/home.md` on a fresh vault; space switching is handled by the `src/_nav.md` navigation rail over the space dashboards `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md`, with the Inbox queue at `src/spaces/inbox.md` and Maintenance collection at `src/spaces/maintenance.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria**; QuickAdd restores it on startup, with `src/home.md` in the main pane and the pinned `src/_nav.md` rail on the left. Space switching is handled by the rail over the space dashboards `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md`, with the Inbox queue at `src/spaces/inbox.md` and Maintenance collection at `src/spaces/maintenance.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 

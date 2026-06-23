@@ -28,6 +28,11 @@ Bases views while ordinary internal links reuse the active tab.
 > called **spaces** — "gate" is now reserved for the approval/review checkpoint. The
 > dashboard decision below still stands; only the path and the "gate" naming changed, and
 > the historical wording is kept as-authored.
+>
+> **Superseded slice (see [ADR-115](115-inbox-queue-and-retired-homepage.md)):**
+> the Homepage plugin no longer opens the Inbox on startup. Startup now uses QuickAdd to
+> ask the core Workspaces plugin to load the saved **Memoria** shell with `home.md`, the
+> pinned rail, and the Co-PI pane.
 
 Memoria uses **four job-named gate dashboard notes** as the primary navigation model:
 Inbox, Library, Knowledge, and Project. The dashboards live under `src/gates/` and
@@ -62,8 +67,8 @@ accepted decision ([ADR-83](83-direct-pi-relate-control.md)).
   not shipped as an empty promise.
 - Workspaces Plus is unnecessary, and the old QuickAdd `load-workspace.js` workaround
   is removed.
-- The Homepage plugin now points at `spaces/inbox`, so launch opens the working space
-  rather than a separate control panel.
+- The Homepage plugin launch slice is superseded by ADR-115; startup now restores the
+  saved **Memoria** shell without the Homepage plugin.
 - Portals adoption is gated by the vendored plugin artifact and provenance lock entry.
 - The missing direct "relate" control is an acknowledged alpha.7 limitation; links
   remain authored in `links:` frontmatter through agent proposals or hand edits.

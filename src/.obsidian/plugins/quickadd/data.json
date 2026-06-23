@@ -566,6 +566,26 @@
           }
         ]
       }
+    },
+    {
+      "id": "59b3c6f7-e726-40cb-9092-b2bbeb8e1a3e",
+      "name": "Memoria: restore shell on startup",
+      "type": "Macro",
+      "command": false,
+      "runOnStartup": true,
+      "macro": {
+        "name": "Memoria: restore shell on startup",
+        "id": "b88d86c9-337a-48d7-948b-a8df27792d43",
+        "commands": [
+          {
+            "name": "restore-memoria-shell",
+            "type": "UserScript",
+            "id": "955481bf-a619-49f7-8774-24ff3d84d3ea",
+            "path": "system/scripts/restore-memoria-shell.js",
+            "settings": {}
+          }
+        ]
+      }
     }
   ],
   "inputPrompt": "single-line",

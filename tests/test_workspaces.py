@@ -6,6 +6,7 @@ from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "src"
 WORKSPACES = SRC / ".obsidian" / "workspaces.json"
+NAV = SRC / "_nav.md"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
 COMMANDER = SRC / ".obsidian" / "plugins" / "cmdr" / "data.json"
 APP = SRC / ".obsidian" / "app.json"
@@ -57,6 +58,14 @@ def _leaves(node):
         yield from _leaves(child)
 
 
+def _leaf_nodes(node):
+    if node.get("type") == "leaf":
+        yield node
+        return
+    for child in node.get("children", []):
+        yield from _leaf_nodes(child)
+
+
 def _choices():
     return json.loads(QUICKADD.read_text(encoding="utf-8"))["choices"]
 
@@ -80,24 +89,36 @@ def test_single_reset_workspace_ships_and_opens_home():
         for leaf in _leaves(ws["main"])
         if leaf.get("state", {}).get("file")
     ]
-    # The reset layout seeds the first-run welcome note (ADR-115); the homepage
-    # plugin that used to force the Inbox queue on launch is retired.
+    # The reset layout seeds the welcome note (ADR-115); QuickAdd reloads the
+    # saved shell on startup without reintroducing the old Homepage plugin.
     assert main_files == ["home.md"]
     assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
     # Left pane is the navigation rail (ADR-114): the pinned nav note ahead of
     # the file-explorer escape hatch.
-    left = list(_leaves(ws["left"]))
+    left_nodes = list(_leaf_nodes(ws["left"]))
+    left = [node["state"] for node in left_nodes]
     assert [leaf["type"] for leaf in left] == ["markdown", "file-explorer"]
     assert left[0]["state"]["file"] == "_nav.md"
+    assert left_nodes[0]["pinned"] is True
 
 
 def test_homepage_plugin_is_retired():
-    # ADR-115 retires the forced-landing homepage plugin in favour of native
-    # session-restore seeded by the reset workspace at home.md.
+    # ADR-115 retires the forced Inbox homepage plugin; startup restores the
+    # saved Memoria shell through QuickAdd and Obsidian's core Workspaces plugin.
     roster = json.loads(COMMUNITY_PLUGINS.read_text(encoding="utf-8"))
     assert "homepage" not in roster
     assert not (SRC / ".obsidian" / "plugins" / "homepage").exists()
     assert (SRC / "home.md").is_file()
+
+
+def test_navigation_rail_warns_only_when_badges_are_nonzero():
+    text = NAV.read_text(encoding="utf-8")
+    assert "[[spaces/maintenance|◆ Drift]]" not in text
+    assert "[[system/dashboards/fleet-health|◆ Fleet]]" not in text
+    assert "[[spaces/maintenance|Drift]]" in text
+    assert "[[system/dashboards/fleet-health|Fleet]]" in text
+    assert text.count('return n > 0 ? "◆ " + n : n') == 2
+    assert 'return n > 0 ? n + " ⚠" : n' in text
 
 
 def test_space_dashboards_exist_and_embed_views():

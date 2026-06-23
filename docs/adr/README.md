@@ -143,7 +143,7 @@ status.
 | [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | accepted |
 | [113](113-copi-guided-onboarding.md) | Co-PI-guided onboarding (deferred) | proposed |
 | [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
-| [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for session-restore + a welcome seed | accepted |
+| [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed | accepted |
 | [115](115-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 | [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | accepted |
 | [117](117-type-naming-scheme.md) | Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces | accepted |

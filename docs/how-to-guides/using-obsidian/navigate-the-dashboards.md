@@ -17,7 +17,7 @@ Two more surfaces hang off *Now*. The **Inbox** is your action queue — open it
 
 Behind those surfaces sit **5 read-only system dashboards** under `system/dashboards/`. They are Dataview-backed views that report state and never change anything. The space surfaces themselves are built from Obsidian Bases (database-style views over your notes). For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
-A few orientation notes: Obsidian restores your last session on launch, so you reopen wherever you left off. The saved **Memoria** workspace is only a reset layout, not a place you navigate to; see [Use the reset workspace](use-workspaces.md). And `home.md` is just the launch screen a brand-new vault shows first — it is not a navigation hub, so do not treat it as your home base.
+A few orientation notes: startup restores the saved **Memoria** shell, but you still navigate through the left rail, not by switching saved workspaces; see [Use the reset workspace](use-workspaces.md). `home.md` is a launch screen, not a navigation hub, so do not treat it as your home base.
 
 To open anything that is not on the rail, follow a link from a space, or press `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 

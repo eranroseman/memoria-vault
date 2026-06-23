@@ -93,10 +93,10 @@ Tick each plugin that is enabled and validated:
 - [ ] `Memoria Inspector`
 - [ ] **A3 Pass (13/13)**
 
-**A4. Launch surface (no forced homepage).** Obsidian restores your **last session** on launch (the homepage plugin is no longer installed). To check the fresh-vault path, trigger a layout reset (or open the vault for the first time): the saved *Memoria* workspace seeds the `home.md` welcome note ("Welcome to Memoria"), a thin first-run landing.
+**A4. Launch surface (startup shell, no Homepage plugin).** On launch QuickAdd runs the startup macro that loads the saved *Memoria* workspace. The shell opens `home.md` ("Welcome to Memoria") in the main pane, the pinned `_nav.md` rail in the left pane, and the Co-PI pane on the right.
 
-- ✓ Pass: a normal launch reopens whatever was open last; a fresh vault / layout reset lands on the `home.md` welcome note. No "Homepage" plugin appears in the Community plugins list.
-- ✗ Fails: a forced landing on every launch → a stale `homepage` plugin is still installed; remove `.obsidian/plugins/homepage/` and drop `homepage` from `community-plugins.json`.
+- ✓ Pass: a normal launch, fresh vault, or layout reset lands on the Memoria shell; the rail is pinned, and no "Homepage" plugin appears in the Community plugins list.
+- ✗ Fails: launch reopens a stale pane set or the rail is replaced on first click → the startup macro, saved workspace, or rail `pinned` flag is broken.
 - [ ] **A4 Pass**
 
 **A5. Left-pane rail navigates.** Open the `_nav.md` rail ("Navigator") in the left pane. *Now* shows the **Inbox** queue count; *Places* lists **Library**, **Knowledge**, **Project**.
