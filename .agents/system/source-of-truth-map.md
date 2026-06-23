@@ -15,7 +15,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Profile tool capabilities | `src/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
 | Profile path permissions | `src/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
 | Hermes profile runtime wiring | `src/.memoria/profiles/*/config.yaml` | Installer deployment, MCP process startup |
-| Agent posture | `src/.memoria/profiles/*/SOUL.md` | Bundled profile skills and shared `src/AGENTS.md` |
+| Agent posture | `src/.memoria/profiles/*/SOUL.md` | Profile-owned skills and shared `src/AGENTS.md` |
 | Profile package metadata | `src/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
 | Task lane to profile routing | `src/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
 | Runtime path and glob semantics | `memoria/runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
