@@ -31,7 +31,7 @@ Press `Cmd/Ctrl-P` and run **Memoria: load sample vault**. It copies a small, la
 
 ## Step 2 — Open a project and name your goal
 
-A **project** is where writing happens, and opening one is how you name what you're writing toward. Run `Cmd/Ctrl-P` → **Memoria: start project** and fill in the form: a **title**, the **scope topics** it covers (Mediterranean diet, cardiovascular health), and an **output mode**. Choose **thesis**, and the project then asks for your provisional thesis in one sentence — the claim you want to be able to stand behind:
+A **project** is where writing happens, and opening one is how you name what you're writing toward. Run `Cmd/Ctrl-P` → **Memoria: start project** and fill in the form: a **title**, the **scope topics** it covers (Mediterranean diet, cardiovascular health), and an **output mode**. Choose **thesis**, and a **provisional thesis** field appears in the form — write it as one sentence, the claim you want to be able to stand behind:
 
 > *A Mediterranean diet reduces major cardiovascular events in high-risk adults.*
 
