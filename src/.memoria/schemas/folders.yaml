@@ -26,6 +26,7 @@ homes:
   work-prompt: inbox
   space: spaces
   queue: spaces
+  maintenance: spaces
   pattern: system/patterns
   worker-card: system/board
   eval-task: system/eval

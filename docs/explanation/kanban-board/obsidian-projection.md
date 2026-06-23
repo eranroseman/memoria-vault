@@ -20,7 +20,7 @@ This is why the board needs no bespoke UI — the Inbox category *is* agent→hu
 
 Below the Inbox sits the execution layer. A board-export cron projects each live Hermes worker card from `kanban.db` to a markdown file in `system/board/` on a ~60-second cadence (matching the dispatcher's tick, so the projection never lags the board by more than one cycle). Each file carries the queryable fields in frontmatter plus the handoff summary in the body. This is the *mechanic's view* — useful when you want to see what a lane is actually executing — not part of the daily surface.
 
-The same pass appends a compact snapshot line to `system/logs/board-state.jsonl` with per-lane counts and review-queue depth; the Inbox queue reads this instead of re-querying the database, keeping its daily glance lightweight.
+The same pass appends a compact snapshot line to `system/logs/board-state.jsonl` with per-lane counts and review-queue depth. The snapshot feeds telemetry and diagnostics; the PI-facing surfaces stay on native Inbox and board Bases.
 
 ## The two layers meet at `done`
 
@@ -38,6 +38,5 @@ Editing a projected file in `system/board/` does nothing to the board — the ex
 
 - Conceptual overview: [Kanban board](README.md)
 - The dashboard built on `inbox.base`: [The board-state dashboard](../dashboards/daily-glance/board-state.md)
-- The dashboard that reads the snapshot: [board-state dashboard](../dashboards/daily-glance/board-state.md)
 - Export file schemas (`board-state.jsonl`, frontmatter fields): [Telemetry log schemas](../../reference/telemetry-logs.md)
 - The separate fleet-health metrics roll-up: [fleet-health dashboard](../dashboards/operational-health/fleet-health.md)

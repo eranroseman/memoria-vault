@@ -7,42 +7,44 @@ grand_parent: Dashboards
 
 # The daily glance view
 
-The morning "is anything red?" glance starts with the Inbox queue's `Needs me`,
-`Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)).
-The daily ritual starts at the rail's *Now*, one click from wherever you are.
+The morning "is anything red?" glance starts at the rail's *Now*, one click from
+wherever you are. The Inbox badge counts daily action cards; the health band counts
+open drift cards and fleet lanes in `watch` or `act`.
 
-The daily glance is the Inbox queue's always-visible system-health view. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+The daily glance is the rail's always-visible action and health line. The budget is
+30 seconds — glance, decide whether anything is red, close. If nothing is red, move
+on to real work.
 
 ---
 
 ## What it shows
 
-What populates the glance — the Inbox queue's top views and the support dashboards
-behind them — is detailed in [Home welcome note](../../obsidian/home.md).
-The framing: each is an "is anything red?" check, not a place to do work — the
-deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
+What populates the glance is intentionally small: non-structural `proposed` Inbox cards,
+open `flag`/`alert` cards, and fleet metric notes in `watch` or `act`. The framing:
+each is an "is anything red?" check, not a place to do work. Click through to the Inbox,
+Maintenance, board-state, drift-watch, or fleet-health surfaces to act.
 
 ---
 
 ## What this surface is not
 
-**Not a vault audit.** Folder counts, orphan notes, stale literature — those are the weekly review's job. The daily glance is *system health*, not *knowledge health*. Mixing them would turn a 30-second glance into a 20-minute triage session.
+**Not a vault audit.** Folder counts, orphan notes, stale literature — those are the weekly review's job. The daily glance is *action and health status*, not *knowledge health*. Mixing them would turn a 30-second glance into a 20-minute triage session.
 
 **Not a task list.** It shows decisions waiting on the human; the human chooses which to address. The Inbox cards, not the glance line, are where state changes happen.
 
-**Not a substitute for the deeper dashboards.** It summarizes red signals; the full views live in `drift-watch`, `fleet-health`, and `audit-log`. It is a dashboard-of-dashboards: filtered subsets of those deeper views, reached by clicking through.
+**Not a substitute for the deeper dashboards.** It summarizes red signals; the full views live in Maintenance, `drift-watch`, `fleet-health`, and `audit-log`. It is a dashboard-of-dashboards: filtered subsets of those deeper views, reached by clicking through.
 
 ---
 
 ## Why it's designed this way
 
-**Absorption beats a second launch surface.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox queue is owned by [Home welcome note](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
+**Absorption beats a second launch surface.** A standalone daily-health page was one more thing to open every morning. The consumer-only, degrades-to-empty rationale is now carried by the rail: the glance is always exactly as fresh as its feeds.
 
-**Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox queue glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
+**Graded loudness decides how urgent it is.** Open `flag` and `alert` cards count in the rail health band; loudness decides how they sort in Maintenance and whether they interrupt through other channels. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 
 **Graceful degradation.** When a feed has no data yet — a fresh vault with no agent runs — the glance states what would populate it: empty means "nothing to report," not "something is broken" (the cross-cutting [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
 
-**30 seconds is a constraint, not an aspiration.** A daily ritual that consistently takes more than 30 seconds stops being daily. A healthy vault produces an all-clear line and an empty "Needs me" view, and the human closes it immediately. Length is a signal: a long glance means something needs attention, not that the ritual needs more time allocated.
+**30 seconds is a constraint, not an aspiration.** A daily ritual that consistently takes more than 30 seconds stops being daily. A healthy vault produces zeroed rail badges and an empty "Needs me" view, and the human closes it immediately. Length is a signal: a long glance means something needs attention, not that the ritual needs more time allocated.
 
 ---
 

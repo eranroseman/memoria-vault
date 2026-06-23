@@ -5,9 +5,9 @@ parent: Reference
 
 # Note types
 
-The 25 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 26 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
-The 25 types group into: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), **4 system types** (pattern, eval task, worklist item, and worker card), and **2 navigation surfaces** (`space` and `queue`).
+The 26 types group into: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), **4 system types** (pattern, eval task, worklist item, and worker card), and **3 navigation surfaces** (`space`, `queue`, and `maintenance`).
 
 ---
 
@@ -83,14 +83,15 @@ Patterns are curated prompt-transformations stored as data ([ADR-53](../adr/53-p
 
 ---
 
-## Navigation surfaces (2)
+## Navigation surfaces (3)
 
-The top-level surfaces under `spaces/`. The three durable **spaces** are the rooms you work in; the **queue** (the Inbox) is a transient triage surface that converges to empty. Space-switching is owned by the left-pane rail, so these notes carry no nav row.
+The top-level surfaces under `spaces/`. The three durable **spaces** are the rooms you work in; the **queue** (the Inbox) is a transient triage surface that converges to empty; **maintenance** is the weekly structural-debt collection. Space-switching is owned by the left-pane rail, so these notes carry no nav row.
 
 | Type | Folder | Lifecycle subset | Required fields | Key optional fields |
 | --- | --- | --- | --- | --- |
 | `space` | `spaces/` | `current → archived` | `title`, `space` (`library` / `knowledge` / `project`) | `created` |
 | `queue` | `spaces/` | `current → archived` | `title` | `created` |
+| `maintenance` | `spaces/` | `current → archived` | `title` | `created` |
 
 ---
 
@@ -109,7 +110,7 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 
 ## Templates
 
-Human-facing starter notes for 20 of the 25 types ship in `src/system/templates` (patterns, eval tasks, spaces, the inbox queue, and worker cards are authored by their owning surfaces). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+Human-facing starter notes for 20 of the 26 types ship in `src/system/templates` (patterns, eval tasks, spaces, the inbox queue, maintenance collection, and worker cards are authored by their owning surfaces). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
 
 ---
 

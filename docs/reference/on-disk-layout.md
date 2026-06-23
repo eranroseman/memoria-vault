@@ -29,7 +29,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   └── _template/             starter project scaffold copied by the Project on-ramp
 ├── inbox/                   the action queue — candidate/gap/flag/alert/work-prompt cards
 │   └── inbox.base             the Inbox board view
-├── spaces/                  the three space dashboards (type: space) + the Inbox queue dashboard (inbox.md, type: queue)
+├── spaces/                  space dashboards + Inbox queue + Maintenance collection
 └── system/                  infrastructure plus typed system homes
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
@@ -54,7 +54,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      25 per-type frontmatter schemas
+│   ├── types/<type>.yaml      26 per-type frontmatter schemas
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
 ├── operations/              the deterministic operation cores
@@ -105,7 +105,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria** that seeds `src/home.md` on a fresh vault; space switching is handled by the `src/_nav.md` navigation rail over the space dashboards `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md`, with the Inbox queue at `src/spaces/inbox.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
+Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria** that seeds `src/home.md` on a fresh vault; space switching is handled by the `src/_nav.md` navigation rail over the space dashboards `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md`, with the Inbox queue at `src/spaces/inbox.md` and Maintenance collection at `src/spaces/maintenance.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
 
 ### The Bases views
 

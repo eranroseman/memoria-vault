@@ -7,7 +7,7 @@ grand_parent: Dashboards
 
 # The board-state dashboard
 
-The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox board — the agent→human action queue. Open it when Home's "Needs me" view isn't enough and you want everything: every card, every state, plus what the workers are executing underneath.
+The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox board — the agent→human action queue. Open it from Maintenance when the Inbox's "Needs me" view isn't enough and you want everything: every card, every state, plus what the workers are executing underneath.
 
 ---
 
@@ -25,7 +25,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 **Not the authoritative execution board.** The worker-card section reads the `system/board/` projections of `kanban.db`. Those are one-way and ephemeral — editing a projected file does nothing; the execution `status` chain is the hidden mechanic the PI never manages.
 
-**Not Home's "Needs me" view.** Home shows only the `proposed` slice, capped for a 30-second glance. Board-state shows the whole board — everything in flight, plus the worker layer.
+**Not the Inbox's "Needs me" view.** The Inbox shows only the daily `proposed` action slice. Board-state shows the whole board — everything in flight, plus the worker layer.
 
 **Not [The discuss-queue dashboard](../synthesis-agenda/discuss-queue.md).** Discuss-queue is a Library-side cognitive-discipline view — sources read but not yet distilled. Board-state is the action-and-execution view — cards, regardless of content.
 
@@ -43,7 +43,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 ## Related
 
-- The daily glance this feeds: [The daily glance view](daily-health.md)
+- The daily glance that links here through Maintenance: [The daily glance view](daily-health.md)
 - How the projections work: [How the board surfaces in Obsidian](../../kanban-board/obsidian-projection.md)
 - The card format: [The honesty card](../../kanban-board/card-schema.md)
 - Troubleshooting board problems: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)

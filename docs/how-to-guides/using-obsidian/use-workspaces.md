@@ -18,9 +18,10 @@ Use the saved **Memoria** workspace only when you want to reset a rearranged win
 
 **1. Switch surfaces from the left-pane rail.**
 
-The pinned **Navigator** (`_nav.md`) owns switching. Its *Now* opens the Inbox queue; its *Places* open the three spaces:
+The pinned **Navigator** (`_nav.md`) owns switching. Its *Now* opens the Inbox queue and Maintenance collection; its *Places* open the three spaces:
 
 - `spaces/inbox.md` — the queue: triage what needs the PI now
+- `spaces/maintenance.md` — weekly structural debt and board state
 - `spaces/library.md` — collect and organize sources
 - `spaces/knowledge.md` — build and test claims
 - `spaces/project.md` — steer bounded inquiry to output
@@ -36,7 +37,7 @@ keeps the Agent Client pane on the right.
 ## Verify
 
 - On launch, Obsidian restores your last session; a fresh vault or reset opens `home.md`.
-- The left-pane rail switches among the three spaces and the Inbox queue.
+- The left-pane rail switches among the three spaces, the Inbox queue, and Maintenance.
 - Loading the **Memoria** workspace restores the shared shell without changing the
   gate model.
 

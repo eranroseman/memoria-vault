@@ -10,8 +10,8 @@ Memoria ships one saved Obsidian workspace named **Memoria** in
 ([ADR-81](../adr/81-persistent-gate-dashboards.md)).
 
 Space switching happens through the navigation rail — the pinned `_nav.md` note in
-the left pane. Its **Now** section surfaces the Inbox queue (count + health dot), and
-its **Places** section links the three durable spaces:
+the left pane. Its **Now** section surfaces the Inbox queue action count and the
+Maintenance/Fleet health band, and its **Places** section links the three durable spaces:
 
 | Space | Job | Dashboard |
 | --- | --- | --- |
@@ -19,10 +19,11 @@ its **Places** section links the three durable spaces:
 | Knowledge | Build and test claims | `spaces/knowledge.md` |
 | Project | Steer bounded inquiry to output | `spaces/project.md` |
 
-The Inbox queue (`spaces/inbox.md`, `type: queue`) is reached from the rail's **Now**,
-not from **Places**. Each space dashboard embeds the relevant Bases views; the rail owns
-switching, so the dashboards no longer carry a nav row. Clicking a rail link opens that
-dashboard in the active tab; it does not load a new workspace layout.
+The Inbox queue (`spaces/inbox.md`, `type: queue`) and Maintenance collection
+(`spaces/maintenance.md`, `type: maintenance`) are reached from the rail's **Now**,
+not from **Places**. Each space dashboard embeds the relevant Bases views; the rail
+owns switching, so the dashboards no longer carry a nav row. Clicking a rail link opens
+that dashboard in the active tab; it does not load a new workspace layout.
 
 On launch Obsidian natively restores your last session. On a fresh vault or layout reset,
 the **Memoria** workspace seeds `home.md`, a thin first-run welcome note — there is no

@@ -19,6 +19,7 @@ SPACES = {
     "knowledge": "spaces/knowledge.md",
     "project": "spaces/project.md",
 }
+MAINTENANCE = "spaces/maintenance.md"
 INBOX_FIRST_ACTIONS = [
     "Memoria: capture source from URL",
     "Memoria: capture fleeting",
@@ -129,9 +130,22 @@ def test_inbox_is_the_queue_not_a_space():
     assert "## Fleeting notes" in text
     assert "![[fleeting.base#To process]]" in text
     assert "distill, attach, or archive" in text
+    for heading in ("## Drift watch", "## Loose ends", "## Board"):
+        assert heading not in text
     assert "[!suggestions] First actions" in text
     for command in INBOX_FIRST_ACTIONS:
         assert command in text, f"inbox missing first action {command!r}"
+
+
+def test_maintenance_collection_embeds_debt_views():
+    text = (SRC / MAINTENANCE).read_text(encoding="utf-8")
+    assert "type: maintenance" in text
+    for embed in (
+        "![[inbox.base#Drift watch]]",
+        "![[inbox.base#Loose ends]]",
+        "![[board.base#By lane]]",
+    ):
+        assert embed in text
 
 
 def test_space_guide_links_use_canonical_pages_routes():
