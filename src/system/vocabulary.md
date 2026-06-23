@@ -1,9 +1,3 @@
----
-type: index
-lifecycle: current
-title: Topic vocabulary
----
-
 # Vocabulary
 
 The single source of truth for the controlled values of the classification fields —

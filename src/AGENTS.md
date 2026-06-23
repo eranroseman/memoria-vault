@@ -14,7 +14,7 @@ filesystem; do not try to route around it.
 ## Where things live (ADR-47)
 
 `catalog/` entity records (Bases-backed; built by the ingest operation) · `notes/` prose —
-fleeting / source / claims 🔒 / hubs 🔒 / index · `projects/` project work · `inbox/`
+fleeting / source / claims 🔒 / hubs 🔒 · `projects/` project work · `inbox/`
 your messages to the PI · `system/` templates, dashboards, patterns, logs. One folder
 never mixes two categories. `archived` is a *state*, not a folder — never move a note
 to archive it.

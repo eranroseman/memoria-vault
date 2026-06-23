@@ -50,7 +50,6 @@ TYPE_HOME = {
     "source": "notes/sources/",
     "claim": "notes/claims/",
     "hub": "notes/hubs/",
-    "index": "notes/indexes/",
     "candidate": "inbox/",
     "gap": "inbox/",
     "flag": "inbox/",

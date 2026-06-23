@@ -1,6 +1,7 @@
 type: paper
 category: catalog
 gated: false
+initial_lifecycle: current
 enums:
   lifecycle: [current, retracted, archived]
   ingest_status: [tier0, enriched, complete, needs-human]

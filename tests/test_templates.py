@@ -156,6 +156,7 @@ def test_project_templates_start_in_schema_valid_states():
     assert project["lifecycle"] == "current"
     assert project["output_mode"] == "thesis"
     assert project["question_version"] == 1
+    assert set(project["finer"]) == {"feasible", "interesting", "novel", "ethical", "relevant"}
     assert thesis["lifecycle"] == "proposed"
     assert thesis["project"] == "[[PLACEHOLDER]]"
 

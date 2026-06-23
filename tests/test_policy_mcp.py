@@ -135,7 +135,6 @@ def test_policy_mcp():
             deny_write=[
                 "notes/claims/**",
                 "notes/hubs/**",
-                "notes/indexes/**",
                 "projects/**",
                 "system/**",
             ],

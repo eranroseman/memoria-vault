@@ -58,9 +58,9 @@ field order, labels, descriptions, required-at-entry flags, and input source
 projects that metadata into the committed Modal Forms `data.json`; it does not
 change the validator grammar above.
 
-Fields such as `summary`, `claim`, or the project form's split PICO prompts are
-creation inputs, not necessarily frontmatter fields. The QuickAdd writer maps
-them into the note body or into structured frontmatter such as `inquiry`.
+Fields such as `summary` or `claim` are creation inputs, not necessarily
+frontmatter fields. The QuickAdd writer maps them into the note body or into
+structured frontmatter.
 
 ---
 
@@ -96,7 +96,7 @@ Each type's schema declares the **subset** it uses (validated as `enum:lifecycle
 | `proposed → current → archived` | `candidate`, `gap`, `flag`, `alert`, `work-prompt`, `code-note`, `pattern`, `eval-task`, `worklist-item` |
 | `proposed → archived` | `fleeting` |
 | `current → retracted → archived` | `claim`, `paper`, `dataset` |
-| `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `index`, `space`, `queue`, `maintenance`, `worker-card` |
+| `current → archived` | `project`, `person`, `organization`, `venue`, `repository`, `hub`, `space`, `queue`, `maintenance`, `worker-card` |
 
 `proposed` always means _awaiting the PI_. `retracted` is a state, not a deletion — supersession keeps the lineage (`superseded_by`). Claim queries and write-assist surfaces exclude claims with a non-empty `superseded_by` by default; include them only for lineage, audit, or supersession-history work. This lifecycle is the **PI-facing state**; the board's `status` enum is a separate, hidden execution mechanic (see [Kanban board reference](kanban-board.md)).
 

@@ -36,52 +36,20 @@ creation:
     fields:
       - name: title
         label: Project title
-        required: true
-        input:
-          type: text
-      - name: slug
-        label: Project slug
+        description: Bounded research question or working project name.
         required: true
         input:
           type: text
       - name: scope_topics
         label: Scope topics
+        description: Controlled vocabulary topics that bound the project.
         required: true
         input:
           type: multiselect
           vocabulary: research_area
-      - name: inquiry_population
-        label: Population
-        required: true
-        input:
-          type: text
-      - name: inquiry_intervention
-        label: Intervention
-        input:
-          type: text
-      - name: inquiry_comparison
-        label: Comparison
-        input:
-          type: text
-      - name: inquiry_outcome
-        label: Outcome
-        required: true
-        input:
-          type: text
-      - name: finer_feasible
-        label: Feasible
-        input:
-          type: textarea
-      - name: finer_novel
-        label: Novel
-        input:
-          type: textarea
-      - name: finer_relevant
-        label: Relevant
-        input:
-          type: textarea
       - name: output_mode
         label: Output mode
+        description: Thesis mode starts with a provisional answer; survey mode starts open.
         required: true
         input:
           type: select

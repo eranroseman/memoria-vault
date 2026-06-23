@@ -1,8 +1,10 @@
 type: source
 category: notes
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, provisional, current, retracted, archived]
+  source_type: [paper, dataset, repository, web-page, report]
   evidence_level: [cebm-1, cebm-2, cebm-3, cebm-4, cebm-5, ungraded]
 required:
   type: literal:source
@@ -10,7 +12,7 @@ required:
   title: str
   entity: str # wikilink to the Catalog entity this note is about
 optional:
-  source_type: str
+  source_type: enum:source_type
   evidence_level: enum:evidence_level
   research_area: list
   methodology: list
@@ -24,37 +26,44 @@ creation:
     fields:
       - name: title
         label: Source title
+        description: Human-readable title for the source note.
         required: true
         input:
           type: text
       - name: entity
         label: Catalog entity
+        description: Catalog record this source note describes.
         required: true
         input:
           type: note
           folder: catalog
       - name: source_type
         label: Source type
+        description: Kind of source behind the note.
         required: true
         input:
           type: select
-          values: [paper, dataset, repository, web-page, report]
+          enum: source_type
       - name: evidence_level
         label: Evidence level
+        description: CEBM-style appraisal grade; use ungraded until appraised.
         input:
           type: select
           enum: evidence_level
       - name: research_area
         label: Research area
+        description: What the work is about.
         input:
           type: multiselect
           vocabulary: research_area
       - name: methodology
         label: Methodology
+        description: How the work was structured or analyzed.
         input:
           type: multiselect
           vocabulary: methodology
       - name: summary
         label: In my words
+        description: Short source-grounded summary in your own words.
         input:
           type: textarea

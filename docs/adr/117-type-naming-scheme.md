@@ -41,7 +41,7 @@ leaves alone.
 
 **The umbrella term for a typed object is "document," not "note."** Every typed object is a
 *document*; a *note* is then **one kind** of document (the `notes/` documents — `source`,
-`claim`, `hub`, `index`, `fleeting`). This single move dissolves the `notes/` doubling:
+`claim`, `hub`, `fleeting`; ADR-119 later retired `index`). This single move dissolves the `notes/` doubling:
 once the umbrella is "document," a `notes/` folder is a legitimate subset, not a circular
 "notes are notes." Type schemas, the page that lists them, and prose say **document type**.
 
@@ -98,13 +98,13 @@ What the rule entails:
   the naming rule.
 - `worker-card` — a Hermes/kanban card; correctly named (`worker-row` would be wrong).
 - `worklist-item`, `eval-task`, `work-prompt`, `code-note` — each the correct term in its kind.
-- the catalog six, `claim`, `source`, `hub`, `index`, `project`, `thesis`, `pattern`, `space`,
+- the catalog six, `claim`, `source`, `hub`, `project`, `thesis`, `pattern`, `space`,
   `queue`, `maintenance` — already conform.
 
 ### Documentation (not renames)
 
-- Document the `flag` vs `alert` and `hub` vs `index` distinctions — the names are fine; only
-  the *difference* between each pair is currently undocumented.
+- Document the `flag` vs `alert` distinction — the names are fine; only the *difference* is
+  currently undocumented.
 
 ## Consequences
 

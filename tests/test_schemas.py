@@ -5,7 +5,7 @@ from operations.lib import schema
 
 def test_all_types_load():
     types = schema.load_types()
-    assert len(types) == 26
+    assert len(types) == 25
     expected = {
         "paper",
         "person",
@@ -20,7 +20,6 @@ def test_all_types_load():
         "source",
         "claim",
         "hub",
-        "index",
         "candidate",
         "gap",
         "flag",
@@ -35,6 +34,13 @@ def test_all_types_load():
         "worklist-item",
     }
     assert set(types) == expected
+
+
+def test_initial_lifecycle_declared_for_every_type():
+    types = schema.load_types()
+    for name, sc in types.items():
+        lifecycle = schema.lifecycle_for(sc)
+        assert sc.get("initial_lifecycle") == lifecycle[0], name
 
 
 def test_type_field_matches_filename_literal():
@@ -104,6 +110,22 @@ def test_validate_frontmatter_round_trip():
     assert any("literal" in e for e in errs)
 
 
+def test_source_type_is_schema_enum():
+    source = schema.load_types()["source"]
+    good = {
+        "type": "source",
+        "lifecycle": "proposed",
+        "title": "T",
+        "entity": "[[paper]]",
+        "source_type": "paper",
+    }
+    assert schema.validate_frontmatter(good, source) == []
+    assert any(
+        "source_type" in e
+        for e in schema.validate_frontmatter(dict(good, source_type="blog"), source)
+    )
+
+
 def test_project_and_thesis_schema_contracts():
     types = schema.load_types()
     project = types["project"]
@@ -120,7 +142,13 @@ def test_project_and_thesis_schema_contracts():
         "slug": "x-improves-y",
         "scope_topics": ["mobile-health"],
         "inquiry": {"population": "patients", "outcome": "adherence"},
-        "finer": {"feasible": "small corpus", "novel": "yes", "relevant": "program"},
+        "finer": {
+            "feasible": "small corpus",
+            "interesting": "yes",
+            "novel": "yes",
+            "ethical": "yes",
+            "relevant": "program",
+        },
         "output_mode": "thesis",
         "question_version": 1,
         "question_log": [],

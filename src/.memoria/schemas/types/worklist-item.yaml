@@ -1,6 +1,7 @@
 type: worklist-item
 category: system
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   decision: [proposed, include, exclude, maybe, archived]

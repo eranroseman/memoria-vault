@@ -31,8 +31,8 @@ module.exports = async (params) => {
   }
 
   const data = normalizeFormData(result.data || {});
-  if (!data.title || !data.slug || !data.scope_topics.length || !data.inquiry_population || !data.inquiry_outcome) {
-    new Notice("Project title, slug, scope topics, population, and outcome are required.", 8000);
+  if (!data.title || !data.scope_topics.length) {
+    new Notice("Project title and scope topics are required.", 8000);
     return;
   }
 
@@ -77,7 +77,9 @@ async function scaffoldProject(app, data, thesisTitle) {
     "  outcome: " + yamlString(data.inquiry_outcome),
     "finer:",
     "  feasible: " + yamlString(data.finer_feasible),
+    "  interesting: " + yamlString(data.finer_interesting),
     "  novel: " + yamlString(data.finer_novel),
+    "  ethical: " + yamlString(data.finer_ethical),
     "  relevant: " + yamlString(data.finer_relevant),
     "output_mode: " + yamlString(data.output_mode),
     "question_version: 1",
@@ -131,14 +133,16 @@ async function scaffoldProject(app, data, thesisTitle) {
 function normalizeFormData(data) {
   return {
     title: String(data.title || "").trim(),
-    slug: slug(data.slug, "project"),
+    slug: slug(data.slug || data.title, "project"),
     scope_topics: normalizeList(data.scope_topics),
     inquiry_population: String(data.inquiry_population || "").trim(),
     inquiry_intervention: String(data.inquiry_intervention || "").trim(),
     inquiry_comparison: String(data.inquiry_comparison || "").trim(),
     inquiry_outcome: String(data.inquiry_outcome || "").trim(),
     finer_feasible: String(data.finer_feasible || "").trim(),
+    finer_interesting: String(data.finer_interesting || "").trim(),
     finer_novel: String(data.finer_novel || "").trim(),
+    finer_ethical: String(data.finer_ethical || "").trim(),
     finer_relevant: String(data.finer_relevant || "").trim(),
     output_mode: ["thesis", "survey"].includes(data.output_mode) ? data.output_mode : "thesis",
   };

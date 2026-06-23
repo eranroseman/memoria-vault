@@ -1,6 +1,7 @@
 type: gap
 category: inbox
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   certainty: [confident, likely, unsure]

@@ -22,7 +22,7 @@ Set up a PRISMA-compliant screening protocol and process the results into Memori
 
 **1. Create a protocol note.**
 
-Author it as an index note in `notes/indexes/` (from `system/templates/index.md`) — e.g. `notes/indexes/jitai-scoping-review-protocol.md`. Record: review title, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
+Author it as a project or source note attached to the review work. Record: review title, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
 
 **2. Write your research question and criteria.**
 

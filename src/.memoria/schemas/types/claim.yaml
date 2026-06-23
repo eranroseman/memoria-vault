@@ -1,6 +1,7 @@
 type: claim
 category: notes
 gated: true # review-gated zone (ADR-03/ADR-47)
+initial_lifecycle: current
 enums:
   lifecycle: [current, retracted, archived]
   maturity: [seedling, budding, evergreen] # a property, never a gate (ADR-50)

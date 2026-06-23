@@ -1,6 +1,7 @@
 type: hub
 category: notes
 gated: true # review-gated zone
+initial_lifecycle: current
 enums:
   lifecycle: [current, archived]
 required:
