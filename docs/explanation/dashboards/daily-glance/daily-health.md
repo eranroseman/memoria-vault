@@ -7,17 +7,17 @@ grand_parent: Dashboards
 
 # The daily glance view
 
-The morning "is anything red?" glance starts with the Inbox space's `Needs me`,
+The morning "is anything red?" glance starts with the Inbox queue's `Needs me`,
 `Drift watch`, `Loose ends`, and `Board` views ([ADR-81](../../../adr/81-persistent-gate-dashboards.md)).
-The daily ritual starts on the surface Obsidian already opens.
+The daily ritual starts at the rail's *Now*, one click from wherever you are.
 
-The daily glance is the Inbox space's always-visible system-health view. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
+The daily glance is the Inbox queue's always-visible system-health view. The budget is 30 seconds — glance, decide whether anything is red, close. If nothing is red, move on to real work.
 
 ---
 
 ## What it shows
 
-What populates the glance — the Inbox space's top views and the support dashboards
+What populates the glance — the Inbox queue's top views and the support dashboards
 behind them — is detailed in [Home — the vault front door](../../obsidian/home.md).
 The framing: each is an "is anything red?" check, not a place to do work — the
 deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
@@ -36,9 +36,9 @@ deeper dashboards (board-state, drift-watch, fleet-health) are where you act.
 
 ## Why it's designed this way
 
-**Absorption beats a second front door.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox launch surface is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
+**Absorption beats a second front door.** A standalone daily-health page was one more thing to open every morning — and a launchpad that owns no logic can't drift or error. The consumer-only, degrades-to-empty rationale for folding the glance into the Inbox queue is owned by [Home — the vault front door](../../obsidian/home.md); the upshot here is that the glance is always exactly as fresh as its feeds.
 
-**Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox space glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
+**Graded loudness decides what reaches it.** `alert`- and `block`-level findings surface in the Inbox queue glance; quieter findings stay in the relevant dashboard or are logged only. Alert/block cards also record Telegram push attempts when written through the shared card writer, and open block cards pause new delegation plus review-gated promotion until resolved. The four-level loudness model and the "does it change what the PI does in the next 30 minutes?" test it turns on are owned by [Interaction channels](../../architecture/human-channels.md).
 
 **Graceful degradation.** When a feed has no data yet — a fresh vault with no agent runs — the glance states what would populate it: empty means "nothing to report," not "something is broken" (the cross-cutting [graceful-degradation principle](../README.md#why-the-dashboards-are-designed-the-way-they-are)).
 

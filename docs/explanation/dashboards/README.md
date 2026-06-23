@@ -12,13 +12,13 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance/README.md)             | Inbox space glance, Board state                              | Start of every session — "is anything wrong?"     |
+| [Daily glance](daily-glance/README.md)             | Inbox queue glance, Board state                              | Start of every session — "is anything wrong?"     |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | Project space                                      | Project gate                                                   | When steering a bounded inquiry to output          |
 | [Structural health](structural-health/README.md)   | Drift watch, Loose ends, Weekly review                          | Maintenance — the Friday ritual and drift checks  |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
 
-The daily glance starts in the Inbox launch surface, and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. Project gate is the Project space's steering surface: active thesis, saturation, and structural-impact cache state. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
+The daily glance starts in the Inbox queue, and **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query page. Project gate is the Project space's steering surface: active thesis, saturation, and structural-impact cache state. The synthesis-vs-structural split is by *actor*: open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
 
 ## Why the dashboards are designed the way they are
 

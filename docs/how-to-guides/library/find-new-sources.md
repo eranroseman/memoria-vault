@@ -31,7 +31,7 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 
 **3. Judge the candidates as one batch.**
 
-**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, shown on the Inbox space), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Judge each one the same way as any captured candidate — read `argument_against` first, then keep (`current`) or skip (`archived`) ([Capture and ingest a source](capture-and-ingest.md)). Work them in one sitting:
+**`candidate` cards** land in the Inbox (the **Needs me** view of `inbox/inbox.base`, shown on the Inbox queue), one per proposed source, each carrying the honesty body and never a verdict ([Frontmatter fields](../../reference/frontmatter.md)). Judge each one the same way as any captured candidate — read `argument_against` first, then keep (`current`) or skip (`archived`) ([Capture and ingest a source](capture-and-ingest.md)). Work them in one sitting:
 
 - **Keep:** the paper enters the Tutorial 04 flow (Catalog entity, reading queue, proposed source note).
 - **Skip:** skipping generously offered candidates is the system working, not failing.

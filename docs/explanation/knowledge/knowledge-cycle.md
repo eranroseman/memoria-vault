@@ -11,7 +11,7 @@ Every note in the vault is somewhere in a long-term progression from catalogued 
 
 ## The six delegable tasks
 
-The PI works at the four spaces — **Inbox**, **Library**, **Knowledge**, and **Project** — not along a pipeline. Library, Knowledge, and Project are where knowledge is taken in, built into claims, and turned into output; the Inbox is where the agents' proposals surface for a decision. Beneath the spaces, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
+The PI works at the three spaces — **Library**, **Knowledge**, and **Project** — not along a pipeline, plus the **Inbox** queue. Library, Knowledge, and Project are where knowledge is taken in, built into claims, and turned into output; the Inbox queue is where the agents' proposals surface for a decision. Beneath the spaces, six tasks can be delegated to a background agent lane; each task's name is at once the action, the lane, and the Inbox signal it raises:
 
 | Task        | What it does                                            | Inbox signal    |
 | ----------- | ------------------------------------------------------- | --------------- |

@@ -9,9 +9,9 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ---
 
-## Required Obsidian plugins (14)
+## Required Obsidian plugins (13)
 
-Memoria breaks without these. The starter vault **ships all fourteen bundled and configured** in `.obsidian/plugins/` — thirteen third-party plugins plus the Memoria-authored Inspector, with no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault **ships all thirteen bundled and configured** in `.obsidian/plugins/` — twelve third-party plugins plus the Memoria-authored Inspector, with no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 The provenance lock for the bundled artifacts is
 `src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
@@ -36,7 +36,6 @@ bundled. Updater automation remains deferred by
 | memoria-inspector | `memoria-inspector` | Memoria-authored read-only sidebar pane for board counts, WIP depth, recent audit entries, and the Linter verdict band ([ADR-84](../adr/84-read-only-obsidian-inspector.md)). |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |
 | obsidian-git | `obsidian-git` | Git commits from inside Obsidian; the `post-commit` hook enqueues project-draft verification. |
-| homepage | `homepage` | Opens `spaces/inbox` on startup as the deterministic landing surface. |
 | buttons | `buttons` | Supports command-button snippets in note bodies. **Command-type buttons only** — the plugin's `template`/`text`/`calculate` button types write to notes outside the policy gate and are banned. Needs no `data.json` (defaults). |
 
 ---

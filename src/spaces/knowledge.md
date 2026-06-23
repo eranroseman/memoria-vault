@@ -9,8 +9,6 @@ cssclasses: memoria-space
 
 # Knowledge
 
-[[spaces/inbox|Inbox]] · [[spaces/library|Library]] · **Knowledge** · [[spaces/project|Project]]
-
 > [!brief] No claims yet? Start with a claim note. A claim cites its sources and
 > keeps typed connections in `links:` frontmatter.
 

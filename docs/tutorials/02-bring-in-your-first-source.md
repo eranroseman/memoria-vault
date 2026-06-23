@@ -42,7 +42,7 @@ Open the **Library** space, find your new paper in its **Catalog** view (`catalo
 
 ## Step 3 — Judge the candidate card
 
-Bringing a paper in doesn't happen silently: a **candidate card** lands in your Inbox, with Memoria proposing that you keep this source and asking you to decide. Open the **Inbox space** → **Needs me** view.
+Bringing a paper in doesn't happen silently: a **candidate card** lands in your Inbox, with Memoria proposing that you keep this source and asking you to decide. Open the **Inbox queue** → **Needs me** view.
 
 The card makes an argument, not a ruling: a proposed `action`, the case for and against, what tipped the balance, and how certain it is. Read the `argument_against` field first — it's the one that actually tells you something. Then decide, and resolve the card from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. For this tutorial, keep the source (`current`). If you skip one instead, its card goes to `archived` and the catalog record stays as a trace. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md).
 

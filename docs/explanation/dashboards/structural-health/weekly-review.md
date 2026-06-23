@@ -14,7 +14,7 @@ The weekly-review dashboard is the Friday-ritual entry point. It gathers the wee
 
 ## What this dashboard is not
 
-**Not [the daily glance](../daily-glance/daily-health.md).** The daily glance is the morning health check on the Inbox launch surface — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
+**Not [the daily glance](../daily-glance/daily-health.md).** The daily glance is the morning health check on the Inbox queue — 30 seconds, system signals, close if green. Weekly review is the knowledge ritual — 90 minutes, deliberate human decisions about content. Different rhythm, different scope, different cognitive mode.
 
 **Not the only weekly view.** The `reading-pipeline`, `loose-ends`, and `drift-watch` dashboards are also recommended-weekly — but weekly-review is the ritual *entry point* that links to them and defines the order. It is the orchestrator of the weekly ritual, not just one surface among several.
 

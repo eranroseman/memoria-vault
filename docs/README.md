@@ -40,7 +40,7 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Set up the vault homepage](how-to-guides/using-obsidian/use-the-vault-homepage.md) · [Use workspaces](how-to-guides/using-obsidian/use-workspaces.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Vault launch screen](how-to-guides/using-obsidian/use-the-vault-homepage.md) · [Use workspaces](how-to-guides/using-obsidian/use-workspaces.md)
 
 **Daily work — sources**
 [Find new sources](how-to-guides/library/find-new-sources.md) · [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Write a claim note](how-to-guides/knowledge/write-a-claim-note.md)

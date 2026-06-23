@@ -25,6 +25,7 @@ homes:
   alert: inbox
   work-prompt: inbox
   space: spaces
+  queue: spaces
   pattern: system/patterns
   worker-card: system/board
   eval-task: system/eval

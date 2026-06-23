@@ -45,7 +45,7 @@ The command creates the project, which now appears in the **Project space**. Ope
 
 Now look at what the corpus can support. Run `Cmd/Ctrl-P` → **Memoria: map corpus**, or ask the Co-PI to map it if you'd like help framing the scope first.
 
-This builds a map of the corpus — how its pieces connect, and where they cluster — and delivers a short read of that map to your **Inbox** (the queue of things waiting on your attention). Open the **Inbox space** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
+This builds a map of the corpus — how its pieces connect, and where they cluster — and delivers a short read of that map to your **Inbox** (the queue of things waiting on your attention). Open the **Inbox queue** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
 
 - **Each dot is a claim** — one defensible sentence that traces back to a real paper. Open one (say `meddiet-reduces-major-cv-events`) and you'll see its shape: a single assertion, evidence lines that each cite a paper, and typed links to neighboring claims. That shape is what you'll learn to make.
 - **They cluster** — most of these claims pull the same way: a Mediterranean diet lowers cardiovascular events, carried by two randomized trials and supporting cohort evidence. A dense, mutually linked cluster is the sign that you can *write* from it.

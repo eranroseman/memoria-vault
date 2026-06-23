@@ -9,8 +9,6 @@ cssclasses: memoria-space
 
 # Project
 
-[[spaces/inbox|Inbox]] · [[spaces/library|Library]] · [[spaces/knowledge|Knowledge]] · **Project**
-
 > [!brief] No projects yet? Create one with the project form. A project carries its
 > inquiry, FINER scope, output mode, and thesis state.
 

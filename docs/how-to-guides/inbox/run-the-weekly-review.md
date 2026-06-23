@@ -21,7 +21,7 @@ Open `research-focus.md`. Confirm or update the active questions and reading foc
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
-Open the Inbox space's **Needs me** view of `inbox/inbox.base` (every card at `lifecycle: proposed`) and work it as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, flags and alerts acted on and resolved ([Work the review queue](../inbox/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
+Open the Inbox queue's **Needs me** view of `inbox/inbox.base` (every card at `lifecycle: proposed`) and work it as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, flags and alerts acted on and resolved ([Work the review queue](../inbox/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Notice-level findings (5 min).**
 
@@ -41,11 +41,11 @@ Scan the Knowledge space's Claims view for long-stable `budding` claims with sev
 
 **Step 7 — Check structural health (5 min).**
 
-Use the Inbox space's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
+Use the Inbox queue's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
 
 **Step 8 — Glance at fleet health (1 min).**
 
-Use the fleet-health dashboard from the Inbox space — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
+Use the fleet-health dashboard from the Inbox queue — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
 
 ## Verify
 

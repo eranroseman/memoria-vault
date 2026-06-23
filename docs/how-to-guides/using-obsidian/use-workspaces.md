@@ -6,7 +6,7 @@ nav_order: 2
 
 # Use the reset workspace
 
-Memoria's daily navigation is the four space dashboards, not saved workspace switching.
+Memoria's daily navigation is the left-pane rail, not saved workspace switching.
 Use the saved **Memoria** workspace only when you want to reset a rearranged window.
 
 ## Prerequisites
@@ -16,11 +16,11 @@ Use the saved **Memoria** workspace only when you want to reset a rearranged win
 
 ## Steps
 
-**1. Switch spaces from the dashboard nav row.**
+**1. Switch surfaces from the left-pane rail.**
 
-Start from Inbox. Each space dashboard links to the others:
+The pinned **Navigator** (`_nav.md`) owns switching. Its *Now* opens the Inbox queue; its *Places* open the three spaces:
 
-- `spaces/inbox.md` — triage what needs the PI now
+- `spaces/inbox.md` — the queue: triage what needs the PI now
 - `spaces/library.md` — collect and organize sources
 - `spaces/knowledge.md` — build and test claims
 - `spaces/project.md` — steer bounded inquiry to output
@@ -30,13 +30,13 @@ Start from Inbox. Each space dashboard links to the others:
 If panes are disarranged, use Obsidian's command palette:
 `Cmd/Ctrl-P` → **Workspaces: Manage workspaces** → load **Memoria**.
 
-The reset layout opens Inbox in the main pane, keeps file navigation on the left, and
+The reset layout opens `home.md` in the main pane, keeps file navigation on the left, and
 keeps the Co-PI pane on the right.
 
 ## Verify
 
-- The Homepage plugin opens `spaces/inbox.md` on startup.
-- Each space dashboard links to the other three spaces.
+- On launch, Obsidian restores your last session; a fresh vault or reset opens `home.md`.
+- The left-pane rail switches among the three spaces and the Inbox queue.
 - Loading the **Memoria** workspace restores the shared shell without changing the
   gate model.
 

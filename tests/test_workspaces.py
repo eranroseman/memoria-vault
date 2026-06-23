@@ -7,7 +7,6 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parent.parent / "src"
 WORKSPACES = SRC / ".obsidian" / "workspaces.json"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
-HOMEPAGE = SRC / ".obsidian" / "plugins" / "homepage" / "data.json"
 COMMANDER = SRC / ".obsidian" / "plugins" / "cmdr" / "data.json"
 APP = SRC / ".obsidian" / "app.json"
 CORE = SRC / ".obsidian" / "core-plugins.json"
@@ -16,17 +15,16 @@ PORTALS = SRC / ".obsidian" / "plugins" / "portals" / "data.json"
 OBSIDIAN_GIT = SRC / ".obsidian" / "plugins" / "obsidian-git" / "data.json"
 
 SPACES = {
-    "inbox": "spaces/inbox.md",
     "library": "spaces/library.md",
     "knowledge": "spaces/knowledge.md",
     "project": "spaces/project.md",
 }
+INBOX_FIRST_ACTIONS = [
+    "Memoria: capture source from URL",
+    "Memoria: capture fleeting",
+    "Agent Client pane",
+]
 FIRST_ACTION_COMMANDS = {
-    "inbox": [
-        "Memoria: capture source from URL",
-        "Memoria: capture fleeting",
-        "Agent Client pane",
-    ],
     "library": [
         "Memoria: capture source from URL",
         "Memoria: capture from Zotero selection",
@@ -70,7 +68,7 @@ def _quickadd_command_ids_by_name():
     }
 
 
-def test_single_reset_workspace_ships_and_opens_inbox():
+def test_single_reset_workspace_ships_and_opens_home():
     data = _workspace_data()
     assert sorted(data["workspaces"]) == ["Memoria"]
     assert data["active"] == "Memoria"
@@ -81,7 +79,9 @@ def test_single_reset_workspace_ships_and_opens_inbox():
         for leaf in _leaves(ws["main"])
         if leaf.get("state", {}).get("file")
     ]
-    assert main_files == ["spaces/inbox.md"]
+    # The reset layout seeds the first-run welcome note (ADR-115); the homepage
+    # plugin that used to force the Inbox queue on launch is retired.
+    assert main_files == ["home.md"]
     assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
     # Left pane is the navigation rail (ADR-114): the pinned nav note ahead of
     # the file-explorer escape hatch.
@@ -90,18 +90,18 @@ def test_single_reset_workspace_ships_and_opens_inbox():
     assert left[0]["state"]["file"] == "_nav.md"
 
 
-def test_homepage_opens_inbox_space_on_startup():
-    homepage = json.loads(HOMEPAGE.read_text(encoding="utf-8"))
-    main = homepage["homepages"]["Main Homepage"]
-    assert main["kind"] == "File"
-    assert main["value"] == "spaces/inbox"
-    assert main["openOnStartup"] is True
-    assert main["openMode"] == "Replace last note"
-    assert main["view"] == "Reading view"
-    assert main["pin"] is False
+def test_homepage_plugin_is_retired():
+    # ADR-115 retires the forced-landing homepage plugin in favour of native
+    # session-restore seeded by the reset workspace at home.md.
+    roster = json.loads(COMMUNITY_PLUGINS.read_text(encoding="utf-8"))
+    assert "homepage" not in roster
+    assert not (SRC / ".obsidian" / "plugins" / "homepage").exists()
+    assert (SRC / "home.md").is_file()
 
 
-def test_space_dashboards_exist_and_link_to_each_other():
+def test_space_dashboards_exist_and_embed_views():
+    # Nav rows were removed (ADR-114/115): the left-pane rail owns switching, so
+    # a space note no longer links to its peers — it is purely a JTBD dashboard.
     for space, relpath in SPACES.items():
         path = SRC / relpath
         assert path.is_file(), f"{relpath} missing"
@@ -109,11 +109,7 @@ def test_space_dashboards_exist_and_link_to_each_other():
         assert f"space: {space}" in text
         assert "cssclasses: memoria-space" in text
         assert "![[" in text, f"{relpath} does not embed any Bases views"
-        for other, other_relpath in SPACES.items():
-            if other == space:
-                continue
-            link = other_relpath.removesuffix(".md")
-            assert f"[[{link}|" in text, f"{relpath} missing nav link to {link}"
+        assert "[[spaces/" not in text, f"{relpath} still carries a nav row"
 
 
 def test_space_dashboards_have_day1_empty_state_actions():
@@ -124,11 +120,18 @@ def test_space_dashboards_have_day1_empty_state_actions():
             assert command in text, f"{relpath} missing first action {command!r}"
 
 
-def test_inbox_space_owns_fleeting_triage_queue():
+def test_inbox_is_the_queue_not_a_space():
+    # ADR-115: Inbox is reclassified as the queue (a state that converges to
+    # empty), not one of the durable Places.
     text = (SRC / "spaces" / "inbox.md").read_text(encoding="utf-8")
+    assert "type: queue" in text
+    assert "space: inbox" not in text
     assert "## Fleeting notes" in text
     assert "![[fleeting.base#To process]]" in text
     assert "distill, attach, or archive" in text
+    assert "[!suggestions] First actions" in text
+    for command in INBOX_FIRST_ACTIONS:
+        assert command in text, f"inbox missing first action {command!r}"
 
 
 def test_space_guide_links_use_canonical_pages_routes():

@@ -42,7 +42,7 @@ end (the boxes are clickable in Obsidian).
 
 ---
 
-## Part A — Obsidian opens and the 14 bundled plugins load (S5)
+## Part A — Obsidian opens and the 13 bundled plugins load (S5)
 
 **A1. Open the vault.** Obsidian → *Open folder as vault* → select the vault dir.
 
@@ -55,7 +55,7 @@ end (the boxes are clickable in Obsidian).
 - ✓ Pass: no "Restricted mode" banner; plugins list populated.
 - [ ] **A2 Pass**
 
-**A3. Confirm all 14 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
+**A3. Confirm all 13 required plugins are installed AND enabled** (Settings → Community plugins). Validate each:
 
 | Plugin | Purpose | ✓ Validate it loaded |
 | --- | --- | --- |
@@ -66,7 +66,6 @@ end (the boxes are clickable in Obsidian).
 | `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, and resolve controls |
 | `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
-| `Homepage` | Opens `spaces/inbox.md` on startup | `spaces/inbox.md` opens as the startup surface |
 | `Local REST API with MCP` | Exposes the vault to Hermes (verified HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
@@ -74,7 +73,7 @@ end (the boxes are clickable in Obsidian).
 | `Portals` | Curated folder portals for the left-side vault surface | a portal pane/command exists and loads without error |
 | `Memoria Inspector` | Read-only board, audit, and linter-status sidebar | the Memoria Inspector view opens and shows read-only status |
 
-- ✓ Pass: **14/14 enabled**, no "Failed to load plugin" notices.
+- ✓ Pass: **13/13 enabled**, no "Failed to load plugin" notices.
 - ✗ Fails: a plugin missing → reinstall via `--profiles-only` or copy `.obsidian/plugins/<name>`; a plugin disabled → enable it; load error → check its `data.json` (the two private ones ship as `data.json.example` and must be copied — see A-note).
 
 Tick each plugin that is enabled and validated:
@@ -86,14 +85,25 @@ Tick each plugin that is enabled and validated:
 - [ ] `Commander`
 - [ ] `Dataview`
 - [ ] `Git`
-- [ ] `Homepage`
 - [ ] `Local REST API with MCP`
 - [ ] `Modal Forms`
 - [ ] `QuickAdd`
 - [ ] `Templater`
 - [ ] `Portals`
 - [ ] `Memoria Inspector`
-- [ ] **A3 Pass (14/14)**
+- [ ] **A3 Pass (13/13)**
+
+**A4. Launch surface (no forced homepage).** Obsidian restores your **last session** on launch (the homepage plugin is no longer installed). To check the fresh-vault path, trigger a layout reset (or open the vault for the first time): the saved *Memoria* workspace seeds the `home.md` welcome note ("Welcome to Memoria"), a thin first-run landing.
+
+- ✓ Pass: a normal launch reopens whatever was open last; a fresh vault / layout reset lands on the `home.md` welcome note. No "Homepage" plugin appears in the Community plugins list.
+- ✗ Fails: a forced landing on every launch → a stale `homepage` plugin is still installed; remove `.obsidian/plugins/homepage/` and drop `homepage` from `community-plugins.json`.
+- [ ] **A4 Pass**
+
+**A5. Left-pane rail navigates.** Open the `_nav.md` rail ("Navigator") in the left pane. *Now* shows the **Inbox** queue count; *Places* lists **Library**, **Knowledge**, **Project**.
+
+- ✓ Pass: the *Now* count and the three *Places* links render (inline-JS counts resolve); each link opens its space. Space notes themselves carry no nav row.
+- ✗ Fails: counts show as raw `$=` text → Dataview *Enable inline JavaScript queries* is off (Settings → Dataview).
+- [ ] **A5 Pass**
 
 > **A-note (private configs).** `obsidian-local-rest-api/data.json` and
 > `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
@@ -144,9 +154,10 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 Open each support dashboard file under `system/dashboards/` (Reading view). For
 **every** ```dataview``` block: it must render a table or placeholder, **never a query
-error**. The four space dashboards under `spaces/` are validated through the launch
-and navigation checks; the former `daily-health.md` page is now the Inbox space glance,
-not a standalone dashboard file.
+error**. The three space dashboards (Library, Knowledge, Project) and the Inbox queue
+under `spaces/` are validated through the launch and navigation checks (Part A4–A5);
+the Inbox glance lives on the `spaces/inbox.md` queue note, not a standalone dashboard
+file.
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |

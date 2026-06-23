@@ -11,7 +11,7 @@ nav_order: 16
 
 The full **non-GUI** verification of the Memoria vault: every deterministic check that runs end-to-end with no Obsidian, no Hermes runtime, no Zotero, and no human eyeball. It is the suite **CI enforces** (the five required status checks) **plus** the schema-correctness checks that catch the silent dashboard/telemetry drift class. Run it after any change to the `.memoria/` tooling, the dashboards, the templates, or the docs — and as the **first gate when rebuilding the test vault**, before the GUI plan.
 
-**Boundary — validated elsewhere.** Anything needing Obsidian (QuickAdd instantiation, Dataview rendering, the homepage), Hermes (profile dispatch, the live write-gate, cron), or Zotero is **out of scope here** — see the [GUI test plan](gui-test-plan.md) (backs **S5** / **G4**) and the [Hermes CLI test plan](hermes-cli-test-plan.md). This plan is the prerequisite both of those build on: if the headless gate is red, don't bother with the GUI.
+**Boundary — validated elsewhere.** Anything needing Obsidian (QuickAdd instantiation, Dataview rendering, the launch screen and left-pane rail), Hermes (profile dispatch, the live write-gate, cron), or Zotero is **out of scope here** — see the [GUI test plan](gui-test-plan.md) (backs **S5** / **G4**) and the [Hermes CLI test plan](hermes-cli-test-plan.md). This plan is the prerequisite both of those build on: if the headless gate is red, don't bother with the GUI.
 
 **Where to run.** Repo root (`memoria-vault/`), any machine with Python 3.11+. Parts A/B/D/E need only Python; Part C additionally needs `shellcheck` and PowerShell + `PSScriptAnalyzer`. No vault runtime, no network except installing `requirements.txt`. The whole thing is scriptable — that's the point.
 
