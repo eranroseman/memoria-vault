@@ -235,10 +235,11 @@ def test_gated_prefix_fallbacks_match_folders_yaml():
     on their path, PyYAML optional), so they each carry the tuple hardcoded;
     schema.load_gated_prefixes is the one loader for in-repo consumers."""
     import patterns_mcp
-    import policy_mcp
+
+    from memoria.runtime.policy import REVIEW_GATED_PREFIXES
 
     canonical = tuple(schema.load_folders()["gated_prefixes"])
     assert canonical == schema.load_gated_prefixes()
     assert canonical == schema.FALLBACK_GATED_PREFIXES
-    assert canonical == policy_mcp.REVIEW_GATED_PREFIXES
+    assert canonical == REVIEW_GATED_PREFIXES
     assert canonical == patterns_mcp.REVIEW_GATED_PREFIXES

@@ -143,6 +143,7 @@ status.
 | [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | accepted |
 | [113](113-copi-guided-onboarding.md) | Co-PI-guided onboarding (deferred) | proposed |
 | [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
+| [115](115-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 
 <!-- ADR-INDEX:END -->
 

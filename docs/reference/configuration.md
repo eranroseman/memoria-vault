@@ -14,7 +14,7 @@ reference pages and schema files.
 
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
-| Hermes profile config | `src/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source, then redeploy profiles | `tests/test_profiles.py` |
+| Hermes profile config | `src/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source; regenerate capability blocks from `tool-registry.yaml`; then redeploy profiles | `tests/test_profiles.py` |
 | Profile metadata | `src/.memoria/profiles/memoria-*/distribution.yaml` | Hermes profile manifest | Memoria | Edit source | `tests/test_profiles.py` |
 | Profile identity | `src/.memoria/profiles/memoria-*/SOUL.md` | Hermes profile directory | Memoria, with PI customization inside release limits | Edit source; reconcile runtime drift intentionally | profile docs and tests |
 | Bundled profile skills | `src/.memoria/profiles/*/skills/` | Hermes profile directory | Memoria | Edit source | profile tests |
@@ -35,7 +35,10 @@ reference pages and schema files.
 
 ## Rendered versus authored
 
-`src/.memoria/profiles/**/config.yaml` is authored source.
+`src/.memoria/profiles/**/config.yaml` is checked-in source. Its mechanical
+capability blocks are generated from `src/.memoria/tool-registry.yaml` by
+`scripts/render_profile_configs.py`; profile-specific server wiring and model
+placeholders remain in the profile config.
 `~/.hermes/profiles/**/config.yaml` is rendered installed output. If the two
 drift, fix the source and redeploy unless the drift is an intentional local
 experiment.

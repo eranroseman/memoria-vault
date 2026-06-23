@@ -95,5 +95,3 @@ ignore = [
 # src/.memoria scripts run with a custom sys.path set before imports.
 "src/.memoria/**" = ["E402"]
 "scripts/**" = ["E402"]
-# board_export re-exports symbols via __all__; F401 fires falsely on those imports.
-"src/.memoria/mcp/board_export.py" = ["E402", "F401"]

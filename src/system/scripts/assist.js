@@ -15,7 +15,7 @@ const RESULTS_STAGE =
   "Do not write directly to canonical/current notes.";
 
 const PATTERNS_DIR = "system/patterns/";
-const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { fnv1a, queueHermesCard } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 const VERBS = {
   find: {
@@ -103,13 +103,13 @@ async function entry(params, settings = {}) {
 
   new Notice("Queuing assist " + verb + "…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq(spec.title(goal)) +
-      " --assignee " + spec.assignee + " --skill " + spec.skill +
-      " --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: spec.title(goal),
+      assignee: spec.assignee,
+      skill: spec.skill,
+      idemKey,
+      body,
+    });
     new Notice("✓ Assist " + verb + " card created (" + spec.assignee + ").", 6000);
   } catch (e) {
     new Notice(("Assist " + verb + " failed: " + e.message).slice(0, 250), 10000);
@@ -170,12 +170,12 @@ async function queuePattern(params, cp, ctx) {
 
   new Notice("Queuing assist pattern " + patternId + "…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Assist patterns: " + patternId + (ctx.activePath ? " on " + ctx.activePath : "")) +
-      " --assignee memoria-librarian --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: "Assist patterns: " + patternId + (ctx.activePath ? " on " + ctx.activePath : ""),
+      assignee: "memoria-librarian",
+      idemKey,
+      body,
+    });
     new Notice("✓ Assist patterns card created (" + patternId + ").", 6000);
   } catch (e) {
     new Notice(("Assist patterns failed: " + e.message).slice(0, 250), 10000);

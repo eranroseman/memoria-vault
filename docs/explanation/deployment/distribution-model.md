@@ -30,14 +30,14 @@ At install time, every system file is also staged at `<vault>/.memoria/golden/` 
 
 ---
 
-## The five profiles: one shared layer, four unique files
+## The five profiles: one shared layer, four profile files
 
 The agents ship as five hand-authored profile directories under `src/.memoria/profiles/` — `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`. Each agent is a **shared layer + a unique layer** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)):
 
 - **Shared:** `AGENTS.md` — the one "how we work in this vault" instruction set every agent reads, living in the vault root so there is exactly one copy of the house rules.
 - **Unique per agent:** `SOUL.md` (its posture — the stable stance, like *faithful* or *skeptical*), `config.yaml` (model, tools, and MCP connections), optional `skills/` (assigned per lane), and `distribution.yaml` (packaging metadata).
 
-So the agents share the house rules but each brings its own stance and toolset. Common policy has one home (`AGENTS.md`), and what remains per-profile is genuinely per-profile. At five profiles, hand-authoring the unique layers stays cheap, and a profile compiler remains unnecessary.
+So the agents share the house rules but each brings its own stance and toolset. Common policy has one home (`AGENTS.md`), and what remains per-profile is genuinely per-profile. At five profiles, a full profile compiler remains unnecessary. The narrow capability blocks in `config.yaml` are materialized from `src/.memoria/tool-registry.yaml` by `scripts/render_profile_configs.py`, so the tool allowlist has one owner while the runtime still receives plain Hermes `config.yaml` files.
 
 ## Why the profile install is idempotent
 

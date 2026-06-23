@@ -1,19 +1,2 @@
 #!/usr/bin/env bash
-# eval-cron.sh — the quarterly vault-eval run (ADR-11: diagnostic, never
-# gating). First scores the *previous* quarter's run off the board — by now its
-# cards have reported — appending one line to system/metrics/eval/runs.jsonl
-# (skipped when no results exist); then fans the gold set in system/eval/ out
-# as one idempotent kanban card per task, routed to the lane that owns the
-# workflow; the dispatch record is written to system/eval/last-run.md.
-# The installer substitutes {{PYTHON}} and {{VAULT_PATH}} when it copies this
-# to ~/.hermes/scripts/memoria-eval.sh.
-set -u
-status=0
-# shellcheck disable=SC2288  # {{PYTHON}} is a template placeholder, substituted at install time
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/telemetry/eval/eval_score.py" --vault "{{VAULT_PATH}}" --quarter previous >/dev/null || status=1
-# shellcheck disable=SC2288
-"{{PYTHON}}" "{{VAULT_PATH}}/.memoria/operations/telemetry/eval/eval_dispatch.py" --vault "{{VAULT_PATH}}" >/dev/null || status=1
-if [ "$status" -eq 0 ]; then
-  # shellcheck disable=SC2288
-  "{{PYTHON}}" "{{VAULT_PATH}}/.memoria/mcp/cron_heartbeat.py" --vault "{{VAULT_PATH}}" --job memoria-eval >/dev/null || true
-fi
+MEMORIA_PYTHON="{{PYTHON}}" MEMORIA_VAULT="{{VAULT_PATH}}" "{{VAULT_PATH}}/.memoria/scripts/cron-runner.sh" eval

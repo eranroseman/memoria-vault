@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compatibility entrypoint for the Memoria policy MCP.
+"""Entrypoint for the Memoria policy MCP.
 
 The behavior-preserving policy implementation is split under
 ``memoria.runtime.policy``:
@@ -11,8 +11,8 @@ The behavior-preserving policy implementation is split under
 - ``audit``: SHA-256 and append-only audit helpers
 - ``engine``: stateful lane cache, hash, audit, loudness, and skill narrowing
 
-This file remains the installed/deployed CLI path and re-exports the old public
-symbols so existing tests, hooks, and profile config do not move in the split PR.
+This file remains the installed/deployed CLI path. Import policy internals from
+``memoria.runtime.policy`` instead of this script.
 """
 
 from __future__ import annotations
@@ -31,74 +31,9 @@ for _path in (_RELEASE_ROOT, _RUNTIME_ROOT, _OPERATIONS_LIB):
 
 from policy_server import build_server, resolve_vault
 
-from memoria.runtime.policy.audit import (
-    AUDIT_RELPATH,
-    AUDIT_SCHEMA_VERSION,
-    EMPTY_SHA256,
-    REVIEW_MODE,
-    append_audit,
-    sha256_file,
-)
-from memoria.runtime.policy.decision import (
-    AUTO_FIX_ALLOWED_CLASSES,
-    AUTO_FIX_DENY_CLASSES,
-    AUTO_FIX_DRY_RUN_CLASSES,
-    compose_skill_deny,
-    decide,
-    is_review_gated,
-    set_gated_prefixes,
-)
+from memoria.runtime.policy.decision import set_gated_prefixes
 from memoria.runtime.policy.engine import PolicyEngine
-from memoria.runtime.policy.lanes import (
-    LANE_OVERRIDE_RELDIR,
-    load_gated_prefixes,
-    load_lane,
-    parse_lane,
-    yaml,
-)
-from memoria.runtime.policy.model import Decision, LanePolicy
-from memoria.runtime.policy.paths import (
-    ACTIONS,
-    MUTATING_ACTIONS,
-    REVIEW_GATED_PREFIXES,
-    glob_to_regex,
-    normalize_path,
-    path_matches,
-    within_scope,
-)
-
-__all__ = [
-    "ACTIONS",
-    "AUDIT_RELPATH",
-    "AUDIT_SCHEMA_VERSION",
-    "AUTO_FIX_ALLOWED_CLASSES",
-    "AUTO_FIX_DENY_CLASSES",
-    "AUTO_FIX_DRY_RUN_CLASSES",
-    "EMPTY_SHA256",
-    "LANE_OVERRIDE_RELDIR",
-    "MUTATING_ACTIONS",
-    "REVIEW_GATED_PREFIXES",
-    "REVIEW_MODE",
-    "Decision",
-    "LanePolicy",
-    "PolicyEngine",
-    "append_audit",
-    "build_server",
-    "compose_skill_deny",
-    "decide",
-    "glob_to_regex",
-    "is_review_gated",
-    "load_gated_prefixes",
-    "load_lane",
-    "normalize_path",
-    "parse_lane",
-    "path_matches",
-    "resolve_vault",
-    "set_gated_prefixes",
-    "sha256_file",
-    "within_scope",
-    "yaml",
-]
+from memoria.runtime.policy.lanes import load_gated_prefixes
 
 
 def main() -> None:

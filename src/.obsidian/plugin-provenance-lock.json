@@ -94,7 +94,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/quickadd/data.json": "5a33891f25e1b9a1fb90f3be360c1bf829c4f451423a57c2fae7b735fd09dbad",
+        "plugins/quickadd/data.json": "03a93ee7d4bf9672f6e7b94411d7b47a14dba8c2b10d0d86d1fc302092df975e",
         "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
         "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
         "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"
@@ -126,7 +126,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/modalforms/data.json": "0ede17c1bcbdea747149d9141c69f445c5d81699c41c77404fadc73076bc6110",
+        "plugins/modalforms/data.json": "28ba98162e99484509432405d2561316fb2bd77334fb92c7d636419af46a9976",
         "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
         "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"

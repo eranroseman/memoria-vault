@@ -9,7 +9,48 @@ import sqlite3
 import subprocess
 from pathlib import Path
 
-from board_export_common import REQUIRED_SESSION_COLUMNS, worker_session_ids
+REQUIRED_SESSION_COLUMNS = {
+    "id",
+    "model",
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "reasoning_tokens",
+    "estimated_cost_usd",
+    "actual_cost_usd",
+    "cost_status",
+    "cost_source",
+    "billing_provider",
+    "pricing_version",
+}
+
+
+def _metadata_value(value) -> dict:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            return parsed if isinstance(parsed, dict) else {}
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def worker_session_ids(card: dict) -> list[str]:
+    out: list[str] = []
+    runs = card.get("runs") or []
+    if not isinstance(runs, list):
+        return out
+    for run in runs:
+        if not isinstance(run, dict):
+            continue
+        md = _metadata_value(run.get("metadata"))
+        sid = md.get("worker_session_id") or run.get("worker_session_id")
+        if sid:
+            out.append(str(sid))
+    return out
 
 
 class CostDoctorError(RuntimeError):

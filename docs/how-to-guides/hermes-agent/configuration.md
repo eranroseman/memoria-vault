@@ -7,7 +7,7 @@ nav_order: 1
 
 # Configure a profile
 
-Edit a profile's `config.yaml`, `SOUL.md`, skills, or lane-override to change its behavior — model routing, write permissions, or API credentials. Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer` ([Profile capabilities](../../reference/profiles.md)).
+Edit a profile's `config.yaml`, `SOUL.md`, skills, or lane-override to change its behavior — model routing, write permissions, or API credentials. Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer` ([Profile capabilities](../../reference/profiles.md)). For tool allowlist changes, edit `src/.memoria/tool-registry.yaml` and run `scripts/render_profile_configs.py --write` instead of hand-editing the generated `platform_toolsets` or MCP `tools.include` blocks.
 
 ## Where profile files live
 
@@ -25,7 +25,7 @@ Always edit the vault source. Re-deploy with `bash scripts/install.sh --profiles
 | File | Controls | Who edits |
 | --- | --- | --- |
 | `SOUL.md` | Profile identity, posture, behavioral constraints | Author (you) |
-| `config.yaml` | Model routing, `mcp_servers`, and the `plugins` block enabling the `memoria-policy-gate` write gate | Author (installer substitutes Python, vault, qmd, and model tokens) |
+| `config.yaml` | Model routing, `mcp_servers`, generated capability blocks, and the `plugins` block enabling the `memoria-policy-gate` write gate | Author plus `scripts/render_profile_configs.py` (installer substitutes Python, vault, qmd, and model tokens) |
 | `distribution.yaml` | Packages the profile for `hermes profile install` | Author |
 | `skills/` | Skill packages the profile can load | Author |
 | `.env` (deployed copy only) | API keys and secrets | **Human only** — never committed to git |

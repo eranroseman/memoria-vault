@@ -1,10 +1,12 @@
 """The five shipped agents (ADR-48): structure, wiring, and ceiling consistency."""
 
+import subprocess
 from pathlib import Path
 
 import yaml
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
 PROFILES = SRC / ".memoria" / "profiles"
 LANES = SRC / ".memoria" / "lane-overrides"
 
@@ -257,6 +259,10 @@ def test_mcp_tool_filters_match_registry_allowlist():
                 continue
             actual = set(cfg["mcp_servers"][server]["tools"]["include"])
             assert actual == tools, f"{name}/{server}"
+
+
+def test_profile_configs_are_materialized_from_registry():
+    subprocess.run(["python", "scripts/render_profile_configs.py", "--check"], cwd=ROOT, check=True)
 
 
 def test_worker_skills_and_curator_are_locked_down():

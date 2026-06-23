@@ -87,7 +87,8 @@ a shell hook. The plugin registers two lifecycle hooks on the plugin manager:
 - `post_tool_call` → complete the audit record (paired `after_hash`).
 
 It **reuses the tested decision core verbatim** — `policy_hook.evaluate_pre` /
-`evaluate_post` and `policy_mcp.PolicyEngine` — so no policy logic is duplicated.
+`evaluate_post` and `memoria.runtime.policy.PolicyEngine` — so no policy logic is
+duplicated.
 The `hooks:` block is removed from every profile `config.yaml`; the plugin is
 turned on per lane via `plugins.enabled` and deployed (with `{{PROFILE}}` /
 `{{VAULT_PATH}}` substituted) by the installer's `deploy_policy_plugin`.

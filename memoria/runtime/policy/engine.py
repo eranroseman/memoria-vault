@@ -7,6 +7,7 @@ from typing import Any
 
 from memoria.runtime.jsonl import iter_jsonl
 from memoria.runtime.time import now_iso
+from memoria.runtime.vaultio import read_frontmatter
 
 from .audit import AUDIT_RELPATH, append_audit, sha256_file
 from .decision import compose_skill_deny, decide, is_review_gated
@@ -190,12 +191,29 @@ class PolicyEngine:
 
 
 def _open_blockers(vault: Path) -> list[dict[str, str]]:
-    import loudness
-
-    return loudness.open_blockers(vault)
+    blockers: list[dict[str, str]] = []
+    for path in sorted((vault / "inbox").glob("*.md")):
+        frontmatter = read_frontmatter(path)
+        if (
+            str(frontmatter.get("loudness") or "").lower() == "block"
+            and str(frontmatter.get("lifecycle") or "").lower() == "proposed"
+        ):
+            blockers.append(
+                {
+                    "path": str(path.relative_to(vault)).replace("\\", "/"),
+                    "title": str(frontmatter.get("title") or path.stem),
+                    "type": str(frontmatter.get("type") or "card"),
+                }
+            )
+    return blockers
 
 
 def _blocker_message(blockers: list[dict[str, str]]) -> str:
-    import loudness
-
-    return loudness.blocker_message(blockers)
+    if not blockers:
+        return ""
+    names = ", ".join(f"{blocker['path']} ({blocker['title']})" for blocker in blockers[:3])
+    more = "" if len(blockers) <= 3 else f"; +{len(blockers) - 3} more"
+    return (
+        "open block-loudness card(s) require PI acknowledgement before "
+        f"dispatch/promotion: {names}{more}"
+    )

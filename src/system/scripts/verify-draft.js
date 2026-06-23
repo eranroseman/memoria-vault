@@ -14,7 +14,7 @@ const LANE = "verify";
 const ASSIGNEE = "memoria-peer-reviewer";
 const SKILL = "verify-check-citation";
 const DRAFT_PREFIX = "projects/";
-const { appendCallout, fnv1a, run, shq, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { appendCallout, fnv1a, queueHermesCard, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -53,12 +53,13 @@ module.exports = async (params) => {
 
   new Notice("Wrote [!verification]; delegating to the " + LANE + " lane…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Verify draft: " + ref) +
-      " --assignee " + ASSIGNEE + " --skill " + SKILL + " --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: "Verify draft: " + ref,
+      assignee: ASSIGNEE,
+      skill: SKILL,
+      idemKey,
+      body,
+    });
     new Notice("✓ Verification callout written; " + gapCards.length + " gap card(s) staged; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 7000);
   } catch (e) {
     new Notice(("Verify delegation failed after writing callout: " + e.message).slice(0, 250), 10000);

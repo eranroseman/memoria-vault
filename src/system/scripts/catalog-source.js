@@ -11,7 +11,7 @@
 const LANE = "catalog";
 const ASSIGNEE = "memoria-librarian";
 const SKILL = "catalog-enrich-record";
-const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { fnv1a, queueHermesCard } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -36,12 +36,13 @@ module.exports = async (params) => {
 
   new Notice("Delegating to the " + LANE + " lane…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Catalog source: " + ref) +
-      " --assignee " + ASSIGNEE + " --skill " + SKILL + " --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: "Catalog source: " + ref,
+      assignee: ASSIGNEE,
+      skill: SKILL,
+      idemKey,
+      body,
+    });
     new Notice("✓ Card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
   } catch (e) {
     new Notice(("Catalog delegation failed: " + e.message).slice(0, 250), 10000);

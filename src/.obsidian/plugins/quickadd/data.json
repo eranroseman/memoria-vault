@@ -29,11 +29,13 @@
         "id": "a2dbb3f3-9000-4cae-a60d-09d5bdf9fe6b",
         "commands": [
           {
-            "name": "archive-fleeting",
+            "name": "archive-active-note",
             "type": "UserScript",
             "id": "b7cc34f4-7059-4bc7-9a9c-1a238709793a",
-            "path": "system/scripts/archive-fleeting.js",
-            "settings": {}
+            "path": "system/scripts/archive-active-note.js",
+            "settings": {
+              "Type": "fleeting"
+            }
           }
         ]
       }
@@ -48,11 +50,13 @@
         "id": "86009e03-5790-47f1-9f22-c4f6d2df2b0d",
         "commands": [
           {
-            "name": "archive-claim",
+            "name": "archive-active-note",
             "type": "UserScript",
             "id": "8675649a-a713-4087-ab97-f02764f94a55",
-            "path": "system/scripts/archive-claim.js",
-            "settings": {}
+            "path": "system/scripts/archive-active-note.js",
+            "settings": {
+              "Type": "claim"
+            }
           }
         ]
       }
