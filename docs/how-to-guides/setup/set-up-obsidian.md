@@ -18,7 +18,7 @@ Open the vault in Obsidian, activate the bundled plugins, and copy the REST API 
 
 **1. Open the vault.**
 
-In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. On a fresh vault you land on the `home.md` welcome note; once you start working, Obsidian reopens your last session on the next launch.
+In Obsidian: Open vault → Open folder as vault → navigate to the runtime vault the installer created (default `~/Memoria`, off OneDrive). The vault name shown is whatever that folder is called on disk. On startup the saved **Memoria** shell opens: `home.md` in the main pane, the pinned rail on the left, and the Co-PI pane on the right.
 
 **2. Enable community plugins.**
 
@@ -85,7 +85,7 @@ Memoria's linting is the Linter **operation** — deterministic Python with a da
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - The left ribbon includes Memoria capture, delegate, and resolve buttons
 - Modal Forms lists the four Memoria capture/project forms
-- A fresh vault lands on the `home.md` welcome note
+- Startup restores the **Memoria** shell with `home.md`, the pinned rail, and the Co-PI pane
 
 Once Hermes is set up, the working loop is: use the left-pane rail to open **Library** for the reading pipeline, use `Memoria:` commands for actions, and open the Agent Client pane when you want conversational help.
 

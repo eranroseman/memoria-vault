@@ -6,7 +6,7 @@ nav_order: 1
 
 # Vault launch screen
 
-On a fresh vault — or after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Once you start working, Obsidian reopens your last session on the next launch, so you return to whatever you had open. Navigation between surfaces is the left-pane rail ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
+On startup — and after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Navigation between surfaces is the left-pane rail ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ On a fresh vault — or after a layout reset — you land on the vault-root `hom
 
 **1. Land on the welcome note.**
 
-On a fresh vault or a layout reset, the saved **Memoria** workspace seeds `home.md` — a first-run welcome note. It is a "start here" screen, not a dashboard: capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](use-workspaces.md)).
+On startup or a layout reset, the saved **Memoria** workspace seeds `home.md` — a welcome note. It is a "start here" screen, not a dashboard: capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](use-workspaces.md)).
 
 **2. Switch spaces from the rail.**
 
@@ -34,8 +34,7 @@ Keep `research-focus.md` current — the Librarian reads it at the start of ever
 
 ## Verify
 
-- A fresh vault or layout reset lands on the `home.md` welcome note
-- After you have worked in the vault, relaunching Obsidian reopens your last session
+- Startup or layout reset lands on the `home.md` welcome note with the rail pinned
 - The left-pane rail shows the Inbox action count and health band under **Now**, and **Library** · **Knowledge** · **Project** under **Places**
 - Clicking **Capture fleeting** opens the QuickAdd capture prompt
 

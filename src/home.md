@@ -27,5 +27,5 @@ rail** — *Now* shows what's waiting on you, *Places* are the three rooms you w
 Anything waiting on a decision collects in the [[spaces/inbox|queue]] — clearing it
 to empty is the goal.
 
-> [!brief] Fresh-vault launch screen. Obsidian reopens your last session once you
-> start working — return here any time from the rail.
+> [!brief] Launch screen. Obsidian restores this shell on startup — use the rail
+> for everyday movement.

@@ -94,8 +94,8 @@ not competitors — kept as sibling tabs.
 
 ### Edges
 
-- **Home** — the cold-start welcome seed only ([ADR-115](115-inbox-queue-and-retired-homepage.md));
-  session-restore returns the human to work, so home is never in the daily loop.
+- **Home** — the startup/reset welcome seed only ([ADR-115](115-inbox-queue-and-retired-homepage.md));
+  the rail owns the daily loop, so home is never the navigation hub.
 - **Co-PI** — the right pane, unchanged.
 
 ## Consequences

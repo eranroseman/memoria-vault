@@ -121,6 +121,22 @@ def test_macro_ids_exist_and_are_unique():
             seen.add(i)
 
 
+def test_startup_macro_restores_saved_memoria_shell():
+    choices = {c["name"]: c for c in _choices()}
+    choice = choices["Memoria: restore shell on startup"]
+    assert choice["type"] == "Macro"
+    assert choice["command"] is False
+    assert choice["runOnStartup"] is True
+
+    [cmd] = choice["macro"]["commands"]
+    assert cmd["path"] == "system/scripts/restore-memoria-shell.js"
+
+    script = (SCRIPTS / "restore-memoria-shell.js").read_text(encoding="utf-8")
+    assert 'WORKSPACE_NAME = "Memoria"' in script
+    assert "internalPlugins?.plugins?.workspaces?.instance" in script
+    assert "loadWorkspace(WORKSPACE_NAME)" in script
+
+
 def _lane_profile():
     """Parse LANE_PROFILE out of tasks_mcp.py (regex — no import, no deps)."""
     src = TASKS_MCP.read_text(encoding="utf-8")

@@ -44,7 +44,8 @@
                     "mode": "preview",
                     "source": false
                   }
-                }
+                },
+                "pinned": true
               },
               {
                 "id": "memoria-left-files",
