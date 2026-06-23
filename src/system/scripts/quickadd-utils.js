@@ -27,6 +27,51 @@ function fnv1a(s) {
   return h.toString(16).padStart(8, "0");
 }
 
+function queueHermesCard(cp, card) {
+  let command =
+    "hermes kanban create " + shq(card.title) +
+    " --assignee " + card.assignee +
+    (card.skill ? " --skill " + card.skill : "") +
+    " --created-by quickadd" +
+    " --idempotency-key " + shq(card.idemKey) +
+    " --body " + shq(card.body);
+  return run(cp, command);
+}
+
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function archiveActiveNote(params, spec) {
+  const { Notice } = params.obsidian;
+  const app = params.app || globalThis.app;
+  const file = app.workspace.getActiveFile();
+  if (!file) {
+    new Notice("No active note — open the " + spec.label + " note first.", 6000);
+    return;
+  }
+  if (!file.path.startsWith(spec.folder) || !file.path.endsWith(".md")) {
+    new Notice(
+      "Not a " + spec.label + " note (" + file.path + ") — only notes under " +
+        spec.folder + " archive here.",
+      8000
+    );
+    return;
+  }
+  try {
+    await app.fileManager.processFrontMatter(file, (fm) => {
+      if ((fm.type || "") !== spec.type) {
+        throw new Error("Active note is not type: " + spec.type + ".");
+      }
+      fm.lifecycle = "archived";
+      fm.archived = todayIsoDate();
+    });
+    new Notice("Archived " + spec.label + " note: " + file.basename, 6000);
+  } catch (e) {
+    new Notice(("Archive " + spec.label + " note failed: " + (e?.message || e)).slice(0, 250), 10000);
+  }
+}
+
 async function uniquePath(adapter, firstPath) {
   const dot = firstPath.lastIndexOf(".");
   const base = dot === -1 ? firstPath : firstPath.slice(0, dot);
@@ -74,12 +119,15 @@ async function appendCallout(app, file, callout) {
 
 module.exports = {
   appendCallout,
+  archiveActiveNote,
   exists,
   fnv1a,
   normalizeList,
+  queueHermesCard,
   run,
   shq,
   slug,
+  todayIsoDate,
   uniquePath,
   yamlString,
 };

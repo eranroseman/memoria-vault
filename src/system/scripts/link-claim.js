@@ -15,7 +15,7 @@ const ASSIGNEE = "memoria-librarian";
 const SKILL = "link-suggest-claim";
 const CLAIM_PREFIX = "notes/claims/";
 const SUGGESTION_LIMIT = 10;
-const { appendCallout, fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { appendCallout, fnv1a, queueHermesCard } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 const STOPWORDS = new Set([
   "about", "after", "again", "against", "also", "because", "before", "between",
   "claim", "could", "from", "have", "into", "more", "note", "only", "paper",
@@ -57,12 +57,13 @@ module.exports = async (params) => {
 
   new Notice("Wrote [!suggestions]; delegating to the " + LANE + " lane…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Link claim: " + ref) +
-      " --assignee " + ASSIGNEE + " --skill " + SKILL + " --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: "Link claim: " + ref,
+      assignee: ASSIGNEE,
+      skill: SKILL,
+      idemKey,
+      body,
+    });
     new Notice("✓ Suggestions written; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
   } catch (e) {
     new Notice(("Link delegation failed after writing suggestions: " + e.message).slice(0, 250), 10000);

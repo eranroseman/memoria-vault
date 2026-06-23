@@ -284,16 +284,15 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
             f"-- blocked fail-closed.",
         }
 
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
-        import policy_mcp  # reuse the tested decision core
+        from memoria.runtime.policy import PolicyEngine
     except Exception as exc:  # noqa: BLE001
         return {
             "decision": "block",
             "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed.",
         }
 
-    resp = policy_mcp.PolicyEngine(vault).check(
+    resp = PolicyEngine(vault).check(
         profile, action, path, task_id, reason=f"obsidian:{payload.get('tool_name')}"
     )
     decision = resp.get("decision")
@@ -340,12 +339,11 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
     extra = payload.get("extra") or {}
     task_id = extra.get("task_id") or payload.get("session_id") or ""
 
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
     try:
-        import policy_mcp
+        from memoria.runtime.policy import EMPTY_SHA256, PolicyEngine
 
-        policy_mcp.PolicyEngine(vault).complete_write(
-            profile, action, path, task_id, stashed.get("before_hash", policy_mcp.EMPTY_SHA256)
+        PolicyEngine(vault).complete_write(
+            profile, action, path, task_id, stashed.get("before_hash", EMPTY_SHA256)
         )
     except Exception as exc:  # noqa: BLE001
         # Never break the agent loop on the audit-completion path, but always

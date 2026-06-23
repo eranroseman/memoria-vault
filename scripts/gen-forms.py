@@ -174,16 +174,6 @@ def generate() -> dict:
                 ],
             ),
             _form(
-                "Memoria hub capture",
-                "memoria-hub-capture",
-                [
-                    _field("title", "Hub title", {"type": "text"}, required=True),
-                    _field("topic", "Topic", _fixed_select(topics), required=True),
-                    _field("members", "Member claims", _note_multi("notes/claims")),
-                    _field("body", "Shape of the topic", {"type": "textarea"}),
-                ],
-            ),
-            _form(
                 "Memoria project start",
                 "memoria-project-start",
                 [
@@ -205,15 +195,6 @@ def generate() -> dict:
                         _radio(project["enums"]["output_mode"]),
                         required=True,
                     ),
-                ],
-            ),
-            _form(
-                "Memoria thesis capture",
-                "memoria-thesis-capture",
-                [
-                    _field("title", "Thesis", {"type": "textarea"}, required=True),
-                    _field("project", "Project", _notes("projects"), required=True),
-                    _field("sources", "Sources", _note_multi("catalog/papers"), required=True),
                 ],
             ),
         ],

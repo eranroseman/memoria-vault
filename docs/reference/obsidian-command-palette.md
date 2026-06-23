@@ -18,9 +18,9 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 | Command | Output | Implementation |
 | --- | --- | --- |
 | `Memoria: capture fleeting` | Opens the `memoria-fleeting-capture` Modal Forms form, writes one raw item to `notes/fleeting/` (`lifecycle: proposed`, `origin: human`), and leaves processing to the Inbox queue. | QuickAdd Macro → `system/scripts/capture-fleeting.js` |
-| `Memoria: archive fleeting note` | The **active** fleeting note (must be under `notes/fleeting/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-fleeting.js` |
+| `Memoria: archive fleeting note` | The **active** fleeting note (must be under `notes/fleeting/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-active-note.js` (`Type: fleeting`) |
 | `Memoria: write claim note` | Opens the `memoria-claim-capture` Modal Forms form, writes a standalone claim in the **review-gated home** (`notes/claims/`), runs the pre-file similarity shadow check, and opens the note. | QuickAdd Macro → `system/scripts/write-claim.js` |
-| `Memoria: archive claim note` | The **active** claim note (must be under `notes/claims/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-claim.js` |
+| `Memoria: archive claim note` | The **active** claim note (must be under `notes/claims/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-active-note.js` (`Type: claim`) |
 | `Memoria: load sample vault` | Copies the bundled `.memoria/samples/mediterranean-diet/` `catalog/` and `notes/` files into the live vault, skipping existing files so user work is not overwritten. | QuickAdd Macro → `src/system/scripts/load-sample-vault.js` |
 | `Memoria: remove sample vault` | Archives live `catalog/` and `notes/` files labeled `sample: true`, leaving the hidden bundle in place. | QuickAdd Macro → `src/system/scripts/remove-sample-vault.js` |
 | `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |

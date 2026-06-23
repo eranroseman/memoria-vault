@@ -56,10 +56,8 @@ def test_structured_capture_forms_cover_source_and_project_setup():
         "memoria-fleeting-capture",
         "memoria-source-capture",
         "memoria-claim-capture",
-        "memoria-hub-capture",
         "memoria-project-start",
-        "memoria-thesis-capture",
-    } <= set(forms)
+    } == set(forms)
 
 
 def test_fleeting_capture_form_carries_prompt_instructions():
@@ -126,14 +124,13 @@ def test_source_capture_uses_catalog_note_picker():
     assert fields["entity"]["input"] == {"type": "note", "folder": "catalog"}
 
 
-def test_claim_and_thesis_sources_use_catalog_paper_picker():
-    for form_name in ("memoria-claim-capture", "memoria-thesis-capture"):
-        fields = {field["name"]: field for field in _forms_by_name()[form_name]["fields"]}
-        assert fields["sources"]["input"] == {
-            "type": "multiselect",
-            "source": "notes",
-            "folder": "catalog/papers",
-        }
+def test_claim_sources_use_catalog_paper_picker():
+    fields = {field["name"]: field for field in _forms_by_name()["memoria-claim-capture"]["fields"]}
+    assert fields["sources"]["input"] == {
+        "type": "multiselect",
+        "source": "notes",
+        "folder": "catalog/papers",
+    }
 
 
 def test_project_start_form_covers_project_schema_fields():

@@ -247,21 +247,24 @@ def test_archive_fleeting_note_is_narrow_and_in_place():
     choice = choices["Memoria: archive fleeting note"]
     assert choice["type"] == "Macro"
     [cmd] = choice["macro"]["commands"]
-    assert cmd["path"] == "system/scripts/archive-fleeting.js"
+    assert cmd["path"] == "system/scripts/archive-active-note.js"
+    assert cmd["settings"] == {"Type": "fleeting"}
 
-    script = (SCRIPTS / "archive-fleeting.js").read_text(encoding="utf-8")
+    script = (SCRIPTS / "archive-active-note.js").read_text(encoding="utf-8")
+    helper = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
+    combined = script + helper
     for marker in (
-        'file.path.startsWith("notes/fleeting/")',
+        'folder: "notes/fleeting/"',
         'file.path.endsWith(".md")',
-        'fm.type || "") !== "fleeting"',
+        'type: "fleeting"',
         'fm.lifecycle = "archived"',
         "fm.archived = todayIsoDate()",
         "processFrontMatter",
     ):
-        assert marker in script
-    assert "unlink" not in script
-    assert "trash" not in script
-    assert "delete" not in script
+        assert marker in combined
+    assert "unlink" not in combined
+    assert "trash" not in combined
+    assert "delete" not in combined
 
 
 def test_archive_claim_note_is_narrow_and_in_place():
@@ -269,20 +272,23 @@ def test_archive_claim_note_is_narrow_and_in_place():
     choice = choices["Memoria: archive claim note"]
     assert choice["type"] == "Macro"
     [cmd] = choice["macro"]["commands"]
-    assert cmd["path"] == "system/scripts/archive-claim.js"
+    assert cmd["path"] == "system/scripts/archive-active-note.js"
+    assert cmd["settings"] == {"Type": "claim"}
 
-    script = (SCRIPTS / "archive-claim.js").read_text(encoding="utf-8")
+    script = (SCRIPTS / "archive-active-note.js").read_text(encoding="utf-8")
+    helper = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
+    combined = script + helper
     for marker in (
-        'file.path.startsWith("notes/claims/")',
+        'folder: "notes/claims/"',
         'file.path.endsWith(".md")',
-        'fm.type || "") !== "claim"',
+        'type: "claim"',
         'fm.lifecycle = "archived"',
         "fm.archived = todayIsoDate()",
         "processFrontMatter",
     ):
-        assert marker in script
-    assert "unlink" not in script
-    assert "trash" not in script
+        assert marker in combined
+    assert "unlink" not in combined
+    assert "trash" not in combined
 
 
 def test_write_claim_note_uses_guided_form_and_template_renderer():
@@ -489,7 +495,8 @@ def test_link_claim_writes_suggestions_callout_before_delegating():
     assert "async function appendCallout" in utils
     assert "app.vault.modify(file," in utils
     assert "optional LLM one-line explanations" in script
-    assert "hermes kanban create" in script
+    assert "queueHermesCard(cp" in script
+    assert "hermes kanban create" in utils
 
 
 def test_link_claim_excludes_superseded_claims_by_default():
@@ -512,7 +519,8 @@ def test_verify_draft_writes_verification_callout_before_delegating():
     assert "async function appendCallout" in utils
     assert "app.vault.modify(file," in utils
     assert "The deterministic [!verification] preflight callout has been written" in script
-    assert "hermes kanban create" in script
+    assert "queueHermesCard(cp" in script
+    assert "hermes kanban create" in utils
 
 
 def test_capture_and_catalog_cards_request_source_note_stub():

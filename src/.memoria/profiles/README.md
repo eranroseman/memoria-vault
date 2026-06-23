@@ -3,11 +3,14 @@
 Each `memoria-*` directory is a deployable Hermes profile:
 
 - `SOUL.md` defines posture.
-- `config.yaml` defines runtime wiring and MCP servers.
+- `config.yaml` defines runtime wiring and MCP servers. Its capability blocks
+  are materialized by `scripts/render_profile_configs.py` from
+  `../tool-registry.yaml`; edit the registry, then regenerate.
 - `distribution.yaml` defines package metadata.
 - `skills/` and `cron/` contain profile-owned additions.
 
 Capability ownership lives in `../tool-registry.yaml`; path and routing ceilings
 live in `../lane-overrides/`. Profile files consume those contracts and must not
-silently widen them. Run `scripts/agents_doctor.py --write` after profile or lane
-changes to refresh the derived profile-policy matrix.
+silently widen them. Run `scripts/render_profile_configs.py --write` after tool
+changes, and `scripts/agents_doctor.py --write` after profile or lane changes to
+refresh the derived profile-policy matrix.

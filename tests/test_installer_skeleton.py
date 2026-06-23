@@ -71,9 +71,9 @@ def test_installer_cron_helper_keeps_all_job_schedules():
 
 
 def test_lint_cron_writes_lint_findings_telemetry():
-    text = (ROOT / "src/.memoria/scripts/lint-cron.sh").read_text(encoding="utf-8")
+    text = (ROOT / "src/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
-    assert "{{VAULT_PATH}}/system/logs/lint-findings.jsonl" in text
+    assert "$vault/system/logs/lint-findings.jsonl" in text
 
 
 def test_zotero_left_the_installer():

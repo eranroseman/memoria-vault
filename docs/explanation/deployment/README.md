@@ -12,7 +12,7 @@ How Memoria is packaged, installed, and deployed. These pages explain the _ratio
 
 | Page                                          | What it explains                                                                                                                                                    |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Distribution model](distribution-model.md)   | How profiles and the vault are packaged and installed — the repo as the install unit, idempotent deploy, hand-authored profiles                                     |
+| [Distribution model](distribution-model.md)   | How profiles and the vault are packaged and installed — the repo as the install unit, idempotent deploy, and generated capability blocks                            |
 | [Bootstrap installer](bootstrap-installer.md) | The one-command installer's design and decided rules for native Windows production and Linux/WSL testing                                                           |
 | [Deployment options](deployment-options.md)   | The adopted `local-only` default and the conventions common to every sync pattern (Git history, `memoria.bib` in-vault, the append-only audit log, one dispatcher per vault) |
 | [Always-on VPS design](always-on-vps-design.md) | Deferred `always-on` topology and validation shape; not a supported setup path. |

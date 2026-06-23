@@ -15,7 +15,7 @@ Why a plugin and not the `hooks:` shell hook it replaces (ADR-28):
     caught), receives the `task_id`, and can be made fail-CLOSED.
 
 It reuses the tested decision core verbatim — `policy_hook.evaluate_pre` /
-`evaluate_post` and `policy_mcp.PolicyEngine` — so no policy logic lives here.
+`evaluate_post` and `memoria.runtime.policy.PolicyEngine` — so no policy logic lives here.
 
 The installer substitutes {{PROFILE}} and {{VAULT_PATH}} per lane at deploy time.
 """

@@ -1,23 +1,25 @@
 """L1 component test for the policy MCP and split policy core."""
 
-import policy_mcp as _m
+import json
+from pathlib import Path
+
 import pytest
 from _util import CheckHarness
 
-AUDIT_RELPATH = _m.AUDIT_RELPATH
-EMPTY_SHA256 = _m.EMPTY_SHA256
-LANE_OVERRIDE_RELDIR = _m.LANE_OVERRIDE_RELDIR
-LanePolicy = _m.LanePolicy
-Path = _m.Path
-PolicyEngine = _m.PolicyEngine
-compose_skill_deny = _m.compose_skill_deny
-decide = _m.decide
-json = _m.json
-load_lane = _m.load_lane
-normalize_path = _m.normalize_path
-path_matches = _m.path_matches
-sha256_file = _m.sha256_file
-yaml = _m.yaml
+from memoria.runtime.policy import (
+    AUDIT_RELPATH,
+    EMPTY_SHA256,
+    LANE_OVERRIDE_RELDIR,
+    LanePolicy,
+    PolicyEngine,
+    compose_skill_deny,
+    decide,
+    load_lane,
+    normalize_path,
+    path_matches,
+    sha256_file,
+)
+from memoria.runtime.policy.lanes import yaml
 
 
 def test_policy_mcp():
@@ -380,7 +382,7 @@ def test_shipped_lanes_deny_template_mutations():
     system/templates/. Agents are blocked here (deny.write `system/**`, Co-PI
     `**`); accidental *human* overwrites are the golden copy's job
     (tests/test_golden_restore.py)."""
-    if _m.yaml is None:
+    if yaml is None:
         pytest.skip("PyYAML not installed")
     src = Path(__file__).resolve().parent.parent / "src"
     path = "system/templates/claim.md"

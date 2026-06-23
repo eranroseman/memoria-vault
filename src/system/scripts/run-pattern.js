@@ -11,7 +11,7 @@
 
 const ASSIGNEE = "memoria-librarian";
 const PATTERNS_DIR = "system/patterns/";
-const { fnv1a, run, shq } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { fnv1a, queueHermesCard } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -56,12 +56,12 @@ module.exports = async (params) => {
 
   new Notice("Queuing pattern " + patternId + "…", 3000);
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Run pattern: " + patternId + (ref ? " on " + ref : "")) +
-      " --assignee " + ASSIGNEE + " --created-by quickadd" +
-      " --idempotency-key " + shq(idemKey) +
-      " --body " + shq(body)
-    );
+    await queueHermesCard(cp, {
+      title: "Run pattern: " + patternId + (ref ? " on " + ref : ""),
+      assignee: ASSIGNEE,
+      idemKey,
+      body,
+    });
     new Notice("✓ Card created on the Librarian lane (" + patternId + ").", 6000);
   } catch (e) {
     new Notice(("Pattern run failed: " + e.message).slice(0, 250), 10000);
