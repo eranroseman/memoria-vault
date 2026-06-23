@@ -118,6 +118,13 @@ def test_installers_render_profile_model_placeholders():
     assert "qwen2.5:7b" in ps
 
 
+def test_installer_removes_legacy_profile_mcp_json():
+    text = INSTALL.read_text(encoding="utf-8")
+    assert "remove_legacy_profile_mcp_json()" in text
+    assert 'run rm -f "$profile_dir/mcp.json"' in text
+    assert 'remove_legacy_profile_mcp_json "$HERMES_PROFILES_DIR/$p"' in text
+
+
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
     assert "python_install_guidance()" in text

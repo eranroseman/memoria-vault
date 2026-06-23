@@ -14,19 +14,30 @@ import policy_hook as _m
 
 evaluate_pre = _m.evaluate_pre
 Path = _m.Path
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _payload(tool_name: str) -> dict:
+    return {
+        "tool_name": tool_name,
+        "tool_input": {},
+        "session_id": "t_sweep",
+        "extra": {"task_id": "t_sweep"},
+    }
 
 
 def _decide(tool_name: str, profile: str = "memoria-copi") -> dict:
-    return evaluate_pre(
-        {
-            "tool_name": tool_name,
-            "tool_input": {},
-            "session_id": "t_sweep",
-            "extra": {"task_id": "t_sweep"},
-        },
-        profile,
-        Path("/nonexistent"),
+    return evaluate_pre(_payload(tool_name), profile, Path("/nonexistent"))
+
+
+def _vault_with_registry(tmp_path: Path) -> Path:
+    registry = tmp_path / ".memoria" / "tool-registry.yaml"
+    registry.parent.mkdir(parents=True)
+    registry.write_text(
+        (ROOT / "src/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
     )
+    return tmp_path
 
 
 def test_every_denylisted_tool_is_blocked_bare_and_prefixed():
@@ -57,22 +68,24 @@ def test_egress_tools_are_blocked_regression():
         assert _decide(f"mcp_x__{tool}").get("decision") == "block"
 
 
-def test_acp_exposed_local_history_tools_are_blocked_or_lane_scoped():
+def test_acp_exposed_local_history_tools_are_blocked_or_lane_scoped(tmp_path):
+    vault = _vault_with_registry(tmp_path)
     assert "session_search" in _m.DENY_DIRECT_TOOLS
     assert _decide("session_search").get("decision") == "block"
     assert _decide("mcp_x__session_search").get("decision") == "block"
 
-    assert _decide("memory", profile="memoria-copi") == {}
+    assert evaluate_pre(_payload("memory"), "memoria-copi", vault) == {}
+    assert evaluate_pre(_payload("mcp_x__memory"), "memoria-copi", vault).get("decision") == "block"
     for profile in (
         "memoria-librarian",
         "memoria-writer",
         "memoria-peer-reviewer",
         "memoria-engineer",
     ):
-        decision = _decide("memory", profile=profile)
+        decision = evaluate_pre(_payload("memory"), profile, vault)
         assert decision.get("decision") == "block", f"gate did not block memory for {profile}"
-        assert "profile-scoped" in decision.get("reason", "")
-        assert _decide("mcp_x__memory", profile=profile).get("decision") == "block"
+        assert "tool-registry allowlist" in decision.get("reason", "")
+        assert evaluate_pre(_payload("mcp_x__memory"), profile, vault).get("decision") == "block"
 
 
 def test_contract_doctor_fails_when_installed_egress_tool_is_not_denied(tmp_path, monkeypatch):

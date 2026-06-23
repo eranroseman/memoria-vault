@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from memoria.runtime.jsonl import iter_jsonl
 from memoria.runtime.paths import load_json
 from memoria.runtime.vaultio import read_frontmatter
 
@@ -113,10 +114,6 @@ def populate_vault(root: Path, vault: Path) -> None:
         (vault / folder).mkdir(parents=True, exist_ok=True)
 
 
-def parse_frontmatter(path: Path) -> dict[str, Any]:
-    return read_frontmatter(path)
-
-
 def write_frontmatter(path: Path, fm: dict[str, Any], body: str) -> None:
     rendered = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True, default_flow_style=False)
     path.write_text(f"---\n{rendered}---\n\n{body.lstrip()}", encoding="utf-8")
@@ -126,7 +123,7 @@ def validate_typed_note(vault: Path, rel: str) -> None:
     from operations.lib import schema
 
     path = vault / rel
-    fm = parse_frontmatter(path)
+    fm = read_frontmatter(path)
     note_type = fm.get("type")
     if not note_type:
         return
@@ -157,7 +154,7 @@ def assert_expectations(vault: Path, expect: dict[str, Any], artifacts: list[str
             raise HarnessError(f"forbidden artifact exists: {rel}")
     if expect.get("audit_decision"):
         audit = vault / "system/logs/audit.jsonl"
-        rows = [json.loads(line) for line in audit.read_text(encoding="utf-8").splitlines() if line]
+        rows = list(iter_jsonl(audit))
         if not rows or rows[-1].get("decision") != expect["audit_decision"]:
             raise HarnessError(f"expected last audit decision {expect['audit_decision']!r}")
         artifacts.append("system/logs/audit.jsonl")
@@ -169,7 +166,7 @@ def apply_classification(vault: Path, args: dict[str, Any]) -> str:
     citekey = args["citekey"]
     rel = f"catalog/papers/{citekey}.md"
     path = vault / rel
-    fm = parse_frontmatter(path)
+    fm = read_frontmatter(path)
     body = path.read_text(encoding="utf-8").split("\n---", 1)[1].lstrip("-\n")
     floor, margin = classify.thresholds(vault)
     decision = classify.decide(args["merged"], floor=floor, margin=margin)

@@ -2,8 +2,8 @@
 # =============================================================================
 # Memoria bootstrap installer  (Linux/WSL testing path; Windows production uses install.ps1)
 # =============================================================================
-# One command sets up the Linux/WSL test system: clones the vault, installs Hermes + the
-# ACP extra, deploys the five memoria-* profiles, provisions skills, and guides
+# One command sets up the Linux/WSL test system: clones the vault, installs Hermes,
+# verifies ACP, deploys the five memoria-* profiles, provisions skills, and guides
 # the GUI app (Obsidian). macOS is not supported. (Zotero: see the tutorial.)
 #
 # Inspect-first (recommended):
@@ -57,6 +57,7 @@ REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
 # `hermes skills install official/...` 404s on them (#59) — we verify presence, never fetch.
 # Paths are on-disk relative (no `official/` prefix), matching the bundled layout.
 BUNDLED_SKILLS="research/arxiv research/llm-wiki note-taking/obsidian productivity/ocr-and-documents github/github-repo-management autonomous-ai-agents/codex autonomous-ai-agents/claude-code"
+OPTIONAL_SKILLS="research/qmd"
 
 # Official Hermes installer (Linux/WSL2) — provisions uv-Python, Node, git-bash, ripgrep, ffmpeg.
 HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
@@ -250,7 +251,7 @@ print_plan() {
   say "  4. copy the runtime vault to your chosen folder"
   say "  5. install MCP server dependencies (pip)"
   say "  6. deploy the five memoria-* Hermes profiles"
-  say "  7. provision skills (K-Dense clone + kepano/qmd hub skills; verify bundled official skills)"
+  say "  7. provision skills (K-Dense clone, official qmd optional skill, kepano hub skill)"
   say "  8. guide the Obsidian install (Zotero moved to the tutorial)"
   say "  9. print where to put your API keys + next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
@@ -345,14 +346,13 @@ ensure_hermes() {
       die "Install Hermes (see $HERMES_DOCS), then re-run with --profiles-only to finish."
     fi
   fi
-  # The agent-client Obsidian pane needs `hermes acp`. The official installer may already
-  # include it; verify rather than pip-install into the wrong (uv-managed) environment.
-  # TODO(confirm-at-build): exact way to add the [acp] extra to the official install.
+  # The agent-client Obsidian pane needs `hermes acp`. The official installer with
+  # [all] includes it; nonstandard installs add it in Hermes's uv environment.
   if [ "$DRY_RUN" -eq 0 ] && have hermes; then
     if hermes acp --help >/dev/null 2>&1; then
       ok "ACP available (hermes acp)"
     else
-      warn "hermes acp not available — add the ACP extra to Hermes's env (pip install 'hermes-agent[acp]'). Docs: $ACP_DOCS"
+      warn "hermes acp not available — run: cd \"$HERMES_HOME/hermes-agent\" && uv pip install -e '.[acp]'  Docs: $ACP_DOCS"
     fi
   fi
 }
@@ -588,6 +588,18 @@ sync_profile_skills() {
   fi
 }
 
+remove_legacy_profile_mcp_json() {
+  local profile_dir="$1"
+  case "$profile_dir" in
+    "$HERMES_PROFILES_DIR"/*) ;;
+    *) die "Refusing to remove legacy mcp.json outside $HERMES_PROFILES_DIR: $profile_dir" ;;
+  esac
+  if [ -e "$profile_dir/mcp.json" ]; then
+    run rm -f "$profile_dir/mcp.json"
+    say "    removed legacy mcp.json (config.yaml owns MCP servers)"
+  fi
+}
+
 verify_profile_obsidian_mcp() {
   local cfg="$1" prof="$2"
   [ -f "$cfg" ] || die "$prof config.yaml missing after staging."
@@ -728,6 +740,7 @@ install_profiles() {
       # policy plugin enablement, and MEMORIA_ENV model overlay; refresh it
       # explicitly so --profiles-only cannot leave stale host-side model wiring.
       run cp "$dst/config.yaml" "$HERMES_PROFILES_DIR/$p/config.yaml"
+      remove_legacy_profile_mcp_json "$HERMES_PROFILES_DIR/$p"
       # Memoria owns each shipped profile's skills directory. Hermes preserves
       # absent distribution paths on force-install, so reconcile it explicitly to
       # remove stale bundled skills from profiles that opt out.
@@ -795,6 +808,16 @@ install_skills() {
       warn "bundled skill '$s' not found under $HERMES_SKILLS_DIR — re-run the Hermes installer (step 3); it ships this skill."
     fi
   done
+  for s in $OPTIONAL_SKILLS; do
+    if [ -f "$HERMES_SKILLS_DIR/$s/SKILL.md" ]; then
+      say "  optional present — $s"
+    elif have hermes; then
+      run hermes skills install "official/$s" --yes \
+        || warn "official optional skill '$s' not installed — install manually: hermes skills install official/$s --yes"
+    else
+      warn "Hermes not on PATH — skipped official optional skill '$s'."
+    fi
+  done
 
   # C. Hub skills — these ARE on the skills hub and must be fetched. --yes skips
   # the per-skill confirm prompt (non-interactive; without it Hermes auto-cancels
@@ -804,11 +827,8 @@ install_skills() {
     # kepano obsidian-markdown
     run hermes skills install kepano/obsidian-skills/skills/obsidian-markdown --yes \
       || warn "kepano obsidian-markdown not installed — see the design doc for the clone fallback"
-    # qmd — TODO(confirm-at-build): packaging is fragmented (skills.sh vs tobi/qmd CLI).
-    run hermes skills install skills-sh/moltbot/skills/qmd --yes \
-      || warn "qmd skill not installed — confirm packaging (skills.sh 'skills-sh/moltbot/skills/qmd'; CLI: github.com/tobi/qmd)"
   else
-    warn "Hermes not on PATH — skipped kepano/qmd hub-skill installs."
+    warn "Hermes not on PATH — skipped kepano hub-skill install."
   fi
 
   say "  (the memoria <task>:<verb>-<object> skills — catalog-enrich-record, verify-check-citation, … — ship inside the vault profiles; nothing to fetch.)"

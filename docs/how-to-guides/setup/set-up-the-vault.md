@@ -13,7 +13,7 @@ Run the bootstrap installer to provision the runtime, lay the vault down, and re
 
 - Git on your `PATH` (required for the installer and for runtime history; sandbox images must include it too)
 - Windows PowerShell 5.1+ for production, or Ubuntu/Debian/WSL for the Linux test path — macOS is not supported
-- The installer provisions Hermes itself (+ the ACP extra); you don't need it beforehand
+- The installer provisions Hermes and verifies ACP; you don't need it beforehand
 
 ## Steps
 
@@ -37,7 +37,7 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `src/` (default `%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux/WSL2; keep it off OneDrive), installs Hermes + the ACP extra, provisions skills, and for each of the five profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`):
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `src/` (default `%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux/WSL2; keep it off OneDrive), installs Hermes, verifies ACP, provisions skills, and for each of the five profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`):
 
 - Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`
 - Substitutes `{{VAULT_PATH}}` in `config.yaml` with the runtime vault's absolute path

@@ -20,6 +20,10 @@ def _load_plugin():
 def _vault_with_writer_policy(tmp_path):
     lane_dir = tmp_path / ".memoria" / "lane-overrides"
     lane_dir.mkdir(parents=True)
+    (tmp_path / ".memoria" / "tool-registry.yaml").write_text(
+        (ROOT / "src/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
     (lane_dir / "writer.yaml").write_text(
         "profile: memoria-writer\n"
         "policy:\n"

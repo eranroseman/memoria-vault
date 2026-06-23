@@ -13,7 +13,7 @@ Four steps from zero to an installed vault. For the full walkthrough with explan
 
 - Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
 - A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
-- The installer provisions Hermes (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 02](../../tutorials/02-bring-in-your-first-source.md)).
+- The installer provisions Hermes, verifies ACP, and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later ([Tutorial 02](../../tutorials/02-bring-in-your-first-source.md)).
 
 ## Steps
 

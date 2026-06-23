@@ -139,9 +139,6 @@ DENY_DIRECT_TOOLS = frozenset(
         "cronjob",
     }
 )
-PROFILE_SCOPED_DIRECT_TOOLS = {
-    "memory": frozenset({"memoria-copi"}),
-}
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
 # Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
@@ -150,6 +147,68 @@ PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "des
 # don't need (least privilege -- the prior uvx mcp-obsidian exposed only
 # read/write/append/patch). Matched as a substring after the `obsidian` prefix.
 DENY_OBSIDIAN = ("command_execute", "vault_delete", "vault_move")
+
+
+def _allowed_registry_tools(vault: Path, profile: str) -> set[str]:
+    import yaml
+
+    path = vault / ".memoria" / "tool-registry.yaml"
+    registry = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    groups = registry["groups"]
+    allow = registry["profiles"][profile]["allow"]
+    out: set[str] = set()
+    for entry in allow:
+        out.update(str(tool).lower() for tool in groups.get(entry, [entry]))
+    return out
+
+
+def _tool_candidates(tool_name: str, allowed: set[str]) -> set[str]:
+    t = (tool_name or "").lower()
+    candidates = {t}
+    if not t.startswith("mcp_"):
+        candidates.add(t.rsplit("__", 1)[-1].rsplit(".", 1)[-1])
+        if "__" in t:
+            candidates.add(t.split("__", 1)[0])
+        if t.startswith("obsidian_"):
+            candidates.add("obsidian." + t.removeprefix("obsidian_"))
+
+    servers = sorted(
+        {tool.split(".", 1)[0] for tool in allowed if "." in tool}, key=len, reverse=True
+    )
+    if t.startswith("mcp__"):
+        parts = t.split("__", 2)
+        if len(parts) == 3:
+            server, tool = parts[1], parts[2]
+            candidates.add(f"{server}.{tool}")
+            if tool.startswith(f"{server}_"):
+                candidates.add(f"{server}.{tool.removeprefix(f'{server}_')}")
+    elif t.startswith("mcp_"):
+        rest = t.removeprefix("mcp_")
+        for server in servers:
+            if rest == server:
+                candidates.add(server)
+            elif rest.startswith(f"{server}_"):
+                tool = rest.removeprefix(f"{server}_")
+                candidates.add(f"{server}.{tool}")
+                if tool.startswith(f"{server}_"):
+                    candidates.add(f"{server}.{tool.removeprefix(f'{server}_')}")
+    return candidates
+
+
+def _registry_block(tool_name: str, profile: str, vault: Path) -> dict | None:
+    try:
+        allowed = _allowed_registry_tools(vault, profile)
+    except Exception as exc:  # noqa: BLE001 -- missing/invalid registry must fail closed
+        return {
+            "decision": "block",
+            "reason": f"policy gate: tool registry unavailable for {profile} ({exc}) -- blocked fail-closed.",
+        }
+    if _tool_candidates(tool_name, allowed).isdisjoint(allowed):
+        return {
+            "decision": "block",
+            "reason": f"policy gate: '{tool_name}' is outside {profile}'s tool-registry allowlist.",
+        }
+    return None
 
 
 def classify(tool_name: str) -> str | None:
@@ -258,13 +317,9 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
             f"agents reach the vault only through MCP (D40/ADR-46); no lane "
             f"is permitted this toolset.",
         }
-    if base in PROFILE_SCOPED_DIRECT_TOOLS and profile not in PROFILE_SCOPED_DIRECT_TOOLS[base]:
-        allowed = ", ".join(sorted(PROFILE_SCOPED_DIRECT_TOOLS[base]))
-        return {
-            "decision": "block",
-            "reason": f"policy gate: '{tool_name}' is a profile-scoped direct tool; "
-            f"allowed only for {allowed}.",
-        }
+    registry_block = _registry_block(tool_name, profile, vault)
+    if registry_block is not None:
+        return registry_block
     action = classify(tool_name)
     if action is None:
         return {}  # read / terminal / ungated tool -> not our concern

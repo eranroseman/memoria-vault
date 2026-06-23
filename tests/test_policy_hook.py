@@ -79,6 +79,12 @@ def _vault_with_policy(tmp_path):
     lanes = vault / ".memoria" / "lane-overrides"
     lanes.mkdir(parents=True)
     (vault / ".memoria" / "mcp").mkdir(parents=True)
+    (vault / ".memoria" / "tool-registry.yaml").write_text(
+        (Path(__file__).resolve().parents[1] / "src/.memoria/tool-registry.yaml").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
     mcp_src = Path(_m.__file__).resolve().parent
     shutil.copy(mcp_src / "policy_mcp.py", vault / ".memoria" / "mcp" / "policy_mcp.py")
     shutil.copy(mcp_src / "policy_server.py", vault / ".memoria" / "mcp" / "policy_server.py")
@@ -118,6 +124,39 @@ def test_evaluate_pre_allows_reads_and_allowed_writes_but_blocks_review_and_deni
     assert "review-gated" in review["reason"]
     assert denied.get("decision") == "block"
     assert missing_task.get("decision") == "block"
+
+
+def test_evaluate_pre_blocks_tools_outside_profile_registry(tmp_path):
+    vault = _vault_with_policy(tmp_path)
+
+    blocked = evaluate_pre(
+        {
+            "tool_name": "mcp_paper_search_search_arxiv",
+            "tool_input": {},
+            "extra": {"task_id": "T2"},
+        },
+        "memoria-writer",
+        vault,
+    )
+    allowed = evaluate_pre(
+        {"tool_name": "mcp_qmd_search", "tool_input": {}, "extra": {"task_id": "T3"}},
+        "memoria-writer",
+        vault,
+    )
+
+    assert blocked.get("decision") == "block"
+    assert "tool-registry allowlist" in blocked["reason"]
+    assert allowed == {}
+
+
+def test_evaluate_pre_fails_closed_when_registry_is_missing(tmp_path):
+    vault = _vault_with_policy(tmp_path)
+    (vault / ".memoria" / "tool-registry.yaml").unlink()
+
+    blocked = _ev(vault, "obsidian_get_file_contents", "x.md")
+
+    assert blocked.get("decision") == "block"
+    assert "tool registry unavailable" in blocked["reason"]
 
 
 def test_native_obsidian_mcp_writes_are_gated_and_dangerous_tools_hard_block(tmp_path):
