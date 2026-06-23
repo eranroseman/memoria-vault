@@ -1,13 +1,13 @@
 ---
-title: The discuss-queue dashboard
+title: Discuss queue
 parent: Synthesis agenda
 nav_order: 2
 grand_parent: Dashboards
 ---
 
-# The discuss-queue dashboard
+# Discuss queue
 
-It is the **Library-side cognitive-discipline dashboard**: a long queue means the human's processing is falling behind their intake rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
+It is the **Library-side cognitive-discipline view**: a long queue means the human's processing is falling behind their intake rate; a short queue means it's keeping up. Making that asymmetry visible early is the point — before it hardens into a synthesis backlog months later.
 
 ---
 
@@ -19,7 +19,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 ## What this dashboard is not
 
-**Not [The reading-pipeline dashboard](reading-pipeline.md).** Reading-pipeline is the broader view: all sources in active processing plus claim maturity. Discuss-queue is a single focused signal: which read sources still owe a conversation. The implied next action is specific — open the Agent Client pane, work through the sharpening questions, then write the claims. A generic list without that implied action would just be noise.
+**Not [Reading pipeline](reading-pipeline.md).** Reading pipeline is the broader view: all sources in active processing plus claim maturity. Discuss queue is a single focused signal: which read sources still owe a conversation. The implied next action is specific — open the Agent Client pane, work through the sharpening questions, then write the claims. A generic list without that implied action would just be noise.
 
 **Not a generic to-do list.** Discuss-queue is not a general inbox or a catch-all task surface. Its one question is: which sources are read and waiting for the thinking step?
 
@@ -31,7 +31,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 **Five-or-fewer rows is healthy.** Ten or more rows is a signal to schedule a reading session. The goal is to make the queue's depth readable at a glance, without needing to count or calculate.
 
-**A reading-session cadence, not a daily alarm.** Unlike the morning glance, discuss-queue is consulted at reading time. Opening it every morning would be noise; the queue doesn't change unless reading happens. The deliberate cadence is part of the discipline — this dashboard exists to protect time for deep reading, not to add another daily obligation.
+**A reading-session cadence, not a daily alarm.** Unlike the morning glance, Discuss queue is consulted at reading time. Opening it every morning would be noise; the queue doesn't change unless reading happens. The deliberate cadence is part of the discipline — this view exists to protect time for deep reading, not to add another daily obligation.
 
 **It belongs to the Library space.** The Library space surfaces source intake, reading queues, and Catalog context together — everything literature processing needs in one dashboard note. The discuss-queue is one of those queues; the space exists to support its discipline without requiring a saved-layout switch.
 
@@ -39,7 +39,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 ## Related
 
-- Broader sibling: [The reading-pipeline dashboard](reading-pipeline.md)
+- Broader sibling: [Reading pipeline](reading-pipeline.md)
 - The conversation that drains this queue: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)
 - What distillation produces: [Write a claim note](../../../how-to-guides/knowledge/write-a-claim-note.md)
 - The space/reset layout model: [Obsidian workspaces](../../../reference/obsidian-workspaces.md)

@@ -20,3 +20,21 @@ cssclasses: memoria-space
 ## Board
 
 ![[board.base#By lane]]
+
+## New this week — catalog
+
+```dataview
+TABLE file.link AS Entity, type
+FROM "catalog"
+WHERE sample != true AND file.ctime >= date(today) - dur(7 days)
+SORT file.ctime DESC
+```
+
+## New this week — notes
+
+```dataview
+TABLE file.link AS Note, type, lifecycle
+FROM "notes"
+WHERE sample != true AND file.ctime >= date(today) - dur(7 days) AND type != "fleeting"
+SORT file.ctime DESC
+```

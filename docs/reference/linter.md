@@ -78,7 +78,7 @@ python3 .memoria/operations/integrity/linter/session_summary.py --vault <vault> 
 
 ## The daily cron
 
-The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden_restore.py check`, and the per-session digests over the vault. Findings surface in the drift dashboards (drift-watch, loose-ends) — see [Dashboards](dashboards.md).
+The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden_restore.py check`, and the per-session digests over the vault. Findings surface in Maintenance's Drift watch and Loose ends views — see [Dashboards](dashboards.md).
 
 ---
 

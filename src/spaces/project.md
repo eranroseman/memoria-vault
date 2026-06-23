@@ -21,6 +21,10 @@ cssclasses: memoria-space
 
 ![[projects.base#Active projects]]
 
+## Needs refutation stamp
+
+![[projects.base#Needs refutation stamp]]
+
 ## Saturation
 
 ![[projects.base#Saturation]]

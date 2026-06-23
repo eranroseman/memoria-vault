@@ -10,7 +10,7 @@ Run a structural health check on the vault, or review the scheduled report. The 
 
 ## When it runs without you
 
-- **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed the drift-watch and loose-ends dashboards.
+- **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed Maintenance's Drift watch and Loose ends views.
 - **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
@@ -36,7 +36,7 @@ Add `--json` for machine-readable output. The detectors cover schema validity, b
 | MEDIUM | Real drift, will compound | Address in the weekly review |
 | LOW | Cosmetic or easily recovered | Defer or accept |
 
-The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM or HIGH) / **FAIL** (any CRITICAL) — the same band drift-watch shows.
+The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM or HIGH) / **FAIL** (any CRITICAL) — the same band Maintenance's Drift watch shows.
 
 **3. Check golden-copy drift.**
 
@@ -66,7 +66,7 @@ hermes cron run memoria-lint   # force a pass now
 
 - A re-run reports no CRITICAL or HIGH findings
 - `golden_restore.py check` exits clean
-- Drift-watch and loose-ends show the improvement after the next cron pass
+- Maintenance's Drift watch and Loose ends views show the improvement after the next cron pass
 
 ## Related
 

@@ -47,7 +47,7 @@ When a map or gap report shows a direction you considered and intentionally reje
 
 The trace lands beside the map under `notes/fleeting/maps/`. It is project-local memory for future you, not canonical knowledge: do not turn it into a claim or hub unless you later find positive evidence worth distilling.
 
-Two standing dashboards answer the same questions continuously: `system/dashboards/open-questions.md` (unconnected claims — the synthesis backlog) and `contradictions.md` (open tensions).
+Two standing Knowledge views answer the same questions continuously: **Open questions** (unconnected claims — the synthesis backlog) and **Contradictions** (open tensions).
 
 ## Verify
 

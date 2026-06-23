@@ -146,6 +146,11 @@ def test_maintenance_collection_embeds_debt_views():
         "![[board.base#By lane]]",
     ):
         assert embed in text
+    assert "## New this week — catalog" in text
+    assert "## New this week — notes" in text
+    assert 'FROM "catalog"' in text
+    assert 'FROM "notes"' in text
+    assert 'AND type != "fleeting"' in text
 
 
 def test_space_guide_links_use_canonical_pages_routes():

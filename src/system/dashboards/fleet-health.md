@@ -28,4 +28,4 @@ Aggregated from: audit deny rate, structural-drift incidents (schema / plugin-co
 ## Related
 
 - [[board-state|Board State]] — the Inbox board; this rollup feeds its operational glance.
-- [[drift-watch|Drift watch]] — complementary *structural*-health view (this one is *operational*).
+- [[spaces/maintenance#Drift watch|Drift watch]] — complementary *structural*-health view (this one is *operational*).

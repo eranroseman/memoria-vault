@@ -19,7 +19,7 @@ The point of a composite is that no single signal dominates: a lane can have a p
 
 **Not board-state.** Board-state shows what work is currently in flight. Fleet-health shows the quality and cost of completed work over time.
 
-**Not audit-log or drift-watch.** Fleet-health aggregates completed work into operational trends (trust score is its headline); audit-log is per-decision forensics, and drift-watch is the structural sibling (verdict band is its headline). For the full three-way distinction, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
+**Not audit log or Drift watch.** Fleet health aggregates completed work into operational trends (trust score is its headline); audit log is per-decision forensics, and Drift watch is the structural sibling (verdict band is its headline). For the full three-way distinction, see [Operational health](README.md#audit-log-vs-fleet-health-vs-drift-watch).
 
 ## When it shows real data
 
@@ -28,5 +28,5 @@ The dashboard and its metrics aggregator ship in `src/` and deploy with the vaul
 ## Related
 
 - [audit-log dashboard](audit-log.md) — per-decision forensics that feed the deny-rate input
-- [drift-watch dashboard](../structural-health/drift-watch.md) — structural complement; verdict band is the structural sibling of trust score
+- [Drift watch](../structural-health/drift-watch.md) — structural complement; verdict band is the structural sibling of trust score
 - [Dashboards](../../../reference/dashboards.md#trust-score-fleet-health) — trust score formula, inputs, and band definitions

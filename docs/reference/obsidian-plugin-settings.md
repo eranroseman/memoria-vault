@@ -129,7 +129,8 @@ chrome only; primary navigation stays in spaces and Bases views.
 | Setting | Required value | Constraint |
 | --- | --- | --- |
 | View type | `memoria-inspector-view` | Opens as a right-sidebar pane through the plugin command or ribbon icon. |
-| Data sources | `system/logs/board-state.jsonl`, `system/logs/audit.jsonl`, latest `system/metrics/lint-verdict-*.md` | Read-only operational snapshot only; the plugin has no vault write path, network request path, or shell path. |
+| Data sources | `system/logs/board-state.jsonl`, `system/logs/audit.jsonl`, latest `system/metrics/lint-verdict-*.md`, latest `system/metrics/lane-*.md` | Read-only operational snapshot only; the plugin has no vault write path, network request path, or shell path. |
+| Deep links | Board state, audit log, Maintenance drift watch, and fleet health. | Uses native Obsidian note links only; the Inspector remains an observability pane, not an action surface. |
 | Refresh cadence | Manual refresh plus 60 s refresh while open | Keeps the inspector current without becoming an action surface. |
 
 ### callout-manager

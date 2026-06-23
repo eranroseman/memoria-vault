@@ -150,49 +150,36 @@ hermes -p memoria-librarian -z "Use the obsidian append tool to create notes/fle
 
 ---
 
-## Part C — The thirteen support dashboards render (G4)
+## Part C — The five system dashboards and space surfaces render (G4)
 
 Open each support dashboard file under `system/dashboards/` (Reading view). For
 **every** ```dataview``` block: it must render a table or placeholder, **never a query
-error**. The three space dashboards (Library, Knowledge, Project) and the Inbox queue
-under `spaces/` are validated through the launch and navigation checks (Part A4–A5);
-the Inbox glance lives on the `spaces/inbox.md` queue note, not a standalone dashboard
-file.
+error**. Also open the Library, Knowledge, Project, Inbox, and Maintenance notes under
+`spaces/`; their embedded Bases views must render without a missing-view or YAML error.
 
 | # | Dashboard file | Reads from | ✓ Validate (and seed if useful) |
 | --- | --- | --- | --- |
 | 1 | `board-state.md` | `system/board/` card projections | sections render; **seed:** create a kanban card + run `hermes cron tick`, then the card shows under *Active* (Part E3) |
-| 2 | `reading-pipeline.md` | `system/dashboards/sources.base` + `system/dashboards/claims.base` | both embedded Bases views render; **seed:** a proposed source note → it appears in *To read & distill* |
-| 3 | `discuss-queue.md` | sources `lifecycle: provisional` | resolves; empty OK |
-| 4 | `open-questions.md` | claims with zero inbound links (`notes/claims/`) | resolves; add an unconnected claim → it lists |
-| 5 | `contradictions.md` | note `links.contradicts` pairs | resolves; empty OK |
-| 6 | `drift-watch.md` | `system/logs/lint-findings.jsonl` | resolves; populates after a Linter operation run |
-| 7 | `loose-ends.md` | `notice`-loudness `flag` cards (`lifecycle: proposed`) | resolves; create a notice flag card → it lists |
-| 8 | `weekly-review.md` | inbox/candidates/synthesis/orphans/projects/metrics | all sections resolve |
-| 9 | `fleet-health.md` | `system/metrics/lane-metric-*` aggregates | resolves; trust-score band shows when metrics exist |
-| 10 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
-| 11 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
-| 12 | `skill-state.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
-| 13 | `project-gate.md` | Project notes, active thesis, and structural-impact cache fields | resolves; active projects and saturation fields render when project data exists |
+| 2 | `fleet-health.md` | `system/metrics/lane-*.md` aggregates | resolves; trust-score band shows when metrics exist |
+| 3 | `audit-log.md` | `system/logs/audit.jsonl` (current week) | shows the **policy-gate rows** — drive a write in WSL2 (Part E2), the `allow`/`deny` row appears here |
+| 4 | `eval-trend.md` | `system/metrics/eval/runs.jsonl` | resolves; shows the placeholder until an eval run is scored (`eval_score.py`) |
+| 5 | `skill-state.md` | `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/` | resolves; lists which skills are active in which lane; consistency-check rows surface any mismatch |
 
 - ✗ Fails: "Dataview: query error" → Dataview not enabled or **JS queries off** (Settings → Dataview → *Enable JavaScript queries* = on, several use `dataviewjs`).
 
 Tick each dashboard whose Dataview blocks all resolve (no query errors):
 
 - [ ] 1 · `board-state.md`
-- [ ] 2 · `reading-pipeline.md`
-- [ ] 3 · `discuss-queue.md`
-- [ ] 4 · `open-questions.md`
-- [ ] 5 · `contradictions.md`
-- [ ] 6 · `drift-watch.md`
-- [ ] 7 · `loose-ends.md`
-- [ ] 8 · `weekly-review.md`
-- [ ] 9 · `fleet-health.md`
-- [ ] 10 · `audit-log.md`
-- [ ] 11 · `eval-trend.md`
-- [ ] 12 · `skill-state.md`
-- [ ] 13 · `project-gate.md`
-- [ ] **Part C / G4 Pass (all 13 resolve)**
+- [ ] 2 · `fleet-health.md`
+- [ ] 3 · `audit-log.md`
+- [ ] 4 · `eval-trend.md`
+- [ ] 5 · `skill-state.md`
+- [ ] `spaces/library.md`
+- [ ] `spaces/knowledge.md`
+- [ ] `spaces/project.md`
+- [ ] `spaces/inbox.md`
+- [ ] `spaces/maintenance.md`
+- [ ] **Part C / G4 Pass (all system dashboards and space surfaces resolve)**
 
 ---
 

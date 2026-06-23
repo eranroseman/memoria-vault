@@ -1,13 +1,13 @@
 ---
-title: The reading-pipeline dashboard
+title: Reading pipeline
 parent: Synthesis agenda
 nav_order: 1
 grand_parent: Dashboards
 ---
 
-# The reading-pipeline dashboard
+# Reading pipeline
 
-Open the reading-pipeline dashboard during a reading session when the queue feels full and you need to decide what to process next.
+Open the Library space's Reading pipeline during a reading session when the queue feels full and you need to decide what to process next.
 
 ---
 
@@ -19,11 +19,11 @@ It shows what is in flight on the Library side and what has come out the other s
 
 ## What this dashboard is not
 
-**Not [The discuss-queue dashboard](discuss-queue.md).** Reading-pipeline is the broader working surface (sources in active processing plus claim maturity); discuss-queue is the narrow read-but-not-distilled slice, where that split and what it protects are spelled out.
+**Not [Discuss queue](discuss-queue.md).** Reading pipeline is the broader working surface (sources in active processing plus claim maturity); Discuss queue is the narrow read-but-not-distilled slice, where that split and what it protects are spelled out.
 
-**Not [The weekly-review dashboard](../structural-health/weekly-review.md).** Weekly-review is a scheduled ritual with a fixed top-to-bottom order. Reading-pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
+**Not [Weekly review](../structural-health/weekly-review.md).** Weekly review is a scheduled ritual with a fixed top-to-bottom order. Reading pipeline is a working surface consulted between rituals, when deciding what to pick up next in a given session.
 
-**Not a board view.** This dashboard queries note state — source-note `lifecycle` and claim `maturity` — not cards. The [The board-state dashboard](../daily-glance/board-state.md) view is the card side.
+**Not a board view.** This view queries note state — source-note `lifecycle` and claim `maturity` — not cards. The [board-state dashboard](../daily-glance/board-state.md) view is the card side.
 
 ---
 
@@ -39,7 +39,7 @@ It shows what is in flight on the Library side and what has come out the other s
 
 ## Related
 
-- Narrower Library-discipline sibling: [The discuss-queue dashboard](discuss-queue.md)
-- Weekly entry point that links to this: [The weekly-review dashboard](../structural-health/weekly-review.md)
+- Narrower Library-discipline sibling: [Discuss queue](discuss-queue.md)
+- Weekly rhythm that revisits this: [Weekly review](../structural-health/weekly-review.md)
 - The state model behind `proposed`/`provisional`: [Lifecycle, not topic — and state, not folders](../../knowledge/lifecycle-over-topic.md)
 - Next step after the pipeline surfaces a source: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)

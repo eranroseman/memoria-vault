@@ -6,7 +6,7 @@ nav_order: 5
 
 # Navigate the dashboards
 
-Each space dashboard under `spaces/` gathers the views for one working mode, and the supporting dashboards under `system/dashboards/` answer narrower operational questions. This guide maps situations to the right surface. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
+Each space dashboard under `spaces/` gathers the views for one working mode. The five read-only system dashboards under `system/dashboards/` answer narrower operational questions. This guide maps situations to the right surface. For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
 ## Where the dashboards open
 
@@ -81,7 +81,7 @@ Open when a write didn't happen as expected ([Diagnose a denied or blocked write
 
 ### "What do I need to do this week?"
 
-**Weekly review** — open manually on Fridays, or from Maintenance when you are already checking structural health.
+**Weekly review** — use Maintenance on Fridays.
 
 The [Run the weekly review](../inbox/run-the-weekly-review.md) guide walks through it step by step.
 

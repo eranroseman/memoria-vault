@@ -21,7 +21,7 @@ You've run a full turn with training wheels on. This tutorial takes them off: it
 
 ## Step 1 — Name the rhythm: the weekly review
 
-You don't babysit this loop, but you can't leave it alone either — queues age and gaps go stale. One standing habit keeps it honest: the **weekly review**, a Friday pass through the weekly-review dashboard. Once the vault is established it takes about 20–30 minutes. You update `research-focus.md` so discovery aims at what you mean to read next, clear the Inbox to empty (candidates kept or skipped, gaps turned into discovery tasks, flags acted on — **empty is the goal**), and advance the claims that have genuinely settled. Full ritual: [Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md). It's what keeps every background worker's output from piling up unread — the difference between a vault that compounds and one that quietly rots.
+You don't babysit this loop, but you can't leave it alone either — queues age and gaps go stale. One standing habit keeps it honest: the **weekly review**, a Friday pass through the Inbox, Maintenance, and Knowledge views. Once the vault is established it takes about 20–30 minutes. You update `research-focus.md` so discovery aims at what you mean to read next, clear the Inbox to empty (candidates kept or skipped, gaps turned into discovery tasks, flags acted on — **empty is the goal**), and advance the claims that have genuinely settled. Full ritual: [Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md). It's what keeps every background worker's output from piling up unread — the difference between a vault that compounds and one that quietly rots.
 
 ---
 

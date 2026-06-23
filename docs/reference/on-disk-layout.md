@@ -33,7 +33,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 └── system/                  infrastructure plus typed system homes
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
-    ├── dashboards/            13 support dashboards + claims/sources/fleeting/project-gate .base files
+    ├── dashboards/            5 read-only system dashboards + claims/sources/fleeting .base files
     ├── patterns/              the pattern library (+ patterns.base, _preamble.md)
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── board/                 board-export card projections
@@ -109,7 +109,7 @@ Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggl
 
 ### The Bases views
 
-The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, `notes/hubs/hubs.base`, `projects/projects.base`, `system/board/board.base`, the `claims`/`sources`/`fleeting`/`project-gate` bases in `system/dashboards/`, `system/patterns/patterns.base`, and `system/worklists/worklists.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
+The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, `notes/hubs/hubs.base`, `projects/projects.base`, `system/board/board.base`, the `claims`/`sources`/`fleeting` bases in `system/dashboards/`, `system/patterns/patterns.base`, and `system/worklists/worklists.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
 
 ---
 

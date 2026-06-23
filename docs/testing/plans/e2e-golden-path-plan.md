@@ -38,7 +38,7 @@ coverage.
 - ✓ Pass: `catalog/papers/smithA.md` (`type: paper`, `citekey`, `_proposed_classification`, `_enrichment`, `[!brief]`); Marker extract in `.memoria/data/extracts/`; `allow_with_log` row in `audit.jsonl`.
 
 **A2. Human classifies.** Set `lifecycle: current` + a `methodology` from vocab on `smithA.md`.
-- ✓ Pass: it now surfaces in `reading-pipeline.md` (open the dashboard) — proves the source entered the human's pipeline.
+- ✓ Pass: it now surfaces in the Library space's Reading pipeline — proves the source entered the human's pipeline.
 
 ---
 
@@ -86,7 +86,7 @@ coverage.
 | F1 | **Board carried the work** | each stage's card moved lane-to-lane; transitions in `board-transitions.jsonl`; `board-state.md` reflects it |
 | F2 | **Audit pairing intact** | every `allow_with_log` row has `before_hash`/`after_hash`; `lint`'s `audit-unpaired-writes` clean |
 | F3 | **Gate held at the boundary** | the only `dry_run`→`allow_with_log` transitions are the human-approved promotions (E1→E2); no agent wrote canon unapproved |
-| F4 | **Dashboards reflect reality** | the rail Now badges, `audit-log`, and `reading-pipeline` all show the run's activity |
+| F4 | **Dashboards reflect reality** | the rail Now badges, `audit-log`, and Library's Reading pipeline all show the run's activity |
 
 ---
 

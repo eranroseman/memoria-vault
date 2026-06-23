@@ -9,8 +9,9 @@ The primary dashboards are the three durable space notes under `spaces/`
 (`src/spaces`): Library, Knowledge, and Project. The Inbox queue (`spaces/inbox.md`,
 `type: queue`) and Maintenance collection (`spaces/maintenance.md`, `type: maintenance`)
 sit alongside them by cadence: daily action vs weekly structural debt. Both are reached
-from the navigation rail's **Now**. Supporting dashboards and Bases live under
-`system/dashboards/` (`src/system/dashboards`) and related data folders. Space
+from the navigation rail's **Now**. Five read-only system dashboards and the
+claim/source/fleeting Bases live under `system/dashboards/` (`src/system/dashboards`);
+other Bases live beside their data folders. Space
 switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
 All dashboards are Dataview / Bases consumers: they render existing vault state and
 logs, never write, and a healthy vault shows action queues near-empty.
@@ -30,19 +31,11 @@ action surface.
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
 | Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me` and fleeting processing views. |
-| Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`type: maintenance`): drift-watch, loose-ends, and board views. |
+| Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`type: maintenance`): drift watch, loose ends, board, and new-this-week digest. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
-| Space | Project | `spaces/project.md` | Project steering space: active projects, saturation, and project gaps. |
+| Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
-| Library support | Reading pipeline | `system/dashboards/reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
-| Library support | Discuss queue | `system/dashboards/discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
-| Knowledge support | Open questions | `system/dashboards/open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
-| Knowledge support | Contradictions | `system/dashboards/contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
-| Project support | Project gate | `system/dashboards/project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state. |
-| Maintenance | Drift watch | `system/dashboards/drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; these count in the rail health band. |
-| Maintenance | Loose ends | `system/dashboards/loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
-| Maintenance | Weekly review | `system/dashboards/weekly-review.md` | The Friday aggregator (multi-section). |
 | Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
 | Agent-ops | Fleet health | `system/dashboards/fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
@@ -67,9 +60,8 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |
-| `project-gate.base` | `system/dashboards/` | Project notes by output mode, refutation stamp, maturity, saturation, and cache timestamp. |
 | `hubs.base` | `notes/hubs/` | Hub notes by topic cluster and lifecycle. |
-| `projects.base` | `projects/` | Project notes by output mode, thesis state, saturation, and open gaps. |
+| `projects.base` | `projects/` | Project notes by output mode, refutation stamp, thesis state, saturation, and open gaps. |
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
 | `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 
@@ -93,9 +85,11 @@ The supported dashboard UI relies on these Obsidian 1.12.7 Bases behaviors:
 
 ---
 
-## Verdict band (drift-watch)
+## Verdict band (Maintenance drift watch)
 
-The drift-watch dashboard rolls the Linter operation's detector findings up into a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
+Maintenance's Drift watch view rolls the Linter operation's detector findings up into
+a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads
+are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
 ## Trust score (fleet-health)
 
@@ -122,7 +116,7 @@ For the exact `lane-metric` fields and trust-score calculation, see [Fleet metri
 
 ## Related
 
-- The detectors behind drift-watch: [Linter: detectors and auto-fix](linter.md)
+- The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
 - The audit-log schema fleet-health and audit-log read: [Memory substrates](memory.md)
 - The card types the Inbox board groups: [Document types](document-types.md)
 - Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)

@@ -4,6 +4,11 @@ const VIEW_TYPE = "memoria-inspector-view";
 const BOARD_STATE = "system/logs/board-state.jsonl";
 const AUDIT_LOG = "system/logs/audit.jsonl";
 const LINT_VERDICT_PREFIX = "system/metrics/lint-verdict-";
+const LANE_METRIC_PREFIX = "system/metrics/lane-";
+const BOARD_DASHBOARD = "system/dashboards/board-state";
+const AUDIT_DASHBOARD = "system/dashboards/audit-log";
+const DRIFT_DASHBOARD = "spaces/maintenance#Drift watch";
+const FLEET_DASHBOARD = "system/dashboards/fleet-health";
 const REFRESH_INTERVAL_MS = 60000;
 
 module.exports = class MemoriaInspectorPlugin extends Plugin {
@@ -78,15 +83,17 @@ class MemoriaInspectorView extends ItemView {
     });
     refresh.addEventListener("click", () => this.refresh());
 
-    const [board, audit, verdict] = await Promise.all([
+    const [board, audit, verdict, laneMetrics] = await Promise.all([
       latestJsonLine(this.app, BOARD_STATE),
       recentJsonLines(this.app, AUDIT_LOG, 5),
       latestLintVerdict(this.app),
+      latestLaneMetrics(this.app),
     ]);
 
-    renderLintBand(root, verdict);
-    renderBoard(root, board);
-    renderAudit(root, audit);
+    renderLintBand(root, verdict, this.app);
+    renderBoard(root, board, this.app);
+    renderAudit(root, audit, this.app);
+    renderFleet(root, laneMetrics, this.app);
   }
 }
 
@@ -135,6 +142,28 @@ async function latestLintVerdict(app) {
   };
 }
 
+async function latestLaneMetrics(app) {
+  const files = app.vault
+    .getFiles()
+    .filter((file) => file.path.startsWith(LANE_METRIC_PREFIX))
+    .sort((a, b) => b.path.localeCompare(a.path));
+  const latestByLane = new Map();
+  for (const file of files) {
+    const frontmatter = parseFrontmatter(await readText(app, file.path));
+    const lane = frontmatter.lane;
+    if (!lane || latestByLane.has(lane)) continue;
+    latestByLane.set(lane, {
+      path: file.path,
+      lane,
+      period: frontmatter.period ?? periodFromName(file.basename),
+      trust_score: frontmatter.trust_score ?? null,
+      band: frontmatter.band ?? "unknown",
+      samples: frontmatter.samples ?? null,
+    });
+  }
+  return Array.from(latestByLane.values()).sort((a, b) => a.lane.localeCompare(b.lane));
+}
+
 function parseFrontmatter(text) {
   if (!text.startsWith("---\n")) return {};
   const end = text.indexOf("\n---", 4);
@@ -163,13 +192,15 @@ function safeJson(line) {
   }
 }
 
-function renderLintBand(root, verdict) {
+function renderLintBand(root, verdict, app) {
   const band = root.createDiv({
     cls: `memoria-inspector__band memoria-inspector__band--${(
       verdict?.verdict ?? "UNKNOWN"
     ).toLowerCase()}`,
   });
-  band.createEl("span", { text: "Linter" });
+  const header = band.createDiv({ cls: "memoria-inspector__band-head" });
+  header.createEl("span", { text: "Linter" });
+  dashboardButton(header, app, DRIFT_DASHBOARD);
   band.createEl("strong", { text: verdict?.verdict ?? "UNKNOWN" });
   band.createEl("small", {
     text: verdict
@@ -178,8 +209,8 @@ function renderLintBand(root, verdict) {
   });
 }
 
-function renderBoard(root, snapshot) {
-  const section = panel(root, "Board counts");
+function renderBoard(root, snapshot, app) {
+  const section = panel(root, "Board counts", app, BOARD_DASHBOARD);
   if (!snapshot || typeof snapshot !== "object") {
     section.createEl("p", {
       cls: "memoria-inspector__empty",
@@ -209,8 +240,8 @@ function renderBoard(root, snapshot) {
   }
 }
 
-function renderAudit(root, rows) {
-  const section = panel(root, "Recent audit");
+function renderAudit(root, rows, app) {
+  const section = panel(root, "Recent audit", app, AUDIT_DASHBOARD);
   if (rows.length === 0) {
     section.createEl("p", {
       cls: "memoria-inspector__empty",
@@ -231,10 +262,52 @@ function renderAudit(root, rows) {
   }
 }
 
-function panel(root, title) {
+function renderFleet(root, metrics, app) {
+  const section = panel(root, "Fleet trust", app, FLEET_DASHBOARD);
+  if (metrics.length === 0) {
+    section.createEl("p", {
+      cls: "memoria-inspector__empty",
+      text: "No lane metric notes found.",
+    });
+    return;
+  }
+  const list = section.createEl("ul", { cls: "memoria-inspector__fleet" });
+  for (const metric of metrics) {
+    const item = list.createEl("li");
+    item.createEl("strong", { text: metric.lane });
+    item.createEl("span", { text: ` ${formatScore(metric.trust_score)} (${metric.band})` });
+    item.createEl("small", {
+      text: compact(
+        [metric.period, formatCount(metric.samples, "sample"), metric.path]
+          .filter(Boolean)
+          .join(" - "),
+      ),
+    });
+  }
+}
+
+function panel(root, title, app, dashboard) {
   const section = root.createEl("section", { cls: "memoria-inspector__panel" });
-  section.createEl("h3", { text: title });
+  const header = section.createDiv({ cls: "memoria-inspector__panel-header" });
+  header.createEl("h3", { text: title });
+  if (dashboard) dashboardButton(header, app, dashboard);
   return section;
+}
+
+function dashboardButton(parent, app, dashboard) {
+  const button = parent.createEl("button", {
+    cls: "memoria-inspector__link",
+    text: "Open",
+    attr: { type: "button" },
+  });
+  button.addEventListener("click", () => {
+    app.workspace.openLinkText(dashboard, "", false);
+  });
+}
+
+function periodFromName(name) {
+  const match = name.match(/(\d{4}-W\d{2})$/);
+  return match ? match[1] : name;
 }
 
 function label(value) {
@@ -249,4 +322,9 @@ function compact(value) {
 function formatCount(value, singular) {
   if (value === null || value === undefined) return "count unavailable";
   return `${value} ${Number(value) === 1 ? singular : `${singular}s`}`;
+}
+
+function formatScore(value) {
+  if (value === null || value === undefined) return "score unavailable";
+  return `${value}/100`;
 }

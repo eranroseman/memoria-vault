@@ -18,7 +18,7 @@ Mark a claim as settled knowledge by advancing its `maturity` to `evergreen` —
 
 **1. Find candidates.**
 
-`system/dashboards/claims.base` groups claims by maturity; `reading-pipeline.md` shows the same rollup. Long-stable `budding` claims with several inlinks are the candidates. The weekly review is the natural moment.
+Knowledge's **Claims by maturity** view groups claims by maturity. Long-stable `budding` claims with several inlinks are the candidates. The weekly review is the natural moment.
 
 **2. Re-read the claim as a stranger.**
 

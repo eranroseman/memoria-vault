@@ -22,6 +22,11 @@
   padding: 4px 8px;
 }
 
+.memoria-inspector__link {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
 .memoria-inspector__band,
 .memoria-inspector__panel {
   border: 1px solid var(--background-modifier-border);
@@ -35,9 +40,18 @@
   padding: 10px;
 }
 
+.memoria-inspector__band-head,
+.memoria-inspector__panel-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
 .memoria-inspector__band span,
 .memoria-inspector__band small,
 .memoria-inspector__audit small,
+.memoria-inspector__fleet small,
 .memoria-inspector__count span {
   color: var(--text-muted);
 }
@@ -65,7 +79,7 @@
 
 .memoria-inspector__panel h3 {
   font-size: 0.85rem;
-  margin: 0 0 8px;
+  margin: 0;
   text-transform: uppercase;
 }
 
@@ -89,7 +103,8 @@
 }
 
 .memoria-inspector__lanes,
-.memoria-inspector__audit {
+.memoria-inspector__audit,
+.memoria-inspector__fleet {
   display: grid;
   gap: 8px;
   list-style: none;
@@ -97,7 +112,8 @@
   padding: 0;
 }
 
-.memoria-inspector__audit li {
+.memoria-inspector__audit li,
+.memoria-inspector__fleet li {
   display: grid;
   gap: 2px;
 }

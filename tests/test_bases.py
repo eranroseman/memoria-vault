@@ -22,6 +22,20 @@ def _bases() -> list[Path]:
     return sorted(SRC.rglob("*.base"))
 
 
+def _base_path_for_embed(target: str) -> Path:
+    direct = SRC / target
+    if direct.is_file():
+        return direct
+    matches = [path for path in _bases() if path.name == Path(target).name]
+    assert len(matches) == 1, f"{target}: expected one matching .base, found {matches}"
+    return matches[0]
+
+
+def _base_view_names(path: Path) -> set[str]:
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return {view.get("name") for view in data.get("views", [])}
+
+
 def _folder_types(folder: str, types: dict, folders: dict) -> set[str]:
     """Type names homed at or under `folder`."""
     out = set()
@@ -133,6 +147,16 @@ def test_base_views_start_with_clickable_note_links():
             )
 
 
+def test_markdown_base_embeds_reference_existing_views():
+    for note in sorted(SRC.rglob("*.md")):
+        text = note.read_text(encoding="utf-8")
+        for target, view_name in re.findall(r"!\[\[([^#\]]+\.base)#([^\]]+)\]\]", text):
+            base = _base_path_for_embed(target)
+            assert view_name in _base_view_names(base), (
+                f"{note}: embeds {target}#{view_name}, missing in {base}"
+            )
+
+
 def test_inbox_base_has_needs_me_view():
     inbox = SRC / "inbox" / "inbox.base"
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
@@ -148,24 +172,42 @@ def test_inbox_base_has_needs_me_view():
     assert "finding" in needs_me_order
 
 
-def test_reading_pipeline_embeds_source_and_claim_bases():
-    text = (SRC / "system" / "dashboards" / "reading-pipeline.md").read_text(encoding="utf-8")
-    assert "![[sources.base#To read & distill]]" in text
-    assert "![[claims.base#By maturity]]" in text
-    assert "```dataview" not in text
-
-
-def test_project_gate_dashboard_embeds_project_base():
-    text = (SRC / "system" / "dashboards" / "project-gate.md").read_text(encoding="utf-8")
-    assert "![[project-gate.base#Active projects]]" in text
-    assert "![[project-gate.base#Needs refutation stamp]]" in text
-    base = yaml.safe_load(
-        (SRC / "system" / "dashboards" / "project-gate.base").read_text(encoding="utf-8")
-    )
+def test_project_space_embeds_project_gate_views():
+    text = (SRC / "spaces" / "project.md").read_text(encoding="utf-8")
+    assert "![[projects.base#Active projects]]" in text
+    assert "![[projects.base#Needs refutation stamp]]" in text
+    base_path = SRC / "projects" / "projects.base"
+    base_text = base_path.read_text(encoding="utf-8")
+    base = yaml.safe_load(base_text)
     views = {v.get("name"): v for v in base.get("views", [])}
     assert {"Active projects", "Needs refutation stamp"} <= set(views)
     assert views["Active projects"]["groupBy"]["property"] == "output_mode"
     assert "refutation_sufficiency" in views["Active projects"]["order"]
+    assert "refutation_sufficiency != true" in base_text
+
+
+def test_consolidated_dashboard_alias_pages_are_retired():
+    retired = {
+        "contradictions.md",
+        "discuss-queue.md",
+        "drift-watch.md",
+        "loose-ends.md",
+        "open-questions.md",
+        "project-gate.md",
+        "project-gate.base",
+        "reading-pipeline.md",
+        "weekly-review.md",
+    }
+    dashboard_dir = SRC / "system" / "dashboards"
+    for name in retired:
+        assert not (dashboard_dir / name).exists()
+    assert {path.name for path in dashboard_dir.glob("*.md")} == {
+        "audit-log.md",
+        "board-state.md",
+        "eval-trend.md",
+        "fleet-health.md",
+        "skill-state.md",
+    }
 
 
 def test_fleeting_base_matches_capture_template_home():
@@ -185,11 +227,12 @@ def test_fleeting_base_matches_capture_template_home():
     assert "title" not in views["To process"]["order"]
 
 
-def test_weekly_review_reuses_fleeting_queue_without_double_listing():
-    text = (SRC / "system" / "dashboards" / "weekly-review.md").read_text(encoding="utf-8")
+def test_maintenance_has_weekly_digest_without_queue_duplication():
+    text = (SRC / "spaces" / "maintenance.md").read_text(encoding="utf-8")
+    assert 'FROM "catalog"' in text
+    assert 'FROM "notes"' in text
     assert 'AND type != "fleeting"' in text
-    assert "![[fleeting.base#To process]]" in text
-    assert "same proposed fleeting queue" in text
+    assert "![[fleeting.base#To process]]" not in text
 
 
 def test_key_bases_surface_lifecycle_near_left_edge():
