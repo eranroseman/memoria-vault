@@ -100,7 +100,7 @@ Until the CSV is present, retraction checks degrade to the live CrossRef + Open 
 hermes -p memoria-copi chat
 ```
 
-Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the pane runs one agent, the Co-PI ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
+Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the pane runs one agent, the Co-PI ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
 **7. Test the ingest path end-to-end.**
 

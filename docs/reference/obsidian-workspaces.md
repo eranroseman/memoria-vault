@@ -61,4 +61,4 @@ The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as
 - The superseded workspace model: [ADR-68](../adr/68-workspaces-desk-library-studio.md)
 - The dashboard roster: [Dashboards](dashboards.md)
 - The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)
-- The Co-PI pane: [Agent-client pane](../how-to-guides/using-obsidian/use-the-acp-pane.md)
+- Conversation surface: [Agent Client pane](../how-to-guides/using-obsidian/use-the-agent-client-pane.md)

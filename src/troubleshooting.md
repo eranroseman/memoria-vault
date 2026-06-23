@@ -29,7 +29,7 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 
 | Symptom | Likely cause | First check |
 | --- | --- | --- |
-| ACP pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
+| Agent Client pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
 | Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state\|Board State]] |
 | New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
 | Linter findings stale | Cron not running | freshness in [[drift-watch\|Drift Watch]] |

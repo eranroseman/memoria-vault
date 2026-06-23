@@ -20,7 +20,7 @@ nav_order: 1
 hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 ```
 
-**If the ACP pane is unresponsive** — the terminal is always the fallback: the pane and the palette macros shell out to the same `hermes kanban create`. A direct lane chat (`hermes -p memoria-librarian chat`) also works as a debugging posture.
+**If the Agent Client pane is unresponsive** — the terminal is always the fallback: the pane and the palette macros shell out to the same `hermes kanban create`. A direct lane chat (`hermes -p memoria-librarian chat`) also works as a debugging posture.
 
 **If enrichment APIs are unreachable** — ingest still creates the Catalog entity from the `.bib` metadata; the per-field provenance records what's missing. The enrichment fills in on a later re-ingest once connectivity is restored — a thin entity is better than a deferred ingest.
 

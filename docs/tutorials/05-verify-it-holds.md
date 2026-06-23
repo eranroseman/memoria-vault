@@ -11,7 +11,7 @@ parent: Tutorials
 
 **Time:** 30–45 minutes.
 
-**You'll use:** the Co-PI pane and the Inbox.
+**You'll use:** the Agent Client pane and the Inbox.
 
 **Prerequisite:** [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) complete — a ~200-word draft under `projects/<slug>/` with in-text citekeys, and the gap card from the map kept in your Inbox.
 
@@ -21,7 +21,7 @@ Drafting got the words down; verifying asks whether they hold up. The point isn'
 
 ## Step 1 — Ask for a verification pass
 
-Run `Cmd/Ctrl-P` → **Memoria: verify draft** with the draft as the active note, or ask in the Co-PI pane if you want help shaping the scope:
+Run `Cmd/Ctrl-P` → **Memoria: verify draft** with the draft as the active note, or ask in the Agent Client pane if you want help shaping the scope:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 

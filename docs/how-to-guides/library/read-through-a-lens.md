@@ -11,7 +11,7 @@ Read a paper through a named theoretical frame so the Co-PI questions it from an
 ## Prerequisites
 
 - A source note (or a cluster of notes) open to read against
-- The Agent Client pane connected ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)); this guide is intentionally conversational rather than a queued action
+- The [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) connected; this guide is intentionally conversational rather than a queued action
 
 ## Steps
 
@@ -28,7 +28,7 @@ Choose by the question in your head, not by the paper on screen — the point of
 
 **2. Open the session in that lens.**
 
-Open the Co-PI pane (see [Agent-client pane](../using-obsidian/use-the-acp-pane.md)) with the source note active, and ask the Co-PI to read through the frame by name:
+Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) with the source note active, and ask the Co-PI to read through the frame by name:
 
 > "Read this through a sensemaking lens."
 
@@ -40,7 +40,7 @@ Switching lenses mid-session muddies whose questions are being asked. For a diff
 
 **4. Read actively — the lens shapes questions, not answers.**
 
-The Co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault ([The Co-PI](../../explanation/profiles/co-pi.md)). The entire product is the conversation, which exports on close for review ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)).
+The Co-PI questions the text through the frame; it will not summarize your thinking back to you or write anything to the vault ([The Co-PI](../../explanation/profiles/co-pi.md)). The entire product is the conversation, which exports on close for review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
 **5. Capture what the lens surfaced — yourself.**
 

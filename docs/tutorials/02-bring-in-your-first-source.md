@@ -11,7 +11,7 @@ parent: Tutorials
 
 **Time:** 30–45 minutes (includes reading the paper or its abstract).
 
-**You'll use:** the Obsidian command palette, the Inbox, and the Co-PI pane.
+**You'll use:** the Obsidian command palette, the Inbox, and the Agent Client pane.
 
 **Prerequisite:** [Tutorial 01: See what you're building](01-orient.md) complete — the sample vault loaded and a project opened over it.
 

@@ -11,7 +11,7 @@ Delegate a **`map`** task to get a corpus map — a structured read of what clai
 ## Prerequisites
 
 - At least ~5 claim notes in `notes/claims/` (fewer than that and the map is mostly gaps)
-- Obsidian command palette available; the Co-PI pane is optional if you want help shaping the scope
+- Obsidian command palette available; the Agent Client pane is optional if you want help shaping the scope
 
 ## Steps
 
@@ -21,7 +21,7 @@ The map lane scopes against what you ask, so bring the deliverable into the ques
 
 **2. Delegate the map task.**
 
-Use the direct command when the scope is clear: `Cmd/Ctrl-P` → **Memoria: map corpus**. Or, if you want help framing the pass, ask in the Co-PI pane:
+Use the direct command when the scope is clear: `Cmd/Ctrl-P` → **Memoria: map corpus**. Or, if you want help framing the pass, ask in the Agent Client pane:
 
 > "Map my corpus on `<topic>` — what do I have good coverage on, and where is it thin? I'm aiming at `<deliverable>`."
 

@@ -1,10 +1,10 @@
 ---
-title: Agent-client pane
+title: Agent Client pane
 parent: Using Obsidian
 nav_order: 3
 ---
 
-# Agent-client pane
+# Agent Client pane
 
 Talk to the Co-PI from inside Obsidian without switching to a terminal. This guide covers opening the pane, attaching context, reading responses, and ending a session cleanly.
 
@@ -15,7 +15,7 @@ Talk to the Co-PI from inside Obsidian without switching to a terminal. This gui
 
 ## One agent in the pane — by design
 
-The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with. Use `Memoria:` commands first for known tasks; use the Co-PI when you want conversational help or an unclear handoff shaped into a board card. Why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-pane.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
+The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with. Use `Memoria:` commands first for known tasks; use the Co-PI when you want conversational help or an unclear handoff shaped into a board card. Why it's the sole agent is explained in [The Agent Client pane](../../explanation/obsidian/agent-client-pane.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 
@@ -30,7 +30,7 @@ the Hermes icon in the left ribbon.
 **Auto-mention (default).** With `autoMentionActiveNote` on, the note open in your editor is attached automatically when you open the pane or send a message — it arrives as a context card with no extra step. Open the note you want to discuss first, then open the pane (or just type, if the pane is already open).
 
 **Via the pane directly:**
-Click the paperclip icon at the top of the ACP pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
+Click the paperclip icon at the top of the Agent Client pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
 
 The attached note appears as a named context card at the top of the conversation. The Co-PI reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
 
@@ -86,4 +86,4 @@ exception, not the production Windows default.
 - Discussing a paper end-to-end: [Discuss a paper](../library/discuss-a-paper.md)
 - Gate/reset layout: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Plugin settings and `customAgents` keys: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- Why one conversational agent: [The agent-client pane](../../explanation/obsidian/agent-client-pane.md)
+- Why one conversational agent: [The Agent Client pane](../../explanation/obsidian/agent-client-pane.md)

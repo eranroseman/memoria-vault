@@ -19,7 +19,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 ## What this dashboard is not
 
-**Not [The reading-pipeline dashboard](reading-pipeline.md).** Reading-pipeline is the broader view: all sources in active processing plus claim maturity. Discuss-queue is a single focused signal: which read sources still owe a conversation. The implied next action is specific — open the Co-PI pane, work through the sharpening questions, then write the claims. A generic list without that implied action would just be noise.
+**Not [The reading-pipeline dashboard](reading-pipeline.md).** Reading-pipeline is the broader view: all sources in active processing plus claim maturity. Discuss-queue is a single focused signal: which read sources still owe a conversation. The implied next action is specific — open the Agent Client pane, work through the sharpening questions, then write the claims. A generic list without that implied action would just be noise.
 
 **Not a generic to-do list.** Discuss-queue is not a general inbox or a catch-all task surface. Its one question is: which sources are read and waiting for the thinking step?
 
@@ -27,7 +27,7 @@ Every source note at `lifecycle: provisional` — read, but not yet distilled in
 
 ## Why it's designed this way
 
-**The Co-PI is the discussion partner.** The queue drains through a conversation in the Co-PI pane, never through an agent writing the claims itself — the grounded-questioning pass lives there ([The agent-client pane](../../obsidian/agent-client-pane.md)).
+**The Co-PI is the discussion partner.** The queue drains through a conversation in the pane, never through an agent writing the claims itself — the grounded-questioning pass lives there ([The Agent Client pane](../../obsidian/agent-client-pane.md)).
 
 **Five-or-fewer rows is healthy.** Ten or more rows is a signal to schedule a reading session. The goal is to make the queue's depth readable at a glance, without needing to count or calculate.
 

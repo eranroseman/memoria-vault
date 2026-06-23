@@ -880,7 +880,7 @@ print_next_steps() {
   say "  1. Fill in the .env secrets (above)."
   [ -n "$VAULT_PATH" ] && say "  2. Open this folder in Obsidian as your vault:  $VAULT_PATH"
   say "  3. Verify the profiles:        hermes profile list"
-  say "  4. Open the Co-PI pane:        hermes -p memoria-copi acp   (or the Agent Client pane in Obsidian)"
+  say "  4. Open the Agent Client pane in Obsidian, or test it with: hermes -p memoria-copi acp"
   say "  5. Open the Library gate from the Obsidian gate nav row"
   say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
   # obsidian-git needs a repo to commit into; we deliberately don't auto-init (the

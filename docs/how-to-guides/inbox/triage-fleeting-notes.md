@@ -44,7 +44,7 @@ Set `lifecycle: archived` (or delete outright — a fleeting note has no provena
 
 ## Notes
 
-**Chat exports are adjacent, not automatic fleeting notes.** Closed ACP-pane sessions are auto-exported to `system/exports/` for PI review. They do not enter the fleeting queue automatically; when a transcript contains a durable thought, create the fleeting note yourself and link back to the export if the context matters. See [Agent-client pane](../using-obsidian/use-the-acp-pane.md).
+**Chat exports are adjacent, not automatic fleeting notes.** Closed pane sessions are auto-exported to `system/exports/` for PI review. They do not enter the fleeting queue automatically; when a transcript contains a durable thought, create the fleeting note yourself and link back to the export if the context matters. See [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md).
 
 The Linter flags stale fleeting notes but never promotes or deletes them — that decision is always yours. A rising fleeting backlog in the weekly review is a signal to run this triage before the next session.
 

@@ -16,7 +16,7 @@ Put a draft in front of the **Peer-reviewer** — the independent, adversarial `
 
 **1. Delegate or commit a verify pass.**
 
-For project drafts under `projects/<slug>/`, committing the draft enqueues a verify-lane card automatically through the vault's `post-commit` hook. You can also request a pass with `Cmd/Ctrl-P` → **Memoria: verify draft**, or ask in the Co-PI pane if you want help shaping the check:
+For project drafts under `projects/<slug>/`, committing the draft enqueues a verify-lane card automatically through the vault's `post-commit` hook. You can also request a pass with `Cmd/Ctrl-P` → **Memoria: verify draft**, or ask in the Agent Client pane if you want help shaping the check:
 
 > "Verify `projects/<slug>/<section>.md` — check that every claim it makes is actually supported by its cited sources."
 

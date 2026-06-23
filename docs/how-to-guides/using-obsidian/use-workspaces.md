@@ -31,7 +31,7 @@ If panes are disarranged, use Obsidian's command palette:
 `Cmd/Ctrl-P` → **Workspaces: Manage workspaces** → load **Memoria**.
 
 The reset layout opens `home.md` in the main pane, keeps file navigation on the left, and
-keeps the Co-PI pane on the right.
+keeps the Agent Client pane on the right.
 
 ## Verify
 
@@ -43,6 +43,6 @@ keeps the Co-PI pane on the right.
 ## Related
 
 - Workspace reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Opening the Co-PI pane: [Agent-client pane](use-the-acp-pane.md)
+- Conversation surface: [Agent Client pane](use-the-agent-client-pane.md)
 - Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
 - The gate decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)

@@ -54,7 +54,7 @@ Three distinct caps, each motivated by a different failure mode (dispatcher poll
 
 ## The Co-PI and the operations are not lanes
 
-**The Co-PI has no lane.** It is the one agent the PI converses with, interactively, in the ACP pane. It is read-only itself: every *write* it wants goes out as a delegated task card to a background lane. It never claims a card and never produces a `done` card — that is the design, not a gap.
+**The Co-PI has no lane.** It is the one agent the PI converses with, interactively, in the Agent Client pane. It is read-only itself: every *write* it wants goes out as a delegated task card to a background lane. It never claims a card and never produces a `done` card — that is the design, not a gap.
 
 **Operations have no lanes either.** Ingest, search, clustering, the verification sweeps, and the Linter are deterministic — no posture, no LLM judgment — so they run on cron and CI, off the board. Their findings still arrive in the Inbox (as `flag`/`alert` cards), but the work itself is never dispatched as a card.
 

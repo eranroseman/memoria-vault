@@ -49,7 +49,7 @@ Then open the Inbox queue: the **Needs me**, **Drift watch**, and **Board** view
 
 ## What's fragile
 
-**ACP pane not responding** — the Co-PI also runs in a terminal: `hermes -p memoria-copi acp` to test the server, and every delegation has a CLI equivalent (`hermes kanban create`). The pane is a convenience layer; see [Safe mode](../troubleshooting/safe-mode.md).
+**Agent Client pane not responding** — the Co-PI also runs in a terminal: `hermes -p memoria-copi acp` to test the server, and every delegation has a CLI equivalent (`hermes kanban create`). The pane is a convenience layer; see [Safe mode](../troubleshooting/safe-mode.md).
 
 **qmd search index stale** — if notes changed outside a session, vault search may lag. Rebuild: [Rebuild the search index](../operate/rebuild-the-search-index.md).
 

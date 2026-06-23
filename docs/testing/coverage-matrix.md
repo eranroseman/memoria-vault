@@ -40,7 +40,7 @@ still need a named plan.
 | 14 | 14 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |
-| 17 | ACP pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
+| 17 | Agent Client pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |
 | 18 | **Installer end-to-end** — clean install, `{{VAULT_PATH}}`, `.env` seed, plugin copy, profile register, idempotency, bootstrap apps, flags, WSL2↔Windows | `vault-assembly` + `release-acceptance` / X | [installer](plans/installer-test-plan.md); PR-safe subset in `scripts/e2e-smoke.sh` | semi | 🟡 (PR subset automated; full install evidence manual) |
 | 19 | **Golden-path E2E** — source → ingest → classify → discuss → claim → draft → verify → export | `workflow-replay` / L4 | [e2e-golden-path](plans/e2e-golden-path-plan.md) for attended runtime; [test-env harness](plans/test-env-harness-plan.md) for ADR-80 Phase 1 cassette replay wired into `scripts/e2e-smoke.sh` | semi | 🟡 (model-free path automated; live model/GUI tail manual) |
 | 20 | **Agent output quality** — classification/draft/cite-check correctness | L5 | [ADR-11](../adr/11-vault-eval-maintenance.md) vault-eval | — | ⛔ (harness empty) |

@@ -11,7 +11,7 @@ parent: Tutorials
 
 **Time:** 20–30 minutes.
 
-**You'll use:** Obsidian's command palette and the Co-PI pane.
+**You'll use:** Obsidian's command palette and the Agent Client pane.
 
 **Before you start:** a working vault with the Co-PI answering. If you don't have one yet, run the [Quickstart](../how-to-guides/setup/quickstart.md) first — installing Memoria is a one-time setup, not part of learning it.
 

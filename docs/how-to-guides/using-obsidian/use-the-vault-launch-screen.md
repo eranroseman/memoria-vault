@@ -41,7 +41,7 @@ Keep `research-focus.md` current — the Librarian reads it at the start of ever
 
 ## Related
 
-- Why the launch screen is a plain note, not a custom app: [Home — the vault front door](../../explanation/obsidian/home.md)
+- Why the launch screen is a plain note, not a custom app: [Home welcome note](../../explanation/obsidian/home.md)
 - The persistent gate decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards)
 - The reset workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)

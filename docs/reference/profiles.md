@@ -15,7 +15,7 @@ One conversational agent (the Co-PI) plus four background agents, each defined b
 
 | Profile | Posture | Role | Invocation | Production default model |
 | --- | --- | --- | --- | --- |
-| `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the ACP pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
+| `memoria-copi` | Reflective thinking-partner | The one agent the PI converses with (the Agent Client pane). Reads directly, delegates every write as a board card. Sole carrier of the memory loop. | `interactive_only` — never dispatched to the board | `claude-opus-latest` |
 | `memoria-librarian` | Faithful | Finds, ingests, enriches, and draft-classifies evidence. Four processing lanes: catalog · extract · link · map. | `dispatched` | `claude-haiku-latest` |
 | `memoria-writer` | Generative | Drafts and synthesizes into project scratch; review-gated. | `dispatched` | `claude-sonnet-latest` |
 | `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
