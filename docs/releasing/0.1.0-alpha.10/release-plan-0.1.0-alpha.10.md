@@ -100,13 +100,12 @@ under the alpha.10 release parent, any open issue assigned to the
   host. Impact: CI can prove Source and Package Gates, but GUI and live MCP
   behavior require attended evidence. Workaround: record the manual Runtime and
   Product Gate checks in the release issue.
-- Limitation: The alpha.10 execution session could not observe live Obsidian GUI
-  rendering of the WSL test vault. Impact: Source, Package, Runtime, deployed
-  runtime doctors, and product-surface tests are green, but the attended
-  Obsidian rail/Bases render pass remains local-host evidence rather than
-  captured headless evidence. Workaround: keep the rendering requirement in the
-  release-candidate runbook and rerun it on a host that can open the test vault
-  natively.
+- Limitation: The alpha.10 Obsidian GUI follow-up has workspace/plugin evidence,
+  not screenshot evidence. Impact: the Linux app opened the WSL test vault,
+  Markdown surfaces, Bases views, and live Local REST API, but the WSL image had
+  no screenshot/window-capture tool for pixel evidence. Workaround: keep the
+  rendering requirement in the release-candidate runbook for hosts with capture
+  tooling.
 - Limitation: The sample vault is tutorial/test scaffolding, not user data
   migration. Impact: sample-vault correctness does not prove production-vault
   upgrade safety. Workaround: keep production validation separate and disposable.
