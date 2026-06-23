@@ -29,7 +29,7 @@ action surface.
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me` and fleeting-note processing views. |
+| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me` and fleeting processing views. |
 | Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`type: maintenance`): drift-watch, loose-ends, and board views. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
@@ -124,5 +124,5 @@ For the exact `lane-metric` fields and trust-score calculation, see [Fleet metri
 
 - The detectors behind drift-watch: [Linter: detectors and auto-fix](linter.md)
 - The audit-log schema fleet-health and audit-log read: [Memory substrates](memory.md)
-- The card types the Inbox board groups: [Note types](note-types.md)
+- The card types the Inbox board groups: [Document types](document-types.md)
 - Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)

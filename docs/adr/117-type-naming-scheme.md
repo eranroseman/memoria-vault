@@ -1,7 +1,7 @@
 ---
 topic: decisions
 id: 117
-title: "Document types: kind-scoped singular nouns; folder names never collide with spaces"
+title: "Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces"
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
@@ -10,7 +10,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-117: Document types — kind-scoped singular nouns; no folder/space collision
+# ADR-117: Document types — kind-scoped names with a fleeting exception; no folder/space collision
 
 ## Context
 
@@ -23,30 +23,31 @@ naming rule**, and that absence costs twice:
   flags `card` as colliding with the Inbox's ADR-51 honesty card. Neither is a defect.
 - **New types can drift in form** with nothing to check them against.
 
-Three concrete issues surfaced: **`fleeting`** is the lone adjective among nouns; the
-**`notes/` category doubles the medium word** — every typed object is a note, yet one category
-is named "notes"; and a tempting fix for that doubling (`notes/ → knowledge/`) would have
-created a *worse* problem — a `knowledge/` folder and the **Knowledge space** sharing a name
-with **different meanings** (the folder holds `source` documents shown in the *Library* space,
-not just claims). The resolution turns out to be cheaper than any folder rename: change the
-**umbrella term**, not the folder.
+Three concrete issues surfaced: **`fleeting`** is the lone adjective among nouns, but it is also
+the entrenched capture term; the **`notes/` category doubles the medium word** — every typed
+object is a note, yet one category is named "notes"; and a tempting fix for that doubling
+(`notes/ → knowledge/`) would have created a *worse* problem — a `knowledge/` folder and the
+**Knowledge space** sharing a name with **different meanings** (the folder holds `source`
+documents shown in the *Library* space, not just claims). The resolution turns out to be cheaper
+than any folder rename: change the **umbrella term**, not the folder, and make `fleeting` the
+explicit naming exception.
 
 ## Decision
 
-Adopt an explicit naming rule, apply two renames, and record what the rule deliberately
+Adopt an explicit naming rule, apply the umbrella rename, and record what the rule deliberately
 leaves alone.
 
 ### The rule
 
 **The umbrella term for a typed object is "document," not "note."** Every typed object is a
 *document*; a *note* is then **one kind** of document (the `notes/` documents — `source`,
-`claim`, `hub`, `index`, `fleeting-note`). This single move dissolves the `notes/` doubling:
+`claim`, `hub`, `index`, `fleeting`). This single move dissolves the `notes/` doubling:
 once the umbrella is "document," a `notes/` folder is a legitimate subset, not a circular
 "notes are notes." Type schemas, the page that lists them, and prose say **document type**.
 
-A type name is a **singular common noun for what the object is**, drawn from **ubiquitous
-language** (the field's own term), scoped to its **kind**. The vault has four kinds; the kind
-is a bounded context carried by the **category folder**:
+A type name is normally a **singular common noun for what the object is**, drawn from
+**ubiquitous language** (the field's own term), scoped to its **kind**. The vault has four kinds;
+the kind is a bounded context carried by the **category folder**:
 
 | Kind | Role | Folder(s) |
 | --- | --- | --- |
@@ -57,7 +58,9 @@ is a bounded context carried by the **category folder**:
 
 What the rule entails:
 
-- **Singular noun; no adjectives or verbs.** (`fleeting` violates this.)
+- **Singular noun by default; no adjectives or verbs.** `fleeting` is the one accepted
+  exception because it names the established capture workflow and preserving it avoids runtime
+  migration without creating ambiguity.
 - **Use the established term** — `paper`/`venue` (bibliographic), `source`/`claim`/`hub`
   (Zettelkasten lineage), `card`/`lane` (kanban), `thesis`/`project` — never invent where a
   field word exists.
@@ -77,11 +80,13 @@ What the rule entails:
 ### The changes
 
 1. **Umbrella: "note types" → "document types."** The collection of types, the page that lists
-   them, and generic prose call a typed object a **document**. This dissolves the `notes/`
-   doubling at the root — and because it keeps `notes/`, it also avoids the `knowledge/` ↔
-   Knowledge-space collision entirely. No folder moves; no `type:` value changes.
-2. **`fleeting` → `fleeting-note`.** Restores the singular-noun form — and reads cleanly under
-   the new umbrella as "a fleeting *note-document*."
+   them (`document-types.md`), and generic prose call a typed object a **document**. This
+   dissolves the `notes/` doubling at the root — and because it keeps `notes/`, it also avoids
+   the `knowledge/` ↔ Knowledge-space collision entirely. No folder moves; no `type:` value
+   changes.
+2. **`fleeting` stays `fleeting`.** It is the named exception to the singular-noun default,
+   kept because it is already the product term for raw capture and does not collide with another
+   type or surface.
 
 ### What the rule validates — do NOT change
 
@@ -89,6 +94,8 @@ What the rule entails:
   note documents), not a circular name — and renaming it would only create a space collision.
 - **The spaces stay**, and the 1:1 folder overlaps `projects/` ≈ Project and `inbox/` ≈ Inbox
   are fine (same concept, not a clash).
+- `fleeting` — accepted exception to the singular-noun default; do not rename it only to satisfy
+  the naming rule.
 - `worker-card` — a Hermes/kanban card; correctly named (`worker-row` would be wrong).
 - `worklist-item`, `eval-task`, `work-prompt`, `code-note` — each the correct term in its kind.
 - the catalog six, `claim`, `source`, `hub`, `index`, `project`, `thesis`, `pattern`, `space`,
@@ -103,15 +110,13 @@ What the rule entails:
 
 - The rule is enforceable going forward and ends the recurring "card"/"note" debate by naming
   the bounded-context and no-collision principles.
-- **The umbrella rename is cheap** — terminology only: the `note-types.md` reference page (title
-  and prose), schema/code comments that say "note type," and generic docs. **No folder moves, no
-  `type:` values change, no paths change** — so none of `folders.yaml`, the `gated_prefixes`, the
-  detectors, the producers, or existing documents are touched by it.
-- **`fleeting` → `fleeting-note`** is the only type rename: it touches the capture path
-  (QuickAdd/Modal Forms), the template, the `fleeting` home in `folders.yaml`, the schema file,
-  the tests, and existing fleeting notes.
-- Phasing: (1) adopt the rule + the "document type" umbrella + the doc clarifications (cheap);
-  (2) `fleeting → fleeting-note`.
+- **The umbrella rename is cheap** — terminology and docs route only: the `document-types.md`
+  reference page (filename, title, and prose), schema/code comments that say "note type," and
+  generic docs. **No folder moves, no `type:` values change, no paths change** — so none of
+  `folders.yaml`, the `gated_prefixes`, the detectors, the producers, or existing documents are
+  touched by it.
+- `fleeting` remains the live type, template, QuickAdd setting, and dashboard filter. Existing
+  fleeting notes need no migration.
 - One internal note: the four *kinds* include "Record"; "document" as the umbrella pairs cleanly
   with Record/Signal/Surface/Control, though "Record document" is faintly redundant — the kind
   could be renamed **Content** if that ever grates. Not load-bearing.
@@ -136,8 +141,7 @@ What the rule entails:
 ## Related
 
 - **Refines:** [ADR-47](47-type-first-category-folders.md) (type-first category folders — the
-  category folders are **kept**; the only folder-map touch is the `fleeting` → `fleeting-note`
-  home), [ADR-51](51-inbox-category-and-honesty-card.md) (inbox honesty cards — formalizes `card`
+  category folders and type homes are **kept**), [ADR-51](51-inbox-category-and-honesty-card.md) (inbox honesty cards — formalizes `card`
   as a Signal/Control dual-use), [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)
   (the overloaded-term principle — applied to types, plus the folder/space no-collision corollary),
   [ADR-116](116-obsidian-surface-architecture.md) (the storage-vs-intent two-axis model the

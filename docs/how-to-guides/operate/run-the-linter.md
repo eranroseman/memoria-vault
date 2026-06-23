@@ -11,7 +11,7 @@ Run a structural health check on the vault, or review the scheduled report. The 
 ## When it runs without you
 
 - **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed the drift-watch and loose-ends dashboards.
-- **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed note blocks the commit.
+- **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
 
@@ -25,7 +25,7 @@ From the vault root:
 python3 .memoria/operations/integrity/linter/detectors.py --vault .
 ```
 
-Add `--json` for machine-readable output. The detectors cover schema validity, broken frontmatter and body wikilinks, misplaced typed notes, dashboard field drift, superseded-claim reuse (`fama-exposure`), broken extract paths, orphan synthesis notes, leftover working files, and stale fleeting notes.
+Add `--json` for machine-readable output. The detectors cover schema validity, broken frontmatter and body wikilinks, misplaced typed documents, dashboard field drift, superseded-claim reuse (`fama-exposure`), broken extract paths, orphan synthesis notes, leftover working files, and stale fleeting notes.
 
 **2. Read the report by severity.**
 

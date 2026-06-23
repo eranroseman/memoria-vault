@@ -48,5 +48,5 @@ The aggregate prompt uses a `worklist-<slug>` dedupe key. Re-running the same re
 ## Related
 
 - Worklist fields: [Frontmatter fields](frontmatter.md)
-- Worklist note type: [Note types](note-types.md)
+- Worklist document type: [Document types](document-types.md)
 - Operation inventory: [Operations](operations.md)

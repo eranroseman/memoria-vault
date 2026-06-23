@@ -87,7 +87,7 @@ Advance the source note past `provisional` and, if a candidate card is still ope
 
 **Reference**
 
-- The claim schema: [Note types](../../reference/note-types.md)
+- The claim schema: [Document types](../../reference/document-types.md)
 - Field semantics: [Frontmatter fields](../../reference/frontmatter.md)
 
 **Explanation**

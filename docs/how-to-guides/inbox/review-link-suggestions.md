@@ -57,7 +57,7 @@ The fleet-health dashboard tracks your accept/reject ratio as a trust-score sign
 
 **Reference**
 
-- The card shapes: [Note types](../../reference/note-types.md)
+- The card shapes: [Document types](../../reference/document-types.md)
 - The accept-ratio signal: [Dashboards](../../reference/dashboards.md)
 
 **Explanation**

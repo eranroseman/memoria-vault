@@ -11,7 +11,7 @@ parent: Reference
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as typed notes — `type: eval-task`, schema `src/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
+Gold tasks live in `system/eval/` as typed documents — `type: eval-task`, schema `src/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |

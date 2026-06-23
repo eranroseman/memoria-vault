@@ -9,7 +9,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
-| Vault note types and fields | `src/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
+| Vault document types and fields | `src/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
 | Type homes, gated zones, skeleton | `src/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
 | Calibrated thresholds | `src/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
 | Profile tool capabilities | `src/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |

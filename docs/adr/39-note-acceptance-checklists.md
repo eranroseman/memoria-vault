@@ -41,5 +41,5 @@ The vault holds **50+ `claim-note`s**, so the criteria can be grounded in real e
 
 - **Tracking issue:** [#372](https://github.com/eranroseman/memoria-vault/issues/372) — implementation readiness lives on the issue.
 - **Pairs with:** [ADR-38 — ratchet duplicate gate](38-pre-file-similarity-gate.md)
-- **Note type concerned:** [claim-note](../reference/note-types.md)
+- **Note type concerned:** [claim-note](../reference/document-types.md)
 - **Re-entry trigger:** 50+ claim-notes in `notes/claims/`

@@ -89,5 +89,5 @@ If the diff is wrong, `git reset --hard HEAD~1` returns you to the step-1 snapsh
 
 **Reference**
 
-- The schema source and what reads it: [Note types](../../reference/note-types.md)
+- The schema source and what reads it: [Document types](../../reference/document-types.md)
 - Why `schema-content` never runs unattended: [Linter: detectors and auto-fix](../../reference/linter.md)

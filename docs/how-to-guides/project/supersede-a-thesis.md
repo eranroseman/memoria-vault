@@ -48,4 +48,4 @@ Open the Inbox alert named for the thesis pivot. Treat it as a reminder to re-ch
 - Start point: [Start a writing project](start-a-writing-project.md)
 - Gate refresh context: [Assess your corpus](assess-your-corpus.md)
 - Draft verification after a pivot: [Verify and revise a draft](verify-and-revise.md)
-- Thesis schema: [Note types](../../reference/note-types.md)
+- Thesis schema: [Document types](../../reference/document-types.md)

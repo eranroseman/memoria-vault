@@ -47,7 +47,7 @@ and builds a project-local `./.qmd/` index of this repo for coding agents — se
 not part of the commit gate; if Node is missing the step is skipped with a pointer to
 install it. Run `bash scripts/qmd-codebase-index.sh --embed` to add semantic vectors.
 
-See [docs/tutorials/01-set-up-from-zero.md](docs/tutorials/01-set-up-from-zero.md) for a full walkthrough.
+See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the install walkthrough.
 
 ### Optional: a git safety alias
 

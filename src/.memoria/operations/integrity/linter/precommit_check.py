@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""precommit_check — schema-validate staged notes (the D50 pre-commit hook).
+"""precommit_check — schema-validate staged documents (the D50 pre-commit hook).
 
-Called by the pre-commit hook with the staged .md paths. Each typed note must
+Called by the pre-commit hook with the staged .md paths. Each typed document must
 pass its schema; untyped system infra and vault-root nav pages are exempt,
 mirroring the Linter's frontmatter_schema_check. Exit 1 blocks the commit.
 
@@ -27,7 +27,7 @@ from operations.lib import schema
 
 
 def check_paths(vault: Path, paths: list[str]) -> list[str]:
-    """Return error strings for staged notes that fail their schema."""
+    """Return error strings for staged documents that fail their schema."""
     types = schema.load_types()
     errors: list[str] = []
     for raw in paths:
@@ -39,7 +39,7 @@ def check_paths(vault: Path, paths: list[str]) -> list[str]:
         if p.suffix != ".md" or not p.is_file():
             continue
         if rel.startswith((".memoria/", ".obsidian/")):
-            continue  # hidden runtime (golden copies, profile SKILLs) — never typed notes
+            continue  # hidden runtime (golden copies, profile SKILLs) — never typed documents
         if is_untyped_infra(rel) or "/" not in rel:
             continue
         fm = parse_frontmatter(p.read_text(encoding="utf-8"))

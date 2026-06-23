@@ -43,5 +43,5 @@ Every card can carry a `loudness` level, and each level has a defined outcome â€
 - Conceptual overview: [Kanban board](README.md)
 - State machine: [Board states and the review gate](states.md)
 - The decision-kind model the card serves: [Why promotion is gated](../knowledge/promotion-model.md)
-- The card types in the type system: [Note types and epistemic roles](../knowledge/note-types.md)
+- The card types in the type system: [Document types and epistemic roles](../knowledge/document-types.md)
 - How policy gates writes: [Policy MCP](../../reference/policy-mcp.md)

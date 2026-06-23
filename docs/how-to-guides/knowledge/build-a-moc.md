@@ -60,5 +60,5 @@ You author and curate hubs. The Librarian's `map` lane can propose that a cluste
 ## Related
 
 - The claims that fill it: [Advance a claim to evergreen](../knowledge/promote-a-claim.md)
-- The hub type and schema: [Note types](../../reference/note-types.md)
+- The hub type and schema: [Document types](../../reference/document-types.md)
 - Why hubs matter to the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

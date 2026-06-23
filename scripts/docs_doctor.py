@@ -370,8 +370,8 @@ def _table_count(text: str, label: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def check_note_type_reference_mirror(repo: Path, errors: list[str]) -> None:
-    doc = repo / "docs" / "reference" / "note-types.md"
+def check_document_type_reference_mirror(repo: Path, errors: list[str]) -> None:
+    doc = repo / "docs" / "reference" / "document-types.md"
     frontmatter = repo / "docs" / "reference" / "frontmatter.md"
     types = _load_schema_types(repo)
     if not types or not doc.is_file() or not frontmatter.is_file():
@@ -380,17 +380,17 @@ def check_note_type_reference_mirror(repo: Path, errors: list[str]) -> None:
     frontmatter_text = read(frontmatter)
     expected_count = len(types)
     for line_no, line in enumerate(doc_text.splitlines(), start=1):
-        if " note types" not in line and " types group" not in line:
+        if " document types" not in line and " types group" not in line:
             continue
         m = COUNT_RE.search(line)
         if m and int(m.group(1)) != expected_count:
             errors.append(
-                f"{doc}:{line_no}: note-type count mirror says {m.group(1)} but schemas define {expected_count}"
+                f"{doc}:{line_no}: document-type count mirror says {m.group(1)} but schemas define {expected_count}"
             )
     mentioned = _markdown_code_values(doc_text)
     missing = sorted(set(types) - mentioned)
     if missing:
-        errors.append(f"{doc}: note-type mirror omits schema type(s): {', '.join(missing)}")
+        errors.append(f"{doc}: document-type mirror omits schema type(s): {', '.join(missing)}")
     lifecycle_mentions = _markdown_code_values(frontmatter_text)
     missing_lifecycle = sorted(set(types) - lifecycle_mentions)
     if missing_lifecycle:
@@ -605,7 +605,7 @@ def check_hermes_cli_skill_mirror(repo: Path, errors: list[str]) -> None:
 
 
 def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
-    check_note_type_reference_mirror(repo, errors)
+    check_document_type_reference_mirror(repo, errors)
     check_vocabulary_reference_mirror(repo, errors)
     check_quickadd_command_reference_mirror(repo, errors)
     check_plugin_count_mirrors(repo, errors)

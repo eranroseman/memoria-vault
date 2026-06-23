@@ -60,5 +60,5 @@ Curate a lens you reach for repeatedly as a **pattern** in `system/patterns/` ([
 
 - The workflow it anchors: [Discuss a paper](discuss-a-paper.md)
 - Capturing the output: [Write a claim note](../knowledge/write-a-claim-note.md)
-- Curated frames as data: [Note types](../../reference/note-types.md)
+- Curated frames as data: [Document types](../../reference/document-types.md)
 - The profile behind it: [The Co-PI](../../explanation/profiles/co-pi.md)

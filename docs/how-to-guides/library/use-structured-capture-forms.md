@@ -61,6 +61,6 @@ Open the Inbox queue's **Needs me** view and resolve the card: keep the source (
 
 - The enriched capture path for papers with a DOI/citekey: [Capture and ingest a source](capture-and-ingest.md)
 - The palette command behind the form: [Obsidian command palette](../../reference/obsidian-command-palette.md)
-- The `source` note schema: [Frontmatter fields](../../reference/frontmatter.md), [Note types](../../reference/note-types.md)
+- The `source` note schema: [Frontmatter fields](../../reference/frontmatter.md), [Document types](../../reference/document-types.md)
 - Resolving the candidate it raises: [Work the review queue](../inbox/work-the-review-queue.md)
 - The decision: [ADR-71: Structured capture forms](../../adr/71-structured-capture-forms.md)

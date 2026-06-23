@@ -16,7 +16,7 @@ The vault stores durable knowledge organized type-first into category folders, w
 
 | Page                                                               | What it covers                                                                                                                           |
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| [Note types and epistemic roles](note-types.md)                    | The three epistemic roles (source / synthesis / working) behind the note types, and why agent permissions follow from them.              |
+| [Document types and epistemic roles](document-types.md)                    | The three epistemic roles (source / synthesis / working) behind the document types, and why agent permissions follow from them.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, and why the vault compounds rather than merely accumulates.                      |
 | [Your first month](your-first-month.md)                            | The tempo of that cycle over your first weeks of real use — when to capture, distill, produce, and review so the vault compounds, not rots. |
 | [Note body structure](note-body-structure.md)                      | Why source notes, claim notes, and hubs have the body sections they do, and what each section makes the note able to do.                  |
@@ -26,4 +26,4 @@ The vault stores durable knowledge organized type-first into category folders, w
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 | [Why hubs](hubs-and-navigation.md)                                 | Why the link-first vault needs a human-curated navigation layer, and why hubs are authored, threshold-prompted, and review-gated.        |
 
-For the complete note-type reference (fields, templates, lifecycle tables), see [Note types](../../reference/note-types.md).
+For the complete document-type reference (fields, templates, lifecycle tables), see [Document types](../../reference/document-types.md).

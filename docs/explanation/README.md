@@ -46,7 +46,7 @@ Read from the inside out: start with what the system is, then why it's shaped th
 ### How it's structured
 
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages (control plane, memory tiers, channels, vault, logging).
-2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge (lifecycle folders, note types, gated promotion).
+2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge (lifecycle folders, document types, gated promotion).
 3. **[Workflows](workflows/README.md)** — how work moves through the system (the board as a state machine, review as a state).
 
 ---
@@ -66,7 +66,7 @@ The curated path above is a reading order, not a full index. The sidebar lists e
 - [Overview](overview/README.md) — start here: what-memoria-is, intellectual-foundations, design-principles
 - [Design rationale](rationale/README.md) — the `why-*` arguments: three-layers, specialist-profiles, human-gate, not-autonomous, hermes, computational-methods, pattern-provenance
 - [Architecture](architecture/README.md) — what each layer and surface *is*: vault, the memory model, control-plane, interaction channels, session-logging
-- [Knowledge](knowledge/README.md) — how durable knowledge is organized: note-types, knowledge-cycle, note-body-structure, lifecycle-over-topic, promotion-model, vocabulary-discipline, common-pitfalls
+- [Knowledge](knowledge/README.md) — how durable knowledge is organized: document-types, knowledge-cycle, note-body-structure, lifecycle-over-topic, promotion-model, vocabulary-discipline, common-pitfalls
 - [Profiles](profiles/README.md) — the five profiles: Co-PI (conversational front) plus four background lanes — librarian, writer, peer-reviewer, engineer — plus delegation-posture
 - [Kanban board](kanban-board/README.md) — the board as coordination layer: states, card-schema, obsidian-projection
 - [Workflows](workflows/README.md) — how work moves: board-as-state-machine, review-as-state, plus verify-on-commit

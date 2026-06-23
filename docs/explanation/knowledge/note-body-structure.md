@@ -9,7 +9,7 @@ nav_order: 3
 
 The three most important prose types — source notes, claim notes, and hubs — have distinct body structures because they answer different questions and serve different epistemic purposes. Understanding why each section exists helps explain what makes a note function as knowledge rather than as accumulated text.
 
-For the frontmatter fields, templates, and field-by-field reference, see [Note types](../../reference/note-types.md).
+For the frontmatter fields, templates, and field-by-field reference, see [Document types](../../reference/document-types.md).
 
 ---
 
@@ -33,7 +33,7 @@ The `## Claim` section states the single durable idea. Atomicity is the constrai
 
 The `## Evidence and argument` section is what distinguishes a claim from an assertion. A claim with no evidence is an opinion. A claim with citekeys pointing to supporting sources is an argument that can be verified, updated, and superseded as evidence accumulates.
 
-The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. The `links:` here are *authored* connections (as distinct from the *given* `relationships` on entities — that distinction is explained in [Note types and epistemic roles](note-types.md)), and they are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without links has not.
+The `## Links` section is the most structurally significant. A claim with no `links:` to other claims has not made it into the knowledge graph — it exists in isolation, where it cannot compound. The `links:` here are *authored* connections (as distinct from the *given* `relationships` on entities — that distinction is explained in [Document types and epistemic roles](document-types.md)), and they are what make the vault a graph rather than a collection. A note that supports, contradicts, or extends another note has been integrated; one without links has not.
 
 This is the **Zettelkasten** principle at the center of the method: a note's value comes from its links, not its contents — an unlinked note is, in Luhmann's terms, lost to the box. The required Links section makes that discipline structural rather than aspirational (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
 
@@ -49,7 +49,7 @@ The three questions a hub body should answer — what is this area about, what b
 
 ## How the body sections honor the epistemic separation
 
-The body structures above only work if the underlying separation holds: a source note records what a source says from an external perspective, a claim records what the PI thinks in their own words, and a hub is a navigational surface rather than a synthesis destination. Why that separation exists, why mixing it breaks citation tracing, and why it lets agent permissions be cleanly scoped are developed in [Note types and epistemic roles](note-types.md).
+The body structures above only work if the underlying separation holds: a source note records what a source says from an external perspective, a claim records what the PI thinks in their own words, and a hub is a navigational surface rather than a synthesis destination. Why that separation exists, why mixing it breaks citation tracing, and why it lets agent permissions be cleanly scoped are developed in [Document types and epistemic roles](document-types.md).
 
 Taking the separation as given, the body sections are what enforce it concretely. The source note's external-perspective Summary and Critique keep the PI's conclusions out of the record of what the paper argues; the claim note's Claim-plus-Evidence shape forces an asserted position rather than a paraphrase; the hub's three questions keep it a framing-and-planning surface rather than a place synthesis accidentally lands.
 
@@ -57,8 +57,8 @@ Taking the separation as given, the body sections are what enforce it concretely
 
 ## Related
 
-- The three epistemic roles explained: [Note types and epistemic roles](note-types.md)
+- The three epistemic roles explained: [Document types and epistemic roles](document-types.md)
 - Why the Links section compounds: [The knowledge cycle](knowledge-cycle.md)
 - What goes wrong without this structure: [Common pitfalls](common-pitfalls.md)
 - How to use the reading workflow: [Discuss a paper](../../how-to-guides/library/discuss-a-paper.md)
-- Note-type reference (templates, fields, lifecycle tables): [Note types](../../reference/note-types.md)
+- Document-type reference (templates, fields, lifecycle tables): [Document types](../../reference/document-types.md)

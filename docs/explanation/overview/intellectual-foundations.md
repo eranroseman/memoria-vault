@@ -61,7 +61,7 @@ The pattern-by-pattern judgment — what was borrowed as-is, taken with the auto
 Memoria takes Karpathy's compiler insight, Luhmann's typed-note discipline, Bush's associative memory, and the operational patterns of contemporary AI-research systems as a single design stack:
 
 - The wiki is the compiled artifact (Karpathy).
-- The note types preserve atomicity and lifespan distinction (Zettelkasten).
+- The document types preserve atomicity and lifespan distinction (Zettelkasten).
 - The associative graph (wikilinks, hubs, entity links) preserves trails (Memex).
 - The stage-gated pipeline and explicit agent roles come from the field survey.
 - The AI agent provides the maintenance discipline that all three earlier traditions required from the human.

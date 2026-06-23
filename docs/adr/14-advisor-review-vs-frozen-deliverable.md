@@ -17,7 +17,7 @@ superseded_by: []
 Memoria models a `deliverable` (`50-deliverables/`) as **terminal and frozen** — produced by
 re-running Pandoc, never edited in place; if it needs changes you supersede it with a new
 draft → export cycle ([Export routes and formats](../reference/export.md),
-[Note types](../reference/note-types.md)). The current export path emits one thing: a
+[Document types](../reference/document-types.md)). The current export path emits one thing: a
 static citeproc `.docx` whose citations are frozen text.
 
 This is correct for **final journal submission**. It has no answer for the **advisor-feedback
@@ -68,5 +68,5 @@ not reimplement citation-field injection.
 ## Related
 
 - **Workflows affected:** [export a draft](../how-to-guides/project/export-a-draft.md) (companion how-to, added with this ADR), [Export routes and formats](../reference/export.md) (the existing static path)
-- **Files affected:** the `deliverable` note type — [Note types](../reference/note-types.md)
+- **Files affected:** the `deliverable` note type — [Document types](../reference/document-types.md)
 - **Profiles:** [Coder](../explanation/profiles/engineer.md) runs the Pandoc mechanics

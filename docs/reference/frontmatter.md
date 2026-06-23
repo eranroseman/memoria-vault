@@ -5,7 +5,7 @@ parent: Reference
 
 # Frontmatter fields
 
-The frontmatter contract for every typed note. **The single source is `.memoria/schemas/`** — per-type field schemas in `src/.memoria/schemas/types`, the type → folder map in `src/.memoria/schemas/folders.yaml`, and the calibrated thresholds in `src/.memoria/schemas/calibration.yaml`. The shared loader/validator is `src/.memoria/operations/lib/schema.py`; the Linter, the pre-commit hook, and the installer-skeleton tests all read it, so a schema change is a one-file edit, never a hunt across hardcoded lists. This page explains the grammar and the universal fields; the per-type tables live in [Note types](note-types.md).
+The frontmatter contract for every typed document. **The single source is `.memoria/schemas/`** — per-document-type field schemas in `src/.memoria/schemas/types`, the type → folder map in `src/.memoria/schemas/folders.yaml`, and the calibrated thresholds in `src/.memoria/schemas/calibration.yaml`. The shared loader/validator is `src/.memoria/operations/lib/schema.py`; the Linter, the pre-commit hook, and the installer-skeleton tests all read it, so a schema change is a one-file edit, never a hunt across hardcoded lists. This page explains the grammar and the universal fields; the per-type tables live in [Document types](document-types.md).
 
 ---
 
@@ -67,7 +67,7 @@ Obsidian does not have a global property-order schema file, so the shipped templ
 
 ## `lifecycle` — the one chain
 
-Every typed note carries `lifecycle`, drawn from the **universal chain** ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)):
+Every typed document carries `lifecycle`, drawn from the **universal chain** ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)):
 
 ```text
 proposed → provisional → current → retracted → archived
@@ -162,13 +162,13 @@ Worklist rows are `worklist-item` notes under `system/worklists/`. Their `lifecy
 | --- | --- |
 | Pre-commit hook | Every staged `.md` note must pass its type schema; exit 1 blocks the commit (`src/.memoria/operations/integrity/linter/precommit_check.py`). |
 | Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
-| Exemptions | Most `system/` infrastructure and vault-root navigation pages (`home.md`, `research-focus.md`, `troubleshooting.md`) are untyped and exempt. Typed system homes (`system/patterns/`, `system/eval/`, `system/worklists/`, `system/board/`) follow [Note types](note-types.md#system-types-4). |
+| Exemptions | Most `system/` infrastructure and vault-root navigation pages (`home.md`, `research-focus.md`, `troubleshooting.md`) are untyped and exempt. Typed system homes (`system/patterns/`, `system/eval/`, `system/worklists/`, `system/board/`) follow [Document types](document-types.md#system-types-4). |
 
 ---
 
 ## Related
 
-- The per-type field tables: [Note types](note-types.md)
+- The per-document-type field tables: [Document types](document-types.md)
 - The controlled classification values: [Vocabulary](vocabulary.md)
 - What validates this contract: [Linter: detectors and auto-fix](linter.md)
 - Where the schema files live: [On-disk layout](on-disk-layout.md)

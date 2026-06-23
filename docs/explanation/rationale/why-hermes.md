@@ -57,7 +57,7 @@ This is why the API server lives here, with Hermes, rather than in [Interaction 
 | Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
 | Write-gating policy MCP | Memoria (plugs into Hermes's MCP interface) |
 | The five profile `SOUL.md`s and lane-overrides | Memoria |
-| The vault, schema, and note types | Memoria |
+| The vault, schema, and document types | Memoria |
 
 The rule of thumb: **Hermes moves work; Memoria decides what work means and what may become canonical.**
 

@@ -43,7 +43,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
-The six vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `spaces`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Note types](note-types.md).
+The six vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `spaces`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Document types](document-types.md).
 
 ---
 
@@ -127,5 +127,5 @@ The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox
 ## Related
 
 - How `src/` becomes a runtime vault: [Installer (bootstrap)](installer.md)
-- The type → folder homes in table form: [Note types](note-types.md)
+- The type → folder homes in table form: [Document types](document-types.md)
 - What keeps the deployed tree honest: [Linter: detectors and auto-fix](linter.md)
