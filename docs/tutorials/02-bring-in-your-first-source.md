@@ -5,6 +5,8 @@ parent: Tutorials
 
 # Tutorial 02: Bring in your first source
 
+*Session 1 of 3 · Build a starter corpus.*
+
 **You will end with:** one source of your own in the Catalog, its candidate card judged in the Inbox, and one proposed source note filled in your own words — your first independent Accumulate rep, sitting alongside the sample's worked examples.
 
 **Time:** 30–45 minutes (includes reading the paper or its abstract).

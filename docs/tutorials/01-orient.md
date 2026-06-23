@@ -5,6 +5,8 @@ parent: Tutorials
 
 # Tutorial 01: See what you're building
 
+*Session 1 of 3 · Build a starter corpus.*
+
 **You will end with:** a project opened over a dense sample corpus, its coverage map read — a tight cluster of connected claims *and* the one gap it doesn't cover — and your goal named. You will have seen the destination before you build toward it.
 
 **Time:** 20–30 minutes.
