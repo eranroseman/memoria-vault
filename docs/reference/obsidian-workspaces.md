@@ -27,8 +27,8 @@ link opens that dashboard in the active tab; it does not load a new workspace la
 The **Memoria** workspace has one shared shell:
 
 - **Main pane** — `spaces/inbox.md`, opened in reading view.
-- **Left sidebar** — Portals folder navigation, with the core file explorer retained
-  as fallback.
+- **Left sidebar** — Portals shortcuts for vault homes; primary movement still happens
+  through the space nav row and Bases views.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
 The core Workspaces plugin stays enabled so you can restore this shell with Obsidian's

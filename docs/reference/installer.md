@@ -52,7 +52,7 @@ The local model overlay changes only the Hermes model block. The Obsidian MCP re
 | 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. |
 | 7. Skills | Clones the K-Dense bundle, verifies the bundled official Hermes skills, and installs the hub skills (`obsidian-markdown`, `qmd`). |
 | 8. Obsidian | Guided, not silent: Windows offers `winget`; Linux offers the Flatpak/AppImage path. **Zotero is no longer provisioned by the Linux test installer** — Windows production still offers winget guidance because Zotero is the expected production bibliography surface. |
-| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (open the Co-PI pane, then use the space nav row to open Library). |
+| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (use the space nav row to open Library, then open the Co-PI pane when you want conversational help). |
 
 ---
 

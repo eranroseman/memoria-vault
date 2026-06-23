@@ -64,7 +64,7 @@ so capture stays close while active-note defaults remain visible.
 
 **3. Use the Co-PI when shaping helps.**
 
-The conversational route is additive: open the Agent Client pane, say what you want, and the Co-PI raises a ceiling-validated card on the right lane when work should become durable ([Agent-client pane](use-the-acp-pane.md)). Use the palette when you already know the lane, task, or assist verb; use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational. Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit hook ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
+The conversational route is additive, not primary: use the palette when you already know the lane, task, or assist verb. Use the Co-PI when you don't, when the work spans several tasks, or when Ask/Explore should stay conversational; if the result should become durable, the Co-PI raises a ceiling-validated card on the right lane ([Agent-client pane](use-the-acp-pane.md)). Linting has no command by design — the Linter is an operation on a daily cron plus the pre-commit hook ([Run the Linter](../operate/run-the-linter.md)). Project scaffolding is a palette command: `Memoria: start project`.
 
 **4. Use the palette by type, not by scroll.**
 

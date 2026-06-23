@@ -19,7 +19,7 @@ Move a paper from discovery into the vault as a Catalog entity, proposed source 
 
 - **From Zotero:** add the source to Zotero (Better BibTeX pins the citekey automatically), select the item, then in Obsidian press `Cmd/Ctrl-P` → **Memoria: capture from Zotero selection**.
 - **From a URL:** `Cmd/Ctrl-P` → **Memoria: capture source from URL** and paste the paper's URL. A URL with a resolvable DOI ingests; a bare or proxied URL asks you for the DOI or citekey.
-- **From the Co-PI:** open the Agent Client pane and say "bring in this paper: `<DOI or citekey>`" — it delegates the same card.
+- **With Co-PI help:** if you are unsure how to frame the capture, open the Agent Client pane and ask; once the request is clear, use the matching palette route or let the Co-PI delegate the same card.
 
 **2. Clean the metadata in Zotero (Zotero route only).**
 
@@ -37,11 +37,11 @@ The Librarian claims the card and drives the deterministic ingest operation over
 
 **4. Judge the candidate card.**
 
-Open the Inbox space's **Needs me** view of `inbox.base` (or the card in `inbox/`). Read `argument_against` first — it's the information-bearing field ([Frontmatter fields](../../reference/frontmatter.md)). Then keep it (resolve to `current`, act on it, then `archived`) or skip it (resolve straight to `archived` — the Catalog entry stays as a record). Resolving a card is one palette command: [Work the review queue](../inbox/work-the-review-queue.md).
+Open the Inbox space's **Needs me** view of `inbox.base`. Read `argument_against` first — it's the information-bearing field ([Frontmatter fields](../../reference/frontmatter.md)). Then keep it (resolve to `current`, act on it, then `archived`) or skip it (resolve straight to `archived` — the Catalog entry stays as a record). Resolving a card is one palette command: [Work the review queue](../inbox/work-the-review-queue.md).
 
 **5. Write your source note.**
 
-For a kept paper, open the proposed reading record in `notes/sources/` — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up there), then `current` once you've distilled its claims (the lifecycle chain is defined in [Frontmatter fields](../../reference/frontmatter.md)). The full loop is [Tutorial 02: Bring in your first source](../../tutorials/02-bring-in-your-first-source.md).
+For a kept paper, open the proposed reading record from the Library space's source views — `entity:` wikilinks the Catalog entry, `lifecycle: proposed` until you read it. Fill it in your own words. Once read it advances to `provisional` (read, not yet distilled — the discuss queue picks it up there), then `current` once you've distilled its claims (the lifecycle chain is defined in [Frontmatter fields](../../reference/frontmatter.md)). The full loop is [Tutorial 02: Bring in your first source](../../tutorials/02-bring-in-your-first-source.md).
 
 ## Verify
 

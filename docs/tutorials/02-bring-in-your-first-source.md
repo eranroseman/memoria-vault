@@ -23,7 +23,7 @@ The sample vault you loaded in Tutorial 01 brought worked source notes (the PRED
 
 Pick a paper you actually want to read for your own goal, and copy its URL (the publisher page, or anything that resolves to a DOI). In Obsidian press `Cmd/Ctrl-P` → **Memoria: capture source from URL** → paste the URL. A resolvable DOI ingests immediately; a bare URL asks you for the DOI or citekey. That puts a capture card on the Librarian's `catalog` lane.
 
-> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. Either route — or just telling the Co-PI to bring in a `<DOI>` — feeds the same `catalog` lane.
+> **See also:** if you keep a [Zotero](https://www.zotero.org/) library, **Memoria: capture from Zotero selection** captures the selected item the same way — [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md) is a one-time setup that gives you stable citekeys. If you are unsure what to capture, ask the Co-PI to help shape the request, then use the matching command; both command routes feed the same `catalog` lane.
 
 ---
 

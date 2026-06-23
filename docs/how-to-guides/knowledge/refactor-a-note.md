@@ -17,7 +17,7 @@ Keep claim notes atomic and remove duplication without losing provenance. Agents
 
 ## Find duplicate candidates
 
-Delegate the hunt from the Co-PI pane:
+Use `Cmd/Ctrl-P` -> **Memoria: delegate task** -> `verify`:
 
 > "Verify my claims on `<topic>` for near-duplicates."
 

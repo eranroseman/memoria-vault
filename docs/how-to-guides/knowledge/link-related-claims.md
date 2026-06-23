@@ -54,7 +54,7 @@ The Librarian's `link` lane surfaces candidate connections and tensions as Inbox
 
 **6. Confirm it surfaced.**
 
-For a `contradicts` link, open `system/dashboards/contradictions.md`. The pair should appear — that visibility is the payoff of typing the link.
+For a `contradicts` link, open the Knowledge space's **Contradictions** view. The pair should appear — that visibility is the payoff of typing the link.
 
 ## Verify
 

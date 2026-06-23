@@ -8,7 +8,7 @@ permalink: /how-to-guides/library/
 
 # Library
 
-Work sources in — find, capture, read, and classify the literature the vault is built from. Performed inside Obsidian via the palette, the Co-PI pane, and the Inbox.
+Work sources in — find, capture, read, and classify the literature the vault is built from. Performed inside Obsidian via the Library space, Inbox, and `Memoria:` commands; the Co-PI pane helps with read-only discussion and unclear handoffs.
 
 | Guide | What it covers |
 | --- | --- |

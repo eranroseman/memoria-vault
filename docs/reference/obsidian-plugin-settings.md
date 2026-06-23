@@ -112,13 +112,13 @@ clearly instead of silently skipping those paths.
 
 ### portals
 
-Portals persists its folder spaces, hidden items, custom icons, and file-explorer
-replacement settings to a vendored `data.json`. It is adopted as navigation chrome
-only, not as a query layer or space switcher.
+Portals persists its shortcuts, hidden items, custom icons, and explorer
+replacement settings to a vendored `data.json`. It is adopted as supplemental reach
+chrome only; primary navigation stays in spaces and Bases views.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `spaces[]` | Folder portals for `inbox`, `catalog`, `notes/sources`, `notes/claims`, `notes/hubs`, and `projects`. | Portals is reach-only folder navigation; no tag portals and no space switching. |
+| `spaces[]` | Shortcuts for the vault homes behind Inbox, Library, Knowledge, and Project work. | Portals is supplemental reach-only navigation; no tag portals and no space switching. |
 | `replaceFileExplorer` | `true` | Portals replaces the visible explorer surface through its own setting while the core `file-explorer` plugin remains enabled as fallback. |
 | `hiddenItems` | `{ "system": true, ".memoria": true }` | Runtime and generated infrastructure stay out of the PI-facing navigation pane. |
 | `tagNotesFolderPath` | `system/_tag-notes` | Keeps the plugin's tag-note folder out of the user namespace. |

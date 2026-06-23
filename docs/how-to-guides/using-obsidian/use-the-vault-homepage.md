@@ -19,7 +19,7 @@ The obsidian-homepage plugin opens `spaces/inbox.md` on launch ([ADR-81](../../a
 The obsidian-homepage plugin opens `spaces/inbox.md` automatically on launch in Reading view, replacing any open notes. It opens on demand too:
 
 - `Cmd/Ctrl-P` → **Homepage: Open homepage**, or click the home ribbon icon
-- Or open `spaces/inbox.md` from the space nav row, Portals, or the file explorer
+- Or open Inbox from the space nav row or Portals
 
 To get back to a clean launch view at any time, **right-click a tab header -> Close all** — it closes every open tab and re-launches Inbox.
 

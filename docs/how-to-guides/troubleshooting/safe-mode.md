@@ -32,11 +32,13 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 
 ## Review and triage
 
-**Must work:** open `system/dashboards/weekly-review.md` in Obsidian. The Dataview queries surface the triage queue without any Hermes involvement.
+**Must work:** open the Inbox space and use its weekly-review and **Needs me**
+views. The embedded Bases/Dataview queries surface the triage queue without any
+Hermes involvement.
 
 **If Hermes is unreachable** — triage is a human-only action anyway. Classify by hand:
 
-1. Open the paper entity in `catalog/papers/`
+1. Open the paper entity from the Library space's Catalog papers view.
 2. Copy the fields you accept from the `_proposed_classification` block into the main frontmatter
 3. Delete the `_proposed_classification:` block
 4. Set `lifecycle: current` ([Classify a source](../library/classify-a-source.md))

@@ -104,7 +104,7 @@ Ask it "explain how this vault is organized". It should answer from the vault. F
 
 **7. Test the ingest path end-to-end.**
 
-In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL (or tell the Co-PI "bring in this paper: `<DOI>`"). Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
+In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL. If you are still shaping the request, use the Co-PI for conversation, then run the matching capture command. Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
 
 ## Verify
 
