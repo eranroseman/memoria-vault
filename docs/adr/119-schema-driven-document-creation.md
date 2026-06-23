@@ -1,98 +1,151 @@
 ---
 topic: decisions
 id: 119
-title: "Schema-driven document creation: the schema generates the form and the template, not just validates them"
+title: "Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is the single source"
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [47, 49, 116, 117]
+assumes: [47, 49, 52, 116, 117]
 supersedes: []
 superseded_by: []
 ---
 
-# ADR-119: Schema-driven document creation
+# ADR-119: The type schema is the complete declarative contract
 
 ## Context
 
-Creating a typed document has **three concerns**: the **contract** (type, required fields,
-enums, defaults, folder, lifecycle — owned by the schema), the **input** (the values a human
-or an agent supplies), and the **shape** (the body structure that encodes how to think about
-the note kind — the template body).
+Validating *and* creating a typed document touches **eight** concerns: identity & placement,
+fields, controlled vocabulary, the state model, the typed-edge graph, cross-field/referential
+invariants, generation metadata (labels, defaults, which fields a creation form asks for), and
+evolution.
 
-Today a type's field list is defined in **three** hand-synced places: the schema
-(`types/<t>.yaml`), the template's frontmatter (`system/templates/<t>.md`), and the Modal Form
-(`memoria-<t>-capture`). The schema is "authoritative" only for *validation* — the template
-and the form **re-encode** it. This is the one corner that breaks Memoria's single-source-of-truth
-rule (the linter, installer, policy MCP, and Bases all *read* the schema; only the form and
-template *duplicate* it), and the drift is already visible — the source form adds a `summary`
-field and drops `links` relative to `source.yaml`.
+Today the type schema (`types/<t>.yaml`) carries only **fields + enums**. Everything else is
+scattered and hand-synced:
 
-Best practice and Memoria's own philosophy converge on the same fix: stop hand-syncing three
-copies; **derive the form and the template from the schema.**
+| Concern | Where it lives today |
+| --- | --- |
+| placement / gating | split between `folders.yaml` and the schema's `category`/`gated` |
+| state transitions | ADR prose + detector code — *not declared anywhere* |
+| graph / edges | `links: map` (untyped); the edge vocabulary ([ADR-52](52-links-vs-relationships.md)) is convention |
+| invariants | **hand-coded in the Linter detectors** (`thesis`→`promoted_at`, `claim`→`sources`, …) |
+| defaults | in the **templates**, not the schema |
+| labels / creation-required | **nowhere** |
+
+So the "schema" is a *fragment* of the contract. The consequences compound: the Linter
+hard-codes per-type knowledge it shouldn't have to; the template frontmatter and the Modal Form
+**re-encode the field list** (three hand-synced copies — the source form already drifted, adding
+`summary` and dropping `links`); and adding a type or a rule means editing **four** places
+(the YAML, a detector in code, a template, and `folders.yaml`).
+
+Best practice and Memoria's own single-source-of-truth philosophy converge on the same fix:
+stop scattering and duplicating the contract — make the schema **complete and declarative**, and
+derive everything else from it.
 
 ## Decision
 
-Promote the schema from a passive validator to the **generator** everything is derived from.
+Promote the type schema from a partial field-list-plus-validator to the **complete declarative
+contract** that everything executes or generates from.
 
-1. **The schema is the single source for the contract — and gains creation metadata.** Per
-   field, beyond type/enum/default, it declares `creation: required | optional` (the creation
-   form asks only for creation-required fields; the rest are filled later during shaping) and a
-   `label` + `description` (for the generated form, especially the jargon fields — CEBM evidence
-   levels, FINER, PICO).
-2. **The form is generated from the schema, not authored.** A build step emits the Modal Form
-   definition from the type schema: creation-required fields → inputs, enums → selects, defaults
-   prefilled, labels/descriptions attached. The form cannot drift because it is compiled.
-   Validation happens **at submit** against the schema; the Linter becomes the backstop, not the
-   primary gate.
-3. **The template splits — frontmatter generated, body authored.** The frontmatter block is
-   generated from the schema's defaults; the **only hand-authored per-type artifact is the body
-   scaffold** — the thinking-shape sections, with **fading prompts that are easy to delete**
-   (hints in comments or `[!hint]` callouts, removed as the section is filled). The full template =
-   generated frontmatter + authored body scaffold.
-4. **One creation engine, two input adapters.** A single `create(type, inputs)` loads the schema
-   spec, applies defaults, merges inputs, validates at creation, prepends the generated
-   frontmatter to the body scaffold, and writes to the schema's folder. **Both the human form and
-   the agent writers (`inbox.py`, ingest) call it** — unifying the two creation tracks. This also
-   explains why 16 types have a template but no form: they are agent-created through the *same*
-   engine with a different input adapter.
+### 1. The schema declares the whole contract
+
+One type definition holds all eight concerns:
+
+- **Fields as first-class specs** — `{type, required, default, label, description,
+  creation: required|optional, constraints}`, with value types richer than `str/list/map`:
+  `link(endpoint-type)`, `citekey`, `date`, `enum(ref)`, `list<T>`, and `edges(edge-vocab)` for
+  the graph.
+- **Placement & gating** — `folder`, `gated` (folding `folders.yaml`'s per-type map in).
+- **State machine** — `lifecycle: {states, transitions, gated-transitions}`: the universal chain
+  projected to this type's subset, with the review-gated transitions declared (not inferred in
+  detectors).
+- **Typed edges** — reference the shared edge vocabulary ([ADR-52](52-links-vs-relationships.md)) with
+  declared endpoint types, so the graph is typed *in the schema*.
+- **Invariants as declarative rules** — conditional requirements
+  (`when lifecycle == current, require promoted_at`) and referential rules
+  (`sources: each is a citekey resolving to a paper`), replacing the hand-coded detector rules.
+
+### 2. The Linter becomes a generic engine
+
+It **executes the declared** field/enum/invariant/transition/placement rules — no per-type code.
+Adding a type or a rule is a *schema edit*, not a detector edit. Declarative beats imperative:
+the detector engine runs the contract; it doesn't *contain* it.
+
+### 3. Forms, templates, the folder map, and the reference docs are generated from the schema
+
+- **The Modal Form is generated** — creation-required fields → inputs, enums → selects, defaults
+  prefilled, labels/descriptions attached. Validation happens **at submit**; the Linter is the
+  backstop, not the primary gate.
+- **The template splits** — frontmatter generated from the schema's defaults; the **only
+  hand-authored per-type artifact is the body scaffold** (the thinking-shape sections, with
+  fading prompts that are easy to delete — hints in comments or `[!hint]` callouts).
+- **`folders.yaml` and the reference docs** (`note-types.md`, `frontmatter.md`) are generated,
+  not hand-mirrored.
+
+### 4. One creation engine, two input adapters
+
+A single `create(type, inputs)` loads the schema spec, applies defaults, merges inputs, validates
+at creation, prepends the generated frontmatter to the body scaffold, and writes to the schema's
+folder. **Both the human form and the agent writers (`inbox.py`, ingest) call it** — unifying the
+two creation tracks. This also explains why 16 types have a template but no form: they are
+agent-created through the *same* engine with a different input adapter.
+
+### 5. Format
+
+Use an **enriched native DSL** — extend the current YAML with field-objects plus
+`transitions`/`edges`/`constraints` blocks — structured so the field layer can be **projected to
+JSON Schema later** if external tooling (IDE autocomplete, form-generation libraries) ever
+justifies it. The decisive wins — completeness and the generic engine — are *format-independent*;
+JSON Schema models a document's internal shape, not the vault's placement/graph/referential layer,
+so a full migration would buy standard tooling for the easy half while the hard half stayed custom.
 
 ## Consequences
 
-- **No form/frontmatter drift** — both are generated from the schema. **Field minimization +
-  progressive enrichment** via `creation: required`. **Validate-at-input** (enum selects, required
-  checks); the Linter is the backstop. **Fading scaffolding** in the body. **Labels/descriptions**
-  carried in the schema.
-- Phasing (so it is not a big-bang):
-  1. **Drift test (now).** Assert each form's creation-required fields equal the schema's, and
-     form enum fields equal the schema's enums. Catches drift immediately; no architecture change.
-  2. **Generate the artifacts.** Add the `creation`/`label` annotations; generate the Modal Form
-     definitions and the template frontmatter from the schema (a generator like `gen_adr_index`);
-     reduce each template to its authored body scaffold.
-  3. **Unify the engine.** Route the human form and the agent writers through one
-     `create(type, inputs)`; trim the project form (derive `slug`, default `question_version`,
-     defer non-essential PICO/FINER fields to shaping).
-- Migration touches: the schema files (annotations), a new generator, the Modal Forms config
-  (becomes generated, not hand-edited), the templates (split into body scaffolds), the agent
-  writers (`inbox.py` / ingest, routed through the engine), and the test suite.
+- **Single source, no drift** — the contract is declared once; the Linter executes it, and the
+  forms, templates, folder map, and docs are generated from it.
+- **Declarative validation** — adding a type or invariant is a schema edit; the detector engine is
+  generic.
+- **Field minimization + progressive enrichment** (`creation`), **validate-at-input** (enum
+  selects, required checks), **fading scaffolding**, and **labels/descriptions** all fall out for
+  free.
+- **Phasing** (sequencing lives in the milestone/issues):
+  1. **Move invariants into the schema; make the detector engine generic** — replace hand-coded
+     per-type rules with declared `constraints` the engine runs. *(Biggest correctness win.)*
+  2. **Fold defaults + labels + `creation` in** — removes the template-frontmatter duplication.
+  3. **Declare the state machine + typed edges** — remove implicit lifecycle/graph knowledge from
+     detectors.
+  4. **Fold `folders.yaml`'s per-type map into the type definitions.**
+  5. **Generate the forms and template frontmatter; reduce templates to body scaffolds; route the
+     human form and agent writers through one `create()`** — the creation pipeline. Trim the
+     project form (derive `slug`, default `question_version`, defer non-essential PICO/FINER).
+  6. **(Optional) project the field layer to JSON Schema** — only if external tooling pays.
+  - A cheap floor for Phase 5: a **drift test** asserting each form's creation-required fields and
+    enums equal the schema's — catches divergence immediately, no architecture change.
+- Migration touches: the schema files (enriched), the Linter (generic engine), `folders.yaml`
+  (folded/generated), the Modal Forms config (generated), the templates (split to body scaffolds),
+  the agent writers (routed through the engine), `note-types.md`/`frontmatter.md` (generated), and
+  the test suite.
 
 ## Alternatives considered
 
-- **Keep three hand-synced copies (status quo).** Rejected: guarantees the drift this decision
-  removes.
-- **Drift test only, no generation.** This is the pragmatic Phase 1, but it merely *detects*
-  divergence; it does not reach single-source. Generation is the target.
+- **Keep fields-only schemas + per-type detector code + hand-synced templates/forms (status quo).**
+  Rejected: the contract stays scattered across four places and the creation layer keeps drifting.
+- **Adopt full JSON Schema as the format.** Standard and well-tooled, but it models a document's
+  internal shape, not the vault's placement/graph/referential layer — so a custom layer survives
+  regardless — and it is verbose. Better deferred to a *projection* of the field slice (Phase 6).
+- **Model + projections** (author types in a rich internal model, emit JSON Schema / forms / docs).
+  The strongest single-source, but the most upfront engineering; the enriched DSL reaches most of
+  the benefit at lower cost, and can grow into this.
 - **Put the body scaffold in the YAML schema.** Rejected: a markdown body shape is best authored
   as markdown — keep it a separate body-scaffold file the engine combines with generated
   frontmatter.
-- **Adopt an external schema-form library.** Rejected: out-of-Obsidian and overkill; Modal Forms
-  plus a small in-repo generator is sufficient and native.
 
 ## Related
 
 - **Refines:** [ADR-116](116-obsidian-surface-architecture.md) (the single-definition principle —
-  applied here to document *creation*, not just views), [ADR-117](117-type-naming-scheme.md) (the
+  applied here to document validation *and* creation), [ADR-117](117-type-naming-scheme.md) (the
   document-type vocabulary).
-- **Depends on:** [ADR-47](47-type-first-category-folders.md) (the type→folder schema map),
+- **Depends on:** [ADR-47](47-type-first-category-folders.md) (the type→folder map),
   [ADR-49](49-catalog-in-bases-linter-monitor.md) (the schema as the authoritative contract the
-  Linter and Bases read).
-- **Source discussion:** the alpha.8 templates and form-creation clean-slate review.
+  Linter and Bases read), [ADR-52](52-links-vs-relationships.md) (the typed-edge vocabulary the graph
+  declares against).
+- **Source discussion:** the alpha.8 schemas, templates, and form-creation clean-slate review.
