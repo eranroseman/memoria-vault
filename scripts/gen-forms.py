@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 SCHEMA_DIR = SRC / ".memoria" / "schemas" / "types"
 VOCABULARY = SRC / "system" / "vocabulary.md"
+FORM_TYPES = ("fleeting", "source", "claim", "project")
 
 
 def _schema(name: str) -> dict:
@@ -29,14 +30,6 @@ def _terms(section: str) -> list[str]:
 
 
 def _fixed_select(values: list[str]) -> dict:
-    return {
-        "type": "select",
-        "source": "fixed",
-        "options": [{"label": value.replace("-", " ").title(), "value": value} for value in values],
-    }
-
-
-def _radio(values: list[str]) -> dict:
     return {
         "type": "select",
         "source": "fixed",
@@ -80,124 +73,56 @@ def _form(title: str, name: str, fields: list[dict]) -> dict:
     return {"title": title, "name": name, "version": "1", "fields": fields}
 
 
+def _vocabulary_terms(input_def: dict) -> list[str]:
+    values = _terms(input_def["vocabulary"])
+    if values:
+        return values
+    fallback = input_def.get("fallback_vocabulary")
+    return _terms(fallback) if fallback else values
+
+
+def _input_from_spec(input_def: dict, schema: dict) -> dict:
+    kind = input_def["type"]
+    if kind in {"text", "textarea"}:
+        return {"type": kind}
+    if kind == "select":
+        if "enum" in input_def:
+            return _fixed_select(schema["enums"][input_def["enum"]])
+        return _fixed_select(input_def["values"])
+    if kind == "multiselect":
+        return _fixed_multi(_vocabulary_terms(input_def))
+    if kind == "note":
+        return _notes(input_def["folder"])
+    if kind == "note-multiselect":
+        return _note_multi(input_def["folder"])
+    raise SystemExit(f"{schema['type']}: unsupported creation input type {kind!r}")
+
+
+def _field_from_spec(field: dict, schema: dict) -> dict:
+    return _field(
+        field["name"],
+        field["label"],
+        _input_from_spec(field["input"], schema),
+        description=field.get("description", ""),
+        required=bool(field.get("required", False)),
+    )
+
+
+def _form_from_schema(schema: dict) -> dict:
+    form = schema["creation"]["form"]
+    return _form(
+        form["title"],
+        form["name"],
+        [_field_from_spec(field, schema) for field in form["fields"]],
+    )
+
+
 def generate() -> dict:
-    source = _schema("source")
-    claim = _schema("claim")
-    project = _schema("project")
-
-    research_area = _terms("research_area")
-    methodology = _terms("methodology")
-    topics = _terms("topics") or research_area
-
     return {
         "editorPosition": "right",
         "attachShortcutToGlobalWindow": False,
         "globalNamespace": "MF",
-        "formDefinitions": [
-            _form(
-                "Memoria fleeting capture",
-                "memoria-fleeting-capture",
-                [
-                    _field("title", "Title", {"type": "text"}, description="Optional short title."),
-                    _field(
-                        "body",
-                        "Thought, quote, or idea",
-                        {"type": "textarea"},
-                        description=(
-                            "One raw item per note. Capture first; distill or archive from "
-                            "the Inbox later."
-                        ),
-                        required=True,
-                    ),
-                ],
-            ),
-            _form(
-                "Memoria source capture",
-                "memoria-source-capture",
-                [
-                    _field("title", "Source title", {"type": "text"}, required=True),
-                    _field("entity", "Catalog entity", _notes("catalog"), required=True),
-                    _field(
-                        "source_type",
-                        "Source type",
-                        _fixed_select(["paper", "dataset", "repository", "web-page", "report"]),
-                        required=True,
-                    ),
-                    _field(
-                        "evidence_level",
-                        "Evidence level",
-                        _fixed_select(source["enums"]["evidence_level"]),
-                    ),
-                    _field("research_area", "Research area", _fixed_multi(research_area)),
-                    _field("methodology", "Methodology", _fixed_multi(methodology)),
-                    _field("summary", "In my words", {"type": "textarea"}),
-                ],
-            ),
-            _form(
-                "Memoria claim capture",
-                "memoria-claim-capture",
-                [
-                    _field(
-                        "title",
-                        "Claim title",
-                        {"type": "text"},
-                        description="Short label for the note and Base row.",
-                        required=True,
-                    ),
-                    _field(
-                        "maturity",
-                        "Maturity",
-                        _radio(claim["enums"]["maturity"]),
-                        description="Start at seedling unless the claim is already well supported.",
-                        required=True,
-                    ),
-                    _field(
-                        "sources",
-                        "Sources",
-                        _note_multi("catalog/papers"),
-                        description="Pick the catalog paper(s) whose citekeys support this claim.",
-                        required=True,
-                    ),
-                    _field(
-                        "topics",
-                        "Topics",
-                        _fixed_multi(topics),
-                        description="Optional vocabulary tags for retrieval and hub thresholds.",
-                    ),
-                    _field(
-                        "claim",
-                        "Claim statement",
-                        {"type": "textarea"},
-                        description="One durable, source-grounded assertion in your own words.",
-                        required=True,
-                    ),
-                ],
-            ),
-            _form(
-                "Memoria project start",
-                "memoria-project-start",
-                [
-                    _field("title", "Project title", {"type": "text"}, required=True),
-                    _field("slug", "Project slug", {"type": "text"}, required=True),
-                    _field(
-                        "scope_topics", "Scope topics", _fixed_multi(research_area), required=True
-                    ),
-                    _field("inquiry_population", "Population", {"type": "text"}, required=True),
-                    _field("inquiry_intervention", "Intervention", {"type": "text"}),
-                    _field("inquiry_comparison", "Comparison", {"type": "text"}),
-                    _field("inquiry_outcome", "Outcome", {"type": "text"}, required=True),
-                    _field("finer_feasible", "Feasible", {"type": "textarea"}),
-                    _field("finer_novel", "Novel", {"type": "textarea"}),
-                    _field("finer_relevant", "Relevant", {"type": "textarea"}),
-                    _field(
-                        "output_mode",
-                        "Output mode",
-                        _radio(project["enums"]["output_mode"]),
-                        required=True,
-                    ),
-                ],
-            ),
-        ],
+        "formDefinitions": [_form_from_schema(_schema(type_name)) for type_name in FORM_TYPES],
     }
 
 

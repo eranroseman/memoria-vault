@@ -12,3 +12,19 @@ optional:
   title: str
   sample: bool
   created: date
+creation:
+  form:
+    title: Memoria fleeting capture
+    name: memoria-fleeting-capture
+    fields:
+      - name: title
+        label: Title
+        description: Optional short title.
+        input:
+          type: text
+      - name: body
+        label: Thought, quote, or idea
+        description: One raw item per note. Capture first; distill or archive from the Inbox later.
+        required: true
+        input:
+          type: textarea
