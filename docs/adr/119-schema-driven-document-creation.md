@@ -69,7 +69,9 @@ contract** that everything executes or generates from.
 One type definition holds all eight concerns:
 
 - **Fields as first-class specs** — `{type, required, default, label, description,
-  creation: required|optional, constraints}`, with value types richer than `str/list/map`:
+  creation: required|optional, constraints}` — where `creation` may be **conditional on another
+  field** (e.g. ask for the provisional thesis only when `output_mode == thesis`), with value
+  types richer than `str/list/map`:
   `link(endpoint-type)`, `citekey`, `date`, `enum(ref)`, `list<T>`, and `edges(edge-vocab)` for
   the graph.
 - **Placement & gating** — `folder`, `gated` (folding `folders.yaml`'s per-type map in).
@@ -140,10 +142,16 @@ Concrete fixes the schema and form audits surfaced, folded into the phases below
   (accept-this vs fill-this). They are correct in the schemas but undocumented; add the prose (and,
   for `candidate`/`gap`, consider one `proposal` type with a subtype — an ADR-51 question, not a
   schema fault).
-- **Trim `project`'s required set at creation** — derive `slug`, default `question_version`, defer
-  PICO/FINER to shaping. And **restore the full five-criterion FINER**: the form collects only
-  Feasible/Novel/Relevant, so Interesting and Ethical are dropped and projects never capture the
-  full answerability lens. *(Phase 5.)*
+- **`project` form fixes.** Derive `slug`, default `question_version`, and defer PICO/FINER to
+  shaping. Make **`scope_topics` `creation: optional`** — required before the *project gate* runs,
+  not at the first form: a project's scope sharpens while reading, so blocking on it fights
+  start-then-shape (keep it mandatory only under a strict "no unbounded projects" rule). **Restore
+  the full five-criterion FINER** — the form drops Interesting and Ethical, so projects never
+  capture the full answerability lens. And add a **conditional creation field**: in **thesis** mode
+  the form asks for the one-sentence **provisional thesis**; in **survey** mode it does not — keyed
+  on `output_mode`, which *is* the thesis/survey distinction (thesis starts with a provisional
+  answer, survey starts open). This also **reconciles the tutorial**, which already promises the
+  thesis prompt the form currently omits — flag `tutorials/02-*` for update to match. *(Phase 5.)*
 
 ## Consequences
 
