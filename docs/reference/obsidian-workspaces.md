@@ -33,8 +33,10 @@ forced landing surface.
 The **Memoria** workspace has one shared shell:
 
 - **Main pane** — `home.md`, the first-run welcome note, opened in reading view.
-- **Left sidebar** — the `_nav.md` navigation rail; primary movement happens through the
-  rail and the Bases views on each space dashboard.
+- **Left sidebar** — two tabs: the `_nav.md` navigation rail (surface switching) and the
+  Portals curated file browser, which replaces the core file explorer and hides `system/`
+  and `.memoria/`. Primary movement happens through the rail and the Bases views on each
+  space dashboard; Portals is for browsing the underlying notes.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
 The core Workspaces plugin stays enabled so you can restore this shell with Obsidian's
