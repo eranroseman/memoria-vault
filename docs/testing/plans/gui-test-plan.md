@@ -10,7 +10,7 @@ nav_order: 15
 # GUI test plan — v0.1 (Obsidian + Zotero)
 
 Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
-shell: the Obsidian/Zotero GUI stage (**S5**) and the thirteen support dashboards
+shell: the Obsidian/Zotero GUI stage (**S5**) and the five system dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
 
@@ -241,9 +241,9 @@ Then open `system/dashboards/audit-log.md`.
 
 | Section | Test | Pass / Fail | Notes |
 | --- | --- | --- | --- |
-| A | 14/14 plugins enabled, no load errors | | |
+| A | 13/13 plugins enabled, no load errors | | |
 | B | REST authenticated (B3) + round-trip write appears (B4) | | |
-| C / G4 | All 13 support dashboards' Dataview blocks resolve | | |
+| C / G4 | All 5 system dashboards' Dataview blocks resolve | | |
 | C | Seeded items appear (board-state, audit-log, loose-ends) | | |
 | D | `memoria.bib` auto-exports; citation resolves | | |
 | E1 | Agent Client pane returns a model response | | |

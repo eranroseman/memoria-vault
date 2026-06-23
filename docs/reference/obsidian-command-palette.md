@@ -5,7 +5,7 @@ parent: Reference
 
 # Obsidian command palette
 
-The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching uses the nav row in the four dashboard notes ([ADR-81](../adr/81-persistent-gate-dashboards.md)); the command palette is for actions, not workspace switching.
+The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching is handled by the left-pane navigator rail (**Now** / **Places**); the command palette is for actions, not navigation.
 
 **Action parity rule:** if an action creates a card, note, draft, report, capture, resolved Inbox item, or any other durable artifact, it must be reachable without asking the Co-PI ([ADR-72](../adr/72-command-surfacing.md)). The Co-PI conversation is a convenient route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but durable actions are also reachable from the palette ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): direct commands for the six non-code lane tasks, the generic delegate fallback for code or unusual work, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
 
