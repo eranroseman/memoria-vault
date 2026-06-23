@@ -325,7 +325,6 @@
           "name": "scope_topics",
           "label": "Scope topics",
           "description": "Controlled vocabulary topics that bound the project.",
-          "isRequired": true,
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -378,6 +377,19 @@
                 "value": "survey"
               }
             ]
+          }
+        },
+        {
+          "name": "provisional_thesis",
+          "label": "Provisional thesis",
+          "description": "One-sentence answer under test; shown only for thesis-mode projects.",
+          "input": {
+            "type": "textarea"
+          },
+          "condition": {
+            "dependencyName": "output_mode",
+            "type": "isExactly",
+            "value": "thesis"
           }
         }
       ]

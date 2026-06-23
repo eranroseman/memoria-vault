@@ -1,9 +1,8 @@
 /*
  * QuickAdd user script — "Memoria: start project".
  *
- * Opens the Modal Forms `memoria-project-start` form and scaffolds a project
- * workspace under projects/<slug>/ with a project question note, thesis note,
- * and empty code/drafts/exports folders.
+ * Opens the Modal Forms `memoria-project-start` form and scaffolds a project workspace under
+ * projects/<slug>/ with a project question note, thesis note, and empty code/drafts/exports folders.
  */
 
 const FORM_NAME = "memoria-project-start";
@@ -20,7 +19,7 @@ module.exports = async (params) => {
 
   let result;
   try {
-    result = await modalforms.openForm(FORM_NAME);
+    result = await modalforms.openForm(FORM_NAME, { values: { output_mode: "thesis" } });
   } catch (e) {
     new Notice(("Project start form failed: " + (e?.message || e)).slice(0, 250), 10000);
     return;
@@ -31,17 +30,17 @@ module.exports = async (params) => {
   }
 
   const data = normalizeFormData(result.data || {});
-  if (!data.title || !data.scope_topics.length) {
-    new Notice("Project title and scope topics are required.", 8000);
+  if (!data.title) {
+    new Notice("Project title is required.", 8000);
+    return;
+  }
+  if (data.output_mode === "thesis" && !data.provisional_thesis) {
+    new Notice("Provisional thesis is required for thesis-mode projects.", 8000);
     return;
   }
 
-  const thesisTitle = data.output_mode === "thesis"
-    ? (await params.quickAddApi.inputPrompt("Provisional thesis, as one sentence:"))?.trim()
-    : "";
-
   try {
-    const projectPath = await scaffoldProject(app, data, thesisTitle || "");
+    const projectPath = await scaffoldProject(app, data);
     const projectFile = app.vault.getAbstractFileByPath(projectPath);
     if (projectFile) await app.workspace.getLeaf(true).openFile(projectFile);
     new Notice("✓ Project scaffolded: " + projectPath, 8000);
@@ -50,7 +49,7 @@ module.exports = async (params) => {
   }
 };
 
-async function scaffoldProject(app, data, thesisTitle) {
+async function scaffoldProject(app, data) {
   const adapter = app.vault.adapter;
   const root = "projects/" + data.slug;
   if (await exists(adapter, root + "/project.md")) {
@@ -108,7 +107,7 @@ async function scaffoldProject(app, data, thesisTitle) {
 
   const thesisText = [
     "---",
-    "title: " + yamlString(thesisTitle || "Provisional thesis for " + data.title),
+    "title: " + yamlString(data.provisional_thesis || "Provisional thesis for " + data.title),
     "type: thesis",
     "lifecycle: proposed",
     "project: " + yamlString("[[" + root + "/project|" + data.slug + "]]"),
@@ -123,7 +122,7 @@ async function scaffoldProject(app, data, thesisTitle) {
     "",
     "# Thesis",
     "",
-    thesisTitle || "State the provisional answer here.",
+    data.provisional_thesis || "State the provisional answer here.",
     "",
   ].join("\n");
   await adapter.write(root + "/thesis.md", thesisText);
@@ -131,6 +130,9 @@ async function scaffoldProject(app, data, thesisTitle) {
 }
 
 function normalizeFormData(data) {
+  const outputMode = ["thesis", "survey"].includes(data.output_mode) ? data.output_mode : "thesis";
+  const provisionalThesis =
+    outputMode === "thesis" ? String(data.provisional_thesis || "").trim() : "";
   return {
     title: String(data.title || "").trim(),
     slug: slug(data.slug || data.title, "project"),
@@ -144,7 +146,8 @@ function normalizeFormData(data) {
     finer_novel: String(data.finer_novel || "").trim(),
     finer_ethical: String(data.finer_ethical || "").trim(),
     finer_relevant: String(data.finer_relevant || "").trim(),
-    output_mode: ["thesis", "survey"].includes(data.output_mode) ? data.output_mode : "thesis",
+    output_mode: outputMode,
+    provisional_thesis: provisionalThesis,
   };
 }
 

@@ -606,7 +606,7 @@ def test_start_project_scaffolds_project_gate_workspace():
     script = (SCRIPTS / "start-project.js").read_text(encoding="utf-8")
     for marker in (
         'FORM_NAME = "memoria-project-start"',
-        "openForm(FORM_NAME)",
+        'openForm(FORM_NAME, { values: { output_mode: "thesis" } })',
         '"projects/" + data.slug',
         'slug(data.slug || data.title, "project")',
         'root + "/project.md"',
@@ -614,13 +614,17 @@ def test_start_project_scaffolds_project_gate_workspace():
         '"code"',
         '"drafts"',
         '"exports"',
-        "Project title and scope topics are required.",
+        "Project title is required.",
+        "Provisional thesis is required for thesis-mode projects.",
+        'outputMode === "thesis"',
+        "data.provisional_thesis",
         '"  interesting: " + yamlString(data.finer_interesting)',
         '"  ethical: " + yamlString(data.finer_ethical)',
         "refutation_sufficiency: false",
         "QuickAdd: Memoria: refresh project gate",
     ):
         assert marker in script
+    assert 'inputPrompt("Provisional thesis' not in script
 
 
 def test_refresh_project_gate_runs_structural_impact_operation():

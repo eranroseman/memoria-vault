@@ -80,6 +80,7 @@ def test_modal_forms_match_type_schema_creation_metadata():
             assert generated["label"] == field["label"]
             assert generated.get("description", "") == field.get("description", "")
             assert generated.get("isRequired", False) is bool(field.get("required", False))
+            assert generated.get("condition") == field.get("condition")
             enum_name = field["input"].get("enum")
             if enum_name:
                 assert [option["value"] for option in generated["input"]["options"]] == schema[
@@ -141,10 +142,17 @@ def test_project_start_form_is_available_for_later_automation():
     form = _forms_by_name()["memoria-project-start"]
     assert form["version"] == "1"
     fields = {field["name"]: field for field in form["fields"]}
-    for required in ("title", "scope_topics", "output_mode"):
+    for required in ("title", "output_mode"):
         assert fields[required]["isRequired"] is True
+    assert fields["scope_topics"].get("isRequired", False) is False
     assert fields["scope_topics"]["input"]["multi_select_options"] == _terms("research_area")
     assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
+    assert fields["provisional_thesis"]["condition"] == {
+        "dependencyName": "output_mode",
+        "type": "isExactly",
+        "value": "thesis",
+    }
+    assert fields["provisional_thesis"].get("isRequired", False) is False
 
 
 def test_source_capture_uses_catalog_note_picker():
@@ -163,6 +171,6 @@ def test_claim_sources_use_catalog_paper_picker():
     }
 
 
-def test_project_start_form_is_trimmed_to_creation_required_fields():
+def test_project_start_form_uses_adr119_phase5_fields():
     fields = {field["name"] for field in _forms_by_name()["memoria-project-start"]["fields"]}
-    assert fields == {"title", "scope_topics", "output_mode"}
+    assert fields == {"title", "scope_topics", "output_mode", "provisional_thesis"}
