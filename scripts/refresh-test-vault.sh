@@ -155,6 +155,7 @@ for rel in \
   .gitignore \
   AGENTS.md \
   home.md \
+  _nav.md \
   research-focus.md \
   troubleshooting.md \
   catalog/catalog.base \

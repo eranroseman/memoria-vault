@@ -11,6 +11,7 @@ def _seed(v: Path) -> None:
     (v / "system/dashboards").mkdir(parents=True)
     (v / "system/dashboards/home-board.md").write_text("DASH", encoding="utf-8")
     (v / "home.md").write_text("HOME", encoding="utf-8")
+    (v / "_nav.md").write_text("NAV", encoding="utf-8")
 
 
 def test_stage_builds_manifest(tmp_path):
@@ -20,6 +21,7 @@ def test_stage_builds_manifest(tmp_path):
         "system/templates/claim.md",
         "system/dashboards/home-board.md",
         "home.md",
+        "_nav.md",
     }
     assert golden.check(tmp_path) == {}
 
