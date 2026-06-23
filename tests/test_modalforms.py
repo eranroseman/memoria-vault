@@ -1,12 +1,20 @@
-"""Modal Forms capture config stays sourced from system/vocabulary.md."""
+"""Modal Forms capture config stays sourced from type schemas and vocabulary."""
 
 import json
 import re
 from pathlib import Path
 
+import yaml
+
 SRC = Path(__file__).resolve().parent.parent / "src"
+SCHEMA_DIR = SRC / ".memoria" / "schemas" / "types"
 VOCABULARY = SRC / "system" / "vocabulary.md"
 MODALFORMS = SRC / ".obsidian" / "plugins" / "modalforms" / "data.json"
+FORM_TYPES = ("fleeting", "source", "claim", "project")
+
+
+def _schema(type_name: str) -> dict:
+    return yaml.safe_load((SCHEMA_DIR / f"{type_name}.yaml").read_text(encoding="utf-8"))
 
 
 def _terms(section: str) -> list[str]:
@@ -48,6 +56,35 @@ def test_source_capture_form_uses_vocabulary_options():
     assert fields["methodology"]["input"]["type"] == "multiselect"
     assert fields["methodology"]["input"]["source"] == "fixed"
     assert fields["methodology"]["input"]["multi_select_options"] == _terms("methodology")
+
+
+def test_modal_forms_match_type_schema_creation_metadata():
+    forms = _forms_by_name()
+    assert set(forms) == {
+        _schema(type_name)["creation"]["form"]["name"] for type_name in FORM_TYPES
+    }
+
+    for type_name in FORM_TYPES:
+        schema = _schema(type_name)
+        spec = schema["creation"]["form"]
+        form = forms[spec["name"]]
+        assert form["title"] == spec["title"]
+        assert form["version"] == "1"
+        assert [field["name"] for field in form["fields"]] == [
+            field["name"] for field in spec["fields"]
+        ]
+
+        generated_fields = {field["name"]: field for field in form["fields"]}
+        for field in spec["fields"]:
+            generated = generated_fields[field["name"]]
+            assert generated["label"] == field["label"]
+            assert generated.get("description", "") == field.get("description", "")
+            assert generated.get("isRequired", False) is bool(field.get("required", False))
+            enum_name = field["input"].get("enum")
+            if enum_name:
+                assert [option["value"] for option in generated["input"]["options"]] == schema[
+                    "enums"
+                ][enum_name]
 
 
 def test_structured_capture_forms_cover_source_and_project_setup():

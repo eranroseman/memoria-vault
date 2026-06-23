@@ -5,7 +5,7 @@ parent: Reference
 
 # Document types
 
-The 26 document types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 26 document types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. Human capture form metadata also lives in the relevant type schemas under `creation.form` ([ADR-119](../adr/119-schema-driven-document-creation.md)). For field semantics see [Frontmatter fields](frontmatter.md).
 
 The 26 types group into: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), **4 system types** (pattern, eval task, worklist item, and worker card), and **3 navigation surfaces** (`space`, `queue`, and `maintenance`).
 
@@ -115,6 +115,10 @@ From `folders.yaml`, the single source the policy MCP and the Linter share:
 ## Templates
 
 Human-facing starter notes for 20 of the 26 types ship in `src/system/templates` (patterns, eval tasks, spaces, the inbox queue, maintenance collection, and worker cards are authored by their owning surfaces). Templates are scaffolding — the schemas, not the templates, are what validation runs against; the Linter's golden-copy check keeps the deployed templates byte-identical to the shipped ones.
+
+The four Modal Forms-backed human entry points (`fleeting`, `source`, `claim`,
+and `project`) are generated from those types' `creation.form` blocks, with
+vocabulary-backed inputs filled from `system/vocabulary.md`.
 
 ---
 

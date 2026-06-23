@@ -84,7 +84,7 @@ Memoria's linting is the Linter **operation** — deterministic Python with a da
 - Settings → Local REST API shows a 64-char hex `apiKey`
 - `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands ([Obsidian command palette](../../reference/obsidian-command-palette.md))
 - The left ribbon includes Memoria capture, delegate, and resolve buttons
-- Modal Forms lists the six Memoria capture forms
+- Modal Forms lists the four Memoria capture/project forms
 - A fresh vault lands on the `home.md` welcome note
 
 Once Hermes is set up, the working loop is: use the left-pane rail to open **Library** for the reading pipeline, use `Memoria:` commands for actions, and open the Agent Client pane when you want conversational help.

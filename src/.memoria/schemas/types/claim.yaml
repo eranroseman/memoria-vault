@@ -17,3 +17,41 @@ optional:
   superseded_by: str
   sample: bool
   created: date
+creation:
+  form:
+    title: Memoria claim capture
+    name: memoria-claim-capture
+    fields:
+      - name: title
+        label: Claim title
+        description: Short label for the note and Base row.
+        required: true
+        input:
+          type: text
+      - name: maturity
+        label: Maturity
+        description: Start at seedling unless the claim is already well supported.
+        required: true
+        input:
+          type: select
+          enum: maturity
+      - name: sources
+        label: Sources
+        description: Pick the catalog paper(s) whose citekeys support this claim.
+        required: true
+        input:
+          type: note-multiselect
+          folder: catalog/papers
+      - name: topics
+        label: Topics
+        description: Optional vocabulary tags for retrieval and hub thresholds.
+        input:
+          type: multiselect
+          vocabulary: topics
+          fallback_vocabulary: research_area
+      - name: claim
+        label: Claim statement
+        description: One durable, source-grounded assertion in your own words.
+        required: true
+        input:
+          type: textarea

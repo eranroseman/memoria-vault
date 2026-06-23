@@ -203,6 +203,7 @@ def test_structured_source_capture_is_palette_wired_and_staged():
         'SOURCE_FOLDER = "notes/sources/"',
         '"type: source"',
         '"lifecycle: proposed"',
+        '"evidence_level: " + yamlString(data.evidence_level || "ungraded")',
         '"type: candidate"',
         '"raised_by: modalforms"',
         '"target: " + yamlString(sourcePath)',

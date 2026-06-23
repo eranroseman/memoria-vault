@@ -49,6 +49,21 @@ optional:
 
 ---
 
+## Creation metadata
+
+Human capture forms are declared beside the validating fields when a type has an
+Obsidian Modal Forms entry. The `creation.form` block owns the form name, title,
+field order, labels, descriptions, required-at-entry flags, and input source
+(`enum`, fixed values, note picker, or vocabulary). `scripts/gen-forms.py`
+projects that metadata into the committed Modal Forms `data.json`; it does not
+change the validator grammar above.
+
+Fields such as `summary`, `claim`, or the project form's split PICO prompts are
+creation inputs, not necessarily frontmatter fields. The QuickAdd writer maps
+them into the note body or into structured frontmatter such as `inquiry`.
+
+---
+
 
 ## Display order and grouping
 
