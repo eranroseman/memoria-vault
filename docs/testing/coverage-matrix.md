@@ -10,11 +10,24 @@ nav_order: 10
 
 Every design component → the behavior/layer/plan that covers it → whether it's automated → status. This is the keystone of the [testing framework](../adr/29-testing-framework.md): if a surface isn't a row here, it isn't tracked. Update it whenever a component or plan changes.
 
+Memoria's process promotes evidence through five gates:
+
+| Gate | Behaviors in this matrix |
+| --- | --- |
+| Source | `static-contract`, `component` |
+| Package | `vault-assembly`, `workflow-replay` |
+| Runtime | live Hermes/MCP/service boundary checks |
+| Product | golden workflows, evals, GUI/Bases/dashboard rendering, telemetry |
+| Release | S0-S5 plus G-gate cut evidence |
+
 **Behavior names** are the reader-facing contract; historical layers remain aliases:
 `static-contract` = L0, `component` = L1, `vault-assembly` = installer-equivalent
 smoke, `workflow-replay` = ADR-80 Phase 1 model-free L2-L4 replay,
 `runtime-integration` = L3 live runtime/GUI, and `release-acceptance` = S0-S5 +
-G-gate evidence. `scripts/test-l2.sh` is the opt-in live Hermes L2 smoke: it is
+G-gate evidence. `scripts/verify` is the front door over the automated gates:
+`pr` runs Source, `package` runs Source+Package, `runtime` and `rc` run the
+automated Runtime prefix, and `live` runs only the live runtime smoke.
+`scripts/test-l2.sh` is the opt-in live Hermes L2 smoke: it is
 manual/nightly, not a required PR gate, and defaults to a deterministic local
 OpenAI-compatible smoke endpoint while allowing a real local model override. L5
 output quality remains the eval layer, and X marks cross-cutting surfaces that
@@ -56,9 +69,9 @@ L2 splits at the model boundary (full note: [ADR-29 § L2 implementation](../adr
 
 ## Open gaps (⛔ / 🟡), prioritized
 
-1. **L5 eval (#20)** — the only layer that tests *quality*; owned by ADR-11, gold tasks unbuilt. Highest long-term value.
-2. **Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
-3. **Runtime integration / golden-path live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; `scripts/test-l2.sh` covers the opt-in live Hermes smoke; live GUI proof remains attended or nightly/manual.
+1. **Product Gate / L5 eval (#20)** — the only layer that tests *quality*; owned by ADR-11, gold tasks unbuilt. Highest long-term value.
+2. **Package Gate / Installer E2E (#18)** — plan now exists; needs a real clean-install run recorded.
+3. **Runtime/Product Gate live tail (#19)** — the ADR-80 Phase 1 cassette path is automated; `scripts/test-l2.sh` covers the opt-in live Hermes smoke; live GUI proof remains attended or nightly/manual.
 4. **Recovery (#21)** — the documented failure-mode/recovery how-tos are never exercised.
 5. **Security (#22)** — now tracked by alpha.9 G2/S4 for the live gate boundary; **Performance (#23)** and **Deployment (#24)** still need named plans.
 

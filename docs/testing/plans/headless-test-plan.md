@@ -116,11 +116,14 @@ A dashboard that queries a field **no writer emits** doesn't error — it shows 
 
 ---
 
-## One-shot runner — `scripts/test.sh`
+## One-shot runner
 
-The maintained runner for this gate (don't copy-paste a loop that drifts). From the repo root:
+The maintained PR entrypoint is `scripts/verify pr`; it runs this Source Gate and
+writes a JSON evidence bundle. `scripts/test.sh` remains the direct runner for
+bisecting this gate. From the repo root:
 
 ```bash
+scripts/verify pr     # Source Gate, with evidence
 scripts/test.sh        # everything (default)
 scripts/test.sh l1     # Part A only — the pytest component suite
 scripts/test.sh l0     # Parts B + C + E, plus the D1 informational run

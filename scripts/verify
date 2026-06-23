@@ -1,0 +1,216 @@
+#!/usr/bin/env python3
+"""Run Memoria verification gates and write a small evidence bundle."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import platform
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+from datetime import UTC, datetime
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+GATE_COMMANDS = {
+    "source": [["bash", "scripts/test.sh", "all"]],
+    "package": [["bash", "scripts/e2e-smoke.sh"]],
+    "runtime": [["bash", "scripts/test-l2.sh"]],
+}
+
+MODES = {
+    "pr": ["source"],
+    "package": ["source", "package"],
+    "runtime": ["source", "package", "runtime"],
+    "rc": ["source", "package", "runtime"],
+    "live": ["runtime"],
+}
+
+MANUAL_FOLLOW_UP = {
+    "rc": [
+        "Complete Product Gate checks in docs/testing/plans/release-candidate-runbook.md.",
+        "Complete Release Gate checks in docs/releasing/README.md.",
+    ],
+    "live": [
+        "Complete Obsidian, Zotero, Bases, dashboard, and workflow checks in the runbook.",
+    ],
+}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=sorted(MODES), help="verification gate set to run")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="write evidence and print commands without running them",
+    )
+    parser.add_argument(
+        "--evidence-dir",
+        type=Path,
+        help="directory for summary.json and command logs; defaults under /tmp",
+    )
+    return parser.parse_args()
+
+
+def git_output(*args: str) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else "unknown"
+
+
+def hermes_version() -> str:
+    if shutil.which("hermes") is None:
+        return "not-found"
+    for command in (["hermes", "--version"], ["hermes", "version"]):
+        result = subprocess.run(
+            command,
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip().splitlines()[0]
+    return "unknown"
+
+
+def default_evidence_dir(mode: str, timestamp: str) -> Path:
+    default_base = Path(tempfile.gettempdir()) / "memoria-verify"
+    base = Path(os.environ.get("MEMORIA_VERIFY_EVIDENCE_DIR", str(default_base)))
+    return base / f"{timestamp}-{mode}"
+
+
+def write_summary(evidence_dir: Path, summary: dict[str, object]) -> None:
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    (evidence_dir / "summary.json").write_text(
+        json.dumps(summary, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def run_step(
+    gate: str,
+    index: int,
+    command: list[str],
+    evidence_dir: Path,
+    dry_run: bool,
+) -> dict[str, object]:
+    started = time.monotonic()
+    display = shlex.join(command)
+    log_path = evidence_dir / f"{index:02d}-{gate}.log"
+    print(f"== {gate}: {display}")
+    if dry_run:
+        log_path.write_text(display + "\n", encoding="utf-8")
+        return {
+            "gate": gate,
+            "command": command,
+            "display": display,
+            "returncode": 0,
+            "result": "dry-run",
+            "duration_seconds": 0,
+            "log": str(log_path),
+        }
+
+    result = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        check=False,
+    )
+    log_path.write_text(result.stdout, encoding="utf-8")
+    print(result.stdout, end="")
+    status = (
+        "passed" if result.returncode == 0 else "skipped" if result.returncode == 77 else "failed"
+    )
+    return {
+        "gate": gate,
+        "command": command,
+        "display": display,
+        "returncode": result.returncode,
+        "result": status,
+        "duration_seconds": round(time.monotonic() - started, 3),
+        "log": str(log_path),
+    }
+
+
+def main() -> int:
+    args = parse_args()
+    timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    evidence_dir = args.evidence_dir or default_evidence_dir(args.mode, timestamp)
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+
+    summary: dict[str, object] = {
+        "mode": args.mode,
+        "timestamp_utc": timestamp,
+        "result": "running",
+        "exit_code": None,
+        "repo": {
+            "branch": git_output("branch", "--show-current"),
+            "commit": git_output("rev-parse", "HEAD"),
+            "dirty": bool(git_output("status", "--short")),
+        },
+        "host": {
+            "platform": platform.platform(),
+            "python": platform.python_version(),
+            "hermes": hermes_version(),
+        },
+        "gates": MODES[args.mode],
+        "steps": [],
+        "manual_follow_up": MANUAL_FOLLOW_UP.get(args.mode, []),
+    }
+    write_summary(evidence_dir, summary)
+
+    exit_code = 0
+    steps: list[dict[str, object]] = []
+    step_index = 1
+    for gate in MODES[args.mode]:
+        for command in GATE_COMMANDS[gate]:
+            step = run_step(gate, step_index, command, evidence_dir, args.dry_run)
+            steps.append(step)
+            step_index += 1
+            if step["returncode"] != 0:
+                exit_code = int(step["returncode"])
+                break
+        if exit_code:
+            break
+
+    if args.dry_run:
+        result = "dry-run"
+    elif exit_code == 0:
+        result = "passed"
+    elif exit_code == 77:
+        result = "skipped"
+    else:
+        result = "failed"
+
+    summary["steps"] = steps
+    summary["result"] = result
+    summary["exit_code"] = exit_code
+    write_summary(evidence_dir, summary)
+
+    print(f"Evidence: {evidence_dir / 'summary.json'}")
+    if summary["manual_follow_up"]:
+        print("Manual follow-up:")
+        for item in summary["manual_follow_up"]:
+            print(f"- {item}")
+    return exit_code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

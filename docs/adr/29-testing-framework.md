@@ -15,6 +15,10 @@ superseded_by: []
 > **Amended by [ADR-44](44-tests-in-pytest-tree.md):** L1 component tests now live in a
 > repo-side `pytest` tree (`tests/`), not inline `--self-test` blocks. The pyramid,
 > coverage matrix, and disciplines below are unchanged; only L1's hosting moved.
+>
+> **Amended 2026-06-23:** the release process is now described as five promotion
+> gates. The historical L0-L5 labels remain coverage aliases; humans and scripts
+> use Source, Package, Runtime, Product, and Release gates.
 
 ## Context
 
@@ -22,9 +26,23 @@ Memoria has three good test plans — [headless](https://github.com/eranroseman/
 
 ## Decision
 
-Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at the base, expensive/manual/rare at the top), indexed by a coverage matrix, governed by four disciplines.
+Adopt a **promotion-gated test framework**: cheap checks run first and often,
+expensive checks run only when their evidence matters, and every release promotes
+from source to package to runtime to product acceptance to cut readiness. The
+coverage matrix still owns the component-to-plan index; the gate vocabulary is
+the process people and scripts use.
 
-**Layers**
+**Promotion gates**
+
+| Gate | Proves | Primary command / evidence | Trigger |
+| --- | --- | --- | --- |
+| **Source** | the repo is internally coherent: format, lint, schema, docs, generated-file drift, secrets/provenance, and changed-code tests | `scripts/verify pr` | every PR |
+| **Package** | the repo can assemble a valid disposable Memoria vault and replay the model-free lifecycle | `scripts/verify package` | vault/package-related PRs, nightly, release candidate |
+| **Runtime** | Hermes, MCP, policy gates, and local service boundaries work with a disposable runtime | `scripts/verify runtime` | nightly, runtime-related PRs when available, release candidate |
+| **Product** | Memoria's user workflows produce the expected artifacts and human-visible surfaces render | release-candidate runbook evidence | release candidate |
+| **Release** | the candidate is ready to cut: fresh-clone evidence, docs, blockers, versioning, close-out, and notes are ready | release issue + release-please evidence | formal release / checkpoint close |
+
+**Coverage aliases**
 
 | Layer | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
@@ -41,7 +59,9 @@ Adopt a **layered test framework** — a pyramid (cheap/automated/frequent at th
 1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
 3. **Drift control.** A check (`scripts/check_test_refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
-4. **Explicit gate mapping.** Each release-plan Gate/Stage names the layer/plan that satisfies it (both directions), so "is the release tested?" is answerable from the matrix.
+4. **Explicit gate mapping.** Each gate names the layer/plan that satisfies it
+   and writes evidence for the run, so "is the release tested?" is answerable
+   from the matrix plus the release issue.
 
 All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing), built from `test-plan-template.md`.
 
@@ -59,17 +79,16 @@ All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/ma
 
 ## Current implementation mapping
 
-The historical L0-L5 names remain the decision vocabulary, but the reader-facing
-testing model now names the behavior each layer proves:
+The historical L0-L5 names remain coverage aliases, but the reader-facing testing
+model now names the behavior each gate proves:
 
-| Behavior name | Historical layer |
+| Promotion gate | Behavior aliases / historical layer |
 | --- | --- |
-| `static-contract` | L0 static, schema, docs, and repo-contract checks |
-| `component` | L1 `pytest tests/` component suite |
-| `vault-assembly` | installer-equivalent disposable vault build and local git/hook checks |
-| `workflow-replay` | ADR-80 Phase 1 model-free cassette replay across the deterministic lifecycle |
-| `runtime-integration` | L3 live Hermes, Obsidian bridge, GUI, local services, and dashboards |
-| `release-acceptance` | S0-S5 + G-gate release evidence |
+| Source | `static-contract` L0 + `component` L1 |
+| Package | `vault-assembly` + `workflow-replay` |
+| Runtime | `runtime-integration` L2b/L3 live Hermes, MCP, local services |
+| Product | golden path, quality evals, GUI/Bases/dashboard acceptance, G9-G11 |
+| Release | S0-S5 + G-gate release evidence, blocker/doc/version close-out |
 
 This is an aliasing migration, not a required-check rename. CI status-check names stay
 stable until branch protection and `ruleset-doctor` are updated deliberately.

@@ -36,6 +36,12 @@ changes.
 ## Commands
 
 ```bash
+scripts/verify package
+```
+
+For direct bisection, the underlying commands are:
+
+```bash
 python3 scripts/test_env_harness.py replay --json
 env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/test_test_env_harness.py -q
 bash scripts/e2e-smoke.sh

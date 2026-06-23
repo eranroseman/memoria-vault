@@ -24,7 +24,8 @@ is worth preserving after the GitHub trail.
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [Test plans](plans/) | The reusable plans (browse the directory) |
 | [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release gate/stage sub-issues |
-| [scripts/test.sh](../../scripts/test.sh) | Local `static-contract` + `component` runner — historical L0/L1 static checks plus the `pytest` suite (`tests/`, ADR-44). Run `scripts/test.sh all` before pushing; it mirrors the `lint` + `python-selftest` CI jobs. |
+| [scripts/verify](../../scripts/verify) | Stable verification front door: `pr`, `package`, `runtime`, `rc`, and `live`; writes a JSON evidence bundle. |
+| [scripts/test.sh](../../scripts/test.sh) | Direct `static-contract` + `component` runner — historical L0/L1 static checks plus the `pytest` suite (`tests/`, ADR-44). Prefer `scripts/verify pr` before pushing; use this for bisection. |
 | [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline `vault-assembly` + `workflow-replay` smoke; shell entrypoint with assertions in `scripts/e2e_smoke.py`, including the ADR-80 Phase 1 cassette replay for the model-free path. |
 
 ## Why plans and runs stay separate
@@ -36,19 +37,29 @@ to a single version. So: reusable procedure -> `testing/plans/`; automated evide
 curated long-lived summary -> `docs/releasing/<version>/validation-log.md` only when
 the issue/Actions trail is not enough.
 
-## Coverage model
+## Promotion gates
 
-The reader-facing test model uses behavior names; the historical layer labels remain
-as compatibility aliases for ADRs, plans, and required CI checks:
+The reader-facing process uses promotion gates. Historical layer names remain
+coverage aliases for ADRs, plans, and existing CI check names.
 
-| Behavior name | Historical coverage |
-| --- | --- |
-| `static-contract` | L0 static, schema, docs, and repo-contract checks |
-| `component` | L1 `pytest tests/` component suite |
-| `vault-assembly` | installer-equivalent disposable vault build and local git/hook checks |
-| `workflow-replay` | ADR-80 Phase 1 model-free cassette replay across the deterministic lifecycle |
-| `runtime-integration` | L3 live Hermes, Obsidian bridge, GUI, local services, and dashboards |
-| `release-acceptance` | S0–S5 + G-gate release evidence |
+| Gate | Proves | Command / evidence |
+| --- | --- | --- |
+| Source | repo coherence: format, lint, schema, docs, generated-file drift, secrets/provenance, changed-code tests | `scripts/verify pr` |
+| Package | disposable vault assembly, hooks, plugin bundle, and model-free lifecycle replay | `scripts/verify package` |
+| Runtime | Hermes, MCP, policy gate, model endpoint, and local service boundaries | `scripts/verify runtime` |
+| Product | golden workflows, eval quality, Obsidian/Bases/dashboard rendering, and telemetry signals | release-candidate runbook |
+| Release | fresh-clone candidate, blockers, docs, versioning, notes, and close-out are ready | release issue + release-please |
+
+Compatibility aliases:
+
+| Behavior name | Historical coverage | Promotion gate |
+| --- | --- | --- |
+| `static-contract` | L0 static, schema, docs, and repo-contract checks | Source |
+| `component` | L1 `pytest tests/` component suite | Source |
+| `vault-assembly` | installer-equivalent disposable vault build and local git/hook checks | Package |
+| `workflow-replay` | ADR-80 Phase 1 model-free cassette replay across the deterministic lifecycle | Package |
+| `runtime-integration` | L3 live Hermes, Obsidian bridge, GUI, local services, and dashboards | Runtime / Product |
+| `release-acceptance` | S0–S5 + G-gate release evidence | Release |
 
 - **Stages (S0–S5)** and **Gates (G1–G11)** — release-readiness checkpoints; their
   **state** lives in the per-release **"Release vX.Y" parent issue and sub-issues**,
@@ -68,20 +79,16 @@ wait for a ratcheting baseline so legacy gaps do not block unrelated fixes.
 ## Run order
 
 ```
-static-contract ─▶ component ─▶ vault-assembly ─▶ workflow-replay
-                                                └▶ runtime-integration ─▶ release-acceptance
+Source ─▶ Package ─▶ Runtime ─▶ Product ─▶ Release
 ```
 
-`static-contract` and `component` are CI-enforced first. `vault-assembly` builds a
-throwaway vault, initializes git, wires hooks, and checks the local shipped config.
-`workflow-replay` runs the model-free ADR-80 Phase 1 cassette through the deterministic
-lifecycle. The shell-compatible smoke entrypoint delegates assertions to
-`scripts/e2e_smoke.py` so the stage checks are importable and unit-covered.
-`runtime-integration` is the non-PR live surface: Hermes, Obsidian bridge,
-local services, GUI/Bases/dashboards, and model connectivity. `release-acceptance`
-is the [Release-candidate runbook](plans/release-candidate-runbook.md); record
-state/evidence in release gate/stage sub-issues and preserve only curated summaries
-in `validation-log.md`.
+`scripts/verify pr` runs the Source Gate. `scripts/verify package` runs Source
+then Package. `scripts/verify runtime` runs Source, Package, then the opt-in live
+Hermes smoke. `scripts/verify rc` runs the automated prefix for a release
+candidate and then points to the manual Product and Release evidence still owed.
+`scripts/verify live` runs only the live runtime smoke. Evidence is written as
+`summary.json` under `/tmp/memoria-verify/` by default, or under
+`--evidence-dir`.
 
 ## Adding or changing a plan
 

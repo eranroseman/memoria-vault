@@ -24,10 +24,19 @@ or the release plan (the prose/definitions).
 The per-area detail lives in the linked plan docs; this sheet sequences them and
 adds the exact commands plus the ingest/runtime setup.
 
-This runbook is the `release-acceptance` layer. It consumes green PR-required
-`static-contract`, `component`, `vault-assembly`, and `workflow-replay` evidence,
-then adds the non-PR `runtime-integration` checks: live Hermes, the Obsidian bridge,
-local services, GUI/Bases/dashboards, and model connectivity.
+This runbook is the `release-acceptance` layer. It consumes green Source and
+Package Gate evidence, then adds the Runtime, Product, and Release Gate checks:
+live Hermes, the Obsidian bridge, local services, GUI/Bases/dashboards, model
+connectivity, workflow acceptance, telemetry, and cut readiness.
+
+The automated prefix is:
+
+```bash
+scripts/verify rc
+```
+
+Attach or link its `summary.json` evidence in the release issue, then complete
+the manual rows below.
 
 ## 0. Preconditions
 
@@ -41,7 +50,7 @@ local services, GUI/Bases/dashboards, and model connectivity.
 ## S0–S1 — static-contract + component  → records G6 (partial), S0, S1
 
 ```bash
-bash scripts/test.sh all          # l1 (component tests, pytest) + l0 (static)
+scripts/verify pr                # Source Gate: l1 (component tests) + l0 (static)
 ```
 
 - [ ] **S0 / static-contract** static (parse, LF endings, profile files present) — PASS.
@@ -51,8 +60,7 @@ bash scripts/test.sh all          # l1 (component tests, pytest) + l0 (static)
 ## PR-safe smoke — vault-assembly + workflow-replay  → records G6 (partial)
 
 ```bash
-bash scripts/e2e-smoke.sh
-python3 scripts/test_env_harness.py replay --json
+scripts/verify package
 ```
 
 - [ ] **vault-assembly** builds a disposable vault, initializes git, wires executable hooks, verifies default CSS snippets and bundled plugins, and finishes fresh-vault integrity cleanly.
