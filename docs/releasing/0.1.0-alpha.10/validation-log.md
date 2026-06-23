@@ -69,10 +69,22 @@ env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest \
 
 Result: `96 passed`.
 
-Attended Obsidian GUI rendering was not captured in this WSL execution session.
-Windows Obsidian was running, but this release candidate validates the Linux/WSL
-test vault at `/home/eranr/Memoria-test`; the project guidance keeps Windows
-Obsidian on Windows-hosted vaults and Linux Obsidian on WSL-hosted vaults.
+Linux Obsidian GUI follow-up was completed on the WSL test vault:
+
+- Linux Obsidian launched with WSLg against `/home/eranr/Memoria-test`; Obsidian's
+  own `obsidian.json` recorded that vault path as open.
+- The left pane had the Portals/rail view active and expanded.
+- Obsidian URI opens landed on `spaces/inbox.md` and `spaces/maintenance.md` as
+  Markdown leaves in reading mode.
+- `inbox/inbox.base` opened as an Obsidian `bases` leaf on the `Needs me` view.
+- `system/board/board.base` opened as an Obsidian `bases` leaf on the `By lane`
+  view.
+- The running Local REST API plugin returned HTTP 200 for `spaces/maintenance.md`
+  over verified HTTPS using the configured `memoria-copi` and `memoria-writer`
+  profile environments.
+
+No screenshot/window-capture tool was installed in the WSL image, so this follow-up
+records Obsidian workspace and live plugin evidence rather than pixel evidence.
 
 ## Release close-out
 
