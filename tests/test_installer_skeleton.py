@@ -102,6 +102,8 @@ def test_installers_verify_generated_profiles_use_https_ssl_verify():
         assert "/mcp" in text
         assert "OBSIDIAN_MCP_SSL_VERIFY" in text
         assert 'url: "http://127' not in text
+    assert 'url:[[:space:]]*"?https://127\\.0\\.0\\.1:' in sh
+    assert 'ssl_verify:[[:space:]]*"?\\$\\{OBSIDIAN_MCP_SSL_VERIFY\\}' in sh
 
 
 def test_installers_render_profile_model_placeholders():

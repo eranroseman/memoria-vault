@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import board_export as _m
+import board_export_cost as _cost
 import yaml
 from _util import CheckHarness
 from operations.lib import schema as _schema
@@ -382,6 +383,37 @@ def test_cost_doctor_fails_closed_on_session_schema_drift(tmp_path):
         assert "actual_cost_usd" in str(exc)
     else:
         raise AssertionError("schema drift should fail closed")
+
+
+def test_cost_doctor_falls_back_to_immutable_read_only(tmp_path, monkeypatch):
+    _session_store(tmp_path / ".hermes")
+    real_connect = sqlite3.connect
+    seen = []
+
+    class SidecarBlockedConnection:
+        def __init__(self, con):
+            self.con = con
+
+        def execute(self, sql, *args, **kwargs):
+            if "sqlite_master" in sql:
+                raise sqlite3.OperationalError("unable to open database file")
+            return self.con.execute(sql, *args, **kwargs)
+
+        def close(self):
+            self.con.close()
+
+    def connect(target, *args, **kwargs):
+        seen.append(str(target))
+        if kwargs.get("uri") and str(target).endswith("?mode=ro"):
+            return SidecarBlockedConnection(real_connect(target, *args, **kwargs))
+        return real_connect(target, *args, **kwargs)
+
+    monkeypatch.setattr(_cost.sqlite3, "connect", connect)
+
+    result = _m.run_cost_doctor(tmp_path / ".hermes")
+
+    assert result["profiles_checked"] == ["memoria-writer"]
+    assert any(target.endswith("?mode=ro&immutable=1") for target in seen)
 
 
 def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
