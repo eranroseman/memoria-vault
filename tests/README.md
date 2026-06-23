@@ -10,7 +10,8 @@ They live here as standalone files so the shipped vault carries no test code.
 - `_util.py` — the shared `CheckHarness`.
 
 Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the
-`python-selftest` job. Higher layers (L2–L5) are the manual/semi-automated plans in
+`python-selftest` job. The normal local PR command is `scripts/verify pr`, which
+adds the static Source Gate checks around pytest. Higher gates are described in
 [docs/testing/](../docs/testing/).
 
 ## Coverage guidance

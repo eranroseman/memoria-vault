@@ -26,6 +26,7 @@ releases. The *live readiness state* lives outside the file — see below.
 | **Scope cuts** | GitHub issues with Readiness `Later`; ADRs only when the cut records a decision or durable rationale |
 | **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
 | **Automated test evidence** | GitHub Actions runs and artifacts |
+| **Local gate evidence** | `scripts/verify` JSON bundles, normally under `/tmp/memoria-verify/` or attached to the release issue |
 | **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |
 | **Close-out evidence worth preserving** | the relevant issue comments, Actions artifacts, or optional `validation-log.md` |
 
@@ -56,6 +57,8 @@ never restates.
 ## Cutting a release
 
 1. Every gate/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
+   The automated prefix for the candidate is `scripts/verify rc`; attach or link its
+   `summary.json` evidence from the release issue.
 2. **Documentation integrity is complete.** Shipped functionality is covered in
    how-to/reference docs, explanatory context is current, contradiction/completion/duplication
    scans are resolved, Diataxis placement is checked, related links and terminology are

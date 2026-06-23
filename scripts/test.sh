@@ -7,11 +7,12 @@
 #   L0  static + schema — docs-doctor, vault links, test-ref drift, dashboard
 #       schema-drift, installer lint, syntax sanity.
 #
-# This is the one-command local gate to run before pushing. CI runs the same
-# checks as separate required jobs (lint [docs-doctor / docs-links / check-test-refs
-# / ruff / status-doctor] + python-selftest); this mirrors them so a red push is
-# caught locally. Higher layers need a runtime or a human — see docs/testing/
-# (L2 agent wiring, L3 GUI, L4 golden-path, L5 eval).
+# This is the direct Source Gate runner. Prefer `scripts/verify pr` before
+# pushing; it calls this script and writes a JSON evidence bundle. CI runs the
+# same checks as separate required jobs (lint [docs-doctor / docs-links /
+# check-test-refs / ruff / status-doctor] + python-selftest); this mirrors them
+# so a red push is caught locally. Higher gates need a runtime or a human — see
+# docs/testing/.
 #
 # Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = collect-only, no run
 set -uo pipefail
@@ -55,7 +56,7 @@ l0() {
   run python3 scripts/plugin_provenance_doctor.py
   if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py
+  run python3 -m py_compile scripts/verify scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py
   run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/test-l2.sh

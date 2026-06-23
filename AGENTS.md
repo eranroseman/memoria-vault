@@ -241,6 +241,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44).
+- **Standard PR gate:** `scripts/verify pr` runs the Source Gate (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
 

@@ -72,17 +72,18 @@ Definitions (confirm/adjust the thresholds for this release):
 
 The staged test plan that turns `shipped` into `approved`. A release candidate
 must re-run **all stages green from a fresh clone** on a clean target box (track
-the runs in the relevant sub-issues under [Release vX.Y]({{ #NN }})).
+the runs in the relevant sub-issues under [Release vX.Y]({{ #NN }})). The
+automated prefix is `scripts/verify rc`; attach or link its `summary.json`
+evidence from the release issue.
 
 | Stage | Proves |
 | --- | --- |
-| S0 | `static-contract`: {{ static checks: parse, formatting, presence }} |
-| S1 | `component`: {{ pytest component suite }} |
-| S2 | `vault-assembly`: {{ dry-run / substitution / disposable vault build }} |
-| S3 | `workflow-replay`: {{ model-free deterministic lifecycle replay }} |
-| S4 | `runtime-integration`: {{ live connectivity, services, bridge, enforcement }} |
-| S5 | `release-acceptance`: {{ end-to-end / GUI / acceptance }} |
-<!-- stages are cumulative; adjust the set per release -->
+| Source | `static-contract` + `component`: {{ static checks, docs, schema, pytest }} |
+| Package | `vault-assembly` + `workflow-replay`: {{ disposable vault build and model-free lifecycle replay }} |
+| Runtime | `runtime-integration`: {{ live Hermes/MCP, services, bridge, enforcement }} |
+| Product | {{ golden workflow, quality eval, GUI/Bases/dashboard, telemetry }} |
+| Release | {{ blockers, docs, versioning, notes, close-out }} |
+<!-- gates are cumulative; adjust evidence detail per release -->
 
 ## 4. Blockers
 
@@ -171,7 +172,7 @@ Before cutting a formal release or closing an internal checkpoint:
 <!-- NUMBERED steps. The reusable checklist for cutting THIS release. -->
 
 1. **Every gate + stage sub-issue closed** under "Release vX.Y"; required CI green on `main`; no open High-priority blocker.
-2. **Re-run all stages from a fresh clone** on a clean target → all green; record evidence in the relevant sub-issues or Actions artifacts.
+2. **Re-run all stages from a fresh clone** on a clean target: start with `scripts/verify rc`, then finish Product and Release Gate checks from the runbook; record evidence in the relevant sub-issues or Actions artifacts.
 3. **Complete §7 documentation integrity, §8 runtime readiness, and §9 close-out sweep.**
 4. **Formal release path:** merge the release-please "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release. Fold the §6 known limitations into the notes. Then set this file's frontmatter to `status: released`, `released: true`.
 5. **Internal checkpoint path:** do not cut a tag or GitHub Release. Set this file's frontmatter to `status: complete`, `released: false` after the release parent issue is closed.
