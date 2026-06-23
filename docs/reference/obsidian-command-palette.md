@@ -62,7 +62,7 @@ Assist commands are verb-shaped entry points for work that starts in the current
 | `Memoria: assist find` | Librarian `catalog-find-source` | Prompts for a source, topic, DOI, URL, or clue; selected text and the active note ride on the card. | Ask the Co-PI to find a source; it delegates if the result should persist. |
 | `Memoria: assist search` | Librarian `map-report-coverage` | Prompts for a search lens or coverage question and stages a coverage/gap report request. | Ask the Co-PI what the corpus already holds for the lens. |
 | `Memoria: assist patterns` | Librarian card invoking `patterns_run` | Picks a runnable pattern from `system/patterns/`; selected text/active note become input context, and output goes only to the returned target. | Ask the Co-PI which pattern to run, then delegate or use this command. |
-| `Memoria: assist ask` | Co-PI `ask-question-source` / `ask-read-lens` | Stages a Co-PI question card when the answer should be reviewable or persistent. | Ask directly in the Agent Client pane; the active note is auto-attached. |
+| `Memoria: assist ask` | Co-PI `ask-question-source` / `ask-read-lens` | Stages a Co-PI question card when the answer should be reviewable or persistent. | Ask directly in the Agent Client pane; the active note is passed as a readable reference. |
 | `Memoria: assist draft` | Writer `draft-write-section` | Prompts for a section/outline goal and stages a draft request with selected text as source context. | Ask the Co-PI to shape the draft, then delegate the durable drafting step. |
 | `Memoria: assist explore` | Co-PI `explore-framings` | Stages an exploration card with the active note/selection attached. | Explore directly in the pane while the output is still human understanding. |
 
@@ -82,7 +82,7 @@ not create board cards.
 ---
 ## The Co-PI delegation path
 
-For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note auto-attached): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
+For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note available as a readable reference): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
 
 ---
 

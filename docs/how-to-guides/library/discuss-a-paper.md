@@ -29,7 +29,7 @@ Re-read your **In my words** and **Worth distilling** sections, and keep `catalo
 
 **3. Open the Agent Client pane.**
 
-Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) with the source note active so it auto-attaches, then ask it to discuss the source.
+Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) with the source note active, then ask it to discuss the source. The Co-PI reads the active note when the question is about it.
 
 **4. Work the standard questions.**
 
