@@ -49,8 +49,9 @@ platform split:
 
 The production path has no `/mnt/c` vault path, no WSL2 gate in the PowerShell
 installer, and no `windowsWslMode` requirement for the ACP pane on production
-Windows. WSL-specific docs still use mirrored networking when validating the
-Linux/WSL test path against Windows Obsidian.
+Windows. WSL-specific test docs open the ext4 test vault with Linux Obsidian on
+the native path; mirrored networking is only relevant for an explicit split
+where WSL Hermes talks to Windows Obsidian serving a Windows-hosted vault.
 
 ## Architecture: two installers, one source tree
 

@@ -206,7 +206,35 @@ def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance
         sh,
         re.S,
     ).group("body")
-    assert "Enable-MemoriaCssSnippets -RepoRoot (Get-LocalRepoRoot)" in ps
+    assert "Enable-MemoriaCssSnippets -RepoRoot $repoRoot" in ps
+
+
+def test_installers_reconcile_profile_skills_on_profile_deploy():
+    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+
+    for text, function_name in (
+        (sh, "sync_profile_skills"),
+        (ps, "Update-DeployedProfileSkills"),
+    ):
+        assert function_name in text
+        assert ".no-bundled-skills" in text
+        assert "Refusing to reconcile skills outside" in text
+        assert "cleared profile skills" in text
+        assert "refreshed profile skills" in text
+
+
+def test_windows_profiles_only_reinstalls_mcp_deps_from_checkout():
+    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    body = re.search(
+        r"else \{\n        Assert-RequiredCommands(?P<body>.*?)\n    \}\n\n    Install-Profiles",
+        ps,
+        re.S,
+    ).group("body")
+
+    assert "Get-LocalRepoRoot" in body
+    assert "Run -ProfilesOnly from a memoria-vault checkout" in body
+    assert "Install-McpDeps -RepoRoot $repoRoot" in body
 
 
 def test_windows_installer_uv_fallback_enables_mcp_extra():

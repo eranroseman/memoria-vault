@@ -21,8 +21,9 @@
     (deliberately outside OneDrive).
 
 .PARAMETER ProfilesOnly
-    Skip repo/vault/bootstrap work; just redeploy profile config, profile .env
-    values, the policy plugin, and cron wrappers from an existing vault.
+    Skip repo/vault/bootstrap work; reinstall MCP deps, then redeploy profile
+    config, profile .env values, the policy plugin, and cron wrappers from an
+    existing vault.
 
 .PARAMETER Only
     Restrict the profile step to these profiles. Pairs with -ProfilesOnly.
@@ -479,6 +480,35 @@ function Deploy-PolicyPlugin {
     Write-Line '    deployed write-gate plugin (memoria-policy-gate)'
 }
 
+function Update-DeployedProfileSkills {
+    param([string]$SourceProfileDir, [string]$ProfileDir)
+    $sourceSkills = Join-Path $SourceProfileDir 'skills'
+    $profileSkills = Join-Path $ProfileDir 'skills'
+    $optOutMarker = Join-Path $SourceProfileDir '.no-bundled-skills'
+    $profilesRoot = [System.IO.Path]::GetFullPath($HermesProfilesDir)
+    $targetRoot = [System.IO.Path]::GetFullPath($ProfileDir)
+    $profilesPrefix = $profilesRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+    if (-not $targetRoot.StartsWith($profilesPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Stop-Install "Refusing to reconcile skills outside $HermesProfilesDir`: $ProfileDir"
+    }
+    if (Test-Path $sourceSkills) {
+        if (-not $DryRun) {
+            if (Test-Path $profileSkills) { Remove-Item $profileSkills -Recurse -Force }
+            New-Item -ItemType Directory -Path $profileSkills -Force | Out-Null
+            Get-ChildItem -Force -Path $sourceSkills | ForEach-Object {
+                Copy-Item $_.FullName $profileSkills -Recurse -Force
+            }
+        }
+        Write-Line '    refreshed profile skills from source'
+    } elseif (Test-Path $optOutMarker) {
+        if (-not $DryRun) {
+            if (Test-Path $profileSkills) { Remove-Item $profileSkills -Recurse -Force }
+            New-Item -ItemType Directory -Path $profileSkills -Force | Out-Null
+        }
+        Write-Line '    cleared profile skills (source opts out of bundled skills)'
+    }
+}
+
 function Install-Profiles {
     Write-Header 'Hermes profiles'
     $profilesSrc = Join-Path $Vault '.memoria/profiles'
@@ -511,6 +541,7 @@ function Install-Profiles {
         if (-not $DryRun) {
             Copy-Item (Join-Path $dst 'config.yaml') (Join-Path $deployed 'config.yaml') -Force
         }
+        Update-DeployedProfileSkills -SourceProfileDir $dst -ProfileDir $deployed
         Copy-EnvValues -ProfileDir $deployed
         Deploy-PolicyPlugin -ProfileDir $deployed -ProfileName $profileName
     }
@@ -584,8 +615,10 @@ function Invoke-Main {
         Install-McpDeps -RepoRoot $repoRoot
     } else {
         Assert-RequiredCommands
-        $script:VenvPython = Join-Path $Vault '.memoria/.venv/Scripts/python.exe'
-        Enable-MemoriaCssSnippets -RepoRoot (Get-LocalRepoRoot)
+        $repoRoot = Get-LocalRepoRoot
+        if (-not $repoRoot) { Stop-Install 'Run -ProfilesOnly from a memoria-vault checkout so the Memoria package can be reinstalled.' }
+        Enable-MemoriaCssSnippets -RepoRoot $repoRoot
+        Install-McpDeps -RepoRoot $repoRoot
     }
 
     Install-Profiles

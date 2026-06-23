@@ -100,18 +100,23 @@ sed_repl() {
   printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
 }
 
+can_prompt() {
+  [ -t 0 ] && return 0
+  { : </dev/tty; } 2>/dev/null
+}
+
 # ask "prompt" "default"  — echo the answer (default when --yes or no tty).
 ask() {
   local prompt="$1" default="${2:-}" reply=""
   if [ "$ASSUME_YES" -eq 1 ]; then printf '%s' "$default"; return; fi
-  if [ ! -t 0 ] && [ ! -r /dev/tty ]; then printf '%s' "$default"; return; fi
+  if ! can_prompt; then printf '%s' "$default"; return; fi
   read -r -p "$prompt " reply </dev/tty || reply=""
   printf '%s' "${reply:-$default}"
 }
 # confirm "prompt"  — 0 on yes. Defaults to NO unless --yes.
 confirm() {
   if [ "$ASSUME_YES" -eq 1 ]; then return 0; fi
-  if [ ! -t 0 ] && [ ! -r /dev/tty ]; then return 1; fi
+  if ! can_prompt; then return 1; fi
   local reply=""
   read -r -p "$1 [y/N] " reply </dev/tty || reply="n"
   case "$reply" in [Yy]*) return 0 ;; *) return 1 ;; esac
@@ -557,6 +562,32 @@ deploy_policy_plugin() {
   say "    deployed write-gate plugin (memoria-policy-gate)"
 }
 
+sync_profile_skills() {
+  local staged_profile="$1" profile_dir="$2"
+  local staged_skills="$staged_profile/skills"
+  local profile_skills="$profile_dir/skills"
+
+  case "$profile_dir" in
+    "$HERMES_PROFILES_DIR"/*) ;;
+    *) die "Refusing to reconcile skills outside $HERMES_PROFILES_DIR: $profile_dir" ;;
+  esac
+
+  if [ -d "$staged_skills" ]; then
+    run rm -rf "$profile_skills"
+    run mkdir -p "$profile_skills"
+    if have rsync; then
+      run rsync -a "$staged_skills"/ "$profile_skills"/
+    else
+      run_sh "cp -R \"$staged_skills\"/. \"$profile_skills\"/"
+    fi
+    say "    refreshed profile skills from source"
+  elif [ -f "$staged_profile/.no-bundled-skills" ]; then
+    run rm -rf "$profile_skills"
+    run mkdir -p "$profile_skills"
+    say "    cleared profile skills (source opts out of bundled skills)"
+  fi
+}
+
 verify_profile_obsidian_mcp() {
   local cfg="$1" prof="$2"
   [ -f "$cfg" ] || die "$prof config.yaml missing after staging."
@@ -697,6 +728,10 @@ install_profiles() {
       # policy plugin enablement, and MEMORIA_ENV model overlay; refresh it
       # explicitly so --profiles-only cannot leave stale host-side model wiring.
       run cp "$dst/config.yaml" "$HERMES_PROFILES_DIR/$p/config.yaml"
+      # Memoria owns each shipped profile's skills directory. Hermes preserves
+      # absent distribution paths on force-install, so reconcile it explicitly to
+      # remove stale bundled skills from profiles that opt out.
+      sync_profile_skills "$dst" "$HERMES_PROFILES_DIR/$p"
       # Capability layer (ADR-27): each profile's config.yaml already carries
       # positive platform_toolsets plus a small disabled_toolsets backstop, so
       # the only vault-write path is the gated obsidian MCP. It ships in the
