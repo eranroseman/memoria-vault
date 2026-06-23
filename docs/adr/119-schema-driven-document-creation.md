@@ -50,6 +50,15 @@ machine implicit); `required_any` is declared in-schema while the conditional an
 wikilink) live in the detectors; and `project` is over-required at creation. The audit also surfaced
 a handful of concrete per-type fixes, folded into the decision below.
 
+A parallel audit of the four human forms points the same way. They are already ahead of the schema
+on validation — every enum is a select, lists are multi-select fields, and `entity`/`sources` use
+note-pickers that validate references against real Catalog notes (`fleeting` and `claim` are
+exemplary). The telling case is `source_type`: the form renders it as a **required five-value
+select** (`paper · dataset · repository · web-page · report`) while the schema declares it an
+**optional free `str`** — the controlled vocabulary lives in the *form*, not the *schema*, which is
+exactly the inversion this decision removes (once the form is generated, a `str` field loses the
+select). The form audit's remaining fixes are folded in below.
+
 ## Decision
 
 Promote the type schema from a partial field-list-plus-validator to the **complete declarative
@@ -107,9 +116,9 @@ justifies it. The decisive wins — completeness and the generic engine — are 
 JSON Schema models a document's internal shape, not the vault's placement/graph/referential layer,
 so a full migration would buy standard tooling for the easy half while the hard half stayed custom.
 
-### 6. Per-type cleanups (from the schema audit)
+### 6. Per-type and per-form cleanups (from the audit)
 
-Concrete fixes the all-26 audit surfaced, folded into the phases below:
+Concrete fixes the schema and form audits surfaced, folded into the phases below:
 
 - **Drop `index`.** Its schema is title-only — it expresses none of its register purpose — it has
   no creation path, and the register function (a list of hubs) is already the `hubs.base#Hubs index`
@@ -117,8 +126,13 @@ Concrete fixes the all-26 audit surfaced, folded into the phases below:
   template, the schema, and the `notes/indexes/` folder. (This is the only fix *outside* the
   schema-as-contract work — a type-roster decision, recorded here.)
 - **Make `source_type` an enum.** A free `str` today but controlled vocabulary in practice
-  (paper · preprint · dataset · book …); as a schema enum it validates at input and the generated
-  form renders a select. *(Phase 2.)*
+  (paper · dataset · repository · web-page · report); the form *already* renders it as a five-value
+  select, so generating the form from a `str` schema would **lose** the constraint — the enum must
+  move into the schema. *(Phase 2.)*
+- **Carry field `description` in the schema, not just `label`.** The `creation` block should hold a
+  per-field description alongside the label, generated into the form as inline help. The `source`
+  and `project` forms have none today — and they carry the most jargon (CEBM grades, PICO, FINER),
+  where help text matters most. *(Phase 2.)*
 - **Declare `initial_lifecycle` and gated transitions uniformly** — three types declare them, 23 do
   not; close the inconsistency as part of the state-machine work. *(Phase 3.)*
 - **Document the fine distinctions the schemas already encode** — `flag` vs `alert` (a pointed
@@ -127,7 +141,9 @@ Concrete fixes the all-26 audit surfaced, folded into the phases below:
   for `candidate`/`gap`, consider one `proposal` type with a subtype — an ADR-51 question, not a
   schema fault).
 - **Trim `project`'s required set at creation** — derive `slug`, default `question_version`, defer
-  PICO/FINER to shaping. *(Phase 5.)*
+  PICO/FINER to shaping. And **restore the full five-criterion FINER**: the form collects only
+  Feasible/Novel/Relevant, so Interesting and Ethical are dropped and projects never capture the
+  full answerability lens. *(Phase 5.)*
 
 ## Consequences
 
