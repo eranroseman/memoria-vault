@@ -29,7 +29,6 @@ SKELETON_DIRS=(
   notes/sources
   notes/claims
   notes/hubs
-  notes/indexes
   projects
   projects/_template
   projects/_template/code

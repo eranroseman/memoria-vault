@@ -22,7 +22,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   ├── catalog.base           the Catalog Bases view
 │   ├── papers/  people/  organizations/  venues/  datasets/  repositories/
 ├── notes/                   the PI's knowledge (authored links:)
-│   ├── fleeting/  sources/  indexes/
+│   ├── fleeting/  sources/
 │   ├── claims/                review-gated
 │   └── hubs/                  review-gated
 ├── projects/                project records, theses, drafts, code, exports
@@ -54,7 +54,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      26 per-type schemas; capture forms read creation.form
+│   ├── types/<type>.yaml      25 per-type schemas; capture forms read creation.form
 │   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
 ├── operations/              the deterministic operation cores

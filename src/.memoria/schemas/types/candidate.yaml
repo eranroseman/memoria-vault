@@ -1,6 +1,7 @@
 type: candidate
 category: inbox
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived] # proposed = awaiting the PI (ADR-50/D18)
   certainty: [confident, likely, unsure] # 3-level, calibrated (D35/D49)

@@ -1,6 +1,7 @@
 type: space
 category: spaces
 gated: false
+initial_lifecycle: current
 enums:
   lifecycle: [current, archived]
   space: [library, knowledge, project]

@@ -1,6 +1,7 @@
 type: work-prompt
 category: inbox
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   loudness: [quiet, notice, alert, block]

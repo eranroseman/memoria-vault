@@ -23,7 +23,6 @@ policy:
     write:
       - "notes/claims/**"      # review-gated (ADR-03/47)
       - "notes/hubs/**"        # review-gated
-      - "notes/indexes/**"
       - "projects/**"
       - "system/**"
   require:

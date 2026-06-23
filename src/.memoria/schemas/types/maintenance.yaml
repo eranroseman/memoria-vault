@@ -1,6 +1,7 @@
 type: maintenance
 category: spaces
 gated: false
+initial_lifecycle: current
 enums:
   lifecycle: [current, archived]
 required:

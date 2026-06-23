@@ -11,7 +11,9 @@ inquiry:
   outcome: ""
 finer:
   feasible: ""
+  interesting: ""
   novel: ""
+  ethical: ""
   relevant: ""
 output_mode: thesis
 question_version: 1

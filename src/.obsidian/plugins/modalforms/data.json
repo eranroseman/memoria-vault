@@ -35,6 +35,7 @@
         {
           "name": "title",
           "label": "Source title",
+          "description": "Human-readable title for the source note.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -43,6 +44,7 @@
         {
           "name": "entity",
           "label": "Catalog entity",
+          "description": "Catalog record this source note describes.",
           "isRequired": true,
           "input": {
             "type": "note",
@@ -52,6 +54,7 @@
         {
           "name": "source_type",
           "label": "Source type",
+          "description": "Kind of source behind the note.",
           "isRequired": true,
           "input": {
             "type": "select",
@@ -83,6 +86,7 @@
         {
           "name": "evidence_level",
           "label": "Evidence level",
+          "description": "CEBM-style appraisal grade; use ungraded until appraised.",
           "input": {
             "type": "select",
             "source": "fixed",
@@ -117,6 +121,7 @@
         {
           "name": "research_area",
           "label": "Research area",
+          "description": "What the work is about.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -154,6 +159,7 @@
         {
           "name": "methodology",
           "label": "Methodology",
+          "description": "How the work was structured or analyzed.",
           "input": {
             "type": "multiselect",
             "source": "fixed",
@@ -196,6 +202,7 @@
         {
           "name": "summary",
           "label": "In my words",
+          "description": "Short source-grounded summary in your own words.",
           "input": {
             "type": "textarea"
           }
@@ -308,14 +315,7 @@
         {
           "name": "title",
           "label": "Project title",
-          "isRequired": true,
-          "input": {
-            "type": "text"
-          }
-        },
-        {
-          "name": "slug",
-          "label": "Project slug",
+          "description": "Bounded research question or working project name.",
           "isRequired": true,
           "input": {
             "type": "text"
@@ -324,6 +324,7 @@
         {
           "name": "scope_topics",
           "label": "Scope topics",
+          "description": "Controlled vocabulary topics that bound the project.",
           "isRequired": true,
           "input": {
             "type": "multiselect",
@@ -360,59 +361,9 @@
           }
         },
         {
-          "name": "inquiry_population",
-          "label": "Population",
-          "isRequired": true,
-          "input": {
-            "type": "text"
-          }
-        },
-        {
-          "name": "inquiry_intervention",
-          "label": "Intervention",
-          "input": {
-            "type": "text"
-          }
-        },
-        {
-          "name": "inquiry_comparison",
-          "label": "Comparison",
-          "input": {
-            "type": "text"
-          }
-        },
-        {
-          "name": "inquiry_outcome",
-          "label": "Outcome",
-          "isRequired": true,
-          "input": {
-            "type": "text"
-          }
-        },
-        {
-          "name": "finer_feasible",
-          "label": "Feasible",
-          "input": {
-            "type": "textarea"
-          }
-        },
-        {
-          "name": "finer_novel",
-          "label": "Novel",
-          "input": {
-            "type": "textarea"
-          }
-        },
-        {
-          "name": "finer_relevant",
-          "label": "Relevant",
-          "input": {
-            "type": "textarea"
-          }
-        },
-        {
           "name": "output_mode",
           "label": "Output mode",
+          "description": "Thesis mode starts with a provisional answer; survey mode starts open.",
           "isRequired": true,
           "input": {
             "type": "select",

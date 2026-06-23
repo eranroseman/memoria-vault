@@ -126,7 +126,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/modalforms/data.json": "28ba98162e99484509432405d2561316fb2bd77334fb92c7d636419af46a9976",
+        "plugins/modalforms/data.json": "2720c508fa26dee18aada563c2bacfa786aaa466812e6489fdfcfbf129282bce",
         "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
         "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"

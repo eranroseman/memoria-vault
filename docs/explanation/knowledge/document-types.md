@@ -30,7 +30,7 @@ An entity record never contains anyone's reading of the source — that is what 
 
 ---
 
-## The five note-document types
+## The four note-document types
 
 ### Source notes: describing the world
 
@@ -50,9 +50,9 @@ Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim i
 
 A **`hub`** is a curated, annotated view of an area: what it is about, what matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also gated 🔒, because a hub is an act of judgment about what belongs together, not a query result. Agents can propose additions; the PI curates.
 
-### Fleeting and index notes
+### Fleeting notes
 
-A **fleeting note** (`type: fleeting`) is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. An **`index`** note is a register — Luhmann's entry-point list into the web.
+A **fleeting note** (`type: fleeting`) is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. Registers are Bases views, not a note type.
 
 ---
 

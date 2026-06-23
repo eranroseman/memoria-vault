@@ -141,14 +141,7 @@ def test_project_start_form_is_available_for_later_automation():
     form = _forms_by_name()["memoria-project-start"]
     assert form["version"] == "1"
     fields = {field["name"]: field for field in form["fields"]}
-    for required in (
-        "title",
-        "slug",
-        "scope_topics",
-        "inquiry_population",
-        "inquiry_outcome",
-        "output_mode",
-    ):
+    for required in ("title", "scope_topics", "output_mode"):
         assert fields[required]["isRequired"] is True
     assert fields["scope_topics"]["input"]["multi_select_options"] == _terms("research_area")
     assert [o["value"] for o in fields["output_mode"]["input"]["options"]] == ["thesis", "survey"]
@@ -170,18 +163,6 @@ def test_claim_sources_use_catalog_paper_picker():
     }
 
 
-def test_project_start_form_covers_project_schema_fields():
+def test_project_start_form_is_trimmed_to_creation_required_fields():
     fields = {field["name"] for field in _forms_by_name()["memoria-project-start"]["fields"]}
-    assert {
-        "title",
-        "slug",
-        "scope_topics",
-        "inquiry_population",
-        "inquiry_intervention",
-        "inquiry_comparison",
-        "inquiry_outcome",
-        "finer_feasible",
-        "finer_novel",
-        "finer_relevant",
-        "output_mode",
-    } <= fields
+    assert fields == {"title", "scope_topics", "output_mode"}

@@ -1,6 +1,7 @@
 type: worker-card
 category: system
 gated: false
+initial_lifecycle: current
 enums:
   lifecycle: [current, archived]
   status: [triage, todo, ready, running, blocked, retrying, done]

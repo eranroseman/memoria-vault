@@ -1,6 +1,7 @@
 type: fleeting
 category: notes
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, archived]
   origin: [human, agent, chat]  # chat = ACP-pane session export (notes/fleeting/chats/)

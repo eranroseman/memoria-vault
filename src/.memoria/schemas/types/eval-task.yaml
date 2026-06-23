@@ -1,6 +1,7 @@
 type: eval-task
 category: system
 gated: false # gold tasks are diagnostic fixtures (ADR-11) — curated assets, not a gated write-zone
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   # the board lane the eval card dispatches to (ADR-48 §4.1) — must stay a

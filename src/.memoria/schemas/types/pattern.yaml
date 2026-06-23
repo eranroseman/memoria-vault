@@ -1,6 +1,7 @@
 type: pattern
 category: system
 gated: false # patterns are gated ASSETS via review, not a gated write-zone
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   mode: [library, project, both]

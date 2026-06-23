@@ -14,7 +14,7 @@ Use this when a cluster has become more than a topic: you have a question, an in
 
 **1. Build the synthesis surface.** Distill claims into `notes/claims/` and gather the cluster under a hub in `notes/hubs/` — [Tutorial 04: Draft a section from your claims](../../tutorials/04-draft-a-section-from-your-claims.md) walks the whole arc.
 
-**2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title, slug, scope topics, PICO-style inquiry fields, FINER notes, and output mode. The command creates the project and thesis records shown in the Project space, plus the project scratch areas used by code, drafts, and exports.
+**2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title, scope topics, and output mode. The command derives the slug, creates blank PICO/FINER scaffolding for shaping, and writes the project and thesis records shown in the Project space, plus the project scratch areas used by code, drafts, and exports.
 
 **3. Check readiness.** Delegate a `map` task ([Assess your corpus](assess-your-corpus.md)) and relate the resulting claims to the active thesis with `supports` / `contradicts` links. A hub with several mutually linked claims is the tell that a cluster is dense enough to write from.
 

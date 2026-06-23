@@ -1,6 +1,7 @@
 type: alert
 category: inbox
 gated: false
+initial_lifecycle: proposed
 enums:
   lifecycle: [proposed, current, archived]
   agent_recommendation: [inconclusive, issues-found, clean]
