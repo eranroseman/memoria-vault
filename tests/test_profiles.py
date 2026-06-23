@@ -313,6 +313,8 @@ def test_agent_client_pane_is_copi_only():
     assert [a["id"] for a in agents] == ["memoria-copi"]
     assert agents[0]["displayName"] == "Memoria Co-PI"
     assert data["defaultAgentId"] == "memoria-copi"
+    assert data["autoMentionActiveNote"] is True
+    assert data["autoAllowPermissions"] is False
     exports = data["exportSettings"]
     assert exports["defaultFolder"] == "system/exports"
     assert exports["autoExportOnNewChat"] is True

@@ -37,7 +37,7 @@ Open the [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md) and
 > "Which of my claims would the 2024 papers contradict?"
 > "What methods have my sources used to measure EMA compliance?"
 
-The active note auto-attaches; attach others when the question is about a specific cluster ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
+The active note is passed as a readable reference; attach others when the question is about a specific cluster ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
 **2. Interrogate the answer.**
 

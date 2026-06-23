@@ -27,12 +27,12 @@ the Hermes icon in the left ribbon.
 
 ## Attaching a note as context
 
-**Auto-mention (default).** With `autoMentionActiveNote` on, the note open in your editor is attached automatically when you open the pane or send a message — it arrives as a context card with no extra step. Open the note you want to discuss first, then open the pane (or just type, if the pane is already open).
+**Auto-mention (default).** With `autoMentionActiveNote` on, the note open in your editor is sent as a reference when you open the pane or send a message. Open the note you want to discuss first, then open the pane (or just type, if the pane is already open). When the question is about that note, the Co-PI reads it with its vault read tools before answering.
 
 **Via the pane directly:**
 Click the paperclip icon at the top of the Agent Client pane → select a file from the picker. Use this when the note you want to discuss isn't the one currently open in the editor.
 
-The attached note appears as a named context card at the top of the conversation. The Co-PI reads its full title and body. It does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
+Explicitly attached notes and selected text are sent as bounded context, capped by the plugin's note/selection length limits. The Co-PI does not follow wikilinks to other notes — attach additional files explicitly if you need them in context.
 
 ## Reading responses
 
@@ -77,7 +77,7 @@ exception, not the production Windows default.
 ## Verify
 
 - The pane runs one agent — **Co-PI** — and connects
-- Opening the pane with a note active attaches it as a context card (auto-mention)
+- Opening the pane with a note active passes that note as a readable reference
 - Asking for lane work ("verify this draft") produces a card on the board, not prose-only
 - Pressing **Clear** empties the pane and resets the session
 
