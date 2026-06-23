@@ -49,7 +49,7 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Obsidian opens only the *runtime* vault (`~/Memoria`) — never this dev repo.
-- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over verified loopback HTTPS — `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA bundle. On WSL2 test runs against Windows Obsidian, mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach the Windows loopback listener. `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or commit the key.
+- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over verified loopback HTTPS — `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA bundle. Obsidian must open the runtime vault on the same OS/filesystem host as the vault path: Linux/WSL test vaults such as `~/Memoria-test` use Linux Obsidian on the native path, never Windows Obsidian through `\\wsl.localhost\...`; Windows Obsidian verifies only Windows-hosted vaults. If Hermes is deliberately split across WSL while Obsidian serves a Windows-hosted vault, mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach that Windows loopback listener. `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or commit the key.
 
 ---
 

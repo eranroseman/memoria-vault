@@ -79,6 +79,8 @@ def test_profile_structure_complete():
 def test_configs_parse_and_reference_real_servers():
     for name in EXPECTED:
         cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
+        assert cfg["_config_version"] == 30
+        assert cfg["context_file_max_chars"] >= 30000
         for server, spec in (cfg.get("mcp_servers") or {}).items():
             args = spec.get("args") or []
             for a in args:

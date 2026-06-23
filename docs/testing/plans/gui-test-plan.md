@@ -36,7 +36,7 @@ end (the boxes are clickable in Obsidian).
 - [ ] Installer has run; in WSL2 `hermes profile list` shows the **5** `memoria-*` profiles.
 - [ ] Obsidian, Zotero, and **Git for Windows** installed (the `install.ps1` path does this; `obsidian-git` needs the Windows git binary).
 - [ ] Keys seeded into each profile `.env` (WSL2): `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OPENALEX_API_KEY` (Librarian; OpenAlex requires a key since 2026-02).
-- [ ] **WSL2 mirrored networking** on: `.wslconfig` has `networkingMode=mirrored` (so WSL-Hermes can reach Obsidian's REST API HTTPS listener at `127.0.0.1:27124`).
+- [ ] For a WSL2/ext4 test vault, Linux Obsidian opens the native path (`obsidian ~/Memoria-test`); do not point Windows Obsidian at `\\wsl.localhost\...\Memoria-test`. Mirrored networking is only for an explicit split where WSL Hermes talks to Windows Obsidian serving a Windows-hosted vault.
 - [ ] Telemetry cron wired (G5) — needed for the board-state dashboard to gain data after activity.
 - [ ] The vault folder is **outside OneDrive**.
 
