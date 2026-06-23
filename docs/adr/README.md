@@ -147,6 +147,7 @@ status.
 | [115](115-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 | [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | accepted |
 | [117](117-type-naming-scheme.md) | Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces | accepted |
+| [118](118-dashboard-consolidation.md) | Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index | accepted |
 
 <!-- ADR-INDEX:END -->
 
