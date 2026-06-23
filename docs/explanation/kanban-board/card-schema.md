@@ -8,13 +8,13 @@ nav_order: 2
 
 An Inbox card is the one artifact the PI is guaranteed to read, so its format is where automation bias is won or lost. Research is blunt about the failure mode: hand a human a confident verdict and their scrutiny drops. And for a *proposal*, the verdict is a **given** — the agent surfaced the item because it recommends it, so printing "recommend: ACCEPT" adds nothing and subtracts attention. The honesty card ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)) is the answer: **proposals carry an honest argument, not a verdict; verification cards lead with the finding.**
 
-The card schemas live in `.memoria/schemas/types/` alongside every other type — a card is just an `inbox/` note on the universal lifecycle chain, validated by the same Linter pass. Engines and lanes share one card-writer, so every card of a given type is shaped identically.
+The card schemas live in `.memoria/schemas/types/` alongside every other type — a card is just an `inbox/` note on the universal lifecycle chain, validated by the same Linter pass. Engines and lanes (a lane is a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) share one card-writer, so every card of a given type is shaped identically.
 
 ---
 
 ## Proposal cards: candidate and gap
 
-A `candidate` (a *found* source proposed for intake) and a `gap` (a *missing*-source need) are approval-gate items. There is **no verdict field** — the verdict is implied by the card existing. `argument_against` and `certainty` are what make the PI judge the argument rather than wave through a foregone conclusion. A card whose against-case is vacuous is a badly written card, and the design rule applies: *an Inbox item a human can clear without reading is a design smell* — give it real decision material or automate the decision. The full field list is in [Inbox card fields](../../reference/inbox-card-fields.md#proposal-cards).
+A `candidate` (a *found* source proposed for intake) and a `gap` (a *missing*-source need) are approval-gate items (the gate is the human approval step — see [Glossary](../../reference/glossary.md)). There is **no verdict field** — the verdict is implied by the card existing. `argument_against` and `certainty` are what make the PI judge the argument rather than wave through a foregone conclusion. A card whose against-case is vacuous is a badly written card, and the design rule applies: *an Inbox item a human can clear without reading is a design smell* — give it real decision material or automate the decision. The full field list is in [Inbox card fields](../../reference/inbox-card-fields.md#proposal-cards).
 
 ## Verification cards: flag and alert
 
@@ -28,7 +28,7 @@ A `work-prompt` is the third shape: not a proposal to judge and not a finding to
 
 ## Graded loudness
 
-Every card can carry a `loudness` level, and each level has a defined outcome — the difference between an ambient signal and an interruption is a design decision, not a worker's mood. `quiet` and `notice` stay pull-only; `alert` and `block` are push-worthy; an open `block` card also pauses delegation and review-gated promotion until the PI resolves it. The four levels and the 30-minute test that picks a card's surface (*does it change what the PI does in the next 30 minutes?*) are owned by [Interaction channels](../architecture/human-channels.md).
+Every card can carry a `loudness` level, and each level has a defined outcome — the difference between an ambient signal and an interruption is a design decision, not a worker's mood. `quiet` and `notice` stay pull-only; `alert` and `block` are push-worthy; an open `block` card also pauses delegation and review-gated promotion (writes that need PI approval — see [Glossary](../../reference/glossary.md)) until the PI resolves it. The four levels and the 30-minute test that picks a card's surface (*does it change what the PI does in the next 30 minutes?*) are owned by [Interaction channels](../architecture/human-channels.md).
 
 ---
 

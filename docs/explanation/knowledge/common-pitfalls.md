@@ -11,9 +11,9 @@ Failure modes that recur in research vaults built this way. Most of them look li
 
 ## Treating agent output as verified content
 
-The Writer produces a draft in response to a query. It looks good. A paragraph gets copied into a composition. Later it emerges that the agent cited paper X for a claim that paper X does not actually make — the semantic similarity was there, but the specific claim wasn't.
+The Writer (the background agent that drafts prose — see [Glossary](../../reference/glossary.md)) produces a draft in response to a query. It looks good. A paragraph gets copied into a composition. Later it emerges that the agent cited paper X for a claim that paper X does not actually make — the semantic similarity was there, but the specific claim wasn't.
 
-This is the failure the Peer-reviewer exists to catch, but its `verify-check-citation` pass only verifies that citekeys resolve — it doesn't verify that the source actually supports the specific claim in the prose. That final check is irreducibly human. The system's design treats agent output as a proposal that requires verification, not a draft that requires only polish.
+This is the failure the Peer-reviewer (the background agent that checks drafts and citations — see [Glossary](../../reference/glossary.md)) exists to catch, but its `verify-check-citation` pass only verifies that citekeys resolve — it doesn't verify that the source actually supports the specific claim in the prose. That final check is irreducibly human. The system's design treats agent output as a proposal that requires verification, not a draft that requires only polish.
 
 ## Unpinned citekeys
 
@@ -35,7 +35,7 @@ The failure is that summary and synthesis look identical in the moment of writin
 
 ## Distilling before triaging
 
-The Librarian's proposed classification often surfaces project connections that weren't obvious at intake — connections that should appear in the claim's `sources:` frontmatter and `links:`. Writing the claim before reviewing that proposal means missing those connections, because the classification pass is also when the system discovers what the source has to do with your existing work.
+The **Librarian** (the background agent that catalogs and classifies sources — see [Glossary](../../reference/glossary.md)) proposes a classification that often surfaces project connections that weren't obvious at intake — connections that should appear in the claim's `sources:` frontmatter and `links:`. Writing the claim before reviewing that proposal means missing those connections, because the classification pass is also when the system discovers what the source has to do with your existing work.
 
 The deeper reason: classification (automated, audited, correctable) is how the system integrates a source into the existing graph. Bypassing it produces a claim that cites a paper but isn't connected to the web of context that would have been visible from the review.
 
@@ -55,7 +55,7 @@ The structural issue is a confusion between indexing and curating. A hub's value
 
 The failures above share a root, and naming it directly is the best defense. A recurring class of mistake is asking agents to make judgment calls. The distinction between what the agent can do reliably and what requires human judgment is not a question of capability — it is a question of what kind of decision is being made.
 
-Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate exists to prevent.
+Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate (the human approval step before content is trusted — see [Glossary](../../reference/glossary.md)) exists to prevent.
 
 For the explicit mapping of tasks to their appropriate owner, see [Profile capabilities](../../reference/profiles.md).
 
@@ -66,4 +66,4 @@ For the explicit mapping of tasks to their appropriate owner, see [Profile capab
 - Why promotion is gated: [Why promotion is gated](promotion-model.md)
 - The fix for compound notes: [Refactor claim notes](../../how-to-guides/knowledge/refactor-a-note.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
-- Lane permissions referenced here: [Profile capabilities](../../reference/profiles.md)
+- Lane (a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) permissions referenced here: [Profile capabilities](../../reference/profiles.md)
