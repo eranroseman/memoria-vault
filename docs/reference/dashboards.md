@@ -7,16 +7,21 @@ parent: Reference
 
 The primary dashboards are the three durable space notes under `spaces/`
 (`src/spaces`): Library, Knowledge, and Project. The Inbox queue (`spaces/inbox.md`,
-`type: queue`) sits alongside them as a transient triage surface, reached from the
-navigation rail's **Now**. Supporting dashboards and Bases live under
+`type: queue`) and Maintenance collection (`spaces/maintenance.md`, `type: maintenance`)
+sit alongside them by cadence: daily action vs weekly structural debt. Both are reached
+from the navigation rail's **Now**. Supporting dashboards and Bases live under
 `system/dashboards/` (`src/system/dashboards`) and related data folders. Space
 switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
 All dashboards are Dataview / Bases consumers: they render existing vault state and
 logs, never write, and a healthy vault shows action queues near-empty.
 
-The daily glance starts in the Inbox queue, and **board-state is the Inbox board** — a thin page embedding `inbox.base`.
+The daily glance starts in the rail's **Now**: action count opens the Inbox queue,
+while the health band opens Maintenance and Fleet health. **Board-state is the Inbox
+board** — a thin page embedding `inbox.base`.
 
-No standalone status-line widget ships in the current Obsidian surface. The Inbox queue is the ambient glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` answer whether anything needs attention without adding a separate always-on widget.
+No standalone status-line widget ships in the current Obsidian surface. The rail health
+band is the ambient glance for structural and fleet health; the Inbox queue stays the
+action surface.
 
 ---
 
@@ -24,17 +29,18 @@ No standalone status-line widget ships in the current Obsidian surface. The Inbo
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me`, drift-watch, loose-ends, and board views. |
+| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me` and fleeting-note processing views. |
+| Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`type: maintenance`): drift-watch, loose-ends, and board views. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, saturation, and project gaps. |
-| Inbox support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
+| Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
 | Library support | Reading pipeline | `system/dashboards/reading-pipeline.md` | Object-first Bases view: source notes at `lifecycle: proposed` awaiting reading & distillation + current claims by maturity. |
 | Library support | Discuss queue | `system/dashboards/discuss-queue.md` | Source notes at `lifecycle: provisional` — read but not yet distilled; worth a Co-PI pass. |
 | Knowledge support | Open questions | `system/dashboards/open-questions.md` | `current` claims with zero inbound links — the unconnected synthesis backlog. |
 | Knowledge support | Contradictions | `system/dashboards/contradictions.md` | `current` claims carrying a `links.contradicts` note link — open tensions. |
 | Project support | Project gate | `system/dashboards/project-gate.md` | Active Project notes, output mode, active thesis, refutation stamp, and the latest structural-impact cache timestamp/state. |
-| Maintenance | Drift watch | `system/dashboards/drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; HIGH/`alert` findings also surface in the daily glance. |
+| Maintenance | Drift watch | `system/dashboards/drift-watch.md` | Open `flag`/`alert` cards in `proposed` — active/imminent structural drift; these count in the rail health band. |
 | Maintenance | Loose ends | `system/dashboards/loose-ends.md` | Notice-loudness `flag` cards in `proposed` — low-stakes structural debt batched for the weekly pass. |
 | Maintenance | Weekly review | `system/dashboards/weekly-review.md` | The Friday aggregator (multi-section). |
 | Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
@@ -42,7 +48,7 @@ No standalone status-line widget ships in the current Obsidian surface. The Inbo
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 | Agent-ops | Skill state | `system/dashboards/skill-state.md` | Which skills are active in which lane, read live from `.memoria/lane-overrides/` + `.memoria/profiles/*/skills/`; mismatches surface as consistency-check rows ([ADR-43](../adr/43-skill-governance.md)). |
 
-The **Surface** column names the space, the queue, or the support context where a dashboard is reached.
+The **Surface** column names the space, queue, maintenance collection, or support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
 demand — **Daily glance**, **Synthesis agenda**, **Structural health**, **Operational
 health** ([Dashboards](../explanation/dashboards/README.md)).

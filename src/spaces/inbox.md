@@ -26,18 +26,6 @@ Raw captures waiting for a PI decision. Open each note, then distill, attach, or
 
 ![[fleeting.base#To process]]
 
-## Drift watch
-
-![[inbox.base#Drift watch]]
-
-## Loose ends
-
-![[inbox.base#Loose ends]]
-
-## Board
-
-![[board.base#By lane]]
-
 Capture and global actions live in the ribbon; navigate spaces from the left-pane rail.
 
 ## Guides

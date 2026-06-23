@@ -32,9 +32,9 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 
 ## Review and triage
 
-**Must work:** open the Inbox queue and use its weekly-review and **Needs me**
-views. The embedded Bases/Dataview queries surface the triage queue without any
-Hermes involvement.
+**Must work:** open the Inbox queue for **Needs me** and Maintenance for weekly
+structural checks. The embedded Bases/Dataview queries surface the triage queue
+without any Hermes involvement.
 
 **If Hermes is unreachable** — triage is a human-only action anyway. Classify by hand:
 

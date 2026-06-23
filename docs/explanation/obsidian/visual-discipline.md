@@ -26,7 +26,7 @@ Emoji in note *titles* break filename portability across operating systems — a
 
 The vault should feel like writing during normal operation. Chrome — tab bars, sidebars, status indicators — is noise during focused reading and writing, and becomes signal when something needs attention. Hiding it by default preserves the signal-to-noise ratio: when the sidebar opens, it *means* something is happening.
 
-Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the Inbox queue's daily glance: `Needs me`, `Drift watch`, `Loose ends`, and `Board` stay visible without adding a separate always-on indicator.
+Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the rail's **Now**: the Inbox action count and Maintenance/Fleet health band stay visible without adding a separate always-on indicator.
 
 One Obsidian window per vault is a technical constraint as much as a discipline. The agent layer assumes a single active vault; multiple windows updating the same card through the policy MCP produce race conditions in the audit log and board state.
 
@@ -34,15 +34,15 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 ## Why spaces are notes, not workspaces
 
-The current design maps work modes to **space dashboard notes** — Inbox, Library,
+The current design maps work modes to dashboard notes — Inbox, Maintenance, Library,
 Knowledge, and Project — rather than to saved Obsidian workspaces
 ([ADR-81](../../adr/81-persistent-gate-dashboards.md)). A gate is content the vault can
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 
-The saved **Memoria** workspace remains useful as a reset shell: Inbox in the main pane,
+The saved **Memoria** workspace remains useful as a reset shell: home in the main pane,
 navigation on the left, Co-PI on the right. Daily mode switching happens through the
-space nav row, not layout swaps. The exact layout and gate list are reference material:
+left-pane rail, not layout swaps. The exact layout and gate list are reference material:
 [Obsidian workspaces](../../reference/obsidian-workspaces.md).
 
 ---

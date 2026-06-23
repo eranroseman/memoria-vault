@@ -20,7 +20,7 @@ On a fresh vault or a layout reset, the saved **Memoria** workspace seeds `home.
 
 **2. Switch spaces from the rail.**
 
-The left-pane rail (`_nav.md`) owns navigation. Under **Now** it shows the Inbox queue count and a health dot; under **Places** it links **Library** · **Knowledge** · **Project**. Click a place to open that space in the active tab; reach the queue from **Now**.
+The left-pane rail (`_nav.md`) owns navigation. Under **Now** it shows the Inbox action count plus the Maintenance/Fleet health band; under **Places** it links **Library** · **Knowledge** · **Project**. Click a place to open that space in the active tab; reach the queue and Maintenance from **Now**.
 
 **3. Act from the action row.**
 
@@ -36,7 +36,7 @@ Keep `research-focus.md` current — the Librarian reads it at the start of ever
 
 - A fresh vault or layout reset lands on the `home.md` welcome note
 - After you have worked in the vault, relaunching Obsidian reopens your last session
-- The left-pane rail shows the Inbox queue count under **Now** and **Library** · **Knowledge** · **Project** under **Places**
+- The left-pane rail shows the Inbox action count and health band under **Now**, and **Library** · **Knowledge** · **Project** under **Places**
 - Clicking **Capture fleeting** opens the QuickAdd capture prompt
 
 ## Related

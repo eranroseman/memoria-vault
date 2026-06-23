@@ -10,7 +10,7 @@ Each space dashboard under `spaces/` gathers the views for one working mode, and
 
 ## Where the dashboards open
 
-The three spaces — **Library**, **Knowledge**, and **Project** — are durable dashboard notes, and the **Inbox** queue is the transient triage surface reached from the rail's *Now*. Obsidian restores your last session on launch; switch among surfaces from the left-pane rail. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
+The three spaces — **Library**, **Knowledge**, and **Project** — are durable dashboard notes. The **Inbox** queue and **Maintenance** collection are cadence surfaces reached from the rail's *Now*. Obsidian restores your last session on launch; switch among surfaces from the left-pane rail. The saved **Memoria** workspace is only a reset layout; see [Use the reset workspace](use-workspaces.md).
 
 Everything else opens manually: follow links from a space dashboard, or use `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
@@ -26,7 +26,7 @@ Glance at the start of every session. Empty means nothing urgent; under 30 secon
 
 ### "What work is in flight? What's stuck?"
 
-**Inbox** — Board section.
+**Maintenance** — Board section.
 
 A card sitting in one lane for days is likely stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 
@@ -63,7 +63,7 @@ graph maturity, saturation state, and gap findings.
 
 ### "Something seems wrong but I can't see why"
 
-**Drift watch** — Inbox queue.
+**Drift watch** — Maintenance.
 
 Open when agents behave unexpectedly or queries return wrong results. A FAIL verdict pauses scheduled work until resolved ([Run the Linter](../operate/run-the-linter.md)).
 
@@ -81,13 +81,13 @@ Open when a write didn't happen as expected ([Diagnose a denied or blocked write
 
 ### "What do I need to do this week?"
 
-**Weekly review** — open manually on Fridays.
+**Weekly review** — open manually on Fridays, or from Maintenance when you are already checking structural health.
 
 The [Run the weekly review](../inbox/run-the-weekly-review.md) guide walks through it step by step.
 
 ### "What low-stakes structural debt has piled up?"
 
-**Loose Ends** — open during the weekly review or after a lint pass.
+**Loose Ends** — Maintenance.
 
 More than five items is a cleanup signal.
 

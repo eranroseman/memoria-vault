@@ -41,11 +41,11 @@ Scan the Knowledge space's Claims view for long-stable `budding` claims with sev
 
 **Step 7 — Check structural health (5 min).**
 
-Use the Inbox queue's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
+Use Maintenance's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
 
 **Step 8 — Glance at fleet health (1 min).**
 
-Use the fleet-health dashboard from the Inbox queue — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
+Use the fleet-health dashboard from the rail health band — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
 
 ## Verify
 

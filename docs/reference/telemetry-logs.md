@@ -30,7 +30,7 @@ A queue-depth snapshot appended once per `board_export.py` run. Counts only — 
 }
 ```
 
-`review_queue` counts cards that are `status: done` **and** sitting in a non-terminal `review_status` (awaiting a human). `retrying` counts cards in `ready` with `retry_count > 0`. A card is counted in exactly one of `running` / `ready` / `blocked`; `review_queue` and `retrying` are overlays for the Inbox daily glance.
+`review_queue` counts cards that are `status: done` **and** sitting in a non-terminal `review_status` (awaiting a human). `retrying` counts cards in `ready` with `retry_count > 0`. A card is counted in exactly one of `running` / `ready` / `blocked`; `review_queue` and `retrying` are overlays for board diagnostics, not separate card states.
 
 ## board-transitions.jsonl
 
