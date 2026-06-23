@@ -49,8 +49,8 @@ still need a named plan.
 | 10 | Board / Kanban — create…archive, dispatch, transitions | L2 | hermes-cli §4.8 | manual | ✅ |
 | 11 | Profile mgmt, skills, cron | L2 | hermes-cli §4.9–4.11 | manual | ✅ |
 | 12 | 20 templates — frontmatter keys; QuickAdd instantiation | L0+L3 | headless §A5/§D · [GUI](plans/gui-test-plan.md) A3 (QuickAdd) | semi | 🟡 (instantiation only spot-checked) |
-| 13 | 13 support dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
-| 14 | 14 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
+| 13 | 5 system dashboards — queries *render* on real data | L3 | GUI Part C | manual | ✅ |
+| 14 | 13 Obsidian plugins load + enabled | L3 | GUI Part A | manual | ✅ |
 | 15 | Local REST API bridge (write-gate lifeline) | L3 | GUI Part B | manual | ✅ |
 | 16 | Zotero + Better BibTeX → `memoria.bib` | L3 | GUI Part D | manual | ✅ |
 | 17 | Agent Client pane (model connectivity through GUI) | L3 | GUI Part E1 | manual | ✅ |

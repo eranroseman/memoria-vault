@@ -11,8 +11,8 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 
 | Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Raises `loudness: block`: blocks new delegation and review-gated promotion until acknowledged, surfaces on Home, and records a Telegram push attempt when the bot environment is configured ([Inbox card fields](inbox-card-fields.md)). |
-| `HIGH` | Surfaced on Home and in Maintenance's Drift watch. |
+| `CRITICAL` | Raises `loudness: block`: blocks new delegation and review-gated promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Inbox card fields](inbox-card-fields.md)). |
+| `HIGH` | Surfaced in the rail's **Now** and in Maintenance's Drift watch. |
 | `MEDIUM` | Surfaced in Maintenance during the weekly review. |
 | `LOW` | Aggregated weekly. |
 
