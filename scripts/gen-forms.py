@@ -99,13 +99,16 @@ def _input_from_spec(input_def: dict, schema: dict) -> dict:
 
 
 def _field_from_spec(field: dict, schema: dict) -> dict:
-    return _field(
+    generated = _field(
         field["name"],
         field["label"],
         _input_from_spec(field["input"], schema),
         description=field.get("description", ""),
         required=bool(field.get("required", False)),
     )
+    if "condition" in field:
+        generated["condition"] = field["condition"]
+    return generated
 
 
 def _form_from_schema(schema: dict) -> dict:

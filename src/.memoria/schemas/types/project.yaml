@@ -43,7 +43,6 @@ creation:
       - name: scope_topics
         label: Scope topics
         description: Controlled vocabulary topics that bound the project.
-        required: true
         input:
           type: multiselect
           vocabulary: research_area
@@ -54,3 +53,12 @@ creation:
         input:
           type: select
           enum: output_mode
+      - name: provisional_thesis
+        label: Provisional thesis
+        description: One-sentence answer under test; shown only for thesis-mode projects.
+        condition:
+          dependencyName: output_mode
+          type: isExactly
+          value: thesis
+        input:
+          type: textarea
