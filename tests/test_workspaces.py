@@ -87,7 +87,7 @@ def test_single_reset_workspace_ships_and_opens_inbox():
     # the file-explorer escape hatch.
     left = list(_leaves(ws["left"]))
     assert [leaf["type"] for leaf in left] == ["markdown", "file-explorer"]
-    assert left[0]["state"]["file"] == "spaces/_nav.md"
+    assert left[0]["state"]["file"] == "_nav.md"
 
 
 def test_homepage_opens_inbox_space_on_startup():

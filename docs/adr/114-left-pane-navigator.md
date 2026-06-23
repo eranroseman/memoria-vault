@@ -38,7 +38,8 @@ Notion email-style counts), constrained by Memoria's plain-note / single-source 
 renders a dashboard view it duplicates the main pane and drifts from it — the same
 single-source hazard the Home note already names.
 
-The rail is a single pinned plain note, `spaces/_nav.md`, in two zones:
+The rail is a single pinned plain note, `_nav.md`, at the vault root (a global
+navigation surface, not a space — it carries no `type`, like `home.md`), in two zones:
 
 1. **Now (awareness).** The Inbox action queue as a live count. Inbox is a *state* that
    converges to empty, not a *place* you dwell — so it surfaces here as a glanceable signal,
@@ -64,7 +65,7 @@ already covers browsing.
 
 ## Consequences
 
-- New surface `spaces/_nav.md` (`type: nav`, `cssclasses: memoria-nav`); a `memoria-nav.css`
+- New surface `_nav.md` at the vault root (`cssclasses: memoria-nav`); a `memoria-nav.css`
   snippet tightens its spacing and pills the counts.
 - `workspaces.json` left split gains the nav leaf ahead of the file explorer and narrows
   320 → 280; `appearance.json` enables the snippet.

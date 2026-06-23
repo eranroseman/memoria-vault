@@ -1,7 +1,5 @@
 ---
 title: Navigator
-type: nav
-lifecycle: current
 cssclasses: memoria-nav
 ---
 
