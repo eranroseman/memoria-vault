@@ -9,7 +9,7 @@ nav_order: 2
 
 Start a terminal session with a Memoria profile — the Co-PI without Obsidian, or a background lane for debugging. (This is the `hermes … chat` CLI — not the in-Obsidian Agent Client pane, which speaks ACP to the same profiles.)
 
-Reach for a CLI chat session when Obsidian isn't running, when debugging a lane profile directly outside board dispatch, or to verify a redeployed profile loads its MCP servers and skills. Otherwise, use the Agent Client pane ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Note that lint and the retraction sweep are now **operations**, not chat sessions ([Run the Linter](../operate/run-the-linter.md), [Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
+Reach for a CLI chat session when Obsidian isn't running, when debugging a lane profile directly outside board dispatch, or to verify a redeployed profile loads its MCP servers and skills. For normal task dispatch, use the Obsidian command palette first; the Agent Client pane is for conversation and handoff shaping ([Agent-client pane](../using-obsidian/use-the-acp-pane.md)). Note that lint and the retraction sweep are now **operations**, not chat sessions ([Run the Linter](../operate/run-the-linter.md), [Run a retraction sweep](../operate/run-a-retraction-sweep.md)).
 
 ```bash
 hermes -p <profile-alias> chat
@@ -24,7 +24,7 @@ The five aliases: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memori
 | Goal | Command |
 | --- | --- |
 | Talk to the Co-PI from the terminal | `hermes -p memoria-copi chat` |
-| Delegate a task (via the Co-PI) | `hermes -p memoria-copi chat`, then e.g. "verify the draft in projects/jitai/draft.md" |
+| Shape a task when Obsidian is unavailable | `hermes -p memoria-copi chat`, then e.g. "help me frame a verify request for projects/jitai/draft.md" |
 | Debug the ingest path | `hermes -p memoria-librarian chat`, then ask it to dry-run `catalog-find-source` on a citekey |
 | Debug the verify checks | `hermes -p memoria-peer-reviewer chat`, then ask for a `verify-trace-claim` pass on a claim note |
 

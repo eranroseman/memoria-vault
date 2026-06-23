@@ -37,15 +37,15 @@ The dashboard embeds the same fleeting **To process** view shown in the Inbox. P
 
 **Step 6 — Advance settled claims (5 min).**
 
-Scan `system/dashboards/claims.base` for long-stable `budding` claims with several inlinks; advance the genuinely settled ones to `evergreen` and slot them into hubs ([Advance a claim to evergreen](../knowledge/promote-a-claim.md)). Don't advance to clear a queue.
+Scan the Knowledge space's Claims view for long-stable `budding` claims with several inlinks; advance the genuinely settled ones to `evergreen` and slot them into hubs ([Advance a claim to evergreen](../knowledge/promote-a-claim.md)). Don't advance to clear a queue.
 
 **Step 7 — Check structural health (5 min).**
 
-Open `system/dashboards/drift-watch.md` and `loose-ends.md` — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
+Use the Inbox space's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
 
 **Step 8 — Glance at fleet health (1 min).**
 
-`system/dashboards/fleet-health.md` — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
+Use the fleet-health dashboard from the Inbox space — per-lane trust scores, refreshed by the Monday metrics cron. Anything under 90 is worth a minute's curiosity; under 70 is a real signal.
 
 ## Verify
 

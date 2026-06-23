@@ -15,7 +15,7 @@ Talk to the Co-PI from inside Obsidian without switching to a terminal. This gui
 
 ## One agent in the pane — by design
 
-The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with; it delegates every write-task to the background lanes as board cards, and why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-pane.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
+The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only profile you converse with. Use `Memoria:` commands first for known tasks; use the Co-PI when you want conversational help or an unclear handoff shaped into a board card. Why it's the sole agent is explained in [The agent-client pane](../../explanation/obsidian/agent-client-pane.md). The Co-PI's lane can write nothing, so a pane conversation can never damage the vault — ask freely.
 
 ## Opening the pane
 
@@ -39,7 +39,7 @@ The attached note appears as a named context card at the top of the conversation
 Two kinds of turn come back:
 
 - **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The Co-PI will not produce a finished note: when you've arrived at a durable claim, write the claim note yourself (`Memoria: write claim note`).
-- **Delegation receipts** — when you ask for work ("verify this draft", "bring in this paper"), the Co-PI raises a card on the right lane and tells you so. Track it on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
+- **Delegation receipts** — when a conversation becomes lane work, the Co-PI raises a card on the right lane and tells you so. Known tasks should start from the matching `Memoria:` command; this route is for shaping unclear requests. Track delegated work on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
 
 ## Ending a session
 
@@ -49,7 +49,7 @@ Leave the pane open during a reading session — sustained questioning across th
 
 Sessions are captured automatically: with the shipped config, opening and closing a chat exports the conversation as a markdown file to `system/exports/` (filenames start with `chat_`). You can also export mid-session via `Cmd/Ctrl+P` → **Agent Client: Export chat**.
 
-Exports are visible raw material for PI review. They are not canonical notes and they do not enter Inbox or fleeting triage automatically. When a conversation contains something durable, promote the insight yourself: create a fleeting note, claim note, source note annotation, or project scratch entry in the right visible folder.
+Exports are visible raw material for PI review. They are not canonical notes and they do not enter Inbox or fleeting triage automatically. When a conversation contains something durable, promote the insight yourself from the appropriate space: create a fleeting note, claim note, source note annotation, or project scratch entry with the matching command or visible Base view.
 
 Three folders to **never** point `exportSettings.defaultFolder` at:
 

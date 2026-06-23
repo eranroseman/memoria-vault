@@ -22,7 +22,10 @@ Create a `.canvas` file in your project folder, `projects/<slug>/` ([Start a wri
 
 **2. Collect the notes.**
 
-Drag the relevant claim notes from the file explorer onto the canvas. A hub's `members` list is the natural shopping list. Include Catalog paper entities for key sources if helpful, but primarily use claims — they already state the argument in your words.
+Open the Knowledge space's Claims view and use the relevant claim names from the
+hub's `members` list as the shopping list. Add those claim notes to the canvas;
+include Catalog paper entities for key sources if helpful, but primarily use
+claims — they already state the argument in your words.
 
 **3. Arrange spatially.**
 

@@ -17,7 +17,11 @@ Think a source through with the Co-PI before writing a claim. The Co-PI is the o
 
 **1. Pick a source from the discuss queue.**
 
-Open `system/dashboards/discuss-queue.md` — source notes at `lifecycle: provisional`, the read-not-yet-distilled stage where the discuss queue picks a note up ([Frontmatter fields](../../reference/frontmatter.md)). The Library space surfaces this queue. Or just open the source note you want to think through.
+Open the Library space and use the **Discuss queue** view — source notes at
+`lifecycle: provisional`, the read-not-yet-distilled stage where the queue picks
+a note up ([Frontmatter fields](../../reference/frontmatter.md)). Or open a
+source note from the Library space if you already know which one you want to
+think through.
 
 **2. Orient yourself first.**
 

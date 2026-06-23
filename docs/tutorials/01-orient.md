@@ -17,7 +17,7 @@ parent: Tutorials
 
 Memoria is a loop, not a pipeline: you **accumulate** (turn what you read into durable, connected, traceable knowledge) and you **produce** (write something defensible from it). Built for real, a corpus dense enough to write from is weeks of reading — too long to wait before you see the point. So you start at the end: you open a project over a corpus that's *already built* and read its map, so you know the shape of what you're aiming at before you lift a finger to build it.
 
-You converse with **one** agent, the **Co-PI**, in the Agent Client pane (`Cmd/Ctrl-P` → **Agent Client: Open chat view**): it questions your thinking, explains the system, and can carry out work for you too. But the durable tasks — mapping, drafting, verifying, capturing — each have a **direct command** in the palette, and that command is the quickest, most precise way to run them; each hands its work to a background lane you never address directly. So you reach for the command first, and turn to the Co-PI whenever you'd rather think it through or simply ask.
+You converse with **one** agent, the **Co-PI**, in the Agent Client pane (`Cmd/Ctrl-P` → **Agent Client: Open chat view**): it questions your thinking and explains the system. Durable tasks — mapping, drafting, verifying, capturing — each have a **direct command** in the palette, and that command is the quickest, most precise way to run them; each hands its work to a background lane you never address directly. Reach for the command first, and turn to the Co-PI when you want help shaping the request or thinking through the result.
 
 ## Step 1 — Load the sample vault
 
@@ -37,7 +37,11 @@ A project is where producing happens — and opening one is how you name what yo
 
 (Write one concrete, writable deliverable, not a vague area like "learn about X.")
 
-The command scaffolds `projects/<slug>/`. Open any file under it and run **Memoria: refresh project gate** — it reads your graph's maturity, saturation, and open gaps into `project-gate-index.md`. Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md). This goal is the line you'll come back to in Tutorial 04 when you draft.
+The command creates the project records shown in the Project space. Open the
+project from that space and run **Memoria: refresh project gate** — it reads
+your graph's maturity, saturation, and open gaps into `project-gate-index.md`.
+Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).
+This goal is the line you'll come back to in Tutorial 04 when you draft.
 
 ---
 
@@ -60,7 +64,7 @@ That raises a **`map`** task for the Librarian's map lane, which builds the type
 
 ## What you have
 
-- A project under `projects/<slug>/`, its deliverable naming your goal
+- A project visible in the Project space, its deliverable naming your goal
 - A coverage map of a dense, writable corpus — and the **gap card** it surfaced, kept for Tutorial 06
 - The vocabulary you'll build with — *claim, cluster, gap* — met in context, on a finished example, before you make your own
 

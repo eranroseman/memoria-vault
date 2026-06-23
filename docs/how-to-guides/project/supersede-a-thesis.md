@@ -18,7 +18,8 @@ Pivot a project thesis without erasing the old argument trail. Supersession mark
 
 **1. Open the active thesis.**
 
-Open `projects/<slug>/thesis.md` or the current thesis named by `active_thesis` in `projects/<slug>/project.md`. The command only runs from a thesis note under `projects/`.
+Open the project from the Project space, then open the thesis named by
+`active_thesis`. The command only runs from a thesis note in the project.
 
 **2. Run the command.**
 
@@ -28,7 +29,7 @@ The command creates a new `projects/<slug>/thesis-<replacement>.md` note at `lif
 
 **3. Refresh the project gate.**
 
-Open any file under the project and run `Memoria: refresh project gate`. The refreshed `project-gate-index.md` recalculates impact, saturation, open risks, and on-path relations from the new active thesis.
+Open the project from the Project space and run `Memoria: refresh project gate`. The refreshed `project-gate-index.md` recalculates impact, saturation, open risks, and on-path relations from the new active thesis.
 
 **4. Triage the alert.**
 

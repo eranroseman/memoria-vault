@@ -42,7 +42,7 @@ The required plugins:
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 | `homepage` | Opens `spaces/inbox.md` on launch |
 | `buttons` | Renders command buttons in note templates |
-| `portals` | Replaces the raw file tree with curated folder navigation |
+| `portals` | Provides curated shortcuts to the space/Bases surfaces |
 | `memoria-inspector` | Shows the read-only Memoria Inspector sidebar |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) for the load-bearing settings of each.
@@ -88,7 +88,7 @@ Memoria's linting is the Linter **operation** — deterministic Python with a da
 - Modal Forms lists the six Memoria capture forms
 - The Homepage plugin opens `spaces/inbox.md`
 
-Once Hermes is set up, the working loop is: open the Co-PI pane (the Agent Client pane, or `hermes -p memoria-copi acp`), then use the space nav row to open **Library** for the reading pipeline.
+Once Hermes is set up, the working loop is: use the space nav row to open **Library** for the reading pipeline, use `Memoria:` commands for actions, and open the Co-PI pane when you want conversational help.
 
 ## Related
 

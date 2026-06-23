@@ -31,7 +31,7 @@ bundled. Updater automation remains deferred by
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
 | cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, and resolution do not require a palette round trip. |
 | modalforms | `modalforms` | Provides structured in-Obsidian forms for capture and Project flows, including controlled `research_area`, `methodology`, and `scope_topics` fields sourced from `system/vocabulary.md`. |
-| portals | `portals` | Replaces the raw left file tree with curated folder portals while retaining the core file explorer as fallback. |
+| portals | `portals` | Provides curated shortcuts to vault homes; spaces and Bases remain the primary navigation surface. |
 | obsidian-citation-plugin | `obsidian-citation-plugin` | Inserts citations from `.memoria/memoria.bib`; creates paper notes from the configured template. (Zotero-side: see [Zotero plugins](zotero-plugins.md).) |
 | memoria-inspector | `memoria-inspector` | Memoria-authored read-only sidebar pane for board counts, WIP depth, recent audit entries, and the Linter verdict band ([ADR-84](../adr/84-read-only-obsidian-inspector.md)). |
 | callout-manager | `callout-manager` | Defines `[!brief]`, `[!suggestions]`, `[!verification]` callout types. |

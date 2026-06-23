@@ -8,7 +8,7 @@ permalink: /how-to-guides/project/
 
 # Project
 
-Steer an inquiry to output — scope, frame, draft, verify, and export a deliverable. Performed inside Obsidian via the Co-PI pane and the Inbox; export runs in the terminal. The Project space gives the work a bounded project folder, active thesis, and saturation signal.
+Steer an inquiry to output — scope, frame, draft, verify, and export a deliverable. Performed inside Obsidian via the Project space, Inbox, and `Memoria:` task commands; the Co-PI pane helps shape unclear handoffs. Export runs in the terminal.
 
 | Guide | What it covers |
 | --- | --- |

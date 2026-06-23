@@ -6,7 +6,7 @@ nav_order: 5
 
 # Draft with the Writer
 
-Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — use the direct palette command or ask the Co-PI to route the task, then the board dispatches it and the result resurfaces through the Inbox.
+Delegate prose and outline work to the Writer's **`draft`** lane. Drafting is human-led — the Writer turns your chosen framing and claims into candidate prose; the argument assembly, and every edit that matters, is yours. The Writer is a background lane: you never chat with it — use the direct palette command when the request is clear, or use the Co-PI to shape an unclear handoff before it becomes a board card.
 
 ## Prerequisites
 

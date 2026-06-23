@@ -8,19 +8,19 @@ nav_order: 1
 
 Stand up the bounded Project space a writing project draws from.
 
-Use this when a cluster has become more than a topic: you have a question, an initial thesis or survey intent, and enough claims/sources that it needs a project folder instead of loose scratch.
+Use this when a cluster has become more than a topic: you have a question, an initial thesis or survey intent, and enough claims/sources that it needs a Project space record instead of loose scratch.
 
 ## Steps
 
 **1. Build the synthesis surface.** Distill claims into `notes/claims/` and gather the cluster under a hub in `notes/hubs/` — [Tutorial 04: Draft a section from your claims](../../tutorials/04-draft-a-section-from-your-claims.md) walks the whole arc.
 
-**2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title, slug, scope topics, PICO-style inquiry fields, FINER notes, and output mode. The command scaffolds `projects/<slug>/project.md`, `projects/<slug>/thesis.md`, and `code/`, `drafts/`, and `exports/` folders.
+**2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title, slug, scope topics, PICO-style inquiry fields, FINER notes, and output mode. The command creates the project and thesis records shown in the Project space, plus the project scratch areas used by code, drafts, and exports.
 
 **3. Check readiness.** Delegate a `map` task ([Assess your corpus](assess-your-corpus.md)) and relate the resulting claims to the active thesis with `supports` / `contradicts` links. A hub with several mutually linked claims is the tell that a cluster is dense enough to write from.
 
-**4. Refresh the gate.** Open a file under `projects/<slug>/` and run `Memoria: refresh project gate`. The operation updates `project-gate-index.md` with graph maturity, saturation state, open high-impact gaps, and advisory findings.
+**4. Refresh the gate.** Open the project from the Project space and run `Memoria: refresh project gate`. The operation updates `project-gate-index.md` with graph maturity, saturation state, open high-impact gaps, and advisory findings.
 
-**5. Sketch and draft.** Lay the argument out spatially ([Use canvas for argument mapping](use-canvas-for-argument-mapping.md)), delegate outline and section work to the Writer's `draft` lane ([Draft with the Writer](draft-with-writer.md)), and keep project scratch under `projects/<slug>/`.
+**5. Sketch and draft.** Lay the argument out spatially ([Use canvas for argument mapping](use-canvas-for-argument-mapping.md)), delegate outline and section work to the Writer's `draft` lane ([Draft with the Writer](draft-with-writer.md)), and keep scratch attached to the project so it stays visible from the Project space.
 
 ## Verify
 
