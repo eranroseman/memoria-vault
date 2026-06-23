@@ -7,26 +7,41 @@ permalink: /tutorials/
 
 # Tutorials
 
-One guided arc that takes you from a working vault to a **verified, cited paragraph you'd defend** — in a single sitting. Each step teaches by doing: you follow concrete steps in Obsidian, in conversation with the Co-PI, and end with something real in your vault.
+One guided arc that takes you from a working vault to a **verified, cited paragraph you'd defend** — across three short sessions, about a focused day in total. Each step teaches by doing: you follow concrete steps in Obsidian, in conversation with the Co-PI, and end with something real in your vault.
 
 **Before you start:** these assume Memoria is installed and the Co-PI is answering. If it isn't, run the [Quickstart](../how-to-guides/setup/quickstart.md) first — installing Memoria is a one-time setup, separate from learning to use it.
 
-You converse with **one** agent throughout: the Co-PI, in the Agent Client pane. It questions your thinking, explains the system, and delegates durable work to background lanes — you never address a lane directly.
+You converse with **one** agent throughout: the Co-PI, in the Agent Client pane. It questions your thinking and explains the system; the durable work you trigger yourself from the command palette, and you can always ask the Co-PI as well.
 
 ## How the path is shaped
 
-Memoria is a loop, not a pipeline: producing and accumulating feed each other. But built for real, a corpus dense enough to write from is weeks of reading — too long to wait before the point is visible. So the arc **starts at the destination**: you open a project over a small **sample vault** that is already part-built, read its coverage map, and only then build toward it — finishing the sample's deliberately-unfinished pieces and threading in a source of your own. By the end you have turned the loop once and graduated onto your own library and project. That is how one sitting reaches a payoff that normally takes weeks to earn.
+Memoria is a loop, not a pipeline: producing and accumulating feed each other. But built for real, a corpus dense enough to write from is weeks of reading — too long to wait before the point is visible. So the arc **starts at the destination**: you open a project over a small **sample vault** that is already part-built, read its coverage map, and only then build toward it — finishing the sample's deliberately-unfinished pieces and threading in a source of your own. By the end you have turned the loop once and graduated onto your own library and project. That is how a focused day — three short sessions — reaches a payoff an empty vault would take weeks to earn.
 
 ## The arc
+
+Seven short tutorials in three sessions. Do a session, take a break, come back — each ends at a natural stopping point.
+
+### Session 1 — Build a starter corpus *(~1.5–2 hours)*
 
 | # | Tutorial | What you'll do | What you end with |
 | --- | --- | --- | --- |
 | 01 | [See what you're building](01-orient.md) | Load the sample, open a project, and read its narrated coverage map — a dense cluster and the one gap it doesn't cover. | A project naming your goal, and the destination in view |
 | 02 | [Bring in your first source](02-bring-in-your-first-source.md) | Capture a real source of your own; judge its candidate card; write its source note in your own words. | Your own Catalog entity and source note |
 | 03 | [Build claims and connect them](03-build-claims-and-connect-them.md) | Study a worked claim, finish the sample's half-built claim and link, then distill your own source and wire it in. | A connected claim cluster, dense enough to write from |
+
+### Session 2 — Produce a cited section *(~1–1.5 hours)*
+
+| # | Tutorial | What you'll do | What you end with |
+| --- | --- | --- | --- |
 | 04 | [Draft a section from your claims](04-draft-a-section-from-your-claims.md) | Decide what the section can stand behind, then draft it with citations bound to sources you hold. | Your goal from 01, in cited prose |
 | 05 | [Verify it holds](05-verify-it-holds.md) | Ask for a verification pass; read the finding-first cards; fix or trust. | A draft you would defend |
-| 06 | [Close the loop and make it your own](06-close-the-loop.md) | Hand the gap back to discovery — one full turn of the loop — then graduate: archive the sample, import your library, open your real project. | A loop you keep turning, on your own material |
+
+### Session 3 — Close the loop and graduate *(~45 minutes)*
+
+| # | Tutorial | What you'll do | What you end with |
+| --- | --- | --- | --- |
+| 06 | [Close the loop](06-close-the-loop.md) | Hand the gap your draft exposed back to discovery — one full turn of the loop. | A loop you keep turning |
+| 07 | [Make it your own](07-make-it-your-own.md) | Name the weekly-review rhythm, then graduate: archive the sample, import your library, open your real project. | The scaffold gone, your own vault running |
 
 ## The sample vault
 

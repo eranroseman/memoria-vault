@@ -5,6 +5,8 @@ parent: Tutorials
 
 # Tutorial 04: Draft a section from your claims
 
+*Session 2 of 3 · Produce a cited section.*
+
 **You will end with:** the goal you named in Tutorial 01, realized as a short, cited section — drafted from your own claim and the sample's worked claims, with every citation bound to a source you actually hold.
 
 **Time:** 30–45 minutes.
@@ -62,7 +64,7 @@ Iterate by re-delegating a corrected spec, not by nagging the same card; small f
 - Your Tutorial 01 goal realized: a ~200-word section, drafted from your own claim and the sample's worked claims, every citation bound to a source you hold and traceable through its claim to a real paper
 - The gap card still in your Inbox, now named in the prose — kept for Tutorial 06
 
-This is the *Produce* payoff the dense cluster bought you: cited prose, in one sitting, from a corpus that normally takes weeks of reading to build.
+This is the *Produce* payoff the dense cluster bought you: cited prose, in a single session, from a corpus that normally takes weeks of reading to build.
 
 ---
 

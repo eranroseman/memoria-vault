@@ -5,6 +5,8 @@ parent: Tutorials
 
 # Tutorial 03: Build claims and connect them
 
+*Session 1 of 3 · Build a starter corpus.*
+
 **You will end with:** the sample's half-built cluster finished — one stubbed claim grounded in its source and one missing link made — plus a claim of your own distilled from your source and wired into the graph. A connected cluster dense enough to write from.
 
 **Time:** 30–45 minutes.

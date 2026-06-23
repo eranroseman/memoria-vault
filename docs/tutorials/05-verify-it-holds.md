@@ -5,6 +5,8 @@ parent: Tutorials
 
 # Tutorial 05: Verify it holds
 
+*Session 2 of 3 · Produce a cited section.*
+
 **You will end with:** an independent verification pass over your draft, the finding-first cards it raises read and acted on, and a short section you would defend in front of someone who disagrees with you.
 
 **Time:** 30–45 minutes.
@@ -79,8 +81,8 @@ One check you never run: the retraction sweep runs on cron behind you and raises
 
 ## What's next
 
-[Tutorial 06: Close the loop and make it your own](06-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to Accumulate, and meet the weekly review that keeps the whole loop turning.
+[Tutorial 06: Close the loop](06-close-the-loop.md) — let the gap your draft exposed become a discovery that sends you back to read again: one full turn of the loop.
 
 ---
 
-← [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) · [Tutorial 06: Close the loop and make it your own](06-close-the-loop.md) →
+← [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) · [Tutorial 06: Close the loop](06-close-the-loop.md) →
