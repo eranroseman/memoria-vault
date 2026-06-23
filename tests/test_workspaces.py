@@ -83,7 +83,11 @@ def test_single_reset_workspace_ships_and_opens_inbox():
     ]
     assert main_files == ["spaces/inbox.md"]
     assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
-    assert [leaf["type"] for leaf in _leaves(ws["left"])] == ["file-explorer"]
+    # Left pane is the navigation rail (ADR-114): the pinned nav note ahead of
+    # the file-explorer escape hatch.
+    left = list(_leaves(ws["left"]))
+    assert [leaf["type"] for leaf in left] == ["markdown", "file-explorer"]
+    assert left[0]["state"]["file"] == "_nav.md"
 
 
 def test_homepage_opens_inbox_space_on_startup():

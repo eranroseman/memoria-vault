@@ -35,6 +35,18 @@
             "type": "tabs",
             "children": [
               {
+                "id": "memoria-left-nav",
+                "type": "leaf",
+                "state": {
+                  "type": "markdown",
+                  "state": {
+                    "file": "_nav.md",
+                    "mode": "preview",
+                    "source": false
+                  }
+                }
+              },
+              {
                 "id": "memoria-left-files",
                 "type": "leaf",
                 "state": {
@@ -47,7 +59,7 @@
           }
         ],
         "direction": "horizontal",
-        "width": 320
+        "width": 280
       },
       "right": {
         "id": "memoria-right-root",
