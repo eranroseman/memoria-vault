@@ -1,11 +1,11 @@
 ---
-title: Note types and epistemic roles
+title: Document types and epistemic roles
 parent: Knowledge
 grand_parent: Explanation
 nav_order: 1
 ---
 
-# Note types and epistemic roles
+# Document types and epistemic roles
 
 The vault's types are not arbitrary — each one answers a different question about who created the content, from whose perspective, and what status it has in the knowledge system. The deepest split is between the **Catalog** (structured entity records, built mechanically) and **Notes** (prose, written by someone). Understanding that split matters more than memorizing the type list.
 
@@ -24,13 +24,13 @@ The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliograp
 
 ## The six entity types
 
-All in `catalog/`, all operation-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Note types](../../reference/note-types.md#catalog-entities-6).
+All in `catalog/`, all operation-built, all Base-backed: the bibliographic records — `paper`, `person`, `organization`, `venue`, `dataset`, `repository` — each keyed on stable IDs (a DOI, an ORCID, an ISSN) and carrying `relationships`. The exhaustive field lists live in [Document types](../../reference/document-types.md#catalog-entities-6).
 
 An entity record never contains anyone's reading of the source — that is what a source *note* is for. The same paper is therefore two files: the `paper` entity (the bibliographic fact) and, if the PI reads it, a `source` note in `notes/sources/` that points back at the entity.
 
 ---
 
-## The five note types
+## The five note-document types
 
 ### Source notes: describing the world
 
@@ -40,7 +40,7 @@ A source note is one prose type regardless of whether the entity behind it is a 
 
 ### Claim notes: the synthesis atom
 
-A **`claim`** is one durable assertion in the PI's own words, linked to the sources that support it. It is the most important note type and the one that distinguishes a research vault from a document store. A vault full of source notes is a bibliography with annotations; a vault with interlinked claims is a knowledge graph the PI can write from.
+A **`claim`** is one durable assertion in the PI's own words, linked to the sources that support it. It is the most important document type and the one that distinguishes a research vault from a document store. A vault full of source notes is a bibliography with annotations; a vault with interlinked claims is a knowledge graph the PI can write from.
 
 Claims live in `notes/claims/` — a **review-gated zone** (🔒): agents draft claim *stubs* into staging, but the canonical claim is human-made. The discipline is atomicity — one claim per note, Luhmann's one-idea-per-slip rule — because wikilinks citing a multi-claim note are ambiguous, and a multi-claim note cannot be cleanly superseded when evidence changes. The test: if the title contains an "and" doing real conceptual work, it is two notes.
 
@@ -52,13 +52,13 @@ A **`hub`** is a curated, annotated view of an area: what it is about, what matt
 
 ### Fleeting and index notes
 
-A **`fleeting`** note is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. An **`index`** note is a register — Luhmann's entry-point list into the web.
+A **fleeting note** (`type: fleeting`) is raw capture — a thought, a URL, a quote — recorded before deciding what to do with it (`origin:` records whether a human or an agent wrote it). Fleeting notes are either distilled or archived; they don't persist as knowledge. An **`index`** note is a register — Luhmann's entry-point list into the web.
 
 ---
 
 ## The five card types
 
-The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge, and they sort into three shapes by epistemic role: **proposals** to judge (`candidate`, `gap`), **verification cards** to adjudicate (`flag`, `alert`), and a **work prompt** for work waiting on the PI (`work-prompt`). The exhaustive list — required fields, who raises each — lives in [Note types](../../reference/note-types.md#inbox-cards-5).
+The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge, and they sort into three shapes by epistemic role: **proposals** to judge (`candidate`, `gap`), **verification cards** to adjudicate (`flag`, `alert`), and a **work prompt** for work waiting on the PI (`work-prompt`). The exhaustive list — required fields, who raises each — lives in [Document types](../../reference/document-types.md#inbox-cards-5).
 
 A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/card-schema.md).
 
@@ -80,4 +80,4 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 - How material crosses the review gate: [Why promotion is gated](promotion-model.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
 - The card format in depth: [The honesty card](../kanban-board/card-schema.md)
-- Complete type reference (fields, templates): [Note types](../../reference/note-types.md)
+- Complete type reference (fields, templates): [Document types](../../reference/document-types.md)

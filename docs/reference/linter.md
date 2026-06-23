@@ -15,10 +15,10 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
-| `schema-check` | MEDIUM | A typed note failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
+| `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
-| `misplaced-note` | MEDIUM / LOW | A typed note outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · spaces · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
+| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · spaces · system`. Skips work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `src/` ships no empty dirs. |
@@ -45,7 +45,7 @@ python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--t
 
 ## The pre-commit hook
 
-The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed note against its schema via the shared loader (`src/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The commit gate ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`src/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

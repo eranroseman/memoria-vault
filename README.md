@@ -92,7 +92,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 ## Documentation
 
 Start in [`docs/`](docs). New here? Begin with
-[Set up and pick your path](docs/tutorials/00-set-up-and-pick-your-path.md), or jump to the
+[Tutorial 01: See what you're building](docs/tutorials/01-orient.md), or jump to the
 [Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) four-quadrant split:

@@ -91,7 +91,7 @@ def test_detectors():
                 "Example link: [[placeholder-target]]\n",
                 encoding="utf-8",
             )
-            # vault-root navigation page: has frontmatter, no type -> NOT a typed note
+            # vault-root navigation page: has frontmatter, no type -> NOT a typed document
             (v / "home.md").write_text(
                 "---\ncreated: 2026-01-01\ncssclasses:\n  - dashboard\n---\n# Home\n",
                 encoding="utf-8",

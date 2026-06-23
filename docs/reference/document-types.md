@@ -1,11 +1,11 @@
 ---
-title: Note types
+title: Document types
 parent: Reference
 ---
 
-# Note types
+# Document types
 
-The 26 note types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
+The 26 document types by category, with their folder homes, lifecycle subsets, and required fields. **The schemas are authoritative:** every type is defined by one YAML file under `src/.memoria/schemas/types`, and the type → folder map lives in `src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)). The Linter, the pre-commit hook, the policy MCP, and the installer all read those files — this page is the human-readable view, and the schemas win on any disagreement. For field semantics see [Frontmatter fields](frontmatter.md).
 
 The 26 types group into: **6 entities** (catalog), **3 project types**, **5 notes**, **5 cards** (inbox), **4 system types** (pattern, eval task, worklist item, and worker card), and **3 navigation surfaces** (`space`, `queue`, and `maintenance`).
 
@@ -52,6 +52,8 @@ The PI's knowledge, carrying **authored** `links:` edges (the field contract is 
 | `hub` | `notes/hubs/` | **yes** | `current → archived` | `title`, `topic` | `members`, `links` |
 | `index` | `notes/indexes/` | no | `current → archived` | `title` | — |
 
+`hub` and `index` are both navigation aids, but they are not substitutes. A `hub` is a curated synthesis surface: it explains an area, selects members, and lives behind the review gate. An `index` is a lightweight entry-point register under `notes/indexes/`: useful for lists and signposts, but not a claim that the set has been synthesized or curated.
+
 `maturity` is a claim **property, never a gate** — its values and the universal lifecycle chain are specified in [Frontmatter fields](frontmatter.md). Claim template version 2 includes `schema_version: 2`; query and write-assist surfaces exclude claims with non-empty `superseded_by` unless the task is explicitly about supersession history.
 
 ---
@@ -66,7 +68,9 @@ The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-
 | **Verification cards** | `flag`, `alert` | Lead with the finding and carry the verdict. A `flag` is a pointed finding (e.g. a retraction); an `alert` is a standing system warning. |
 | **Work prompts** | `work-prompt` | An action and a pointer, never a verdict — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). |
 
-See [Inbox card fields](inbox-card-fields.md) for the complete per-type field contract (required, `required_any`, optional, and the shared `raised_by` / `loudness` fields). Operations and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
+Use `flag` for a bounded verification finding that needs a decision about one object or assertion: retraction, extraction conflict, link contradiction, or failed invariant. Use `alert` for a standing warning about a condition the PI may need to monitor over time: structural drift, backlog health, or repeated runtime failure. Both are Signal documents and lead with the finding; neither is a proposal.
+
+See [Inbox card fields](inbox-card-fields.md) for the complete per-document-type field contract (required, `required_any`, optional, and the shared `raised_by` / `loudness` fields). Operations and lanes never invent card formats — every card goes through the shared writer `src/.memoria/operations/lib/inbox.py`.
 
 ---
 

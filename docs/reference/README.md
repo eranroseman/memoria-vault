@@ -17,7 +17,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
 | [Inbox card fields](inbox-card-fields.md) | Field-level contract for candidate, gap, flag, alert, and work-prompt cards |
-| [Note types](note-types.md) | The 26 note types: folder, template, lifecycle, promotion map |
+| [Document types](document-types.md) | The 26 document types: folder, template, lifecycle, promotion map |
 | [Vocabulary](vocabulary.md) | Controlled values for `research_area`, `methodology`, and claim `topics` |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |

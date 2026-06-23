@@ -14,7 +14,7 @@ Every action the system can perform, with its performer. Three performer kinds: 
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Tier-0 capture | ingest operation (`ingest_paper.py`) | Extracts citekey identity and frontmatter from local BibTeX — no network. |
-| Tier-0 routing | ingest operation (`ingest_paper.py`) | Routes the entry type (article / book / software / dataset) to its catalog home and note type ([Ingest routing](ingest.md)). |
+| Tier-0 routing | ingest operation (`ingest_paper.py`) | Routes the entry type (article / book / software / dataset) to its catalog home and document type ([Ingest routing](ingest.md)). |
 | Resolve | ingest operation (`resolve_merge.py`) | Queries Semantic Scholar, OpenAlex, Crossref, and PubMed/NCBI to resolve identity, authors, citations, biomedical identifiers, and enrichment metadata. |
 | Merge | ingest operation (`resolve_merge.py`) | Merges per-field best-source-wins across the four sources with provenance, and scores identity disagreement. |
 | Classify | ingest operation (`classify.py`) | Proposes `research_area` / `methodology` from OpenAlex topics, with a confidence floor and near-tie flagging; audited to `system/logs/classify.jsonl`. |

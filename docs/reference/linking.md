@@ -47,7 +47,7 @@ Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub cr
 
 ## Authored links (`links:` map)
 
-Notes carry **authored** `links:` — the PI's thinking ([ADR-52](../adr/52-links-vs-relationships.md)). The `links:` vs `relationships` field contract (which note types carry each, and the authored-vs-given split) is specified in [Frontmatter fields](frontmatter.md). Available on `source`, `claim`, and `hub` notes; agent-proposed candidates are reviewed before they become canonical.
+Notes carry **authored** `links:` — the PI's thinking ([ADR-52](../adr/52-links-vs-relationships.md)). The `links:` vs `relationships` field contract (which document types carry each, and the authored-vs-given split) is specified in [Frontmatter fields](frontmatter.md). Available on `source`, `claim`, and `hub` notes; agent-proposed candidates are reviewed before they become canonical.
 
 ```yaml
 links:
@@ -73,7 +73,7 @@ Catalog entities carry **given** `relationships:` instead, written by the ingest
 
 ## Cross-link topology
 
-Expected link graph by note type:
+Expected link graph by document type:
 
 ```text
 paper ({citekey})

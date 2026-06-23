@@ -33,7 +33,7 @@ if str(_RUNTIME_ROOT) not in sys.path:
 
 SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = ("inbox/", "system/logs/", "system/board/")
-# A typed note legitimately leaves its type-home only while it is work-in-flight
+# A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
@@ -70,10 +70,10 @@ KNOWN_TOP_DIRS = {
     "spaces",
     "system",
 }
-# Scaffolding, not authored notes: skeleton folders, assets, and the note
-# templates (raw notes full of placeholder [[links]]). Detectors that assert
-# things about *real* notes (broken wikilinks, type schema) skip these. Templates
-# templates live in system/templates/ (ADR-47);
+# Scaffolding, not authored documents: skeleton folders, assets, and the
+# templates (raw Markdown full of placeholder [[links]]). Detectors that assert
+# things about *real* documents (broken wikilinks, type schema) skip these.
+# Templates live in system/templates/ (ADR-47);
 # keep this the single source of truth so the skip can't drift from the move.
 SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns/")
 
@@ -377,7 +377,7 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
         if is_untyped_infra(rp):  # system infra isn't typed knowledge
             continue
         if "/" not in rp:  # vault-root pages (home, troubleshooting,
-            continue  # research-focus) are navigation, not typed notes
+            continue  # research-focus) are navigation, not typed documents
         fm = parse_frontmatter(read(p))
         if not fm:
             continue
@@ -618,7 +618,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
 
 
 def misplaced_note(vault: Path) -> list[Finding]:
-    """A typed note (or stray top-level folder) outside its schema home.
+    """A typed document (or stray top-level folder) outside its schema home.
 
     Report-only, mirroring fama-exposure / broken-wikilinks discipline -- never
     auto-move; the human decides. Skips scaffolding (templates/assets/skeleton),

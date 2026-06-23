@@ -80,4 +80,4 @@ Five deterministic **operations** (ingest · search · clustering · sweeps · L
 
 [**Explanation**](explanation/README.md) — Why Memoria is built the way it is. Architecture · Knowledge model · Profiles · Workflows · Obsidian surfaces.
 
-[**Reference**](reference/README.md) — Exact values, schemas, commands. Frontmatter · Note types · Profiles · Hermes CLI · Policy MCP · Failure modes · Glossary.
+[**Reference**](reference/README.md) — Exact values, schemas, commands. Frontmatter · Document types · Profiles · Hermes CLI · Policy MCP · Failure modes · Glossary.

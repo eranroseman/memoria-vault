@@ -56,7 +56,7 @@ the PI chooses. Sparring partner, not oracle (ADR-48).
 4. **Hold the door open.** Recommend only if asked; even then, the recommendation
    carries its argument-against. The chosen branch's next step goes out via
    `route-task`; if the PI wants the branches kept, suggest delegating a
-   fleeting-note capture — you write nothing yourself.
+   fleeting capture — you write nothing yourself.
 
 ## Output contract
 

@@ -62,7 +62,7 @@ The right response to a full queue is not to automate review but to let the WIP 
 
 **Explanation**
 
-- The types and zones involved: [Note types and epistemic roles](note-types.md)
+- The types and zones involved: [Document types and epistemic roles](document-types.md)
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/card-schema.md)
 - The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)

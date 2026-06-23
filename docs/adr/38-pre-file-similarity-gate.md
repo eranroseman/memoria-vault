@@ -68,4 +68,4 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 - **Pairs with:** [ADR-39 — note-acceptance checklists](39-note-acceptance-checklists.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
 - **Profiles:** [Linter](../explanation/operations/README.md), [Mapper](../explanation/profiles/librarian.md)
-- **Note types gated:** [claim-note, reference-note](../reference/note-types.md)
+- **Document types gated:** [claim-note, reference-note](../reference/document-types.md)

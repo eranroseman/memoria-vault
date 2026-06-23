@@ -2,7 +2,7 @@
 
 This directory owns the machine-readable vault contract.
 
-- `types/` defines frontmatter by note type.
+- `types/` defines frontmatter by document type.
 - `folders.yaml` owns type homes, gated prefixes, and the empty-folder skeleton.
 - `calibration.yaml` owns shared thresholds.
 

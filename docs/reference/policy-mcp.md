@@ -193,4 +193,4 @@ It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin
 - The lane ceilings in table form: [Profile capabilities](profiles.md)
 - Audit-log substrate and retention: [Memory substrates](memory.md)
 - The ceiling check on delegation payloads: [Kanban board reference](kanban-board.md)
-- The gated folder map's single source: [Note types](note-types.md)
+- The gated folder map's single source: [Document types](document-types.md)

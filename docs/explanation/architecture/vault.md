@@ -33,11 +33,11 @@ The top level is organized by **category** — one content kind per folder, no l
 
 ## Types and their homes
 
-Each category houses a fixed set of types — Catalog entity records, the prose Notes (fleeting, source, claim 🔒, hub 🔒, index), project work artifacts, Inbox cards, Space notes, and System infrastructure. The architectural distinction is the trust posture each carries: Catalog frontmatter is **given facts** built by ingest and **not gated** (one escape valve — low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)), while the claim and hub are the PI's **judgment**. The full type roster and its folder homes are in [Note types](../../reference/note-types.md).
+Each category houses a fixed set of types — Catalog entity records, the prose Notes (fleeting, source, claim 🔒, hub 🔒, index), project work artifacts, Inbox cards, Space notes, and System infrastructure. The architectural distinction is the trust posture each carries: Catalog frontmatter is **given facts** built by ingest and **not gated** (one escape valve — low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)), while the claim and hub are the PI's **judgment**. The full type roster and its folder homes are in [Document types](../../reference/document-types.md).
 
 ## Gated zones
 
-The review-gated zones 🔒 are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment. Which prefixes are gated is owned by [Note types](../../reference/note-types.md).
+The review-gated zones 🔒 are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment. Which prefixes are gated is owned by [Document types](../../reference/document-types.md).
 
 ## Archived is a state, not a folder
 

@@ -64,4 +64,4 @@ The `memoria-sweeps` cron (every 15 minutes) detects captures that logged an int
 - Next step: [Classify a source](classify-a-source.md)
 - If the citekey isn't found: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - The pipeline behind the card: [Ingest routing](../../reference/ingest.md)
-- The entity and card schemas: [Note types](../../reference/note-types.md)
+- The entity and card schemas: [Document types](../../reference/document-types.md)

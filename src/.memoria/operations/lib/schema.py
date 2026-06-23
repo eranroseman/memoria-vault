@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """schema — loader + validator for the canonical type schemas (ADR-49/ADR-50).
 
-`.memoria/schemas/` is the single source for the vault's type vocabulary
+`.memoria/schemas/` is the single source for the vault's document-type vocabulary
 (ADR-47): per-type frontmatter schemas (`types/<type>.yaml`), the type→folder
 map (`folders.yaml`), and the calibrated thresholds (`calibration.yaml`).
 This module is the one reader every consumer shares — the Linter, the
@@ -29,7 +29,7 @@ def _schemas_dir(schemas_dir: Path | None = None) -> Path:
 
 
 def load_types(schemas_dir: Path | None = None) -> dict[str, dict]:
-    """Return {type name: schema dict} for every types/<type>.yaml."""
+    """Return {document type: schema dict} for every types/<type>.yaml."""
     out: dict[str, dict] = {}
     for f in sorted((_schemas_dir(schemas_dir) / "types").glob("*.yaml")):
         data = yaml.safe_load(f.read_text(encoding="utf-8"))
@@ -110,7 +110,7 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
 
 
 def validate_frontmatter(fm: dict, schema: dict) -> list[str]:
-    """Validate one note's frontmatter against its type schema.
+    """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
     Unknown extra fields are allowed — the schema constrains, it does not enumerate.

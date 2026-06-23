@@ -1,11 +1,11 @@
 ---
 name: schema-change
-description: Implement or review changes to Memoria note schemas, folder homes, gated prefixes, calibration, templates, Bases, dashboards, linter validation, and installer skeleton without cross-file drift.
+description: Implement or review changes to Memoria document schemas, folder homes, gated prefixes, calibration, templates, Bases, dashboards, linter validation, and installer skeleton without cross-file drift.
 ---
 
 # Schema change
 
-Use this skill when adding or changing a note type, frontmatter field, enum,
+Use this skill when adding or changing a document type, frontmatter field, enum,
 folder home, gated/transient prefix, skeleton directory, or calibrated threshold.
 
 ## Authority and maps
@@ -36,7 +36,7 @@ Read:
    - Linter/pre-commit behavior
    - Installer skeleton and golden-copy behavior
    - Policy/pattern fallback constants when gated prefixes change
-   - Frontmatter, note-type, layout, and workflow documentation
+   - Frontmatter, document-type, layout, and workflow documentation
 4. Preserve invariants:
    - Every type has exactly one home and a matching type literal.
    - Lifecycle values are an ordered subset of the universal chain.

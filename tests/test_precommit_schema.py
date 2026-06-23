@@ -1,4 +1,4 @@
-"""The D50 pre-commit hook: staged typed notes must pass their schema."""
+"""The D50 pre-commit hook: staged typed documents must pass their schema."""
 
 from pathlib import Path
 

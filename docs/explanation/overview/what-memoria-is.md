@@ -23,7 +23,7 @@ Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking an
 
 **Personal** — thinking is private and separate from communication; notes stay unfiltered, preserving raw reasoning before audience-aware editing sanitizes it. The design assumes one human who owns judgment: review decisions, synthesis choices, and scope priorities all belong to that researcher. This is not a team tool.
 
-**Opinionated** — it enforces specific workflows and eliminates setup paralysis. The vault structure, the note types, and the review gates are not configurable surfaces to tune; they are the design.
+**Opinionated** — it enforces specific workflows and eliminates setup paralysis. The vault structure, the document types, and the review gates are not configurable surfaces to tune; they are the design.
 
 **Phase-gated** — work passes through defined phases with explicit outputs, and nothing becomes a claim or deliverable without human review. A source doesn't become a claim until it's been classified, discussed, and synthesized; a draft doesn't become a deliverable until it's been verified and approved. Each phase has a clear entry and exit condition.
 

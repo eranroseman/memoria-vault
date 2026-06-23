@@ -58,9 +58,9 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 
 **Reference**
 
-- The fleeting type and its lifecycle subset: [Note types](../../reference/note-types.md)
+- The fleeting type and its lifecycle subset: [Document types](../../reference/document-types.md)
 
 **Explanation**
 
-- The fleeting note's role: [Note types and epistemic roles](../../explanation/knowledge/note-types.md)
+- The fleeting note's role: [Document types and epistemic roles](../../explanation/knowledge/document-types.md)
 - Triage as the first promotion decision: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)
