@@ -31,13 +31,13 @@ Press `Cmd/Ctrl-P` and run **Memoria: load sample vault**. It copies a small, la
 
 ## Step 2 — Open a project and name your goal
 
-A **project** is where writing happens, and opening one is how you name what you're writing toward. Run `Cmd/Ctrl-P` → **Memoria: start project** and fill in the form: a title, a short name (the slug), the topic (Mediterranean diet and heart health), and the deliverable. For the deliverable, write the one concrete thing you want to be able to stand behind:
+A **project** is where writing happens, and opening one is how you name what you're writing toward. Run `Cmd/Ctrl-P` → **Memoria: start project** and fill in the form: a **title**, the **scope topics** it covers (Mediterranean diet, cardiovascular health), and an **output mode**. Choose **thesis**, and the project then asks for your provisional thesis in one sentence — the claim you want to be able to stand behind:
 
-> *A verified 200-word section on whether a Mediterranean diet protects the heart.*
+> *A Mediterranean diet reduces major cardiovascular events in high-risk adults.*
 
-Write something concrete you could actually produce — not a vague area like "learn about X."
+Write a claim you could actually defend — not a vague area like "learn about X." By the end of Session 2 you'll have turned it into a verified, cited section.
 
-The command creates the project, which now appears in the **Project space**. Open it there and run **Memoria: refresh project gate** — this checks how ready the corpus is to write from and records the result. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The goal you just wrote is the line you'll come back to in Tutorial 04, when you draft.
+The command creates the project, which now appears in the **Project space**. Open it there and run **Memoria: refresh project gate** — this checks how ready the corpus is to write from and records the result. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
 
 ---
 
@@ -60,7 +60,7 @@ This builds a map of the corpus — how its pieces connect, and where they clust
 
 ## What you have
 
-- A project in the Project space, its deliverable naming your goal
+- A project in the Project space, its provisional thesis naming your goal
 - A map of a dense, writable corpus — and the **gap** it surfaced, which you'll pick up again in Tutorial 06
 - The words you'll build with — *claim, cluster, gap* — met in context on a finished example, before you make your own
 

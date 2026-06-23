@@ -21,7 +21,7 @@ You've oriented, captured, distilled, drafted, and verified — one full pass th
 
 ## Step 1 — Find the gap card again
 
-Open the **Inbox** space → **Needs me** and find the **gap card** the map surfaced in Tutorial 01 and verification confirmed in Tutorial 05:
+Open the **Inbox queue** → **Needs me** view and find the **gap card** the map surfaced in Tutorial 01 and verification confirmed in Tutorial 05:
 
 > "Corpus has no evidence on **primary prevention in low-risk people**, and nothing on whether the benefit **carries beyond Mediterranean populations and diets**." — `certainty: likely`, with the same honest body as the other cards.
 

@@ -33,7 +33,7 @@ Now the handoff, in three moves.
 
 **Bring in your own library.** In these tutorials you brought sources in one at a time. For real work, point Memoria at your reference manager so reading flows in as fast as you read. Set up Zotero once ([Set up Zotero](../how-to-guides/zotero/set-up-zotero.md)), then capture from a selection or run **Memoria: capture source from URL** with a DOI — or, if you're still deciding what to bring in, talk it through with the Co-PI first. Discovery now runs against *your* catalog, surfacing what *your* corpus is missing.
 
-**Open your own project.** The project from Tutorial 01 was about the sample's topic. Open one for the question you actually care about — `Cmd/Ctrl-P` → **Memoria: start project**, with your real deliverable — and run the same loop on it: capture as you read, distill claims, map for coverage, draft, verify, and let the gaps pull your next reading. The moves are the same; only the material is now yours.
+**Open your own project.** The project from Tutorial 01 was about the sample's topic. Open one for the question you actually care about — `Cmd/Ctrl-P` → **Memoria: start project**, with your own scope and thesis — and run the same loop on it: capture as you read, distill claims, map for coverage, draft, verify, and let the gaps pull your next reading. The moves are the same; only the material is now yours.
 
 ---
 
