@@ -376,8 +376,17 @@ def test_starter_vault_enables_memoria_snippets():
     appearance = json.loads((SRC / ".obsidian" / "appearance.json").read_text(encoding="utf-8"))
     assert set(appearance["enabledCssSnippets"]) >= {
         "memoria-link-colors",
+        "memoria-nav",
         "memoria-property-badges",
     }
+
+
+def test_nav_snippet_compacts_rail_command_buttons():
+    css = (SRC / ".obsidian" / "snippets" / "memoria-nav.css").read_text(encoding="utf-8")
+    assert ".markdown-preview-view.memoria-nav .block-language-button" in css
+    assert ".markdown-preview-view.memoria-nav button.button-default" in css
+    assert "padding: 2px 6px;" in css
+    assert "font-size: var(--font-ui-smaller);" in css
 
 
 def test_link_color_snippet_ships_lifecycle_accents():
