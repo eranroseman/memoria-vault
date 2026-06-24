@@ -621,6 +621,9 @@ def test_start_project_scaffolds_project_gate_workspace():
         '"code"',
         '"drafts"',
         '"exports"',
+        '"# " + data.title',
+        "Project · ",
+        "Readiness details",
         "Project title is required.",
         "Provisional thesis is required for thesis-mode projects.",
         'outputMode === "thesis"',
@@ -631,6 +634,7 @@ def test_start_project_scaffolds_project_gate_workspace():
         "QuickAdd: Memoria: refresh project gate",
     ):
         assert marker in script
+    assert "![[project-gate-index]]" not in script
     assert 'inputPrompt("Provisional thesis' not in script
 
 

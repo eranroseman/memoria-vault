@@ -23,14 +23,27 @@ refutation_sufficiency: false
 created: {{DATE:YYYY-MM-DD}}
 ---
 
-# Question
+# {{VALUE:project question}}
 
-The bounded inquiry this project is trying to answer.
+Project · thesis mode
 
-# Scope
+## Project gate
+
+> [!brief] Cold start
+> No readiness data yet. Relate claims to the active thesis with `supports` / `contradicts`, then refresh the gate.
+>
+> [[project-gate-index|Readiness details]]
+
+```button
+name Refresh gate
+type command
+action QuickAdd: Memoria: refresh project gate
+```
+
+## Scope
 
 What belongs inside the project map, and what is intentionally out.
 
-# Change Log
+## Change Log
 
 Record question changes here before incrementing `question_version`.

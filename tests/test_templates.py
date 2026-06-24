@@ -152,11 +152,17 @@ def test_templates_surface_identity_type_lifecycle_first():
 def test_project_templates_start_in_schema_valid_states():
     project = _frontmatter(TEMPLATES / "project.md")
     thesis = _frontmatter(TEMPLATES / "thesis.md")
+    project_body = (TEMPLATES / "project.md").read_text(encoding="utf-8")
 
     assert project["lifecycle"] == "current"
     assert project["output_mode"] == "thesis"
     assert project["question_version"] == 1
     assert set(project["finer"]) == {"feasible", "interesting", "novel", "ethical", "relevant"}
+    assert "# {{VALUE:project question}}" in project_body
+    assert "Project · thesis mode" in project_body
+    assert "[[project-gate-index|Readiness details]]" in project_body
+    assert "name Refresh gate" in project_body
+    assert "![[project-gate-index]]" not in project_body
     assert thesis["lifecycle"] == "proposed"
     assert thesis["project"] == "[[PLACEHOLDER]]"
 
