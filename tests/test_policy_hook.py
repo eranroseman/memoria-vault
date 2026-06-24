@@ -198,6 +198,36 @@ def test_evaluate_pre_blocks_tools_outside_profile_registry(tmp_path):
     assert allowed == {}
 
 
+def test_evaluate_pre_maps_builtin_tool_names_to_allowed_toolsets(tmp_path):
+    vault = _vault_with_policy(tmp_path)
+    payload = {"tool_input": {}, "extra": {"task_id": "T4"}}
+
+    assert evaluate_pre({**payload, "tool_name": "skill_view"}, "memoria-writer", vault) == {}
+    assert (
+        evaluate_pre({**payload, "tool_name": "mcp_x__skill_manage"}, "memoria-copi", vault) == {}
+    )
+
+
+def test_evaluate_pre_allows_kanban_worker_tools_for_dispatched_profiles(tmp_path):
+    vault = _vault_with_policy(tmp_path)
+    payload = {"tool_input": {}, "extra": {"task_id": "T4"}}
+
+    for profile in (
+        "memoria-librarian",
+        "memoria-writer",
+        "memoria-peer-reviewer",
+        "memoria-engineer",
+    ):
+        assert evaluate_pre({**payload, "tool_name": "kanban_show"}, profile, vault) == {}
+        assert (
+            evaluate_pre({**payload, "tool_name": "mcp_x__kanban_complete"}, profile, vault) == {}
+        )
+
+    blocked = evaluate_pre({**payload, "tool_name": "kanban_show"}, "memoria-copi", vault)
+    assert blocked.get("decision") == "block"
+    assert "tool-registry allowlist" in blocked["reason"]
+
+
 def test_evaluate_pre_fails_closed_when_registry_is_missing(tmp_path):
     vault = _vault_with_policy(tmp_path)
     (vault / ".memoria" / "tool-registry.yaml").unlink()

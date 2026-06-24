@@ -42,6 +42,7 @@ PLATFORM_KEYS = (
 TOOLSET_ORDER = (
     "skills",
     "todo",
+    "kanban",
     "memory",
     "policy",
     "obsidian",

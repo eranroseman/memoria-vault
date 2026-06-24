@@ -169,6 +169,20 @@ PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "des
 # don't need (least privilege -- the prior uvx mcp-obsidian exposed only
 # read/write/append/patch). Matched as a substring after the `obsidian` prefix.
 DENY_OBSIDIAN = ("command_execute", "vault_delete", "vault_move")
+BUILTIN_TOOLSET_BY_TOOL = {
+    "kanban_show": "kanban",
+    "kanban_list": "kanban",
+    "kanban_complete": "kanban",
+    "kanban_block": "kanban",
+    "kanban_heartbeat": "kanban",
+    "kanban_comment": "kanban",
+    "kanban_create": "kanban",
+    "kanban_link": "kanban",
+    "kanban_unblock": "kanban",
+    "skills_list": "skills",
+    "skill_view": "skills",
+    "skill_manage": "skills",
+}
 
 
 def _allowed_registry_tools(vault: Path, profile: str) -> set[str]:
@@ -187,8 +201,11 @@ def _allowed_registry_tools(vault: Path, profile: str) -> set[str]:
 def _tool_candidates(tool_name: str, allowed: set[str]) -> set[str]:
     t = (tool_name or "").lower()
     candidates = {t}
+    base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]
+    if base in BUILTIN_TOOLSET_BY_TOOL:
+        candidates.add(BUILTIN_TOOLSET_BY_TOOL[base])
     if not t.startswith("mcp_"):
-        candidates.add(t.rsplit("__", 1)[-1].rsplit(".", 1)[-1])
+        candidates.add(base)
         if "__" in t:
             candidates.add(t.split("__", 1)[0])
         if t.startswith("obsidian_"):
