@@ -19,6 +19,20 @@ If you need exact values, field names, or configuration formats, see [Reference]
 
 ---
 
+## Five words first
+
+Memoria runs on five terms. Learn these and most of the docs read easily:
+
+- **PI** — you, the principal investigator. Memoria is single-user by design; every judgment about what enters the vault is yours.
+- **Co-PI** — the one agent you converse with. It questions, explains, and delegates, but writes nothing itself.
+- **Lanes** — the four background agents (Librarian, Writer, Peer-reviewer, Engineer) the Co-PI delegates to. They propose; you dispose.
+- **Board** — the Kanban control plane where delegated work moves through states under a review gate.
+- **Vault** — your Obsidian folder tree, where the notes, claims, and drafts you produce actually live.
+
+Full definitions are in the [Glossary](reference/glossary.md); each term is also explained where it first comes up.
+
+---
+
 ## Where do you want to go?
 
 | I want to…                                  | Go here                                                                                           |
@@ -34,6 +48,34 @@ If you need exact values, field names, or configuration formats, see [Reference]
 ## New here? Follow the tutorial sequence
 
 Seven tutorials, each building on the last. Start at 01 and follow the sequence — or jump in at whichever step matches where you are. The full sequence, with what you do and end with at each step, is in [Tutorials](tutorials/README.md).
+
+---
+
+## Prefer to read it straight through?
+
+The sections below are organized the Diátaxis way — by what you're trying to do, not as a syllabus. If you'd rather understand the system as one argument before touching it, read the Explanation pages in this order, then start the tutorials. Same material, sequenced concept-first.
+
+**Understand the system (read in order)**
+
+1. [What Memoria is](explanation/overview/what-memoria-is.md) — the central insight, and what it deliberately is not
+2. [Intellectual foundations](explanation/overview/intellectual-foundations.md) — where the design comes from
+3. [Design principles](explanation/overview/design-principles.md) — the rules the framing produces
+4. [Architecture](explanation/architecture/README.md) — the layered structure
+5. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
+6. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
+7. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
+8. [Profiles](explanation/profiles/README.md) — the Co-PI and the four background lanes
+9. [Operations](explanation/operations/README.md) — the deterministic layer beneath the agents
+10. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
+11. [The workflow model](explanation/workflows/README.md) — how work moves, with review as a first-class state
+12. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
+13. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
+14. [Design rationale](explanation/rationale/README.md) — why each major decision went the way it did
+
+**Then learn it by doing**
+
+15. [Tutorials 01–07](tutorials/README.md) — build one small, well-sourced paragraph end to end
+16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
 
 ---
 
@@ -69,6 +111,22 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 Five deterministic **operations** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
+
+---
+
+## Current status and limitations
+
+Memoria is at **v0.1**: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
+
+- **No end-to-end run on a live runtime** — continuous, unattended operation through all workflow stages is not yet demonstrated.
+- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/human-channels.md).
+- **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
+- **Writability and readiness scoring are not implemented** — `map:score-writability` / `map:score-readiness` are deferred ([Hermes CLI](reference/hermes-cli.md)).
+- **Single-user only** — team and multi-user review are out of scope by design.
+- **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
+- **Some integrations are planned, not shipped** — e.g. expanded reference-manager support.
+
+Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; nothing here implies they work yet.
 
 ---
 

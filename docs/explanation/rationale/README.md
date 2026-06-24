@@ -28,6 +28,7 @@ The `why-*` pages: the durable conceptual arguments behind Memoria's core design
 | Page                                                                   | What it provides                                                                                                                           |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md) | The borrow / adapt / reference / ignore judgment table against ~47 surveyed AI-research systems — the evidence the arguments above lean on |
+| [What the literature pushes back on](what-the-literature-pushes-back-on.md) | The adversarial counterpart — where the corpus contradicts Memoria's stronger claims and which bets to scope back |
 
 ---
 

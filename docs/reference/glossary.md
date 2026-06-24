@@ -23,7 +23,9 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
-**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. See [Profile capabilities](profiles.md).
+**Agent** — a running instance of the model doing work, operating under exactly one **profile**. Two kinds: the **Co-PI**, the interactive agent the PI talks to (it runs off the board), and **background agents**, which execute operations in **lanes**. An agent is a *process*; its permissions come from its profile, and its place on the board is its lane. Contrast *profile* (the configured posture) and *lane* (the board slot).
+
+**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. A profile is *configuration* — a posture — not a running process; the process that runs under it is an **agent** and its board slot is a **lane**. Permissions live on the profile, so "agent permissions" and "a lane's permissions" are shorthand for the permissions of the profile that agent or lane runs. See [Profile capabilities](profiles.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
@@ -63,7 +65,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
-**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. The Co-PI has no lane; operations run off the board.
+**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. Each lane runs one fixed **profile** and so inherits that profile's permissions; the thing that actually runs in the lane is an **agent**. The Co-PI has no lane; operations run off the board.
 
 **Card vs task** — a *task* is a unit of delegated work; the *card* (`worker-card`) is its representation on the board. One task becomes one card — the same split as a Jira *work item* rendered as a Kanban *card*.
 
