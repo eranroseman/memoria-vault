@@ -60,9 +60,31 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import site
 import sys
 import time
 from pathlib import Path
+
+
+def _vault_site_packages() -> list[Path]:
+    memoria_dir = Path(__file__).resolve().parents[1]
+    venv = memoria_dir / ".venv"
+    return [venv / "Lib" / "site-packages", *sorted((venv / "lib").glob("python*/site-packages"))]
+
+
+def _bootstrap_vault_runtime_package() -> None:
+    # The policy plugin runs in Hermes's Python, not the vault venv.
+    for path in _vault_site_packages():
+        if not path.is_dir():
+            continue
+        site.addsitedir(str(path))
+        path_text = str(path)
+        if path_text in sys.path:
+            sys.path.remove(path_text)
+        sys.path.insert(0, path_text)
+
+
+_bootstrap_vault_runtime_package()
 
 from _shared import load_json, safe_filename
 

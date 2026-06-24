@@ -2,6 +2,8 @@
 
 import os
 import shutil
+import subprocess
+import sys
 import time as _time
 
 import policy_hook as _m
@@ -15,6 +17,53 @@ evaluate_pre = _m.evaluate_pre
 extract_path = _m.extract_path
 json = _m.json
 to_vault_relative = _m.to_vault_relative
+
+
+def test_policy_hook_bootstraps_vault_venv_runtime_package(tmp_path):
+    vault = tmp_path / "vault"
+    mcp = vault / ".memoria" / "mcp"
+    mcp.mkdir(parents=True)
+    mcp_src = Path(_m.__file__).resolve().parent
+    shutil.copy(mcp_src / "policy_hook.py", mcp / "policy_hook.py")
+    shutil.copy(mcp_src / "_shared.py", mcp / "_shared.py")
+
+    runtime = vault / ".memoria" / ".venv" / "lib" / "python9.9" / "site-packages"
+    package = runtime / "memoria"
+    runtime_pkg = package / "runtime"
+    runtime_pkg.mkdir(parents=True)
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (runtime_pkg / "__init__.py").write_text("", encoding="utf-8")
+    (runtime_pkg / "jsonl.py").write_text(
+        "def append_jsonl(*args, **kwargs):\n    return None\n\n"
+        "def iter_jsonl(*args, **kwargs):\n    return iter(())\n",
+        encoding="utf-8",
+    )
+    (runtime_pkg / "paths.py").write_text(
+        "def load_json(*args, **kwargs):\n    return {}\n\n"
+        "def resolve_vault(*args, **kwargs):\n    return None\n\n"
+        "def safe_filename(value):\n    return str(value)\n",
+        encoding="utf-8",
+    )
+    (runtime_pkg / "time.py").write_text(
+        "def now_iso():\n    return '2026-01-01T00:00:00Z'\n\n"
+        "def parse_iso(value):\n    return value\n",
+        encoding="utf-8",
+    )
+    (runtime_pkg / "diagnostics.py").write_text(
+        "def record_event(*args, **kwargs):\n    return None\n",
+        encoding="utf-8",
+    )
+
+    code = f"import sys; sys.path.insert(0, {str(mcp)!r}); import policy_hook"
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", code],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_classify_maps_write_tools_and_ignores_read_or_direct_tools():
