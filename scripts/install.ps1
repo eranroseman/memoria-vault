@@ -65,7 +65,7 @@ $VenvPython = $null
 $MemoriaEnv = if ($env:MEMORIA_ENV) { $env:MEMORIA_ENV } else { 'prod' }
 $MemoriaTestModelProvider = if ($env:MEMORIA_MODEL_PROVIDER) { $env:MEMORIA_MODEL_PROVIDER } else { 'kilocode' }
 $MemoriaTestModelBaseUrl = if ($env:MEMORIA_MODEL_BASE_URL) { $env:MEMORIA_MODEL_BASE_URL } else { 'https://api.kilo.ai/api/gateway' }
-$MemoriaTestModelDefault = if ($env:MEMORIA_MODEL_NAME) { $env:MEMORIA_MODEL_NAME } else { 'deepseek/deepseek-v4-flash' }
+$MemoriaTestModelDefault = if ($env:MEMORIA_MODEL_NAME) { $env:MEMORIA_MODEL_NAME } else { 'meta-llama/llama-4-scout' }
 $MemoriaTestModelContextLength = if ($env:MEMORIA_MODEL_CONTEXT_LENGTH) { $env:MEMORIA_MODEL_CONTEXT_LENGTH } else { '' }
 
 function Write-Line { param([string]$Message) Write-Host $Message }

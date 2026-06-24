@@ -31,7 +31,7 @@ PROD_MODELS = {
     "memoria-librarian": "~anthropic/claude-haiku-latest",
     "memoria-engineer": "~anthropic/claude-haiku-latest",
 }
-TEST_MODEL = "deepseek/deepseek-v4-flash"
+TEST_MODEL = "meta-llama/llama-4-scout"
 PLATFORM_KEYS = {
     "cli",
     "cron",
@@ -166,7 +166,7 @@ def test_prod_model_overlay_preserves_shipped_profile_tiers():
         }
 
 
-def test_test_model_overlay_wires_profiles_to_kilo_deepseek_flash():
+def test_test_model_overlay_wires_profiles_to_kilo_llama_scout():
     for name in EXPECTED:
         model = _render_profile_config(name, env="test")["model"]
         assert model == {

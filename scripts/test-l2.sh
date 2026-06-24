@@ -7,7 +7,7 @@ PROFILE="memoria-writer"
 ARTIFACT="projects/l2-smoke/live-dispatch.md"
 MODEL_PROVIDER="${MEMORIA_L2_MODEL_PROVIDER:-kilocode}"
 MODEL_BASE_URL="${MEMORIA_L2_MODEL_BASE_URL:-${MEMORIA_MODEL_BASE_URL:-https://api.kilo.ai/api/gateway}}"
-MODEL_NAME="${MEMORIA_L2_MODEL_NAME:-${MEMORIA_MODEL_NAME:-deepseek/deepseek-v4-flash}}"
+MODEL_NAME="${MEMORIA_L2_MODEL_NAME:-${MEMORIA_MODEL_NAME:-meta-llama/llama-4-scout}}"
 MODEL_CONTEXT_LENGTH="${MEMORIA_L2_MODEL_CONTEXT_LENGTH:-${MEMORIA_MODEL_CONTEXT_LENGTH:-65536}}"
 USE_SMOKE_MODEL="${MEMORIA_L2_USE_SMOKE_MODEL:-1}"
 KEEP_TMP=0
@@ -31,7 +31,7 @@ Model defaults:
   MEMORIA_L2_USE_SMOKE_MODEL=1      # starts a local deterministic endpoint
   MEMORIA_L2_MODEL_PROVIDER=kilocode  # used when MEMORIA_L2_USE_SMOKE_MODEL=0
   MEMORIA_L2_MODEL_BASE_URL=https://api.kilo.ai/api/gateway
-  MEMORIA_L2_MODEL_NAME=deepseek/deepseek-v4-flash
+  MEMORIA_L2_MODEL_NAME=meta-llama/llama-4-scout
   MEMORIA_L2_MODEL_CONTEXT_LENGTH=65536
 
 The smoke creates a disposable vault and temporary HERMES_HOME, installs a

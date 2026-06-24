@@ -32,7 +32,7 @@
 # Honors $HERMES_HOME (default ~/.hermes), matching Hermes's own convention.
 # Honors $MEMORIA_ENV for Linux/WSL test profile model wiring:
 #   prod (default) -> shipped Kilo Code gateway tiers
-#   test           -> Kilo DeepSeek Flash by default; explicit env can point local
+#   test           -> Kilo Llama 4 Scout by default; explicit env can point local
 # =============================================================================
 set -euo pipefail
 
@@ -49,7 +49,7 @@ HERMES_SKILLS_DIR="$HERMES_HOME/skills"
 MEMORIA_ENV="${MEMORIA_ENV:-prod}"
 MEMORIA_TEST_MODEL_PROVIDER="${MEMORIA_MODEL_PROVIDER:-kilocode}"
 MEMORIA_TEST_MODEL_BASE_URL="${MEMORIA_MODEL_BASE_URL:-https://api.kilo.ai/api/gateway}"
-MEMORIA_TEST_MODEL_DEFAULT="${MEMORIA_MODEL_NAME:-deepseek/deepseek-v4-flash}"
+MEMORIA_TEST_MODEL_DEFAULT="${MEMORIA_MODEL_NAME:-meta-llama/llama-4-scout}"
 MEMORIA_TEST_MODEL_CONTEXT_LENGTH="${MEMORIA_MODEL_CONTEXT_LENGTH:-}"
 
 ALL_PROFILES="memoria-copi memoria-librarian memoria-writer memoria-peer-reviewer memoria-engineer"
@@ -702,7 +702,7 @@ install_profiles() {
     #                       policy hook import mcp+PyYAML from where install_mcp_deps
     #                       put them (not bare system python).
     #   - {{VAULT_PATH}} -> the real vault path.
-    #   - {{MODEL_*}}    -> prod cloud tiers by default, or Kilo DeepSeek Flash
+    #   - {{MODEL_*}}    -> prod cloud tiers by default, or Kilo Llama 4 Scout
     #                       when MEMORIA_ENV=test unless env overrides it.
     local pybin="${VENV_PYTHON:-python}"
     if [ -f "$dst/config.yaml" ]; then
