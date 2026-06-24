@@ -105,6 +105,30 @@ async function scaffoldProject(app, data) {
   ].join("\n");
   await adapter.write(root + "/project.md", projectText);
 
+  // Placeholder gate index so the project page's embed isn't blank before the
+  // first deterministic refresh. The structural-impact Operation overwrites this
+  // whole file; it has no JSON payload block, so it reads as "no previous".
+  const gateText = [
+    "---",
+    "title: " + yamlString("Project gate index: " + data.slug),
+    "generated_by: memoria-start-project",
+    "project: " + yamlString(root + "/project.md"),
+    "active_thesis: " + yamlString(activeThesis),
+    "argument_stage: cold-start",
+    "evidence_saturation: unknown",
+    "relation_count: 0",
+    "open_high_impact_gaps: 0",
+    "stale: true",
+    "---",
+    "",
+    "# Project gate index: " + data.slug,
+    "",
+    "> [!brief] Cold start — no readiness data yet.",
+    "> Relate claims to this project's thesis with `supports` / `contradicts` links, then run **Memoria: refresh project gate** (the button above) to populate maturity, evidence saturation, and open gaps.",
+    "",
+  ].join("\n");
+  await adapter.write(root + "/project-gate-index.md", gateText);
+
   const thesisText = [
     "---",
     "title: " + yamlString(data.provisional_thesis || "Provisional thesis for " + data.title),
