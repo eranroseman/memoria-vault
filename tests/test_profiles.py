@@ -215,11 +215,14 @@ def test_dispatched_lanes_do_not_get_todo_toolset():
     """Kanban workers get lifecycle tools from HERMES_KANBAN_TASK; todo is Co-PI-only."""
     copi = yaml.safe_load((PROFILES / "memoria-copi" / "config.yaml").read_text(encoding="utf-8"))
     assert "todo" in set(copi["platform_toolsets"]["cli"])
+    assert "kanban" not in set(copi["platform_toolsets"]["cli"])
     for name in EXPECTED - {"memoria-copi"}:
         cfg = yaml.safe_load((PROFILES / name / "config.yaml").read_text(encoding="utf-8"))
         assert "todo" not in _expected_toolsets(name), f"{name} registry grants todo"
+        assert "kanban" in _expected_toolsets(name), f"{name} registry must allow kanban"
         for platform, toolsets in cfg["platform_toolsets"].items():
             assert "todo" not in set(toolsets), f"{name}/{platform} exposes todo"
+            assert "kanban" in set(toolsets), f"{name}/{platform} lacks kanban"
 
 
 def _registry() -> dict:

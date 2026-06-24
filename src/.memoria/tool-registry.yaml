@@ -57,17 +57,17 @@ profiles:
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [vault_read, vault_write, skills, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
-    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; no todo planner in dispatched workers because Hermes injects kanban lifecycle tools; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
+    allow: [vault_read, vault_write, skills, kanban, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
 
   memoria-writer:
-    allow: [vault_read, vault_write, skills, policy, qmd_read]
-    notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No todo planner in dispatched workers; no web — it composes from the vault, never researches."
+    allow: [vault_read, vault_write, skills, kanban, policy, qmd_read]
+    notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; no web — it composes from the vault, never researches."
 
   memoria-peer-reviewer:
-    allow: [vault_read, vault_write, skills, policy, zotero_read, qmd_read]
-    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); no todo planner in dispatched workers; vault_write lane-scoped to inbox/ cards only."
+    allow: [vault_read, vault_write, skills, kanban, policy, zotero_read, qmd_read]
+    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to inbox/ cards only."
 
   memoria-engineer:
-    allow: [vault_read, vault_write, skills, policy]
-    notes: "The code lane: MCP-only (ADR-21) — no terminal or file access. It scaffolds the handoff to an external coding agent through the gated obsidian MCP; the substantive coding and git run in that external agent, not here. No todo planner in dispatched workers; vault_write lane-scoped to projects/*/code/."
+    allow: [vault_read, vault_write, skills, kanban, policy]
+    notes: "The code lane: MCP-only (ADR-21) — no terminal or file access. It scaffolds the handoff to an external coding agent through the gated obsidian MCP; the substantive coding and git run in that external agent, not here. No todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to projects/*/code/."
