@@ -6,7 +6,7 @@ nav_order: 1
 
 # Vault launch screen
 
-On startup — and after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Navigation between surfaces is the left-pane rail ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
+On startup — and after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at loading the tutorial sample, capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Navigation between surfaces is the left-pane rail ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ On startup — and after a layout reset — you land on the vault-root `home.md`
 
 **1. Land on the welcome note.**
 
-On startup or a layout reset, the saved **Memoria** workspace seeds `home.md` — a welcome note. It is a "start here" screen, not a dashboard: capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](use-workspaces.md)).
+On startup or a layout reset, the saved **Memoria** workspace seeds `home.md` — a welcome note. It is a "start here" screen, not a dashboard: load the tutorial sample, capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](use-workspaces.md)).
 
 **2. Switch spaces from the rail.**
 

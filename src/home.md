@@ -12,6 +12,8 @@ rail** — *Now* shows what's waiting on you, *Places* are the three rooms you w
 
 ## Start here
 
+- **Load the sample vault** — run `Cmd/Ctrl-P` → **Memoria: load sample vault**,
+  then follow [Tutorial 01: See what you're building](https://eranroseman.github.io/memoria-vault/tutorials/01-orient.html).
 - **Capture your first source** — run `Cmd/Ctrl-P` → **Memoria: capture source from
   URL** (a DOI, PMID, arXiv, or article URL). New sources land in [[spaces/library|Library]].
 - **Jot a loose thought** — **Memoria: capture fleeting**. It waits in the queue until

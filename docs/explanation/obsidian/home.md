@@ -15,10 +15,11 @@ Co-PI pane on the right ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
 
 ## What it shows
 
-The welcome note is a "start here" screen: capture your first source, the three places
-(Library · Knowledge · Project), and a pointer to ask the Co-PI. It is not a dashboard —
-it carries no health views and no counts. Navigation between surfaces is the left-pane
-rail, not this note. The welcome note is a plain Markdown note; it owns no custom renderer.
+The welcome note is a "start here" screen: load the tutorial sample vault, capture your
+first source, learn the three places (Library · Knowledge · Project), and ask the Co-PI.
+It is not a dashboard — it carries no health views and no counts. Navigation between
+surfaces is the left-pane rail, not this note. The welcome note is a plain Markdown note;
+it owns no custom renderer.
 
 ---
 
