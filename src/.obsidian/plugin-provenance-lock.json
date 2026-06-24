@@ -1,23 +1,23 @@
 {
   "schema_version": 1,
   "generated_from": "vendored plugin files in src/.obsidian/plugins",
-  "generated_at": "2026-06-18",
+  "generated_at": "2026-06-24",
   "notes": "ADR-74 provenance lock for checked-in Obsidian plugin artifacts. scripts/plugin_provenance_doctor.py validates the lock in CI; updater automation remains deferred.",
   "plugins": [
     {
       "id": "agent-client",
       "name": "Agent Client",
-      "version": "0.10.6",
+      "version": "0.11.0",
       "upstream": "https://github.com/rait-09/obsidian-agent-client",
-      "pinned_ref": "0.10.6",
+      "pinned_ref": "0.11.0",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/agent-client/data.json.example": "a58640b4e72bb74a93bb1a325957753e730bd0a9bdc950698aa26431773413d3",
-        "plugins/agent-client/main.js": "839b7bb7a70739c753cbbb349fc9e4be73efe36d3aa102c05cf558225ab2cc08",
-        "plugins/agent-client/manifest.json": "758708104f3c159f91003ad8b3968acfc06a610d96f68f08edfbd8b55ff0cb29",
-        "plugins/agent-client/styles.css": "1e44cbcee201c966a8eb845e5d4a0ecdbe8846ce23066a8a07e25d527831bf70"
+        "plugins/agent-client/main.js": "2acfc4cf90a59f9f6d3ba0dafa5e09648d06fdfe91d7ee648e8e8dadbbd0bba8",
+        "plugins/agent-client/manifest.json": "8fe877d1a8c6b298eb9a2e30ea38d2573e9400bf2f6d2498d0e2486214a53c56",
+        "plugins/agent-client/styles.css": "20452335a3fa171cbf4ded03fdbcb84c098a0e395e87212269d30e312de8f4c5"
       }
     },
     {
@@ -55,32 +55,32 @@
     {
       "id": "obsidian-git",
       "name": "Git",
-      "version": "2.38.3",
+      "version": "2.38.5",
       "upstream": "https://github.com/vinzent03/obsidian-git",
-      "pinned_ref": "2.38.3",
+      "pinned_ref": "2.38.5",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/obsidian-git/data.json": "e501f0a2d6dda684d99923b8a6adef7d66cef0b40984944161e347c959a42de2",
-        "plugins/obsidian-git/main.js": "d1bcc50f05646aed708330b80251de755894e3b3bdf7f81e231a03b88212bbb5",
-        "plugins/obsidian-git/manifest.json": "26f0ef6849027ee315989f539a846a42bd3a88112f025ceee6e303ff2f64be85",
+        "plugins/obsidian-git/main.js": "bb46181b36715b3f776a1c2467fcdbbe2e23c4efe7bb1d9bf302700d42b6019f",
+        "plugins/obsidian-git/manifest.json": "aaa7ccb10f637cf361a0b6592f93379396f9baa943000afca42ad42eb5526516",
         "plugins/obsidian-git/styles.css": "f5ab93f4d5b4dd1bd1e577864c5c79087f7adfd448ac346e0489e5847ce6922d"
       }
     },
     {
       "id": "obsidian-local-rest-api",
       "name": "Local REST API with MCP",
-      "version": "4.1.2",
+      "version": "4.1.3",
       "upstream": "https://github.com/coddingtonbear/obsidian-local-rest-api",
-      "pinned_ref": "4.1.2",
+      "pinned_ref": "4.1.3",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/obsidian-local-rest-api/data.json.example": "771f0997eb6c45f0a7d7eda07ff69b716cc51fb8c22042eb9701a2a7ffcac74b",
-        "plugins/obsidian-local-rest-api/main.js": "7ccfbda2a8664c823deab8f345b8e6cdbeb8166a43c029901d44558305e3ff9f",
-        "plugins/obsidian-local-rest-api/manifest.json": "c2abc7e944b1be0ad5c8548df55da7c2a595338575f6d03e2fc5ada66d6536b3",
+        "plugins/obsidian-local-rest-api/main.js": "93588cbb6cf0214479c069a36f670acd0eb11b72072caa45a13a777a595b4389",
+        "plugins/obsidian-local-rest-api/manifest.json": "05d304daffef1b8095bad7b1602dfe22cd340f30bfd35610784ac2ba5e2deab2",
         "plugins/obsidian-local-rest-api/styles.css": "497944ed33ba2acbc574b0138ab379396ec3a84c521935e882b3734ce1062c05"
       }
     },
@@ -119,33 +119,33 @@
     {
       "id": "modalforms",
       "name": "Modal forms",
-      "version": "1.66.1",
+      "version": "1.67.0",
       "upstream": "https://github.com/danielo515/obsidian-modal-form",
-      "pinned_ref": "1.66.1",
+      "pinned_ref": "1.67.0",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/modalforms/data.json": "f1a3c95eef8f3d0243b0f3a8e774bb7871e30f13352f6ce7fef237f7855643ec",
-        "plugins/modalforms/main.js": "8e23a434b6e613e1c432e772d3fd913b41c3e04d2b63c8eaae5cccf2c58b2e3c",
-        "plugins/modalforms/manifest.json": "2da7d712d53a279e629aa4dc0af8ea1fd574df81c551bf41cb4203af7f27a4b1",
+        "plugins/modalforms/main.js": "47dca433e545e15de1364a8a20d910310b7c0b3a83ecfd25129b9403f91ba7d9",
+        "plugins/modalforms/manifest.json": "2fbd23a868c71060dc27eebfb65c531b1babf39bb45c4cc16129aced99f66e13",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"
       }
     },
     {
       "id": "templater-obsidian",
       "name": "Templater",
-      "version": "2.20.5",
+      "version": "2.23.0",
       "upstream": "https://github.com/SilentVoid13/Templater",
-      "pinned_ref": "2.20.5",
+      "pinned_ref": "2.23.0",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/templater-obsidian/data.json": "9ad8d0c478e31165e86ee4a6dd4f422aacb5b1af11bbb876fdf97b15dceff2f4",
-        "plugins/templater-obsidian/main.js": "804536468672c6cd1a1d8a2f418a94e0a15e8e4af1a07236f147dccf311a4431",
-        "plugins/templater-obsidian/manifest.json": "5df1451e29cabdeca445ddf346e51fac0a93f007bf0f8d100924d35d7a3a03d8",
-        "plugins/templater-obsidian/styles.css": "7d85bcd129e9f38a8932455bdf05c9629ce466ab1236dc933b7b7aea55350c04"
+        "plugins/templater-obsidian/main.js": "eb1b153b0505db04399ae1a738e422ed164d0b98a9a74224d1c2bfe864b61288",
+        "plugins/templater-obsidian/manifest.json": "cc273a26942744128df71ae3c01970a71e8310c9a2f94d7905dbb8423b827a9f",
+        "plugins/templater-obsidian/styles.css": "eb94063be602679f397e3e35fcb7f6a4b027da82e17c213bb44a267c6b45d8de"
       }
     },
     {

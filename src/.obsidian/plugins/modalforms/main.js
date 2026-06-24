@@ -5432,10 +5432,10 @@ ${body}`;
 var import_obsidian34 = require("obsidian");
 
 // src/API.ts
-var import_obsidian14 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 
 // src/FormModal.ts
-var import_obsidian13 = require("obsidian");
+var import_obsidian14 = require("obsidian");
 
 // node_modules/svelte/src/runtime/internal/utils.js
 function noop() {
@@ -15061,7 +15061,7 @@ var FormModal = class extends SvelteComponent {
 var FormModal_default = FormModal;
 
 // src/core/FormResult.ts
-var import_obsidian12 = require("obsidian");
+var import_obsidian13 = require("obsidian");
 
 // src/core/ResultValue.ts
 function _toBulletList(value) {
@@ -15320,13 +15320,732 @@ function objectSelect(obj, opts) {
   );
 }
 
+// src/core/template/templateParser.ts
+var import_obsidian12 = require("obsidian");
+
+// node_modules/parser-ts/es6/ParseResult.js
+var __assign = function() {
+  __assign = Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+      for (var p in s)
+        if (Object.prototype.hasOwnProperty.call(s, p))
+          t[p] = s[p];
+    }
+    return t;
+  };
+  return __assign.apply(this, arguments);
+};
+var success = function(value, next, start) {
+  return right3({
+    value,
+    next,
+    start
+  });
+};
+var error = function(input, expected2, fatal) {
+  if (expected2 === void 0) {
+    expected2 = [];
+  }
+  if (fatal === void 0) {
+    fatal = false;
+  }
+  return left3({
+    input,
+    expected: expected2,
+    fatal
+  });
+};
+var withExpected = function(err, expected2) {
+  return __assign(__assign({}, err), { expected: expected2 });
+};
+var extend4 = function(err1, err2) {
+  return getSemigroup6().concat(err1, err2);
+};
+var getSemigroup6 = function() {
+  return {
+    concat: function(x, y) {
+      if (x.input.cursor < y.input.cursor)
+        return last().concat(x, y);
+      if (x.input.cursor > y.input.cursor)
+        return first().concat(x, y);
+      return struct2({
+        input: first(),
+        fatal: first(),
+        expected: getMonoid2()
+      }).concat(x, y);
+    }
+  };
+};
+
+// node_modules/parser-ts/es6/Stream.js
+var stream = function(buffer, cursor) {
+  if (cursor === void 0) {
+    cursor = 0;
+  }
+  return {
+    buffer,
+    cursor
+  };
+};
+var get2 = function(s) {
+  return lookup2(s.cursor, s.buffer);
+};
+var atEnd = function(s) {
+  return s.cursor >= s.buffer.length;
+};
+var getAndNext = function(s) {
+  return pipe(get2(s), map4(function(a) {
+    return { value: a, next: { buffer: s.buffer, cursor: s.cursor + 1 } };
+  }));
+};
+
+// node_modules/parser-ts/es6/Parser.js
+var __assign2 = function() {
+  __assign2 = Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+      for (var p in s)
+        if (Object.prototype.hasOwnProperty.call(s, p))
+          t[p] = s[p];
+    }
+    return t;
+  };
+  return __assign2.apply(this, arguments);
+};
+var succeed = function(a) {
+  return function(i) {
+    return success(a, i, i);
+  };
+};
+var fail = function() {
+  return function(i) {
+    return error(i);
+  };
+};
+var failAt = function(i) {
+  return function() {
+    return error(i);
+  };
+};
+var sat = function(predicate) {
+  return pipe(withStart(item()), chain6(function(_a) {
+    var a = _a[0], start = _a[1];
+    return predicate(a) ? of8(a) : failAt(start);
+  }));
+};
+var expected = function(p, message) {
+  return function(i) {
+    return pipe(p(i), mapLeft(function(err) {
+      return withExpected(err, [message]);
+    }));
+  };
+};
+var item = function() {
+  return function(i) {
+    return pipe(getAndNext(i), fold2(function() {
+      return error(i);
+    }, function(_a) {
+      var value = _a.value, next = _a.next;
+      return success(value, next, i);
+    }));
+  };
+};
+var seq = function(fa, f) {
+  return function(i) {
+    return pipe(fa(i), chain2(function(s) {
+      return pipe(f(s.value)(s.next), chain2(function(next) {
+        return success(next.value, next.next, i);
+      }));
+    }));
+  };
+};
+var either2 = function(p, f) {
+  return function(i) {
+    var e = p(i);
+    if (isRight2(e)) {
+      return e;
+    }
+    if (e.left.fatal) {
+      return e;
+    }
+    return pipe(f()(i), mapLeft(function(err) {
+      return extend4(e.left, err);
+    }));
+  };
+};
+var withStart = function(p) {
+  return function(i) {
+    return pipe(p(i), map3(function(s) {
+      return __assign2(__assign2({}, s), { value: [s.value, i] });
+    }));
+  };
+};
+var maybe = function(M) {
+  return alt6(function() {
+    return of8(M.empty);
+  });
+};
+var eof = function() {
+  return expected(function(i) {
+    return atEnd(i) ? success(void 0, i, i) : error(i);
+  }, "end of file");
+};
+var many = function(p) {
+  return pipe(many1(p), alt6(function() {
+    return of8([]);
+  }));
+};
+var many1 = function(parser) {
+  return pipe(parser, chain6(function(head6) {
+    return chainRec_(of2(head6), function(acc) {
+      return pipe(parser, map9(function(a) {
+        return left3(append4(a)(acc));
+      }), alt6(function() {
+        return of8(right3(acc));
+      }));
+    });
+  }));
+};
+var sepBy = function(sep, p) {
+  var nil = of8([]);
+  return pipe(sepBy1(sep, p), alt6(function() {
+    return nil;
+  }));
+};
+var sepBy1 = function(sep, p) {
+  return pipe(p, chain6(function(head6) {
+    return pipe(many(pipe(sep, apSecond6(p))), map9(function(tail5) {
+      return prepend3(head6)(tail5);
+    }));
+  }));
+};
+var between = function(left6, right6) {
+  return function(p) {
+    return pipe(left6, chain6(function() {
+      return p;
+    }), chainFirst6(function() {
+      return right6;
+    }));
+  };
+};
+var surroundedBy = function(bound) {
+  return between(bound, bound);
+};
+var lookAhead = function(p) {
+  return function(i) {
+    return pipe(p(i), chain2(function(next) {
+      return success(next.value, i, i);
+    }));
+  };
+};
+var optional2 = function(parser) {
+  return pipe(parser, map9(some3), alt6(function() {
+    return succeed(none2);
+  }));
+};
+var many1Till = function(parser, terminator) {
+  return pipe(parser, chain6(function(x) {
+    return chainRec_(of(x), function(acc) {
+      return pipe(terminator, map9(function() {
+        return right3(acc);
+      }), alt6(function() {
+        return pipe(parser, map9(function(a) {
+          return left3(append3(a)(acc));
+        }));
+      }));
+    });
+  }));
+};
+var map_ = function(ma, f) {
+  return function(i) {
+    return pipe(ma(i), map3(function(s) {
+      return __assign2(__assign2({}, s), { value: f(s.value) });
+    }));
+  };
+};
+var ap_ = function(mab, ma) {
+  return chain_(mab, function(f) {
+    return map_(ma, f);
+  });
+};
+var chain_ = function(ma, f) {
+  return seq(ma, f);
+};
+var chainRec_ = function(a, f) {
+  var split2 = function(start) {
+    return function(result2) {
+      return isLeft2(result2.value) ? left3({ value: result2.value.left, stream: result2.next }) : right3(success(result2.value.right, result2.next, start));
+    };
+  };
+  return function(start) {
+    return tailRec({ value: a, stream: start }, function(state) {
+      var result2 = f(state.value)(state.stream);
+      if (isLeft2(result2)) {
+        return right3(error(state.stream, result2.left.expected, result2.left.fatal));
+      }
+      return split2(start)(result2.right);
+    });
+  };
+};
+var alt_ = function(fa, that) {
+  return either2(fa, that);
+};
+var map9 = function(f) {
+  return function(fa) {
+    return map_(fa, f);
+  };
+};
+var apFirst6 = function(fb) {
+  return function(fa) {
+    return ap_(map_(fa, function(a) {
+      return function() {
+        return a;
+      };
+    }), fb);
+  };
+};
+var apSecond6 = function(fb) {
+  return function(fa) {
+    return ap_(map_(fa, function() {
+      return function(b) {
+        return b;
+      };
+    }), fb);
+  };
+};
+var of8 = succeed;
+var chain6 = function(f) {
+  return function(ma) {
+    return chain_(ma, f);
+  };
+};
+var chainFirst6 = function(f) {
+  return function(ma) {
+    return chain_(ma, function(a) {
+      return map_(f(a), function() {
+        return a;
+      });
+    });
+  };
+};
+var alt6 = function(that) {
+  return function(fa) {
+    return alt_(fa, that);
+  };
+};
+var URI6 = "Parser";
+var getSemigroup7 = function(S) {
+  return {
+    concat: function(x, y) {
+      return ap_(map_(x, function(x2) {
+        return function(y2) {
+          return S.concat(x2, y2);
+        };
+      }), y);
+    }
+  };
+};
+var getMonoid5 = function(M) {
+  return __assign2(__assign2({}, getSemigroup7(M)), { empty: succeed(M.empty) });
+};
+var ChainRec2 = {
+  URI: URI6,
+  map: map_,
+  ap: ap_,
+  chain: chain_,
+  chainRec: chainRec_
+};
+
+// node_modules/parser-ts/es6/char.js
+var maybe2 = maybe(Monoid);
+var char = function(c) {
+  return expected(sat(function(s) {
+    return s === c;
+  }), '"'.concat(c, '"'));
+};
+var notChar = function(c) {
+  return expected(sat(function(c1) {
+    return c1 !== c;
+  }), 'anything but "'.concat(c, '"'));
+};
+var many2 = function(parser) {
+  return maybe2(many12(parser));
+};
+var many12 = function(parser) {
+  return pipe(many1(parser), map9(function(nea) {
+    return nea.join("");
+  }));
+};
+var isDigit = function(c) {
+  return "0123456789".indexOf(c) !== -1;
+};
+var digit = expected(sat(isDigit), "a digit");
+var spaceRe = /^\s$/;
+var isSpace = function(c) {
+  return spaceRe.test(c);
+};
+var space2 = expected(sat(isSpace), "a whitespace");
+var isUnderscore = function(c) {
+  return c === "_";
+};
+var isLetter = function(c) {
+  return /[a-z]/.test(c.toLowerCase());
+};
+var isAlphanum = function(c) {
+  return isLetter(c) || isDigit(c) || isUnderscore(c);
+};
+var alphanum = expected(sat(isAlphanum), "a word character");
+var letter = expected(sat(isLetter), "a letter");
+var isUnicodeLetter = function(c) {
+  return c.toLowerCase() !== c.toUpperCase();
+};
+var unicodeLetter = expected(sat(isUnicodeLetter), "an unicode letter");
+var isUpper = function(c) {
+  return isLetter(c) && c === c.toUpperCase();
+};
+var upper = expected(sat(isUpper), "an upper case letter");
+var isLower = function(c) {
+  return isLetter(c) && c === c.toLowerCase();
+};
+var lower = expected(sat(isLower), "a lower case letter");
+var notDigit = expected(sat(not(isDigit)), "a non-digit");
+var notSpace = expected(sat(not(isSpace)), "a non-whitespace character");
+var notAlphanum = expected(sat(not(isAlphanum)), "a non-word character");
+var notLetter = expected(sat(not(isLetter)), "a non-letter character");
+var notUpper = expected(sat(not(isUpper)), "anything but an upper case letter");
+var notLower = expected(sat(not(isLower)), "anything but a lower case letter");
+
+// node_modules/fp-ts/es6/Monoid.js
+var concatAll5 = function(M) {
+  return concatAll2(M)(M.empty);
+};
+var monoidVoid = {
+  concat: semigroupVoid.concat,
+  empty: void 0
+};
+var monoidAll = {
+  concat: semigroupAll.concat,
+  empty: true
+};
+var monoidAny = {
+  concat: semigroupAny.concat,
+  empty: false
+};
+var monoidString = {
+  concat: semigroupString.concat,
+  empty: ""
+};
+var monoidSum = {
+  concat: semigroupSum.concat,
+  empty: 0
+};
+var monoidProduct = {
+  concat: semigroupProduct.concat,
+  empty: 1
+};
+
+// node_modules/parser-ts/es6/string.js
+var string2 = function(s) {
+  return expected(ChainRec2.chainRec(s, function(acc) {
+    return pipe(charAt(0, acc), fold2(function() {
+      return of8(right3(s));
+    }, function(c) {
+      return pipe(char(c), chain6(function() {
+        return of8(left3(acc.slice(1)));
+      }));
+    }));
+  }), JSON.stringify(s));
+};
+var fold4 = concatAll5(getMonoid5(Monoid));
+var maybe3 = maybe(Monoid);
+var many3 = function(parser) {
+  return maybe3(many13(parser));
+};
+var many13 = function(parser) {
+  return pipe(many1(parser), map9(function(nea) {
+    return nea.join("");
+  }));
+};
+var charAt = function(index, s) {
+  return index >= 0 && index < s.length ? some3(s.charAt(index)) : none2;
+};
+var spaces = many2(space2);
+var spaces1 = many12(space2);
+var notSpaces = many2(notSpace);
+var notSpaces1 = many12(notSpace);
+var fromString = function(s) {
+  var n = +s;
+  return isNaN(n) || s === "" ? none2 : some3(n);
+};
+var int = expected(pipe(fold4([maybe3(char("-")), many12(digit)]), map9(function(s) {
+  return +s;
+})), "an integer");
+var float = expected(pipe(fold4([maybe3(char("-")), many2(digit), maybe3(fold4([char("."), many12(digit)]))]), chain6(function(s) {
+  return pipe(fromString(s), fold2(function() {
+    return fail();
+  }, succeed));
+})), "a float");
+var doubleQuotedString = surroundedBy(char('"'))(many3(either2(string2('\\"'), function() {
+  return notChar('"');
+})));
+function run2(string3) {
+  return function(p) {
+    return p(stream(string3.split("")));
+  };
+}
+
+// src/core/template/templateSchema.ts
+var TemplateTextSchema = object({
+  _tag: literal("text"),
+  value: string()
+});
+var upper2 = transform(enumType(["upper", "uppercase"]), (_) => "upper");
+var transformations = union4([
+  upper2,
+  literal("lower"),
+  literal("trim"),
+  literal("stringify"),
+  literal("capitalize")
+]);
+var TemplateVariableSchema = object({
+  _tag: literal("variable"),
+  value: string(),
+  transformation: optional(transformations)
+});
+var FrontmatterCommandSchema = object({
+  _tag: literal("frontmatter-command"),
+  pick: array2(string()),
+  omit: array2(string())
+});
+var ParsedTemplateSchema = array2(
+  union4([TemplateTextSchema, TemplateVariableSchema, FrontmatterCommandSchema])
+);
+
+// src/core/template/templateParser.ts
+function TemplateText(value) {
+  return { _tag: "text", value };
+}
+function TemplateVariable(value, transformation2) {
+  return { _tag: "variable", value, transformation: transformation2 };
+}
+function FrontmatterCommand(pick = [], omit = []) {
+  return { _tag: "frontmatter-command", pick, omit };
+}
+var EofStr = pipe2(
+  eof(),
+  map9(() => "")
+);
+var open = fold4([string2("{{"), spaces]);
+var close = expected(fold4([spaces, string2("}}")]), 'closing variable tag: "}}"');
+var identifier = many13(alphanum);
+var transformation = pipe2(
+  fold4([spaces, string2("|"), spaces]),
+  apSecond6(identifier),
+  map9((x) => {
+    return pipe2(
+      parse2(transformations, x),
+      fold(constUndefined, (x2) => x2)
+    );
+  })
+);
+var templateIdentifier = pipe2(
+  identifier,
+  // First, we parse the variable name
+  // chain takes a function that accepts the result of the previous parser and returns a new parser
+  chain6(
+    (value) => pipe2(
+      // Within this pipe we build a parser of Parser<string, TemplateVariable> also using the value of the previous parser
+      optional2(transformation),
+      map9((trans) => TemplateVariable(value, Option_exports.toUndefined(trans)))
+    )
+  ),
+  // finally we wrap the resulting parser in between the open and close strings
+  between(open, close)
+);
+var commandOpen = fold4([string2("{#"), spaces]);
+var commandClose = expected(fold4([spaces, string2("#}")]), 'a closing command tag: "#}"');
+var sepByComma = sepBy(fold4([char(","), spaces]), identifier);
+var commandOptionParser = (option2) => pipe2(
+  fold4([string2(option2), spaces]),
+  // dam prettier
+  apSecond6(sepByComma)
+);
+var frontmatterCommandParser = pipe2(
+  fold4([string2("frontmatter"), spaces]),
+  apSecond6(optional2(commandOptionParser("pick:")))
+  //P.apFirst(S.spaces),
+  // P.chain(commandOptionParser("pick:")),
+);
+var commandParser = pipe2(
+  frontmatterCommandParser,
+  between(commandOpen, commandClose),
+  map9((value) => {
+    return pipe2(
+      value,
+      Option_exports.fold(() => [], identity),
+      FrontmatterCommand
+    );
+  })
+);
+var OpenOrEof = pipe2(
+  open,
+  alt6(() => commandOpen),
+  alt6(() => EofStr)
+);
+var anythingUntilOpenOrEOF = many1Till(item(), lookAhead(OpenOrEof));
+var text2 = pipe2(
+  anythingUntilOpenOrEOF,
+  map9((value) => TemplateText(value.join("")))
+);
+var TextOrVariable = pipe2(
+  templateIdentifier,
+  alt6(() => commandParser),
+  alt6(() => text2)
+);
+var Template = pipe2(
+  many(TextOrVariable),
+  // dam prettier
+  apFirst6(eof())
+);
+function parseTemplate(template) {
+  return pipe2(
+    Template,
+    run2(template),
+    fold(
+      ({ expected: expected2 }) => left3(`Expected ${expected2.join(" or ")}`),
+      (result2) => right3(result2.value)
+    )
+  );
+}
+function templateVariables(parsedTemplate) {
+  return pipe2(
+    parsedTemplate,
+    fold(
+      () => [],
+      filterMap((token) => {
+        if (token._tag === "variable") {
+          return Option_exports.some(token.value);
+        }
+        return Option_exports.none;
+      })
+    )
+  );
+}
+function templateError(parsedTemplate) {
+  return pipe2(
+    parsedTemplate,
+    fold(
+      (error2) => error2,
+      () => void 0
+    )
+  );
+}
+function tokenToString(token) {
+  const tag = token._tag;
+  switch (tag) {
+    case "text":
+      return token.value;
+    case "variable":
+      return `{{${token.value}${token.transformation ? `|${token.transformation}` : ""}}}`;
+    case "frontmatter-command":
+      return `{{# frontmatter pick: ${token.pick.join(", ")}, omit: ${token.omit.join(
+        ", "
+      )} #}}`;
+    default:
+      return absurd(tag);
+  }
+}
+function matchToken(onText, onVariable, onCommand) {
+  return (token) => {
+    switch (token._tag) {
+      case "text":
+        return onText(token.value);
+      case "variable":
+        return onVariable(token.value, token.transformation);
+      case "frontmatter-command":
+        return onCommand(token);
+      default:
+        return absurd(token);
+    }
+  };
+}
+function parsedTemplateToString(parsedTemplate) {
+  return pipe2(
+    // prettier shut up
+    parsedTemplate,
+    foldMap3(Monoid)(tokenToString)
+  );
+}
+function asFrontmatterString(data) {
+  return ({ pick, omit }) => pipe2(
+    data,
+    filterMapWithIndex3((key, value) => {
+      if (pick.length === 0)
+        return Option_exports.some(value);
+      return pick.includes(key) ? Option_exports.some(value) : Option_exports.none;
+    }),
+    filterMapWithIndex3((key, value) => !omit.includes(key) ? Option_exports.some(value) : Option_exports.none),
+    // stringifyYaml renders an empty object as the literal "{}",
+    // which is invalid when embedded inside a frontmatter block
+    (selected) => Object.keys(selected).length === 0 ? "" : (0, import_obsidian12.stringifyYaml)(selected)
+  );
+}
+function executeTransformation(transformation2) {
+  return (value) => {
+    if (transformation2 === void 0) {
+      return String(value);
+    }
+    switch (transformation2) {
+      case "upper":
+        return String(value).toUpperCase();
+      case "lower":
+        return String(value).toLowerCase();
+      case "stringify":
+        return JSON.stringify(value);
+      case "trim":
+        return String(value).trim();
+      case "capitalize": {
+        const str = String(value);
+        const first2 = str.charAt(0).toUpperCase();
+        return first2 + str.slice(1);
+      }
+      default:
+        return absurd(transformation2);
+    }
+  };
+}
+function applyTransformation(name, value) {
+  const transformation2 = name ? pipe2(
+    parse2(transformations, name),
+    fold(constUndefined, identity)
+  ) : void 0;
+  return executeTransformation(transformation2)(value);
+}
+function executeTemplate(parsedTemplate, formData) {
+  const toFrontmatter = asFrontmatterString(formData);
+  return pipe2(
+    parsedTemplate,
+    filterMap(
+      matchToken(
+        Option_exports.some,
+        (key, transformation2) => pipe2(
+          Option_exports.fromNullable(formData[key]),
+          Option_exports.map(executeTransformation(transformation2))
+        ),
+        (command) => pipe2(
+          //prettier
+          command,
+          toFrontmatter,
+          Option_exports.some
+        )
+      )
+    ),
+    foldMap3(Monoid)(String)
+  );
+}
+
 // src/core/FormResult.ts
-function isPrimitive(value) {
-  return typeof value === "string" || typeof value === "boolean" || typeof value === "number";
-}
-function isPrimitiveArray(value) {
-  return Array.isArray(value) && value.every(isPrimitive);
-}
 var FormResult = class {
   constructor(data, status) {
     this.data = data;
@@ -15368,7 +16087,7 @@ var FormResult = class {
     if (Object.keys(data).length === 0) {
       return "";
     }
-    return (0, import_obsidian12.stringifyYaml)(data);
+    return (0, import_obsidian13.stringifyYaml)(data);
   }
   /**
    * Return the current data as a block of dataview properties
@@ -15392,13 +16111,25 @@ var FormResult = class {
   /**
    * Returns the data formatted as a string matching the provided
    * template.
+   *
+   * Variables use the `{{ key }}` syntax. Optional whitespace is allowed
+   * around the key, and a transformation can be applied with `|`, e.g.
+   * `{{ key | upper }}`. Supported transformations match the ones used by
+   * form templates: `upper`, `lower`, `trim`, `stringify`, `capitalize`.
+   * Unknown keys are left untouched (the literal `{{ key }}` stays in the
+   * output) so users can spot typos easily.
    */
   asString(template) {
-    let result2 = template;
-    for (const [key, value] of Object.entries(this.data)) {
-      result2 = result2.replace(new RegExp(`{{${key}}}`, "g"), value + "");
-    }
-    return result2;
+    return template.replace(
+      /\{\{\s*(\w+)\s*(?:\|\s*(\w+)\s*)?\}\}/g,
+      (match7, key, transformationName) => {
+        const value = this.data[key];
+        if (value === void 0) {
+          return match7;
+        }
+        return applyTransformation(transformationName, value);
+      }
+    );
   }
   /**
    * Gets a single value from the data.
@@ -15425,6 +16156,14 @@ var FormResult = class {
     return ResultValue.from(this.data[key], key);
   }
 };
+
+// src/core/formResultTypes.ts
+function isPrimitive(value) {
+  return typeof value === "string" || typeof value === "boolean" || typeof value === "number";
+}
+function isPrimitiveArray(value) {
+  return Array.isArray(value) && value.every(isPrimitive);
+}
 
 // src/core/formDataFromFormDefaults.ts
 function formDataFromFormDefaults(fields, values) {
@@ -15857,7 +16596,7 @@ var notify = throttle(
   (msg) => log_notice("\u26A0\uFE0F  The form has errors \u26A0\uFE0F", msg.join("\n"), "notice-warning"),
   2e3
 );
-var FormModal2 = class extends import_obsidian13.Modal {
+var FormModal2 = class extends import_obsidian14.Modal {
   constructor(app, modalDefinition, onSubmit, options) {
     var _a;
     super(app);
@@ -15909,7 +16648,7 @@ var FormModal2 = class extends import_obsidian13.Modal {
         }
       })
     );
-    const buttons = new import_obsidian13.Setting(contentEl).addButton(
+    const buttons = new import_obsidian14.Setting(contentEl).addButton(
       (btn) => btn.setButtonText("Cancel").onClick(this.formEngine.triggerCancel)
     );
     buttons.addButton(
@@ -16035,33 +16774,6 @@ function findFieldErrors(fields) {
     // Separated.left,
   );
 }
-
-// src/core/template/templateSchema.ts
-var TemplateTextSchema = object({
-  _tag: literal("text"),
-  value: string()
-});
-var upper = transform(enumType(["upper", "uppercase"]), (_) => "upper");
-var transformations = union4([
-  upper,
-  literal("lower"),
-  literal("trim"),
-  literal("stringify"),
-  literal("capitalize")
-]);
-var TemplateVariableSchema = object({
-  _tag: literal("variable"),
-  value: string(),
-  transformation: optional(transformations)
-});
-var FrontmatterCommandSchema = object({
-  _tag: literal("frontmatter-command"),
-  pick: array2(string()),
-  omit: array2(string())
-});
-var ParsedTemplateSchema = array2(
-  union4([TemplateTextSchema, TemplateVariableSchema, FrontmatterCommandSchema])
-);
 
 // src/core/formDefinitionSchema.ts
 var FieldDefinitionSchema = object({
@@ -16608,7 +17320,7 @@ var API = class {
         (name) => resolve_tfile(name, this.app),
         Either_exports.map((f) => this.app.metadataCache.getCache(f.path)),
         Either_exports.chainW(Either_exports.fromNullable(new Error("No cache found"))),
-        Either_exports.map((tf) => (0, import_obsidian14.parseFrontMatterAliases)(tf.frontmatter)),
+        Either_exports.map((tf) => (0, import_obsidian15.parseFrontMatterAliases)(tf.frontmatter)),
         Either_exports.match(
           () => [],
           (aliases) => aliases
@@ -16724,7 +17436,7 @@ var API = class {
 };
 
 // src/ModalFormSettingTab.ts
-var import_obsidian15 = require("obsidian");
+var import_obsidian16 = require("obsidian");
 
 // src/core/settings.ts
 var OpenPositionSchema = enumType(["left", "right", "mainView"]);
@@ -16759,7 +17471,7 @@ function parseSettings(maybeSettings) {
 }
 
 // src/ModalFormSettingTab.ts
-var ModalFormSettingTab = class extends import_obsidian15.PluginSettingTab {
+var ModalFormSettingTab = class extends import_obsidian16.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -16773,7 +17485,7 @@ var ModalFormSettingTab = class extends import_obsidian15.PluginSettingTab {
       href: "https://github.com/danielo515/obsidian-modal-form"
     });
     const settings2 = await plugin.getSettings();
-    new import_obsidian15.Setting(containerEl).setName("Editor position").setDesc("Where the form editor will be opened. In mobile it will always be main view.").addDropdown((component) => {
+    new import_obsidian16.Setting(containerEl).setName("Editor position").setDesc("Where the form editor will be opened. In mobile it will always be main view.").addDropdown((component) => {
       component.addOptions({
         left: "Left",
         right: "Right",
@@ -16784,7 +17496,7 @@ var ModalFormSettingTab = class extends import_obsidian15.PluginSettingTab {
         }
       });
     });
-    new import_obsidian15.Setting(containerEl).setName("Attach Modal-Form Shortcut to Global Window").setDesc(
+    new import_obsidian16.Setting(containerEl).setName("Attach Modal-Form Shortcut to Global Window").setDesc(
       "Enable or disable attaching a modal-form shortcut to the global window. If you enable this you will be able to access the API using the global variable `MF`. Enabling is immediate, disabling requires a restart."
     ).addToggle((component) => {
       component.setValue(settings2.attachShortcutToGlobalWindow).onChange(async (value) => {
@@ -16850,697 +17562,6 @@ var settingsStore = {
 
 // src/views/FormBuilder.svelte
 var import_obsidian22 = require("obsidian");
-
-// src/core/template/templateParser.ts
-var import_obsidian16 = require("obsidian");
-
-// node_modules/parser-ts/es6/ParseResult.js
-var __assign = function() {
-  __assign = Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-      s = arguments[i];
-      for (var p in s)
-        if (Object.prototype.hasOwnProperty.call(s, p))
-          t[p] = s[p];
-    }
-    return t;
-  };
-  return __assign.apply(this, arguments);
-};
-var success = function(value, next, start) {
-  return right3({
-    value,
-    next,
-    start
-  });
-};
-var error = function(input, expected2, fatal) {
-  if (expected2 === void 0) {
-    expected2 = [];
-  }
-  if (fatal === void 0) {
-    fatal = false;
-  }
-  return left3({
-    input,
-    expected: expected2,
-    fatal
-  });
-};
-var withExpected = function(err, expected2) {
-  return __assign(__assign({}, err), { expected: expected2 });
-};
-var extend4 = function(err1, err2) {
-  return getSemigroup6().concat(err1, err2);
-};
-var getSemigroup6 = function() {
-  return {
-    concat: function(x, y) {
-      if (x.input.cursor < y.input.cursor)
-        return last().concat(x, y);
-      if (x.input.cursor > y.input.cursor)
-        return first().concat(x, y);
-      return struct2({
-        input: first(),
-        fatal: first(),
-        expected: getMonoid2()
-      }).concat(x, y);
-    }
-  };
-};
-
-// node_modules/parser-ts/es6/Stream.js
-var stream = function(buffer, cursor) {
-  if (cursor === void 0) {
-    cursor = 0;
-  }
-  return {
-    buffer,
-    cursor
-  };
-};
-var get2 = function(s) {
-  return lookup2(s.cursor, s.buffer);
-};
-var atEnd = function(s) {
-  return s.cursor >= s.buffer.length;
-};
-var getAndNext = function(s) {
-  return pipe(get2(s), map4(function(a) {
-    return { value: a, next: { buffer: s.buffer, cursor: s.cursor + 1 } };
-  }));
-};
-
-// node_modules/parser-ts/es6/Parser.js
-var __assign2 = function() {
-  __assign2 = Object.assign || function(t) {
-    for (var s, i = 1, n = arguments.length; i < n; i++) {
-      s = arguments[i];
-      for (var p in s)
-        if (Object.prototype.hasOwnProperty.call(s, p))
-          t[p] = s[p];
-    }
-    return t;
-  };
-  return __assign2.apply(this, arguments);
-};
-var succeed = function(a) {
-  return function(i) {
-    return success(a, i, i);
-  };
-};
-var fail = function() {
-  return function(i) {
-    return error(i);
-  };
-};
-var failAt = function(i) {
-  return function() {
-    return error(i);
-  };
-};
-var sat = function(predicate) {
-  return pipe(withStart(item()), chain6(function(_a) {
-    var a = _a[0], start = _a[1];
-    return predicate(a) ? of8(a) : failAt(start);
-  }));
-};
-var expected = function(p, message) {
-  return function(i) {
-    return pipe(p(i), mapLeft(function(err) {
-      return withExpected(err, [message]);
-    }));
-  };
-};
-var item = function() {
-  return function(i) {
-    return pipe(getAndNext(i), fold2(function() {
-      return error(i);
-    }, function(_a) {
-      var value = _a.value, next = _a.next;
-      return success(value, next, i);
-    }));
-  };
-};
-var seq = function(fa, f) {
-  return function(i) {
-    return pipe(fa(i), chain2(function(s) {
-      return pipe(f(s.value)(s.next), chain2(function(next) {
-        return success(next.value, next.next, i);
-      }));
-    }));
-  };
-};
-var either2 = function(p, f) {
-  return function(i) {
-    var e = p(i);
-    if (isRight2(e)) {
-      return e;
-    }
-    if (e.left.fatal) {
-      return e;
-    }
-    return pipe(f()(i), mapLeft(function(err) {
-      return extend4(e.left, err);
-    }));
-  };
-};
-var withStart = function(p) {
-  return function(i) {
-    return pipe(p(i), map3(function(s) {
-      return __assign2(__assign2({}, s), { value: [s.value, i] });
-    }));
-  };
-};
-var maybe = function(M) {
-  return alt6(function() {
-    return of8(M.empty);
-  });
-};
-var eof = function() {
-  return expected(function(i) {
-    return atEnd(i) ? success(void 0, i, i) : error(i);
-  }, "end of file");
-};
-var many = function(p) {
-  return pipe(many1(p), alt6(function() {
-    return of8([]);
-  }));
-};
-var many1 = function(parser) {
-  return pipe(parser, chain6(function(head6) {
-    return chainRec_(of2(head6), function(acc) {
-      return pipe(parser, map9(function(a) {
-        return left3(append4(a)(acc));
-      }), alt6(function() {
-        return of8(right3(acc));
-      }));
-    });
-  }));
-};
-var sepBy = function(sep, p) {
-  var nil = of8([]);
-  return pipe(sepBy1(sep, p), alt6(function() {
-    return nil;
-  }));
-};
-var sepBy1 = function(sep, p) {
-  return pipe(p, chain6(function(head6) {
-    return pipe(many(pipe(sep, apSecond6(p))), map9(function(tail5) {
-      return prepend3(head6)(tail5);
-    }));
-  }));
-};
-var between = function(left6, right6) {
-  return function(p) {
-    return pipe(left6, chain6(function() {
-      return p;
-    }), chainFirst6(function() {
-      return right6;
-    }));
-  };
-};
-var surroundedBy = function(bound) {
-  return between(bound, bound);
-};
-var lookAhead = function(p) {
-  return function(i) {
-    return pipe(p(i), chain2(function(next) {
-      return success(next.value, i, i);
-    }));
-  };
-};
-var optional2 = function(parser) {
-  return pipe(parser, map9(some3), alt6(function() {
-    return succeed(none2);
-  }));
-};
-var many1Till = function(parser, terminator) {
-  return pipe(parser, chain6(function(x) {
-    return chainRec_(of(x), function(acc) {
-      return pipe(terminator, map9(function() {
-        return right3(acc);
-      }), alt6(function() {
-        return pipe(parser, map9(function(a) {
-          return left3(append3(a)(acc));
-        }));
-      }));
-    });
-  }));
-};
-var map_ = function(ma, f) {
-  return function(i) {
-    return pipe(ma(i), map3(function(s) {
-      return __assign2(__assign2({}, s), { value: f(s.value) });
-    }));
-  };
-};
-var ap_ = function(mab, ma) {
-  return chain_(mab, function(f) {
-    return map_(ma, f);
-  });
-};
-var chain_ = function(ma, f) {
-  return seq(ma, f);
-};
-var chainRec_ = function(a, f) {
-  var split2 = function(start) {
-    return function(result2) {
-      return isLeft2(result2.value) ? left3({ value: result2.value.left, stream: result2.next }) : right3(success(result2.value.right, result2.next, start));
-    };
-  };
-  return function(start) {
-    return tailRec({ value: a, stream: start }, function(state) {
-      var result2 = f(state.value)(state.stream);
-      if (isLeft2(result2)) {
-        return right3(error(state.stream, result2.left.expected, result2.left.fatal));
-      }
-      return split2(start)(result2.right);
-    });
-  };
-};
-var alt_ = function(fa, that) {
-  return either2(fa, that);
-};
-var map9 = function(f) {
-  return function(fa) {
-    return map_(fa, f);
-  };
-};
-var apFirst6 = function(fb) {
-  return function(fa) {
-    return ap_(map_(fa, function(a) {
-      return function() {
-        return a;
-      };
-    }), fb);
-  };
-};
-var apSecond6 = function(fb) {
-  return function(fa) {
-    return ap_(map_(fa, function() {
-      return function(b) {
-        return b;
-      };
-    }), fb);
-  };
-};
-var of8 = succeed;
-var chain6 = function(f) {
-  return function(ma) {
-    return chain_(ma, f);
-  };
-};
-var chainFirst6 = function(f) {
-  return function(ma) {
-    return chain_(ma, function(a) {
-      return map_(f(a), function() {
-        return a;
-      });
-    });
-  };
-};
-var alt6 = function(that) {
-  return function(fa) {
-    return alt_(fa, that);
-  };
-};
-var URI6 = "Parser";
-var getSemigroup7 = function(S) {
-  return {
-    concat: function(x, y) {
-      return ap_(map_(x, function(x2) {
-        return function(y2) {
-          return S.concat(x2, y2);
-        };
-      }), y);
-    }
-  };
-};
-var getMonoid5 = function(M) {
-  return __assign2(__assign2({}, getSemigroup7(M)), { empty: succeed(M.empty) });
-};
-var ChainRec2 = {
-  URI: URI6,
-  map: map_,
-  ap: ap_,
-  chain: chain_,
-  chainRec: chainRec_
-};
-
-// node_modules/parser-ts/es6/char.js
-var maybe2 = maybe(Monoid);
-var char = function(c) {
-  return expected(sat(function(s) {
-    return s === c;
-  }), '"'.concat(c, '"'));
-};
-var notChar = function(c) {
-  return expected(sat(function(c1) {
-    return c1 !== c;
-  }), 'anything but "'.concat(c, '"'));
-};
-var many2 = function(parser) {
-  return maybe2(many12(parser));
-};
-var many12 = function(parser) {
-  return pipe(many1(parser), map9(function(nea) {
-    return nea.join("");
-  }));
-};
-var isDigit = function(c) {
-  return "0123456789".indexOf(c) !== -1;
-};
-var digit = expected(sat(isDigit), "a digit");
-var spaceRe = /^\s$/;
-var isSpace = function(c) {
-  return spaceRe.test(c);
-};
-var space2 = expected(sat(isSpace), "a whitespace");
-var isUnderscore = function(c) {
-  return c === "_";
-};
-var isLetter = function(c) {
-  return /[a-z]/.test(c.toLowerCase());
-};
-var isAlphanum = function(c) {
-  return isLetter(c) || isDigit(c) || isUnderscore(c);
-};
-var alphanum = expected(sat(isAlphanum), "a word character");
-var letter = expected(sat(isLetter), "a letter");
-var isUnicodeLetter = function(c) {
-  return c.toLowerCase() !== c.toUpperCase();
-};
-var unicodeLetter = expected(sat(isUnicodeLetter), "an unicode letter");
-var isUpper = function(c) {
-  return isLetter(c) && c === c.toUpperCase();
-};
-var upper2 = expected(sat(isUpper), "an upper case letter");
-var isLower = function(c) {
-  return isLetter(c) && c === c.toLowerCase();
-};
-var lower = expected(sat(isLower), "a lower case letter");
-var notDigit = expected(sat(not(isDigit)), "a non-digit");
-var notSpace = expected(sat(not(isSpace)), "a non-whitespace character");
-var notAlphanum = expected(sat(not(isAlphanum)), "a non-word character");
-var notLetter = expected(sat(not(isLetter)), "a non-letter character");
-var notUpper = expected(sat(not(isUpper)), "anything but an upper case letter");
-var notLower = expected(sat(not(isLower)), "anything but a lower case letter");
-
-// node_modules/fp-ts/es6/Monoid.js
-var concatAll5 = function(M) {
-  return concatAll2(M)(M.empty);
-};
-var monoidVoid = {
-  concat: semigroupVoid.concat,
-  empty: void 0
-};
-var monoidAll = {
-  concat: semigroupAll.concat,
-  empty: true
-};
-var monoidAny = {
-  concat: semigroupAny.concat,
-  empty: false
-};
-var monoidString = {
-  concat: semigroupString.concat,
-  empty: ""
-};
-var monoidSum = {
-  concat: semigroupSum.concat,
-  empty: 0
-};
-var monoidProduct = {
-  concat: semigroupProduct.concat,
-  empty: 1
-};
-
-// node_modules/parser-ts/es6/string.js
-var string2 = function(s) {
-  return expected(ChainRec2.chainRec(s, function(acc) {
-    return pipe(charAt(0, acc), fold2(function() {
-      return of8(right3(s));
-    }, function(c) {
-      return pipe(char(c), chain6(function() {
-        return of8(left3(acc.slice(1)));
-      }));
-    }));
-  }), JSON.stringify(s));
-};
-var fold4 = concatAll5(getMonoid5(Monoid));
-var maybe3 = maybe(Monoid);
-var many3 = function(parser) {
-  return maybe3(many13(parser));
-};
-var many13 = function(parser) {
-  return pipe(many1(parser), map9(function(nea) {
-    return nea.join("");
-  }));
-};
-var charAt = function(index, s) {
-  return index >= 0 && index < s.length ? some3(s.charAt(index)) : none2;
-};
-var spaces = many2(space2);
-var spaces1 = many12(space2);
-var notSpaces = many2(notSpace);
-var notSpaces1 = many12(notSpace);
-var fromString = function(s) {
-  var n = +s;
-  return isNaN(n) || s === "" ? none2 : some3(n);
-};
-var int = expected(pipe(fold4([maybe3(char("-")), many12(digit)]), map9(function(s) {
-  return +s;
-})), "an integer");
-var float = expected(pipe(fold4([maybe3(char("-")), many2(digit), maybe3(fold4([char("."), many12(digit)]))]), chain6(function(s) {
-  return pipe(fromString(s), fold2(function() {
-    return fail();
-  }, succeed));
-})), "a float");
-var doubleQuotedString = surroundedBy(char('"'))(many3(either2(string2('\\"'), function() {
-  return notChar('"');
-})));
-function run2(string3) {
-  return function(p) {
-    return p(stream(string3.split("")));
-  };
-}
-
-// src/core/template/templateParser.ts
-function TemplateText(value) {
-  return { _tag: "text", value };
-}
-function TemplateVariable(value, transformation2) {
-  return { _tag: "variable", value, transformation: transformation2 };
-}
-function FrontmatterCommand(pick = [], omit = []) {
-  return { _tag: "frontmatter-command", pick, omit };
-}
-var EofStr = pipe2(
-  eof(),
-  map9(() => "")
-);
-var open = fold4([string2("{{"), spaces]);
-var close = expected(fold4([spaces, string2("}}")]), 'closing variable tag: "}}"');
-var identifier = many13(alphanum);
-var transformation = pipe2(
-  fold4([spaces, string2("|"), spaces]),
-  apSecond6(identifier),
-  map9((x) => {
-    return pipe2(
-      parse2(transformations, x),
-      fold(constUndefined, (x2) => x2)
-    );
-  })
-);
-var templateIdentifier = pipe2(
-  identifier,
-  // First, we parse the variable name
-  // chain takes a function that accepts the result of the previous parser and returns a new parser
-  chain6(
-    (value) => pipe2(
-      // Within this pipe we build a parser of Parser<string, TemplateVariable> also using the value of the previous parser
-      optional2(transformation),
-      map9((trans) => TemplateVariable(value, Option_exports.toUndefined(trans)))
-    )
-  ),
-  // finally we wrap the resulting parser in between the open and close strings
-  between(open, close)
-);
-var commandOpen = fold4([string2("{#"), spaces]);
-var commandClose = expected(fold4([spaces, string2("#}")]), 'a closing command tag: "#}"');
-var sepByComma = sepBy(fold4([char(","), spaces]), identifier);
-var commandOptionParser = (option2) => pipe2(
-  fold4([string2(option2), spaces]),
-  // dam prettier
-  apSecond6(sepByComma)
-);
-var frontmatterCommandParser = pipe2(
-  fold4([string2("frontmatter"), spaces]),
-  apSecond6(optional2(commandOptionParser("pick:")))
-  //P.apFirst(S.spaces),
-  // P.chain(commandOptionParser("pick:")),
-);
-var commandParser = pipe2(
-  frontmatterCommandParser,
-  between(commandOpen, commandClose),
-  map9((value) => {
-    return pipe2(
-      value,
-      Option_exports.fold(() => [], identity),
-      FrontmatterCommand
-    );
-  })
-);
-var OpenOrEof = pipe2(
-  open,
-  alt6(() => commandOpen),
-  alt6(() => EofStr)
-);
-var anythingUntilOpenOrEOF = many1Till(item(), lookAhead(OpenOrEof));
-var text2 = pipe2(
-  anythingUntilOpenOrEOF,
-  map9((value) => TemplateText(value.join("")))
-);
-var TextOrVariable = pipe2(
-  templateIdentifier,
-  alt6(() => commandParser),
-  alt6(() => text2)
-);
-var Template = pipe2(
-  many(TextOrVariable),
-  // dam prettier
-  apFirst6(eof())
-);
-function parseTemplate(template) {
-  return pipe2(
-    Template,
-    run2(template),
-    fold(
-      ({ expected: expected2 }) => left3(`Expected ${expected2.join(" or ")}`),
-      (result2) => right3(result2.value)
-    )
-  );
-}
-function templateVariables(parsedTemplate) {
-  return pipe2(
-    parsedTemplate,
-    fold(
-      () => [],
-      filterMap((token) => {
-        if (token._tag === "variable") {
-          return Option_exports.some(token.value);
-        }
-        return Option_exports.none;
-      })
-    )
-  );
-}
-function templateError(parsedTemplate) {
-  return pipe2(
-    parsedTemplate,
-    fold(
-      (error2) => error2,
-      () => void 0
-    )
-  );
-}
-function tokenToString(token) {
-  const tag = token._tag;
-  switch (tag) {
-    case "text":
-      return token.value;
-    case "variable":
-      return `{{${token.value}${token.transformation ? `|${token.transformation}` : ""}}}`;
-    case "frontmatter-command":
-      return `{{# frontmatter pick: ${token.pick.join(", ")}, omit: ${token.omit.join(
-        ", "
-      )} #}}`;
-    default:
-      return absurd(tag);
-  }
-}
-function matchToken(onText, onVariable, onCommand) {
-  return (token) => {
-    switch (token._tag) {
-      case "text":
-        return onText(token.value);
-      case "variable":
-        return onVariable(token.value, token.transformation);
-      case "frontmatter-command":
-        return onCommand(token);
-      default:
-        return absurd(token);
-    }
-  };
-}
-function parsedTemplateToString(parsedTemplate) {
-  return pipe2(
-    // prettier shut up
-    parsedTemplate,
-    foldMap3(Monoid)(tokenToString)
-  );
-}
-function asFrontmatterString(data) {
-  return ({ pick, omit }) => pipe2(
-    data,
-    filterMapWithIndex3((key, value) => {
-      if (pick.length === 0)
-        return Option_exports.some(value);
-      return pick.includes(key) ? Option_exports.some(value) : Option_exports.none;
-    }),
-    filterMapWithIndex3((key, value) => !omit.includes(key) ? Option_exports.some(value) : Option_exports.none),
-    // stringifyYaml renders an empty object as the literal "{}",
-    // which is invalid when embedded inside a frontmatter block
-    (selected) => Object.keys(selected).length === 0 ? "" : (0, import_obsidian16.stringifyYaml)(selected)
-  );
-}
-function executeTransformation(transformation2) {
-  return (value) => {
-    if (transformation2 === void 0) {
-      return String(value);
-    }
-    switch (transformation2) {
-      case "upper":
-        return String(value).toUpperCase();
-      case "lower":
-        return String(value).toLowerCase();
-      case "stringify":
-        return JSON.stringify(value);
-      case "trim":
-        return String(value).trim();
-      case "capitalize": {
-        const str = String(value);
-        const first2 = str.charAt(0).toUpperCase();
-        return first2 + str.slice(1);
-      }
-      default:
-        return absurd(transformation2);
-    }
-  };
-}
-function executeTemplate(parsedTemplate, formData) {
-  const toFrontmatter = asFrontmatterString(formData);
-  return pipe2(
-    parsedTemplate,
-    filterMap(
-      matchToken(
-        Option_exports.some,
-        (key, transformation2) => pipe2(
-          Option_exports.fromNullable(formData[key]),
-          Option_exports.map(executeTransformation(transformation2))
-        ),
-        (command) => pipe2(
-          //prettier
-          command,
-          toFrontmatter,
-          Option_exports.some
-        )
-      )
-    ),
-    foldMap3(Monoid)(String)
-  );
-}
 
 // node_modules/svelte/src/runtime/easing/index.js
 function cubicOut(t) {

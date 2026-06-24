@@ -85168,6 +85168,22 @@ var RequestHandler = class {
       })) : void 0
     });
   }
+  extractVaultPath(req, res) {
+    let decoded;
+    try {
+      decoded = decodeURIComponent(req.path.slice(req.path.indexOf("/", 1) + 1));
+    } catch {
+      this.returnCannedResponse(res, { errorCode: 40021 /* PathTraversalNotAllowed */ });
+      return null;
+    }
+    const syntheticRoot = "/vault";
+    const resolved = import_path3.posix.resolve(syntheticRoot, decoded);
+    if (resolved !== syntheticRoot && !resolved.startsWith(syntheticRoot + "/")) {
+      this.returnCannedResponse(res, { errorCode: 40021 /* PathTraversalNotAllowed */ });
+      return null;
+    }
+    return decoded;
+  }
   async _vaultGet(path2, req, res) {
     const normalizedPath = path2.endsWith("/") ? path2.slice(0, -1) : path2;
     let filePath = normalizedPath;
@@ -85289,9 +85305,8 @@ var RequestHandler = class {
     res.send(Buffer.from(content));
   }
   async vaultGet(req, res) {
-    const path2 = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const path2 = this.extractVaultPath(req, res);
+    if (path2 === null) return;
     return this._vaultGet(path2, req, res);
   }
   /** Resolves a raw path (possibly containing a URL-embedded target) into a
@@ -85351,9 +85366,8 @@ var RequestHandler = class {
     return;
   }
   async vaultPut(req, res) {
-    const rawPath = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const rawPath = this.extractVaultPath(req, res);
+    if (rawPath === null) return;
     const resolved = await this._resolvePathAndTarget(rawPath);
     if (resolved === null) {
       if (rawPath.split("/").some((s) => ["heading", "block", "frontmatter"].includes(s))) {
@@ -85453,9 +85467,8 @@ var RequestHandler = class {
     }
   }
   async vaultPatch(req, res) {
-    const rawPath = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const rawPath = this.extractVaultPath(req, res);
+    if (rawPath === null) return;
     return this._vaultPatch(rawPath, req, res);
   }
   async _vaultPatchTargeted(filePath, targetType, target, operation, req, res, extraOpts) {
@@ -85521,9 +85534,8 @@ var RequestHandler = class {
     return;
   }
   async vaultPost(req, res) {
-    const rawPath = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const rawPath = this.extractVaultPath(req, res);
+    if (rawPath === null) return;
     const resolved = await this._resolvePathAndTarget(rawPath);
     if (resolved === null) {
       if (rawPath.split("/").some((s) => ["heading", "block", "frontmatter"].includes(s))) {
@@ -85581,9 +85593,8 @@ var RequestHandler = class {
     return;
   }
   async vaultDelete(req, res) {
-    const rawPath = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const rawPath = this.extractVaultPath(req, res);
+    if (rawPath === null) return;
     const resolved = await this._resolvePathAndTarget(rawPath);
     if (resolved?.targetType) {
       this.returnCannedResponse(res, {
@@ -85655,9 +85666,8 @@ var RequestHandler = class {
     }
   }
   async vaultMove(req, res) {
-    const path2 = decodeURIComponent(
-      req.path.slice(req.path.indexOf("/", 1) + 1)
-    );
+    const path2 = this.extractVaultPath(req, res);
+    if (path2 === null) return;
     return this._vaultMove(path2, req, res);
   }
   getPeriodicNoteInterface() {
@@ -87215,5 +87225,3 @@ response-time/index.js:
    * MIT Licensed
    *)
 */
-
-/* nosourcemap */
