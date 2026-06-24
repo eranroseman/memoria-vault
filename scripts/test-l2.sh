@@ -5,9 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROFILE="memoria-writer"
 ARTIFACT="projects/l2-smoke/live-dispatch.md"
-MODEL_PROVIDER="${MEMORIA_L2_MODEL_PROVIDER:-custom}"
-MODEL_BASE_URL="${MEMORIA_L2_MODEL_BASE_URL:-${MEMORIA_MODEL_BASE_URL:-http://127.0.0.1:11434/v1}}"
-MODEL_NAME="${MEMORIA_L2_MODEL_NAME:-${MEMORIA_MODEL_NAME:-qwen2.5:7b}}"
+MODEL_PROVIDER="${MEMORIA_L2_MODEL_PROVIDER:-kilocode}"
+MODEL_BASE_URL="${MEMORIA_L2_MODEL_BASE_URL:-${MEMORIA_MODEL_BASE_URL:-https://api.kilo.ai/api/gateway}}"
+MODEL_NAME="${MEMORIA_L2_MODEL_NAME:-${MEMORIA_MODEL_NAME:-deepseek/deepseek-v4-flash}}"
 MODEL_CONTEXT_LENGTH="${MEMORIA_L2_MODEL_CONTEXT_LENGTH:-${MEMORIA_MODEL_CONTEXT_LENGTH:-65536}}"
 USE_SMOKE_MODEL="${MEMORIA_L2_USE_SMOKE_MODEL:-1}"
 KEEP_TMP=0
@@ -24,22 +24,22 @@ Prerequisites:
   - hermes on PATH with MCP support
   - Python runtime deps installed (src/.memoria/mcp/requirements.txt)
   - git on PATH
-  - a cheap OpenAI-compatible model endpoint, or the built-in deterministic
-    smoke endpoint used by default
+  - Kilo Code model access, an OpenAI-compatible endpoint override, or the
+    built-in deterministic smoke endpoint used by default
 
 Model defaults:
   MEMORIA_L2_USE_SMOKE_MODEL=1      # starts a local deterministic endpoint
-  MEMORIA_L2_MODEL_PROVIDER=custom  # used when MEMORIA_L2_USE_SMOKE_MODEL=0
-  MEMORIA_L2_MODEL_BASE_URL=http://127.0.0.1:11434/v1
-  MEMORIA_L2_MODEL_NAME=qwen2.5:7b
+  MEMORIA_L2_MODEL_PROVIDER=kilocode  # used when MEMORIA_L2_USE_SMOKE_MODEL=0
+  MEMORIA_L2_MODEL_BASE_URL=https://api.kilo.ai/api/gateway
+  MEMORIA_L2_MODEL_NAME=deepseek/deepseek-v4-flash
   MEMORIA_L2_MODEL_CONTEXT_LENGTH=65536
 
 The smoke creates a disposable vault and temporary HERMES_HOME, installs a
 minimal writer profile, replaces Obsidian's HTTPS MCP with a filesystem-backed
 stdio shim, deploys the real memoria-policy-gate plugin, runs one
 `hermes chat -q` dispatch, then asserts the written artifact and audit row.
-Set MEMORIA_L2_USE_SMOKE_MODEL=0, or pass --real-model, to use your real local
-model endpoint instead of the deterministic smoke backend.
+Set MEMORIA_L2_USE_SMOKE_MODEL=0, or pass --real-model, to use Kilo or your
+explicit endpoint override instead of the deterministic smoke backend.
 
 Exit codes:
   0   passed

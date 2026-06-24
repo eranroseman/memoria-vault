@@ -31,6 +31,7 @@ PROD_MODELS = {
     "memoria-librarian": "~anthropic/claude-haiku-latest",
     "memoria-engineer": "~anthropic/claude-haiku-latest",
 }
+TEST_MODEL = "deepseek/deepseek-v4-flash"
 PLATFORM_KEYS = {
     "cli",
     "cron",
@@ -141,11 +142,11 @@ def _render_profile_config(name: str, *, env: str) -> dict:
         context = ""
     elif env == "test":
         model = {
-            "{{MODEL_PROVIDER}}": "custom",
-            "{{MODEL_BASE_URL}}": "http://127.0.0.1:11434/v1",
-            "{{MODEL_DEFAULT}}": "qwen2.5:7b",
+            "{{MODEL_PROVIDER}}": "kilocode",
+            "{{MODEL_BASE_URL}}": "https://api.kilo.ai/api/gateway",
+            "{{MODEL_DEFAULT}}": TEST_MODEL,
         }
-        context = "  context_length: 65536\n  ollama_num_ctx: 65536\n"
+        context = ""
     else:
         raise AssertionError(env)
 
@@ -165,16 +166,22 @@ def test_prod_model_overlay_preserves_shipped_profile_tiers():
         }
 
 
-def test_test_model_overlay_wires_profiles_to_local_ollama():
+def test_test_model_overlay_wires_profiles_to_kilo_deepseek_flash():
     for name in EXPECTED:
         model = _render_profile_config(name, env="test")["model"]
         assert model == {
-            "provider": "custom",
-            "base_url": "http://127.0.0.1:11434/v1",
-            "default": "qwen2.5:7b",
-            "context_length": 65536,
-            "ollama_num_ctx": 65536,
+            "provider": "kilocode",
+            "base_url": "https://api.kilo.ai/api/gateway",
+            "default": TEST_MODEL,
         }
+
+
+def test_dispatched_profiles_spell_out_kanban_startup():
+    for name in EXPECTED - {"memoria-copi"}:
+        soul = (PROFILES / name / "SOUL.md").read_text(encoding="utf-8")
+        assert "`work kanban task t_...`" in soul
+        assert "Call\n`kanban_show()` immediately" in soul
+        assert "`kanban_complete(...)` or\n`kanban_block(...)`" in soul
 
 
 def test_every_agent_has_a_lane_override():

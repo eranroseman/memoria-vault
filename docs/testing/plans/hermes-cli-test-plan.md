@@ -24,25 +24,24 @@ read-only/dry-run commands — *nothing* written).
 
 ## 1. Test environment setup
 
-### 1.1 Switch all agents to the local test model
+### 1.1 Switch all agents to the test model
 
-Run the suite against the Linux/WSL local-model overlay so the test run does not
-depend on paid Kilo Code pricing or mutate the production model tiers. The supported
-path is installer-owned: do not hand-edit the five profile `config.yaml` files.
+Run the suite against the Linux/WSL test overlay so the test run does not mutate
+the production model tiers. The supported path is installer-owned: do not hand-edit
+the five profile `config.yaml` files.
 
-Start Ollama with a tool-capable local model, then render all profiles through the
-test overlay:
+Render all profiles through the test overlay:
 
 ```bash
-ollama list | grep qwen2.5:7b
 MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
 hermes profile show memoria-librarian | grep -i model
 ```
 
-Expected model block: `provider: custom`, `base_url: http://127.0.0.1:11434/v1`,
-`default: qwen2.5:7b`, `context_length: 65536`, and `ollama_num_ctx: 65536`.
-Override with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or
-`MEMORIA_MODEL_CONTEXT_LENGTH` if your local endpoint differs.
+Expected model block: `provider: kilocode`,
+`base_url: https://api.kilo.ai/api/gateway`, and
+`default: deepseek/deepseek-v4-flash`. Override with
+`MEMORIA_MODEL_PROVIDER=custom`, `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`,
+or `MEMORIA_MODEL_CONTEXT_LENGTH` for an explicit local endpoint.
 
 > Auxiliary slots (title/approval/mcp/skills-hub/compression) are already cheap and
 > set in the **global** `~/.hermes/config.yaml`; leave them. See
@@ -104,7 +103,7 @@ Each case below gives: **Setup** (fixtures/preconditions) · **Run** (invocation
 | # | Run | Pass criteria |
 |---|---|---|
 | S1 | `hermes profile list` | all 5 `memoria-*` profiles listed, status OK |
-| S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `inclusionai/ling-2.6-flash` (test config is live) |
+| S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `deepseek/deepseek-v4-flash` (test config is live) |
 | S3 | `hermes -p memoria-librarian chat -s catalog-find-source "<F2 topic>"` | returns ranked results; **no** write row in `audit.jsonl` |
 | S4 | `hermes -p memoria-librarian chat -s catalog-enrich-record smithA` | `catalog/papers/smithA.md` created; `allow_with_log` row in `audit.jsonl` |
 | S5 | `hermes -p memoria-copi chat -s ask-question-source catalog/papers/smithA.md` then ask it to "write a note" | questions only; **`deny`** (or no write) for `memoria-copi` in `audit.jsonl` — write-wall holds |
@@ -211,7 +210,7 @@ These are deterministic operation entry points, not chat profile skills. They ar
 | ID | Run | Pass criteria |
 |---|---|---|
 | P1 | `hermes profile list` | all 5 `memoria-*`: alias, status, installed path |
-| P2 | `hermes profile show memoria-peer-reviewer` | shows `SOUL.md`, MCP servers (`policy`, `obsidian`), allowed skills, `.env` key **names** (values redacted), and model = `inclusionai/ling-2.6-flash` |
+| P2 | `hermes profile show memoria-peer-reviewer` | shows `SOUL.md`, MCP servers (`policy`, `obsidian`), allowed skills, `.env` key **names** (values redacted), and model = `deepseek/deepseek-v4-flash` |
 | P3 | `bash scripts/install.sh --profiles-only` (the supported form of `profile install`) | deploys vault source → `~/.hermes/profiles/`; re-run `profile show` reflects the change |
 | P4 | `hermes profile remove memoria-<tmp>` (on a throwaway alias) | registration removed; vault source under `.memoria/profiles/` **untouched** |
 
@@ -246,7 +245,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
 | X5 | **Dry-run safety** — Peer-reviewer skills and deterministic operations with `--dry-run` | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
-| X7 | **Model in effect** — `profile show` for all 5 | all on `inclusionai/ling-2.6-flash` during the run; restored to Claude tiers after (§1.5) |
+| X7 | **Model in effect** — `profile show` for all 5 | all on `deepseek/deepseek-v4-flash` during the run; restored to Claude tiers after (§1.5) |
 
 ---
 
