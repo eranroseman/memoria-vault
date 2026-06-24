@@ -63,6 +63,10 @@ $AllProfiles = @('memoria-copi', 'memoria-librarian', 'memoria-writer', 'memoria
 $RequiredFiles = @('SOUL.md', 'config.yaml', 'distribution.yaml')
 $VenvPython = $null
 $MemoriaEnv = if ($env:MEMORIA_ENV) { $env:MEMORIA_ENV } else { 'prod' }
+$MemoriaTestModelProvider = if ($env:MEMORIA_MODEL_PROVIDER) { $env:MEMORIA_MODEL_PROVIDER } else { 'kilocode' }
+$MemoriaTestModelBaseUrl = if ($env:MEMORIA_MODEL_BASE_URL) { $env:MEMORIA_MODEL_BASE_URL } else { 'https://api.kilo.ai/api/gateway' }
+$MemoriaTestModelDefault = if ($env:MEMORIA_MODEL_NAME) { $env:MEMORIA_MODEL_NAME } else { 'deepseek/deepseek-v4-flash' }
+$MemoriaTestModelContextLength = if ($env:MEMORIA_MODEL_CONTEXT_LENGTH) { $env:MEMORIA_MODEL_CONTEXT_LENGTH } else { '' }
 
 function Write-Line { param([string]$Message) Write-Host $Message }
 function Write-Header { param([string]$Message) Write-Host "`n== $Message ==" -ForegroundColor Cyan }
@@ -335,14 +339,15 @@ function Get-ProfileModelOverlay {
             }
         }
         'test' {
-            $baseUrl = if ($env:MEMORIA_MODEL_BASE_URL) { $env:MEMORIA_MODEL_BASE_URL } else { 'http://127.0.0.1:11434/v1' }
-            $modelName = if ($env:MEMORIA_MODEL_NAME) { $env:MEMORIA_MODEL_NAME } else { 'qwen2.5:7b' }
-            $context = if ($env:MEMORIA_MODEL_CONTEXT_LENGTH) { $env:MEMORIA_MODEL_CONTEXT_LENGTH } else { '65536' }
+            $context = ''
+            if ($MemoriaTestModelProvider -eq 'custom' -and $MemoriaTestModelContextLength) {
+                $context = "  context_length: $MemoriaTestModelContextLength`n  ollama_num_ctx: $MemoriaTestModelContextLength`n"
+            }
             return @{
-                Provider = 'custom'
-                BaseUrl = $baseUrl
-                Default = $modelName
-                Context = "  context_length: $context`n  ollama_num_ctx: $context`n"
+                Provider = $MemoriaTestModelProvider
+                BaseUrl = $MemoriaTestModelBaseUrl
+                Default = $MemoriaTestModelDefault
+                Context = $context
             }
         }
         default {

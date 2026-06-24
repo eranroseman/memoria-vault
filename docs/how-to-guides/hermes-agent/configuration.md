@@ -59,7 +59,7 @@ model:
   default: ~anthropic/claude-<tier>-latest
 ```
 
-**Test (Linux/WSL).** Render every profile to a local Ollama endpoint by setting `MEMORIA_ENV=test` when you install:
+**Test (Linux/WSL).** Render every profile to Kilo DeepSeek V4 Flash by setting `MEMORIA_ENV=test` when you install:
 
 ```bash
 MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
@@ -69,14 +69,12 @@ That renders:
 
 ```yaml
 model:
-  provider: custom
-  base_url: http://127.0.0.1:11434/v1
-  default: qwen2.5:7b
-  context_length: 65536
-  ollama_num_ctx: 65536
+  provider: kilocode
+  base_url: https://api.kilo.ai/api/gateway
+  default: deepseek/deepseek-v4-flash
 ```
 
-To point the test install at a different local endpoint or model, set `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, and `MEMORIA_MODEL_CONTEXT_LENGTH`.
+To point the test install at a local OpenAI-compatible endpoint instead, set `MEMORIA_MODEL_PROVIDER=custom`, `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, and optionally `MEMORIA_MODEL_CONTEXT_LENGTH`.
 
 To change the production tier permanently, update the installer's profile model overlay and the profile tests together, then re-deploy:
 

@@ -116,8 +116,10 @@ def test_installers_render_profile_model_placeholders():
     assert "{{MODEL_LOCAL_CONTEXT}}" in ps
     assert "MEMORIA_ENV" in sh
     assert "MEMORIA_ENV" in ps
-    assert "qwen2.5:7b" in sh
-    assert "qwen2.5:7b" in ps
+    assert "deepseek/deepseek-v4-flash" in sh
+    assert "deepseek/deepseek-v4-flash" in ps
+    assert "MEMORIA_MODEL_PROVIDER" in sh
+    assert "MEMORIA_MODEL_PROVIDER" in ps
 
 
 def test_installer_removes_legacy_profile_mcp_json():

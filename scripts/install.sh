@@ -32,7 +32,7 @@
 # Honors $HERMES_HOME (default ~/.hermes), matching Hermes's own convention.
 # Honors $MEMORIA_ENV for Linux/WSL test profile model wiring:
 #   prod (default) -> shipped Kilo Code gateway tiers
-#   test           -> local OpenAI-compatible Ollama endpoint
+#   test           -> Kilo DeepSeek Flash by default; explicit env can point local
 # =============================================================================
 set -euo pipefail
 
@@ -47,6 +47,10 @@ HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_PROFILES_DIR="$HERMES_HOME/profiles"
 HERMES_SKILLS_DIR="$HERMES_HOME/skills"
 MEMORIA_ENV="${MEMORIA_ENV:-prod}"
+MEMORIA_TEST_MODEL_PROVIDER="${MEMORIA_MODEL_PROVIDER:-kilocode}"
+MEMORIA_TEST_MODEL_BASE_URL="${MEMORIA_MODEL_BASE_URL:-https://api.kilo.ai/api/gateway}"
+MEMORIA_TEST_MODEL_DEFAULT="${MEMORIA_MODEL_NAME:-deepseek/deepseek-v4-flash}"
+MEMORIA_TEST_MODEL_CONTEXT_LENGTH="${MEMORIA_MODEL_CONTEXT_LENGTH:-}"
 
 ALL_PROFILES="memoria-copi memoria-librarian memoria-writer memoria-peer-reviewer memoria-engineer"
 REQUIRED_FILES="SOUL.md config.yaml distribution.yaml"
@@ -633,10 +637,13 @@ profile_model_overlay() {
       MODEL_CONTEXT_LENGTH=""
       ;;
     test)
-      MODEL_PROVIDER="custom"
-      MODEL_BASE_URL="${MEMORIA_MODEL_BASE_URL:-http://127.0.0.1:11434/v1}"
-      MODEL_DEFAULT="${MEMORIA_MODEL_NAME:-qwen2.5:7b}"
-      MODEL_CONTEXT_LENGTH="${MEMORIA_MODEL_CONTEXT_LENGTH:-65536}"
+      MODEL_PROVIDER="$MEMORIA_TEST_MODEL_PROVIDER"
+      MODEL_BASE_URL="$MEMORIA_TEST_MODEL_BASE_URL"
+      MODEL_DEFAULT="$MEMORIA_TEST_MODEL_DEFAULT"
+      MODEL_CONTEXT_LENGTH=""
+      if [ "$MODEL_PROVIDER" = "custom" ] && [ -n "$MEMORIA_TEST_MODEL_CONTEXT_LENGTH" ]; then
+        MODEL_CONTEXT_LENGTH="$MEMORIA_TEST_MODEL_CONTEXT_LENGTH"
+      fi
       ;;
     *)
       die "Unsupported MEMORIA_ENV=$MEMORIA_ENV (expected prod or test)."
@@ -675,7 +682,6 @@ install_profiles() {
   staging="$(mktemp -d "${TMPDIR:-/tmp}/memoria-staging-XXXXXXXX")"
   # shellcheck disable=SC2064
   trap "rm -rf '$staging'" RETURN
-
   local p src missing f dst env_example env_file
   for p in $targets; do
     src="$profiles_src/$p"
@@ -696,8 +702,8 @@ install_profiles() {
     #                       policy hook import mcp+PyYAML from where install_mcp_deps
     #                       put them (not bare system python).
     #   - {{VAULT_PATH}} -> the real vault path.
-    #   - {{MODEL_*}}    -> prod cloud tiers by default, or local Ollama-compatible
-    #                       wiring when MEMORIA_ENV=test.
+    #   - {{MODEL_*}}    -> prod cloud tiers by default, or Kilo DeepSeek Flash
+    #                       when MEMORIA_ENV=test unless env overrides it.
     local pybin="${VENV_PYTHON:-python}"
     if [ -f "$dst/config.yaml" ]; then
       local pybin_esc vault_esc qmd_esc model_provider_esc model_base_url_esc model_default_esc

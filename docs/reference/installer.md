@@ -27,12 +27,13 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | Variable | Effect |
 | --- | --- |
 | `MEMORIA_ENV=prod` | Default. Renders the shipped Kilo Code gateway model tiers: Co-PI and Peer-reviewer on Opus, Writer on Sonnet, Librarian and Engineer on Haiku. |
-| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to an OpenAI-compatible local endpoint, defaulting to `custom` + `http://127.0.0.1:11434/v1` + `qwen2.5:7b` with `context_length` and `ollama_num_ctx` set to `65536`. |
-| `MEMORIA_MODEL_BASE_URL` | Overrides the local endpoint when `MEMORIA_ENV=test`. |
-| `MEMORIA_MODEL_NAME` | Overrides the local model name when `MEMORIA_ENV=test`. |
-| `MEMORIA_MODEL_CONTEXT_LENGTH` | Overrides the rendered local context length when `MEMORIA_ENV=test`. |
+| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to `kilocode` + `https://api.kilo.ai/api/gateway` + `deepseek/deepseek-v4-flash`. |
+| `MEMORIA_MODEL_PROVIDER` | Overrides the test overlay provider. Use `custom` for a local OpenAI-compatible endpoint. |
+| `MEMORIA_MODEL_BASE_URL` | Overrides the test overlay endpoint. |
+| `MEMORIA_MODEL_NAME` | Overrides the test overlay model name. |
+| `MEMORIA_MODEL_CONTEXT_LENGTH` | Adds rendered `context_length` and `ollama_num_ctx` when `MEMORIA_ENV=test` and `MEMORIA_MODEL_PROVIDER=custom`. |
 
-The local model overlay changes only the Hermes model block. The Obsidian MCP remains verified loopback HTTPS and still requires `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OBSIDIAN_API_KEY` in each profile's `.env`.
+The model overlay changes only the Hermes model block. The Obsidian MCP remains verified loopback HTTPS and still requires `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OBSIDIAN_API_KEY` in each profile's `.env`.
 
 ---
 

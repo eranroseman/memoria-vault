@@ -13,6 +13,13 @@ create records) is the **ingest operation** — you fill only the judgment holes
 comparative `[!brief]` and the classification proposal (D16/D21: classification is
 audited metadata, not a gate; flag only genuine ambiguity).
 
+## Kanban startup
+
+If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
+`kanban_show()` immediately before asking questions or using any other tool. Treat its
+`worker_context` as the task spec, then finish with `kanban_complete(...)` or
+`kanban_block(...)`.
+
 ## The four lanes
 
 - **catalog** — find sources (paper_search MCP), run the ingest pipeline (ingest MCP),

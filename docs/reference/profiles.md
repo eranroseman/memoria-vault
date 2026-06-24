@@ -21,7 +21,7 @@ One conversational agent (the Co-PI) plus four background agents, each defined b
 | `memoria-peer-reviewer` | Adversarial (flag, don't fix) | The independent verify gate: claim, citation, duplicate, and retraction checks. Writes only Inbox cards. | `dispatched` | `claude-opus-latest` |
 | `memoria-engineer` | Coordinating | The code lane: writes scoped handoff/provenance notes for an external coding agent under `projects/*/code/`; substantive coding and git stay outside Memoria. | `dispatched` | `claude-haiku-latest` |
 
-These are the `MEMORIA_ENV=prod` defaults rendered by the installer. Linux/WSL test installs may render all five profiles to a local OpenAI-compatible Ollama endpoint with `MEMORIA_ENV=test`; see [Installer environment overlays](installer.md#environment-overlays).
+These are the `MEMORIA_ENV=prod` defaults rendered by the installer. Linux/WSL test installs render all five profiles to Kilo DeepSeek V4 Flash with `MEMORIA_ENV=test`; see [Installer environment overlays](installer.md#environment-overlays).
 
 ---
 

@@ -36,13 +36,22 @@ MEMORIA_TELEGRAM_CHAT_ID=...          # optional urgent alert/block pushes
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 
-For a Linux/WSL disposable test vault that should use a local Ollama model instead of Kilo Code, leave `KILOCODE_API_KEY` alone and run the profile deploy with `MEMORIA_ENV=test`. The installer renders every profile to `http://127.0.0.1:11434/v1`, `qwen2.5:7b`, and a 64K context by default:
+For a Linux/WSL disposable test vault, run the profile deploy with `MEMORIA_ENV=test`. The installer renders every profile to Kilo DeepSeek V4 Flash by default:
 
 ```bash
 MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
 ```
 
-Override the local endpoint with `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, or `MEMORIA_MODEL_CONTEXT_LENGTH` when your Ollama setup uses a different model.
+Use a local OpenAI-compatible endpoint only when you explicitly want local-model testing:
+
+```bash
+MEMORIA_ENV=test \
+MEMORIA_MODEL_PROVIDER=custom \
+MEMORIA_MODEL_BASE_URL=http://127.0.0.1:11434/v1 \
+MEMORIA_MODEL_NAME=<local-model> \
+MEMORIA_MODEL_CONTEXT_LENGTH=65536 \
+bash scripts/install.sh --profiles-only --vault ~/Memoria-test
+```
 
 **2. Propagate the keys into every profile.**
 
