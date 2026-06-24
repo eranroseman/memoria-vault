@@ -42,13 +42,13 @@ A **project** is where writing happens, and opening one is how you name what you
 
 Write a claim you could actually defend — not a vague area like "learn about X." By the end of Session 2 you'll have turned it into a verified, cited section.
 
-The command creates the project, which now appears in the **Project space**. Open its page: the question is the page heading, and the compact **Project gate** starts at *cold-start*. It fills in as you connect claims to the thesis over the next tutorials — refresh it any time with the page's **Refresh gate** button, and open **Readiness details** when you want the full table. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
+The command creates the project, which now appears in the **Project space**. Open its page: the question is the page heading, and the compact **Project gate** starts at *cold-start*. Use its **Map corpus** button to read the sample's shape; later, as you connect claims to the thesis, refresh it with **Refresh gate** and open **Readiness details** when you want the full table. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
 
 ---
 
 ## Step 3 — Read the map
 
-Now look at what the corpus can support. Run `Cmd/Ctrl-P` → **Memoria: map corpus**. It asks for a **scope** — a folder or hub note to narrow to; press **Enter** to map the whole corpus, which is what you want here. (If you'd rather think the scope through first, ask the Co-PI to map it for you.)
+Now look at what the corpus can support. Use the project's **Map corpus** button, or run `Cmd/Ctrl-P` → **Memoria: map corpus**. The command asks for a **scope** — a folder or hub note to narrow to; press **Enter** to map the whole corpus, which is what you want here. (If you'd rather think the scope through first, ask the Co-PI to map it for you.)
 
 This builds a map of the corpus — how its pieces connect, and where they cluster — and delivers a short read of that map to your **Inbox** (the queue of things waiting on your attention). Open the **Inbox queue** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
 
