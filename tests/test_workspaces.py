@@ -43,6 +43,25 @@ FIRST_ACTION_COMMANDS = {
         "Memoria: draft section",
     ],
 }
+NAV_ACTION_COMMANDS = {
+    "Inbox actions": [
+        "Memoria: capture source from URL",
+        "Memoria: capture fleeting",
+        "Memoria: load sample vault",
+    ],
+    "Library actions": [
+        "Memoria: structured source capture",
+        "Memoria: capture from Zotero selection",
+    ],
+    "Knowledge actions": [
+        "Memoria: write claim note",
+        "Memoria: link claim",
+    ],
+    "Project actions": [
+        "Memoria: start project",
+        "Memoria: refresh project gate",
+    ],
+}
 COPI_VIEW = "agent-client-chat-view"
 
 
@@ -119,6 +138,28 @@ def test_navigation_rail_warns_only_when_badges_are_nonzero():
     assert "[[system/dashboards/fleet-health|Fleet]]" in text
     assert text.count('return n > 0 ? "◆ " + n : n') == 2
     assert 'return n > 0 ? n + " ⚠" : n' in text
+
+
+def test_navigation_rail_has_collapsed_space_action_callouts():
+    text = NAV.read_text(encoding="utf-8")
+    quickadd_names = {choice["name"] for choice in _choices() if choice.get("command")}
+
+    for label, commands in NAV_ACTION_COMMANDS.items():
+        assert f"> [!note]- {label}" in text
+        for command in commands:
+            assert command in quickadd_names
+            assert f"action QuickAdd: {command}" in text
+
+    assert text.count("type command") == sum(
+        len(commands) for commands in NAV_ACTION_COMMANDS.values()
+    )
+    for command in (
+        "Memoria: remove sample vault",
+        "Memoria: archive claim note",
+        "Memoria: archive fleeting note",
+        "Memoria: supersede thesis",
+    ):
+        assert f"action QuickAdd: {command}" not in text
 
 
 def test_space_dashboards_exist_and_embed_views():
