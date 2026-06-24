@@ -95,5 +95,6 @@ The ~47-system agent-research slice that grounds the four verdicts above is cata
 
 ## Related
 
+- Where the corpus pushes back on these bets: [What the literature pushes back on](what-the-literature-pushes-back-on.md)
 - The principles this survey operationalizes: [Design principles](../overview/design-principles.md)
 - What Memoria is, in system terms: [What Memoria is](../overview/what-memoria-is.md)
