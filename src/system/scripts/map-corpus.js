@@ -11,6 +11,7 @@
 const LANE = "map";
 const ASSIGNEE = "memoria-librarian";
 const SKILL = "map-cluster-corpus";
+const IDEMPOTENCY_WINDOW_MS = 10 * 60 * 1000;
 const { fnv1a, queueHermesCard } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
@@ -29,8 +30,8 @@ module.exports = async (params) => {
     (scope ? " scoped to " + scope : "") + ". " +
     "Use the " + SKILL + " skill: cluster the notes, surface dense and thin areas, stage the " +
     "report through the normal proposal path, then kanban_complete with review_status: requested.";
-  // Minute-scoped so accidental double fires collapse, but later retries create fresh cards.
-  const retryWindow = Math.floor(Date.now() / 60000);
+  // Window-scoped so repeated clicks collapse, but stale blocked cards do not suppress retries.
+  const retryWindow = Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS);
   const idemKey = "quickadd-" + LANE + "-" + fnv1a(scope || "whole-corpus") + "-" + retryWindow;
 
   new Notice("Delegating to the " + LANE + " lane…", 3000);
