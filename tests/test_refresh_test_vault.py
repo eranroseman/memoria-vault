@@ -64,6 +64,7 @@ def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
         "system/dashboards",
         "system/scripts",
         "system/templates",
+        ".memoria/samples",
         "spaces",
         "catalog/catalog.base",
         "inbox/inbox.base",

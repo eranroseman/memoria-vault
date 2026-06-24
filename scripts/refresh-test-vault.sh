@@ -135,6 +135,7 @@ for rel in \
   .memoria/operations \
   .memoria/plugins \
   .memoria/profiles \
+  .memoria/samples \
   .memoria/schemas \
   .memoria/scripts \
   spaces \
