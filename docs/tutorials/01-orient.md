@@ -42,7 +42,7 @@ A **project** is where writing happens, and opening one is how you name what you
 
 Write a claim you could actually defend — not a vague area like "learn about X." By the end of Session 2 you'll have turned it into a verified, cited section.
 
-The command creates the project, which now appears in the **Project space**. Open its page: the question is the page heading, and the compact **Project gate** starts at *cold-start*. Use its **Map corpus** button to read the sample's shape; later, as you connect claims to the thesis, refresh it with **Refresh gate** and open **Readiness details** when you want the full table. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
+The command creates the project, which now appears in the **Project space**. Open its page: the question is the page heading, and the compact **Project gate** starts at *cold-start*. Use its **Map corpus** button to delegate a map pass; later, as you connect claims to the thesis, refresh readiness with **Refresh gate** and open **Readiness details** when you want the full table. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
 
 ---
 
