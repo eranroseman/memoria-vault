@@ -16,7 +16,7 @@ superseded_by: []
 
 Every lane's vault-write path is the `obsidian` MCP ([ADR-27](27-hermes-native-config-and-gate-enforcement.md)/[ADR-28](28-write-gate-as-plugin.md)). v0.1 used the **uvx `mcp-obsidian`** package (stdio), which **hardwires port 27124** and reads only `OBSIDIAN_API_KEY` — `OBSIDIAN_HOST`/`OBSIDIAN_PORT` are ignored. Because only one Obsidian vault can serve a given port, a sandbox and a production vault couldn't both expose the REST API at once, forcing a "keep production closed during runs" rule and manual port juggling.
 
-The **Local REST API plugin (v4.1.2, "with MCP")** now ships its **own native MCP server** at `/<host>/mcp` (Streamable HTTP) — a viable replacement whose port lives in the URL.
+The **Local REST API plugin (v4.1.3, "with MCP")** now ships its **own native MCP server** at `/<host>/mcp` (Streamable HTTP) — a viable replacement whose port lives in the URL.
 
 ## Decision
 
