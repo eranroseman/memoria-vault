@@ -594,6 +594,12 @@ def test_map_corpus_treats_quickadd_empty_backslash_as_whole_corpus():
     assert 'if (/^\\\\+$/.test(scope)) scope = "";' in script
 
 
+def test_map_corpus_idempotency_key_allows_later_retries():
+    script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
+    assert "Math.floor(Date.now() / 60000)" in script
+    assert '+ "-" + retryWindow' in script
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]

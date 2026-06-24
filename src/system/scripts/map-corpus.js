@@ -29,8 +29,9 @@ module.exports = async (params) => {
     (scope ? " scoped to " + scope : "") + ". " +
     "Use the " + SKILL + " skill: cluster the notes, surface dense and thin areas, stage the " +
     "report through the normal proposal path, then kanban_complete with review_status: requested.";
-  // Stable per scope so a double-fire creates one card, not two.
-  const idemKey = "quickadd-" + LANE + "-" + fnv1a(scope || "whole-corpus");
+  // Minute-scoped so accidental double fires collapse, but later retries create fresh cards.
+  const retryWindow = Math.floor(Date.now() / 60000);
+  const idemKey = "quickadd-" + LANE + "-" + fnv1a(scope || "whole-corpus") + "-" + retryWindow;
 
   new Notice("Delegating to the " + LANE + " lane…", 3000);
   try {
