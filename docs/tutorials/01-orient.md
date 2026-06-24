@@ -48,7 +48,7 @@ The command creates the project, which now appears in the **Project space**. Ope
 
 ## Step 3 — Read the map
 
-Now look at what the corpus can support. Run `Cmd/Ctrl-P` → **Memoria: map corpus**, or ask the Co-PI to map it if you'd like help framing the scope first.
+Now look at what the corpus can support. Run `Cmd/Ctrl-P` → **Memoria: map corpus**. It asks for a **scope** — a folder or hub note to narrow to; press **Enter** to map the whole corpus, which is what you want here. (If you'd rather think the scope through first, ask the Co-PI to map it for you.)
 
 This builds a map of the corpus — how its pieces connect, and where they cluster — and delivers a short read of that map to your **Inbox** (the queue of things waiting on your attention). Open the **Inbox queue** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
 
