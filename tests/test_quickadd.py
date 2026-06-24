@@ -596,7 +596,8 @@ def test_map_corpus_treats_quickadd_empty_backslash_as_whole_corpus():
 
 def test_map_corpus_idempotency_key_allows_later_retries():
     script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
-    assert "Math.floor(Date.now() / 60000)" in script
+    assert "IDEMPOTENCY_WINDOW_MS = 10 * 60 * 1000" in script
+    assert "Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS)" in script
     assert '+ "-" + retryWindow' in script
 
 
