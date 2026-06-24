@@ -42,7 +42,7 @@ A **project** is where writing happens, and opening one is how you name what you
 
 Write a claim you could actually defend — not a vague area like "learn about X." By the end of Session 2 you'll have turned it into a verified, cited section.
 
-The command creates the project, which now appears in the **Project space**. Open its page: it shows your thesis and a **readiness panel** (the *project gate*) that starts at *cold-start* and fills in as you connect claims to the thesis over the next tutorials — refresh it any time with the page's **Refresh Project gate** button. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
+The command creates the project, which now appears in the **Project space**. Open its page: it shows your **Question** and a **readiness panel** (the *project gate*) that starts at *cold-start* and fills in as you connect claims to the thesis over the next tutorials — refresh it any time with the page's **Refresh Project gate** button. (Full procedure: [Start a writing project](../how-to-guides/project/start-a-writing-project.md).) The thesis you just wrote is the line you'll come back to in Tutorial 04, when you draft.
 
 ---
 
