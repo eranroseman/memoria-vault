@@ -39,7 +39,7 @@ hermes profile show memoria-librarian | grep -i model
 
 Expected model block: `provider: kilocode`,
 `base_url: https://api.kilo.ai/api/gateway`, and
-`default: deepseek/deepseek-v4-flash`. Override with
+`default: meta-llama/llama-4-scout`. Override with
 `MEMORIA_MODEL_PROVIDER=custom`, `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`,
 or `MEMORIA_MODEL_CONTEXT_LENGTH` for an explicit local endpoint.
 
@@ -103,7 +103,7 @@ Each case below gives: **Setup** (fixtures/preconditions) · **Run** (invocation
 | # | Run | Pass criteria |
 |---|---|---|
 | S1 | `hermes profile list` | all 5 `memoria-*` profiles listed, status OK |
-| S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `deepseek/deepseek-v4-flash` (test config is live) |
+| S2 | `hermes profile show memoria-engineer \| grep -i model` | model = `meta-llama/llama-4-scout` (test config is live) |
 | S3 | `hermes -p memoria-librarian chat -s catalog-find-source "<F2 topic>"` | returns ranked results; **no** write row in `audit.jsonl` |
 | S4 | `hermes -p memoria-librarian chat -s catalog-enrich-record smithA` | `catalog/papers/smithA.md` created; `allow_with_log` row in `audit.jsonl` |
 | S5 | `hermes -p memoria-copi chat -s ask-question-source catalog/papers/smithA.md` then ask it to "write a note" | questions only; **`deny`** (or no write) for `memoria-copi` in `audit.jsonl` — write-wall holds |
@@ -210,7 +210,7 @@ These are deterministic operation entry points, not chat profile skills. They ar
 | ID | Run | Pass criteria |
 |---|---|---|
 | P1 | `hermes profile list` | all 5 `memoria-*`: alias, status, installed path |
-| P2 | `hermes profile show memoria-peer-reviewer` | shows `SOUL.md`, MCP servers (`policy`, `obsidian`), allowed skills, `.env` key **names** (values redacted), and model = `deepseek/deepseek-v4-flash` |
+| P2 | `hermes profile show memoria-peer-reviewer` | shows `SOUL.md`, MCP servers (`policy`, `obsidian`), allowed skills, `.env` key **names** (values redacted), and model = `meta-llama/llama-4-scout` |
 | P3 | `bash scripts/install.sh --profiles-only` (the supported form of `profile install`) | deploys vault source → `~/.hermes/profiles/`; re-run `profile show` reflects the change |
 | P4 | `hermes profile remove memoria-<tmp>` (on a throwaway alias) | registration removed; vault source under `.memoria/profiles/` **untouched** |
 
@@ -245,7 +245,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
 | X5 | **Dry-run safety** — Peer-reviewer skills and deterministic operations with `--dry-run` | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
 | X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
-| X7 | **Model in effect** — `profile show` for all 5 | all on `deepseek/deepseek-v4-flash` during the run; restored to Claude tiers after (§1.5) |
+| X7 | **Model in effect** — `profile show` for all 5 | all on `meta-llama/llama-4-scout` during the run; restored to Claude tiers after (§1.5) |
 
 ---
 

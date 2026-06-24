@@ -36,7 +36,7 @@ MEMORIA_TELEGRAM_CHAT_ID=...          # optional urgent alert/block pushes
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 
-For a Linux/WSL disposable test vault, run the profile deploy with `MEMORIA_ENV=test`. The installer renders every profile to Kilo DeepSeek V4 Flash by default:
+For a Linux/WSL disposable test vault, run the profile deploy with `MEMORIA_ENV=test`. The installer renders every profile to Kilo Llama 4 Scout by default:
 
 ```bash
 MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test

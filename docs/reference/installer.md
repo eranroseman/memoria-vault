@@ -27,7 +27,7 @@ Safety posture: no silent privilege escalation (every `sudo` is printed and conf
 | Variable | Effect |
 | --- | --- |
 | `MEMORIA_ENV=prod` | Default. Renders the shipped Kilo Code gateway model tiers: Co-PI and Peer-reviewer on Opus, Writer on Sonnet, Librarian and Engineer on Haiku. |
-| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to `kilocode` + `https://api.kilo.ai/api/gateway` + `deepseek/deepseek-v4-flash`. |
+| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to `kilocode` + `https://api.kilo.ai/api/gateway` + `meta-llama/llama-4-scout`. |
 | `MEMORIA_MODEL_PROVIDER` | Overrides the test overlay provider. Use `custom` for a local OpenAI-compatible endpoint. |
 | `MEMORIA_MODEL_BASE_URL` | Overrides the test overlay endpoint. |
 | `MEMORIA_MODEL_NAME` | Overrides the test overlay model name. |

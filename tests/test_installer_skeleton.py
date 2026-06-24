@@ -116,8 +116,8 @@ def test_installers_render_profile_model_placeholders():
     assert "{{MODEL_LOCAL_CONTEXT}}" in ps
     assert "MEMORIA_ENV" in sh
     assert "MEMORIA_ENV" in ps
-    assert "deepseek/deepseek-v4-flash" in sh
-    assert "deepseek/deepseek-v4-flash" in ps
+    assert "meta-llama/llama-4-scout" in sh
+    assert "meta-llama/llama-4-scout" in ps
     assert "MEMORIA_MODEL_PROVIDER" in sh
     assert "MEMORIA_MODEL_PROVIDER" in ps
 

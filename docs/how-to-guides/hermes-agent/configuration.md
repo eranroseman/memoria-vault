@@ -59,7 +59,7 @@ model:
   default: ~anthropic/claude-<tier>-latest
 ```
 
-**Test (Linux/WSL).** Render every profile to Kilo DeepSeek V4 Flash by setting `MEMORIA_ENV=test` when you install:
+**Test (Linux/WSL).** Render every profile to Kilo Llama 4 Scout by setting `MEMORIA_ENV=test` when you install:
 
 ```bash
 MEMORIA_ENV=test bash scripts/install.sh --profiles-only --vault ~/Memoria-test
@@ -71,7 +71,7 @@ That renders:
 model:
   provider: kilocode
   base_url: https://api.kilo.ai/api/gateway
-  default: deepseek/deepseek-v4-flash
+  default: meta-llama/llama-4-scout
 ```
 
 To point the test install at a local OpenAI-compatible endpoint instead, set `MEMORIA_MODEL_PROVIDER=custom`, `MEMORIA_MODEL_BASE_URL`, `MEMORIA_MODEL_NAME`, and optionally `MEMORIA_MODEL_CONTEXT_LENGTH`.
@@ -98,7 +98,7 @@ auxiliary:
   approval:         { provider: kilocode, model: z-ai/glm-4.7-flash }
   mcp:              { provider: kilocode, model: z-ai/glm-4.7-flash }
   skills_hub:       { provider: kilocode, model: z-ai/glm-4.7-flash }
-  compression:      { provider: kilocode, model: deepseek/deepseek-v4-flash }     # 1M ctx — must hold the main model's window
+  compression:      { provider: kilocode, model: meta-llama/llama-4-scout }       # 10M ctx — must hold the main model's window
   # vision / web_extract: a cheap multimodal (e.g. google/gemini-2.5-flash) only if you use image/page analysis
 ```
 
