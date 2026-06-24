@@ -624,6 +624,7 @@ def test_start_project_scaffolds_project_gate_workspace():
         '"# " + data.title',
         "Project · ",
         "Readiness details",
+        "QuickAdd: Memoria: map corpus",
         "Project title is required.",
         "Provisional thesis is required for thesis-mode projects.",
         'outputMode === "thesis"',

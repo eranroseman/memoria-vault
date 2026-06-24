@@ -161,6 +161,8 @@ def test_project_templates_start_in_schema_valid_states():
     assert "# {{VALUE:project question}}" in project_body
     assert "Project · thesis mode" in project_body
     assert "[[project-gate-index|Readiness details]]" in project_body
+    assert "name Map corpus" in project_body
+    assert "QuickAdd: Memoria: map corpus" in project_body
     assert "name Refresh gate" in project_body
     assert "![[project-gate-index]]" not in project_body
     assert thesis["lifecycle"] == "proposed"

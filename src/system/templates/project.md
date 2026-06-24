@@ -30,9 +30,15 @@ Project · thesis mode
 ## Project gate
 
 > [!brief] Cold start
-> No readiness data yet. Relate claims to the active thesis with `supports` / `contradicts`, then refresh the gate.
+> No readiness data yet. Map the corpus, relate claims to the active thesis with `supports` / `contradicts`, then refresh the gate.
 >
 > [[project-gate-index|Readiness details]]
+
+```button
+name Map corpus
+type command
+action QuickAdd: Memoria: map corpus
+```
 
 ```button
 name Refresh gate

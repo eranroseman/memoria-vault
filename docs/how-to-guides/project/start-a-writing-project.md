@@ -16,7 +16,7 @@ Use this when a cluster has become more than a topic: you have a question, an in
 
 **2. Start the project.** In Obsidian, run `Memoria: start project`. Fill the title and output mode; add scope topics if they are clear now. Thesis mode also asks for the provisional thesis. The command derives the slug, creates blank PICO/FINER scaffolding for shaping, and writes the project and thesis records shown in the Project space, plus the project scratch areas used by code, drafts, and exports.
 
-**3. Check readiness.** Delegate a `map` task ([Assess your corpus](assess-your-corpus.md)) and relate the resulting claims to the active thesis with `supports` / `contradicts` links. A hub with several mutually linked claims is the tell that a cluster is dense enough to write from.
+**3. Check readiness.** Use the page's **Map corpus** button or delegate a `map` task ([Assess your corpus](assess-your-corpus.md)), then relate the resulting claims to the active thesis with `supports` / `contradicts` links. A hub with several mutually linked claims is the tell that a cluster is dense enough to write from.
 
 **4. Refresh the gate.** Open the project from the Project space and run `Memoria: refresh project gate` with the page's **Refresh gate** button or the command palette. The operation updates `project-gate-index.md` with graph maturity, saturation state, open high-impact gaps, and advisory findings; the project page links to it as **Readiness details**.
 
