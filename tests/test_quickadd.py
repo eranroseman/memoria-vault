@@ -617,6 +617,7 @@ def test_start_project_scaffolds_project_gate_workspace():
         'slug(data.slug || data.title, "project")',
         'root + "/project.md"',
         'root + "/thesis.md"',
+        'root + "/project-gate-index.md"',
         '"code"',
         '"drafts"',
         '"exports"',
