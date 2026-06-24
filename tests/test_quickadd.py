@@ -589,6 +589,11 @@ def test_delegate_task_picker_uses_work_labels_not_profile_ids():
     assert 'l + " → " + LANES[l]' not in script
 
 
+def test_map_corpus_treats_quickadd_empty_backslash_as_whole_corpus():
+    script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
+    assert 'if (/^\\\\+$/.test(scope)) scope = "";' in script
+
+
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
     wired = {
         cmd["path"]

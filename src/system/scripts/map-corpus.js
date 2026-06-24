@@ -17,10 +17,12 @@ module.exports = async (params) => {
   const { Notice } = params.obsidian;
   const cp = require("child_process");
 
-  const scope =
+  let scope =
     (await params.quickAddApi.inputPrompt(
       "Scope (folder or hub note — optional, Enter for the whole corpus):"
     ))?.trim() || "";
+  // ponytail: Buttons/QuickAdd can pass "\" for empty input; real scopes are paths or topics.
+  if (/^\\+$/.test(scope)) scope = "";
 
   const body =
     "delegate:" + LANE + " — from the palette. Map the corpus" +
