@@ -135,17 +135,17 @@
     {
       "id": "templater-obsidian",
       "name": "Templater",
-      "version": "2.23.0",
+      "version": "2.20.6",
       "upstream": "https://github.com/SilentVoid13/Templater",
-      "pinned_ref": "2.23.0",
+      "pinned_ref": "2.20.6",
       "pinned_commit": "NOASSERTION",
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
         "plugins/templater-obsidian/data.json": "9ad8d0c478e31165e86ee4a6dd4f422aacb5b1af11bbb876fdf97b15dceff2f4",
-        "plugins/templater-obsidian/main.js": "eb1b153b0505db04399ae1a738e422ed164d0b98a9a74224d1c2bfe864b61288",
-        "plugins/templater-obsidian/manifest.json": "cc273a26942744128df71ae3c01970a71e8310c9a2f94d7905dbb8423b827a9f",
-        "plugins/templater-obsidian/styles.css": "eb94063be602679f397e3e35fcb7f6a4b027da82e17c213bb44a267c6b45d8de"
+        "plugins/templater-obsidian/main.js": "e034847c91530bb52d13671feabf105551c8b51ce74747745d9c6c91063cb872",
+        "plugins/templater-obsidian/manifest.json": "30ebc235c9b1c99a60df2f1be7d57341d4f158798b6c197cc52598902e558962",
+        "plugins/templater-obsidian/styles.css": "7d85bcd129e9f38a8932455bdf05c9629ce466ab1236dc933b7b7aea55350c04"
       }
     },
     {
