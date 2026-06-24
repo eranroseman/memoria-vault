@@ -40,7 +40,7 @@ DISABLED_TOOLSETS = [
     "x_search",
     "yuanbao",
 ]
-SMOKE_PLATFORM_TOOLSETS = ["skills", "todo", "obsidian"]
+SMOKE_PLATFORM_TOOLSETS = ["skills", "obsidian"]
 
 
 def prepare_vault(root: Path, vault: Path) -> None:
