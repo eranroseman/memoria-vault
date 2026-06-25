@@ -28,14 +28,61 @@ function fnv1a(s) {
 }
 
 function queueHermesCard(cp, card) {
+  const hermes = card.hermesCommand || "hermes";
   let command =
-    "hermes kanban create " + shq(card.title) +
+    hermes + " kanban create " + shq(card.title) +
     " --assignee " + card.assignee +
     (card.skill ? " --skill " + card.skill : "") +
     " --created-by quickadd" +
     " --idempotency-key " + shq(card.idemKey) +
-    " --body " + shq(card.body);
-  return run(cp, command);
+    " --body " + shq(card.body) +
+    " --json";
+  return run(cp, command).then(async (stdout) => {
+    const task = parseTask(stdout);
+    await writeTriggeredTaskTicket(card, task);
+    return task;
+  });
+}
+
+function parseTask(stdout) {
+  const data = JSON.parse(String(stdout || "{}"));
+  return data.task || data;
+}
+
+async function writeTriggeredTaskTicket(card, task) {
+  const app = card.app || globalThis.app;
+  const adapter = app?.vault?.adapter;
+  const taskId = task?.id;
+  if (!adapter || !taskId) return;
+
+  const path = "inbox/work-prompt-" + taskId + ".md";
+  if (await exists(adapter, path)) return;
+
+  const laneLine = card.lane ? "lane: " + yamlString(card.lane) : "";
+  const body = [
+    "---",
+    "title: " + yamlString("Task queued: " + card.title),
+    "type: work-prompt",
+    "lifecycle: proposed",
+    "action: " + yamlString("check this triggered task"),
+    "what_happened: " + yamlString("Obsidian queued Hermes task " + taskId + " for " + card.assignee + "."),
+    "task_id: " + yamlString(taskId),
+    laneLine,
+    "raised_by: quickadd",
+    "loudness: quiet",
+    "created: " + todayIsoDate(),
+    "---",
+    "",
+    "# Triggered task",
+    "",
+    "- Task: `" + taskId + "`",
+    "- Assignee: `" + card.assignee + "`",
+    card.lane ? "- Lane: `" + card.lane + "`" : "",
+    "",
+    "If this task blocks, this ticket is the Inbox handle for follow-up.",
+    "",
+  ].filter(Boolean).join("\n");
+  await adapter.write(path, body);
 }
 
 function todayIsoDate() {

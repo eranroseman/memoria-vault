@@ -48,3 +48,16 @@ def test_cluster_map_candidate_surfaces_in_inbox():
         '`action` = "read this cluster',
     ):
         assert marker in text
+
+
+def test_too_small_cluster_map_surfaces_as_gap():
+    text = (SKILLS / "map-cluster-corpus" / "SKILL.md").read_text(encoding="utf-8")
+    for marker in (
+        "too few documents",
+        "type: gap",
+        "lifecycle: proposed",
+        "gap_type: additive",
+        "enough sources to map the corpus",
+        "`too-few-documents`",
+    ):
+        assert marker in text

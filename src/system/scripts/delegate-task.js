@@ -61,7 +61,7 @@ module.exports = async (params) => {
 
   new Notice("Delegating to the " + lane + " lane…", 3000);
   try {
-    await queueHermesCard(cp, { title: goal, assignee, idemKey, body });
+    await queueHermesCard(cp, { title: goal, assignee, idemKey, body, lane });
     new Notice("✓ Delegated → " + LANE_LABELS[lane] + " card created.", 6000);
   } catch (e) {
     new Notice(("Delegation failed: " + e.message).slice(0, 250), 10000);
