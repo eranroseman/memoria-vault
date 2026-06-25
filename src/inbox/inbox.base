@@ -5,7 +5,7 @@ filters:
     - file.inFolder("inbox")
     - 'file.ext == "md"'
 formulas:
-  note: 'link(file.path, title)'
+  note: 'link(file.path, if(action.isEmpty(), title, title + " - " + action))'
   age_days: '(now() - file.ctime).days.round(0)'
   loudness_rank: 'if(loudness == "block", 0, if(loudness == "alert", 1, if(loudness == "notice", 2, 3)))'
 properties:
@@ -30,7 +30,6 @@ views:
         direction: DESC
     order:
       - formula.note
-      - action
       - formula.age_days
   - type: table
     name: "Drift watch"

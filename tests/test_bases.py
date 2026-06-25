@@ -163,13 +163,15 @@ def test_inbox_base_has_needs_me_view():
     views = {v.get("name"): v for v in data.get("views", [])}
     names = set(views)
     assert "Needs me" in names  # the Inbox space embeds this view by name
-    assert data["formulas"]["note"] == "link(file.path, title)"
+    assert data["formulas"]["note"] == (
+        'link(file.path, if(action.isEmpty(), title, title + " - " + action))'
+    )
     assert data["properties"]["formula.note"]["displayName"] == "Note"
     needs_me_order = views["Needs me"]["order"]
     assert needs_me_order[0] == "formula.note"
     assert "title" not in needs_me_order
-    assert needs_me_order == ["formula.note", "action", "formula.age_days"]
-    assert data["properties"]["action"]["displayName"] == "Next step"
+    assert "action" not in needs_me_order
+    assert needs_me_order == ["formula.note", "formula.age_days"]
 
 
 def test_project_space_embeds_project_gate_views():
