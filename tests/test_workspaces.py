@@ -108,8 +108,8 @@ def test_single_reset_workspace_ships_and_opens_home():
         for leaf in _leaves(ws["main"])
         if leaf.get("state", {}).get("file")
     ]
-    # The reset layout seeds the welcome note (ADR-115); QuickAdd reloads the
-    # saved shell on startup without reintroducing the old Homepage plugin.
+    # The reset layout seeds the welcome note (ADR-115); QuickAdd uses it only
+    # when startup needs to repair a missing rail.
     assert main_files == ["home.md"]
     assert COPI_VIEW in [leaf["type"] for leaf in _leaves(ws["right"])]
     # Left pane is the navigation rail (ADR-114): the pinned nav note ahead of
@@ -122,8 +122,8 @@ def test_single_reset_workspace_ships_and_opens_home():
 
 
 def test_homepage_plugin_is_retired():
-    # ADR-115 retires the forced Inbox homepage plugin; startup restores the
-    # saved Memoria shell through QuickAdd and Obsidian's core Workspaces plugin.
+    # ADR-115 retires the forced Inbox homepage plugin; startup preserves the
+    # previous session and falls back to this shell only when the rail is missing.
     roster = json.loads(COMMUNITY_PLUGINS.read_text(encoding="utf-8"))
     assert "homepage" not in roster
     assert not (SRC / ".obsidian" / "plugins" / "homepage").exists()

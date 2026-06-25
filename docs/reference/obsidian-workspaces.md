@@ -25,11 +25,12 @@ not from **Places**. Each space dashboard embeds the relevant Bases views; the r
 owns switching, so the dashboards no longer carry a nav row. Clicking a rail link opens
 that dashboard in the active tab; it does not load a new workspace layout.
 
-On launch QuickAdd runs the `Memoria: restore shell on startup` macro, which asks
-Obsidian's core Workspaces plugin to load the saved **Memoria** workspace. That makes
-normal startup, a fresh vault, and a layout reset land on the same shell: `home.md` in
-the main pane, the pinned rail on the left, and the Co-PI pane on the right. There is
-no Homepage plugin and no Inbox forced landing.
+On launch QuickAdd runs the `Memoria: restore shell on startup` macro. It first lets
+Obsidian restore your previous session; if the pinned `_nav.md` rail is already present,
+the macro only reveals it and leaves the main pane where you were. If the rail is
+missing, it falls back to Obsidian's core Workspaces plugin and loads the saved
+**Memoria** workspace: `home.md` in the main pane, the pinned rail on the left, and the
+Co-PI pane on the right. There is no Homepage plugin and no Inbox forced landing.
 
 ## Reset layout
 
@@ -42,9 +43,10 @@ The **Memoria** workspace has one shared shell:
   space dashboard; Portals is for browsing the underlying notes.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
-The core Workspaces plugin stays enabled so startup can restore this shell and so you
-can restore it manually with Obsidian's own **Manage workspaces** command if panes get
-rearranged. Space switching is not exposed through QuickAdd commands or loader scripts.
+The core Workspaces plugin stays enabled so startup can repair a missing rail and so
+you can restore the reset shell manually with Obsidian's own **Manage workspaces**
+command if panes get rearranged. Space switching is not exposed through QuickAdd
+commands or loader scripts.
 
 Workspaces Plus was evaluated and rejected for the shipped path. It can register
 native workspace-switching commands, but Memoria models spaces as dashboard notes

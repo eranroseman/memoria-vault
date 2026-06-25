@@ -8,7 +8,8 @@ nav_order: 2
 
 Memoria's daily navigation is the left-pane rail, not saved workspace switching.
 Use the saved **Memoria** workspace manually only when you want to reset a rearranged window.
-Startup loads the same workspace automatically.
+Startup preserves your previous session when the pinned rail is present; it loads the
+saved workspace only when the rail is missing.
 
 ## Prerequisites
 
@@ -37,7 +38,9 @@ keeps the Agent Client pane on the right.
 
 ## Verify
 
-- On launch, Obsidian restores the saved **Memoria** shell with `home.md` and the pinned rail.
+- On normal launch, Obsidian reopens your previous note and the pinned rail remains.
+- If the rail is missing, startup restores the saved **Memoria** shell with `home.md`
+  and the pinned rail.
 - The left-pane rail switches among the three spaces, the Inbox queue, and Maintenance.
 - Loading the **Memoria** workspace restores the shared shell without changing the
   gate model.

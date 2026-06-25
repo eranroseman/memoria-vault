@@ -93,9 +93,9 @@ Tick each plugin that is enabled and validated:
 - [ ] `Memoria Inspector`
 - [ ] **A3 Pass (13/13)**
 
-**A4. Launch surface (startup shell, no Homepage plugin).** On launch QuickAdd runs the startup macro that loads the saved *Memoria* workspace. The shell opens `home.md` ("Welcome to Memoria") in the main pane, the pinned `_nav.md` rail in the left pane, and the Co-PI pane on the right.
+**A4. Launch surface (session restore + fallback shell, no Homepage plugin).** On launch QuickAdd runs the startup macro after Obsidian restores the previous session. If the pinned `_nav.md` rail is present, the macro reveals it and leaves the main pane where it was. If the rail is missing, the macro loads the saved *Memoria* workspace: `home.md` ("Welcome to Memoria") in the main pane, the pinned rail on the left, and the Co-PI pane on the right.
 
-- ✓ Pass: a normal launch, fresh vault, or layout reset lands on the Memoria shell; the rail is pinned, and no "Homepage" plugin appears in the Community plugins list.
+- ✓ Pass: a normal launch returns to the previous note with the pinned rail intact; a fresh vault or layout reset lands on the Memoria shell; no "Homepage" plugin appears in the Community plugins list.
 - ✗ Fails: launch reopens a stale pane set or the rail is replaced on first click → the startup macro, saved workspace, or rail `pinned` flag is broken.
 - [ ] **A4 Pass**
 
