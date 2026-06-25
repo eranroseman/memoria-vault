@@ -168,8 +168,8 @@ def test_inbox_base_has_needs_me_view():
     needs_me_order = views["Needs me"]["order"]
     assert needs_me_order[0] == "formula.note"
     assert "title" not in needs_me_order
-    assert "action" in needs_me_order
-    assert "finding" in needs_me_order
+    assert needs_me_order == ["formula.note", "action", "formula.age_days"]
+    assert data["properties"]["action"]["displayName"] == "Next step"
 
 
 def test_project_space_embeds_project_gate_views():
