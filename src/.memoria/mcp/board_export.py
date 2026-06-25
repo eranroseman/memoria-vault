@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -353,6 +354,66 @@ def export_review_prompts(vault: Path, prev: dict, cards: list[dict]) -> int:
     return written
 
 
+def _set_frontmatter_fields(text: str, updates: dict[str, str]) -> str:
+    match = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    if not match:
+        return text
+    head = match.group(1)
+    for key, value in updates.items():
+        line = f"{key}: {_yaml_scalar(value)}"
+        pattern = re.compile(rf"^{re.escape(key)}:.*$", re.M)
+        head = pattern.sub(line, head) if pattern.search(head) else head + "\n" + line
+    return "---\n" + head + text[match.end(1) :]
+
+
+def update_triggered_task_receipts(vault: Path, cards: list[dict]) -> int:
+    updated = 0
+    for raw in cards:
+        card = normalize(raw)
+        if card["status"] not in {"blocked", "done"}:
+            continue
+        path = vault / "inbox" / f"work-prompt-{safe_filename(card['task_id'])}.md"
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        if card["status"] == "done":
+            new = _set_frontmatter_fields(
+                text,
+                {
+                    "title": f"Task completed: {card['title']}",
+                    "lifecycle": "archived",
+                    "action": "review the result prompt if one was created",
+                    "what_happened": f"Lane {card['assignee']} completed task {card['task_id']}.",
+                    "loudness": "quiet",
+                },
+            )
+            if "## Completed" not in new:
+                new += (
+                    f"\n## Completed\n\nTask finished at `{now_iso()}`. "
+                    "Use the separate result card or artifact for review.\n"
+                )
+        else:
+            reason = card["reason"] or "No block reason was recorded."
+            new = _set_frontmatter_fields(
+                text,
+                {
+                    "title": f"Task blocked: {card['title']}",
+                    "lifecycle": "proposed",
+                    "action": "resolve the blocked task or archive this receipt",
+                    "what_happened": (
+                        f"Lane {card['assignee']} blocked task {card['task_id']}: {reason}"
+                    ),
+                    "loudness": "alert",
+                },
+            )
+            if "## Blocked" not in new:
+                new += f"\n## Blocked\n\nBlocked at `{now_iso()}`.\n\nReason: {reason}\n"
+        if new != text:
+            path.write_text(new, encoding="utf-8")
+            updated += 1
+    return updated
+
+
 def run_export(
     vault: Path, from_json: Path | None = None, hermes_home: Path | str | None = None
 ) -> dict:
@@ -364,6 +425,7 @@ def run_export(
         cost_lookup = HermesCostLookup(hermes_home=hermes_home)
     events = export_events(vault, prev, cards, cost_lookup=cost_lookup)
     prompts = export_review_prompts(vault, prev, cards)
+    receipts = update_triggered_task_receipts(vault, cards)
     exported = export_markdown(vault, cards)
     snap = export_snapshot(vault, cards)
     save_state_cache(vault, cards)
@@ -372,6 +434,7 @@ def run_export(
         "snapshot": snap["totals"],
         "events": events,
         "review_prompts": prompts,
+        "trigger_receipts_updated": receipts,
     }
 
 

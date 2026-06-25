@@ -620,6 +620,10 @@ def test_triggered_hermes_tasks_create_inbox_work_prompt():
         '"inbox/work-prompt-" + taskId + ".md"',
         "type: work-prompt",
         "task_id: ",
+        "Queued:",
+        "watch for the result; use this ticket if it stalls",
+        "Original request",
+        "quoteMarkdown(card.body)",
     ):
         assert marker in utils
 

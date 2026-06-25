@@ -460,6 +460,29 @@ def _frontmatter(path):
     return yaml.safe_load(m.group(1))
 
 
+def _trigger_receipt(vault, task_id="t_1"):
+    inbox = vault / "inbox"
+    inbox.mkdir()
+    path = inbox / f"work-prompt-{task_id}.md"
+    path.write_text(
+        "---\n"
+        'title: "Task queued: Draft answer"\n'
+        "type: work-prompt\n"
+        "lifecycle: proposed\n"
+        'action: "watch for the result; use this ticket if it stalls"\n'
+        'what_happened: "Obsidian queued Hermes task t_1 for memoria-writer."\n'
+        "task_id: t_1\n"
+        "lane: memoria-writer\n"
+        "raised_by: quickadd\n"
+        "loudness: quiet\n"
+        "created: 2026-06-25\n"
+        "---\n\n"
+        "# Triggered task\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
     run1 = [_card("t_1", "running", metadata={"expected_outputs": "projects/p1/draft.md"})]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run1) == 0
@@ -502,6 +525,29 @@ def test_non_done_transitions_emit_nothing(tmp_path):
     run2 = [_card("t_1", "ready"), _card("t_2", "blocked")]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 0
     assert _prompt_files(tmp_path) == []
+
+
+def test_done_task_archives_trigger_receipt(tmp_path):
+    receipt = _trigger_receipt(tmp_path)
+    assert _m.update_triggered_task_receipts(tmp_path, [_card("t_1", "done")]) == 1
+    fm = _frontmatter(receipt)
+    assert fm["lifecycle"] == "archived"
+    assert fm["loudness"] == "quiet"
+    assert "completed" in fm["what_happened"]
+    assert "## Completed" in receipt.read_text(encoding="utf-8")
+
+
+def test_blocked_task_updates_trigger_receipt(tmp_path):
+    receipt = _trigger_receipt(tmp_path)
+    card = _card("t_1", "blocked")
+    card["reason"] = "waiting for Zotero"
+    assert _m.update_triggered_task_receipts(tmp_path, [card]) == 1
+    fm = _frontmatter(receipt)
+    assert fm["lifecycle"] == "proposed"
+    assert fm["loudness"] == "alert"
+    assert fm["action"] == "resolve the blocked task or archive this receipt"
+    body = receipt.read_text(encoding="utf-8")
+    assert "## Blocked" in body and "waiting for Zotero" in body
 
 
 def test_bootstrap_guard_skips_old_done_cards(tmp_path):
