@@ -18,7 +18,7 @@
 const BBT_RPC = "http://127.0.0.1:23119/better-bibtex/json-rpc";
 const SELECTED_CITEKEY_REQUEST =
   '[{"jsonrpc":"2.0","method":"item.citationkey","params":["selected"],"id":1}]';
-const { exists, run, shq, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { exists, fnv1a, queueHermesCard, run, shq, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -111,14 +111,18 @@ module.exports = async (params) => {
     new Notice(("Inbox card write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
   }
   try {
-    await run(cp,
-      hermesCommand() + " kanban create " + shq(cardTitle) +
-      " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
-      " --body " + shq(body)
-    );
-    new Notice(`✓ Captured ${citekey} → intake card created on the Librarian lane.`, 6000);
+    await queueHermesCard(cp, {
+      title: cardTitle,
+      assignee: "memoria-librarian",
+      skill: "catalog-enrich-record",
+      idemKey: "quickadd-zotero-" + fnv1a(citekey),
+      body,
+      lane: "catalog",
+      hermesCommand: hermesCommand(),
+    });
+    new Notice(`✓ Captured ${citekey} → intake card queued on the Librarian lane.`, 15000);
   } catch (e) {
-    new Notice(`Capture failed for ${citekey}: ${e.message}`.slice(0, 300), 10000);
+    new Notice(`Capture failed for ${citekey}: ${e.message}`.slice(0, 300), 15000);
   }
 };
 

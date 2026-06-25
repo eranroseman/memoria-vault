@@ -7,7 +7,7 @@
  * `bash -lc` so it reaches the native Hermes CLI.
  */
 
-const { run, shq, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
+const { fnv1a, queueHermesCard, slug, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
   const { Notice } = params.obsidian;
@@ -38,14 +38,17 @@ module.exports = async (params) => {
     new Notice(("Inbox card write failed; continuing with ingest task: " + e.message).slice(0, 250), 9000);
   }
   try {
-    await run(cp,
-      "hermes kanban create " + shq("Ingest source: " + url) +
-      " --assignee memoria-librarian --skill catalog-enrich-record --created-by quickadd" +
-      " --body " + shq(body)
-    );
-    new Notice("✓ Captured → intake card created on the Librarian lane.", 6000);
+    await queueHermesCard(cp, {
+      title: "Ingest source: " + url,
+      assignee: "memoria-librarian",
+      skill: "catalog-enrich-record",
+      idemKey: "quickadd-capture-url-" + fnv1a(url),
+      body,
+      lane: "catalog",
+    });
+    new Notice("✓ Captured → intake card queued on the Librarian lane.", 15000);
   } catch (e) {
-    new Notice(("Capture failed: " + e.message).slice(0, 250), 10000);
+    new Notice(("Capture failed: " + e.message).slice(0, 250), 15000);
   }
 };
 

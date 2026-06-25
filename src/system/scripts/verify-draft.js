@@ -59,6 +59,7 @@ module.exports = async (params) => {
       skill: SKILL,
       idemKey,
       body,
+      lane: LANE,
     });
     new Notice("✓ Verification callout written; " + gapCards.length + " gap card(s) staged; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 7000);
   } catch (e) {

@@ -42,6 +42,7 @@ module.exports = async (params) => {
       skill: SKILL,
       idemKey,
       body,
+      lane: LANE,
     });
     new Notice("✓ Card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
   } catch (e) {

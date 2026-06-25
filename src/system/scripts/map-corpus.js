@@ -42,9 +42,10 @@ module.exports = async (params) => {
       skill: SKILL,
       idemKey,
       body,
+      lane: LANE,
     });
-    new Notice("✓ Card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
+    new Notice("✓ Map card queued on the " + LANE + " lane (" + ASSIGNEE + ").", 15000);
   } catch (e) {
-    new Notice(("Map delegation failed: " + e.message).slice(0, 250), 10000);
+    new Notice(("Map delegation failed: " + e.message).slice(0, 250), 15000);
   }
 };

@@ -356,6 +356,7 @@ def test_zotero_capture_writes_visible_candidate_card_and_resolves_hermes():
     script = (SCRIPTS / "capture-from-zotero.js").read_text(encoding="utf-8")
     assert "writeCandidateCard(params, citekey, title)" in script
     assert "writePaperStub(params, citekey, title)" in script
+    assert "queueHermesCard(cp" in script
     assert "chooseCitekey(params, citekeys)" in script
     assert "params.quickAddApi.suggester(options, options)" in script
     assert "capturing the first" not in script
@@ -458,6 +459,7 @@ def test_url_capture_writes_visible_candidate_card():
     """
     script = (SCRIPTS / "capture-from-url.js").read_text(encoding="utf-8")
     assert "writeCandidateCard(params, url)" in script
+    assert "queueHermesCard(cp" in script
     assert '"inbox/" + stem + ".md"' in script
     for field in (
         "type: candidate",
@@ -519,7 +521,7 @@ def test_link_claim_writes_suggestions_callout_before_delegating():
     assert "app.vault.modify(file," in utils
     assert "optional LLM one-line explanations" in script
     assert "queueHermesCard(cp" in script
-    assert "hermes kanban create" in utils
+    assert "kanban create" in utils
 
 
 def test_link_claim_excludes_superseded_claims_by_default():
@@ -543,7 +545,7 @@ def test_verify_draft_writes_verification_callout_before_delegating():
     assert "app.vault.modify(file," in utils
     assert "The deterministic [!verification] preflight callout has been written" in script
     assert "queueHermesCard(cp" in script
-    assert "hermes kanban create" in utils
+    assert "kanban create" in utils
 
 
 def test_capture_and_catalog_cards_request_source_note_stub():
@@ -599,6 +601,34 @@ def test_map_corpus_idempotency_key_allows_later_retries():
     assert "IDEMPOTENCY_WINDOW_MS = 10 * 60 * 1000" in script
     assert "Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS)" in script
     assert '+ "-" + retryWindow' in script
+
+
+def test_map_corpus_notices_stay_readable():
+    script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
+    assert "Map card queued" in script
+    assert "15000" in script
+
+
+def test_triggered_hermes_tasks_create_inbox_work_prompt():
+    utils = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
+    for marker in (
+        "--json",
+        "writeTriggeredTaskTicket",
+        '"inbox/work-prompt-" + taskId + ".md"',
+        "type: work-prompt",
+        "task_id: ",
+    ):
+        assert marker in utils
+
+    for fname in [
+        *LANE_SCRIPTS,
+        "assist.js",
+        "capture-from-url.js",
+        "capture-from-zotero.js",
+        "delegate-task.js",
+        "run-pattern.js",
+    ]:
+        assert "queueHermesCard(cp" in (SCRIPTS / fname).read_text(encoding="utf-8"), fname
 
 
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
