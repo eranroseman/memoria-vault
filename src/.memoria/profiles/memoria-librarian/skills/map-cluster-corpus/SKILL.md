@@ -70,9 +70,10 @@ never gates anything (reports inform — ADR-54).
 - The map note (`notes/fleeting/maps/…`): frontmatter `sources:` names the folders,
   date range, qmd index, and the `params_echo` from the cluster MCP, so any reader can
   reproduce the run.
-- One `candidate` card (schema `candidate`, ADR-51 honesty body): `action` = "read this
-  cluster map", `argument_for` / `argument_against` (e.g. "small corpus — clusters may
-  be noise"), `what_tipped_it`, `certainty` (confident / likely / unsure).
+- One `candidate` card (schema `candidate`, ADR-51 honesty body): frontmatter includes
+  `type: candidate`, `lifecycle: proposed`, `title`, `action` = "read this cluster
+  map", `argument_for` / `argument_against` (e.g. "small corpus — clusters may be
+  noise"), `what_tipped_it`, `certainty` (confident / likely / unsure).
 
 ## Honesty rules
 
