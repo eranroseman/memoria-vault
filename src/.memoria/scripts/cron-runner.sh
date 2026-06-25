@@ -2,8 +2,10 @@
 # Shared dispatcher for Memoria's deterministic Hermes cron jobs.
 set -u
 
-py="${MEMORIA_PYTHON:-{{PYTHON}}}"
-vault="${MEMORIA_VAULT:-{{VAULT_PATH}}}"
+py="${MEMORIA_PYTHON:-}"
+vault="${MEMORIA_VAULT:-}"
+[ -n "$py" ] || py="{{PYTHON}}"
+[ -n "$vault" ] || vault="{{VAULT_PATH}}"
 job="${1:-}"
 status=0
 
