@@ -35,7 +35,7 @@ action surface.
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
-| Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with the card's `action`/`finding` visible) plus live worker cards from `system/board/`. |
+| Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with title/action merged into the clickable row label and findings visible in maintenance views) plus live worker cards from `system/board/`. |
 | Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
 | Agent-ops | Fleet health | `system/dashboards/fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
@@ -55,7 +55,7 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 | Base | Lives at | View over |
 | --- | --- | --- |
 | `catalog.base` | `catalog/` | The Catalog — entity records by type (papers, people, organizations, venues, datasets, repositories), `lifecycle != archived`. |
-| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; `action`/`finding` columns expose the next thing to decide; converges to empty. |
+| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; the clickable row label merges title/action, while drift views expose findings; converges to empty. |
 | `board.base` | `system/board/` | Live worker cards by lane/state, mirrored from Hermes board state. |
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
