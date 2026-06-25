@@ -59,12 +59,13 @@ async function writeTriggeredTaskTicket(card, task) {
   if (await exists(adapter, path)) return;
 
   const laneLine = card.lane ? "lane: " + yamlString(card.lane) : "";
+  const queuedAt = new Date().toISOString();
   const body = [
     "---",
     "title: " + yamlString("Task queued: " + card.title),
     "type: work-prompt",
     "lifecycle: proposed",
-    "action: " + yamlString("check this triggered task"),
+    "action: " + yamlString("watch for the result; use this ticket if it stalls"),
     "what_happened: " + yamlString("Obsidian queued Hermes task " + taskId + " for " + card.assignee + "."),
     "task_id: " + yamlString(taskId),
     laneLine,
@@ -76,13 +77,30 @@ async function writeTriggeredTaskTicket(card, task) {
     "# Triggered task",
     "",
     "- Task: `" + taskId + "`",
+    "- Queued: `" + queuedAt + "`",
     "- Assignee: `" + card.assignee + "`",
     card.lane ? "- Lane: `" + card.lane + "`" : "",
     "",
-    "If this task blocks, this ticket is the Inbox handle for follow-up.",
+    "## Why this is here",
+    "",
+    "This is the receipt for a task you triggered from Obsidian. It is useful only if the task does not produce a later result card or artifact.",
+    "",
+    "## What to check",
+    "",
+    "- Watch **Inbox → Needs me** for the result card.",
+    "- Watch **Maintenance → Board** for the live task state.",
+    "- Archive this ticket when the result appears.",
+    "",
+    "## Original request",
+    "",
+    quoteMarkdown(card.body),
     "",
   ].filter(Boolean).join("\n");
   await adapter.write(path, body);
+}
+
+function quoteMarkdown(s) {
+  return String(s || "").split("\n").map((line) => "> " + line).join("\n");
 }
 
 function todayIsoDate() {
