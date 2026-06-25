@@ -1,6 +1,7 @@
 """The installer skeleton cannot drift from the schema home (ADR-55 risk control)."""
 
 import re
+import subprocess
 from pathlib import Path
 
 from operations.lib import schema
@@ -74,6 +75,18 @@ def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "src/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
+
+
+def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
+    runner = ROOT / "src/.memoria/scripts/cron-runner.sh"
+    result = subprocess.run(
+        ["bash", str(runner), "board-export"],
+        env={"MEMORIA_PYTHON": "/bin/true", "MEMORIA_VAULT": str(tmp_path)},
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def test_zotero_left_the_installer():
