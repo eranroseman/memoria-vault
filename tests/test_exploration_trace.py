@@ -38,3 +38,13 @@ def test_map_methods_keep_exploration_trace_project_local():
         "never auto-promoted into claims, sources, hubs, or project state",
     ):
         assert marker in text
+
+
+def test_cluster_map_candidate_surfaces_in_inbox():
+    text = (SKILLS / "map-cluster-corpus" / "SKILL.md").read_text(encoding="utf-8")
+    for marker in (
+        "type: candidate",
+        "lifecycle: proposed",
+        '`action` = "read this cluster',
+    ):
+        assert marker in text
