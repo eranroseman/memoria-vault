@@ -20,6 +20,9 @@ properties:
 views:
   - type: table
     name: "Needs me"
+    columnSize:
+      formula.note: 760
+      formula.age_days: 72
     filters:
       and:
         - 'lifecycle == "proposed"'
