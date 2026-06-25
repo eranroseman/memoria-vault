@@ -172,6 +172,7 @@ def test_inbox_base_has_needs_me_view():
     assert "title" not in needs_me_order
     assert "action" not in needs_me_order
     assert needs_me_order == ["formula.note", "formula.age_days"]
+    assert views["Needs me"]["columnSize"] == {"formula.note": 760, "formula.age_days": 72}
 
 
 def test_project_space_embeds_project_gate_views():
