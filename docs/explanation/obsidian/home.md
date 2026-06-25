@@ -36,7 +36,7 @@ wrong?"
 
 ## Why a note, not a plugin start-page
 
-The welcome note is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. Startup depends on the already-bundled QuickAdd startup macro and Obsidian's core Workspaces plugin to restore the saved **Memoria** shell. `home.md` stays an ordinary, git-tracked note.
+The welcome note is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. Startup depends on the already-bundled QuickAdd startup macro and Obsidian's core Workspaces plugin only as a fallback: Obsidian normally restores the previous session, and the saved **Memoria** shell is loaded only when the pinned rail is missing. `home.md` stays an ordinary, git-tracked note.
 
 This is the same discipline applied to the dashboards themselves: the human-facing surface is always a plain note the system's own tools can see and check.
 

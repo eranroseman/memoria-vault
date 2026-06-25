@@ -25,19 +25,19 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 ## Decision
 
-**Reclassify the Inbox as the queue, drop the nav rows, and retire the forced-landing homepage in favour of a startup restore of the saved Memoria shell.**
+**Reclassify the Inbox as the queue, drop the nav rows, and retire the forced-landing homepage in favour of Obsidian session restore plus a saved-shell fallback.**
 
 1. **Inbox is the queue (`type: queue`), not a space.** A new `queue` type (`schemas/types/queue.yaml`, category `spaces`, mapped `queue → spaces/`) is added; `spaces/inbox.md` becomes `type: queue` (still titled "Inbox"). The `space` type's enum drops `inbox` → `[library, knowledge, project]`. **The durable spaces are three** — Library, Knowledge, Project; the Inbox is the transient triage surface reached from the rail's *Now*.
 2. **Space notes carry no nav row.** The rail owns switching ([ADR-114](114-left-pane-navigator.md)), so a space note is purely its JTBD dashboard — title, brief, embedded views, guides. The four notes' nav rows are removed.
 3. **The homepage plugin is retired.** The old forced landing opened the Inbox queue and made Memoria feel like an inbox manager. The `homepage` community plugin, its vendored bundle, and its provenance-lock entry remain removed.
-4. **Startup restores the saved Memoria shell.** QuickAdd's `Memoria: restore shell on startup` macro runs after Obsidian's first layout is ready and calls the core Workspaces plugin's `loadWorkspace("Memoria")`. That restores `home.md` in the main pane, the pinned `_nav.md` rail in the left pane, and the Co-PI pane on the right without reintroducing the old Inbox homepage.
+4. **Startup preserves the session and repairs a missing rail.** QuickAdd's `Memoria: restore shell on startup` macro runs after Obsidian's first layout is ready. If the pinned `_nav.md` rail is already present, it only reveals the rail and leaves the main pane where the previous session restored it. If the rail is missing, it calls the core Workspaces plugin's `loadWorkspace("Memoria")`, restoring `home.md` in the main pane, the pinned rail on the left, and the Co-PI pane on the right without reintroducing the old Inbox homepage.
 5. **The launch/reset shell seeds `home.md`.** The saved **Memoria** workspace points its main pane at `home.md`, recast as a thin welcome note ("start here": capture your first source, the three places, ask the Co-PI). It is not a dashboard and not a daily front door; it owns no computation. Daily movement belongs to the pinned rail.
 
 ## Consequences
 
 - Data model: new `queue` type; `space` enum loses `inbox`; `folders.yaml` and the Linter `detectors.py` folder map gain `queue → spaces/`. Type count 24 → 25; templates exclude `queue` (authored, not template-created), so the template count stays 20.
 - App config: `community-plugins.json` drops `homepage`; `src/.obsidian/plugins/homepage/` is deleted and removed from `plugin-provenance-lock.json`; the **Memoria** workspace's main leaf points at `home.md` and pins `_nav.md`.
-- `home.md` is rewritten from a homepage-fallback into the welcome note. The launch behaviour now depends on the already-bundled QuickAdd startup hook plus Obsidian's core Workspaces plugin — no new community plugin or provenance lock.
+- `home.md` is rewritten from a homepage-fallback into the welcome note. The launch repair path depends on the already-bundled QuickAdd startup hook plus Obsidian's core Workspaces plugin — no new community plugin or provenance lock.
 - Live docs are updated to current-state: the Inbox is "the queue" (not a space), the spaces are three, and the launch surface is the saved **Memoria** shell restored on startup. ADR and `releasing/` prose are left in their own vocabulary; only [ADR-13](13-homepage-front-door.md) is marked superseded.
 - The "what needs me?" ambient signal is fully carried by the rail's *Now*; the daily glance still lives on the Inbox queue note.
 
