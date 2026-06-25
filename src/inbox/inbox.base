@@ -11,8 +11,10 @@ formulas:
 properties:
   formula.note:
     displayName: "Note"
+  action:
+    displayName: "Next step"
   formula.age_days:
-    displayName: "Age (days)"
+    displayName: "Age"
   formula.loudness_rank:
     displayName: "Priority"
 views:
@@ -21,9 +23,6 @@ views:
     filters:
       and:
         - 'lifecycle == "proposed"'
-    groupBy:
-      property: type
-      direction: ASC
     sort:
       - property: formula.loudness_rank
         direction: ASC
@@ -32,9 +31,6 @@ views:
     order:
       - formula.note
       - action
-      - finding
-      - certainty
-      - loudness
       - formula.age_days
   - type: table
     name: "Drift watch"

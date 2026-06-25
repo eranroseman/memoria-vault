@@ -1,6 +1,6 @@
 {
   "showInlineTitle": false,
-  "readableLineLength": true,
+  "readableLineLength": false,
   "newLinkFormat": "absolute",
   "alwaysUpdateLinks": true,
   "newFileLocation": "folder",

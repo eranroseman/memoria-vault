@@ -297,7 +297,7 @@ def test_app_json_ships_memoria_editor_settings():
     app = json.loads(APP.read_text(encoding="utf-8"))
     assert app == {
         "showInlineTitle": False,
-        "readableLineLength": True,
+        "readableLineLength": False,
         "newLinkFormat": "absolute",
         "alwaysUpdateLinks": True,
         "newFileLocation": "folder",
