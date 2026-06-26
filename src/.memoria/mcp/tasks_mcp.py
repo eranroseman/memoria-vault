@@ -18,12 +18,14 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
+from _shared import safe_filename
 from operations.lib import loudness
 
 from memoria.runtime.paths import resolve_vault
@@ -116,11 +118,13 @@ def create_card(
     try:
         r = runner(cmd, capture_output=True, text=True, timeout=30, check=True)
         obj = json.loads(r.stdout or "{}")
+        task = obj.get("task") if isinstance(obj.get("task"), dict) else obj
         return {
             "created": True,
-            "card_id": str(obj.get("id") or obj.get("task_id") or "queued"),
+            "card_id": str(task.get("id") or task.get("task_id") or "queued"),
             "lane": lane,
             "assignee": LANE_PROFILE[lane],
+            "status": str(task.get("status") or "ready"),
         }
     except FileNotFoundError:
         return {
@@ -172,7 +176,62 @@ def delegate(
         body_parts.append(f"## Expected outputs\n{expected_outputs}")
     if review_checks:
         body_parts.append(f"## Review checks\n{review_checks}")
-    return create_card(lane, goal, "\n\n".join(body_parts), idempotency_key, runner=card_runner)
+    body = "\n\n".join(body_parts)
+    result = create_card(lane, goal, body, idempotency_key, runner=card_runner)
+    if result.get("created"):
+        _write_activity_snapshot(vault, goal, body, result)
+    return result
+
+
+def _write_activity_snapshot(vault: Path, title: str, body: str, task: dict) -> None:
+    task_id = str(task.get("card_id") or "")
+    if not task_id or task_id == "queued":
+        return
+    board = vault / "system" / "board"
+    board.mkdir(parents=True, exist_ok=True)
+    path = board / f"{safe_filename(task_id)}.md"
+    if path.exists():
+        return
+    status = _normal_status(str(task.get("status") or "ready"))
+    queue_state = "queued" if status in {"triage", "todo", "ready"} else status
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    text = "\n".join(
+        [
+            "---",
+            f"title: {_yaml_str(title)}",
+            "type: worker-card",
+            "lifecycle: current",
+            f"task_id: {_yaml_str(task_id)}",
+            f"lane: {_yaml_str(str(task.get('assignee') or ''))}",
+            f"status: {status}",
+            'review_status: "unreviewed"',
+            "retry_count: 0",
+            'reason: ""',
+            f"as_of: {_yaml_str(now)}",
+            f"created: {now[:10]}",
+            "---",
+            "",
+            f"# {title}",
+            "",
+            f"Status: {queue_state}. No action needed; wait for the result.",
+            "",
+            "## Original request",
+            "",
+            *[f"> {line}" for line in body.splitlines()],
+            "",
+        ]
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def _normal_status(status: str) -> str:
+    return (
+        status if status in {"triage", "todo", "ready", "running", "blocked", "done"} else "ready"
+    )
+
+
+def _yaml_str(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def build_server(vault: Path):

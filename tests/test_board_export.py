@@ -133,6 +133,11 @@ def test_board_export():
             normalize(sample[3])["review_status"] == "unreviewed",
         )
         check("normalize pulls run summary", "enrich" in normalize(sample[0])["summary"])
+        check(
+            "normalize pulls run error as blocked reason",
+            normalize({"status": "blocked", "runs": [{"error": "pid 123 not alive"}]})["reason"]
+            == "pid 123 not alive",
+        )
         check("normalize reads block reason", normalize(sample[3])["reason"] == "needs human input")
         check(
             "normalize reads renamed agent_recommendation",
@@ -416,21 +421,19 @@ def test_cost_doctor_falls_back_to_immutable_read_only(tmp_path, monkeypatch):
     assert any(target.endswith("?mode=ro&immutable=1") for target in seen)
 
 
-def test_cost_lookup_fails_closed_when_show_lacks_worker_session_id(tmp_path):
+def test_cost_lookup_missing_worker_session_id_is_a_miss_not_export_failure(tmp_path):
     _session_store(tmp_path / ".hermes")
     lookup = _m.HermesCostLookup(
         hermes_home=tmp_path / ".hermes",
         show_card=lambda task_id: {"task_id": task_id, "runs": [{"metadata": {}}]},
     )
 
-    try:
-        lookup(
-            {"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, now_iso()
-        )
-    except _m.CostDoctorError as exc:
-        assert "runs[].metadata.worker_session_id" in str(exc)
-    else:
-        raise AssertionError("missing worker_session_id should fail closed")
+    cost, miss = lookup(
+        {"task_id": "no-sid"}, {"task_id": "no-sid", "assignee": "memoria-writer"}, now_iso()
+    )
+
+    assert cost is None
+    assert miss["reason"] == "missing-worker-session-id"
 
 
 # --------------------------------------------------------------------------- #
@@ -460,35 +463,13 @@ def _frontmatter(path):
     return yaml.safe_load(m.group(1))
 
 
-def _trigger_receipt(vault, task_id="t_1"):
-    inbox = vault / "inbox"
-    inbox.mkdir()
-    path = inbox / f"work-prompt-{task_id}.md"
-    path.write_text(
-        "---\n"
-        'title: "Task queued: Draft answer"\n'
-        "type: work-prompt\n"
-        "lifecycle: proposed\n"
-        'action: "watch for the result; use this ticket if it stalls"\n'
-        'what_happened: "Obsidian queued Hermes task t_1 for memoria-writer."\n'
-        "task_id: t_1\n"
-        "lane: memoria-writer\n"
-        "raised_by: quickadd\n"
-        "loudness: quiet\n"
-        "created: 2026-06-25\n"
-        "---\n\n"
-        "# Triggered task\n",
-        encoding="utf-8",
-    )
-    return path
-
-
 def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
-    run1 = [_card("t_1", "running", metadata={"expected_outputs": "projects/p1/draft.md"})]
+    meta = {"expected_outputs": "projects/p1/draft.md", "review_status": "requested"}
+    run1 = [_card("t_1", "running", metadata=meta)]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run1) == 0
     save_state_cache(tmp_path, run1)
 
-    run2 = [_card("t_1", "done", metadata={"expected_outputs": "projects/p1/draft.md"})]
+    run2 = [_card("t_1", "done", metadata=meta)]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 1
     files = _prompt_files(tmp_path)
     assert len(files) == 1
@@ -497,15 +478,20 @@ def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
     assert fm["task_id"] == "t_1" and fm["lane"] == "memoria-writer"
     assert fm["target"] == "projects/p1/draft.md"
     assert fm["lifecycle"] == "proposed"
+    assert fm["prompt_kind"] == "review"
+    assert fm["title"] == "Completed work: Draft answer"
+    assert fm["action"] == "Open the result, then keep it as a reminder or dismiss it."
+    assert fm["title"] != fm["action"]
     assert "agent_recommendation" not in fm  # ADR-51: never a verdict
     body = files[0].read_text(encoding="utf-8")
     assert "Draft answer" in body and "# Where to look" in body
 
 
 def test_rerun_emits_no_second_prompt(tmp_path):
-    run1 = [_card("t_1", "running")]
+    meta = {"review_status": "requested"}
+    run1 = [_card("t_1", "running", metadata=meta)]
     save_state_cache(tmp_path, run1)
-    run2 = [_card("t_1", "done")]
+    run2 = [_card("t_1", "done", metadata=meta)]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 1
     save_state_cache(tmp_path, run2)
     # the card stays done across the next cron runs — no new prompt, ever
@@ -519,35 +505,221 @@ def test_rerun_emits_no_second_prompt(tmp_path):
     assert len(_prompt_files(tmp_path)) == 1
 
 
-def test_non_done_transitions_emit_nothing(tmp_path):
+def test_non_done_or_unrequested_done_transitions_emit_nothing(tmp_path):
     run1 = [_card("t_1", "todo"), _card("t_2", "ready")]
     save_state_cache(tmp_path, run1)
-    run2 = [_card("t_1", "ready"), _card("t_2", "blocked")]
+    run2 = [_card("t_1", "ready"), _card("t_2", "blocked"), _card("t_3", "done")]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), run2) == 0
     assert _prompt_files(tmp_path) == []
 
 
-def test_done_task_archives_trigger_receipt(tmp_path):
-    receipt = _trigger_receipt(tmp_path)
-    assert _m.update_triggered_task_receipts(tmp_path, [_card("t_1", "done")]) == 1
-    fm = _frontmatter(receipt)
-    assert fm["lifecycle"] == "archived"
-    assert fm["loudness"] == "quiet"
-    assert "completed" in fm["what_happened"]
-    assert "## Completed" in receipt.read_text(encoding="utf-8")
+def test_blocked_map_task_creates_one_source_gap(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(8):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    card = _card("t_1", "blocked", title="Map the corpus", assignee="memoria-librarian")
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 1
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 0
 
-
-def test_blocked_task_updates_trigger_receipt(tmp_path):
-    receipt = _trigger_receipt(tmp_path)
-    card = _card("t_1", "blocked")
-    card["reason"] = "waiting for Zotero"
-    assert _m.update_triggered_task_receipts(tmp_path, [card]) == 1
-    fm = _frontmatter(receipt)
+    files = sorted((tmp_path / "inbox").glob("gap-map-corpus*.md"))
+    assert len(files) == 1
+    assert files[0].name == "gap-map-corpus.md"
+    fm = _frontmatter(files[0])
+    assert _schema.validate_frontmatter(fm, _schema.load_types()["gap"]) == []
+    assert fm["title"] == "Map corpus needs more sources"
+    assert fm["action"] == "Add 2 source note(s), then retry Map corpus"
     assert fm["lifecycle"] == "proposed"
-    assert fm["loudness"] == "alert"
-    assert fm["action"] == "resolve the blocked task or archive this receipt"
-    body = receipt.read_text(encoding="utf-8")
-    assert "## Blocked" in body and "waiting for Zotero" in body
+    body = files[0].read_text(encoding="utf-8")
+    assert "Map corpus needs `10` non-empty source notes" in body
+    assert "The current source corpus has `8`." in body
+    assert "partial corpus map" in body
+    assert "QuickAdd: Memoria: assist find" in body
+    assert "If you already have a source in hand:" in body
+    assert "QuickAdd: Memoria: capture source from URL" in body
+    assert "QuickAdd: Memoria: capture from Zotero selection" in body
+    assert "QuickAdd: Memoria: retry map corpus and dismiss" in body
+    assert "name Dismiss" in body
+    assert "QuickAdd: Memoria: dismiss inbox card" in body
+    assert "name Back to Inbox" in body
+    assert "QuickAdd: Memoria: open Inbox" in body
+
+
+def test_blocked_map_task_archives_legacy_generic_prompt(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(8):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    legacy = inbox / "work-prompt-blocked-t-1.md"
+    legacy.write_text(
+        (
+            "---\n"
+            'title: "Blocked work: Map corpus"\n'
+            "type: work-prompt\n"
+            "lifecycle: proposed\n"
+            'action: "Resolve the blocker."\n'
+            "---\n"
+        ),
+        encoding="utf-8",
+    )
+
+    card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 2
+
+    assert _frontmatter(legacy)["lifecycle"] == "archived"
+    assert _frontmatter(inbox / "gap-map-corpus.md")["lifecycle"] == "proposed"
+
+
+def test_miscompleted_too_small_map_task_creates_source_gap(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(8):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    card = _card("t_1", "done", title="Map corpus", assignee="memoria-librarian")
+    card["summary"] = "Corpus is too small to generate a cluster map"
+
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 1
+
+    files = sorted((tmp_path / "inbox").glob("gap-map-corpus*.md"))
+    assert len(files) == 1
+    assert _frontmatter(files[0])["action"] == "Add 2 source note(s), then retry Map corpus"
+
+
+def test_miscompleted_map_task_uses_show_summary_when_list_is_thin(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(8):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    card = _card("t_1", "done", title="Map corpus", assignee="memoria-librarian")
+
+    def show_card(task_id):
+        assert task_id == "t_1"
+        return {**card, "latest_summary": "Corpus is too small to generate a cluster map"}
+
+    assert _m.export_actionable_blockers(tmp_path, [card], show_card=show_card) == 1
+    _m.export_markdown(tmp_path, [card], show_card=show_card)
+    board_card = (tmp_path / BOARD_RELDIR / "t_1.md").read_text(encoding="utf-8")
+    assert 'status: "blocked"' in board_card
+    assert "Corpus is too small to generate a cluster map" in board_card
+    assert len(sorted((tmp_path / "inbox").glob("gap-map-corpus*.md"))) == 1
+
+
+def test_duplicate_map_blockers_share_one_stable_gap(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(8):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    old = _card(
+        "t_old",
+        "blocked",
+        title="Map corpus",
+        assignee="memoria-librarian",
+        updated="2026-06-25T10:00:00Z",
+    )
+    new = _card(
+        "t_new",
+        "blocked",
+        title="Map corpus",
+        assignee="memoria-librarian",
+        updated="2026-06-25T11:00:00Z",
+    )
+
+    assert _m.export_actionable_blockers(tmp_path, [old, new]) == 1
+    body = (tmp_path / "inbox/gap-map-corpus.md").read_text(encoding="utf-8")
+    assert "Latest task: `t_new`" in body
+    assert not list((tmp_path / "inbox").glob("gap-map-corpus-t_*.md"))
+
+
+def test_blocked_non_map_task_creates_one_blocked_prompt(tmp_path):
+    card = _card(
+        "t_1",
+        "blocked",
+        title="Draft section",
+        assignee="memoria-writer",
+        metadata={"blocked_reason": "Missing project thesis"},
+    )
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 1
+    assert _m.export_actionable_blockers(tmp_path, [card]) == 0
+
+    files = _prompt_files(tmp_path)
+    assert len(files) == 1
+    fm = _frontmatter(files[0])
+    assert _schema.validate_frontmatter(fm, _schema.load_types()["work-prompt"]) == []
+    assert fm["title"] == "Blocked work: Draft section"
+    assert fm["action"] == "Resolve the blocker, then retry or dismiss this item."
+    assert fm["prompt_kind"] == "blocked"
+    assert fm["task_id"] == "t_1"
+    assert fm["title"] != fm["action"]
+
+
+def test_blocked_map_task_with_enough_sources_creates_blocked_prompt(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(10):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
+
+    def show_card(task_id):
+        assert task_id == "t_1"
+        return {**card, "latest_summary": "Corpus is too small to generate a cluster map"}
+
+    assert _m.export_actionable_blockers(tmp_path, [card], show_card=show_card) == 1
+    files = _prompt_files(tmp_path)
+    assert [path.name for path in files] == ["work-prompt-map-corpus-blocked.md"]
+    fm = _frontmatter(files[0])
+    assert fm["title"] == "Map corpus blocked"
+    assert fm["action"] == "Retry Map corpus or dismiss this ticket"
+    assert fm["prompt_kind"] == "blocked"
+    body = files[0].read_text(encoding="utf-8")
+    assert "Previous block reason: the source-count floor was not met when this task ran." in body
+    assert "Corpus is too small to generate a cluster map" not in body
+    assert "Current source corpus: `10` non-empty source notes" in body
+    assert "The corpus now meets the source-count floor" in body
+    assert "retry button also dismisses this ticket and returns to the Inbox" in body
+    assert "QuickAdd: Memoria: retry map corpus and dismiss" in body
+    assert "name Dismiss" in body
+    assert "QuickAdd: Memoria: dismiss inbox card" in body
+    assert "name Back to Inbox" in body
+    assert "QuickAdd: Memoria: open Inbox" in body
+
+
+def test_blocked_map_task_uses_hermes_run_error(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(10):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
+
+    def show_card(task_id):
+        assert task_id == "t_1"
+        return {**card, "runs": [{"error": "pid 123 not alive"}]}
+
+    assert _m.export_actionable_blockers(tmp_path, [card], show_card=show_card) == 1
+    body = (tmp_path / "inbox/work-prompt-map-corpus-blocked.md").read_text(encoding="utf-8")
+    assert "Recorded block reason: pid 123 not alive" in body
+    assert "The corpus now meets the source-count floor" in body
+    assert "No block reason was recorded" not in body
+
+
+def test_map_gap_archives_when_source_floor_is_met(tmp_path):
+    sources = tmp_path / "notes/sources"
+    sources.mkdir(parents=True)
+    for i in range(10):
+        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    inbox = tmp_path / "inbox"
+    inbox.mkdir()
+    gap = inbox / "gap-map-corpus.md"
+    gap.write_text(
+        "---\ntitle: Map corpus needs more sources\ntype: gap\nlifecycle: proposed\n---\n",
+        encoding="utf-8",
+    )
+
+    assert _m.export_actionable_blockers(tmp_path, []) == 1
+    fm = _frontmatter(gap)
+    assert fm["lifecycle"] == "archived"
+    assert "resolved" in fm
 
 
 def test_bootstrap_guard_skips_old_done_cards(tmp_path):
@@ -555,7 +727,9 @@ def test_bootstrap_guard_skips_old_done_cards(tmp_path):
     recent = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     first_run = [
         _card("t_old", "done", updated=old),  # pre-feature backlog: silent
-        _card("t_recent", "done", updated=recent),  # done within 24h: prompt
+        _card(
+            "t_recent", "done", updated=recent, metadata={"review_status": "requested"}
+        ),  # done within 24h: prompt
         _card("t_nostamp", "done"),  # no timestamp: silent (safe)
     ]
     assert export_review_prompts(tmp_path, load_state_cache(tmp_path), first_run) == 1
@@ -568,6 +742,9 @@ def test_run_export_reports_review_prompts(tmp_path):
     cards.write_text(json.dumps([_card("t_1", "running")]), encoding="utf-8")
     run_export(tmp_path, cards)
     now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
-    cards.write_text(json.dumps([_card("t_1", "done", updated=now)]), encoding="utf-8")
+    cards.write_text(
+        json.dumps([_card("t_1", "done", updated=now, metadata={"review_status": "requested"})]),
+        encoding="utf-8",
+    )
     assert run_export(tmp_path, cards)["review_prompts"] == 1
     assert run_export(tmp_path, cards)["review_prompts"] == 0

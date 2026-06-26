@@ -30,12 +30,12 @@ action surface.
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Queue | Inbox | `spaces/inbox.md` | Action-first triage queue (`type: queue`), reached from the rail's *Now*: the Inbox `Needs me` and fleeting processing views. |
+| Queue | Inbox | `spaces/inbox.md` | Daily attention queue (`type: queue`), reached from the rail's *Now*: compact in-process Activity first, then `Needs me`, then fleeting processing. |
 | Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`type: maintenance`): drift watch, loose ends, board, and new-this-week digest. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
-| Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = cards in `proposed`, with title/action merged into the clickable row label and findings visible in maintenance views) plus live worker cards from `system/board/`. |
+| Maintenance support | Board state | `system/dashboards/board-state.md` | The full Inbox board (embeds `inbox.base` — "Needs me" = proposed `candidate` / `gap` / `work-prompt` action cards, with title/action merged into the clickable row label and findings visible in Maintenance views) plus worker-card projections from `system/board/`. |
 | Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
 | Agent-ops | Fleet health | `system/dashboards/fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
 | Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
@@ -55,8 +55,8 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 | Base | Lives at | View over |
 | --- | --- | --- |
 | `catalog.base` | `catalog/` | The Catalog — entity records by type (papers, people, organizations, venues, datasets, repositories), `lifecycle != archived`. |
-| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = `proposed`; the clickable row label merges title/action, while drift views expose findings; converges to empty. |
-| `board.base` | `system/board/` | Live worker cards by lane/state, mirrored from Hermes board state. |
+| `inbox.base` | `inbox/` | The Inbox board — cards grouped by type; "Needs me" = proposed `candidate` / `gap` / `work-prompt` action cards; the clickable row label merges title/action, while drift views expose findings; converges to empty. |
+| `board.base` | `system/board/` | Worker-card projections by lane/state, mirrored from Hermes board state; the Inbox embeds only the in-process Activity view. |
 | `claims.base` | `system/dashboards/` | Claims by maturity. |
 | `sources.base` | `system/dashboards/` | Source notes by lifecycle. |
 | `fleeting.base` | `system/dashboards/` | Fleeting notes awaiting promote-or-discard. |

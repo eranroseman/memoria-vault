@@ -22,7 +22,7 @@ A `flag` (a verification or integrity issue) and an `alert` (a drift or retracti
 
 ## Work prompts: work-prompt
 
-A `work-prompt` is the third shape: not a proposal to judge and not a finding to adjudicate, but **work waiting on the PI** — the board export raises one when a worker card reaches `done`, and a batch worklist surfaces as one aggregate prompt. Like proposals, it carries **no verdict**; see [Inbox card fields](../../reference/inbox-card-fields.md#work-prompts).
+A `work-prompt` is the third shape: not a proposal to judge and not a finding to adjudicate, but **work waiting on the PI** — the board export raises one when a worker card reaches `done` and asks for review, and a batch worklist surfaces as one aggregate prompt. Like proposals, it carries **no verdict**; see [Inbox card fields](../../reference/inbox-card-fields.md#work-prompts).
 
 ---
 

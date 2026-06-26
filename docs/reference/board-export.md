@@ -5,7 +5,7 @@ parent: Reference
 
 # Board export
 
-`src/.memoria/mcp/board_export.py` is the one-way projection from the Hermes Kanban database into vault files and telemetry logs. The Hermes board at `~/.hermes/kanban.db` remains authoritative; the exported files are consumer views for Obsidian dashboards, Dataview, metrics aggregation, and review prompts.
+`src/.memoria/mcp/board_export.py` is the one-way projection from the Hermes Kanban database into vault files and telemetry logs. The Hermes board at `~/.hermes/kanban.db` remains authoritative; the exported files are consumer views for Obsidian dashboards, Inbox Activity, Dataview, metrics aggregation, review prompts, and blocker tickets.
 
 ## Command
 
@@ -28,14 +28,17 @@ Without `--from-json`, the exporter shells out to `hermes kanban list --json`. C
 
 | Path | Shape |
 | --- | --- |
-| `system/board/<task_id>.md` | One markdown projection per live card for board-state dashboards. |
+| `system/board/<task_id>.md` | One markdown projection per live card for board-state dashboards; the Inbox Activity view shows only in-process statuses. QuickAdd and Co-PI delegation may seed this immediately, and export reconciles it from Hermes. |
 | `system/logs/board-state.jsonl` | Queue-depth snapshot, one row per export run. |
 | `system/logs/board-transitions.jsonl` | Per-card status and review-state transitions derived from the previous export cache. |
 | `system/logs/disposition.jsonl` | Review decisions: `accept`, `edit`, or `reject`. |
 | `system/logs/cost.jsonl` | API spend and token counts per completed card when the Hermes session join succeeds. |
 | `system/logs/cost-misses.jsonl` | Completed cards whose Hermes session/cost join could not be completed. |
 | `system/logs/blind-review-samples.jsonl` | Deterministic sample requests for blind re-review. |
-| `inbox/work-prompt-review-*.md` | One PI review prompt for a card that newly reaches `done`. |
+| `inbox/work-prompt-review-*.md` | One PI review prompt for a card that newly reaches `done` with `review_status: requested`; status-only cards stay out of `inbox/`. |
+| `inbox/gap-map-corpus.md` | One source-gap card when Map corpus blocks below the calibrated corpus floor. |
+| `inbox/work-prompt-map-corpus-blocked.md` | Domain-specific blocked ticket for a Map corpus task that cannot complete. |
+| `inbox/work-prompt-blocked-*.md` | Fallback blocked-task prompt when no domain-specific ticket exists. |
 
 `system/logs/.board-state-cache.json` stores the previous card snapshot. The exporter diffs the current board against that cache before saving the new cache, so transition logs are append-only while projected card markdown is refreshed.
 

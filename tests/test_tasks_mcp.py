@@ -1,6 +1,7 @@
 """The delegation path (ADR-48): lane routing + the ceiling-narrowing rule."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import tasks_mcp
 
@@ -136,3 +137,20 @@ def test_delegate_resumes_after_block_card_is_acknowledged(tmp_path, monkeypatch
     )
     monkeypatch.setattr(tasks_mcp, "create_card", lambda *args, **kwargs: {"created": True})
     assert tasks_mcp.delegate(v, "catalog", "goal", allowed_paths=["catalog/"])["created"] is True
+
+
+def test_delegate_projects_success_to_inbox_activity(tmp_path):
+    v = _vault(tmp_path)
+
+    def runner(*args, **kwargs):
+        return SimpleNamespace(stdout='{"task": {"id": "t_copi", "status": "ready"}}')
+
+    out = tasks_mcp.delegate(v, "catalog", "Ingest @smith2026", card_runner=runner)
+    assert out["created"] is True
+    activity = v / "system" / "board" / "t_copi.md"
+    assert activity.is_file()
+    text = activity.read_text(encoding="utf-8")
+    assert "type: worker-card" in text
+    assert 'task_id: "t_copi"' in text
+    assert "Status: queued. No action needed; wait for the result." in text
+    assert not (v / "inbox").exists()

@@ -5,7 +5,7 @@ cssclasses: memoria-nav
 
 **Now**
 
-[[spaces/inbox|⬤ Needs you]] &nbsp; `$= dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && p.type != "flag" && p.type != "alert").length`
+[[spaces/inbox|⬤ Needs you]] &nbsp; `$= dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && ["candidate", "gap", "work-prompt"].includes(p.type)).length`
 
 [[spaces/maintenance|Drift]] &nbsp; `$= (() => { const n = dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && (p.type == "flag" || p.type == "alert")).length; return n > 0 ? "◆ " + n : n })()` &nbsp; [[system/dashboards/fleet-health|Fleet]] &nbsp; `$= (() => { const n = dv.pages('"system/metrics"').where(p => p.type == "lane-metric" && (p.band == "act" || p.band == "watch")).length; return n > 0 ? "◆ " + n : n })()`
 

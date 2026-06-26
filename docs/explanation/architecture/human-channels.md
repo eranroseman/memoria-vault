@@ -6,7 +6,7 @@ nav_order: 4
 
 # Interaction channels
 
-Memoria's primary UI is Obsidian — and within it, the **Inbox** is the one place agents speak to the PI: candidate, gap, flag, alert, and work-prompt cards ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)) feeding the Inbox queue's "Needs me" view ([ADR-81](../../adr/81-persistent-gate-dashboards.md)). Beyond Obsidian are two secondary channels for reaching the system when it isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
+Memoria's primary UI is Obsidian — and within it, `inbox/` is the one place agents leave PI-facing cards: candidate, gap, flag, alert, and work-prompt ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). The daily Inbox queue shows only action cards in "Needs me"; Maintenance reads the flag/alert drift slices ([ADR-81](../../adr/81-persistent-gate-dashboards.md)). Beyond Obsidian are two secondary channels for reaching the system when it isn't the right place — the CLI (precise, occasional, forensic) and Telegram (mobile, async) — plus one non-human integration path, the API server, which programs use and humans never touch directly.
 
 The organizing principle: **each channel owns one mode.** Using one for another's job produces slow erosion — daily operations done via CLI compound into friction that eventually stops the behavior; push notifications wired for the wrong events train the human to ignore them all.
 
@@ -46,10 +46,10 @@ Every agent and operation finding carries one of four loudness levels, and the l
 | --- | --- |
 | **Quiet** | logged only; no push |
 | **Notice** | appears in the relevant dashboard + weekly review; no push |
-| **Alert** | appears in Home / the Inbox's "Needs me" queue and sends Telegram push when configured |
-| **Block** | appears in Home, sends Telegram push when configured, and pauses new delegation plus review-gated promotion until acknowledged |
+| **Alert** | appears in Maintenance's health surfaces and sends Telegram push when configured |
+| **Block** | appears in Maintenance or an Inbox work prompt, sends Telegram push when configured, and pauses new delegation plus review-gated promotion until acknowledged |
 
-The test for push vs dashboard routing: *does it change what the PI does in the next 30 minutes?* Only Alert and Block should ever reach a push channel; everything else waits in the Inbox and dashboards. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
+The test for push vs dashboard routing: *does it change what the PI does in the next 30 minutes?* Only Alert and Block should ever reach a push channel; everything else waits in the Inbox, Maintenance, or the relevant dashboard. This is what keeps the push channel trustworthy — when Telegram buzzes, it matters.
 
 ---
 

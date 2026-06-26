@@ -143,7 +143,7 @@ ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings,cost}
 
 - [ ] `board-state`, `board-transitions`, `audit`, and `lint-findings` all gain rows from the live activity above.
 - [ ] The cost doctor passes before live export trusts the Hermes session-store join; any missing cost rows are counted in `cost-misses.jsonl`, not treated as zero.
-- [ ] Resolve at least one `work-prompt` through `Memoria: resolve inbox card` and confirm `disposition.jsonl` gains an `accepted`, `edited`, or `rejected` row from the human action surface.
+- [ ] Resolve at least one `work-prompt` through `Memoria: resolve inbox card` with **Keep as reminder** and confirm `disposition.jsonl` gains an `accepted` row from the human action surface.
 
 ## G7 — no High-priority blockers
 

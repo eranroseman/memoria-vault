@@ -27,6 +27,8 @@ Press `Cmd/Ctrl-P` and run **Memoria: load sample vault**. It copies a small, la
 
 > One honest note: a cluster this dense is weeks of reading, compressed. It's a teaching scaffold — you'll finish a few of its deliberately-unfinished pieces to learn the moves, then repeat them on your own sources.
 
+The bundled corpus includes enough non-empty source notes for a full map pass; if you map a smaller personal corpus later, Memoria blocks and asks you to add sources rather than showing a partial map as if it were complete.
+
 ---
 
 ## Step 2 — Open a project and name your goal
@@ -50,7 +52,7 @@ The command creates the project, which now appears in the **Project space**. Ope
 
 Now look at what the corpus can support. Use the project's **Map corpus** button, or run `Cmd/Ctrl-P` → **Memoria: map corpus**. The command asks for a **scope** — a folder or hub note to narrow to; press **Enter** to map the whole corpus, which is what you want here. (If you'd rather think the scope through first, ask the Co-PI to map it for you.)
 
-This hands a **map** task to the **Librarian**, a background worker. It clusters the corpus — how its pieces connect, and where they're dense or thin — and posts a short coverage read to your **Inbox** (the queue of things waiting on your attention). It runs in the background, so give it a moment; when the card lands, open the **Inbox queue** → **Needs me** view and read it with the Co-PI narrating. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
+This hands a **map** task to the **Librarian**, a background worker. Inbox **Activity** shows the task while it is queued or running. When it finishes or needs your attention, a card lands in **Needs me** with either the map to read or the issue to resolve. You don't yet know how each piece was made — that's the next four tutorials — so let it walk you through:
 
 - **Each dot is a claim** — one defensible sentence that traces back to a real paper. Open one (say `meddiet-reduces-major-cv-events`) and you'll see its shape: a single assertion, evidence lines that each cite a paper, and typed links to neighboring claims. That shape is what you'll learn to make.
 - **They cluster** — most of these claims pull the same way: a Mediterranean diet lowers cardiovascular events, carried by two randomized trials and supporting cohort evidence. A dense, mutually linked cluster is the sign that you can *write* from it.

@@ -110,7 +110,7 @@ async function entry(params, settings = {}) {
       idemKey,
       body,
     });
-    new Notice("✓ Assist " + verb + " card created (" + spec.assignee + ").", 6000);
+    new Notice("✓ Assist " + verb + " queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Assist " + verb + " failed: " + e.message).slice(0, 250), 10000);
   }
@@ -176,7 +176,7 @@ async function queuePattern(params, cp, ctx) {
       idemKey,
       body,
     });
-    new Notice("✓ Assist patterns card created (" + patternId + ").", 6000);
+    new Notice("✓ Assist patterns queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Assist patterns failed: " + e.message).slice(0, 250), 10000);
   }

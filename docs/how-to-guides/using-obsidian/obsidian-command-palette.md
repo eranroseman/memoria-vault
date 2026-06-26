@@ -40,10 +40,13 @@ First, a few terms used below:
 - `Memoria: structured source capture` — a guided form; writes a proposed source note plus an Inbox candidate card
 - `Memoria: capture from Zotero selection` — the same capture card, citekey pre-filled from the current Zotero selection
 - `Memoria: resolve inbox card` — marks the active Inbox card resolved, in place
+- `Memoria: dismiss inbox card` — archives the active Inbox card without opening the resolve menu, then returns to the Inbox
+- `Memoria: open Inbox` — returns the active pane to the Inbox without resolving the current note
 
 **Per-task lane commands** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) — one command per lane task. Each prompts only for what that task needs, then raises a board card on the right lane:
 
 - `Memoria: catalog source` · `Memoria: extract claims` · `Memoria: link claim` · `Memoria: map corpus` — the Librarian's four tasks
+- `Memoria: retry map corpus and dismiss` — used by map-blocker tickets; queues the retry, archives the ticket, and returns to the Inbox
 - `Memoria: draft section` — the Writer's `draft` lane
 - `Memoria: verify draft` — the Peer-reviewer's `verify` lane
 - `Memoria: run pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along

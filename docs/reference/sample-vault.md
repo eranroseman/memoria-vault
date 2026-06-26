@@ -13,14 +13,14 @@ It ships inside the installed vault as a hidden bundle at `.memoria/samples/medi
 
 | Layer | Worked (study these) | Half-built (left for you to finish) |
 | --- | --- | --- |
-| Sources | 6 source notes, written "in my words" with claims distilled | 2 sources captured but not yet distilled |
+| Sources | 8 source notes, written "in my words" with claims distilled | 2 sources captured but not yet distilled |
 | Claims | 11 connected claims with typed `supports` / `contradicts` links | 2 claim stubs (evidence blank) and 1 deliberately unmade link |
-| Catalog | 8 catalog entities, one per cited paper | — |
+| Catalog | 10 catalog entities, one per cited paper | — |
 | Hub | 1 hub organizing the cluster and naming an open gap | — |
 
 Every note is labeled `sample: true`, which keeps it visibly separate from your own work and lets a single command archive the whole sample later.
 
-Everything traces to a **real, citable paper** (PREDIMED, the Lyon Diet Heart Study, the Seven Countries Study, a Greek cohort, and two reviews). Nothing is fabricated or model-generated: the whole point of Memoria is that every claim traces to a source, so a sample that faked its provenance would teach the exact habit the system exists to prevent.
+Everything traces to a **real, citable paper** (PREDIMED, PREDIMED substudies, the Lyon Diet Heart Study, the Seven Countries Study, a Greek cohort, and two reviews). Nothing is fabricated or model-generated: the whole point of Memoria is that every claim traces to a source, so a sample that faked its provenance would teach the exact habit the system exists to prevent.
 
 ## The shape to notice
 

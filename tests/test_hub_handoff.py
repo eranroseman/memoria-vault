@@ -50,6 +50,7 @@ def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
         "card_id": "card-42",
         "lane": "map",
         "assignee": "memoria-librarian",
+        "status": "ready",
     }
     cmd = calls[0]
     assert cmd[:3] == ["hermes", "kanban", "create"]

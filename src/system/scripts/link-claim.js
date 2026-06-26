@@ -65,7 +65,7 @@ module.exports = async (params) => {
       body,
       lane: LANE,
     });
-    new Notice("✓ Suggestions written; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
+    new Notice("✓ Suggestions written; link task queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Link delegation failed after writing suggestions: " + e.message).slice(0, 250), 10000);
   }

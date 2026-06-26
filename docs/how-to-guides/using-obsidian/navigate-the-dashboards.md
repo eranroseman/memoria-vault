@@ -13,7 +13,7 @@ You move around Memoria from the **navigator rail** on the left. It has two part
 - **Now** — what is waiting for you right now. Three entries: **Needs you** (your action queue), **Drift** (integrity flags), and **Fleet** (the health of the background workers).
 - **Places** — the three working **spaces** you switch between: **Library** (sources you are reading), **Knowledge** (claims you are synthesizing), and **Project** (drafts you are steering toward output).
 
-Two more surfaces hang off *Now*. The **Inbox** is your action queue — open it from *Now → Needs you*; its main view is **Needs me**. **Maintenance** is a separate weekly surface for structural cleanup; it holds Drift watch, Loose ends, the Board, and a "new this week" digest.
+Two more surfaces hang off *Now*. The **Inbox** is your daily attention queue — open it from *Now → Needs you*; it shows in-process Activity first, then **Needs me**, then fleeting captures. **Maintenance** is a separate weekly surface for structural cleanup and status review; it holds Drift watch, Loose ends, the Board, and a "new this week" digest.
 
 Behind those surfaces sit **5 read-only system dashboards** under `system/dashboards/`. They are Dataview-backed views that report state and never change anything. The space surfaces themselves are built from Obsidian Bases (database-style views over your notes). For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
 
@@ -29,11 +29,11 @@ To open anything that is not on the rail, follow a link from a space, or press `
 
 Open the **Inbox** (`spaces/inbox.md`) from *Now → Needs you*.
 
-The Inbox is your action queue: items that Memoria has parked for a decision from you. Glance at it at the start of every session. Empty means nothing is waiting; a full read takes under 30 seconds.
+The Inbox answers two quick questions: what is currently queued or running, and what action needs you now. Glance at Activity first, then work **Needs me** if it has rows. Empty means nothing is waiting; a full read takes under 30 seconds.
 
 ### "What work is in flight? What's stuck?"
 
-Open **Maintenance** from *Now*, then read its **Board** section.
+For a quick live answer, read **Inbox → Activity**. For blocked, done, or older board history, open **Maintenance** from *Now*, then read its **Board** section.
 
 The Board shows the background workers — Memoria calls them **lanes** — and the work moving through them as **cards** (one card per unit of work). A card that has sat in the same lane for days is probably stuck: [Fix a stuck card](../troubleshooting/fix-stuck-card.md).
 

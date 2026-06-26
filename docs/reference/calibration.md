@@ -33,7 +33,7 @@ merge, block, or reorder canonical work.
 | `entity_resolution` | cross-source identity agreement floor | below the floor, ingest raises an Inbox near-tie flag instead of merging |
 | `classify` | OpenAlex topic classification floor and near-tie margin | clear winners apply; near ties raise a review flag |
 | `inbox` | resolved-card archival age | archival sweep moves old resolved cards out of active Inbox views |
-| `clustering` | display defaults for graph/topic maps | layout/topic defaults only; not a canonical-write decision |
+| `clustering` | display defaults and corpus floor for graph/topic maps | layout/topic defaults only; below the corpus floor the map lane raises a gap instead of approximating |
 
 ## Hybrid-Score Thresholds
 

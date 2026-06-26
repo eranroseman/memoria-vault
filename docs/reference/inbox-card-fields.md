@@ -5,7 +5,7 @@ parent: Reference
 
 # Inbox card fields
 
-Schema fields for Inbox cards under `inbox/`. The source of truth is `src/.memoria/schemas/types/`; this page is the lookup view for the PI-facing card shapes.
+Schema fields for Inbox cards under `inbox/`. The source of truth is `src/.memoria/schemas/types/`; this page is the lookup view for the PI-facing card shapes. The daily **Needs me** view embeds only proposed `candidate`, `gap`, and `work-prompt` cards; `flag` and `alert` cards are still Inbox cards, but they are worked from Maintenance drift views unless they raise a work prompt.
 
 ## Shared card fields
 
@@ -45,12 +45,13 @@ Schema fields for Inbox cards under `inbox/`. The source of truth is `src/.memor
 
 ## Work prompts
 
-`work-prompt` cards tell the PI what completed or needs attention. They carry no recommendation field.
+`work-prompt` cards tell the PI what completed, blocked, or needs attention. They carry no recommendation field. A useful prompt explains why it exists, what to do next, where to inspect the material, and how to keep or dismiss it.
 
 | Field | Kind | Required | Meaning |
 | --- | --- | --- | --- |
 | `action` | `str` | Yes | What the PI should do. |
 | `what_happened` | `str` | Yes | What finished or triggered the prompt. |
+| `prompt_kind` | enum | Optional | `review`, `worklist`, `nudge`, or `blocked`; a quick hint for the surface that raised the prompt. |
 | `target` | `str` | Required-any | Output path or artifact to review. |
 | `task_id` | `str` | Required-any | Board card the prompt is about. |
 | `lane` | `str` | Optional | Lane that completed the work. |

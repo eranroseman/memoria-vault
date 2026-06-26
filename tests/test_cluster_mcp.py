@@ -1,5 +1,8 @@
 """The cluster MCP: typed-graph metrics (networkx) + clean degradation (ADR-33)."""
 
+import sys
+from types import SimpleNamespace
+
 import cluster_mcp
 import pytest
 
@@ -62,6 +65,27 @@ def test_topics_degrade_cleanly(tmp_path):
     v = _vault(tmp_path)
     out = cluster_mcp.model_topics(v)
     assert out.get("error") in ("bertopic-not-installed", "too-few-documents")
+
+
+def test_topics_use_calibrated_corpus_floor(tmp_path, monkeypatch):
+    monkeypatch.setitem(sys.modules, "bertopic", SimpleNamespace(BERTopic=object))
+    monkeypatch.setitem(sys.modules, "umap", SimpleNamespace(UMAP=object))
+    v = _vault(tmp_path)
+    (v / ".memoria/schemas").mkdir(parents=True)
+    (v / ".memoria/schemas/calibration.yaml").write_text(
+        "clustering:\n  hdbscan_min_cluster_size: 2\n  full_cluster_min_documents: 7\n",
+        encoding="utf-8",
+    )
+    (v / "notes/sources").mkdir(parents=True)
+    for i in range(6):
+        (v / f"notes/sources/source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+
+    out = cluster_mcp.model_topics(v)
+
+    assert out["error"] == "too-few-documents"
+    assert out["documents"] == 6
+    assert out["required_documents"] == 7
+    assert "7 non-empty notes" in out["note"]
 
 
 def test_empty_vault_no_crash(tmp_path):

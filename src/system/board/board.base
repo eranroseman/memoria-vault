@@ -4,14 +4,32 @@ filters:
     - file.inFolder("system/board")
     - 'type == "worker-card"'
 formulas:
-  note: 'link(file.path, title)'
+  note: 'link(file.path, title + " - " + if(status == "triage" || status == "todo" || status == "ready", "queued", status))'
   age_min: '(now() - date(as_of)).minutes.round(0)'
 properties:
   formula.note:
     displayName: "Note"
+  expected_outputs:
+    displayName: "Result"
   formula.age_min:
     displayName: "Age (min)"
 views:
+  - type: table
+    name: "Inbox activity"
+    columnSize:
+      formula.note: 520
+      expected_outputs: 260
+      formula.age_min: 72
+    filters:
+      and:
+        - 'status == "triage" || status == "todo" || status == "ready" || status == "running"'
+    sort:
+      - property: formula.age_min
+        direction: ASC
+    order:
+      - formula.note
+      - expected_outputs
+      - formula.age_min
   - type: table
     name: "By lane"
     groupBy:

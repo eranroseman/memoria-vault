@@ -350,6 +350,8 @@ def model_topics(
     seed = seed if seed is not None else int(cal.get("seed", 42))
     mcs = min_cluster_size or int(cal.get("hdbscan_min_cluster_size", 5))
     nn = int(cal.get("umap_n_neighbors", 15))
+    corpus_floor = int(cal.get("full_cluster_min_documents", 10))
+    required_documents = max(mcs * 2, corpus_floor)
     docs, names = [], []
     d = vault / folder
     for p in sorted(d.glob("*.md")) if d.is_dir() else []:
@@ -357,11 +359,12 @@ def model_topics(
         if body:
             docs.append(body)
             names.append(p.stem)
-    if len(docs) < max(mcs * 2, 10):
+    if len(docs) < required_documents:
         return {
             "error": "too-few-documents",
             "documents": len(docs),
-            "note": f"need at least {max(mcs * 2, 10)} non-empty notes under {folder}",
+            "required_documents": required_documents,
+            "note": f"need at least {required_documents} non-empty notes under {folder}",
         }
     embedding = cal.get("embedding_model") or "all-MiniLM-L6-v2"
     topic_model = BERTopic(
@@ -382,6 +385,8 @@ def model_topics(
             "embedding_model": embedding,
             "min_cluster_size": mcs,
             "umap_n_neighbors": nn,
+            "full_cluster_min_documents": corpus_floor,
+            "required_documents": required_documents,
             "seed": seed,
         },
     }

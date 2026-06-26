@@ -3,6 +3,8 @@
 import re
 from pathlib import Path
 
+import yaml
+
 SRC = Path(__file__).resolve().parent.parent / "src"
 ROOT = SRC.parent
 SAMPLE = SRC / ".memoria" / "samples" / "mediterranean-diet"
@@ -27,7 +29,9 @@ def test_sample_vault_is_bundled_under_src_not_repo_root():
 
 def test_every_sample_note_is_labeled_and_loadable():
     notes = sorted(SAMPLE.rglob("*.md"))
-    assert len(notes) == 30
+    assert len(notes) == 34
+    assert len(sorted((SAMPLE / "catalog" / "papers").glob("*.md"))) == 10
+    assert len(sorted((SAMPLE / "notes" / "sources").glob("*.md"))) == 10
     for path in notes:
         rel = path.relative_to(SAMPLE).as_posix()
         assert rel.startswith(("catalog/", "notes/")), rel
@@ -35,6 +39,19 @@ def test_every_sample_note_is_labeled_and_loadable():
         fm = _frontmatter(path)
         assert re.search(r"^sample:\s*true$", fm, re.M), path
         assert not re.search(r"\[\[[^\]|#]+\]\]", text), path
+
+
+def test_sample_sources_meet_full_map_floor():
+    calibration = yaml.safe_load((SRC / ".memoria" / "schemas" / "calibration.yaml").read_text())
+    required = calibration["clustering"]["full_cluster_min_documents"]
+    sources = sorted((SAMPLE / "notes" / "sources").glob("*.md"))
+    non_empty = 0
+    for path in sources:
+        text = path.read_text(encoding="utf-8")
+        body = re.sub(r"^---\n(.*?)\n---", "", text, count=1, flags=re.S)
+        if body.strip():
+            non_empty += 1
+    assert non_empty >= required
 
 
 def test_sample_commands_are_narrow_and_offline_bundled():

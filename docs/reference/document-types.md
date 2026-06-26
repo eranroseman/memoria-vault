@@ -61,13 +61,13 @@ and lives behind the review gate. Pure registers are Bases views such as
 
 ## Inbox cards (5)
 
-The agent → human action queue ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). All five live flat in `inbox/`, start at `lifecycle: proposed` (awaiting the PI), and converge to `archived`. Three shapes:
+The agent → human signal category ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). All five live flat in `inbox/`, start at `lifecycle: proposed`, and converge to `archived`; the daily **Needs me** view embeds only proposed `candidate`, `gap`, and `work-prompt` cards, while Maintenance works `flag` and `alert` slices. Three shapes:
 
 | Shape | Types | What it carries |
 | --- | --- | --- |
 | **Proposals** | `candidate`, `gap` | The honesty body — arguments, never a verdict. A `candidate` proposes an acceptance (e.g. a discovered paper); a `gap` proposes a missing piece (coverage gap, missing link). |
 | **Verification cards** | `flag`, `alert` | Lead with the finding and carry the verdict. A `flag` is a pointed finding (e.g. a retraction); an `alert` is a standing system warning. |
-| **Work prompts** | `work-prompt` | An action and a pointer, never a verdict — e.g. the review prompt the board export raises when a card reaches `done` ([Kanban board reference](kanban-board.md)). |
+| **Work prompts** | `work-prompt` | An action and a pointer, never a verdict — e.g. the review prompt the board export raises when a `done` card explicitly requests review ([Kanban board reference](kanban-board.md)). |
 
 Use `flag` for a bounded verification finding that needs a decision about one object or assertion: retraction, extraction conflict, link contradiction, or failed invariant. Use `alert` for a standing warning about a condition the PI may need to monitor over time: structural drift, backlog health, or repeated runtime failure. Both are Signal documents and lead with the finding; neither is a proposal.
 

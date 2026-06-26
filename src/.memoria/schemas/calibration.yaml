@@ -24,6 +24,9 @@ clustering:
   embedding_model: null # pinned when the cluster MCP is configured
   umap_n_neighbors: 15
   hdbscan_min_cluster_size: 5
+  # Full topic maps stop below this corpus floor and raise a gap instead of
+  # approximating a small-corpus map that looks more capable than it is.
+  full_cluster_min_documents: 10
   seed: 42
   quality_thresholds:
     # #379: typed-graph/topic clustering can surface ranked maps only after these

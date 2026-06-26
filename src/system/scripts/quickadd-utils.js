@@ -39,7 +39,7 @@ function queueHermesCard(cp, card) {
     " --json";
   return run(cp, command).then(async (stdout) => {
     const task = parseTask(stdout);
-    await writeTriggeredTaskTicket(card, task);
+    await writeTaskActivitySnapshot(card, task);
     return task;
   });
 }
@@ -49,47 +49,37 @@ function parseTask(stdout) {
   return data.task || data;
 }
 
-async function writeTriggeredTaskTicket(card, task) {
+async function writeTaskActivitySnapshot(card, task) {
   const app = card.app || globalThis.app;
   const adapter = app?.vault?.adapter;
   const taskId = task?.id;
   if (!adapter || !taskId) return;
 
-  const path = "inbox/work-prompt-" + taskId + ".md";
+  const path = "system/board/" + safePathSegment(taskId) + ".md";
   if (await exists(adapter, path)) return;
+  await ensureFolder(app, "system/board");
 
-  const laneLine = card.lane ? "lane: " + yamlString(card.lane) : "";
-  const queuedAt = new Date().toISOString();
+  const status = normalizeTaskStatus(task?.status);
+  const asOf = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const queueState = ["triage", "todo", "ready"].includes(status) ? "queued" : status;
   const body = [
     "---",
-    "title: " + yamlString("Task queued: " + card.title),
-    "type: work-prompt",
-    "lifecycle: proposed",
-    "action: " + yamlString("watch for the result; use this ticket if it stalls"),
-    "what_happened: " + yamlString("Obsidian queued Hermes task " + taskId + " for " + card.assignee + "."),
+    "title: " + yamlString(card.title),
+    "type: worker-card",
+    "lifecycle: current",
     "task_id: " + yamlString(taskId),
-    laneLine,
-    "raised_by: quickadd",
-    "loudness: quiet",
+    "lane: " + yamlString(card.assignee),
+    "status: " + status,
+    "review_status: " + yamlString("unreviewed"),
+    "retry_count: 0",
+    "reason: " + yamlString(""),
+    "as_of: " + yamlString(asOf),
     "created: " + todayIsoDate(),
     "---",
     "",
-    "# Triggered task",
+    "# " + card.title,
     "",
-    "- Task: `" + taskId + "`",
-    "- Queued: `" + queuedAt + "`",
-    "- Assignee: `" + card.assignee + "`",
-    card.lane ? "- Lane: `" + card.lane + "`" : "",
-    "",
-    "## Why this is here",
-    "",
-    "This is the receipt for a task you triggered from Obsidian. It is useful only if the task does not produce a later result card or artifact.",
-    "",
-    "## What to check",
-    "",
-    "- Watch **Inbox → Needs me** for the result card.",
-    "- Watch **Maintenance → Board** for the live task state.",
-    "- Archive this ticket when the result appears.",
+    "Status: " + queueState + ". No action needed; wait for the result.",
     "",
     "## Original request",
     "",
@@ -97,6 +87,26 @@ async function writeTriggeredTaskTicket(card, task) {
     "",
   ].filter(Boolean).join("\n");
   await adapter.write(path, body);
+}
+
+function normalizeTaskStatus(status) {
+  const allowed = new Set(["triage", "todo", "ready", "running", "blocked", "retrying", "done"]);
+  return allowed.has(status) ? status : "ready";
+}
+
+function safePathSegment(s) {
+  return String(s).replace(/[^A-Za-z0-9._-]/g, "_");
+}
+
+async function ensureFolder(app, folder) {
+  const parts = folder.split("/");
+  let cur = "";
+  for (const part of parts) {
+    cur = cur ? cur + "/" + part : part;
+    if (!(await app.vault.adapter.exists(cur))) {
+      await app.vault.createFolder(cur);
+    }
+  }
 }
 
 function quoteMarkdown(s) {

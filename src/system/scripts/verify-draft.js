@@ -61,7 +61,7 @@ module.exports = async (params) => {
       body,
       lane: LANE,
     });
-    new Notice("✓ Verification callout written; " + gapCards.length + " gap card(s) staged; card created on the " + LANE + " lane (" + ASSIGNEE + ").", 7000);
+    new Notice("✓ Verification callout written; " + gapCards.length + " gap card(s) staged; verify task queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Verify delegation failed after writing callout: " + e.message).slice(0, 250), 10000);
   }

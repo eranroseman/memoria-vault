@@ -1,11 +1,12 @@
 # The Inbox board — the agent→human action queue (ADR-51). One base grouped by
-# card type; "Needs me" = cards in `proposed` (awaiting the PI). Converges to empty.
+# card type; "Needs me" = proposed candidate/gap/work-prompt cards awaiting the PI.
+# Drift views own flag/alert cards. Converges to empty.
 filters:
   and:
     - file.inFolder("inbox")
     - 'file.ext == "md"'
 formulas:
-  note: 'link(file.path, if(action.isEmpty(), title, title + " - " + action))'
+  note: 'link(file.path, if(action.isEmpty() || action == title, title, title + " - " + action))'
   age_days: '(now() - file.ctime).days.round(0)'
   loudness_rank: 'if(loudness == "block", 0, if(loudness == "alert", 1, if(loudness == "notice", 2, 3)))'
 properties:
@@ -26,6 +27,7 @@ views:
     filters:
       and:
         - 'lifecycle == "proposed"'
+        - 'type == "candidate" || type == "gap" || type == "work-prompt"'
     sort:
       - property: formula.loudness_rank
         direction: ASC

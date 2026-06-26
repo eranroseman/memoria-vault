@@ -50,14 +50,13 @@ def test_cluster_map_candidate_surfaces_in_inbox():
         assert marker in text
 
 
-def test_too_small_cluster_map_surfaces_as_gap():
+def test_too_small_cluster_map_blocks_for_board_export_gap():
     text = (SKILLS / "map-cluster-corpus" / "SKILL.md").read_text(encoding="utf-8")
     for marker in (
         "too few documents",
-        "type: gap",
-        "lifecycle: proposed",
-        "gap_type: additive",
-        "enough sources to map the corpus",
-        "`too-few-documents`",
+        "kanban_block",
+        "current and required source counts",
+        "`board_export.py` owns the `gap` card",
+        "Do not `kanban_complete`",
     ):
         assert marker in text

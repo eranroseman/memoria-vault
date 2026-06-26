@@ -62,7 +62,7 @@ module.exports = async (params) => {
       idemKey,
       body,
     });
-    new Notice("✓ Card created on the Librarian lane (" + patternId + ").", 6000);
+    new Notice("✓ Pattern queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Pattern run failed: " + e.message).slice(0, 250), 10000);
   }

@@ -132,6 +132,8 @@ def test_homepage_plugin_is_retired():
 
 def test_navigation_rail_warns_only_when_badges_are_nonzero():
     text = NAV.read_text(encoding="utf-8")
+    assert '["candidate", "gap", "work-prompt"].includes(p.type)' in text
+    assert 'p.type != "flag" && p.type != "alert"' not in text
     assert "[[spaces/maintenance|◆ Drift]]" not in text
     assert "[[system/dashboards/fleet-health|◆ Fleet]]" not in text
     assert "[[spaces/maintenance|Drift]]" in text

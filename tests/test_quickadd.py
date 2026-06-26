@@ -49,6 +49,8 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: extract claims",
         "Memoria: link claim",
         "Memoria: map corpus",
+        "Memoria: retry map corpus and dismiss",
+        "Memoria: open Inbox",
         "Memoria: record exploration trace",
         "Memoria: draft section",
         "Memoria: verify draft",
@@ -60,6 +62,7 @@ def test_command_labels_are_direct_and_article_free():
         "Memoria: assist draft",
         "Memoria: assist explore",
         "Memoria: resolve inbox card",
+        "Memoria: dismiss inbox card",
         "Memoria: create linked claim note",
         "Memoria: write claim note",
         "Memoria: start project",
@@ -474,6 +477,8 @@ def test_url_capture_writes_visible_candidate_card():
         "raised_by: quickadd",
     ):
         assert field in script
+    assert "Review captured URL: " in script
+    assert "Accept this URL into the catalog intake queue" in script
 
 
 def test_create_linked_claim_writes_schema_shaped_claim_and_source_link():
@@ -561,11 +566,9 @@ def test_capture_and_catalog_cards_request_source_note_stub():
 def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
     assert '"retracted"' not in script
-    assert '"current (accept)": "current"' in script
-    assert '"current (edited)": "current"' in script
-    assert '"archived (reject)": "archived"' in script
-    assert '"archived (done / no action)": "archived"' in script
-    assert '"current (edited)": "edited"' in script
+    assert '"Keep as reminder": "current"' in script
+    assert '"Dismiss": "archived"' in script
+    assert '"Keep as reminder": "accepted"' in script
     assert 'ATTENTION_LOG = "system/logs/attention.jsonl"' in script
     assert 'TRIAGE_LOG = "system/logs/triage.jsonl"' in script
     assert 'DISPOSITION_LOG = "system/logs/disposition.jsonl"' in script
@@ -573,8 +576,37 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     assert 'event: "work_prompt_reviewed"' in script
     assert "duration_minutes: durationMinutes(openedAt, resolvedAt)" in script
     assert "appendJsonl(app, ATTENTION_LOG, attentionRow)" in script
+    assert "configuredOutcome" in script
+    assert 'getAbstractFileByPath("spaces/inbox.md")' in script
+    assert 'verdict === "Dismiss"' in script
+    assert "openFile(inbox)" in script
+    choices = {c["name"]: c for c in _choices()}
+    dismiss = choices["Memoria: dismiss inbox card"]["macro"]["commands"][0]
+    assert dismiss["path"] == "system/scripts/resolve-inbox-card.js"
+    assert dismiss["settings"] == {"Outcome": "Dismiss"}
     assert "appendJsonl(app, TRIAGE_LOG, triageRow)" in script
     assert "appendJsonl(app, DISPOSITION_LOG, dispositionRow)" in script
+
+
+def test_map_retry_and_inbox_navigation_commands_are_wired():
+    choices = {c["name"]: c for c in _choices()}
+
+    retry = choices["Memoria: retry map corpus and dismiss"]["macro"]["commands"][0]
+    assert retry["path"] == "system/scripts/retry-map-corpus-and-dismiss.js"
+    retry_script = (SCRIPTS / "retry-map-corpus-and-dismiss.js").read_text(encoding="utf-8")
+    assert "system/scripts/map-corpus.js" in retry_script
+    assert "system/scripts/resolve-inbox-card.js" in retry_script
+    assert '{ Outcome: "Dismiss" }' in retry_script
+
+    map_script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
+    assert "return true;" in map_script
+    assert "return false;" in map_script
+
+    open_inbox = choices["Memoria: open Inbox"]["macro"]["commands"][0]
+    assert open_inbox["path"] == "system/scripts/open-inbox.js"
+    open_script = (SCRIPTS / "open-inbox.js").read_text(encoding="utf-8")
+    assert 'getAbstractFileByPath("spaces/inbox.md")' in open_script
+    assert "openFile(inbox)" in open_script
 
 
 def test_delegate_task_picker_uses_work_labels_not_profile_ids():
@@ -608,24 +640,25 @@ def test_map_corpus_idempotency_key_allows_later_retries():
 
 def test_map_corpus_notices_stay_readable():
     script = (SCRIPTS / "map-corpus.js").read_text(encoding="utf-8")
-    assert "Map card queued" in script
+    assert "Map corpus queued. Watch Inbox > Activity." in script
     assert "15000" in script
 
 
-def test_triggered_hermes_tasks_create_inbox_work_prompt():
+def test_triggered_hermes_tasks_create_board_activity_snapshot():
     utils = (SCRIPTS / "quickadd-utils.js").read_text(encoding="utf-8")
     for marker in (
         "--json",
-        "writeTriggeredTaskTicket",
-        '"inbox/work-prompt-" + taskId + ".md"',
-        "type: work-prompt",
+        "writeTaskActivitySnapshot",
+        '"system/board/" + safePathSegment(taskId) + ".md"',
+        "type: worker-card",
         "task_id: ",
-        "Queued:",
-        "watch for the result; use this ticket if it stalls",
+        "Status: ",
+        "No action needed; wait for the result.",
         "Original request",
         "quoteMarkdown(card.body)",
     ):
         assert marker in utils
+    assert "type: work-prompt" not in utils
 
     for fname in [
         *LANE_SCRIPTS,
@@ -635,7 +668,9 @@ def test_triggered_hermes_tasks_create_inbox_work_prompt():
         "delegate-task.js",
         "run-pattern.js",
     ]:
-        assert "queueHermesCard(cp" in (SCRIPTS / fname).read_text(encoding="utf-8"), fname
+        script = (SCRIPTS / fname).read_text(encoding="utf-8")
+        assert "queueHermesCard(cp" in script, fname
+        assert "Watch Inbox > Activity. Needs me changes only if action is needed." in script, fname
 
 
 def test_lane_scripts_and_pattern_runner_are_wired_into_the_palette():
@@ -710,6 +745,13 @@ def test_supersede_thesis_marks_old_and_raises_reconfirm_alert():
         "lifecycle: proposed",
     ):
         assert marker in script
+
+
+def test_structured_source_candidate_has_distinct_title_and_action():
+    script = (SCRIPTS / "structured-source-capture.js").read_text(encoding="utf-8")
+    assert "Structured source staged: " in script
+    assert "Keep or dismiss staged source note " in script
+    assert "Review structured source: " not in script
 
 
 def test_verify_draft_emits_visible_knowledge_gap_cards():

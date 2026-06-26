@@ -10,8 +10,9 @@ Memoria ships one saved Obsidian workspace named **Memoria** in
 ([ADR-81](../adr/81-persistent-gate-dashboards.md)).
 
 Space switching happens through the navigation rail — the pinned `_nav.md` note in
-the left pane. Its **Now** section surfaces the Inbox queue action count and the
-Maintenance/Fleet health band, and its **Places** section links the three durable spaces:
+the left pane. Its **Now** section surfaces the Inbox action count (proposed
+`candidate`, `gap`, and `work-prompt` cards) and the Maintenance/Fleet health band,
+and its **Places** section links the three durable spaces:
 
 | Space | Job | Dashboard |
 | --- | --- | --- |

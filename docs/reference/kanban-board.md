@@ -53,19 +53,19 @@ triage ──► todo ──► ready ──► running ──► done ──►
 | `todo` | Specified; on backlog. | Human |
 | `ready` | Dispatchable. | Human (`hermes kanban release`) — delegation-created cards arrive ready to specify |
 | `running` | A lane owns the card and is executing. | Dispatcher (atomic claim + spawn); workers do not self-claim |
-| `blocked` | Worker cannot proceed; carries a `reason`. | Worker blocks; human clears (`hermes kanban unblock`) |
-| `done` | Worker finished; the result surfaces as an Inbox card or a proposed note. The board export raises **one `work-prompt` review card** in `inbox/` on this transition (see below). | Worker |
+| `blocked` | Worker cannot proceed; carries a `reason`. It leaves Inbox Activity and board export raises one blocker ticket for the PI. | Worker blocks; human clears (`hermes kanban unblock`) |
+| `done` | Worker finished. It leaves Inbox Activity; when `review_status: requested`, board export raises one `work-prompt` review card in `inbox/` (see below). | Worker |
 | `archived` | Terminal. | `hermes kanban archive` |
 
 Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (the soft verdict on verification cards — its values are in the [Glossary](glossary.md) Verdicts table, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
 
 **Rejection spawns a new card** (`supersedes: <original-id>`; the original archives as `superseded`), mirroring claim supersession — each card is one attempt, so the audit trail can't lie. Abandoned work archives as `discarded`.
 
-### Done → review prompt
+### Terminal states → optional action prompts
 
-The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — a finished card must surface there, not wait silently in a board column. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — review the work product, then accept it or archive the board card. Honesty rules apply: action + what happened + where to look, never a verdict.
+The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — in-process task status appears in **Inbox Activity** from `system/board/`, while `Needs me` stays reserved for human action. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done` with `review_status: requested`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — open the result, then keep it as a reminder or dismiss it. A blocked card similarly raises one blocker prompt or domain-specific gap. Honesty rules apply: action + what happened + where to look, never a verdict.
 
-The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same done card never produces two prompts across cron runs. On a fresh cache (first run), only cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
+The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same review request never produces two prompts across cron runs. On a fresh cache (first run), only review-requested cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
 
 ---
 

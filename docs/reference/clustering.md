@@ -52,7 +52,7 @@ BERTopic over note bodies — the **opt-in heavy path**. Its dependencies (`bert
 | `min_cluster_size` | Minimum topic size; `0` uses the calibration default. |
 | `seed` | UMAP `random_state`; `< 0` uses the calibration default. |
 
-Returns `{topics, doc_topic_map, outliers, params_echo}` — `topics` is `{topic, size, label}` per cluster, `doc_topic_map` maps each note stem to its topic, and `outliers` are notes assigned topic `-1`. It errors cleanly rather than crashing: `{"error": "bertopic-not-installed", "note": "pip install -r .memoria/mcp/requirements-cluster.txt"}` when the deps are absent, and `{"error": "too-few-documents"}` when fewer than `max(min_cluster_size × 2, 10)` non-empty notes exist under `folder`.
+Returns `{topics, doc_topic_map, outliers, params_echo}` — `topics` is `{topic, size, label}` per cluster, `doc_topic_map` maps each note stem to its topic, and `outliers` are notes assigned topic `-1`. It errors cleanly rather than crashing: `{"error": "bertopic-not-installed", "note": "pip install -r .memoria/mcp/requirements-cluster.txt"}` when the deps are absent, and `{"error": "too-few-documents", "documents": N, "required_documents": M}` when the folder has too few non-empty notes for a full topic map. The required count is `max(min_cluster_size × 2, full_cluster_min_documents)`, so small corpora raise a gap instead of producing a weak map that looks complete.
 
 ---
 
@@ -65,6 +65,7 @@ Read from the `clustering` block of `.memoria/schemas/calibration.yaml` (drift-b
 | `seed` | `42` | all three tools (graph layout, canvas layout, UMAP) |
 | `hdbscan_min_cluster_size` | `5` | `cluster_model_topics` minimum topic size |
 | `umap_n_neighbors` | `15` | `cluster_model_topics` UMAP neighbourhood |
+| `full_cluster_min_documents` | `10` | minimum non-empty notes before `cluster_model_topics` runs |
 | `embedding_model` | `null` | reserved pin for the configured topic-model embedding |
 
 The `clustering.quality_thresholds` block is separate from these display

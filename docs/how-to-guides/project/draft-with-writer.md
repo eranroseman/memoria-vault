@@ -29,7 +29,7 @@ The Writer writes **only** under `projects/` — claims, hubs, catalog, and inbo
 
 **3. Pick up the result.**
 
-The done card surfaces in the Inbox with the draft's location in `projects/<slug>/`. Open the draft and edit freely — the Writer's output is a starting point, never the deliverable.
+The task state appears in Inbox Activity. If the Writer requests review, a Needs me prompt links the draft location in `projects/<slug>/`. Open the draft and edit freely — the Writer's output is a starting point, never the deliverable.
 
 **4. Don't draft past unsupported claims.**
 
@@ -50,7 +50,7 @@ A rejected draft is not "redo it better" on the same card — delegate a correct
 
 ## Verify
 
-- The draft exists under `projects/<slug>/` and the done card is resolved
+- The draft exists under `projects/<slug>/`, Activity no longer shows the task, and any review prompt is resolved
 - Every substantive claim in the prose corresponds to a claim note; every citation is a citekey in your `.bib`
 - `system/logs/audit.jsonl` shows the Writer's writes confined to `projects/`
 

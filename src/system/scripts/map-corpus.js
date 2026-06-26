@@ -29,7 +29,8 @@ module.exports = async (params) => {
     "delegate:" + LANE + " — from the palette. Map the corpus" +
     (scope ? " scoped to " + scope : "") + ". " +
     "Use the " + SKILL + " skill: cluster the notes, surface dense and thin areas, stage the " +
-    "report through the normal proposal path, then kanban_complete with review_status: requested.";
+    "report through the normal proposal path, then kanban_complete with review_status: requested. " +
+    "If the corpus is too small, kanban_block with the current and required source counts instead.";
   // Window-scoped so repeated clicks collapse, but stale blocked cards do not suppress retries.
   const retryWindow = Math.floor(Date.now() / IDEMPOTENCY_WINDOW_MS);
   const idemKey = "quickadd-" + LANE + "-" + fnv1a(scope || "whole-corpus") + "-" + retryWindow;
@@ -37,15 +38,17 @@ module.exports = async (params) => {
   new Notice("Delegating to the " + LANE + " lane…", 3000);
   try {
     await queueHermesCard(cp, {
-      title: "Map the corpus" + (scope ? ": " + scope : ""),
+      title: "Map corpus" + (scope ? ": " + scope : ""),
       assignee: ASSIGNEE,
       skill: SKILL,
       idemKey,
       body,
       lane: LANE,
     });
-    new Notice("✓ Map card queued on the " + LANE + " lane (" + ASSIGNEE + ").", 15000);
+    new Notice("Map corpus queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
+    return true;
   } catch (e) {
     new Notice(("Map delegation failed: " + e.message).slice(0, 250), 15000);
+    return false;
   }
 };
