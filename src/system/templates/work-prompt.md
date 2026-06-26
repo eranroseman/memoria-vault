@@ -2,6 +2,7 @@
 title: "{{VALUE:what needs doing}}"
 type: work-prompt
 lifecycle: proposed
+prompt_kind: review
 action: ""
 what_happened: ""
 target: ""

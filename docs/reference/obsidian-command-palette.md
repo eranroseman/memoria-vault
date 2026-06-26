@@ -23,11 +23,13 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 | `Memoria: archive claim note` | The **active** claim note (must be under `notes/claims/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-active-note.js` (`Type: claim`) |
 | `Memoria: load sample vault` | Copies the bundled `.memoria/samples/mediterranean-diet/` `catalog/` and `notes/` files into the live vault, skipping existing files so user work is not overwritten. | QuickAdd Macro → `src/system/scripts/load-sample-vault.js` |
 | `Memoria: remove sample vault` | Archives live `catalog/` and `notes/` files labeled `sample: true`, leaving the hidden bundle in place. | QuickAdd Macro → `src/system/scripts/remove-sample-vault.js` |
-| `Memoria: capture source from URL` | A capture card on the Librarian lane with the pasted URL. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
+| `Memoria: capture source from URL` | A source candidate lands in **Needs me**; the Librarian ingest task lands in **Activity**. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
 | `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `src/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
-| `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a capture card on the Librarian lane, citekey pre-populated from the current Zotero selection. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
-| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: `lifecycle:` set to your outcome (`current` = accept, `archived` = reject / done) and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
+| `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a source candidate in **Needs me**; the Librarian ingest task lands in **Activity**. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
+| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: **Keep as reminder** sets `lifecycle: current`; **Dismiss** sets `lifecycle: archived`; both stamp `resolved:` with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
+| `Memoria: dismiss inbox card` | The **active** Inbox card archived in place with no menu, then the pane returns to the Inbox. Generated ticket buttons use this when the only immediate action is to clear the ticket. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (`Outcome: Dismiss`) |
+| `Memoria: open Inbox` | Opens `spaces/inbox.md` in the active pane without changing the active note. Generated tickets use this for a **Back to Inbox** button. | QuickAdd Macro → `src/system/scripts/open-inbox.js` |
 
 Template-based document creation starts from the templates in `system/templates/` — see [Document types](document-types.md). Claim and fleeting capture use Modal Forms wrappers that render their templates, so the form prompts, note body, and note-local command buttons stay aligned.
 
@@ -35,7 +37,7 @@ Template-based document creation starts from the templates in `system/templates/
 
 ## Per-task lane commands
 
-One command per non-code lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). Code and unusual work use the generic delegate command.
+One command per non-code lane task, each prompting only for what that task needs and creating a card addressed to the lane's agent and skill (`hermes kanban create --assignee … --skill …`). These commands show status in **Inbox → Activity**; **Needs me** changes only if the result requires PI action. Code and unusual work use the generic delegate command.
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |
@@ -43,6 +45,7 @@ One command per non-code lane task, each prompting only for what that task needs
 | `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/sources/`, otherwise prompts for a path or citekey. | QuickAdd Macro → `src/system/scripts/extract-claims.js` |
 | `Memoria: link claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `src/system/scripts/link-claim.js` |
 | `Memoria: map corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `src/system/scripts/map-corpus.js` |
+| `Memoria: retry map corpus and dismiss` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. Generated map-blocker tickets use it to queue the retry, archive the ticket, and return to the Inbox. | QuickAdd Macro → `src/system/scripts/retry-map-corpus-and-dismiss.js` |
 | `Memoria: draft section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `src/system/scripts/draft-section.js` |
 | `Memoria: verify draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `src/system/scripts/verify-draft.js` |
 | `Memoria: delegate task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `src/system/scripts/delegate-task.js` |
@@ -82,7 +85,7 @@ not create board cards.
 ---
 ## The Co-PI delegation path
 
-For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note available as a readable reference): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, and the result resurfaces in the Inbox. The mechanics are in [Kanban board reference](kanban-board.md).
+For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note available as a readable reference): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, status appears in **Inbox → Activity**, and **Needs me** changes only when the result needs PI action. The mechanics are in [Kanban board reference](kanban-board.md).
 
 ---
 

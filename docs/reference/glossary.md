@@ -43,7 +43,7 @@ Term definitions for Memoria, organized by domain. One definition per term; disa
 
 **Space** — a navigation surface that is also a dashboard-as-note (`type: space`): Library, Knowledge, Project, each embedding Bases views over the vault. "Gate" is reserved for the approval gate, never a space ([ADR-101](../adr/101-navigation-spaces-gate-reserved-for-approval.md)).
 
-**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily surface of agent proposals and integrity flags, reached from **Now → Needs you**; main view **Needs me**. Clearing it to empty is the goal.
+**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily attention surface reached from **Now → Needs you**. It shows in-process Activity, then `Needs me` action cards (`candidate`, `gap`, `work-prompt`), then fleeting captures. Clearing it to empty is the goal.
 
 **Maintenance** — the weekly structural-debt surface (`type: maintenance`): Drift watch, Loose ends, the worker board, and "new this week".
 

@@ -75,7 +75,11 @@ def load_card_detail(task_id: str) -> dict:
         raise CostDoctorError("'hermes' not found on PATH for cost join") from exc
     data = json.loads(proc.stdout)
     if isinstance(data, dict) and isinstance(data.get("task"), dict):
-        return data["task"]
+        task = dict(data["task"])
+        for key in ("events", "runs", "latest_summary"):
+            if key in data:
+                task[key] = data[key]
+        return task
     if isinstance(data, dict):
         return data
     raise CostDoctorError(f"hermes kanban show {task_id!r} returned non-object JSON")
@@ -212,21 +216,19 @@ class HermesCostLookup:
         self.hermes_home = _hermes_home(hermes_home)
         self.show_card = show_card or load_card_detail
 
-    def _session_id_for(self, raw: dict, task_id: str) -> str:
+    def _session_id_for(self, raw: dict, task_id: str) -> str | None:
         ids = worker_session_ids(raw)
         if ids:
             return ids[-1]
         detail = self.show_card(task_id)
         ids = worker_session_ids(detail)
-        if not ids:
-            raise CostDoctorError(
-                f"hermes kanban show {task_id!r} did not expose runs[].metadata.worker_session_id"
-            )
-        return ids[-1]
+        return ids[-1] if ids else None
 
     def __call__(self, raw: dict, card: dict, ts: str) -> tuple[dict | None, dict | None]:
         task_id, lane = card["task_id"], card["assignee"]
         session_id = self._session_id_for(raw, task_id)
+        if session_id is None:
+            return None, cost_miss(ts, task_id, lane, "missing-worker-session-id")
         db_path = state_db_for_lane(lane, self.hermes_home)
         if not db_path.exists():
             return None, cost_miss(ts, task_id, lane, "missing-state-db", session_id=session_id)

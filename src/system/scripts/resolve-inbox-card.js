@@ -10,16 +10,12 @@
 
 // Outcome label → lifecycle value written to the card.
 const VERDICTS = {
-  "current (accept)": "current",
-  "current (edited)": "current",
-  "archived (reject)": "archived",
-  "archived (done / no action)": "archived",
+  "Keep as reminder": "current",
+  "Dismiss": "archived",
 };
 
 const DISPOSITIONS = {
-  "current (accept)": "accepted",
-  "current (edited)": "edited",
-  "archived (reject)": "rejected",
+  "Keep as reminder": "accepted",
 };
 
 const ATTENTION_LOG = "system/logs/attention.jsonl";
@@ -68,7 +64,14 @@ async function appendJsonl(app, path, row) {
   await app.vault.adapter.write(path, current + line);
 }
 
-module.exports = async (params) => {
+async function openInbox(app) {
+  const inbox = app.vault.getAbstractFileByPath("spaces/inbox.md");
+  if (inbox) {
+    await app.workspace.getLeaf(false).openFile(inbox);
+  }
+}
+
+async function entry(params, settings = {}) {
   const { Notice } = params.obsidian;
   const app = params.app || globalThis.app;
 
@@ -83,7 +86,10 @@ module.exports = async (params) => {
   }
 
   const labels = Object.keys(VERDICTS);
-  const verdict = await params.quickAddApi.suggester(labels, labels);
+  const configuredOutcome = String(settings.Outcome || "").trim();
+  const verdict = labels.includes(configuredOutcome)
+    ? configuredOutcome
+    : await params.quickAddApi.suggester(labels, labels);
   if (!verdict) {
     new Notice("No verdict chosen.", 4000);
     return;
@@ -153,8 +159,30 @@ module.exports = async (params) => {
     if (dispositionRow) {
       await appendJsonl(app, DISPOSITION_LOG, dispositionRow);
     }
+    if (verdict === "Dismiss") {
+      try {
+        await openInbox(app);
+      } catch (e) {
+        // Dismissal is complete even if Obsidian refuses to switch panes.
+      }
+    }
     new Notice("✓ Resolved " + file.basename + " → lifecycle: " + lifecycle + ", resolved: " + today + ".", 6000);
   } catch (e) {
     new Notice(("Resolve failed: " + e.message).slice(0, 250), 10000);
   }
+}
+
+module.exports = {
+  entry,
+  settings: {
+    name: "Memoria: resolve inbox card",
+    author: "Memoria",
+    options: {
+      Outcome: {
+        type: "text",
+        defaultValue: "",
+        placeholder: "Keep as reminder | Dismiss",
+      },
+    },
+  },
 };

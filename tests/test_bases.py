@@ -164,7 +164,7 @@ def test_inbox_base_has_needs_me_view():
     names = set(views)
     assert "Needs me" in names  # the Inbox space embeds this view by name
     assert data["formulas"]["note"] == (
-        'link(file.path, if(action.isEmpty(), title, title + " - " + action))'
+        'link(file.path, if(action.isEmpty() || action == title, title, title + " - " + action))'
     )
     assert data["properties"]["formula.note"]["displayName"] == "Note"
     needs_me_order = views["Needs me"]["order"]
@@ -173,6 +173,37 @@ def test_inbox_base_has_needs_me_view():
     assert "action" not in needs_me_order
     assert needs_me_order == ["formula.note", "formula.age_days"]
     assert views["Needs me"]["columnSize"] == {"formula.note": 760, "formula.age_days": 72}
+    needs_me_filter = " ".join(views["Needs me"]["filters"]["and"])
+    assert 'lifecycle == "proposed"' in needs_me_filter
+    assert all(card_type in needs_me_filter for card_type in ("candidate", "gap", "work-prompt"))
+    assert "flag" not in needs_me_filter
+    assert "alert" not in needs_me_filter
+
+
+def test_inbox_space_embeds_activity_from_worker_cards():
+    text = (SRC / "spaces" / "inbox.md").read_text(encoding="utf-8")
+    assert "![[inbox.base#Needs me]]" in text
+    assert "![[board.base#Inbox activity]]" in text
+    assert text.index("## Activity") < text.index("## Needs me") < text.index("## Fleeting notes")
+
+    board = yaml.safe_load((SRC / "system" / "board" / "board.base").read_text(encoding="utf-8"))
+    views = {v.get("name"): v for v in board.get("views", [])}
+    assert "Inbox activity" in views
+    assert 'file.inFolder("system/board")' in (SRC / "system" / "board" / "board.base").read_text(
+        encoding="utf-8"
+    )
+    assert 'type == "worker-card"' in (SRC / "system" / "board" / "board.base").read_text(
+        encoding="utf-8"
+    )
+    assert views["Inbox activity"]["order"] == [
+        "formula.note",
+        "expected_outputs",
+        "formula.age_min",
+    ]
+    activity_filter = " ".join(views["Inbox activity"]["filters"]["and"])
+    assert all(status in activity_filter for status in ("triage", "todo", "ready", "running"))
+    assert "blocked" not in activity_filter
+    assert "done" not in activity_filter
 
 
 def test_project_space_embeds_project_gate_views():

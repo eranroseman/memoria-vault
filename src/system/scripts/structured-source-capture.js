@@ -106,8 +106,8 @@ async function writeSourceNote(app, data, cp, crypto) {
 
 async function writeCandidateCard(app, data, sourcePath) {
   const adapter = app.vault.adapter;
-  const title = "Review structured source: " + data.title;
-  const action = "Review staged source note " + sourcePath;
+  const title = "Structured source staged: " + data.title;
+  const action = "Keep or dismiss staged source note " + sourcePath;
   const argumentFor = "The PI completed the structured source capture form with schema-valid metadata.";
   const argumentAgainst = "The source has not yet been read or enriched, so relevance and quality still need review.";
   const whatTippedIt = "Structured PI input is enough to stage the source note and queue a lightweight keep/archive decision.";

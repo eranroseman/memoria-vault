@@ -27,7 +27,7 @@ Where every file lives. The repo ships the vault under **`src/`**; the installer
 │   └── hubs/                  review-gated
 ├── projects/                project records, theses, drafts, code, exports
 │   └── _template/             starter project scaffold copied by the Project on-ramp
-├── inbox/                   the action queue — candidate/gap/flag/alert/work-prompt cards
+├── inbox/                   PI-facing cards — daily action cards plus Maintenance findings
 │   └── inbox.base             the Inbox board view
 ├── spaces/                  space dashboards + Inbox queue + Maintenance collection
 └── system/                  infrastructure plus typed system homes

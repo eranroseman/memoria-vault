@@ -224,6 +224,7 @@ def test_honesty_card_fields_on_proposals():
     # work prompts: action + what happened + where to look, never a verdict
     wp = types["work-prompt"]
     assert "action" in wp["required"] and "what_happened" in wp["required"]
+    assert wp["optional"]["prompt_kind"] == "enum:prompt_kind"
     assert "agent_recommendation" not in wp["required"]
     assert "agent_recommendation" not in (wp.get("optional") or {})
     assert set(wp["required_any"]) == {"target", "task_id"}

@@ -10,7 +10,8 @@ Delegate a **`map`** task to get a corpus map — a structured read of what clai
 
 ## Prerequisites
 
-- At least ~5 claim notes in `notes/claims/` (fewer than that and the map is mostly gaps)
+- At least 10 non-empty source notes in `notes/sources/` for a full corpus map
+- Several claim notes in `notes/claims/` if you want the map to show structure rather than mostly gaps
 - Obsidian command palette available; the Agent Client pane is optional if you want help shaping the scope
 
 ## Steps
@@ -25,11 +26,11 @@ Use the direct command when the scope is clear: `Cmd/Ctrl-P` → **Memoria: map 
 
 > "Map my corpus on `<topic>` — what do I have good coverage on, and where is it thin? I'm aiming at `<deliverable>`."
 
-Both routes create a **`map`** task for the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). The palette command prompts for an optional scope; the Co-PI route delegates the same card after helping shape the request (see [Command palette](../../reference/obsidian-command-palette.md)).
+Both routes create a **`map`** task for the Librarian's map lane, which builds the typed graph and topic clusters over the cluster MCP ([The Librarian](../../explanation/profiles/librarian.md)). The palette command prompts for an optional scope; the Co-PI route delegates the same card after helping shape the request (see [Command palette](../../reference/obsidian-command-palette.md)). Watch **Inbox → Activity** while the task is queued or running; **Needs me** changes only when the map produces something you need to read or fix.
 
 **3. Read the results from the Inbox.**
 
-The coverage read comes back through the Inbox, with **`gap` cards** for the thin areas — each carrying the honesty body, never a verdict. Read by pattern:
+The coverage read comes back through the Inbox, with **`gap` cards** for the thin areas — each carrying the honesty body, never a verdict. If the corpus is below the calibrated full-map floor, Memoria raises one source-gap card instead of producing a partial map that looks complete. Read by pattern:
 
 - **Dense + recent cluster** — draft from it; the evidence is there and current.
 - **Dense + stale cluster** — well-read a while ago; check for newer work before leaning on it.

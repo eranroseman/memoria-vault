@@ -53,9 +53,9 @@ never gates anything (reports inform — ADR-54).
 2. **Cluster deterministically.** Call **`cluster_model_topics(folder, min_cluster_size,
    seed)`** for topics / doc-topic map / outliers, and **`cluster_build_graph(seed)`**
    for the typed-link communities and centrality. Both tools are read-only and echo
-   their parameters. If there are too few documents to map, raise one `gap` card in
-   `inbox/` with `lifecycle: proposed`, `gap_type: additive`, and `action` = "add
-   enough sources to map the corpus", then complete with result `too-few-documents`.
+   their parameters. If there are too few documents to map, stop and
+   `kanban_block` with the returned `documents` / `required_documents` counts.
+   Do not `kanban_complete`; the board export creates the PI-facing gap card.
    If the optional BERTopic stack is not installed the tool errors cleanly — report
    that and stop, do not approximate clusters yourself.
 3. **Aggregate.** Compute recency, density, and source-diversity per cluster — pure
@@ -77,9 +77,9 @@ never gates anything (reports inform — ADR-54).
   `type: candidate`, `lifecycle: proposed`, `title`, `action` = "read this cluster
   map", `argument_for` / `argument_against` (e.g. "small corpus — clusters may be
   noise"), `what_tipped_it`, `certainty` (confident / likely / unsure).
-- Too-small corpus fallback: one `gap` card in `inbox/`, frontmatter includes
-  `type: gap`, `lifecycle: proposed`, `gap_type: additive`, `title`, `action`,
-  `argument_for`, `argument_against`, `what_tipped_it`, and `certainty: confident`.
+- Too-small corpus fallback: `kanban_block` with the current and required source counts.
+  `board_export.py` owns the `gap` card in `inbox/` so the PI-facing action is
+  generated once from board state.
 
 ## Honesty rules
 

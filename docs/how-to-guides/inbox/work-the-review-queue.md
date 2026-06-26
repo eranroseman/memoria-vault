@@ -6,11 +6,11 @@ nav_order: 3
 
 # Work the review queue
 
-Clear the decisions waiting on you. The review surface is the **Inbox**: agents finish board cards, and what needs your judgment lands as typed cards (`candidate` / `gap` / `flag` / `alert`) at `lifecycle: proposed`. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
+Clear the decisions waiting on you. The review surface is the **Inbox**: task status stays in **Activity**, and only work needing your judgment lands in **Needs me** as typed cards (`candidate` / `gap` / `work-prompt`) at `lifecycle: proposed`. Flags and alerts live in **Maintenance** unless they emit a same-day work prompt. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
 
 ## Prerequisites
 
-- Cards in the Inbox at `lifecycle: proposed` (the **Needs me** view of `inbox/inbox.base` on the Inbox queue)
+- Proposed `candidate`, `gap`, or `work-prompt` cards in the **Needs me** view of `inbox/inbox.base`; task-only status belongs in **Activity**
 
 ## Steps
 
@@ -21,11 +21,12 @@ Sit down once and sweep the queue — high-cardinality decisions belong in one w
 **2. Read each card the right way round.**
 
 - **Proposals** (`candidate`, `gap`) carry the honesty body — read `argument_against` and `certainty` first; the card existing *is* the recommendation, so there is no verdict field.
-- **Verification cards** (`flag`, `alert`) lead with the `finding` and carry an `agent_recommendation` — a recommendation, never the decision ([Inbox card fields](../../reference/inbox-card-fields.md)). You can reject a `clean` and accept an `issues-found`.
+- **Work prompts** (`work-prompt`) tell you what finished, blocked, or needs a batch pass. Read the reason, inspect the target, then keep it as a reminder or dismiss it.
+- **Verification cards** (`flag`, `alert`) are not part of daily **Needs me**. Work them from Maintenance's Drift watch unless a card also raises a work prompt for same-day action.
 
 **3. Act, then resolve.**
 
-Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card** sets your outcome (`current` = accepted, `archived` = rejected / done) and stamps `resolved:`. You don't archive accepted cards by hand: the archival sweep flips resolved `current` cards to `lifecycle: archived` once the stamp is older than `inbox.archive_after_days` (default 30, set in calibration.yaml), so accepted verdicts stay visible while fresh and the Inbox converges to empty; empty is success.
+Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. **Keep as reminder** sets `lifecycle: current`; **Dismiss** sets `lifecycle: archived`; both stamp `resolved:`. The archival sweep flips resolved `current` cards to `lifecycle: archived` once the stamp is older than `inbox.archive_after_days` (default 30, set in calibration.yaml), so reminders stay visible while fresh and the Inbox converges to empty; empty is success.
 
 **4. Reject cleanly.**
 
@@ -41,7 +42,7 @@ The fleet-health dashboard tracks accept/reject ratios per proposing lane — ve
 
 ## Verify
 
-- No card sits at `lifecycle: proposed` longer than your review cadence (the weekly review is the backstop)
+- No Needs me action card sits at `lifecycle: proposed` longer than your review cadence (the weekly review is the backstop)
 - Every accepted proposal resulted in a change made by your hand; rejected cards left nothing behind
 - the Inbox's **Needs me** view is empty at the end of the pass
 

@@ -8,13 +8,19 @@ cssclasses: memoria-space
 
 # Inbox
 
-> [!brief] Inbox empty? That's the goal. New agent proposals, integrity flags, and
-> work prompts land here when they need a decision.
+> [!brief] Inbox empty? That's the goal. Active work appears first; decisions and
+> raw captures follow when they need you.
 
 > [!suggestions] First actions
 > - Start Library intake with **Memoria: capture source from URL**.
 > - Capture a loose thought with **Memoria: capture fleeting**.
 > - Ask the Co-PI in the Agent Client pane what to do next.
+
+## Activity
+
+Recent background tasks. Only queued or running work appears here.
+
+![[board.base#Inbox activity]]
 
 ## Needs me
 

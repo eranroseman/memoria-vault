@@ -7,15 +7,15 @@ grand_parent: Dashboards
 
 # The board-state dashboard
 
-The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox board — the agent→human action queue. Open it from Maintenance when the Inbox's "Needs me" view isn't enough and you want everything: every card, every state, plus what the workers are executing underneath.
+The board-state dashboard (`system/dashboards/board-state.md`) is the full Inbox board — every agent→human card plus the worker projections underneath. Open it from Maintenance when the Inbox's "Needs me" view isn't enough and you want everything: every card, every state, plus what the workers are executing underneath.
 
 ---
 
 ## What it shows
 
-The page is built on **`inbox.base`** — the one Obsidian Base over `inbox/`, grouped by card type ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)). Its **"Needs me"** view (cards in `proposed` — the same view the Inbox queue embeds) comes first; an **"All cards"** view (everything in flight, whatever its state) follows. A third section lists the **live worker cards** — the read-only markdown exports in `system/board/` that mirror what each Hermes lane is currently executing.
+The page is built on **`inbox.base`** — the one Obsidian Base over `inbox/`, grouped by card type ([ADR-51](../../../adr/51-inbox-category-and-honesty-card.md)). Its **"Needs me"** view (proposed `candidate`, `gap`, and `work-prompt` cards — the same action view the Inbox queue embeds) comes first; an **"All cards"** view (every non-archived Inbox card, whatever its type) follows. A third section lists the **worker-card projections** — the read-only markdown exports in `system/board/` that mirror what each Hermes lane is currently executing.
 
-Cards in `proposed` are waiting on you; the queue converges to empty. That convergence is the design: batch screening never lands here as N cards (one aggregate work-prompt points at the worklist instead), so a long queue always means real decisions, not noise.
+Needs me action cards in `proposed` are waiting on you; the queue converges to empty. That convergence is the design: batch screening never lands here as N cards (one aggregate work-prompt points at the worklist instead), so a long queue always means real decisions, not noise.
 
 ---
 
@@ -25,7 +25,7 @@ Cards in `proposed` are waiting on you; the queue converges to empty. That conve
 
 **Not the authoritative execution board.** The worker-card section reads the `system/board/` projections of `kanban.db`. Those are one-way and ephemeral — editing a projected file does nothing; the execution `status` chain is the hidden mechanic the PI never manages.
 
-**Not the Inbox's "Needs me" view.** The Inbox shows only the daily `proposed` action slice. Board-state shows the whole board — everything in flight, plus the worker layer.
+**Not the Inbox's "Needs me" view.** The Inbox shows only the daily action slice after its compact Activity strip. Board-state shows the whole board — drift cards, reminders, archived-excluded cards, plus the worker layer.
 
 **Not [Discuss queue](../synthesis-agenda/discuss-queue.md).** Discuss queue is a Library-side cognitive-discipline view — sources read but not yet distilled. Board state is the action-and-execution view — cards, regardless of content.
 

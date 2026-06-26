@@ -23,7 +23,7 @@ python src/.memoria/mcp/metrics_aggregate.py --vault <vault> --from-json cards.j
 | `system/logs/audit.jsonl` | Mutating policy decisions: write count, deny count, dry-run count, and deny rate. |
 | Hermes board / `--from-json` cards | Done/blocked counts, retry totals, time on gate, and expand-to-accept timing when card timestamps are present. |
 | `system/logs/lint-findings.jsonl` | Drift incident counts and the weekly lint verdict note. |
-| `system/logs/disposition.jsonl` | Accepted, edited, rejected review counts and accept ratio. |
+| `system/logs/disposition.jsonl` | Accepted review counts and accept ratio; legacy edited/rejected rows are still counted when present. |
 | `system/logs/cost.jsonl` | API spend and token totals. |
 | `system/logs/board-transitions.jsonl` | Median operator decision time from `review: requested` to a terminal review state. |
 | `system/logs/attention.jsonl` | Obsidian-side PI card-open-to-resolve timing. |

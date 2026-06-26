@@ -129,6 +129,7 @@ def write_work_prompt(
     lane: str = "",
     loudness: str = "notice",
     dedupe_slug: str = "",
+    prompt_kind: str = "",
 ) -> Path | None:
     """Write a `work-prompt` card (ADR-51 honesty rules: action + what happened +
     where to look — never a verdict). A prompt must point somewhere: `target`
@@ -154,6 +155,8 @@ def write_work_prompt(
         lines.append(f"task_id: {_yaml_str(task_id)}")
     if lane:
         lines.append(f"lane: {_yaml_str(lane)}")
+    if prompt_kind:
+        lines.append(f"prompt_kind: {prompt_kind}")
     lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
     body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
     where = " · ".join(filter(None, (target, task_id and f"board card `{task_id}`")))

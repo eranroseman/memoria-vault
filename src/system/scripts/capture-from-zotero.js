@@ -120,7 +120,7 @@ module.exports = async (params) => {
       lane: "catalog",
       hermesCommand: hermesCommand(),
     });
-    new Notice(`✓ Captured ${citekey} → intake card queued on the Librarian lane.`, 15000);
+    new Notice(`✓ Captured ${citekey}. Watch Inbox > Activity. Needs me changes only if action is needed.`, 15000);
   } catch (e) {
     new Notice(`Capture failed for ${citekey}: ${e.message}`.slice(0, 300), 15000);
   }

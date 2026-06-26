@@ -46,7 +46,7 @@ module.exports = async (params) => {
       body,
       lane: "catalog",
     });
-    new Notice("✓ Captured → intake card queued on the Librarian lane.", 15000);
+    new Notice("✓ Captured. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Capture failed: " + e.message).slice(0, 250), 15000);
   }

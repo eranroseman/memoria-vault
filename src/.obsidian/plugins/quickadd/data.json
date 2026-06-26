@@ -252,6 +252,44 @@
       }
     },
     {
+      "id": "f3ce84df-4a2d-4b15-961a-5a6349e2a03c",
+      "name": "Memoria: retry map corpus and dismiss",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: retry map corpus and dismiss",
+        "id": "c2e9b07a-3bd4-4139-bb2f-13d80d9a5cc7",
+        "commands": [
+          {
+            "name": "retry-map-corpus-and-dismiss",
+            "type": "UserScript",
+            "id": "a6f8a4cc-cc2d-4749-9d1c-720d3f3284ec",
+            "path": "system/scripts/retry-map-corpus-and-dismiss.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "f9bba766-4823-4bb2-9613-d3965b94b84c",
+      "name": "Memoria: open Inbox",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: open Inbox",
+        "id": "a991076b-4565-442a-b66d-d402bf029284",
+        "commands": [
+          {
+            "name": "open-inbox",
+            "type": "UserScript",
+            "id": "ba3ef695-9a1a-42e4-a696-b6d427ac0bc1",
+            "path": "system/scripts/open-inbox.js",
+            "settings": {}
+          }
+        ]
+      }
+    },
+    {
       "id": "78231299-6f8e-460e-b23b-b9c0c566a57f",
       "name": "Memoria: record exploration trace",
       "type": "Macro",
@@ -468,6 +506,27 @@
             "id": "5c1d9a07-e4b6-42f8-b3a9-160df72e84c5",
             "path": "system/scripts/resolve-inbox-card.js",
             "settings": {}
+          }
+        ]
+      }
+    },
+    {
+      "id": "42ec8422-0de8-4c88-b5b4-9278608337b4",
+      "name": "Memoria: dismiss inbox card",
+      "type": "Macro",
+      "command": true,
+      "macro": {
+        "name": "Memoria: dismiss inbox card",
+        "id": "f9cf0f3e-bc11-4c8b-b261-af033d7b7f74",
+        "commands": [
+          {
+            "name": "resolve-inbox-card",
+            "type": "UserScript",
+            "id": "5d45c6ec-0ec1-4b44-9d29-1e27c9e74d77",
+            "path": "system/scripts/resolve-inbox-card.js",
+            "settings": {
+              "Outcome": "Dismiss"
+            }
           }
         ]
       }

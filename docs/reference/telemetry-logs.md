@@ -51,28 +51,25 @@ The card-level state-change stream — the spine the other event logs hang off. 
 ## disposition.jsonl
 
 The **un-backfillable** signal: what the human actually did with a finished work
-prompt. Emitted by the `Memoria: resolve inbox card` QuickAdd command at the same
+prompt. Emitted by the `Memoria: resolve inbox card` / `Memoria: dismiss inbox card`
+QuickAdd commands at the same
 moment it writes `attention.jsonl` and `triage.jsonl`; it is not inferred from
 board metadata or terminal `review_status`.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "work_prompt_reviewed", "path": "inbox/work-prompt-review-x.md", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "edited", "outcome": "current (edited)", "agent_recommendation": "clean", "source": "quickadd.resolve-inbox-card"}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "work_prompt_reviewed", "path": "inbox/work-prompt-review-x.md", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "accepted", "outcome": "Keep as reminder", "agent_recommendation": "clean", "source": "quickadd.resolve-inbox-card"}
 ```
 
 | Field | Values |
 | --- | --- |
 | `event` | currently `work_prompt_reviewed` |
 | `path` | vault-relative Inbox card path |
-| `disposition` | `accepted` \| `edited` \| `rejected` — the three-way human verdict |
-| `outcome` | visible resolve choice: `current (accept)`, `current (edited)`, or `archived (reject)` |
+| `disposition` | `accepted` when the human keeps the finished-work prompt as a reminder |
+| `outcome` | visible resolve choice, currently `Keep as reminder` |
 | `agent_recommendation` | what the agent proposed (values in the [Glossary](glossary.md) Verdicts table); pairs the agent's self-assessment against the human's call |
 | `source` | currently `quickadd.resolve-inbox-card` |
 
-Only `work-prompt` cards with a `task_id` write a disposition row. `archived (done
-/ no action)` remains a generic Inbox cleanup outcome and does not count as a
-finished-work review. The explicit `current (edited)` outcome is how the human
-records accepted-after-changes; without it the system cannot distinguish "accepted
-as written" from "accepted after I fixed it."
+Only `work-prompt` cards with a `task_id` write a disposition row. `Dismiss` remains a generic Inbox cleanup outcome and does not count as a finished-work review.
 
 ## cost.jsonl
 
@@ -111,10 +108,10 @@ quality counters, not cost facts, and downstream spend totals must ignore them.
 
 ## attention.jsonl
 
-The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` QuickAdd command appends one row when the active Inbox card is resolved. This is the only signal emitted from the actual human action surface rather than from the board exporter.
+The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` and `Memoria: dismiss inbox card` QuickAdd commands append one row when the active Inbox card is resolved. This is the only signal emitted from the actual human action surface rather than from the board exporter.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "current (accept)", "lifecycle_from": "proposed", "lifecycle_to": "current", "opened_at": "2026-06-01T11:00:00Z", "resolved_at": "2026-06-01T11:30:00Z", "duration_minutes": 30.0}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Keep as reminder", "lifecycle_from": "proposed", "lifecycle_to": "current", "opened_at": "2026-06-01T11:00:00Z", "resolved_at": "2026-06-01T11:30:00Z", "duration_minutes": 30.0}
 ```
 
 | Field | Meaning |
@@ -129,10 +126,10 @@ The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` QuickAd
 
 ## triage.jsonl
 
-The PI's Inbox decision stream. The same `Memoria: resolve inbox card` action that writes `attention.jsonl` also appends one triage row with the selected outcome and lifecycle transition.
+The PI's Inbox decision stream. The same resolver path behind `Memoria: resolve inbox card` and `Memoria: dismiss inbox card` also appends one triage row with the selected outcome and lifecycle transition.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "current (accept)", "lifecycle_from": "proposed", "lifecycle_to": "current", "source": "quickadd.resolve-inbox-card"}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Keep as reminder", "lifecycle_from": "proposed", "lifecycle_to": "current", "source": "quickadd.resolve-inbox-card"}
 ```
 
 ## pre-file-similarity.jsonl
@@ -214,7 +211,7 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 | Field | Source | Meaning |
 | --- | --- | --- |
 | `trust_score` | composite | the lane's headline score |
-| `accepted` / `edited` / `rejected` | `disposition.jsonl` | three-way disposition counts |
+| `accepted` / `edited` / `rejected` | `disposition.jsonl` | accepted counts plus legacy edited/rejected counts when present |
 | `accept_ratio` | derived | `accepted / (accepted + edited + rejected)` |
 | `decision_time_min` | `board-transitions.jsonl` | median human review latency, minutes |
 | `time_on_gate_min` | board card timestamps | median time from card creation to terminal `done` / `blocked`, minutes |

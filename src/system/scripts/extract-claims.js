@@ -47,7 +47,7 @@ module.exports = async (params) => {
       body,
       lane: LANE,
     });
-    new Notice("✓ Card created on the " + LANE + " lane (" + ASSIGNEE + ").", 6000);
+    new Notice("✓ Extract claims queued. Watch Inbox > Activity. Needs me changes only if action is needed.", 15000);
   } catch (e) {
     new Notice(("Extract delegation failed: " + e.message).slice(0, 250), 10000);
   }
