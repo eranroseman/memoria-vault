@@ -11,7 +11,7 @@ nav_order: 2
 
 **Current status: complete internal checkpoint.** alpha.8 is the **runtime-foundations &
 observability** checkpoint: it implemented every issue marked
-`Readiness: Ready` in the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
+`Readiness: Ready` in the Memoria Issue Tracker project.
 `released:` in the frontmatter is the formal-release machine flag: it flips to
 `true` only for a tagged GitHub Release. Like alpha.5-alpha.7, alpha.8 is an
 **internal untagged checkpoint**: `status: complete`, `released: false`, no

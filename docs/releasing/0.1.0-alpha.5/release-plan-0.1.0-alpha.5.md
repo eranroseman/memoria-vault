@@ -79,7 +79,7 @@ the sub-issues under [#584](https://github.com/eranroseman/memoria-vault/issues/
 
 Not enumerated here — a second list would drift. **By definition the blockers are** any open gate/stage
 sub-issue under [#584](https://github.com/eranroseman/memoria-vault/issues/584), plus any open
-High-priority blocker in the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
+High-priority blocker in the Memoria Issue Tracker project.
 The one hard sequencing fact: **[#576](https://github.com/eranroseman/memoria-vault/issues/576)
 (the §D3 spike) gates the dashboard surface** — resolve it first; the data model proceeds regardless.
 

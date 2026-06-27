@@ -14,10 +14,11 @@ The branch, isolation, and merge-discipline rules are authoritative in **AGENTS.
 
 ## Issue and Project flow
 
-Every actionable item is a GitHub issue in
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1). The full
-field model is in [Issue tracking](issue-tracking.md); this page only summarizes
-the working loop.
+Every actionable item is a
+[GitHub issue](https://github.com/eranroseman/memoria-vault/issues). Maintainers
+track those issues in the private Memoria Issue Tracker project. The full field
+model is in [Issue tracking](issue-tracking.md); this page only summarizes the
+working loop.
 
 Pick an issue with Status `Backlog` and Readiness `Ready`, move it to
 `In progress`, and open a branch. Open the PR with `Closes #N` so the linked

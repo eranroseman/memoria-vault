@@ -18,7 +18,7 @@ duplicated across two places.
 | Surface | Role | Do not also use for |
 |---|---|---|
 | **Issue** | The atomic unit of work: one bug, feature, task, decision, or question | Multi-topic dumps; split them |
-| **Project #1 — [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)** | Triage and planning surface; holds **Status / Readiness** fields and board/table views | Release prose or decision rationale |
+| **Project #1 — Memoria Issue Tracker** | Private maintainer triage and planning surface; holds **Status / Readiness** fields and board/table views | Release prose or decision rationale |
 | **Milestone** | Release phase only: `0.1.0-alpha.3`, `0.1.0-alpha.4`, `0.1.0` | Status, Readiness, priority, type, or subsystem |
 | **Sub-issues** | Hierarchy / epics; a big issue composed of smaller issues | Loose "related to" links; use a mention for that |
 | **Labels** | Repo-wide search chips and bot automation | Status, Readiness, priority, or subsystem taxonomy |
@@ -82,8 +82,8 @@ Set colors in Project settings -> field -> option color picker.
 
 1. Create the issue with a clear title, problem statement, concrete paths or repro
    steps for bugs, and **acceptance criteria**.
-2. Add it to [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1)
-   if the auto-add workflow did not do it.
+2. Add it to the Memoria Issue Tracker project if the auto-add workflow did not
+   do it.
 3. Set Readiness and Status `Backlog`.
 4. Set a milestone only when scheduling it into a release; no milestone means
    unscheduled backlog.
@@ -121,7 +121,7 @@ Use ordinary mentions for loose related work.
 
 ## Project views
 
-Keep these views in [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1):
+Keep these views in the Memoria Issue Tracker project:
 
 - **Board grouped by Status** for day-to-day flow.
 - **Table grouped by Readiness** for blocked, shaping, ready, and later-work

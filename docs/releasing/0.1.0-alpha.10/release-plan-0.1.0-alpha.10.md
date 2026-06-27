@@ -77,7 +77,7 @@ record the skip reason and run the Runtime Gate manually on the test host.
 Not enumerated here. By definition the blockers are any open gate/stage issue
 under the alpha.10 release parent, any open issue assigned to the
 `0.1.0-alpha.10` milestone, plus any open High-priority blocker in the
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
+Memoria Issue Tracker project.
 
 ## 5. Out of scope (later)
 

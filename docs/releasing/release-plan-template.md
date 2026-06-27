@@ -92,7 +92,7 @@ evidence from the release issue.
 
 Not enumerated here — a second list would drift. **By definition the blockers
 are** any open readiness/stage sub-issue, plus any open High-priority blocker in
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
+Memoria Issue Tracker project.
 
 ## 5. Out of scope (later)
 

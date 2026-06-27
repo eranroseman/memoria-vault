@@ -19,7 +19,7 @@ authoritative rules for AI agents are in [AGENTS.md](https://github.com/eranrose
 | Content | Location | When to look here |
 |---|---|---|
 | **Decisions** (ADRs, every status) | [Decisions](../adr/) | Why something is the way it is, what's been considered, and the background analysis behind a decision |
-| **Live work state** | [Issue tracking](issue-tracking.md) + [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1) | What is ready, blocked, active, later, or complete |
+| **Live work state** | [Issue tracking](issue-tracking.md) + [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) + the maintainer-only Memoria Issue Tracker project | What is ready, blocked, active, later, or complete |
 | **Release prose** | [Releasing](https://github.com/eranroseman/memoria-vault/tree/main/docs/releasing) | What a release covers, how to cut one, and where live readiness lives |
 | **Test plans** (QA procedures) | [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing) | How to validate or verify the system |
 | **Test code** (pytest) | `tests/` at the repo root | The executable unit tests themselves |

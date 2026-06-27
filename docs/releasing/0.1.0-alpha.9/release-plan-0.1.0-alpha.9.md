@@ -75,7 +75,7 @@ open gate/stage sub-issue under
 [Release v0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835),
 any open issue assigned to the `0.1.0-alpha.9` milestone, and any open
 High-priority blocker in the
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
+Memoria Issue Tracker project.
 
 ## 5. Out of scope (later)
 
