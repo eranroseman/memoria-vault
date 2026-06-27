@@ -1,8 +1,8 @@
 ---
 title: Lifecycle, not topic — and state, not folders
-parent: Knowledge
-grand_parent: Explanation
-nav_order: 4
+parent: Design Book
+grand_parent: Developers
+nav_order: 20
 ---
 
 # Lifecycle, not topic — and state, not folders
@@ -19,14 +19,14 @@ A paper on attention and working memory belongs in `cognitive-science/`, and in 
 
 Most knowledge systems respond by letting notes exist in multiple places (aliases, copies) or by moving topics to tags. But that creates a different problem: the folder is now redundant. If topics live in frontmatter and links, the folder adds no information. If the folder adds information, it must mean something other than topic.
 
-**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research_area`, `methodology`) and in links, where many-to-many can be expressed properly. This is a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research_area`, `methodology`) and in links, where many-to-many can be expressed properly. This is a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ---
 
 ## Lifecycle lives in frontmatter
-The vault's top level is organized by **category** ([ADR-47](../../adr/47-type-first-category-folders.md)): one folder per category (`catalog/`, `notes/` with its prose subfolders, `projects/`, `inbox/`, `spaces/`, `system/`), never mixing two categories, with no lifecycle numbers and no archive folder. The full tree is catalogued in [On-disk layout](../../reference/on-disk-layout.md). A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
+The vault's top level is organized by **category** ([ADR-47](../adr/47-type-first-category-folders.md)): one folder per category (`catalog/`, `notes/` with its prose subfolders, `projects/`, `inbox/`, `spaces/`, `system/`), never mixing two categories, with no lifecycle numbers and no archive folder. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md). A claim doesn't travel anywhere when the PI retracts it; a source note doesn't become a different kind of thing when it's read. What changes is its *standing* — and standing is a property, not a location.
 
-Direction lives instead in the `lifecycle` frontmatter property — one chain for everything, each type using a subset of it ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)); the chain and its per-type subsets are defined in [Frontmatter fields](../../reference/frontmatter.md). A source note awaiting reading is `proposed`; a claim the PI stands behind is `current`; a claim invalidated by new evidence is `retracted`, with lineage links to its successor.
+Direction lives instead in the `lifecycle` frontmatter property — one chain for everything, each type using a subset of it ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)); the chain and its per-type subsets are defined in [Frontmatter fields](../reference/frontmatter.md). A source note awaiting reading is `proposed`; a claim the PI stands behind is `current`; a claim invalidated by new evidence is `retracted`, with lineage links to its successor.
 
 ---
 
@@ -60,8 +60,8 @@ Topical *navigation* is built on top by **hubs** (`notes/hubs/`): curated notes 
 
 ## Related
 
-- The type system the folders encode: [Document types and epistemic roles](document-types.md)
-- How state changes are gated: [Why promotion is gated](promotion-model.md)
-- The decisions: [ADR-47](../../adr/47-type-first-category-folders.md), [ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)
-- The folder tree itself: [The vault](../architecture/vault.md)
-- The facet fields: [Frontmatter fields](../../reference/frontmatter.md)
+- The type system the folders encode: [Document types and epistemic roles](../explanation/knowledge/document-types.md)
+- How state changes are gated: [Why promotion is gated](../explanation/knowledge/promotion-model.md)
+- The decisions: [ADR-47](../adr/47-type-first-category-folders.md), [ADR-50](../adr/50-universal-lifecycle-and-maturity.md)
+- The folder tree itself: [The vault](../explanation/architecture/vault.md)
+- The facet fields: [Frontmatter fields](../reference/frontmatter.md)

@@ -32,7 +32,7 @@ Three kinds of actor work across the structural layers:
 | **Agents** | the Co-PI (L3) + the Task lanes (L4) | posture + LLM judgment; propose, never dispose |
 | **Operations** | ingest · search · clustering · sweeps · Linter (L6) | deterministic, no posture; never on the board |
 
-The "is it an agent or an operation?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane. Agents propose and only the PI disposes; why that gate is structural rather than a convention is [Why the review gate is structural](../rationale/why-human-gate.md).
+The "is it an agent or an operation?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane. Agents propose and only the PI disposes; why that gate is structural rather than a convention is [Why the review gate is structural](../../design/why-human-gate.md).
 
 ## The layering binds the agent write-path only
 
@@ -53,7 +53,7 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 
 ## Where to go next
 
-- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../rationale/why-three-layers.md)
+- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-three-layers.md)
 - **The agents that occupy L3 and L4** → [Profiles](../profiles/README.md)
 - **The deterministic L6 operations** → [Operations](../operations/README.md)
 - **The board state machine** under the Tasks layer → [Kanban board](../kanban-board/README.md)

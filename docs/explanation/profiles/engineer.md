@@ -32,4 +32,4 @@ The Engineer runs the **code** lane as a documentary front for an external codin
 
 - Where the handoff lives: [The vault](../architecture/vault.md)
 - How far each agent may delegate: [Delegation posture](delegation-posture.md)
-- The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
+- The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

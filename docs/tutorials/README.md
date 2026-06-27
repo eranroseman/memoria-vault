@@ -3,13 +3,11 @@ title: Tutorials
 nav_order: 11
 has_children: true
 permalink: /tutorials/
-book: Operator Guide
 ---
 
 # Tutorials
 
-These tutorials are part of the [Operator Guide](../operator-guide.md). They teach
-Memoria by building one small thing end to end: a short, well-sourced paragraph you
+These tutorials teach Memoria by building one small thing end to end: a short, well-sourced paragraph you
 could defend. You work in Obsidian, one concrete step at a time, and finish with real
 notes in your own vault.
 
@@ -59,7 +57,7 @@ You can remove it when you're done: **Memoria: remove sample vault** archives th
 
 ## See also
 
-- [What Memoria is](../explanation/overview/what-memoria-is.md) — what the system is, and what it isn't
+- [What Memoria is](../design/what-memoria-is.md) — what the system is, and what it isn't
 - [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md) — the cycle these tutorials turn, and the six tasks you can hand off
 - [The Co-PI](../explanation/profiles/co-pi.md) — the one assistant you talk to, and why it hands every change to a background helper
 - [Your first month](../explanation/knowledge/your-first-month.md) — the real rhythm to settle into once the tutorials are done

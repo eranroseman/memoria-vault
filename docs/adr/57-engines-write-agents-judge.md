@@ -21,7 +21,7 @@ superseded_by: []
 ## Context
 
 Memoria's split between deterministic **engines** and judgment-bearing **agents**
-(ADR-46, ADR-48; the [task classification](../explanation/rationale/why-computational-methods.md))
+(ADR-46, ADR-48; the [task classification](../design/why-computational-methods.md))
 has always carried an implicit corollary: an LLM agent is **never used as the
 mechanical writer** of an artifact whose content is derivable by rule — catalog
 records, logs, file moves, schema-shaped transformations, exports. ADR-30 applies it
@@ -86,7 +86,7 @@ LLM write costs tokens and latency and can fail in ways no test can enumerate.
 - Every new mechanical write needs engine code (and a test) instead of a sentence in
   a SKILL.md — slower to add, which is the point: the sentence version is the failure.
 - Some tasks sit on the boundary (e.g. summarize-then-file); the
-  [task classification](../explanation/rationale/why-computational-methods.md) default
+  [task classification](../design/why-computational-methods.md) default
   test applies — if a rule would produce the right answer most of the time, the write
   is engine work and the LLM contributes at most a bounded judgment hole.
 
@@ -126,4 +126,4 @@ LLM write costs tokens and latency and can fail in ways no test can enumerate.
   [ADR-32](32-external-access-over-mcp.md), [ADR-46](46-seven-layer-architecture.md)
   (engines as an actor-kind), [ADR-03](03-structural-review-gate.md) (structure over
   prompt discipline).
-- **Rationale page:** [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md).
+- **Rationale page:** [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md).

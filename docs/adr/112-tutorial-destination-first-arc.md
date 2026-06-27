@@ -58,7 +58,7 @@ sub-task of that single artifact.
   and links to the [Quickstart](../how-to-guides/setup/quickstart.md). (This dissolves the
   Quickstart ↔ tutorial duplication and its drift.)
 - **The two modes are narrative, not spine** — their canonical home stays
-  [What Memoria is](../explanation/overview/what-memoria-is.md); the tutorial references
+  [What Memoria is](../design/what-memoria-is.md); the tutorial references
   the *why* but is structured by the *doing*.
 - **ADR-111's seeded half-built sample vault is retained** — and now earns a third job:
   it **enables the destination-first opening** (you cannot map an empty vault).
@@ -131,7 +131,7 @@ later dramatize, so it must exist and stabilize first.
 - **Supersedes:** [ADR-111](111-two-mode-tutorial-spine.md) (replaces its tutorial spine;
   retains its seeded sample-vault decision and the load/remove commands).
 - **Deferred alternative:** [ADR-113: Co-PI-guided onboarding](113-copi-guided-onboarding.md).
-- **Builds on:** [What Memoria is](../explanation/overview/what-memoria-is.md),
+- **Builds on:** [What Memoria is](../design/what-memoria-is.md),
   [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md), and the
   [Quickstart](../how-to-guides/setup/quickstart.md) (which now owns setup).
 - **Research basis:** the deep-research pass recorded in ADR-111 (worked-example,

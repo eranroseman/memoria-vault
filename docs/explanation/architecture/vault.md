@@ -56,4 +56,4 @@ Bases has no integrity guarantees — no schema, no constraints. That gap is the
 - The full stack the vault sits under: [Architecture](README.md)
 - The agent→human signal folder in depth: [ADR-51](../../adr/51-inbox-category-and-honesty-card.md)
 - The operations that maintain the vault: [Operations](../operations/README.md)
-- Why the review gate is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why the review gate is structural: [Why the review gate is structural](../../design/why-human-gate.md)

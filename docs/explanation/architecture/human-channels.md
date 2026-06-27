@@ -69,7 +69,7 @@ Confining Telegram to one messaging channel is also intentional. Each additional
 
 ## Why the API server is for programs only
 
-The API server (port 8642) is the one-row integration surface in the table above: programs connect through it (file-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch) while humans use the command palette and CLI instead. It is a different door, not a different key — every API write still passes through the policy MCP at the calling profile's permissions. The full rationale is in [Why Hermes](../rationale/why-hermes.md).
+The API server (port 8642) is the one-row integration surface in the table above: programs connect through it (file-system watchers, Zotero hooks, git post-commit hooks, cross-machine dispatch) while humans use the command palette and CLI instead. It is a different door, not a different key — every API write still passes through the policy MCP at the calling profile's permissions. The full rationale is in [Why Hermes](../../design/why-hermes.md).
 
 ---
 

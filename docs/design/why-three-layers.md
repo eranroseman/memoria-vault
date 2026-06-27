@@ -1,14 +1,15 @@
 ---
 title: Why the architecture is layered
-parent: Design rationale
-nav_order: 1
+parent: Design Book
+grand_parent: Developers
+nav_order: 10
 ---
 
 # Why the architecture is layered
 
-Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. The argument was first made for three layers ([ADR-01](../../adr/01-three-layer-architecture.md): board, workers, vault) and survives intact in the seven-layer stack that superseded it ([ADR-46](../../adr/46-seven-layer-architecture.md)) — the refinement added layers; it never weakened the separation.
+Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. The argument was first made for three layers ([ADR-01](../adr/01-three-layer-architecture.md): board, workers, vault) and survives intact in the seven-layer stack that superseded it ([ADR-46](../adr/46-seven-layer-architecture.md)) — the refinement added layers; it never weakened the separation.
 
-For the current shared vocabulary, start with [The model](../../the-model.md).
+For the current shared vocabulary, start with [The model](../the-model.md).
 
 ---
 
@@ -41,11 +42,11 @@ Task history pollutes the knowledge graph. In-flight notes get confused with set
 
 The layered design follows a principle that several independent research systems identified from different starting points:
 
-**[Chen et al. 2026](../../reference/bibliography.md#chen2026autonomous)** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
+**[Chen et al. 2026](../reference/bibliography.md#chen2026autonomous)** (*Toward Autonomous Long-Horizon Engineering for ML Research*) describes this as "thin control over thick state": the orchestrator and workers carry as little persistent context as possible; durable knowledge lives in files. Their ablation removes the persistent knowledge layer and measures a drop of 6.41 points on PaperBench and 31.82 points on MLE-Bench Lite. The persistent layer isn't overhead — it's the mechanism that enables long-horizon work.
 
-**AgentRxiv** ([Schmidgall and Moor 2025](../../reference/bibliography.md#schmidgall2025agentrxiv)) shows that agents reading prior agent-generated reports gain ~11% over isolated agents on MATH-500. Cross-session knowledge persistence is the mechanism; agents that can't read prior work start from scratch every time.
+**AgentRxiv** ([Schmidgall and Moor 2025](../reference/bibliography.md#schmidgall2025agentrxiv)) shows that agents reading prior agent-generated reports gain ~11% over isolated agents on MATH-500. Cross-session knowledge persistence is the mechanism; agents that can't read prior work start from scratch every time.
 
-**PARNESS** ([Wang and Luan 2026](../../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
+**PARNESS** ([Wang and Luan 2026](../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
 
 Unrelated systems, different architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. (A further corroboration at the claim grain is catalogued in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md).)
 
@@ -53,7 +54,7 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 ## From three layers to seven
 
-ADR-01's three layers framed the original infrastructure, but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). [ADR-46](../../adr/46-seven-layer-architecture.md) pulled them apart and superseded ADR-01 with the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
+ADR-01's three layers framed the original infrastructure, but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). [ADR-46](../adr/46-seven-layer-architecture.md) pulled them apart and superseded ADR-01 with the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
 
 Each refinement carries the same argument further:
 
@@ -84,11 +85,11 @@ The separation is maintained by rules that cannot be violated without breaking t
 
 **Explanation**
 
-- The seven layers described: [Architecture](../architecture/README.md)
+- The seven layers described: [Architecture](../explanation/architecture/README.md)
 - How the agent layer is structured: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
 - Why the vault's review gate is structural: [Why the review gate is structural](why-human-gate.md)
 
 **Reference**
 
-- The guard layer in detail: [Policy MCP](../../reference/policy-mcp.md)
-- The thick-state substrate: [Memory substrates](../../reference/memory.md)
+- The guard layer in detail: [Policy MCP](../reference/policy-mcp.md)
+- The thick-state substrate: [Memory substrates](../reference/memory.md)

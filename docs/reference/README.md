@@ -3,14 +3,14 @@ title: Reference
 nav_order: 13
 has_children: true
 permalink: /reference/
-book: Operator Guide
 ---
 
 # Reference
 
-Lookup material for Memoria — fields, values, commands, schemas, folder paths. This
-section is part of the [Operator Guide](../operator-guide.md). For design rationale
-and conceptual explanations, see [Explanation](../explanation).
+Lookup material for Memoria — fields, values, commands, schemas, folder paths,
+and runtime contracts. For design rationale and decision history, see
+[Developers](../developers.md); for operational explanations, see
+[Explanation](../explanation).
 
 The files are grouped below by domain for scanning; the folder itself is flat.
 
@@ -35,6 +35,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract |
 | [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
+| [Runtime Spec](runtime-spec.md) | Agent rules, generated profile policy, and runtime contract sources |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries (the in-Obsidian UI surface) |

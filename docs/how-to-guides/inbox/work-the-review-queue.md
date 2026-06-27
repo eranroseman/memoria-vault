@@ -51,4 +51,4 @@ The fleet-health dashboard tracks accept/reject ratios per proposing lane — ve
 - Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
 - The card shapes and their fields: [Document types](../../reference/document-types.md)
 - The gate that holds agent writes: [Policy MCP](../../reference/policy-mcp.md)
-- Why review is structural, not a convention: [Why a human gate](../../explanation/rationale/why-human-gate.md)
+- Why review is structural, not a convention: [Why a human gate](../../design/why-human-gate.md)

@@ -1,7 +1,8 @@
 ---
 title: Why the review gate is structural
-parent: Design rationale
-nav_order: 3
+parent: Design Book
+grand_parent: Developers
+nav_order: 12
 ---
 
 # Why the review gate is structural
@@ -85,10 +86,10 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 - Why specialist profiles support this: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
 - Why the vault won't autonomize synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
-- How the review state works in the workflow: [Review as a first-class state](../workflows/review-as-state.md)
-- What the gate enforces at the synthesis boundary: [Why promotion is gated](../knowledge/promotion-model.md)
+- How the review state works in the workflow: [Review as a first-class state](../explanation/workflows/review-as-state.md)
+- What the gate enforces at the synthesis boundary: [Why promotion is gated](../explanation/knowledge/promotion-model.md)
 
 **Reference**
 
-- Policy MCP enforcement details: [Profile capabilities](../../reference/profiles.md) (permissions) · [Memory substrates](../../reference/memory.md) (audit log)
-- The enforcement mechanism: [Policy MCP](../../reference/policy-mcp.md)
+- Policy MCP enforcement details: [Profile capabilities](../reference/profiles.md) (permissions) · [Memory substrates](../reference/memory.md) (audit log)
+- The enforcement mechanism: [Policy MCP](../reference/policy-mcp.md)

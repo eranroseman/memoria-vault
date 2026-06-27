@@ -5,7 +5,7 @@ parent: Reference
 
 # Pattern library
 
-The shipped runnable patterns, the pattern-note schema, and the `patterns_list` / `patterns_run` contract. Patterns are *data* — markdown prompt-transformations in `system/patterns/` — and the patterns MCP (`src/.memoria/mcp/patterns_mcp.py`) is the single audited chokepoint that runs them ([ADR-53](../adr/53-pattern-library.md)). The runner never writes content: it composes a prompt and hands it back through the gated path the calling agent already uses. To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md); for why provenance is recorded, see [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md).
+The shipped runnable patterns, the pattern-note schema, and the `patterns_list` / `patterns_run` contract. Patterns are *data* — markdown prompt-transformations in `system/patterns/` — and the patterns MCP (`src/.memoria/mcp/patterns_mcp.py`) is the single audited chokepoint that runs them ([ADR-53](../adr/53-pattern-library.md)). The runner never writes content: it composes a prompt and hands it back through the gated path the calling agent already uses. To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md); for why provenance is recorded, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
 ---
 
@@ -115,7 +115,7 @@ A failed provenance write does not abort the run — the prompt is the product �
 ## Related
 
 - Running a pattern from Obsidian: [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md)
-- Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md)
+- Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)
 - The palette commands that invoke the runner: [Obsidian command palette](obsidian-command-palette.md)
 - Every action the system performs: [System actions](system-actions.md)
 - The picker view over the library: [Dashboards](dashboards.md)

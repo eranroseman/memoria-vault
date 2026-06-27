@@ -1,8 +1,9 @@
 ---
 title: Decision records
+parent: Developers
 has_children: true
 topic: decisions
-nav_order: 90
+nav_order: 3
 permalink: /adr/
 ---
 

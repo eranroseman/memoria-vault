@@ -156,7 +156,7 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 
 ## Broader literature foundations
 
-Pivotal works from the wider literature review — ~400 papers read end-to-end and judged adopt/borrow/reject for the design (`_papers/`, reviewed 2026-06; the working corpus is the Zotero export `_papers/Exported Items.bib`). These ground the cross-cutting choices cited in [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md) and [Intellectual foundations](../explanation/overview/intellectual-foundations.md): the HCI human-augmentation tradition behind the review gate, generator–verifier and evidence-grounded verification, temporal retrieval, and the indirect-prompt-injection case for the MCP sandbox.
+Pivotal works from the wider literature review — ~400 papers read end-to-end and judged adopt/borrow/reject for the design (`_papers/`, reviewed 2026-06; the working corpus is the Zotero export `_papers/Exported Items.bib`). These ground the cross-cutting choices cited in [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md) and [Intellectual foundations](../design/intellectual-foundations.md): the HCI human-augmentation tradition behind the review gate, generator–verifier and evidence-grounded verification, temporal retrieval, and the indirect-prompt-injection case for the MCP sandbox.
 
 <a id="abdallah2026tempo"></a>
 Abdelrahman Abdallah, Mohammed Ali, Muhammad Abdul-Mageed, and Adam Jatowt. 2026. TEMPO: A Realistic Multi-Domain Benchmark for Temporal Reasoning-Intensive Retrieval. arXiv:2601.09523. Retrieved from https://arxiv.org/abs/2601.09523
@@ -202,5 +202,5 @@ James Thorne, Andreas Vlachos, Christos Christodoulopoulos, and Arpit Mittal. 20
 
 ## Related
 
-- Foundations that cite these works: [Intellectual foundations](../explanation/overview/intellectual-foundations.md)
-- The pattern-provenance survey citing this list: [Pattern provenance: borrow, adapt, ignore](../explanation/rationale/why-pattern-provenance.md)
+- Foundations that cite these works: [Intellectual foundations](../design/intellectual-foundations.md)
+- The pattern-provenance survey citing this list: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)

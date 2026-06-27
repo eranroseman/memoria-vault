@@ -13,7 +13,7 @@ entries:
   status: manual
 - path: docs/adr/01-three-layer-architecture.md
   title: "Three-layer architecture \u2014 board, workers, vault"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -31,7 +31,7 @@ entries:
   status: manual
 - path: docs/adr/02-seven-specialist-profiles.md
   title: Seven specialist profiles over one generalist agent
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -49,7 +49,7 @@ entries:
   status: manual
 - path: docs/adr/03-structural-review-gate.md
   title: Review gate is structural, enforced by the policy MCP
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -66,7 +66,7 @@ entries:
   status: manual
 - path: docs/adr/04-lifecycle-over-topic-folders.md
   title: Folders encode lifecycle stage, not subject area
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -84,7 +84,7 @@ entries:
   status: manual
 - path: docs/adr/05-zotero-as-bibliographic-backbone.md
   title: Zotero + Better BibTeX as the bibliographic backbone
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -101,7 +101,7 @@ entries:
   status: manual
 - path: docs/adr/06-citekey-naming-convention.md
   title: Citekey naming convention
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -118,7 +118,7 @@ entries:
   status: manual
 - path: docs/adr/07-delegate-coding-to-external-agents.md
   title: Code agent attachment
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -135,7 +135,7 @@ entries:
   status: manual
 - path: docs/adr/08-typed-relations-frontmatter.md
   title: Typed relations frontmatter
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -153,7 +153,7 @@ entries:
   status: manual
 - path: docs/adr/09-contradictions-dashboard.md
   title: Contradictions / tensions dashboard
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -170,7 +170,7 @@ entries:
   status: manual
 - path: docs/adr/10-claim-supersession.md
   title: Claim supersession relation
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -187,7 +187,7 @@ entries:
   status: manual
 - path: docs/adr/100-exploration-trace-capture.md
   title: Exploration-trace capture
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -207,7 +207,7 @@ entries:
   status: manual
 - path: docs/adr/101-navigation-spaces-gate-reserved-for-approval.md
   title: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -228,7 +228,7 @@ entries:
   status: manual
 - path: docs/adr/102-disposable-projection-engine.md
   title: Disposable projection engine
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -250,7 +250,7 @@ entries:
   status: manual
 - path: docs/adr/103-projected-canvas-spatial-axis.md
   title: Projected Canvas spatial axis
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -272,7 +272,7 @@ entries:
   status: manual
 - path: docs/adr/104-telemetry-three-planes.md
   title: "Telemetry as three planes \u2014 audit, analytics, diagnostic"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -293,7 +293,7 @@ entries:
   status: manual
 - path: docs/adr/105-diagnostic-plane.md
   title: "Content-light diagnostic plane \u2014 out of the vault, ephemeral, opt-in detail"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -313,7 +313,7 @@ entries:
   status: manual
 - path: docs/adr/106-cost-and-disposition-capture.md
   title: "Cost and disposition capture \u2014 Hermes session store and the review action"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -333,7 +333,7 @@ entries:
   status: manual
 - path: docs/adr/107-okf-interchange-bundle-format.md
   title: OKF as Memoria's import/export bundle format
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -357,7 +357,7 @@ entries:
   status: manual
 - path: docs/adr/108-liteparse-local-document-parsing.md
   title: LiteParse as the local document-parsing engine
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -376,7 +376,7 @@ entries:
   status: manual
 - path: docs/adr/109-project-management-native-views.md
   title: Project management uses native views over project notes
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -399,7 +399,7 @@ entries:
   status: manual
 - path: docs/adr/11-vault-eval-maintenance.md
   title: vault-eval as a maintenance capability
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -416,7 +416,7 @@ entries:
   status: manual
 - path: docs/adr/110-ruff-format-python-layout.md
   title: 'Ruff: formatter owns layout (line-length 100), curated lint ruleset'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -433,7 +433,7 @@ entries:
   status: manual
 - path: docs/adr/111-two-mode-tutorial-spine.md
   title: Two-mode tutorial spine, seeded by a half-built corpus
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -451,7 +451,7 @@ entries:
   status: manual
 - path: docs/adr/112-tutorial-destination-first-arc.md
   title: Onboarding is one destination-first project arc
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -469,7 +469,7 @@ entries:
   status: manual
 - path: docs/adr/113-copi-guided-onboarding.md
   title: Co-PI-guided onboarding (deferred)
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -487,7 +487,7 @@ entries:
   status: manual
 - path: docs/adr/114-left-pane-navigator.md
   title: 'Left pane is a navigation rail: Now over Places'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -507,7 +507,7 @@ entries:
   status: manual
 - path: docs/adr/115-inbox-queue-and-retired-homepage.md
   title: Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -529,7 +529,7 @@ entries:
   status: manual
 - path: docs/adr/115-profile-config-materialization.md
   title: Profile config capability blocks are materialized from the tool registry
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -548,7 +548,7 @@ entries:
   status: manual
 - path: docs/adr/116-obsidian-surface-architecture.md
   title: 'Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -570,7 +570,7 @@ entries:
   status: manual
 - path: docs/adr/117-type-naming-scheme.md
   title: 'Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -592,7 +592,7 @@ entries:
 - path: docs/adr/118-dashboard-consolidation.md
   title: 'Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector
     the read-only index'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -615,7 +615,7 @@ entries:
 - path: docs/adr/119-schema-driven-document-creation.md
   title: 'Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is
     the single source'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -638,7 +638,7 @@ entries:
   status: manual
 - path: docs/adr/12-obsidian-linter-reference-only.md
   title: obsidian-linter is reference-only, not a control-plane formatter
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -655,7 +655,7 @@ entries:
   status: manual
 - path: docs/adr/13-homepage-front-door.md
   title: Homepage front-door note, auto-opened by obsidian-homepage
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -673,7 +673,7 @@ entries:
   status: manual
 - path: docs/adr/14-advisor-review-vs-frozen-deliverable.md
   title: Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -690,7 +690,7 @@ entries:
   status: manual
 - path: docs/adr/15-project-membership-from-topic-hint.md
   title: Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -707,7 +707,7 @@ entries:
   status: manual
 - path: docs/adr/16-systematic-review-adopt-on-demand.md
   title: "Adopt-on-demand \u2014 systematic-review tooling"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -724,7 +724,7 @@ entries:
   status: manual
 - path: docs/adr/17-shared-candidate-frontmatter.md
   title: Shared candidate frontmatter format
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -743,7 +743,7 @@ entries:
   status: manual
 - path: docs/adr/18-rename-agent-verdict.md
   title: "Rename `agent_verdict` \u2192 `agent_recommendation`"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -760,7 +760,7 @@ entries:
   status: manual
 - path: docs/adr/19-moc-threshold-alert.md
   title: Agent-proposed hubs (threshold alert and Mapper handoff)
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -777,7 +777,7 @@ entries:
   status: manual
 - path: docs/adr/20-publication-path.md
   title: "Publication path \u2014 vault-eval benchmark first, capture-now"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -794,7 +794,7 @@ entries:
   status: manual
 - path: docs/adr/21-l3-autonomy-ceiling.md
   title: L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired)
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -811,7 +811,7 @@ entries:
   status: manual
 - path: docs/adr/22-build-on-hermes-runtime.md
   title: Build on the Hermes Agent runtime rather than a bespoke one
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -828,7 +828,7 @@ entries:
   status: manual
 - path: docs/adr/23-scoped-memory-substrates.md
   title: Memory is seven scoped substrates, not one store
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -845,7 +845,7 @@ entries:
   status: manual
 - path: docs/adr/24-single-researcher-scope.md
   title: "Single-researcher scope \u2014 multi-user semantics are out of scope"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -862,7 +862,7 @@ entries:
   status: manual
 - path: docs/adr/25-session-logging-two-logs.md
   title: "Two separate session logs \u2014 hash-paired audit vs. per-session digests"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -881,7 +881,7 @@ entries:
   status: manual
 - path: docs/adr/26-repo-as-install-unit.md
   title: The repo is the install unit; profiles are hand-authored and idempotently deployed
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -899,7 +899,7 @@ entries:
 - path: docs/adr/27-hermes-native-config-and-gate-enforcement.md
   title: Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the
     only write path
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -918,7 +918,7 @@ entries:
   status: manual
 - path: docs/adr/28-write-gate-as-plugin.md
   title: The vault write gate is a Hermes Python plugin, not a shell hook
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -936,7 +936,7 @@ entries:
   status: manual
 - path: docs/adr/29-testing-framework.md
   title: A layered testing framework, not a pile of plans
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -953,7 +953,7 @@ entries:
   status: manual
 - path: docs/adr/30-deterministic-ingest-pipeline.md
   title: "Tiered ingest pipeline (capture \u2192 fallback-chained enrichment \u2192 gated write)"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -970,7 +970,7 @@ entries:
   status: manual
 - path: docs/adr/31-native-obsidian-mcp.md
   title: Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -987,7 +987,7 @@ entries:
   status: manual
 - path: docs/adr/32-external-access-over-mcp.md
   title: Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1004,7 +1004,7 @@ entries:
   status: manual
 - path: docs/adr/33-cluster-mcp-bertopic.md
   title: The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1021,7 +1021,7 @@ entries:
   status: manual
 - path: docs/adr/34-code-artifact-autopilot.md
   title: Code-artifact autopilot
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1038,7 +1038,7 @@ entries:
   status: manual
 - path: docs/adr/35-cross-run-skill-insights.md
   title: Cross-run skill-insights memory
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1055,7 +1055,7 @@ entries:
   status: manual
 - path: docs/adr/36-dedicated-review-note-type.md
   title: Dedicated review-note type
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1073,7 +1073,7 @@ entries:
   status: manual
 - path: docs/adr/37-retriever-scout-profile.md
   title: Retriever / Scout as a separate profile
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1091,7 +1091,7 @@ entries:
   status: manual
 - path: docs/adr/38-pre-file-similarity-gate.md
   title: "Ratchet \u2014 a qmd similarity gate before filing a synthesis note"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1109,7 +1109,7 @@ entries:
   status: manual
 - path: docs/adr/39-note-acceptance-checklists.md
   title: Per-note-type acceptance checklists ("frozen evaluator")
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1126,7 +1126,7 @@ entries:
   status: manual
 - path: docs/adr/40-admin-gui-surface.md
   title: Admin/forensic GUI surface (hermes-workspace)
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1143,7 +1143,7 @@ entries:
   status: manual
 - path: docs/adr/41-configurable-review-gate-mode.md
   title: Configurable review-gate mode (blocking / advisory) for comparison studies
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1160,7 +1160,7 @@ entries:
   status: manual
 - path: docs/adr/42-profile-compilation.md
   title: Profile compilation from a shared base
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -1178,7 +1178,7 @@ entries:
   status: manual
 - path: docs/adr/43-skill-governance.md
   title: Skill governance and lifecycle
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1196,7 +1196,7 @@ entries:
   status: manual
 - path: docs/adr/44-tests-in-pytest-tree.md
   title: L1 component tests live in a repo-side pytest tree, not inline in shipped modules
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1214,7 +1214,7 @@ entries:
   status: manual
 - path: docs/adr/45-release-management-model.md
   title: "Release management \u2014 gates as a tracking-issue checklist, release-please for versioning"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1232,7 +1232,7 @@ entries:
   status: manual
 - path: docs/adr/46-seven-layer-architecture.md
   title: "Seven-layer architecture \u2014 PI \xB7 Interface \xB7 Co-PI \xB7 Tasks \xB7 MCP \xB7 Engines \xB7 Vault"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1251,7 +1251,7 @@ entries:
   status: manual
 - path: docs/adr/47-type-first-category-folders.md
   title: "Type-first category folders \u2014 catalog \xB7 notes \xB7 projects \xB7 inbox \xB7 system"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1270,7 +1270,7 @@ entries:
   status: manual
 - path: docs/adr/48-copi-and-agent-consolidation.md
   title: One Co-PI fronts everything; specialists consolidate to posture-defined agents
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1292,7 +1292,7 @@ entries:
   status: manual
 - path: docs/adr/49-catalog-in-bases-linter-monitor.md
   title: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1310,7 +1310,7 @@ entries:
   status: manual
 - path: docs/adr/50-universal-lifecycle-and-maturity.md
   title: One lifecycle chain for everything; maturity is a claim property; reference dropped; MOC renamed hub
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1329,7 +1329,7 @@ entries:
   status: manual
 - path: docs/adr/51-inbox-category-and-honesty-card.md
   title: "The Inbox category and the honesty card \u2014 argument for/against, what tipped it, certainty; no verdict on proposals"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1351,7 +1351,7 @@ entries:
   status: manual
 - path: docs/adr/52-links-vs-relationships.md
   title: "Notes carry authored links:, entities carry given relationships \u2014 two kinds of connection"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1371,7 +1371,7 @@ entries:
   status: manual
 - path: docs/adr/53-pattern-library.md
   title: "The pattern library \u2014 curated prompt-transformations as data in system/patterns/, one runner"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1391,7 +1391,7 @@ entries:
 - path: docs/adr/54-two-decision-kinds-batch-worklists.md
   title: "Two kinds of human decision \u2014 approval gates and work prompts; classify automated; batch worklists for high\
     \ cardinality"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1411,7 +1411,7 @@ entries:
   status: manual
 - path: docs/adr/55-src-scaffold-populate-golden-copy.md
   title: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1430,7 +1430,7 @@ entries:
   status: manual
 - path: docs/adr/56-extraction-uncertainty-flag.md
   title: "Low-confidence extraction routes to a flag \u2014 the ingest engine never merges identities silently"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1449,7 +1449,7 @@ entries:
   status: manual
 - path: docs/adr/57-engines-write-agents-judge.md
   title: "Engines write, agents judge \u2014 no LLM agent as a mechanical writer"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1469,7 +1469,7 @@ entries:
   status: manual
 - path: docs/adr/58-adjacent-tool-integrations.md
   title: Adjacent tool integrations and added surfaces
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1492,7 +1492,7 @@ entries:
   status: manual
 - path: docs/adr/59-classical-method-displacements.md
   title: Classical method displacements over LLM calls
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1517,7 +1517,7 @@ entries:
   status: manual
 - path: docs/adr/60-cross-vault-knowledge-sharing.md
   title: Cross-vault and cross-project knowledge sharing
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1536,7 +1536,7 @@ entries:
   status: manual
 - path: docs/adr/61-nightly-discovery-loop.md
   title: Nightly discovery loop, code-experiment loop, and Writer-proposed claims
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1558,7 +1558,7 @@ entries:
   status: manual
 - path: docs/adr/62-measurement-and-verification-harnesses.md
   title: Measurement and verification harnesses
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1577,7 +1577,7 @@ entries:
   status: manual
 - path: docs/adr/63-multi-machine-deployment.md
   title: Multi-machine deployment topologies and secondary-device patterns
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1597,7 +1597,7 @@ entries:
   status: manual
 - path: docs/adr/64-native-windows-support.md
   title: 'Native Windows support: production on Windows, testing on Linux'
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1616,7 +1616,7 @@ entries:
   status: manual
 - path: docs/adr/65-retrieval-and-schema-extensions.md
   title: Retrieval and schema extensions
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1638,7 +1638,7 @@ entries:
   status: manual
 - path: docs/adr/66-triage-ranking-improvements.md
   title: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1658,7 +1658,7 @@ entries:
   status: manual
 - path: docs/adr/67-drift-procedures-keep-or-retire.md
   title: "Drift procedures under the golden-copy model \u2014 keep or retire"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1679,7 +1679,7 @@ entries:
   status: manual
 - path: docs/adr/68-workspaces-desk-library-studio.md
   title: "Workspaces v2 \u2014 Desk / Library / Studio, home.md as control panel"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1699,7 +1699,7 @@ entries:
   status: manual
 - path: docs/adr/69-operations-layer-naming.md
   title: "Operations \u2014 name the deterministic layer and its four categories"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1717,7 +1717,7 @@ entries:
   status: manual
 - path: docs/adr/70-navigation-gates-dashboards.md
   title: "Navigation \u2014 intent-named gates, ambient maintenance, JTBD dashboards"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1737,7 +1737,7 @@ entries:
   status: manual
 - path: docs/adr/71-structured-capture-forms.md
   title: "Structured capture \u2014 forms at entry, the Linter as authority, one schema per type"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1756,7 +1756,7 @@ entries:
   status: manual
 - path: docs/adr/72-command-surfacing.md
   title: "Command surfacing \u2014 every action reachable directly; Commander for placement, the Co-PI additive"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1774,7 +1774,7 @@ entries:
   status: manual
 - path: docs/adr/73-docs-reference-conventions.md
   title: "Documentation references \u2014 source links, ADR links, and per-operation Di\xE1taxis split"
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1792,7 +1792,7 @@ entries:
   status: manual
 - path: docs/adr/74-pinned-obsidian-plugin-supply-chain.md
   title: Manage bundled Obsidian plugins with a pinned provenance manifest
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1812,7 +1812,7 @@ entries:
   status: manual
 - path: docs/adr/75-github-project-fields-and-release-sub-issues.md
   title: Use GitHub Project fields and release sub-issues for live work state
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1830,7 +1830,7 @@ entries:
   status: manual
 - path: docs/adr/76-versioned-vault-release-reconciling-installer.md
   title: Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1852,7 +1852,7 @@ entries:
   status: manual
 - path: docs/adr/77-project-gate.md
   title: Project gate
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1875,7 +1875,7 @@ entries:
   status: manual
 - path: docs/adr/78-thesis-note-type.md
   title: Thesis note type
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1894,7 +1894,7 @@ entries:
   status: manual
 - path: docs/adr/79-argument-graph-and-warrant.md
   title: Argument graph and warrant
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1915,7 +1915,7 @@ entries:
   status: manual
 - path: docs/adr/80-ephemeral-containerized-test-env.md
   title: Ephemeral containerized Linux test-env harness
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1936,7 +1936,7 @@ entries:
   status: manual
 - path: docs/adr/81-persistent-gate-dashboards.md
   title: Persistent gate dashboards
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1959,7 +1959,7 @@ entries:
   status: manual
 - path: docs/adr/82-four-gates-canonical-vocabulary.md
   title: The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -1980,7 +1980,7 @@ entries:
   status: manual
 - path: docs/adr/83-direct-pi-relate-control.md
   title: Direct PI relate control
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2002,7 +2002,7 @@ entries:
   status: manual
 - path: docs/adr/84-read-only-obsidian-inspector.md
   title: Read-only Obsidian Inspector
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2021,7 +2021,7 @@ entries:
   status: manual
 - path: docs/adr/85-todoist-gap-card-mirroring.md
   title: Todoist gap-card mirroring
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2041,7 +2041,7 @@ entries:
   status: manual
 - path: docs/adr/86-open-design-deliverable-rendering-agent.md
   title: Open-design deliverable-rendering agent
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2060,7 +2060,7 @@ entries:
   status: manual
 - path: docs/adr/87-static-html-admin-reports.md
   title: Static-HTML admin reports
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2080,7 +2080,7 @@ entries:
   status: manual
 - path: docs/adr/88-literate-code-note.md
   title: Literate code-note
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2100,7 +2100,7 @@ entries:
   status: manual
 - path: docs/adr/89-learning-to-rank-triage.md
   title: Learning-to-rank triage
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2120,7 +2120,7 @@ entries:
   status: manual
 - path: docs/adr/90-claim-sentence-classification.md
   title: Claim-sentence classification
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2140,7 +2140,7 @@ entries:
   status: manual
 - path: docs/adr/91-classical-prose-metrics-export-gate.md
   title: Classical prose metrics for the export gate
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2160,7 +2160,7 @@ entries:
   status: manual
 - path: docs/adr/92-discovery-relevance-scoring.md
   title: Discovery relevance scoring
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2179,7 +2179,7 @@ entries:
   status: manual
 - path: docs/adr/93-keyphrase-extraction-tag-candidates.md
   title: Keyphrase extraction for tag candidates
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2198,7 +2198,7 @@ entries:
   status: manual
 - path: docs/adr/94-record-linkage-entity-deduplication.md
   title: Record linkage for entity deduplication
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2218,7 +2218,7 @@ entries:
   status: manual
 - path: docs/adr/95-nightly-proactive-discovery-loop.md
   title: Nightly proactive discovery loop
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2238,7 +2238,7 @@ entries:
   status: manual
 - path: docs/adr/96-code-lane-keep-revert-experiment-loop.md
   title: Code-lane keep/revert experiment loop
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2257,7 +2257,7 @@ entries:
   status: manual
 - path: docs/adr/97-writer-proposed-candidate-claim-notes.md
   title: Writer-proposed candidate claim notes
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2277,7 +2277,7 @@ entries:
   status: manual
 - path: docs/adr/98-relation-vocabulary-expansion.md
   title: Relation-vocabulary expansion
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2297,7 +2297,7 @@ entries:
   status: manual
 - path: docs/adr/99-massw-aligned-paper-aspects.md
   title: MASSW-aligned paper aspects
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes:
@@ -2316,11 +2316,12 @@ entries:
   status: manual
 - path: docs/adr/README.md
   title: Decision records
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     has_children: true
-    nav_order: 90
+    nav_order: 3
+    parent: Developers
     permalink: /adr/
     title: Decision records
     topic: decisions
@@ -2328,7 +2329,7 @@ entries:
   status: manual
 - path: docs/adr/_template.md
   title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
-  book: Decision records
+  book: Developers
   topic: decisions
   frontmatter:
     assumes: []
@@ -2374,32 +2375,220 @@ entries:
     title: Contributing workflow
   canonical_owner: false
   status: manual
-- path: docs/design-book.md
+- path: docs/design/README.md
   title: Design Book
-  book: Internal
-  topic: explanation
+  book: Developers
+  topic: null
   frontmatter:
-    nav_order: 20
-    permalink: /design-book/
+    has_children: true
+    nav_order: 1
+    parent: Developers
+    permalink: /design/
     title: Design Book
-    topic: explanation
+  canonical_owner: false
+  status: manual
+- path: docs/design/always-on-vps-design.md
+  title: Always-on VPS design
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 24
+    parent: Design Book
+    title: Always-on VPS design
+  canonical_owner: false
+  status: manual
+- path: docs/design/design-principles.md
+  title: Design principles
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 3
+    parent: Design Book
+    title: Design principles
+  canonical_owner: false
+  status: manual
+- path: docs/design/distribution-model.md
+  title: Distribution model
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 23
+    parent: Design Book
+    title: Distribution model
+  canonical_owner: false
+  status: manual
+- path: docs/design/hubs-and-navigation.md
+  title: Why hubs
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 21
+    parent: Design Book
+    title: Why hubs
+  canonical_owner: false
+  status: manual
+- path: docs/design/intellectual-foundations.md
+  title: Intellectual foundations
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 2
+    parent: Design Book
+    title: Intellectual foundations
+  canonical_owner: false
+  status: manual
+- path: docs/design/lifecycle-over-topic.md
+  title: "Lifecycle, not topic \u2014 and state, not folders"
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 20
+    parent: Design Book
+    title: "Lifecycle, not topic \u2014 and state, not folders"
+  canonical_owner: false
+  status: manual
+- path: docs/design/visual-discipline.md
+  title: Visual-style discipline
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 22
+    parent: Design Book
+    title: Visual-style discipline
+  canonical_owner: false
+  status: manual
+- path: docs/design/what-memoria-is.md
+  title: What Memoria is
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 1
+    parent: Design Book
+    title: What Memoria is
+  canonical_owner: false
+  status: manual
+- path: docs/design/what-the-literature-pushes-back-on.md
+  title: What the literature pushes back on
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 31
+    parent: Design Book
+    title: What the literature pushes back on
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-computational-methods.md
+  title: Why Memoria uses deterministic methods alongside LLMs
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 15
+    parent: Design Book
+    title: Why Memoria uses deterministic methods alongside LLMs
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-hermes.md
+  title: Why Hermes
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 14
+    parent: Design Book
+    title: Why Hermes
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-human-gate.md
+  title: Why the review gate is structural
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 12
+    parent: Design Book
+    title: Why the review gate is structural
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-not-autonomous.md
+  title: Why Memoria doesn't pursue full autonomy
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 13
+    parent: Design Book
+    title: Why Memoria doesn't pursue full autonomy
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-pattern-provenance.md
+  title: 'Pattern provenance: borrow, adapt, ignore'
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 30
+    parent: Design Book
+    title: 'Pattern provenance: borrow, adapt, ignore'
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-specialist-profiles.md
+  title: Why specialist profiles, not a generalist agent
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 11
+    parent: Design Book
+    title: Why specialist profiles, not a generalist agent
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-three-layers.md
+  title: Why the architecture is layered
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 10
+    parent: Design Book
+    title: Why the architecture is layered
+  canonical_owner: false
+  status: manual
+- path: docs/developers.md
+  title: Developers
+  book: Developers
+  topic: development
+  frontmatter:
+    has_children: true
+    nav_order: 80
+    permalink: /developers/
+    title: Developers
+    topic: development
   canonical_owner: false
   status: manual
 - path: docs/explanation/README.md
   title: Explanation
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
-    book: Design Book
     has_children: true
-    nav_order: 21
+    nav_order: 14
     permalink: /explanation/
     title: Explanation
   canonical_owner: false
   status: manual
 - path: docs/explanation/architecture/README.md
   title: Architecture
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2411,7 +2600,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/control-plane.md
   title: The control plane
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -2421,7 +2610,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/human-channels.md
   title: Interaction channels
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 4
@@ -2431,7 +2620,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/memory-model.md
   title: The memory model
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 2
@@ -2441,7 +2630,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/session-logging.md
   title: Session logging
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 5
@@ -2451,7 +2640,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/telemetry-architecture.md
   title: Telemetry architecture
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 6
@@ -2461,7 +2650,7 @@ entries:
   status: manual
 - path: docs/explanation/architecture/vault.md
   title: The vault
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 1
@@ -2471,7 +2660,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/README.md
   title: Dashboards
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2483,7 +2672,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/daily-glance/README.md
   title: Daily glance
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2496,7 +2685,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/daily-glance/board-state.md
   title: The board-state dashboard
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2507,7 +2696,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/daily-glance/daily-health.md
   title: The daily glance view
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2518,7 +2707,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/operational-health/README.md
   title: Operational health
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2531,7 +2720,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/operational-health/audit-log.md
   title: audit-log dashboard
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2542,7 +2731,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/operational-health/eval-trend.md
   title: eval-trend dashboard
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2553,7 +2742,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/operational-health/fleet-health.md
   title: fleet-health dashboard
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2564,7 +2753,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/operational-health/skill-state.md
   title: skill-state dashboard
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2575,7 +2764,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/structural-health/README.md
   title: Structural health
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2588,7 +2777,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/structural-health/drift-watch.md
   title: Drift watch
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2599,7 +2788,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/structural-health/loose-ends.md
   title: Loose ends
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2610,7 +2799,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/structural-health/weekly-review.md
   title: Weekly review
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2621,7 +2810,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/README.md
   title: Synthesis agenda
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2634,7 +2823,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/contradictions.md
   title: Contradictions
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2645,7 +2834,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/discuss-queue.md
   title: Discuss queue
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2656,7 +2845,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/open-questions.md
   title: Open questions
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2667,7 +2856,7 @@ entries:
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/reading-pipeline.md
   title: Reading pipeline
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Dashboards
@@ -2678,7 +2867,7 @@ entries:
   status: manual
 - path: docs/explanation/deployment/README.md
   title: Deployment
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2688,19 +2877,9 @@ entries:
     title: Deployment
   canonical_owner: false
   status: manual
-- path: docs/explanation/deployment/always-on-vps-design.md
-  title: Always-on VPS design
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 4
-    parent: Deployment
-    title: Always-on VPS design
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/deployment/bootstrap-installer.md
   title: Bootstrap installer
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 2
@@ -2710,7 +2889,7 @@ entries:
   status: manual
 - path: docs/explanation/deployment/deployment-options.md
   title: Deployment options
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -2718,19 +2897,9 @@ entries:
     title: Deployment options
   canonical_owner: false
   status: manual
-- path: docs/explanation/deployment/distribution-model.md
-  title: Distribution model
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 1
-    parent: Deployment
-    title: Distribution model
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/kanban-board/README.md
   title: Kanban board
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2742,7 +2911,7 @@ entries:
   status: manual
 - path: docs/explanation/kanban-board/card-schema.md
   title: The honesty card
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 2
@@ -2752,7 +2921,7 @@ entries:
   status: manual
 - path: docs/explanation/kanban-board/obsidian-projection.md
   title: How the board surfaces in Obsidian
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -2762,7 +2931,7 @@ entries:
   status: manual
 - path: docs/explanation/kanban-board/states.md
   title: Board states and the review gate
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 1
@@ -2772,7 +2941,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/README.md
   title: Knowledge
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2784,7 +2953,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/common-pitfalls.md
   title: Common pitfalls
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2795,7 +2964,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/document-types.md
   title: Document types and epistemic roles
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2804,20 +2973,9 @@ entries:
     title: Document types and epistemic roles
   canonical_owner: false
   status: manual
-- path: docs/explanation/knowledge/hubs-and-navigation.md
-  title: Why hubs
-  book: Design Book
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 8
-    parent: Knowledge
-    title: Why hubs
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/knowledge/knowledge-cycle.md
   title: The knowledge cycle
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2826,20 +2984,9 @@ entries:
     title: The knowledge cycle
   canonical_owner: false
   status: manual
-- path: docs/explanation/knowledge/lifecycle-over-topic.md
-  title: "Lifecycle, not topic \u2014 and state, not folders"
-  book: Design Book
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 4
-    parent: Knowledge
-    title: "Lifecycle, not topic \u2014 and state, not folders"
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/knowledge/note-body-structure.md
   title: Note body structure
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2850,7 +2997,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/promotion-model.md
   title: Why promotion is gated
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2861,7 +3008,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/vocabulary-discipline.md
   title: Vocabulary discipline
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2872,7 +3019,7 @@ entries:
   status: manual
 - path: docs/explanation/knowledge/your-first-month.md
   title: Your first month
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
@@ -2883,7 +3030,7 @@ entries:
   status: manual
 - path: docs/explanation/obsidian/README.md
   title: Obsidian
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2895,7 +3042,7 @@ entries:
   status: manual
 - path: docs/explanation/obsidian/agent-client-pane.md
   title: The Agent Client pane
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 4
@@ -2905,7 +3052,7 @@ entries:
   status: manual
 - path: docs/explanation/obsidian/callouts.md
   title: Callouts
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -2915,7 +3062,7 @@ entries:
   status: manual
 - path: docs/explanation/obsidian/design-system.md
   title: Design system
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 6
@@ -2925,7 +3072,7 @@ entries:
   status: manual
 - path: docs/explanation/obsidian/home.md
   title: Home welcome note
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 1
@@ -2933,19 +3080,9 @@ entries:
     title: Home welcome note
   canonical_owner: false
   status: manual
-- path: docs/explanation/obsidian/visual-discipline.md
-  title: Visual-style discipline
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 5
-    parent: Obsidian
-    title: Visual-style discipline
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/operations/README.md
   title: "Operations \u2014 the deterministic layer"
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: false
@@ -2957,7 +3094,7 @@ entries:
   status: manual
 - path: docs/explanation/overview/README.md
   title: Overview
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -2967,39 +3104,9 @@ entries:
     title: Overview
   canonical_owner: false
   status: manual
-- path: docs/explanation/overview/design-principles.md
-  title: Design principles
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 3
-    parent: Overview
-    title: Design principles
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/overview/intellectual-foundations.md
-  title: Intellectual foundations
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 2
-    parent: Overview
-    title: Intellectual foundations
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/overview/what-memoria-is.md
-  title: What Memoria is
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 1
-    parent: Overview
-    title: What Memoria is
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/profiles/README.md
   title: Profiles
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -3011,7 +3118,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/co-pi.md
   title: The Co-PI
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 1
@@ -3021,7 +3128,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/delegation-posture.md
   title: Delegation posture
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 8
@@ -3031,7 +3138,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/engineer.md
   title: The Engineer
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 5
@@ -3041,7 +3148,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/librarian.md
   title: The Librarian
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 2
@@ -3051,7 +3158,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/peer-reviewer.md
   title: The Peer-reviewer
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 4
@@ -3061,7 +3168,7 @@ entries:
   status: manual
 - path: docs/explanation/profiles/writer.md
   title: The Writer
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -3069,101 +3176,9 @@ entries:
     title: The Writer
   canonical_owner: false
   status: manual
-- path: docs/explanation/rationale/README.md
-  title: Design rationale
-  book: Design Book
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 10
-    parent: Explanation
-    permalink: /explanation/rationale/
-    title: Design rationale
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/what-the-literature-pushes-back-on.md
-  title: What the literature pushes back on
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 8
-    parent: Design rationale
-    title: What the literature pushes back on
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-computational-methods.md
-  title: Why Memoria uses deterministic methods alongside LLMs
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 6
-    parent: Design rationale
-    title: Why Memoria uses deterministic methods alongside LLMs
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-hermes.md
-  title: Why Hermes
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 5
-    parent: Design rationale
-    title: Why Hermes
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-human-gate.md
-  title: Why the review gate is structural
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 3
-    parent: Design rationale
-    title: Why the review gate is structural
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-not-autonomous.md
-  title: Why Memoria doesn't pursue full autonomy
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 4
-    parent: Design rationale
-    title: Why Memoria doesn't pursue full autonomy
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-pattern-provenance.md
-  title: 'Pattern provenance: borrow, adapt, ignore'
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 7
-    parent: Design rationale
-    title: 'Pattern provenance: borrow, adapt, ignore'
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-specialist-profiles.md
-  title: Why specialist profiles, not a generalist agent
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 2
-    parent: Design rationale
-    title: Why specialist profiles, not a generalist agent
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/rationale/why-three-layers.md
-  title: Why the architecture is layered
-  book: Design Book
-  topic: null
-  frontmatter:
-    nav_order: 1
-    parent: Design rationale
-    title: Why the architecture is layered
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/workflows/README.md
   title: Workflows
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     has_children: true
@@ -3175,7 +3190,7 @@ entries:
   status: manual
 - path: docs/explanation/workflows/board-as-state-machine.md
   title: The board as a state machine (the control plane)
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 2
@@ -3185,7 +3200,7 @@ entries:
   status: manual
 - path: docs/explanation/workflows/review-as-state.md
   title: Review as a first-class state
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 3
@@ -3195,7 +3210,7 @@ entries:
   status: manual
 - path: docs/explanation/workflows/verify-on-commit.md
   title: Verify-on-commit
-  book: Design Book
+  book: Explanation
   topic: null
   frontmatter:
     nav_order: 4
@@ -3205,10 +3220,9 @@ entries:
   status: manual
 - path: docs/how-to-guides/README.md
   title: How-to guides
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
-    book: Operator Guide
     has_children: true
     nav_order: 12
     permalink: /how-to-guides/
@@ -3217,7 +3231,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/hermes-agent/README.md
   title: Hermes Agent
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3229,7 +3243,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/hermes-agent/chat-with-hermes.md
   title: Run a CLI chat session
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3239,7 +3253,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/hermes-agent/configuration.md
   title: Configure a profile
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3249,7 +3263,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/README.md
   title: Inbox
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3261,7 +3275,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/return-to-work.md
   title: Return to work
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3271,7 +3285,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/review-link-suggestions.md
   title: Review link suggestions
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3281,7 +3295,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/run-the-weekly-review.md
   title: Run the weekly review
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3291,7 +3305,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/triage-fleeting-notes.md
   title: Triage fleeting notes
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3301,7 +3315,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/inbox/work-the-review-queue.md
   title: Work the review queue
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3311,7 +3325,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/README.md
   title: Knowledge
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3323,7 +3337,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/build-a-moc.md
   title: Build a hub
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3334,7 +3348,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/link-related-claims.md
   title: Link related claims
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3345,7 +3359,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/manage-vocabulary.md
   title: Manage your topic vocabulary
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3356,7 +3370,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/promote-a-claim.md
   title: Advance a claim to evergreen
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3367,7 +3381,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/query-the-vault.md
   title: Query the vault
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3378,7 +3392,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/refactor-a-note.md
   title: Refactor claim notes
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3389,7 +3403,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/run-a-pattern.md
   title: Run a pattern
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3400,7 +3414,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/knowledge/write-a-claim-note.md
   title: Write a claim note
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
@@ -3411,7 +3425,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/README.md
   title: Library
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3423,7 +3437,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/archive-a-source.md
   title: Archive a source
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 8
@@ -3433,7 +3447,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/capture-and-ingest.md
   title: Capture and ingest a source
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3443,7 +3457,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/classify-a-source.md
   title: Classify a source
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3453,7 +3467,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/discuss-a-paper.md
   title: Discuss a paper
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3463,7 +3477,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/find-new-sources.md
   title: Find new sources
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3473,7 +3487,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/read-through-a-lens.md
   title: Read a paper through a lens
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 6
@@ -3483,7 +3497,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/run-a-systematic-review.md
   title: Run a systematic review
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 7
@@ -3493,7 +3507,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/library/use-structured-capture-forms.md
   title: Use structured capture forms
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3503,7 +3517,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/README.md
   title: Operate
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3515,7 +3529,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/inspect-session-logs.md
   title: Inspect session logs
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 9
@@ -3525,7 +3539,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/rebuild-the-search-index.md
   title: Rebuild the search index
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3535,7 +3549,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/redeploy-profiles.md
   title: Redeploy profiles
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3545,7 +3559,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/run-a-retraction-sweep.md
   title: Run a retraction sweep
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3555,7 +3569,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/run-a-schema-migration.md
   title: Run a schema migration
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3565,7 +3579,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/run-the-linter.md
   title: Run the Linter
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3575,7 +3589,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/operate/run-the-vault-eval.md
   title: Run the vault eval
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 8
@@ -3585,7 +3599,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/README.md
   title: Project
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3597,7 +3611,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/assess-your-corpus.md
   title: Assess your corpus
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3607,7 +3621,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/create-a-code-artifact.md
   title: Create a code artifact
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 8
@@ -3617,7 +3631,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/draft-with-writer.md
   title: Draft with the Writer
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3627,7 +3641,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/export-a-draft.md
   title: Export a draft
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 7
@@ -3637,7 +3651,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/frame-a-project.md
   title: Frame a project
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3647,7 +3661,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/start-a-writing-project.md
   title: Start a writing project
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3657,7 +3671,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/supersede-a-thesis.md
   title: Supersede a thesis
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3.5
@@ -3667,7 +3681,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/use-canvas-for-argument-mapping.md
   title: Use canvas for argument mapping
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3677,7 +3691,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/project/verify-and-revise.md
   title: Verify and revise a draft
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 6
@@ -3687,7 +3701,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/README.md
   title: Setup
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3699,7 +3713,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/add-a-second-vault.md
   title: Add a second vault
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 7
@@ -3709,7 +3723,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/configure-project-hints.md
   title: Configure project hints
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 6
@@ -3719,7 +3733,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/quickstart.md
   title: Quickstart
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3729,7 +3743,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/sample-vault.md
   title: Load and remove the sample vault
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3739,7 +3753,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/set-up-hermes.md
   title: Set up Hermes
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3749,7 +3763,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/set-up-obsidian.md
   title: Set up Obsidian
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3759,7 +3773,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/setup/set-up-the-vault.md
   title: Set up the vault
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3769,7 +3783,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/README.md
   title: Troubleshooting
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3781,7 +3795,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/diagnose-a-denied-write.md
   title: Diagnose a denied or blocked write
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3791,7 +3805,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-broken-frontmatter.md
   title: Fix broken frontmatter
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3801,7 +3815,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-empty-enrichment.md
   title: Fix empty enrichment
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 9
@@ -3811,7 +3825,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-missing-query-results.md
   title: Fix missing query results
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 10
@@ -3821,7 +3835,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-profile-drift.md
   title: Fix profile drift
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 6
@@ -3831,7 +3845,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-stuck-card.md
   title: Fix a stuck card
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3841,7 +3855,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/troubleshooting/safe-mode.md
   title: Safe mode
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3851,7 +3865,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/README.md
   title: Using Obsidian
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3863,7 +3877,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/navigate-the-dashboards.md
   title: Navigate the dashboards
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3873,7 +3887,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/obsidian-command-palette.md
   title: Command palette
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3883,7 +3897,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/use-the-agent-client-pane.md
   title: Agent Client pane
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 3
@@ -3893,7 +3907,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/use-the-vault-launch-screen.md
   title: Vault launch screen
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 1
@@ -3903,7 +3917,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/using-obsidian/use-workspaces.md
   title: Use the reset workspace
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 2
@@ -3913,7 +3927,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/zotero/README.md
   title: Zotero
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     has_children: true
@@ -3924,7 +3938,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/zotero/fix-stale-bib.md
   title: Fix a stale .bib
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 5
@@ -3934,7 +3948,7 @@ entries:
   status: manual
 - path: docs/how-to-guides/zotero/set-up-zotero.md
   title: Set up Zotero
-  book: Operator Guide
+  book: How-to guides
   topic: null
   frontmatter:
     nav_order: 4
@@ -3942,23 +3956,11 @@ entries:
     title: Set up Zotero
   canonical_owner: false
   status: manual
-- path: docs/operator-guide.md
-  title: Operator Guide
-  book: Internal
-  topic: operations
-  frontmatter:
-    nav_order: 10
-    permalink: /operator-guide/
-    title: Operator Guide
-    topic: operations
-  canonical_owner: false
-  status: manual
 - path: docs/reference/README.md
   title: Reference
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
-    book: Operator Guide
     has_children: true
     nav_order: 13
     permalink: /reference/
@@ -3967,7 +3969,7 @@ entries:
   status: manual
 - path: docs/reference/bibliography.md
   title: Bibliography
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -3976,7 +3978,7 @@ entries:
   status: manual
 - path: docs/reference/board-export.md
   title: Board export
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -3985,7 +3987,7 @@ entries:
   status: manual
 - path: docs/reference/calibration.md
   title: Calibration
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -3994,7 +3996,7 @@ entries:
   status: manual
 - path: docs/reference/clustering.md
   title: Clustering
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4003,7 +4005,7 @@ entries:
   status: manual
 - path: docs/reference/computational-toolbox.md
   title: Retrieval and analysis methods
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4012,7 +4014,7 @@ entries:
   status: manual
 - path: docs/reference/configuration.md
   title: Memoria configuration
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4021,7 +4023,7 @@ entries:
   status: manual
 - path: docs/reference/dashboards.md
   title: Dashboards
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4030,7 +4032,7 @@ entries:
   status: manual
 - path: docs/reference/diagnostics.md
   title: Diagnostics
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4039,7 +4041,7 @@ entries:
   status: manual
 - path: docs/reference/document-types.md
   title: Document types
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4048,7 +4050,7 @@ entries:
   status: manual
 - path: docs/reference/export.md
   title: Export routes and formats
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4057,7 +4059,7 @@ entries:
   status: manual
 - path: docs/reference/failure-modes.md
   title: Failure modes
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4066,7 +4068,7 @@ entries:
   status: manual
 - path: docs/reference/fleet-metrics.md
   title: Fleet metrics
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4075,7 +4077,7 @@ entries:
   status: manual
 - path: docs/reference/frontmatter.md
   title: Frontmatter fields
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4084,7 +4086,7 @@ entries:
   status: manual
 - path: docs/reference/glossary.md
   title: Glossary
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4093,7 +4095,7 @@ entries:
   status: manual
 - path: docs/reference/hermes-cli.md
   title: Hermes CLI
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4102,7 +4104,7 @@ entries:
   status: manual
 - path: docs/reference/inbox-card-fields.md
   title: Inbox card fields
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4111,7 +4113,7 @@ entries:
   status: manual
 - path: docs/reference/ingest.md
   title: Ingest routing
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4120,7 +4122,7 @@ entries:
   status: manual
 - path: docs/reference/installer.md
   title: Installer (bootstrap)
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4129,7 +4131,7 @@ entries:
   status: manual
 - path: docs/reference/integrations.md
   title: External integrations
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4138,7 +4140,7 @@ entries:
   status: manual
 - path: docs/reference/kanban-board.md
   title: Kanban board reference
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4147,7 +4149,7 @@ entries:
   status: manual
 - path: docs/reference/linking.md
   title: Wikilink and link conventions
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4156,7 +4158,7 @@ entries:
   status: manual
 - path: docs/reference/linter.md
   title: 'Linter: detectors and auto-fix'
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4165,7 +4167,7 @@ entries:
   status: manual
 - path: docs/reference/memory.md
   title: Memory substrates
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4174,7 +4176,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-callouts.md
   title: Obsidian callouts
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4183,7 +4185,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-command-palette.md
   title: Obsidian command palette
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4192,7 +4194,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-plugin-data-files.md
   title: Obsidian plugin data files
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4201,7 +4203,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-plugin-settings.md
   title: Obsidian plugin settings
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4210,7 +4212,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-plugins.md
   title: Obsidian plugins
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4219,7 +4221,7 @@ entries:
   status: manual
 - path: docs/reference/obsidian-workspaces.md
   title: Obsidian workspaces
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4228,7 +4230,7 @@ entries:
   status: manual
 - path: docs/reference/on-disk-layout.md
   title: On-disk layout
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4237,7 +4239,7 @@ entries:
   status: manual
 - path: docs/reference/operations.md
   title: Operations
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4246,7 +4248,7 @@ entries:
   status: manual
 - path: docs/reference/patterns.md
   title: Pattern library
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4255,7 +4257,7 @@ entries:
   status: manual
 - path: docs/reference/policy-audit-log.md
   title: Policy audit log
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4264,7 +4266,7 @@ entries:
   status: manual
 - path: docs/reference/policy-auto-fix.md
   title: Policy auto-fix
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4273,7 +4275,7 @@ entries:
   status: manual
 - path: docs/reference/policy-mcp.md
   title: Policy MCP
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4282,7 +4284,7 @@ entries:
   status: manual
 - path: docs/reference/profiles.md
   title: Profile capabilities
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4291,16 +4293,28 @@ entries:
   status: partial
 - path: docs/reference/project-structural-impact.md
   title: Project structural impact
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
     title: Project structural impact
   canonical_owner: false
   status: manual
+- path: docs/reference/runtime-spec.md
+  title: Runtime Spec
+  book: Reference
+  topic: reference
+  frontmatter:
+    nav_order: 23
+    parent: Reference
+    permalink: /reference/runtime-spec/
+    title: Runtime Spec
+    topic: reference
+  canonical_owner: false
+  status: manual
 - path: docs/reference/sample-vault.md
   title: The sample vault
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4309,7 +4323,7 @@ entries:
   status: manual
 - path: docs/reference/search.md
   title: Search
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4318,7 +4332,7 @@ entries:
   status: manual
 - path: docs/reference/sweeps.md
   title: Sweeps
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4327,7 +4341,7 @@ entries:
   status: manual
 - path: docs/reference/system-actions.md
   title: System actions
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4336,7 +4350,7 @@ entries:
   status: manual
 - path: docs/reference/system-artifacts.md
   title: System artifacts
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4345,7 +4359,7 @@ entries:
   status: manual
 - path: docs/reference/telemetry-logs.md
   title: Telemetry log schemas
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4354,7 +4368,7 @@ entries:
   status: manual
 - path: docs/reference/telemetry.md
   title: Telemetry & logs
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4363,7 +4377,7 @@ entries:
   status: manual
 - path: docs/reference/vault-eval.md
   title: Vault eval
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4372,7 +4386,7 @@ entries:
   status: manual
 - path: docs/reference/vocabulary.md
   title: Vocabulary
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4381,7 +4395,7 @@ entries:
   status: manual
 - path: docs/reference/worklists.md
   title: Worklists
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4390,7 +4404,7 @@ entries:
   status: manual
 - path: docs/reference/zotero-plugins.md
   title: Zotero plugins
-  book: Operator Guide
+  book: Reference
   topic: null
   frontmatter:
     parent: Reference
@@ -4727,17 +4741,6 @@ entries:
     title: "Release plan \u2014 vX.Y.Z"
   canonical_owner: false
   status: manual
-- path: docs/runtime-spec.md
-  title: Runtime Spec
-  book: Internal
-  topic: reference
-  frontmatter:
-    nav_order: 80
-    permalink: /runtime-spec/
-    title: Runtime Spec
-    topic: reference
-  canonical_owner: false
-  status: manual
 - path: docs/testing/README.md
   title: Testing
   book: Internal
@@ -4912,7 +4915,7 @@ entries:
   status: manual
 - path: docs/tutorials/01-orient.md
   title: 'Tutorial 01: See what you''re building'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4921,7 +4924,7 @@ entries:
   status: manual
 - path: docs/tutorials/02-bring-in-your-first-source.md
   title: 'Tutorial 02: Bring in your first source'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4930,7 +4933,7 @@ entries:
   status: manual
 - path: docs/tutorials/03-build-claims-and-connect-them.md
   title: 'Tutorial 03: Build claims and connect them'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4939,7 +4942,7 @@ entries:
   status: manual
 - path: docs/tutorials/04-draft-a-section-from-your-claims.md
   title: 'Tutorial 04: Draft a section from your claims'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4948,7 +4951,7 @@ entries:
   status: manual
 - path: docs/tutorials/05-verify-it-holds.md
   title: 'Tutorial 05: Verify it holds'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4957,7 +4960,7 @@ entries:
   status: manual
 - path: docs/tutorials/06-close-the-loop.md
   title: 'Tutorial 06: Close the loop'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4966,7 +4969,7 @@ entries:
   status: manual
 - path: docs/tutorials/07-make-it-your-own.md
   title: 'Tutorial 07: Make it your own'
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
     parent: Tutorials
@@ -4975,10 +4978,9 @@ entries:
   status: manual
 - path: docs/tutorials/README.md
   title: Tutorials
-  book: Operator Guide
+  book: Tutorials
   topic: null
   frontmatter:
-    book: Operator Guide
     has_children: true
     nav_order: 11
     permalink: /tutorials/
@@ -4987,28 +4989,28 @@ entries:
   status: manual
 - path: AGENTS.md
   title: "AGENTS.md \u2014 working guidelines for AI agents in this repo"
-  book: Runtime Spec
+  book: Reference
   topic: null
   frontmatter: {}
   canonical_owner: true
   status: manual
 - path: .agents/system/source-of-truth-map.md
   title: Source-of-truth map
-  book: Runtime Spec
+  book: Reference
   topic: null
   frontmatter: {}
   canonical_owner: true
   status: manual
 - path: .agents/system/profile-policy-matrix.md
   title: Profile policy matrix
-  book: Runtime Spec
+  book: Reference
   topic: null
   frontmatter: {}
   canonical_owner: false
   status: generated
 - path: .agents/system/change-impact-map.md
   title: Change-impact map
-  book: Runtime Spec
+  book: Reference
   topic: null
   frontmatter: {}
   canonical_owner: false

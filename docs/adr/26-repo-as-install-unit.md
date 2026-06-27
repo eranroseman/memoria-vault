@@ -28,7 +28,7 @@ superseded_by: []
 
 > *Note (v0.1.0-alpha.2): "seven" profile directories below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** (`.memoria/profiles/memoria-{copi,librarian,writer,peer-reviewer,engineer}`). The decision is unchanged — profiles remain hand-authored and idempotently deployed; the deferred-compiler trade-off now reads "five-profile scale".*
 
-How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [Distribution model](../explanation/deployment/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.
+How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [Distribution model](../design/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.
 
 ## Decision
 
@@ -54,7 +54,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 ## Related
 
-- **Supporting rationale:** [Distribution model](../explanation/deployment/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
+- **Supporting rationale:** [Distribution model](../design/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
 - **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
 - **Installer design:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) (rationale) + [Installer (bootstrap)](../reference/installer.md) (inventories).
 - **Proposals:** [Profile compilation from a shared base](42-profile-compilation.md) (the deferred compiler).

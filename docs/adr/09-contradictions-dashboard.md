@@ -29,9 +29,9 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)) independently confirms LLM memory/similarity judgments are unreliable.
 
-**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
+**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
 ## Related
 

@@ -52,7 +52,7 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 
 ## Why this feels slow
 
-The human gate is the system's bottleneck by design, and that is the point — the full argument for why the review gate is structural rather than advisory is in [Why the review gate is structural](../rationale/why-human-gate.md). Here the consequence: agents can catalog, extract, and draft faster than the PI can review, so the proposal queue grows unless the PI keeps pace.
+The human gate is the system's bottleneck by design, and that is the point — the full argument for why the review gate is structural rather than advisory is in [Why the review gate is structural](../../design/why-human-gate.md). Here the consequence: agents can catalog, extract, and draft faster than the PI can review, so the proposal queue grows unless the PI keeps pace.
 
 The right response to a full queue is not to automate review but to let the WIP limits and back-pressure bite — the board mechanism that makes the bottleneck visible instead of letting "reviewed" silently degrade into "rubber-stamped." That mechanism, and the rule that a rejected proposal spawns a fresh card rather than reopening the old one, are explained in [Board states and the review gate](../kanban-board/states.md). The gate is also instrumented — time-on-gate and accept-rate feed the fleet-health dashboard — so a gate that has stopped being a real decision shows up in the data.
 
@@ -63,7 +63,7 @@ The right response to a full queue is not to automate review but to let the WIP 
 **Explanation**
 
 - The types and zones involved: [Document types and epistemic roles](document-types.md)
-- Why state replaced folders: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
+- Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/card-schema.md)
 - The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)
 

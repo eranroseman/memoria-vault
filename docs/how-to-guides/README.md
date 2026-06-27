@@ -3,16 +3,16 @@ title: How-to guides
 nav_order: 12
 has_children: true
 permalink: /how-to-guides/
-book: Operator Guide
 ---
 
 # How-to guides
 
-Task-oriented recipes for getting specific things done with Memoria. This section is
-part of the [Operator Guide](../operator-guide.md). Each guide assumes you already
+Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already
 know the system — if you're new, start with the [Tutorials](../tutorials).
 
-For the *why* behind any design choice, see [Explanation](../explanation). For exact field names, schemas, and command flags, see [Reference](../reference).
+For operating explanations, see [Explanation](../explanation). For the design
+rationale, see [Design Book](../design/README.md). For exact field names,
+schemas, and command flags, see [Reference](../reference).
 
 ---
 

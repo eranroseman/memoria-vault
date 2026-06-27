@@ -30,4 +30,4 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 - The agent that checks its output: [The Peer-reviewer](peer-reviewer.md)
 - Where its drafts live: [The vault](../architecture/vault.md)
-- Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
+- Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

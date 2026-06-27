@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-Memoria assumes one human who owns judgment: review decisions, synthesis choices, and scope priorities all belong to that single researcher. This assumption is stated in [What Memoria is](../explanation/overview/what-memoria-is.md) but was never recorded as a decision — and unrecorded scope *constraints* are the ones that erode silently, because each individual "could we also support two reviewers / a shared queue / per-user permissions?" looks harmless in isolation. Recording the boundary makes the cumulative cost of crossing it explicit: multi-user review is not a feature increment, it is a different system.
+Memoria assumes one human who owns judgment: review decisions, synthesis choices, and scope priorities all belong to that single researcher. This assumption is stated in [What Memoria is](../design/what-memoria-is.md) but was never recorded as a decision — and unrecorded scope *constraints* are the ones that erode silently, because each individual "could we also support two reviewers / a shared queue / per-user permissions?" looks harmless in isolation. Recording the boundary makes the cumulative cost of crossing it explicit: multi-user review is not a feature increment, it is a different system.
 
 ## Decision
 
@@ -36,7 +36,7 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 
 ## Related
 
-- **Supporting rationale:** [What Memoria is](../explanation/overview/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
+- **Supporting rationale:** [What Memoria is](../design/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-membership-from-topic-hint.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
 - **Proposals bounded by this ADR:** [Cross-vault knowledge sharing](60-cross-vault-knowledge-sharing.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
 - **Source discussion:** retroactively records the scope boundary already stated in `what-memoria-is.md`.

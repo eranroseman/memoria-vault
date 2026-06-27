@@ -51,7 +51,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
 def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensitive():
     assert not is_sensitive("docs/testing/coverage-matrix.md")
     assert not is_sensitive("docs/reference/policy-mcp.md")
-    assert not is_sensitive("docs/explanation/overview/what-memoria-is.md")
+    assert not is_sensitive("docs/design/what-memoria-is.md")
     assert not is_sensitive("README.md")
 
 

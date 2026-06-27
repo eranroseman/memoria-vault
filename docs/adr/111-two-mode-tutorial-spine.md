@@ -43,7 +43,7 @@ decomposes into **two modes a researcher alternates between**:
 
 Plus three jobs that serve the loop, not entered for their own sake: **stay honest**
 (verify), **find the gaps** (discover), **don't rot** (maintenance the agent does). The
-two failure modes named in [What Memoria is](../explanation/overview/what-memoria-is.md)
+two failure modes named in [What Memoria is](../design/what-memoria-is.md)
 — "capture without synthesis" and "synthesis without rigor" — are exactly these two
 modes *decoupled*. The product is keeping them coupled.
 
@@ -155,7 +155,7 @@ by-doing in a sitting — genre mismatch. It belongs in a practice guide.
 
 ## Related
 
-- **Builds on:** [What Memoria is](../explanation/overview/what-memoria-is.md) (the two
+- **Builds on:** [What Memoria is](../design/what-memoria-is.md) (the two
   failure modes), [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)
   (the loop, the six delegable tasks), and the current
   [Tutorials](../tutorials/README.md).

@@ -27,5 +27,5 @@ This proposal bundle is split into one ADR per candidate displacement:
 ## Related
 
 - **Related decisions / Depends on:** [ADR-09 contradictions dashboard](09-contradictions-dashboard.md) (owns the NLI contradiction proposer); [ADR-30 deterministic ingest pipeline](30-deterministic-ingest-pipeline.md) (the deterministic discipline these displacements extend).
-- **Source discussion:** [Why Memoria uses deterministic methods alongside LLMs](../explanation/rationale/why-computational-methods.md).
+- **Source discussion:** [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md).
 - **Original tracking issue:** [#409](https://github.com/eranroseman/memoria-vault/issues/409).
