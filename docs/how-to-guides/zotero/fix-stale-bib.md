@@ -1,6 +1,7 @@
 ---
 title: Fix a stale .bib
 parent: Zotero
+grand_parent: How-to guides
 nav_order: 5
 ---
 

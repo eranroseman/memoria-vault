@@ -1,6 +1,7 @@
 ---
 title: Read a paper through a lens
 parent: Library
+grand_parent: How-to guides
 nav_order: 6
 ---
 

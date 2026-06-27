@@ -1,6 +1,7 @@
 ---
 title: Discuss a paper
 parent: Library
+grand_parent: How-to guides
 nav_order: 5
 ---
 

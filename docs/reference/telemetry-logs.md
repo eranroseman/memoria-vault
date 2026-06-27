@@ -1,6 +1,7 @@
 ---
 title: Telemetry log schemas
-parent: Reference
+parent: Pipelines and I/O
+grand_parent: Reference
 ---
 
 # Telemetry log schemas

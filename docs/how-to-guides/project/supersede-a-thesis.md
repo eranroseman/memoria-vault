@@ -1,6 +1,7 @@
 ---
 title: Supersede a thesis
 parent: Project
+grand_parent: How-to guides
 nav_order: 3.5
 ---
 

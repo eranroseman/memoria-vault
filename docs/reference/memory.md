@@ -1,6 +1,7 @@
 ---
 title: Memory substrates
-parent: Reference
+parent: Pipelines and I/O
+grand_parent: Reference
 ---
 
 # Memory substrates

@@ -1,6 +1,7 @@
 ---
 title: Inspect session logs
 parent: Operate
+grand_parent: How-to guides
 nav_order: 9
 ---
 

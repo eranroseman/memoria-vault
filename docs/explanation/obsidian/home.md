@@ -1,6 +1,7 @@
 ---
 title: Home welcome note
 parent: Obsidian
+grand_parent: Explanation
 nav_order: 1
 ---
 

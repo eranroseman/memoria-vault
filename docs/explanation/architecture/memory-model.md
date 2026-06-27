@@ -1,6 +1,7 @@
 ---
 title: The memory model
 parent: Architecture
+grand_parent: Explanation
 nav_order: 2
 ---
 

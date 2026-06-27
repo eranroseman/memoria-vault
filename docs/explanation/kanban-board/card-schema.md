@@ -1,6 +1,7 @@
 ---
 title: The honesty card
 parent: Kanban board
+grand_parent: Explanation
 nav_order: 2
 ---
 

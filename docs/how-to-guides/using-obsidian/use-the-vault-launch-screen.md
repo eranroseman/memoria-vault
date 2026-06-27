@@ -1,6 +1,7 @@
 ---
 title: Vault launch screen
 parent: Using Obsidian
+grand_parent: How-to guides
 nav_order: 1
 ---
 

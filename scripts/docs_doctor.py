@@ -431,6 +431,85 @@ def check_hidden_compatibility_page(md: Path, root: Path, errors: list[str]) -> 
         )
 
 
+def _frontmatter_scalar(md: Path, key: str) -> str:
+    match = FRONTMATTER_RE.match(read(md))
+    if not match:
+        return ""
+    found = re.search(rf"^{re.escape(key)}:\s*(.+?)\s*$", match.group(1), re.MULTILINE)
+    if not found:
+        return ""
+    return found.group(1).strip().strip("\"'")
+
+
+def _frontmatter_bool(md: Path, key: str) -> bool:
+    return _frontmatter_scalar(md, key).lower() == "true"
+
+
+def check_site_nav_hierarchy(root: Path, errors: list[str]) -> None:
+    pages = [
+        path
+        for path in sorted(root.rglob("*.md"))
+        if not _scratch(path, root) and not _site_excluded(path, root)
+    ]
+    by_title: dict[str, list[Path]] = {}
+    for path in pages:
+        title = _frontmatter_scalar(path, "title")
+        if title:
+            by_title.setdefault(title, []).append(path)
+
+    def unique_container(
+        title: str, child: Path, relation: str, parent_title: str = ""
+    ) -> Path | None:
+        matches = by_title.get(title, [])
+        if parent_title:
+            matches = [
+                path for path in matches if _frontmatter_scalar(path, "parent") == parent_title
+            ]
+        if not matches:
+            qualifier = f" under '{parent_title}'" if parent_title else ""
+            errors.append(
+                f"{child}: site nav {relation} '{title}'{qualifier} has no published page"
+            )
+            return None
+        if len(matches) > 1:
+            locations = ", ".join(str(path) for path in matches)
+            errors.append(f"{child}: site nav {relation} '{title}' is ambiguous ({locations})")
+            return None
+        parent = matches[0]
+        if not _frontmatter_bool(parent, "has_children"):
+            errors.append(
+                f"{child}: site nav {relation} '{title}' is not marked has_children: true"
+            )
+        return parent
+
+    for path in pages:
+        parent_title = _frontmatter_scalar(path, "parent")
+        grand_parent_title = _frontmatter_scalar(path, "grand_parent")
+        if grand_parent_title and not parent_title:
+            errors.append(f"{path}: site nav grand_parent is set without parent")
+            continue
+        parent = (
+            unique_container(parent_title, path, "parent", grand_parent_title)
+            if parent_title
+            else None
+        )
+        if not parent:
+            continue
+        parent_parent = _frontmatter_scalar(parent, "parent")
+        if parent_parent and not grand_parent_title:
+            errors.append(
+                f"{path}: site nav child of '{parent_title}' must set grand_parent: {parent_parent}"
+            )
+        if grand_parent_title:
+            parent_grand_parent = _frontmatter_scalar(parent, "grand_parent")
+            unique_container(grand_parent_title, path, "grand_parent", parent_grand_parent)
+            if parent_parent != grand_parent_title:
+                errors.append(
+                    f"{path}: site nav parent '{parent_title}' is not under grand_parent "
+                    f"'{grand_parent_title}'"
+                )
+
+
 def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
     # Current public docs should link ADR references so readers can jump to the decision
     # record. ADR files themselves and repo-internal release/testing/contributing docs keep
@@ -731,6 +810,7 @@ def main() -> int:
     doc_md_names = {p.name.lower() for p in root.rglob("*.md") if not _scratch(p, root)}
     check_readmes(root, errors)
     check_thin_folders(root, warnings)
+    check_site_nav_hierarchy(root, errors)
     for md in sorted(p for p in root.rglob("*.md") if not _scratch(p, root)):
         check_frontmatter(md, errors)
         check_links(md, errors)

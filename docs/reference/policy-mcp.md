@@ -1,6 +1,7 @@
 ---
 title: Policy MCP
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Policy MCP

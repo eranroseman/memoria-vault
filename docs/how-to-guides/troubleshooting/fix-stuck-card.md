@@ -1,6 +1,7 @@
 ---
 title: Fix a stuck card
 parent: Troubleshooting
+grand_parent: How-to guides
 nav_order: 2
 ---
 

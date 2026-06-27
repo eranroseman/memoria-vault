@@ -1,6 +1,7 @@
 ---
 title: Fix profile drift
 parent: Troubleshooting
+grand_parent: How-to guides
 nav_order: 6
 ---
 

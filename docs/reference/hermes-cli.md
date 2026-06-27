@@ -1,6 +1,7 @@
 ---
 title: Hermes CLI
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Hermes CLI

@@ -1,6 +1,7 @@
 ---
 title: Vault eval
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Vault eval

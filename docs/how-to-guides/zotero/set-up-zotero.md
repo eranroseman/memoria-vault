@@ -1,6 +1,7 @@
 ---
 title: Set up Zotero
 parent: Zotero
+grand_parent: How-to guides
 nav_order: 4
 ---
 

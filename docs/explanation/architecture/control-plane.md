@@ -1,6 +1,7 @@
 ---
 title: The control plane
 parent: Architecture
+grand_parent: Explanation
 nav_order: 3
 ---
 

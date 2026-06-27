@@ -1,6 +1,7 @@
 ---
 title: Start a writing project
 parent: Project
+grand_parent: How-to guides
 nav_order: 1
 ---
 

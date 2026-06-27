@@ -1,6 +1,7 @@
 ---
 title: Safe mode
 parent: Troubleshooting
+grand_parent: How-to guides
 nav_order: 1
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Assess your corpus
 parent: Project
+grand_parent: How-to guides
 nav_order: 2
 ---
 

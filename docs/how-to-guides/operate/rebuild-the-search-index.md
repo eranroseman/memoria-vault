@@ -1,6 +1,7 @@
 ---
 title: Rebuild the search index
 parent: Operate
+grand_parent: How-to guides
 nav_order: 5
 ---
 

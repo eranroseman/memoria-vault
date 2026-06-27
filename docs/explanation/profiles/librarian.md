@@ -1,6 +1,7 @@
 ---
 title: The Librarian
 parent: Profiles
+grand_parent: Explanation
 nav_order: 2
 ---
 

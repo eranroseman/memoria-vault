@@ -1,6 +1,7 @@
 ---
 title: Kanban board reference
-parent: Reference
+parent: Vault data model
+grand_parent: Reference
 ---
 
 # Kanban board reference

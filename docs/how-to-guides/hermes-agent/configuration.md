@@ -1,6 +1,7 @@
 ---
 title: Configure a profile
 parent: Hermes Agent
+grand_parent: How-to guides
 nav_order: 1
 ---
 

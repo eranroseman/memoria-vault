@@ -1,6 +1,7 @@
 ---
 title: Set up Obsidian
 parent: Setup
+grand_parent: How-to guides
 nav_order: 3
 ---
 

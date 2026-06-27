@@ -1,6 +1,7 @@
 ---
 title: Return to work
 parent: Inbox
+grand_parent: How-to guides
 nav_order: 5
 ---
 

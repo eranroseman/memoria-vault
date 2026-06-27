@@ -1,6 +1,7 @@
 ---
 title: "Linter: detectors and auto-fix"
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Linter: detectors and auto-fix

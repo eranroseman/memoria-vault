@@ -1,6 +1,7 @@
 ---
 title: Run the Linter
 parent: Operate
+grand_parent: How-to guides
 nav_order: 1
 ---
 

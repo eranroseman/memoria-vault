@@ -1,6 +1,7 @@
 ---
 title: Retrieval and analysis methods
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Retrieval and analysis methods

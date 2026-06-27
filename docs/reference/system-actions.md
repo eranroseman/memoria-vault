@@ -1,6 +1,7 @@
 ---
 title: System actions
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # System actions

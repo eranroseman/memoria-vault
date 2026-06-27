@@ -1,6 +1,7 @@
 ---
 title: Fix missing query results
 parent: Troubleshooting
+grand_parent: How-to guides
 nav_order: 10
 ---
 

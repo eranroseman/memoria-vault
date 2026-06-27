@@ -16,6 +16,7 @@ check_quickadd_command_reference_mirror = _m.check_quickadd_command_reference_mi
 check_readmes = _m.check_readmes
 check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
+check_site_nav_hierarchy = _m.check_site_nav_hierarchy
 check_system_actions_skill_mirror = _m.check_system_actions_skill_mirror
 check_template_frontmatter = _m.check_template_frontmatter
 check_thin_folders = _m.check_thin_folders
@@ -365,6 +366,56 @@ def test_check_hidden_compatibility_page_rejects_hidden_permalink_stub(tmp_path)
 
     assert len(errors) == 1
     assert "hidden compatibility pages are forbidden" in errors[0]
+
+
+def test_check_site_nav_hierarchy_validates_parent_containers(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "README.md").write_text(
+        "---\ntitle: Home\nhas_children: true\n---\n# Home\n", encoding="utf-8"
+    )
+    (root / "reference.md").write_text(
+        "---\ntitle: Reference\nhas_children: true\n---\n# Reference\n", encoding="utf-8"
+    )
+    (root / "group.md").write_text(
+        "---\ntitle: Group\nparent: Reference\n---\n# Group\n", encoding="utf-8"
+    )
+    (root / "child.md").write_text(
+        "---\ntitle: Child\nparent: Group\ngrand_parent: Reference\n---\n# Child\n",
+        encoding="utf-8",
+    )
+
+    errors: list[str] = []
+    check_site_nav_hierarchy(root, errors)
+
+    assert len(errors) == 1
+    assert "not marked has_children: true" in errors[0]
+
+
+def test_check_site_nav_hierarchy_requires_grandparent_for_nested_children(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "reference.md").write_text(
+        "---\ntitle: Reference\nhas_children: true\n---\n# Reference\n", encoding="utf-8"
+    )
+    (root / "group.md").write_text(
+        "---\ntitle: Group\nparent: Reference\nhas_children: true\n---\n# Group\n",
+        encoding="utf-8",
+    )
+    (root / "child.md").write_text(
+        "---\ntitle: Child\nparent: Group\n---\n# Child\n",
+        encoding="utf-8",
+    )
+    (root / "bad.md").write_text(
+        "---\ntitle: Bad\nparent: Group\ngrand_parent: Missing\n---\n# Bad\n",
+        encoding="utf-8",
+    )
+
+    errors: list[str] = []
+    check_site_nav_hierarchy(root, errors)
+
+    assert any("must set grand_parent: Reference" in error for error in errors)
+    assert any("parent 'Group' under 'Missing' has no published page" in error for error in errors)
 
 
 def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):
