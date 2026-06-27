@@ -36,7 +36,7 @@ manual mirrors.
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions | Partially generated |
+| [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions | Generated |
 | [Runtime contracts](runtime-spec.md) | Agent rules, generated profile policy, and runtime contract sources | Manual |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and eval-task schema | Manual |
