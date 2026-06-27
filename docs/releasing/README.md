@@ -19,7 +19,7 @@ formal releases. The *live readiness state* lives outside the file — see below
 
 | Thing | Lives in |
 |---|---|
-| **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` plus the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1) view filtered to that milestone |
+| **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` plus the Memoria Issue Tracker project view filtered to that milestone |
 | **Readiness** (promotion-gate + validation-stage state) | the parent **"Release vX.Y"** issue and its readiness/stage sub-issues |
 | **Prose** (scope summary, limitations, cut steps, roadmap) | `docs/releasing/<version>/release-plan-<version>.md` |
 | **Build gaps** | GitHub issues |
@@ -42,7 +42,7 @@ never restates.
    `status: draft`, `released: false`.
 2. **Milestone + Project view = scope.** Create the `vX.Y` milestone
    (`gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y`) and assign the
-   issues that scope it. In [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1),
+   issues that scope it. In the Memoria Issue Tracker project,
    use a table filtered to the milestone and sorted by Priority as the live release plan.
 3. **Parent issue + sub-issues = readiness.** Open a **"Release vX.Y"** issue
    (label `release`, milestone `vX.Y`). Add one sub-issue per release gate or

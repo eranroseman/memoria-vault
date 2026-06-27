@@ -91,7 +91,7 @@ under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vau
 Not enumerated here — a second list would drift. **By definition the blockers are** any
 open gate/stage sub-issue under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635), plus any open
 High-priority blocker in the
-[Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1). Two hard facts
+Memoria Issue Tracker project. Two hard facts
 this release: **[#620](https://github.com/eranroseman/memoria-vault/issues/620) is the
 one security regression** (a bearer token on plain loopback) and carries High priority;
 and **[#586](https://github.com/eranroseman/memoria-vault/issues/586) (the harness) is
