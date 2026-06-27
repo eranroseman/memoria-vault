@@ -35,7 +35,7 @@ Left alone, queues age and gaps go stale. The [weekly review](../../how-to-guide
 
 ## The two failure modes the rhythm prevents
 
-A research vault fails in one of two ways ([What Memoria is](../overview/what-memoria-is.md)), and the tempo above exists to keep both halves coupled:
+A research vault fails in one of two ways ([What Memoria is](../../design/what-memoria-is.md)), and the tempo above exists to keep both halves coupled:
 
 - **Capture without synthesis** — you read and file constantly but never distill. The vault grows; it does not compound. (The fix is Weeks 2–3: distill once clusters mature.)
 - **Synthesis without rigor** — you write claims that no longer trace to a source. (The fix is the provenance discipline the tutorials drilled: every evidence line cites a citekey, and verification before anything ships.)

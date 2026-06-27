@@ -5,7 +5,7 @@ parent: Reference
 
 # Wikilink and link conventions
 
-Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([Note body structure](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([Lifecycle, not topic — and state, not folders](../explanation/knowledge/lifecycle-over-topic.md)), and why a densely linked vault compounds ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
+Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub creation thresholds — the *how*. The *why* linking is load-bearing isn't a single page; it's explained across the knowledge model: why connections are a required section ([Note body structure](../explanation/knowledge/note-body-structure.md)), why topics live in links rather than folders ([Lifecycle, not topic — and state, not folders](../design/lifecycle-over-topic.md)), and why a densely linked vault compounds ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). For the overall conceptual model see [explanation/vault](../explanation/architecture/vault.md).
 
 ---
 
@@ -151,5 +151,5 @@ Slugs are permanent — renaming a note breaks all wikilinks pointing to the old
 
 - How-to for setting authored links: [Link related claims](../how-to-guides/knowledge/link-related-claims.md)
 - Why the Connections section is load-bearing: [Note body structure](../explanation/knowledge/note-body-structure.md)
-- Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../explanation/knowledge/lifecycle-over-topic.md)
+- Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../design/lifecycle-over-topic.md)
 - How links keep the vault compounding: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)

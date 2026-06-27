@@ -1,6 +1,7 @@
 ---
 title: Design principles
-parent: Overview
+parent: Design Book
+grand_parent: Developers
 nav_order: 3
 ---
 
@@ -28,7 +29,7 @@ Agents read broadly but write to controlled areas. Humans review every promotion
 
 **5. Provenance everywhere.**
 
-Every claim traces back to a citekey. Every agent action traces back to an audit log entry. Untraceable content is not knowledge — it is a liability that will fail when cited. The [Policy MCP](../../reference/policy-mcp.md), its per-write SHA-256 hash pairing, and the `sources:` field on claim notes all enforce this.
+Every claim traces back to a citekey. Every agent action traces back to an audit log entry. Untraceable content is not knowledge — it is a liability that will fail when cited. The [Policy MCP](../reference/policy-mcp.md), its per-write SHA-256 hash pairing, and the `sources:` field on claim notes all enforce this.
 
 **6. Prefer incremental over full rewrites.**
 
@@ -54,8 +55,8 @@ Research, writing, and coding all access the same agent from within their respec
 
 ## Related
 
-- Why these principles led to a human-gated system: [Why the review gate is structural](../rationale/why-human-gate.md)
-- Why specialist profiles rather than one generalist: [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md)
-- Why not autonomous: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
+- Why these principles led to a human-gated system: [Why the review gate is structural](why-human-gate.md)
+- Why specialist profiles rather than one generalist: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
+- Why not autonomous: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - What the principles describe: [What Memoria is](what-memoria-is.md)
 - Where the principles come from: [Intellectual foundations](intellectual-foundations.md)

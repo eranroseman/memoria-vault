@@ -1,6 +1,7 @@
 ---
 title: Intellectual foundations
-parent: Overview
+parent: Design Book
+grand_parent: Developers
 nav_order: 2
 ---
 
@@ -12,7 +13,7 @@ Memoria is built on four converging ideas and informed by a full review of ~400 
 
 ## Karpathy's LLM-Wiki pattern
 
-[Andrej Karpathy](../../reference/bibliography.md#karpathy-llm-wiki) proposed an AI agent that compiles raw sources into a persistent, interlinked Markdown wiki. The key move is replacing _retrieval from scratch at query time_ with a _persistent wiki that grows with use_.
+[Andrej Karpathy](../reference/bibliography.md#karpathy-llm-wiki) proposed an AI agent that compiles raw sources into a persistent, interlinked Markdown wiki. The key move is replacing _retrieval from scratch at query time_ with a _persistent wiki that grows with use_.
 
 In standard retrieval-augmented generation, every question triggers a fresh search over raw documents. Useful synthesis is never stored; nothing compounds. The LLM-wiki pattern inverts this: the agent builds durable pages, and each new source improves those pages rather than sitting in isolation. The agent is a **compiler**, not just a retriever.
 
@@ -24,7 +25,7 @@ What Memoria doesn't take from this pattern: Karpathy's framing implies an agent
 
 ## Luhmann's Zettelkasten
 
-[Niklas Luhmann](../../reference/bibliography.md#luhmann-zettelkasten)'s slip-box method enforces three disciplines that prevent a wiki from becoming an undifferentiated pile:
+[Niklas Luhmann](../reference/bibliography.md#luhmann-zettelkasten)'s slip-box method enforces three disciplines that prevent a wiki from becoming an undifferentiated pile:
 
 **Atomicity** — each note captures one idea, not a topic dump. An atomic note can be moved, cited, and linked without carrying irrelevant context.
 
@@ -38,7 +39,7 @@ Zettelkasten's weakness in modern workflows is that it is entirely human-maintai
 
 ## Bush's Memex
 
-[Vannevar Bush](../../reference/bibliography.md#bush1945)'s 1945 vision: a personal interconnected knowledge machine where _associations_ are first-class objects. The device would let a researcher leave "trails" through a document collection — associative links that persist and can be revisited.
+[Vannevar Bush](../reference/bibliography.md#bush1945)'s 1945 vision: a personal interconnected knowledge machine where _associations_ are first-class objects. The device would let a researcher leave "trails" through a document collection — associative links that persist and can be revisited.
 
 What Bush identified is that memory is associative, not taxonomic. A subject-area folder structure doesn't model how thinking actually works. What makes a knowledge base useful is not whether items are correctly classified, but whether the associations between them are preserved.
 
@@ -52,7 +53,7 @@ A full review of ~400 papers (`_papers/`, each read end-to-end and judged for wh
 
 The headline finding is that this wider literature does not merely *permit* Memoria's design — it independently *re-derives* it. The structural review gate ("engines write, agents judge, PI approves"), the durable vault-as-memory, the MCP-only agent sandbox, and deterministic ingest are each re-arrived-at by separate research lines. The patterns Memoria borrows — stage-gated pipelines, thin control over thick state, explicit agent roles, structured outputs at handoffs, persistent knowledge graphs — recur across nearly every end-to-end system, and Memoria's layered split is the structural form of them. The review also fixes what Memoria *declines* (advisory-only LLM review, scalar-metric keep/revert, tree-search-over-synthesis) and contributes two sharpenings to the knowledge model: build contradiction and supersession on entailment rather than embedding similarity, and treat temporal coverage as a first-class retrieval dimension.
 
-The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused, plus the [cross-cutting findings](../rationale/why-pattern-provenance.md#cross-cutting-findings-from-the-full-literature-review) from the wider corpus — is in [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md); the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](../rationale/why-human-gate.md).
+The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused, plus the [cross-cutting findings](why-pattern-provenance.md#cross-cutting-findings-from-the-full-literature-review) from the wider corpus — is in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md); the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](why-human-gate.md).
 
 ---
 
@@ -73,7 +74,7 @@ The design is not a novel invention — it is an integration of patterns that al
 ## Related
 
 - What the foundations produced: [Design principles](design-principles.md)
-- Full borrow/adapt/ignore breakdown: [Pattern provenance: borrow, adapt, ignore](../rationale/why-pattern-provenance.md)
+- Full borrow/adapt/ignore breakdown: [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md)
 - What Memoria is: [What Memoria is](what-memoria-is.md)
-- The layered architecture (structural form of thin-control-thick-state): [Architecture](../architecture/README.md)
-- Why the autonomy boundary is where it is: [Why Memoria doesn't pursue full autonomy](../rationale/why-not-autonomous.md)
+- The layered architecture (structural form of thin-control-thick-state): [Architecture](../explanation/architecture/README.md)
+- Why the autonomy boundary is where it is: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)

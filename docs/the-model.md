@@ -40,19 +40,20 @@ Agents propose; the PI disposes. Background lanes can create staged notes, Inbox
 or project scratch within their lane scope. Promotion into review-gated knowledge stays
 human-owned and policy-gated.
 
-## The four books
+## Documentation map
 
-| Book | Use it for |
+| Section | Use it for |
 | --- | --- |
-| [Operator Guide](operator-guide.md) | Learn and operate Memoria: tutorials, how-to guides, and lookup reference. |
-| [Design Book](design-book.md) | Understand the rationale, architecture, workflows, and design arguments. |
-| [Decision records](adr/) | Read the dated ADR history for decisions at every status. |
-| [Runtime Spec](runtime-spec.md) | Inspect agent policy, profile capability, and runtime contract sources. |
+| [Tutorials](tutorials/README.md) | Learn Memoria through a guided first project. |
+| [How-to guides](how-to-guides/README.md) | Complete a specific task. |
+| [Reference](reference/README.md) | Look up exact fields, commands, schemas, settings, and paths. |
+| [Explanation](explanation/README.md) | Understand architecture, workflows, and concepts. |
+| [Developers](developers.md) | Inspect runtime contracts, design rationale, and ADRs. |
 
 ## Where details live
 
 - Exact fields, schemas, commands, and configuration live in [Reference](reference/README.md).
-- Design rationale lives in [Explanation](explanation/README.md).
-- Dated decisions live in [Decision records](adr/).
+- Explanations live in [Explanation](explanation/README.md).
+- Design Book pages and dated decisions live in [Developers](developers.md).
 - Agent working rules live in
   [AGENTS.md](https://github.com/eranroseman/memoria-vault/blob/main/AGENTS.md).

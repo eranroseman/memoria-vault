@@ -60,4 +60,4 @@ Once you've resolved Cause A or B, run the redeploy procedure — `install.sh --
 - Redeploy profiles (normal workflow): [Redeploy profiles](../operate/redeploy-profiles.md)
 - Profile configuration: [Configure a profile](../hermes-agent/configuration.md)
 - Full failure-modes catalog: [Failure modes](../../reference/failure-modes.md)
-- The idempotency mechanism behind the fix: [Distribution model](../../explanation/deployment/distribution-model.md)
+- The idempotency mechanism behind the fix: [Distribution model](../../design/distribution-model.md)

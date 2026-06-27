@@ -10,7 +10,7 @@ This guide produces a code artifact: a small note plus its implementation (for e
 
 You delegate the work to the **Engineer**, a background worker (a **lane**) that prepares the code task and controls when changes are saved. The Engineer doesn't write the substantive code itself; it sets up a scaffold and hands the actual implementation to an external coding agent. You stay responsible for the *why*: what claim or figure the code serves.
 
-For the reasoning behind this split, see [Why implementation is delegated outward](../../explanation/rationale/why-not-autonomous.md).
+For the reasoning behind this split, see [Why implementation is delegated outward](../../design/why-not-autonomous.md).
 
 ## Prerequisites
 
@@ -69,5 +69,5 @@ git commit -m "code: figure-3 receptivity curve — <slug>"
 ## Related
 
 - The lane's design: [The Engineer](../../explanation/profiles/engineer.md)
-- Why implementation is delegated outward: [Why Memoria doesn't pursue full autonomy](../../explanation/rationale/why-not-autonomous.md)
+- Why implementation is delegated outward: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)
 - The decision: [ADR-07](../../adr/07-delegate-coding-to-external-agents.md)

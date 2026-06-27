@@ -16,7 +16,7 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
+What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](../../design/distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 
@@ -88,5 +88,5 @@ Each trades a little breadth for much less shell to build and maintain:
 
 - **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../../adr/26-repo-as-install-unit.md) (the repo is the install unit).
-- **Explanation:** [Distribution model](distribution-model.md), [Why Hermes](../rationale/why-hermes.md) (the runtime the installer provisions).
+- **Design:** [Distribution model](../../design/distribution-model.md), [Why Hermes](../../design/why-hermes.md) (the runtime the installer provisions).
 - **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md).

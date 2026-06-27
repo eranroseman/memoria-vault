@@ -34,7 +34,7 @@ Sorted by severity, then topic.
 | Obsidian agent-client can't connect | MEDIUM | `hermes -p memoria-copi acp` cannot start or the plugin command path is stale | Run `hermes -p memoria-copi acp` in a terminal, then check the bundled agent-client settings and profile `.env`. |
 | `_proposed_classification` not appearing | MEDIUM | The Librarian's `catalog-classify-source` skill did not run or the capture never reached the catalog lane | Check the source card and `memoria-librarian` bundled skills, then rerun the catalog/classify task. |
 | Syncthing + `.bib` race condition | MEDIUM | VPS reads `.bib` while Syncthing is mid-transfer | Use Git pull for `.bib` distribution on `always-on` deployment — not Syncthing. |
-| Deferred always-on bridge unreachable | MEDIUM | Unsupported `always-on` topology drifted or the single dispatcher is offline | Return to the supported local install, or follow the deferred topology notes in [Always-on VPS design](../explanation/deployment/always-on-vps-design.md). |
+| Deferred always-on bridge unreachable | MEDIUM | Unsupported `always-on` topology drifted or the single dispatcher is offline | Return to the supported local install, or follow the deferred topology notes in [Always-on VPS design](../design/always-on-vps-design.md). |
 | Schema mismatch in Dataview | MEDIUM | Notes do not match the current schema | Run a manual, git-disciplined migration — there is no automated migrate command. Follow [Run a schema migration](../how-to-guides/operate/run-a-schema-migration.md) and validate with `python3 .memoria/operations/integrity/linter/detectors.py --vault .`. |
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host, stale `.env`, or missing Hermes cron registration | Check `hermes cron list`, the latest board/metrics outputs under `system/`, and rerun the installer profiles-only path if wrappers are missing. |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
@@ -50,4 +50,4 @@ Sorted by severity, then topic.
 ## Related
 
 - The troubleshooting how-to guides: [Troubleshooting](../how-to-guides/troubleshooting/README.md)
-- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../explanation/rationale/why-human-gate.md)
+- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../design/why-human-gate.md)

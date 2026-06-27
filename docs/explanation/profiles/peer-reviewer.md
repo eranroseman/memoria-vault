@@ -14,7 +14,7 @@ The Peer-reviewer owns judgment checks; deterministic verification work — retr
 
 ## Why it's designed this way
 
-**Independence is the design, not a staffing detail.** The agent that synthesizes must not also grade its own work — which is why the Peer-reviewer was never merged into the Librarian, however much tooling they share. The separation-of-duties / anti-rubber-stamp argument behind that is [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).
+**Independence is the design, not a staffing detail.** The agent that synthesizes must not also grade its own work — which is why the Peer-reviewer was never merged into the Librarian, however much tooling they share. The separation-of-duties / anti-rubber-stamp argument behind that is [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md).
 
 **Judgment checks vs operation sweeps.** A retraction lookup gives the same answer on every run — that's an operation. "Does this prose claim actually follow from this source?" requires reading — that's this agent. Splitting by determinism keeps the reproducible checks cheap and auditable while spending LLM judgment only where a verdict requires it.
 
@@ -36,4 +36,4 @@ The Peer-reviewer owns judgment checks; deterministic verification work — retr
 
 - The deterministic half of verification: [Operations](../operations/README.md)
 - The proposer it stays independent of: [The Librarian](librarian.md)
-- Why review is human-driven: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why review is human-driven: [Why the review gate is structural](../../design/why-human-gate.md)

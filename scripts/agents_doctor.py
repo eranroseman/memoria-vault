@@ -126,19 +126,25 @@ def _heading_title(path: Path) -> str:
 def _book_for(relative: str) -> str:
     if relative == "docs/the-model.md":
         return "Model spine"
-    if relative.startswith(("docs/tutorials/", "docs/how-to-guides/", "docs/reference/")):
-        return "Operator Guide"
+    if relative == "docs/developers.md":
+        return "Developers"
+    if relative.startswith(("docs/adr/", "docs/design/")):
+        return "Developers"
+    if relative.startswith("docs/tutorials/"):
+        return "Tutorials"
+    if relative.startswith("docs/how-to-guides/"):
+        return "How-to guides"
+    if relative.startswith("docs/reference/"):
+        return "Reference"
     if relative.startswith("docs/explanation/"):
-        return "Design Book"
-    if relative.startswith("docs/adr/"):
-        return "Decision records"
+        return "Explanation"
     if relative in {
         "AGENTS.md",
         ".agents/system/source-of-truth-map.md",
         ".agents/system/profile-policy-matrix.md",
         ".agents/system/change-impact-map.md",
     }:
-        return "Runtime Spec"
+        return "Reference"
     return "Internal"
 
 

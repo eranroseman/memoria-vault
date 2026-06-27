@@ -48,4 +48,4 @@ The same principle governs promotion, not just writes: maturity moves only by a 
 
 **Advisory LLM reviewer** — confidently wrong on exactly the inputs the gate needs to catch. Converts a structural guarantee into a probabilistic one.
 
-**Confidence-routed gate (SmartPause)** — routes to human only when agent confidence is low. Fails because hallucinated citations are emitted with high confidence. See [Why Memoria doesn't pursue full autonomy](../explanation/rationale/why-not-autonomous.md).
+**Confidence-routed gate (SmartPause)** — routes to human only when agent confidence is low. Fails because hallucinated citations are emitted with high confidence. See [Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md).

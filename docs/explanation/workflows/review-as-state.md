@@ -71,7 +71,7 @@ This is different from a **retry**, which is automatic re-dispatch of the same c
 ## Related
 
 - The card lifecycle and state machine: [The board as a state machine (the control plane)](board-as-state-machine.md)
-- Why the review gate is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why the review gate is structural: [Why the review gate is structural](../../design/why-human-gate.md)
 - Why synthesis promotion is gated: [Why promotion is gated](../knowledge/promotion-model.md)
 - The execution-state breakdown: [Board states and the review gate](../kanban-board/states.md)
 - The review_status enum and WIP limits: [Kanban board reference](../../reference/kanban-board.md)

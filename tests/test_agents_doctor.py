@@ -11,7 +11,12 @@ def test_docs_manifest_routes_model_and_runtime_surfaces():
     manifest = agents_doctor.yaml.safe_load(agents_doctor._render_docs_manifest())
     entries = {entry["path"]: entry for entry in manifest["entries"]}
 
-    assert entries["AGENTS.md"]["book"] == "Runtime Spec"
+    assert entries["AGENTS.md"]["book"] == "Reference"
+    assert entries["docs/developers.md"]["book"] == "Developers"
+    assert entries["docs/adr/README.md"]["book"] == "Developers"
+    assert entries["docs/design/README.md"]["book"] == "Developers"
+    assert entries["docs/explanation/README.md"]["book"] == "Explanation"
+    assert entries["docs/reference/runtime-spec.md"]["book"] == "Reference"
     assert entries["docs/the-model.md"]["book"] == "Model spine"
     assert entries["docs/the-model.md"]["canonical_owner"] is True
 

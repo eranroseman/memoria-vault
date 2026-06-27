@@ -81,10 +81,10 @@ The dry-run output should show paths inside `my-second-vault/`, not your primary
 
 ## What collides when two vaults run at once
 
-The steps above isolate the three resources two vaults would otherwise contend for — the Obsidian REST API port (step 5), the Hermes profiles (step 2 aliases or a separate `HERMES_HOME`), and the Kanban queue (a separate `HERMES_HOME`). For what each fix protects against and why coexistence works this way, see [Distribution model → Running more than one vault](../../explanation/deployment/distribution-model.md#running-more-than-one-vault).
+The steps above isolate the three resources two vaults would otherwise contend for — the Obsidian REST API port (step 5), the Hermes profiles (step 2 aliases or a separate `HERMES_HOME`), and the Kanban queue (a separate `HERMES_HOME`). For what each fix protects against and why coexistence works this way, see [Distribution model → Running more than one vault](../../design/distribution-model.md#running-more-than-one-vault).
 
 ## Related
 
 - First vault setup: [Set up the vault](set-up-the-vault.md)
 - Redeploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
-- Distribution model explanation: [Distribution model](../../explanation/deployment/distribution-model.md)
+- Distribution model explanation: [Distribution model](../../design/distribution-model.md)

@@ -51,6 +51,6 @@ On a freshly cloned vault, before any data exists, the welcome note shows its "s
 ## Related
 
 - What Home links *to*: [the dashboards](../dashboards/README.md)
-- The visual restraint Home participates in: [Visual-style discipline](visual-discipline.md)
+- The visual restraint Home participates in: [Visual-style discipline](../../design/visual-discipline.md)
 - The plugin inventory behind these surfaces: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - The welcome-note decision history: [ADR-13](../../adr/13-homepage-front-door.md)

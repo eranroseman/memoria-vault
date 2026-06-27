@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-How far agent autonomy may extend is the single most consequential constraint in Memoria — it governs every future automation proposal — yet it was only ever argued in prose ([Why Memoria doesn't pursue full autonomy](../explanation/rationale/why-not-autonomous.md), [What Memoria is](../explanation/overview/what-memoria-is.md)) and never recorded as a decision with a fixed anchor. The live question is concrete: [Karpathy](../reference/bibliography.md#karpathy-llm-wiki)'s autonomous keep/revert loop is safe only when three preconditions hold simultaneously — the metric is monotonic, changes are reversible, and experiments are independent. Knowledge synthesis fails all three: synthesis quality is not a scalar, synthesis errors persist and compound across everything that later cites them, and later sources reinterpret earlier ones. Without a recorded ceiling, each new "let the agent just do X overnight" proposal re-litigates this from scratch, and the boundary erodes by increments.
+How far agent autonomy may extend is the single most consequential constraint in Memoria — it governs every future automation proposal — yet it was only ever argued in prose ([Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md), [What Memoria is](../design/what-memoria-is.md)) and never recorded as a decision with a fixed anchor. The live question is concrete: [Karpathy](../reference/bibliography.md#karpathy-llm-wiki)'s autonomous keep/revert loop is safe only when three preconditions hold simultaneously — the metric is monotonic, changes are reversible, and experiments are independent. Knowledge synthesis fails all three: synthesis quality is not a scalar, synthesis errors persist and compound across everything that later cites them, and later sources reinterpret earlier ones. Without a recorded ceiling, each new "let the agent just do X overnight" proposal re-litigates this from scratch, and the boundary erodes by increments.
 
 ## Decision
 
@@ -37,7 +37,7 @@ Memoria targets **L3 on the [Chen et al. 2026](../reference/bibliography.md#chen
 
 ## Related
 
-- **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../explanation/rationale/why-not-autonomous.md) (the preconditions argument and the Coder exception), [Why the review gate is structural](../explanation/rationale/why-human-gate.md), [What Memoria is](../explanation/overview/what-memoria-is.md) (autonomy-spectrum positioning, "vibe researching").
+- **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md) (the preconditions argument and the Coder exception), [Why the review gate is structural](../design/why-human-gate.md), [What Memoria is](../design/what-memoria-is.md) (autonomy-spectrum positioning, "vibe researching").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the mechanism that enforces this ceiling); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (the Coder lane this ADR carves the exception for).
 - **Proposals bounded by this ADR:** the code-lane keep/revert experiment loop
   tracked in [ADR-61](61-nightly-discovery-loop.md); [Configurable review-gate mode

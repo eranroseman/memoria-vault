@@ -6,7 +6,7 @@ nav_order: 2
 
 # The board as a state machine (the control plane)
 
-The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until the PI approves it into the vault or archives it: agents propose, only the PI disposes, and the policy MCP enforces that wall — see [Why the review gate is structural](../rationale/why-human-gate.md).
+The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until the PI approves it into the vault or archives it: agents propose, only the PI disposes, and the policy MCP enforces that wall — see [Why the review gate is structural](../../design/why-human-gate.md).
 
 ---
 
@@ -84,13 +84,13 @@ A card may reference a note by path (its `metadata.promote_target` is a note pat
 
 ## Why no Orchestrator
 
-Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files, not in a reasoning agent. If the rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. Why there is no routing agent — the auditability argument — is owned by [Why specialist profiles, not a generalist agent](../rationale/why-specialist-profiles.md).
+Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files, not in a reasoning agent. If the rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. Why there is no routing agent — the auditability argument — is owned by [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md).
 
 ---
 
 ## Related
 
-- Why the layered architecture requires explicit separation: [Why the architecture is layered](../rationale/why-three-layers.md)
+- Why the layered architecture requires explicit separation: [Why the architecture is layered](../../design/why-three-layers.md)
 - Why review is a first-class state: [Review as a first-class state](review-as-state.md)
 - How the knowledge model complements the board: [Knowledge](../knowledge/README.md)
 - The board's conceptual overview: [Kanban board](../kanban-board/README.md)

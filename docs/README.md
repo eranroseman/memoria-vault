@@ -9,7 +9,7 @@ permalink: /
 A research operating system for a single researcher (the PI) — a Co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
 Start with [The model](the-model.md): the five terms, the working loop, and the
-four books. If you want a guided first experience, see [Tutorials](tutorials).
+main docs sections. If you want a guided first experience, see [Tutorials](tutorials).
 If you need to _do_ something, see [How-to guides](how-to-guides). If you need
 exact values, field names, or configuration formats, see [Reference](reference).
 
@@ -27,7 +27,8 @@ exact values, field names, or configuration formats, see [Reference](reference).
 | **Get set up for the first time**           | [Quickstart — set up your vault](how-to-guides/setup/quickstart.md)                                |
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
-| **Understand why something works this way** | [Explanation](explanation/README.md)                                                              |
+| **Understand how the system fits together** | [Explanation](explanation/README.md)                                                              |
+| **Understand why it is designed this way** | [Design Book](design/README.md)                                                                   |
 | **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
 
 ---
@@ -40,14 +41,16 @@ Seven tutorials, each building on the last. Start at 01 and follow the sequence 
 
 ## Prefer to read it straight through?
 
-The sections below are organized the Diátaxis way — by what you're trying to do, not as a syllabus. If you'd rather understand the system as one argument before touching it, read the Explanation pages in this order, then start the tutorials. Same material, sequenced concept-first.
+The sections below are organized by what you're trying to do, not as a syllabus.
+If you'd rather understand the system before touching it, read the model, the
+Design Book foundations, then the Explanation pages in this order.
 
 **Understand the system (read in order)**
 
 1. [The model](the-model.md) — the shared vocabulary and working loop
-2. [What Memoria is](explanation/overview/what-memoria-is.md) — the central insight, and what it deliberately is not
-3. [Intellectual foundations](explanation/overview/intellectual-foundations.md) — where the design comes from
-4. [Design principles](explanation/overview/design-principles.md) — the rules the framing produces
+2. [What Memoria is](design/what-memoria-is.md) — the central insight, and what it deliberately is not
+3. [Intellectual foundations](design/intellectual-foundations.md) — where the design comes from
+4. [Design principles](design/design-principles.md) — the rules the framing produces
 5. [Architecture](explanation/architecture/README.md) — the layered structure
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
@@ -58,7 +61,7 @@ The sections below are organized the Diátaxis way — by what you're trying to 
 12. [The workflow model](explanation/workflows/README.md) — how work moves, with review as a first-class state
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
 14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
-15. [Design rationale](explanation/rationale/README.md) — why each major decision went the way it did
+15. [Design Book](design/README.md) — why each major decision went the way it did
 
 **Then learn it by doing**
 
@@ -122,10 +125,12 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**The model**](the-model.md) — Shared vocabulary and the working loop.
 
-[**Operator Guide**](operator-guide.md) — Tutorials, how-to guides, and reference.
+[**Tutorials**](tutorials/README.md) — Guided first use.
 
-[**Design Book**](design-book.md) — Explanation, design rationale, and architecture.
+[**How-to guides**](how-to-guides/README.md) — Task recipes.
 
-[**Decision records**](adr/) — ADRs at every lifecycle state.
+[**Reference**](reference/README.md) — Exact fields, commands, schemas, settings, and paths.
 
-[**Runtime Spec**](runtime-spec.md) — Agent guidance, generated profile policy, and runtime contracts.
+[**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
+
+[**Developers**](developers.md) — Design Book and decision records.

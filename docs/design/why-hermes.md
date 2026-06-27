@@ -1,7 +1,8 @@
 ---
 title: Why Hermes
-parent: Design rationale
-nav_order: 5
+parent: Design Book
+grand_parent: Developers
+nav_order: 14
 ---
 
 # Why Hermes
@@ -27,9 +28,9 @@ Memoria supplies the *conventions on top*: the review-gate overlay in card `meta
 
 ## Why not build our own runtime
 
-A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that keeps the [Engineer](../profiles/engineer.md) MCP-only rather than a reimplementation of an external coding runtime.
+A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that keeps the [Engineer](../explanation/profiles/engineer.md) MCP-only rather than a reimplementation of an external coding runtime.
 
-Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../kanban-board/card-schema.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
+Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../explanation/kanban-board/card-schema.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
 
 This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenance.md) sense: Hermes's persistent-Kanban-plus-worker-lanes pattern is adopted wholesale; what Memoria declines from other runtimes is, e.g., chat-as-substrate (AutoGen) and sandbox-vs-host permission models (OpenHands), because those route durable state or permissions through the wrong layer.
 
@@ -39,11 +40,11 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 Hermes exposes an **API server** (port 8642) — the surface where *programs*, not humans, connect to Memoria. File-system watchers, Zotero/Better BibTeX hooks, git `post-commit` hooks, calendar integrations, and cross-machine dispatch all enter here.
 
-**Why a separate surface at all.** Programmatic integration needs a different interface than human operation. A file-system watcher that fires on a PDF drop cannot use the command palette; a Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; Obsidian, the CLI, and Telegram (see [Interaction channels](../architecture/human-channels.md)) are the interaction surfaces for humans. The same operations available through the API are exposed to humans through the palette and CLI with better affordances — so humans never need to touch the API directly.
+**Why a separate surface at all.** Programmatic integration needs a different interface than human operation. A file-system watcher that fires on a PDF drop cannot use the command palette; a Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; Obsidian, the CLI, and Telegram (see [Interaction channels](../explanation/architecture/human-channels.md)) are the interaction surfaces for humans. The same operations available through the API are exposed to humans through the palette and CLI with better affordances — so humans never need to touch the API directly.
 
-**It grants no extra power.** Every write through the API still passes through the policy MCP. A program calling the API has exactly the permissions of the profile it acts as — no elevation. The API is a different *door*, not a different *key*. See [Policy MCP](../../reference/policy-mcp.md) for enforcement details.
+**It grants no extra power.** Every write through the API still passes through the policy MCP. A program calling the API has exactly the permissions of the profile it acts as — no elevation. The API is a different *door*, not a different *key*. See [Policy MCP](../reference/policy-mcp.md) for enforcement details.
 
-This is why the API server lives here, with Hermes, rather than in [Interaction channels](../architecture/human-channels.md): it is a Hermes integration surface that humans never operate, not a human channel.
+This is why the API server lives here, with Hermes, rather than in [Interaction channels](../explanation/architecture/human-channels.md): it is a Hermes integration surface that humans never operate, not a human channel.
 
 ---
 
@@ -68,11 +69,11 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 **Explanation**
 
 - What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-three-layers.md)
-- The board as a state machine: [The board as a state machine (the control plane)](../workflows/board-as-state-machine.md)
-- The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../kanban-board/card-schema.md)
-- The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../architecture/human-channels.md)
+- The board as a state machine: [The board as a state machine (the control plane)](../explanation/workflows/board-as-state-machine.md)
+- The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/card-schema.md)
+- The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/human-channels.md)
 
 **Reference**
 
-- What the API's writes pass through: [Policy MCP](../../reference/policy-mcp.md)
-- Hermes admin commands (reference): [Hermes CLI](../../reference/hermes-cli.md)
+- What the API's writes pass through: [Policy MCP](../reference/policy-mcp.md)
+- Hermes admin commands (reference): [Hermes CLI](../reference/hermes-cli.md)

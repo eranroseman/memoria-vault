@@ -66,7 +66,7 @@ Three distinct caps, each motivated by a different failure mode (dispatcher poll
 
 - Conceptual overview: [Kanban board](README.md)
 - The card the PI reads: [The honesty card](card-schema.md)
-- Why review is human-only: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why review is human-only: [Why the review gate is structural](../../design/why-human-gate.md)
 - The decision-kind model the gate implements: [Why promotion is gated](../knowledge/promotion-model.md)
 
 **How-to**

@@ -13,7 +13,7 @@ The vault's types are not arbitrary — each one answers a different question ab
 
 ## Entities vs notes: Luhmann's two boxes
 
-The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliographic index** (who wrote what, where) physically separate from the **main slip-box** (his own thinking). Memoria does the same (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)):
+The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliographic index** (who wrote what, where) physically separate from the **main slip-box** (his own thinking). Memoria does the same (see [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten)):
 
 - **`catalog/` — entity records.** Structured facts about things in the world: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Built by the **ingest operation** from metadata APIs, surfaced through Obsidian Bases, not review-gated — they are extractions of given facts, not judgments. Entities carry `relationships` (cited-by, authored-by, published-in): **given** connections the operation derives mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)).
 - **`notes/` — prose.** What a source says, what you think, how it all hangs together. Written by the PI or proposed by an agent. Notes carry `links:` — **authored** connections (supports, contradicts, hub membership) that an agent may propose but only the PI confirms.
@@ -76,7 +76,7 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 
 ## Related
 
-- Why folders carry the type and frontmatter carries the state: [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)
+- Why folders carry the type and frontmatter carries the state: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - How material crosses the review gate: [Why promotion is gated](promotion-model.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
 - The card format in depth: [The honesty card](../kanban-board/card-schema.md)

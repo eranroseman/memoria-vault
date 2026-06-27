@@ -120,9 +120,9 @@ and to ADRs only when the exclusion has decision rationale. }}
 
 Before the release candidate is approved, complete a fresh documentation sweep:
 
-1. **Coverage:** every shipped feature, operation, profile behavior, installer path, and runtime expectation has current coverage in `docs/how-to-guides/` or `docs/reference/`, with explanatory context in `docs/explanation/` when the "why" matters.
+1. **Coverage:** every shipped feature, operation, profile behavior, installer path, and runtime expectation has current coverage in `docs/how-to-guides/` or `docs/reference/`, with explanatory context in `docs/explanation/` and design rationale in `docs/design/` when the "why" matters.
 2. **Single source of truth:** scan the repository docs for implementation-documentation gaps, duplicate/competing authorities, contradictions, and subtle cross-document drift. Fix defects rather than recording known-bad prose as limitations.
-3. **Diataxis placement and indexing:** review `docs/explanation/`, `docs/how-to-guides/`, `docs/tutorials/`, `docs/reference/`, and their README/index pages for quadrant fit, titles, links, `nav_order`, guide-map coverage, and section README shape.
+3. **Diataxis placement and indexing:** review `docs/explanation/`, `docs/design/`, `docs/how-to-guides/`, `docs/tutorials/`, `docs/reference/`, and their README/index pages for quadrant fit, titles, links, `nav_order`, guide-map coverage, and section README shape.
 4. **Related links:** review "Related" sections for missing, stale, weak, or incorrectly ordered links. Keep only strong semantic or explicit workflow links; remove weak proximity links.
 5. **Terminology and glossary drift:** scan for overloaded terms, renamed concepts, inconsistent stage/status/profile names, and undefined terms that need `docs/reference/vocabulary.md` or another central reference entry.
 6. **Third-party and example freshness:** verify claims, commands, config keys, snippets, and examples that mention Hermes, Obsidian, Zotero, bundled plugins, skills, package managers, or external CLIs against the current implementation or upstream docs when relevant.

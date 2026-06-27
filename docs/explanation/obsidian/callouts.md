@@ -31,7 +31,7 @@ The design rule: if the information is only useful in the context of a specific 
 
 ## Why content is produced deterministically, then composed
 
-All three callouts follow the same pattern: a deterministic step selects and ranks candidates; an LLM composes the prose over them. This is the [hybrid method pattern](../rationale/why-computational-methods.md) applied to a note-level surface, and it is a deliberate choice rather than a convenience.
+All three callouts follow the same pattern: a deterministic step selects and ranks candidates; an LLM composes the prose over them. This is the [hybrid method pattern](../../design/why-computational-methods.md) applied to a note-level surface, and it is a deliberate choice rather than a convenience.
 
 The reason is auditability under cost control. The *selection* — which sources are comparable, which links are candidates, which claims trace — is the part that must be reproducible and reviewable, so it stays deterministic: the same vault state produces the same candidates, ranked the same way, every run. The *prose* — the comparative narrative, the one-line link explanations — is the part with no deterministic form, so it's where LLM judgment is spent, and only there. Letting the LLM also do the selection would make the callout non-reproducible and the cost unbounded, for no gain the human can verify.
 
@@ -51,5 +51,5 @@ Callout writes pass through the policy MCP like any other vault write — logged
 
 ## Related
 
-- The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../rationale/why-computational-methods.md)
+- The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../../design/why-computational-methods.md)
 - Callout field reference: [Obsidian callouts](../../reference/obsidian-callouts.md)

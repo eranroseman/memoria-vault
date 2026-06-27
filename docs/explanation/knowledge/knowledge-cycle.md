@@ -38,7 +38,7 @@ What the cycle prevents is the two failure modes at opposite ends: notes that ar
 
 The distinction between a vault that compounds and one that merely accumulates is in the density of the claim layer. A vault with 500 catalog entities and 10 claims is a sophisticated reading list — useful for finding sources but not for writing from. A vault with 50 source notes and 40 claims that link to each other and to hubs is a structure the PI can write from directly, navigating the graph of connected ideas rather than remembering what they read.
 
-A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes. Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../overview/intellectual-foundations.md#luhmanns-zettelkasten)).
+A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes. Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten)).
 
 ## Where the cycle gets stuck
 

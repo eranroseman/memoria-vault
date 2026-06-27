@@ -315,16 +315,17 @@ without it qmd falls back to CPU (slower, still works).
 
 ## Writing docs
 
-### Diátaxis quadrant routing
+### Documentation routing
 
-| Quadrant | Folder | Answers |
+| Section | Folder | Answers |
 |---|---|---|
 | Tutorial | `docs/tutorials/` | "How do I learn X by doing it?" |
 | How-to | `docs/how-to-guides/` | "How do I accomplish X?" |
 | Reference | `docs/reference/` | "What is the exact value/command?" |
-| Explanation | `docs/explanation/` | "Why is it designed this way?" |
+| Explanation | `docs/explanation/` | "How does this part of the system work?" |
+| Design Book | `docs/design/` | "Why is it designed this way?" |
 
-Mixed-quadrant pages are wrong — split them.
+Mixed-purpose pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `src/` (vault-tree) files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
   - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. `docs/contributing/`, `docs/releasing/`, and `docs/testing/` are **build-excluded** from the site (see `docs/_config.yml`) — they have no Pages route, so links to them (and to non-doc files under `src/`/`scripts/`) use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), same as any other unpublished target.

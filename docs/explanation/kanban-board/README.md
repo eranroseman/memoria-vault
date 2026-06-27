@@ -28,7 +28,7 @@ For the state lookup tables (enums, lane assignments, WIP caps, dispatch setting
 
 **Explanation**
 
-- Why review is structural: [Why the review gate is structural](../rationale/why-human-gate.md)
+- Why review is structural: [Why the review gate is structural](../../design/why-human-gate.md)
 - The decision model behind the cards: [Why promotion is gated](../knowledge/promotion-model.md)
 - The Inbox card types: [Document types and epistemic roles](../knowledge/document-types.md)
 

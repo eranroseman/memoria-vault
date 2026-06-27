@@ -6,7 +6,7 @@ nav_order: 3
 
 # The control plane
 
-Every unit of **agent** work is a card on the kanban board — the Tasks layer of the [seven-layer stack](README.md). A trigger (the PI, the Co-PI — Memoria's single conversational agent — or cron) creates a card; the dispatcher assigns it to a **lane** (a background worker on the board — see [Glossary](../../reference/glossary.md)); the lane's agent runs it under propose-not-dispose — agents propose, only the PI disposes, a wall the policy MCP enforces ([Why the review gate is structural](../rationale/why-human-gate.md)); the result resurfaces as an Inbox signal (a proposal card in your queue). Engines run *off* the board — on cron/CI or behind an MCP facade, never as cards.
+Every unit of **agent** work is a card on the kanban board — the Tasks layer of the [seven-layer stack](README.md). A trigger (the PI, the Co-PI — Memoria's single conversational agent — or cron) creates a card; the dispatcher assigns it to a **lane** (a background worker on the board — see [Glossary](../../reference/glossary.md)); the lane's agent runs it under propose-not-dispose — agents propose, only the PI disposes, a wall the policy MCP enforces ([Why the review gate is structural](../../design/why-human-gate.md)); the result resurfaces as an Inbox signal (a proposal card in your queue). Engines run *off* the board — on cron/CI or behind an MCP facade, never as cards.
 
 ---
 

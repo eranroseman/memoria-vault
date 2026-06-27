@@ -1,12 +1,13 @@
 ---
 title: Why specialist profiles, not a generalist agent
-parent: Design rationale
-nav_order: 2
+parent: Design Book
+grand_parent: Developers
+nav_order: 11
 ---
 
 # Why specialist profiles, not a generalist agent
 
-Memoria uses **one conversational Co-PI and four posture-defined background agents** instead of one generalist ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes the argument — why specialists at all, and why posture is the axis that divides them.
+Memoria uses **one conversational Co-PI and four posture-defined background agents** instead of one generalist ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). The dividing line is **posture and write-permission, not capability or tool**: faithful vs skeptical, read-only vs scratch-write vs review-gated. This page makes the argument — why specialists at all, and why posture is the axis that divides them.
 
 ---
 
@@ -65,7 +66,7 @@ Dividing by posture still has its price: the same *technique* can live in severa
 
 ## Related
 
-- The five agents described: [Profiles](../profiles/README.md)
-- The deterministic actors that are not agents: [Operations](../operations/README.md)
+- The five agents described: [Profiles](../explanation/profiles/README.md)
+- The deterministic actors that are not agents: [Operations](../explanation/operations/README.md)
 - Why the layers separate concerns: [Why the architecture is layered](why-three-layers.md)
 - Why the review gate is human-owned: [Why the review gate is structural](why-human-gate.md)
