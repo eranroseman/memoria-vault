@@ -1,6 +1,7 @@
 ---
 title: Use canvas for argument mapping
 parent: Project
+grand_parent: How-to guides
 nav_order: 4
 ---
 

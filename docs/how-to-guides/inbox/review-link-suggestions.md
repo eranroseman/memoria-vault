@@ -1,6 +1,7 @@
 ---
 title: Review link suggestions
 parent: Inbox
+grand_parent: How-to guides
 nav_order: 2
 ---
 

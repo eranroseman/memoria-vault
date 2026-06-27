@@ -1,6 +1,7 @@
 ---
 title: Classify a source
 parent: Library
+grand_parent: How-to guides
 nav_order: 4
 ---
 

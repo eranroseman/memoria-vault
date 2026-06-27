@@ -1,6 +1,7 @@
 ---
 title: The Agent Client pane
 parent: Obsidian
+grand_parent: Explanation
 nav_order: 4
 ---
 

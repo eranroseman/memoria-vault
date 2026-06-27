@@ -1,6 +1,7 @@
 ---
 title: Obsidian plugins
-parent: Reference
+parent: Obsidian and Zotero
+grand_parent: Reference
 ---
 
 # Obsidian plugins

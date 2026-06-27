@@ -1,6 +1,7 @@
 ---
 title: Worklists
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Worklists

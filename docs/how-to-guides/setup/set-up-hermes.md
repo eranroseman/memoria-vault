@@ -1,6 +1,7 @@
 ---
 title: Set up Hermes
 parent: Setup
+grand_parent: How-to guides
 nav_order: 4
 ---
 

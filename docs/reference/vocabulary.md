@@ -1,6 +1,7 @@
 ---
 title: Vocabulary
-parent: Reference
+parent: Vault data model
+grand_parent: Reference
 ---
 
 # Vocabulary

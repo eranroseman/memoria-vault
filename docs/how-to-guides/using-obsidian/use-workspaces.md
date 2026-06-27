@@ -1,6 +1,7 @@
 ---
 title: Use the reset workspace
 parent: Using Obsidian
+grand_parent: How-to guides
 nav_order: 2
 ---
 

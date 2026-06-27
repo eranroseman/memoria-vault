@@ -1,6 +1,7 @@
 ---
 title: Work the review queue
 parent: Inbox
+grand_parent: How-to guides
 nav_order: 3
 ---
 

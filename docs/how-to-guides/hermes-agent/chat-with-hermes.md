@@ -1,6 +1,7 @@
 ---
 title: Run a CLI chat session
 parent: Hermes Agent
+grand_parent: How-to guides
 nav_order: 2
 ---
 

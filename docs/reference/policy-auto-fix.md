@@ -1,6 +1,7 @@
 ---
 title: Policy auto-fix
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Policy auto-fix

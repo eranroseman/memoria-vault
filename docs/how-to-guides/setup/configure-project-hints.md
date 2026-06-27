@@ -1,6 +1,7 @@
 ---
 title: Configure project hints
 parent: Setup
+grand_parent: How-to guides
 nav_order: 6
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Sweeps
-parent: Reference
+parent: Pipelines and I/O
+grand_parent: Reference
 ---
 
 # Sweeps

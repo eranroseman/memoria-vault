@@ -1,6 +1,7 @@
 ---
 title: Board export
-parent: Reference
+parent: Pipelines and I/O
+grand_parent: Reference
 ---
 
 # Board export

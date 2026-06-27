@@ -1,6 +1,7 @@
 ---
 title: Bootstrap installer
 parent: Design Book
+grand_parent: Developers
 nav_order: 14
 ---
 

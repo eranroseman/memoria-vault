@@ -1,6 +1,7 @@
 ---
 title: Policy audit log
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Policy audit log

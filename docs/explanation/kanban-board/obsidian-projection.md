@@ -1,6 +1,7 @@
 ---
 title: How the board surfaces in Obsidian
 parent: Kanban board
+grand_parent: Explanation
 nav_order: 3
 ---
 

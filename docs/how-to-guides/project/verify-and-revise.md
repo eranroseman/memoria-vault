@@ -1,6 +1,7 @@
 ---
 title: Verify and revise a draft
 parent: Project
+grand_parent: How-to guides
 nav_order: 6
 ---
 

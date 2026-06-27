@@ -1,6 +1,7 @@
 ---
 title: Agent Client pane
 parent: Using Obsidian
+grand_parent: How-to guides
 nav_order: 3
 ---
 

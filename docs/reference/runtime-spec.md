@@ -1,6 +1,7 @@
 ---
 title: Runtime Spec
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 nav_order: 23
 permalink: /reference/runtime-spec/
 topic: reference

@@ -1,6 +1,7 @@
 ---
 title: Run a systematic review
 parent: Library
+grand_parent: How-to guides
 nav_order: 7
 ---
 

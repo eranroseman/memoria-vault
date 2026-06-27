@@ -1,6 +1,7 @@
 ---
 title: Navigate the dashboards
 parent: Using Obsidian
+grand_parent: How-to guides
 nav_order: 5
 ---
 

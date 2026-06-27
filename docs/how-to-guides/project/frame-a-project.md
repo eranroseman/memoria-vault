@@ -1,6 +1,7 @@
 ---
 title: Frame a project
 parent: Project
+grand_parent: How-to guides
 nav_order: 3
 ---
 

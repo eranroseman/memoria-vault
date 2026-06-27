@@ -1,6 +1,7 @@
 ---
 title: Load and remove the sample vault
 parent: Setup
+grand_parent: How-to guides
 nav_order: 5
 ---
 

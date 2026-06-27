@@ -1,6 +1,7 @@
 ---
 title: Run the weekly review
 parent: Inbox
+grand_parent: How-to guides
 nav_order: 4
 ---
 

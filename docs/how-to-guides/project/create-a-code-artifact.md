@@ -1,6 +1,7 @@
 ---
 title: Create a code artifact
 parent: Project
+grand_parent: How-to guides
 nav_order: 8
 ---
 

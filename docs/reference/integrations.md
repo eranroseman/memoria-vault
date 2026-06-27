@@ -1,6 +1,7 @@
 ---
 title: External integrations
-parent: Reference
+parent: System and infrastructure
+grand_parent: Reference
 ---
 
 # External integrations

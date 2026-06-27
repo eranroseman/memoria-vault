@@ -1,6 +1,7 @@
 ---
 title: Redeploy profiles
 parent: Operate
+grand_parent: How-to guides
 nav_order: 4
 ---
 

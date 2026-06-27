@@ -1,6 +1,7 @@
 ---
 title: Quickstart
 parent: Setup
+grand_parent: How-to guides
 nav_order: 1
 ---
 

@@ -1,6 +1,7 @@
 ---
 title: Dashboards
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Dashboards

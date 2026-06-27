@@ -1,6 +1,7 @@
 ---
 title: Obsidian plugin data files
-parent: Reference
+parent: Obsidian and Zotero
+grand_parent: Reference
 ---
 
 # Obsidian plugin data files

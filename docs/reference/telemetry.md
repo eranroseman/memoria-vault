@@ -1,6 +1,7 @@
 ---
 title: Telemetry & logs
-parent: Reference
+parent: Pipelines and I/O
+grand_parent: Reference
 ---
 
 

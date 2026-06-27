@@ -1,6 +1,7 @@
 ---
 title: Wikilink and link conventions
-parent: Reference
+parent: Vault data model
+grand_parent: Reference
 ---
 
 # Wikilink and link conventions

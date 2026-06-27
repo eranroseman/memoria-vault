@@ -1,6 +1,7 @@
 ---
 title: Run a retraction sweep
 parent: Operate
+grand_parent: How-to guides
 nav_order: 2
 ---
 

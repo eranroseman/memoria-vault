@@ -1,6 +1,7 @@
 ---
 title: Export a draft
 parent: Project
+grand_parent: How-to guides
 nav_order: 7
 ---
 

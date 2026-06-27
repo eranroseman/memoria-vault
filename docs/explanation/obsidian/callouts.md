@@ -1,6 +1,7 @@
 ---
 title: Callouts
 parent: Obsidian
+grand_parent: Explanation
 nav_order: 3
 ---
 

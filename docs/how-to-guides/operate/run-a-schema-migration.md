@@ -1,6 +1,7 @@
 ---
 title: Run a schema migration
 parent: Operate
+grand_parent: How-to guides
 nav_order: 3
 ---
 

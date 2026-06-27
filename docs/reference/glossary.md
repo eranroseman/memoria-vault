@@ -1,6 +1,7 @@
 ---
 title: Glossary
-parent: Reference
+parent: Vault data model
+grand_parent: Reference
 ---
 
 # Glossary

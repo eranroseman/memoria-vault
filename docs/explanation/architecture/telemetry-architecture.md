@@ -1,6 +1,7 @@
 ---
 title: Telemetry architecture
 parent: Architecture
+grand_parent: Explanation
 nav_order: 6
 ---
 

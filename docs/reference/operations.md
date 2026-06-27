@@ -1,6 +1,7 @@
 ---
 title: Operations
-parent: Reference
+parent: Agents and control
+grand_parent: Reference
 ---
 
 # Operations

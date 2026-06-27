@@ -49,6 +49,7 @@ l0() {
   run ruff format --check memoria scripts src/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
   run python3 scripts/gen_profiles_ref.py --check
+  run python3 scripts/gen_reference_refs.py --check
   run bash scripts/check-vault-links.sh
   run python3 scripts/adr_code_doctor.py
   run python3 scripts/agents_doctor.py
