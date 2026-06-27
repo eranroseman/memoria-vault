@@ -165,8 +165,7 @@ by-doing in a sitting — genre mismatch. It belongs in a practice guide.
   ACM ToCE 2025, DOI 10.1145/3732791; subgoal/transfer-failure
   — [Catrambone 1994](https://link.springer.com/article/10.3758/BF03198399); fading &
   completion — Renkl/Chen 2023, DOI 10.1080/01443410.2023.2273762;
-  expertise-reversal —
-  [Kalyuga et al.](https://www.researchgate.net/publication/226748784_The_expertise_reversal_effect_and_worked_examples_in_tutored_problem_solving);
+  expertise-reversal — Kalyuga et al.;
   sample-corpus pedagogy — MySQL Sakila,
   [Dyer & Rogers, JISE 2015](https://jise.org/Volume26/n2/JISEv26n2p85.pdf); empty-state
   vs sample-data UX —
