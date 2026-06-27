@@ -126,6 +126,43 @@ def test_source_type_is_schema_enum():
     )
 
 
+def test_vocabulary_fields_are_validated_when_terms_are_loaded():
+    types = schema.load_types()
+    vocabulary = schema.load_vocabulary()
+    source = {
+        "type": "source",
+        "lifecycle": "proposed",
+        "title": "T",
+        "entity": "[[paper]]",
+        "research_area": ["mobile-health"],
+        "methodology": ["review"],
+    }
+    assert schema.validate_frontmatter(source, types["source"], vocabulary) == []
+    errs = schema.validate_frontmatter(
+        dict(source, research_area=["Health Informatics"], methodology=["not-a-method"]),
+        types["source"],
+        vocabulary,
+    )
+    assert any("research_area" in err and "off-vocabulary" in err for err in errs)
+    assert any("methodology" in err and "off-vocabulary" in err for err in errs)
+
+    claim = {
+        "type": "claim",
+        "lifecycle": "current",
+        "title": "T",
+        "maturity": "seedling",
+        "sources": [],
+        "topics": ["mobile-health"],
+    }
+    assert schema.validate_frontmatter(claim, types["claim"], vocabulary) == []
+    assert any(
+        "topics" in err
+        for err in schema.validate_frontmatter(
+            dict(claim, topics=["Sleep"]), types["claim"], vocabulary
+        )
+    )
+
+
 def test_project_and_thesis_schema_contracts():
     types = schema.load_types()
     project = types["project"]

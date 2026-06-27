@@ -433,6 +433,38 @@ def test_append_findings_jsonl_touches_empty_file_for_clean_runs(tmp_path):
     assert out.read_text(encoding="utf-8") == ""
 
 
+def test_schema_check_flags_off_vocabulary_values(tmp_path):
+    v = tmp_path
+    (v / "system").mkdir(parents=True)
+    (v / "system/vocabulary.md").write_text(
+        "# Vocabulary\n\n"
+        "## research_area\n\n"
+        "- mobile-health — Mobile health.\n\n"
+        "## methodology\n\n"
+        "- review — Review.\n\n"
+        "## topics\n",
+        encoding="utf-8",
+    )
+    (v / "notes/claims").mkdir(parents=True)
+    (v / "notes/claims/off-topic.md").write_text(
+        "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n"
+        "title: Off topic\nsources: []\ntopics: [Sleep]\n---\n",
+        encoding="utf-8",
+    )
+    (v / "notes/sources").mkdir(parents=True)
+    (v / "notes/sources/off-source.md").write_text(
+        "---\ntype: source\nlifecycle: proposed\ntitle: Off source\nentity: '[[p]]'\n"
+        "research_area: [Health Informatics]\nmethodology: [not-a-method]\n---\n",
+        encoding="utf-8",
+    )
+
+    findings = _m.frontmatter_schema_check(v)
+    messages = "\n".join(f.message for f in findings)
+    assert "topics: off-vocabulary" in messages
+    assert "research_area: off-vocabulary" in messages
+    assert "methodology: off-vocabulary" in messages
+
+
 def _claim(v, name, topics):
     (v / "notes/claims").mkdir(parents=True, exist_ok=True)
     (v / f"notes/claims/{name}.md").write_text(

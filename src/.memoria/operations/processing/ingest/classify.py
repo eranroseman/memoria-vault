@@ -62,6 +62,7 @@ METHODOLOGY_FROM_PUBTYPE = {
 
 _warned_calibration = False  # warn once per process, not per ingest
 _warned_hints = False  # ditto, for a malformed project-hints.yaml
+_warned_vocabulary = False
 
 
 def thresholds(vault: Path | None) -> tuple[float, float]:
@@ -86,6 +87,25 @@ def thresholds(vault: Path | None) -> tuple[float, float]:
                 file=sys.stderr,
             )
         return DEFAULT_FLOOR, DEFAULT_MARGIN
+
+
+def load_vocabulary(vault: Path | None) -> dict[str, set[str]]:
+    global _warned_vocabulary
+    if vault is None:
+        return {}
+    try:
+        from operations.lib import schema as schema_lib
+
+        return schema_lib.load_vocabulary(Path(vault) / "system" / "vocabulary.md")
+    except Exception as exc:  # noqa: BLE001
+        if not _warned_vocabulary:
+            _warned_vocabulary = True
+            print(
+                f"[classify] WARNING: cannot read system/vocabulary.md "
+                f"({type(exc).__name__}: {exc}) — classification stays unconstrained",
+                file=sys.stderr,
+            )
+        return {}
 
 
 def candidates(merged: dict) -> list[tuple[str, float]]:
@@ -115,13 +135,21 @@ def methodology(merged: dict) -> list[str]:
     return out
 
 
-def decide(merged: dict, floor: float = DEFAULT_FLOOR, margin: float = DEFAULT_MARGIN) -> dict:
+def decide(
+    merged: dict,
+    floor: float = DEFAULT_FLOOR,
+    margin: float = DEFAULT_MARGIN,
+    vocabulary: dict[str, set[str]] | None = None,
+) -> dict:
     """The classify decision for one merged record. Pure — no I/O.
 
     status: applied (clear winner) | ambiguous (near-tie / below floor; field
     stays unset) | no_data (nothing to classify — a no-op, not audited)."""
+    vocabulary = vocabulary or {}
     cands = candidates(merged)
     meth = methodology(merged)
+    if vocabulary.get("methodology"):
+        meth = [m for m in meth if m in vocabulary["methodology"]]
     d = {
         "research_area": [],
         "methodology": meth,
@@ -145,10 +173,17 @@ def decide(merged: dict, floor: float = DEFAULT_FLOOR, margin: float = DEFAULT_M
             f"{cands[1][0]!r} ({cands[1][1]:.2f}) is within the "
             f"margin {margin:.2f}",
         }
+    controlled = controlled_research_area(top_name, vocabulary)
+    if controlled is None:
+        return {
+            **d,
+            "status": "ambiguous",
+            "reason": f"top candidate {top_name!r} is outside the research_area vocabulary",
+        }
     return {
         **d,
         "status": "applied",
-        "research_area": [top_name],
+        "research_area": [controlled],
         "reason": f"clear winner: {top_name!r} ({top:.2f}) >= floor "
         f"{floor:.2f} with margin >= {margin:.2f}",
     }
@@ -186,9 +221,12 @@ def append_audit(vault: Path, citekey: str, decision: dict, floor: float, margin
     }
     if decision["status"] == "ambiguous":
         record["classify_miss"] = True
-        record["miss_kind"] = (
-            "below_floor" if "below the confidence floor" in decision["reason"] else "near_tie"
-        )
+        if "below the confidence floor" in decision["reason"]:
+            record["miss_kind"] = "below_floor"
+        elif "outside the research_area vocabulary" in decision["reason"]:
+            record["miss_kind"] = "off_vocabulary"
+        else:
+            record["miss_kind"] = "near_tie"
     log = Path(vault) / AUDIT_RELPATH
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("a", encoding="utf-8") as f:
@@ -244,6 +282,14 @@ def load_project_hints(vault: Path | None) -> list[dict]:
 def _norm_topic(term: str) -> str:
     """Kebab-case normalization: 'mHealth Apps' -> 'mhealth-apps'."""
     return re.sub(r"[^a-z0-9]+", "-", str(term).lower()).strip("-")
+
+
+def controlled_research_area(name: str, vocabulary: dict[str, set[str]]) -> str | None:
+    allowed = vocabulary.get("research_area") or set()
+    if not allowed:
+        return name
+    by_normalized = {_norm_topic(term): term for term in allowed}
+    return by_normalized.get(_norm_topic(name))
 
 
 def paper_topic_terms(merged: dict) -> list[str]:

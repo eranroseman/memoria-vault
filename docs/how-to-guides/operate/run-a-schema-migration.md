@@ -48,7 +48,7 @@ Edit `.memoria/schemas/types/<type>.yaml` so the new field name or value set is 
 For a mechanical rename over the reviewed file list:
 
 ```bash
-xargs -a /tmp/migration-files.txt sed -i 's/^methodology: rct$/methodology: randomized-controlled-trial/'
+xargs -a /tmp/migration-files.txt sed -i 's/^methodology: randomized-controlled-trial$/methodology: rct/'
 ```
 
 For anything non-mechanical (restructuring a map, splitting a field), edit by hand or with a one-off script — but always over the step-2 list.
@@ -67,7 +67,7 @@ python3 .memoria/operations/integrity/linter/detectors.py --vault .
 git diff --stat       # only the expected files, only the expected change
 xargs -a /tmp/migration-files.txt git add            # stage exactly the reviewed file list
 git add .memoria/schemas/types/<type>.yaml           # plus the schema, if step 3 changed it
-git commit -m "schema: rename methodology rct → randomized-controlled-trial"
+git commit -m "schema: rename methodology randomized-controlled-trial → rct"
 ```
 
 Staging from the step-2 file list keeps the commit scoped to the reviewed notes — no stray working-tree edits ride along.

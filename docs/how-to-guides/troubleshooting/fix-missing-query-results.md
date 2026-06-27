@@ -13,7 +13,7 @@ nav_order: 10
 - A dashboard or hub view is emptier than the vault warrants
 - The "missing" notes are valid and visible everywhere except the filtered view
 
-**Diagnosis:** the field value doesn't match the controlled vocabulary *exactly*. Dataview and Bases compare strings literally, so a near-miss term (`RCT` for `randomized-controlled-trial`, `field study` for `field-study`, a stray capital, a plural) silently drops the note from the filtered result. Nothing errors — the value is well-formed YAML, just off-vocabulary. This is term drift, and it fails silently by design ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
+**Diagnosis:** the field value doesn't match the controlled vocabulary *exactly*. Dataview and Bases compare strings literally, so a near-miss term (`RCT` for `rct`, `field study` for `field-study`, a stray capital, a plural) silently drops the note from the filtered result. The query engine does not error — the value is well-formed YAML, just off-vocabulary. Run the Linter's `schema-check` to surface the offending note ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
 **Fix:** find the off-vocabulary values, then either correct the note to the exact controlled term or add the term to the vocabulary if it's genuinely new.
 

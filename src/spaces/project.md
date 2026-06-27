@@ -33,9 +33,8 @@ cssclasses: memoria-space
 
 ![[projects.base#Project gaps]]
 
-Open a project note to see its thesis, sources, and local notes. The projected
-argument canvas is deferred; alpha.7 ships the project base and authored project
-pages.
+Open a project note to see its thesis, sources, and local notes. Refresh the
+project gate after edits; the projected argument canvas remains deferred.
 
 ## Guides
 

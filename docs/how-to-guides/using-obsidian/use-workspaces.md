@@ -44,11 +44,11 @@ keeps the Agent Client pane on the right.
   and the pinned rail.
 - The left-pane rail switches among the three spaces, the Inbox queue, and Maintenance.
 - Loading the **Memoria** workspace restores the shared shell without changing the
-  gate model.
+  space model.
 
 ## Related
 
 - Workspace reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Conversation surface: [Agent Client pane](use-the-agent-client-pane.md)
 - Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
-- The gate decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)
+- The dashboard decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)

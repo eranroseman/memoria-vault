@@ -1,6 +1,7 @@
 ---
 title: Issue tracking
 parent: Contributing
+grand_parent: Developers
 nav_order: 2
 ---
 

@@ -43,10 +43,10 @@ Below the floor, the bundle carries a `flag_needed` block instead of a silent be
 
 ## Automated classification
 
-`classify.py` reads the scored OpenAlex topics already in the enrichment payload (no new network call), rolls them up to their subfield, and decides:
+`classify.py` reads the scored OpenAlex topics already in the enrichment payload (no new network call), rolls them up to their subfield, checks the controlled vocabulary, and decides:
 
-- **Clear winner** — the top score clears the floor _and_ beats the runner-up by the near-tie margin → `research_area` is applied silently. A `methodology` facet is applied whenever it is derivable from the S2 publication types (Review, MetaAnalysis, ClinicalTrial, CaseReport, Dataset — deterministic, independent of topic ambiguity).
-- **Genuine ambiguity** — below the floor or within the margin → the field **stays unset** and ingest raises **one** Inbox `flag` card: what was ambiguous and the top candidates with scores, never a verdict (the [ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty rules).
+- **Clear winner** — the top score clears the floor, beats the runner-up by the near-tie margin, and matches `system/vocabulary.md` → `research_area` is applied silently. A `methodology` facet is applied whenever it is derivable from the S2 publication types (Review, MetaAnalysis, ClinicalTrial, CaseReport, Dataset — deterministic, independent of topic ambiguity).
+- **Genuine ambiguity** — below the floor, within the margin, or outside the controlled vocabulary → the field **stays unset** and ingest raises **one** Inbox `flag` card: what was ambiguous and the top candidates with scores, never a verdict (the [ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty rules).
 - **No data** (enrichment off, or no topics resolved) → a no-op.
 
 The thresholds live beside the entity-resolution floor in `src/.memoria/schemas/calibration.yaml`, under the same drift-bound discipline:

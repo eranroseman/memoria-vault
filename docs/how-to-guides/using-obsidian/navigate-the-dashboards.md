@@ -53,7 +53,7 @@ Knowledge is where your **claims** live — the individual statements you are bu
 
 Open the **Knowledge** space, then its **Contradictions** view.
 
-This view lists pairs of claims that disagree with each other. Check it before you promote a claim to `evergreen` (the most settled maturity level) or submit a draft. An unresolved contradiction means the argument is not settled yet.
+This view lists pairs of claims that disagree with each other. Check it before you advance a claim's maturity to `evergreen` (the most settled level) or submit a draft. An unresolved contradiction means the argument is not settled yet.
 
 ### "Is this project ready to draft?"
 

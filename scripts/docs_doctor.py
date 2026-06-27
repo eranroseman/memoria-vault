@@ -51,7 +51,7 @@ DROPPED_KEYS = (
 # published-docs bar.
 SCRATCH_DIRS = {"tmp"}
 
-DEFAULT_SITE_EXCLUDED_DIRS = {"contributing", "releasing", "testing"}
+DEFAULT_SITE_EXCLUDED_DIRS = {"releasing", "testing"}
 _SITE_EXCLUDE_CACHE: dict[Path, set[str]] = {}
 
 

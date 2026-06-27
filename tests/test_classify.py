@@ -26,6 +26,20 @@ def _audit_lines(vault):
     return [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
 
 
+def _write_vocabulary(vault):
+    (vault / "system").mkdir(parents=True, exist_ok=True)
+    (vault / "system/vocabulary.md").write_text(
+        "# Vocabulary\n\n"
+        "## research_area\n\n"
+        "- mobile-health — Mobile health.\n\n"
+        "## methodology\n\n"
+        "- review — Review.\n"
+        "- meta-analysis — Meta-analysis.\n\n"
+        "## topics\n",
+        encoding="utf-8",
+    )
+
+
 # --------------------------------------------------------------------------- #
 # decide() — the pure decision rule
 # --------------------------------------------------------------------------- #
@@ -70,16 +84,17 @@ def test_flag_payload_is_honest_no_verdict():
 # the pipeline integration — applies / flags / no-ops, always audited
 # --------------------------------------------------------------------------- #
 def test_clear_winner_applies_and_audits(monkeypatch, tmp_path):
+    _write_vocabulary(tmp_path)
     m = _merged(
         [
-            _topic("mHealth Apps", 0.97, "Health Informatics"),
+            _topic("mHealth Apps", 0.97, "mobile-health"),
             _topic("HCI Theory", 0.40, "Human-Computer Interaction"),
         ],
         publication_types=["Review"],
     )
     b = _run_pipeline(monkeypatch, tmp_path, m)
     fm = b["frontmatter"]
-    assert fm["research_area"] == ["Health Informatics"]
+    assert fm["research_area"] == ["mobile-health"]
     assert fm["methodology"] == ["review"]
     assert b["classify"]["status"] == "applied"
     assert "classify_flag_needed" not in b
@@ -87,11 +102,25 @@ def test_clear_winner_applies_and_audits(monkeypatch, tmp_path):
     assert len(lines) == 1
     rec = lines[0]
     assert rec["decision"] == "applied" and rec["citekey"] == "x2024Test"
-    assert rec["research_area"] == ["Health Informatics"]
-    assert rec["candidates"][0]["name"] == "Health Informatics"
+    assert rec["research_area"] == ["mobile-health"]
+    assert rec["candidates"][0]["name"] == "mobile-health"
     assert rec["confidence_floor"] == 0.6 and rec["near_tie_margin"] == 0.15
     assert rec["source"] == "openalex.topics"
     assert rec["timestamp"].endswith("Z") and rec["run_id"]
+
+
+def test_off_vocabulary_winner_flags_and_leaves_unset(monkeypatch, tmp_path):
+    _write_vocabulary(tmp_path)
+    m = _merged([_topic("mHealth Apps", 0.97, "Health Informatics")], publication_types=["Review"])
+
+    b = _run_pipeline(monkeypatch, tmp_path, m)
+
+    assert b["frontmatter"]["research_area"] == []
+    assert b["frontmatter"]["methodology"] == ["review"]
+    assert b["classify"]["status"] == "ambiguous"
+    assert "outside the research_area vocabulary" in b["classify"]["reason"]
+    assert "outside the research_area vocabulary" in b["classify_flag_needed"]["finding"]
+    assert _audit_lines(tmp_path)[0]["miss_kind"] == "off_vocabulary"
 
 
 def test_near_tie_flags_audits_and_leaves_unset(monkeypatch, tmp_path):

@@ -5,6 +5,7 @@ Deterministic runtime processors live here. They may read canonical schemas from
 redefine profile permissions or bypass the policy gate for vault writes.
 
 - `processing/ingest/` owns capture, extraction, resolution, and linking.
+- `processing/project/` owns deterministic project-gate impact refreshes.
 - `integrity/linter/` owns schema/content diagnostics, golden restore, and commit checks.
 - `integrity/retraction/` owns retraction lookup and alerting.
 - `cleanup/` owns deterministic recovery and reconciliation jobs.

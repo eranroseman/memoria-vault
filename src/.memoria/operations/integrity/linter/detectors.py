@@ -145,6 +145,7 @@ NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects", "spaces")
 # --------------------------------------------------------------------------- #
 TYPE_SCHEMAS: dict | None = None
 _FOLDERS: dict | None = None
+_VOCABULARY_BY_VAULT: dict[Path, dict[str, set[str]]] = {}
 try:
     from operations.lib import schema as _schema
 
@@ -371,6 +372,11 @@ def extract_path_broken(vault: Path) -> list[Finding]:
 
 def frontmatter_schema_check(vault: Path) -> list[Finding]:
     out = []
+    vocabulary_terms = None
+    if _schema is not None:
+        vocabulary_terms = _VOCABULARY_BY_VAULT.setdefault(
+            vault, _schema.load_vocabulary(vault / "system" / "vocabulary.md")
+        )
     for p in iter_notes(vault):
         rp = relpath(vault, p)
         if is_untyped_infra(rp):  # system infra isn't typed knowledge
@@ -396,7 +402,7 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
                     )
                 )
                 continue
-            for err in _schema.validate_frontmatter(fm, sc):
+            for err in _schema.validate_frontmatter(fm, sc, vocabulary_terms):
                 out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
         else:
             for field in REQUIRED_FIELDS.get(ntype, []):

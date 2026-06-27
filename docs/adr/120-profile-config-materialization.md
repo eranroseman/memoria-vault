@@ -1,6 +1,6 @@
 ---
 topic: decisions
-id: 115
+id: 120
 title: Profile config capability blocks are materialized from the tool registry
 nav_exclude: true
 status: accepted
@@ -11,7 +11,7 @@ supersedes: []
 superseded_by: []
 ---
 
-# ADR-115: Profile config capability blocks are materialized from the tool registry
+# ADR-120: Profile config capability blocks are materialized from the tool registry
 
 ## Context
 

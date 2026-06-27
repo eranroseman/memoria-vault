@@ -44,7 +44,7 @@ navigation surface, not a space — it carries no `type`, like `home.md`), in tw
 
 1. **Now (awareness).** The Inbox action queue as a live count. Inbox is a *state* that
    converges to empty, not a *place* you dwell — so it surfaces here as a glanceable signal,
-   not as a peer destination. Clicking opens the Inbox space in the main pane.
+   not as a peer destination. Clicking opens the Inbox queue in the main pane.
 2. **Places (destinations).** The three durable rooms — **Library · Knowledge · Project** —
    each with one context badge (sources to read · open contradictions · active projects).
    Selecting opens that room's full dashboard in the main pane.

@@ -36,7 +36,7 @@ Capture and global actions live in the ribbon; navigate spaces from the left-pan
 
 ## Guides
 
-Step-by-step for working this space:
+Step-by-step for working this queue:
 
 - [Triage fleeting notes](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/triage-fleeting-notes.html)
 - [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions.html)

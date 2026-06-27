@@ -37,9 +37,8 @@ cssclasses: memoria-space
 
 ![[patterns.base#Library mode]]
 
-> [!verification] Edge authoring is the alpha.7 gap. `links:` frontmatter is the system
-> of record, but there is no dedicated relate control yet. Confirm an agent proposal
-> or hand-edit `links:` until that follow-on ships.
+> [!verification] `links:` frontmatter is the system of record. Use **Memoria: link claim**
+> for suggestions, then add accepted `supports` or `contradicts` entries by hand.
 
 ## Guides
 

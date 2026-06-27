@@ -15,6 +15,7 @@ Field kinds: str | int | bool | date | list | map | literal:<value> | enum:<name
 from __future__ import annotations
 
 import datetime
+import re
 from pathlib import Path
 
 import yaml
@@ -22,6 +23,11 @@ import yaml
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent.parent / "schemas"
 
 UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
+VOCABULARY_FIELDS = {
+    "paper": {"research_area": "research_area", "methodology": "methodology"},
+    "source": {"research_area": "research_area", "methodology": "methodology"},
+    "claim": {"topics": "topics"},
+}
 
 
 def _schemas_dir(schemas_dir: Path | None = None) -> Path:
@@ -46,6 +52,32 @@ def load_folders(schemas_dir: Path | None = None) -> dict:
 def load_calibration(schemas_dir: Path | None = None) -> dict:
     f = _schemas_dir(schemas_dir) / "calibration.yaml"
     return yaml.safe_load(f.read_text(encoding="utf-8"))
+
+
+def load_vocabulary(
+    vocabulary_path: Path | None = None, schemas_dir: Path | None = None
+) -> dict[str, set[str]]:
+    path = vocabulary_path or _schemas_dir(schemas_dir).parent.parent / "system" / "vocabulary.md"
+    out: dict[str, set[str]] = {"research_area": set(), "methodology": set(), "topics": set()}
+    if not path.is_file():
+        return out
+    current = ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## research_area"):
+            current = "research_area"
+            continue
+        if line.startswith("## methodology"):
+            current = "methodology"
+            continue
+        if line.startswith("## topics"):
+            current = ""
+            continue
+        if current:
+            match = re.match(r"- ([a-z0-9-]+) —", line)
+            if match:
+                out[current].add(match.group(1))
+    out["topics"] = set(out["research_area"])
+    return out
 
 
 def home_for(type_name: str, folders: dict) -> str | None:
@@ -109,7 +141,9 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
     return f"unknown kind {kind!r}"
 
 
-def validate_frontmatter(fm: dict, schema: dict) -> list[str]:
+def validate_frontmatter(
+    fm: dict, schema: dict, vocabulary_terms: dict[str, set[str]] | None = None
+) -> list[str]:
     """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
@@ -135,6 +169,15 @@ def validate_frontmatter(fm: dict, schema: dict) -> list[str]:
     gate = schema.get("promotion_gate")
     if gate and fm.get("lifecycle") == gate and fm.get("promoted_at") in (None, ""):
         errors.append(f"lifecycle {gate!r} requires promoted_at promotion provenance")
+    if vocabulary_terms:
+        for field, vocabulary in VOCABULARY_FIELDS.get(str(schema.get("type")), {}).items():
+            values = fm.get(field)
+            allowed = vocabulary_terms.get(vocabulary) or set()
+            if not allowed or values in (None, "") or not isinstance(values, list):
+                continue
+            bad = [str(value) for value in values if str(value) not in allowed]
+            if bad:
+                errors.append(f"{field}: off-vocabulary value(s) {bad}; expected {vocabulary} term")
     return errors
 
 

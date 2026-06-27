@@ -528,25 +528,6 @@ entries:
     topic: decisions
   canonical_owner: true
   status: manual
-- path: docs/adr/115-profile-config-materialization.md
-  title: Profile config capability blocks are materialized from the tool registry
-  book: Developers
-  topic: decisions
-  frontmatter:
-    assumes:
-    - 27
-    - 48
-    date_proposed: 2026-06-23
-    date_resolved: 2026-06-23
-    id: 115
-    nav_exclude: true
-    status: accepted
-    superseded_by: []
-    supersedes: []
-    title: Profile config capability blocks are materialized from the tool registry
-    topic: decisions
-  canonical_owner: true
-  status: manual
 - path: docs/adr/116-obsidian-surface-architecture.md
   title: 'Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges'
   book: Developers
@@ -651,6 +632,25 @@ entries:
     superseded_by: []
     supersedes: []
     title: obsidian-linter is reference-only, not a control-plane formatter
+    topic: decisions
+  canonical_owner: true
+  status: manual
+- path: docs/adr/120-profile-config-materialization.md
+  title: Profile config capability blocks are materialized from the tool registry
+  book: Developers
+  topic: decisions
+  frontmatter:
+    assumes:
+    - 27
+    - 48
+    date_proposed: 2026-06-23
+    date_resolved: 2026-06-23
+    id: 120
+    nav_exclude: true
+    status: accepted
+    superseded_by: []
+    supersedes: []
+    title: Profile config capability blocks are materialized from the tool registry
     topic: decisions
   canonical_owner: true
   status: manual
@@ -2351,7 +2351,8 @@ entries:
   topic: null
   frontmatter:
     has_children: true
-    nav_order: 6
+    nav_order: 4
+    parent: Developers
     permalink: /contributing/
     title: Contributing
   canonical_owner: false
@@ -2361,6 +2362,7 @@ entries:
   book: Internal
   topic: null
   frontmatter:
+    grand_parent: Developers
     nav_order: 2
     parent: Contributing
     title: Issue tracking
@@ -2371,6 +2373,7 @@ entries:
   book: Internal
   topic: null
   frontmatter:
+    grand_parent: Developers
     nav_order: 1
     parent: Contributing
     title: Contributing workflow

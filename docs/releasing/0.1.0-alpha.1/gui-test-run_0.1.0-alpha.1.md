@@ -64,7 +64,7 @@ end (the boxes are clickable in Obsidian).
 | `Agent Client` | ACP chat pane to Hermes | an *Agent Client* pane/command exists (Part E1) |
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
-| `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
+| `Dataview` | Powers JSONL-backed dashboards and inline rail counts | system dashboards render tables and rail counts resolve (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Local REST API with MCP` | Exposes the vault to Hermes (HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `QuickAdd` | Registers the `Memoria:` command-palette entries | Cmd/Ctrl-P → typing `Memoria:` lists commands |
@@ -85,13 +85,8 @@ Tick each plugin that is enabled and validated:
 - [x] `Templater`
 - [x] **A3 Pass (8/8)**
 
-> **A-note (private configs).** `obsidian-local-rest-api/data.json` and
-> `agent-client/data.json` are gitignored and ship as `data.json.example`. On a
-> fresh vault: `obsidian-local-rest-api` **regenerates its own** (apiKey + TLS) on
-> first launch, and the installer **seeds `agent-client/data.json`** from its example
-> (set the agent command path inside it). Separately, **`obsidian-git` needs Git for
-> Windows** — `install.ps1` installs it via winget; if *Source Control* shows "git
-> not found", install Git and restart Obsidian.
+> **A-note (private configs).** Use the maintained private-config note in
+> [GUI test plan](../../testing/plans/gui-test-plan.md#part-b--local-rest-api-bridge-the-write-gates-lifeline).
 
 ---
 

@@ -1,7 +1,7 @@
 /*
  * QuickAdd user script - "Memoria: open Inbox".
  *
- * Opens the daily Inbox space in the current pane. Used by generated Inbox-card
+ * Opens the daily Inbox queue in the current pane. Used by generated Inbox-card
  * buttons that should navigate without changing the active card lifecycle.
  */
 
