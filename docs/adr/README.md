@@ -15,7 +15,7 @@ decided, why, which alternatives were weighed, and the consequences. ADRs are th
 proposals folder.
 
 Files are named `NN-title.md` and are **browsable in this directory** — numbered in
-creation order. To add one, copy [the ADR template](_template.md) and take the next
+creation order. To add one, copy `docs/adr/_template.md` and take the next
 number.
 
 ## Status lifecycle
@@ -23,7 +23,7 @@ number.
 `proposed` → `accepted` → `superseded` (or `rejected`). ADR status records decision
 state only. Scheduling and readiness live in the GitHub issue tracker: an accepted
 decision can still have an implementation issue with Readiness `Later`, `Blocked`,
-or `Needs shaping`. See [the template](_template.md) for the required fields per
+or `Needs shaping`. See `docs/adr/_template.md` for the required fields per
 status.
 
 ## Index

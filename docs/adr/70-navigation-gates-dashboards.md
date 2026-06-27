@@ -44,7 +44,7 @@ object-first for browsing.
 
 - Caps cognitive load (3 gates now, progressive disclosure for depth) and keeps
   maintenance from ever being a forced "wall of yellow."
-- Maps onto [ADR-69](69-operations-layer-naming.md): **Integrity** findings → status
+- Maps onto [ADR-69]({{ site.baseurl }}/adr/69-operations-layer-naming.html): **Integrity** findings → status
   bar + Action cards; **Telemetry** → pull dashboards; **Cleanup** → invisible;
   **Processing** → the knowledge itself.
 - Base Board (kanban over Bases) is adopted only as a **version-pinned sandbox pilot**,
@@ -72,7 +72,7 @@ intent earns a concrete job.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md)
-  (the shells), [ADR-69](69-operations-layer-naming.md) (the categories the dashboards
+  (the shells), [ADR-69]({{ site.baseurl }}/adr/69-operations-layer-naming.html) (the categories the dashboards
   map onto), [ADR-77](77-project-gate.md) (the fourth gate)
 - **Implementing issues:** #467 (JTBD dashboards + intent-named gates), #375 (status-bar
   ambient indicator), #380 (assist surface), #145 (property display)

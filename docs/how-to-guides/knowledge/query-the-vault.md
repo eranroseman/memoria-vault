@@ -43,7 +43,7 @@ The active note is passed as a readable reference; attach others when the questi
 
 The Co-PI reads the vault directly and never writes (hybrid keyword + vector
 search over Memoria's filtered `qmd` MCP, plus the typed graph — [The
-Co-PI](../../explanation/profiles/co-pi.md)). Current retrieval excludes claim
+Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Current retrieval excludes claim
 notes that carry `superseded_by`; ask explicitly for historical/superseded claims
 when you are reconstructing what changed. Push on it: "which note says that?",
 "what disagrees with this?". An assertion it can't ground in a note of yours is
@@ -65,4 +65,4 @@ its synthesis, not your knowledge — treat it accordingly.
 - Distilling a kept answer: [Write a claim note](../knowledge/write-a-claim-note.md)
 - The transcript's afterlife: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
 - The search engine underneath: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- The agent in the Agent Client pane: [The Co-PI](../../explanation/profiles/co-pi.md)
+- The agent in the Agent Client pane: [The Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)

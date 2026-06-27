@@ -14,7 +14,7 @@ superseded_by: []
 # ADR-46: Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault
 
 > **Vocabulary amended (2026-06-14, [ADR-69: Operations — name the deterministic
-> layer and its four categories](69-operations-layer-naming.md)).** The layer this ADR
+> layer and its four categories]({{ site.baseurl }}/adr/69-operations-layer-naming.html)).** The layer this ADR
 > calls **Engines** is now named **Operations** (the synonym "app" is retired too).
 > ADR-69 governs the vocabulary; this ADR keeps the architecture.
 

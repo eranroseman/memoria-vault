@@ -44,7 +44,7 @@ development vault is limited to overwriting shipped system files from `src/` and
 restaging `.memoria/golden/manifest.json` so later drift checks compare against the
 installed source snapshot. There is no shipped in-place release-upgrade reconcile:
 that broader layer-aware upgrade path belongs to the later versioned-release spine in
-[ADR-76](76-versioned-vault-release-reconciling-installer.md).
+[ADR-76]({{ site.baseurl }}/adr/76-versioned-vault-release-reconciling-installer.html).
 
 This amends [ADR-26](26-repo-as-install-unit.md): the repo remains the install unit
 and profiles remain hand-authored and idempotently deployed; what changes is the
@@ -85,6 +85,6 @@ install; `src/` populate + golden staging keeps authoring (repo) and restoring
   [ADR-49](49-catalog-in-bases-linter-monitor.md), [ADR-47](47-type-first-category-folders.md)
 - **Extended by (proposed):** [ADR-76: Distribute Memoria as a versioned vault release;
   deploy via a source-agnostic reconciling
-  installer](76-versioned-vault-release-reconciling-installer.md) proposes extending this
+  installer]({{ site.baseurl }}/adr/76-versioned-vault-release-reconciling-installer.html) proposes extending this
   ADR's golden manifest to cover the code and authored-content layers; if accepted, its
   manifest supersedes this one.

@@ -17,7 +17,7 @@ superseded_by: [50, 51]
 >
 > **Superseded 2026-06-16 on two axes — read both.**
 > [ADR-50: One lifecycle chain for everything; maturity is a claim property; reference
-> dropped; MOC renamed hub](50-universal-lifecycle-and-maturity.md) replaces the
+> dropped; MOC renamed hub]({{ site.baseurl }}/adr/50-universal-lifecycle-and-maturity.html) replaces the
 > **lifecycle vocabulary** (it now owns the universal lifecycle chain), and
 > [ADR-51: The Inbox category and the honesty card](51-inbox-category-and-honesty-card.md)
 > replaces the **candidate-note routing** (Inbox categories and gap-card honesty). This
