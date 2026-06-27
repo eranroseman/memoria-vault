@@ -2486,6 +2486,39 @@ entries:
     title: What the literature pushes back on
   canonical_owner: false
   status: manual
+- path: docs/design/why-agent-client-pane.md
+  title: Why the Agent Client pane exists
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 29
+    parent: Design Book
+    title: Why the Agent Client pane exists
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-board-state-machine.md
+  title: Why the board is a state machine
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 26
+    parent: Design Book
+    title: Why the board is a state machine
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-callouts.md
+  title: Why callouts exist
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 30
+    parent: Design Book
+    title: Why callouts exist
+  canonical_owner: false
+  status: manual
 - path: docs/design/why-computational-methods.md
   title: Why Memoria uses deterministic methods alongside LLMs
   book: Developers
@@ -2539,6 +2572,39 @@ entries:
     nav_order: 30
     parent: Design Book
     title: 'Pattern provenance: borrow, adapt, ignore'
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-profile-boundaries.md
+  title: Why profile boundaries exist
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 25
+    parent: Design Book
+    title: Why profile boundaries exist
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-promotion-is-gated.md
+  title: Why promotion is gated
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 28
+    parent: Design Book
+    title: Why promotion is gated
+  canonical_owner: false
+  status: manual
+- path: docs/design/why-review-is-state.md
+  title: Why review is a state
+  book: Developers
+  topic: null
+  frontmatter:
+    grand_parent: Developers
+    nav_order: 27
+    parent: Design Book
+    title: Why review is a state
   canonical_owner: false
   status: manual
 - path: docs/design/why-specialist-profiles.md
@@ -2996,14 +3062,14 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/explanation/knowledge/promotion-model.md
-  title: Why promotion is gated
+  title: Promotion and gated zones
   book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
     nav_order: 5
     parent: Knowledge
-    title: Why promotion is gated
+    title: Promotion and gated zones
   canonical_owner: false
   status: manual
 - path: docs/explanation/knowledge/vocabulary-discipline.md

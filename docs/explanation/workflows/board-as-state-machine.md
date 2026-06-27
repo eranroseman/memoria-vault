@@ -6,31 +6,7 @@ nav_order: 2
 
 # The board as a state machine (the control plane)
 
-The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until the PI approves it into the vault or archives it: agents propose, only the PI disposes, and the policy MCP enforces that wall — see [Why the review gate is structural](../../design/why-human-gate.md).
-
----
-
-## Procedure vs. state-machine path
-
-A scripted procedure says: "do step 1, then step 2, then step 3." If step 2 fails, the script fails. The state of the work lives implicitly in how far along the script got.
-
-A state-machine path says: "a card in state A, assigned to profile P, moves to state B when condition C is met." The state of the work is **explicit, persistent, and queryable**. If something fails, the card stays in its current state, the failure is recorded, and dispatch retries or escalates.
-
-The difference matters most in long-horizon work. A research task doesn't complete in one session. Sources are found over days, synthesis develops over weeks, verification happens in parallel with drafting. A scripted procedure can't represent "this task is in progress across three sessions" — a state machine can.
-
----
-
-## Why not chat
-
-The alternative to a board is chat-based coordination: a human messages an agent, the agent does work, the human messages again. Many agent systems work this way. The problems emerge with scale:
-
-**Chat is session-scoped.** When the session ends, the context is gone. The next session starts fresh. "Where was that task we were working on?" doesn't have an answer — it was in the conversation, which is now just a log.
-
-**Chat has no WIP visibility.** In a chat-based system, there's no way to ask "what's in progress right now?" without reading the conversation. The board answers that question with a query.
-
-**Chat doesn't survive handoffs.** When a task passes from the Librarian to the Peer-reviewer, what carries the context? In a chat system, the answer is "we re-explain it in the new session." In a board system, the answer is the card's `summary` and `metadata` — structured, persistent, and readable by any profile that picks it up.
-
-**Chat conflates work with knowledge.** When a useful answer appears in a chat, it's trapped there. The vault and the board create two separate channels: the board is for work, the vault is for knowledge. The discipline separates "this is in progress" from "this has been established."
+The Kanban board is Memoria's **control plane** — the shared state machine that coordinates work across profiles, sessions, and flows. Every long-lived task lives on the board until the PI approves it into the vault or archives it: agents propose, only the PI disposes, and the policy MCP enforces that wall.
 
 ---
 
@@ -82,14 +58,9 @@ A card may reference a note by path (its `metadata.promote_target` is a note pat
 
 ---
 
-## Why no Orchestrator
-
-Routing — "which profile picks up this card?" — is encoded in the card's `assignee` and the lane-override files, not in a reasoning agent. If the rules can't decide (no eligible profile, or ambiguous assignment), the card sits in `ready` until the human intervenes. Why there is no routing agent — the auditability argument — is owned by [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md).
-
----
-
 ## Related
 
+- Why the board is a state machine: [Why the board is a state machine](../../design/why-board-state-machine.md)
 - Why the layered architecture requires explicit separation: [Why the architecture is layered](../../design/why-three-layers.md)
 - Why review is a first-class state: [Review as a first-class state](review-as-state.md)
 - How the knowledge model complements the board: [Knowledge](../knowledge/README.md)

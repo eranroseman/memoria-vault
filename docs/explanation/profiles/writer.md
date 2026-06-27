@@ -10,14 +10,6 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 ---
 
-## Why it's designed this way
-
-**Draft-only is policy, not etiquette.** The Writer's lane ceiling excludes every gated zone; the policy MCP intercepts any attempt. Even an aggressive Writer cannot corrupt the canonical layer.
-
-**No self-verification.** The Writer's job is to make tracing *possible* — cite sources explicitly, link claims — not to do the tracing. Citation checks, claim traces, and the red-team belong to the [Peer-reviewer](peer-reviewer.md); an author grading its own work is the rubber-stamp the split exists to prevent.
-
-**No external reach.** The Writer's inputs are entirely what the vault already holds — sources, claims, hubs, the project's canvas and outline. This keeps the writing grounded in the PI's own corpus rather than freshly retrieved material, and keeps the prompt-injection surface at zero.
-
 ## What the Writer is not
 
 **Not the Co-PI.** The Co-PI sharpens thinking *before* writing, in conversation; the Writer composes prose after the thinking is delegated as a card. Blurring them produces writing that sounds like the PI's thinking but never was.
@@ -30,4 +22,5 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 - The agent that checks its output: [The Peer-reviewer](peer-reviewer.md)
 - Where its drafts live: [The vault](../architecture/vault.md)
+- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
 - Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

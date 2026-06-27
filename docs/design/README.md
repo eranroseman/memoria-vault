@@ -45,6 +45,12 @@ bounded the way it is.
 | [Visual-style discipline](visual-discipline.md) | Why the Obsidian UI uses a small, consistent visual vocabulary |
 | [Distribution model](distribution-model.md) | Why Memoria ships as a repo-backed vault plus runtime configuration |
 | [Always-on VPS design](always-on-vps-design.md) | Why the always-on topology is deferred and what would need validation |
+| [Why profile boundaries exist](why-profile-boundaries.md) | Why the Co-PI and four background lanes have distinct authority |
+| [Why the board is a state machine](why-board-state-machine.md) | Why long-running agent work lives on persistent cards instead of chat |
+| [Why review is a state](why-review-is-state.md) | Why review is structured schema state instead of comments, tags, or convention |
+| [Why promotion is gated](why-promotion-is-gated.md) | Why canonical content requires PI promotion |
+| [Why the Agent Client pane exists](why-agent-client-pane.md) | Why conversation and artifact-producing work use separate surfaces |
+| [Why callouts exist](why-callouts.md) | Why note-level context uses callouts instead of dashboards |
 
 ## Evidence base
 
