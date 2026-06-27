@@ -15,4 +15,5 @@ Runtime contracts and generated inventories live in Reference.
 | --- | --- |
 | [Design Book](design/README.md) | Maintained arguments for the major design choices. |
 | [Decision records](adr/) | Dated ADR records for decisions at every lifecycle state. |
+| [Contributing](contributing/README.md) | Human-facing contribution workflow and issue-tracking model. |
 | [Runtime contracts](reference/runtime-spec.md) | Agent rules, generated profile policy, and runtime contract sources. |

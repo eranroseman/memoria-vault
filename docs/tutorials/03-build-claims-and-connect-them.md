@@ -41,7 +41,13 @@ The sample left two things undone on purpose. Finishing them is the middle pass 
 
 Open the half-built source note **`sofi2010-meta-analysis`** beside it — its **In my words** is also just a prompt, because the paper was captured but never read. Read the abstract, write two or three plain sentences in **In my words**, then go back to the claim and finish it: add `sofi2010` to the claim's `sources`, and write one **Evidence** line that cites it. The moment the citekey and the evidence line match, the claim is real.
 
-**2b — Make the missing link.** Open the claim **"Extra-virgin olive oil and nuts are the components most linked to the benefit"** (`evoo-and-nuts-active-components`). It's written but unconnected — it names a likely *reason* for the headline effect, but nothing in your notes says so yet. With the claim open, run `Cmd/Ctrl-P` → **Memoria: link claim** and propose a `supports` link to `meddiet-reduces-major-cv-events`. The link is only a proposal until you confirm it (the next aside explains why); confirm it now.
+**2b — Make the missing link.** Open the claim **"Extra-virgin olive oil and nuts are the components most linked to the benefit"** (`evoo-and-nuts-active-components`). It's written but unconnected — it names a likely *reason* for the headline effect, but nothing in your notes says so yet. With the claim open, run `Cmd/Ctrl-P` → **Memoria: link claim**. Read the `[!suggestions]` callout it writes, then add this accepted link to the claim's frontmatter:
+
+```yaml
+links:
+  supports:
+    - "[[meddiet-reduces-major-cv-events]]"
+```
 
 ---
 
@@ -53,7 +59,7 @@ With the source note open, run `Cmd/Ctrl-P` → **Memoria: create linked claim n
 
 1. **Claim** — one sentence. If it needs an "and," it's probably two claims.
 2. **Evidence** — one or two lines, each citing your citekey. If a line won't trace to a source, cut it or capture the source that would back it.
-3. **Connections** — run `Cmd/Ctrl-P` → **Memoria: link claim** and propose a link to a nearby claim: one of yours, or one of the sample's if your topic touches it. Use `supports` if it points the same way, `contradicts` if it cuts against — disagreement is welcome.
+3. **Connections** — run `Cmd/Ctrl-P` → **Memoria: link claim** to get nearby suggestions, then add the link you accept to the claim's `links:` frontmatter. Use `supports` if it points the same way, `contradicts` if it cuts against — disagreement is welcome.
 
 You've now distilled a claim with no scaffolding under you — the hardest move in the whole habit, done once on your own material.
 
@@ -61,7 +67,7 @@ You've now distilled a claim with no scaffolding under you — the hardest move 
 
 ## A note on the link gate
 
-Links are never added silently. `Memoria: link claim` *proposes* a `supports` or `contradicts` connection; it becomes real only when you confirm it — that confirmation step is the **link gate**. The agent can suggest connections all day, but which ones are real is your call — the same split between agent and you that runs through the whole system. Confirming takes one keystroke; the point is that nothing enters your notes behind your back.
+Links are never added silently. `Memoria: link claim` writes suggestions and queues a Librarian review card; a connection becomes real only when you write it into `links:` yourself — that edit is the **link gate**. The agent can suggest connections all day, but which ones are real is your call — the same split between agent and you that runs through the whole system.
 
 ---
 

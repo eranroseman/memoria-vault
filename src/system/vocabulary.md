@@ -4,16 +4,16 @@ The single source of truth for the controlled values of the classification field
 `research_area` and `methodology` (on `paper` and `source` notes) and `topics` (on
 `claim` notes). These are the exact field names the schemas declare
 (`.memoria/schemas/types/paper.yaml`, `source.yaml`, `claim.yaml`); keep this note and
-the schemas in lockstep. The Librarian's ingest classifier reads this note in-context
-and **prefers a term defined here**; when nothing fits it may propose a new
-*provisional* term (flagged in `_proposed_classification`) for you to consolidate
-later. The Linter's `schema-check` validates note values against these lists.
+the schemas in lockstep. The Librarian's ingest classifier reads this note and
+**applies only a term defined here**; when nothing fits, it leaves the field unset
+and raises an Inbox flag for consolidation. The Linter's `schema-check` validates
+note values against these lists.
 
 How each field is populated:
 
 - **`research_area`** — *what the work is about.* Seeded mechanically from OpenAlex
-  topics by the ingest operation (`classify.py`), so the vocabulary is free and consistent
-  across sources; the list below is the curated preferred set you consolidate toward.
+  topics by the ingest operation (`classify.py`) when the top candidate matches this
+  vocabulary; off-vocabulary winners are flagged for consolidation.
 - **`methodology`** — *how the study was structured, and the techniques it used.* A
   coarse facet is derived from the S2 publication types at ingest; the rest is
   human-extended against the list below.
@@ -69,6 +69,7 @@ below are valid `methodology` values.
 ### Research architecture — how the study was structured
 
 - rct — Randomized controlled trial.
+- clinical-trial — Interventional study registered or reported as a clinical trial.
 - quasi-experiment — Controlled comparison without randomization.
 - observational — Non-interventional study of naturally occurring data.
 - field-study — In-situ deployment study in a real-world setting.
@@ -78,9 +79,12 @@ below are valid `methodology` values.
 - design-science — Build-and-evaluate of a novel artifact or system.
 - formative-study — Early needs-finding or exploratory design study.
 - case-study — In-depth study of one or a few instances.
+- case-report — Clinical report of one patient or a small case series.
+- review — Narrative or broad synthesis of prior work.
 - systematic-review — Structured synthesis of prior studies.
 - meta-analysis — Statistical pooling of results across studies.
 - secondary-analysis — New analysis of an existing dataset.
+- dataset — Dataset publication or data-resource paper.
 
 ### Specific methods — the techniques used
 

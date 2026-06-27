@@ -22,8 +22,8 @@ match their filename and index link text.
 - Links between `docs/` pages are relative.
 - Published pages must not use relative links into `src/` or other unpublished
   repository paths. Prefer inline paths or an absolute GitHub blob/tree URL.
-- Repo-internal pages under `docs/contributing/`, `docs/releasing/`,
-  `docs/testing/`, and excluded `tmp/` directories may link to repository files.
+- Repo-internal pages under `docs/releasing/`, `docs/testing/`, and excluded
+  `tmp/` directories may link to repository files.
 - Link text should name the destination concept, not merely repeat a filename.
 
 Run:
@@ -45,7 +45,7 @@ Distinguish blocking failures from known advisory warnings.
 ## 4. Check terminology and claims
 
 - Use the repository vocabulary from `AGENTS.md` and `docs/reference/glossary.md`.
-- Keep Compile, Compose, and the knowledge cycle distinct.
+- Keep spaces, queues, and agent lanes distinct.
 - Put new citations in `docs/reference/bibliography.md` using the existing format.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.

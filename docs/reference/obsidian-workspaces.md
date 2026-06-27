@@ -53,7 +53,7 @@ The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as
 
 ## Related
 
-- Gate decision: [ADR-81](../adr/81-persistent-gate-dashboards.md)
+- Dashboard decision: [ADR-81](../adr/81-persistent-gate-dashboards.md)
 - The superseded workspace model: [ADR-68](../adr/68-workspaces-desk-library-studio.md)
 - The dashboard roster: [Dashboards](dashboards.md)
 - The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)

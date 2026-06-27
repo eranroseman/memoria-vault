@@ -1,6 +1,7 @@
 ---
 title: Contributing workflow
 parent: Contributing
+grand_parent: Developers
 nav_order: 1
 ---
 # Contributing workflow

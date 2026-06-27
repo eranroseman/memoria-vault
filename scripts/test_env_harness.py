@@ -169,7 +169,9 @@ def apply_classification(vault: Path, args: dict[str, Any]) -> str:
     fm = read_frontmatter(path)
     body = path.read_text(encoding="utf-8").split("\n---", 1)[1].lstrip("-\n")
     floor, margin = classify.thresholds(vault)
-    decision = classify.decide(args["merged"], floor=floor, margin=margin)
+    decision = classify.decide(
+        args["merged"], floor=floor, margin=margin, vocabulary=classify.load_vocabulary(vault)
+    )
     if decision["status"] == "applied":
         fm["research_area"] = decision["research_area"]
         fm["methodology"] = decision["methodology"]

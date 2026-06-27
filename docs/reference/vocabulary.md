@@ -65,6 +65,7 @@ The tables below mirror the shipped [`src/system/vocabulary.md`](https://github.
 | Term | Definition |
 | --- | --- |
 | `rct` | Randomized controlled trial. |
+| `clinical-trial` | Interventional study registered or reported as a clinical trial. |
 | `quasi-experiment` | Controlled comparison without randomization. |
 | `observational` | Non-interventional study of naturally occurring data. |
 | `field-study` | In-situ deployment study in a real-world setting. |
@@ -74,9 +75,12 @@ The tables below mirror the shipped [`src/system/vocabulary.md`](https://github.
 | `design-science` | Build-and-evaluate of a novel artifact or system. |
 | `formative-study` | Early needs-finding or exploratory design study. |
 | `case-study` | In-depth study of one or a few instances. |
+| `case-report` | Clinical report of one patient or a small case series. |
+| `review` | Narrative or broad synthesis of prior work. |
 | `systematic-review` | Structured synthesis of prior studies. |
 | `meta-analysis` | Statistical pooling of results across studies. |
 | `secondary-analysis` | New analysis of an existing dataset. |
+| `dataset` | Dataset publication or data-resource paper. |
 
 **Specific methods — the techniques used**
 

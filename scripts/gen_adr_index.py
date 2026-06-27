@@ -149,12 +149,19 @@ def render_table(adrs: list[dict[str, object]]) -> str:
 def collect_adrs(adr_dir: Path) -> list[dict[str, object]]:
     """Parse every NN-*.md ADR file in adr_dir (skips README.md and _template.md)."""
     adrs: list[dict[str, object]] = []
+    ids: dict[int, Path] = {}
     for path in sorted(adr_dir.glob("*.md")):
         if not ADR_FILE_RE.match(path.name):
             continue
         adr = parse_adr(path.read_text(encoding="utf-8"))
         if adr["id"] is None:
             raise SystemExit(f"gen-adr-index: {path.name} has no numeric 'id' in frontmatter")
+        adr_id = int(adr["id"])
+        if adr_id in ids:
+            raise SystemExit(
+                f"gen-adr-index: duplicate ADR id {adr_id}: {ids[adr_id].name} and {path.name}"
+            )
+        ids[adr_id] = path
         errors = validate_adr(path, adr)
         if errors:
             raise SystemExit("gen-adr-index: ADR frontmatter invalid\n  ✗ " + "\n  ✗ ".join(errors))

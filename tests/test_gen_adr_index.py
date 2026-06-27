@@ -151,6 +151,14 @@ def test_collect_adrs_exits_on_nonnumeric_id(tmp_path):
         collect_adrs(tmp_path)
 
 
+def test_collect_adrs_exits_on_duplicate_id(tmp_path):
+    (tmp_path / "03-one.md").write_text(_frontmatter(id="3", title="One"))
+    (tmp_path / "04-two.md").write_text(_frontmatter(id="3", title="Two"))
+
+    with pytest.raises(SystemExit, match="duplicate ADR id 3"):
+        collect_adrs(tmp_path)
+
+
 def test_collect_adrs_exits_on_invalid_frontmatter(tmp_path):
     (tmp_path / "03-invalid.md").write_text(_frontmatter(id="3", title="Invalid", date_resolved=""))
 

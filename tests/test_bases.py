@@ -162,7 +162,7 @@ def test_inbox_base_has_needs_me_view():
     data = yaml.safe_load(inbox.read_text(encoding="utf-8"))
     views = {v.get("name"): v for v in data.get("views", [])}
     names = set(views)
-    assert "Needs me" in names  # the Inbox space embeds this view by name
+    assert "Needs me" in names  # the Inbox queue embeds this view by name
     assert data["formulas"]["note"] == (
         'link(file.path, if(action.isEmpty() || action == title, title, title + " - " + action))'
     )

@@ -15,7 +15,7 @@ directly; package code owns the behavior.
 | Operation | Primary entry point | MCP facade | Direct callers | What it does |
 | --- | --- | --- | --- | --- |
 | Ingest | `src/.memoria/operations/processing/ingest/runner.py` | `src/.memoria/mcp/ingest_mcp.py` | PI, tests, debug sessions | Fetches metadata, extracts text, builds entity `relationships`, and prepares Catalog records. |
-| Project structural impact | `src/.memoria/operations/processing/project/structural_impact.py` | None | PI, tests, future Project dashboard | Traverses the thesis-rooted `supports`/`contradicts` argument graph and writes one generated Project gate index note with `impact`, `on_path`, gap findings/advisories, `evidence_saturation`, `argument_stage`, and `computed_at`. |
+| Project structural impact | `src/.memoria/operations/processing/project/structural_impact.py` | None | PI, tests, Project space command palette | Traverses the thesis-rooted `supports`/`contradicts` argument graph and writes one generated Project gate index note with `impact`, `on_path`, gap findings/advisories, `evidence_saturation`, `argument_stage`, and `computed_at`. |
 | Search | qmd plus Obsidian MCP | Profile MCP tools | PI, debug sessions | Performs deterministic retrieval over the vault. |
 | Clustering | `src/.memoria/mcp/cluster_mcp.py` | `src/.memoria/mcp/cluster_mcp.py` | PI, tests, debug sessions | Builds typed link-structure graphs, topic models, and claim-debate Canvas artifacts. |
 | Integrity retraction | `src/.memoria/operations/integrity/retraction/retraction.py` | None | Cron, CI, PI | Runs retraction lookups, surfacing findings as Inbox cards. |

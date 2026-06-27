@@ -36,9 +36,9 @@ The leanest possible proof that **the agent spine runs end-to-end through the bo
 
 Run **A-min first** (isolates the gate/write/complete spine from the scheduler); run **A-cron** second, once A-min is green.
 
-**A-min. Hand-create one `ready` card** for the Linter operation: task `health-report` (or `nightly-lint`), `state: ready`, `assignee: memoria-engineer`, via `hermes kanban create …` _(confirm)_.
-- ✓ Pass: card appears in `hermes kanban list --json` as `ready`/`memoria-engineer`; within ~60 s the dispatcher moves it to `running` and runs the Linter operation.
-- ✗ If it fails: card never claimed → dispatcher not polling (gateway down), or lane-assignee mismatch. Card claimed but no run → profile registration/`config.yaml` problem.
+**A-min. Run the Linter operation directly** with `detectors.py --vault <path>` before testing scheduler plumbing.
+- ✓ Pass: the command produces a findings set and verdict without a Hermes chat skill.
+- ✗ If it fails: a detector or vault-fixture bug; fix that before testing cron/card plumbing.
 
 **A-cron** (after A-min). Enable the Linter-operation lane cron and let `nightly-lint` fire on its schedule (`cron/scheduled.yaml`: `0 2 * * *` → `creates_card:{state: ready}`), or force a tick _(confirm)_.
 - ✓ Pass: the cron entry creates the `ready` card with no human action, then A-min's claim behavior follows.
@@ -48,7 +48,7 @@ Run **A-min first** (isolates the gate/write/complete spine from the scheduler);
 
 ## Part B — Run (deterministic health-report)
 
-**B1.** The claimed Linter-operation run produces the report — `detectors.py --vault <path>` → `run_all()` + `verdict()`, via the profile's terminal capability (it is the shipped detector operation, not a coined skill).
+**B1.** The Linter-operation run produces the report — `detectors.py --vault <path>` → `run_all()` + `verdict()`.
 - ✓ Pass: a findings set + a single verdict band (`PASS`/`REVIEW`/`FAIL`) is produced; running it twice on unchanged vault state yields a byte-identical report (determinism).
 - ✗ If it fails: a stack trace or a non-deterministic diff → a detector bug, not a spine problem (run `python3 -m pytest tests/test_detectors.py` to bisect).
 

@@ -64,7 +64,7 @@ end (the boxes are clickable in Obsidian).
 | `Callout Manager` | Defines `[!brief]` `[!suggestions]` `[!verification]` | a note with `> [!brief]` renders as a styled callout |
 | `Citations` | Insert citations from `.memoria/memoria.bib` | *Insert Markdown citation* command exists (Part D5) |
 | `Commander` | Places high-frequency `Memoria:` commands in the ribbon/page header | left ribbon shows Memoria capture, delegate, and resolve controls |
-| `Dataview` | Powers every dashboard | any dashboard renders a table (Part C) |
+| `Dataview` | Powers JSONL-backed dashboards and inline rail counts | system dashboards render tables and rail counts resolve (Part C) |
 | `Git` | Git commits from Obsidian; post-commit workflows | *Source Control* shows the repo. **The vault must be a git repo** — run `git init` (+ first commit) if Source Control is empty; the installer does **not** auto-init (the vault is your repo). An un-init'd vault is not a plugin failure |
 | `Local REST API with MCP` | Exposes the vault to Hermes (verified HTTPS 27124) — control-plane lifeline | status bar shows **"Local REST API: started"** (Part B) |
 | `Modal Forms` | Structured capture forms with controlled vocabulary fields | `memoria-source-capture` appears and its research/method fields offer vocabulary terms |

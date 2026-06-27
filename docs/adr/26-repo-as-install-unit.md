@@ -20,7 +20,7 @@ superseded_by: []
 > "deferred ([ADR-42](42-profile-compilation.md))" is superseded by the Co-PI/agent
 > consolidation in [ADR-48](48-copi-and-agent-consolidation.md); the seven-profile
 > premise no longer holds. (3) Profile configs are no longer entirely hand-authored:
-> [ADR-115](115-profile-config-materialization.md) materializes only the mechanical
+> [ADR-120](120-profile-config-materialization.md) materializes only the mechanical
 > capability blocks from `tool-registry.yaml`. The core decision (the repo is the
 > install unit; idempotent profile deploy) stands.
 

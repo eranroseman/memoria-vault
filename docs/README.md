@@ -136,7 +136,7 @@ Design Book foundations, then the Explanation pages in this order.
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
 | **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert checkpoint |
 
-Five deterministic **operations** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
+Deterministic **operations** do the mechanical work, behind the policy MCP.
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
 
@@ -168,4 +168,4 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
 
-[**Developers**](developers.md) — Design Book and decision records.
+[**Developers**](developers.md) — Design Book, decision records, and contributing workflow.

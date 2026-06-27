@@ -17,7 +17,7 @@ Memoria classifies sources with two distinct facets — `research_area` and `met
 
 `methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research_area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research_area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
 
-The Linter's `lint:check-schema` pass validates that facet values match the defined vocabulary, but only after the vocabulary has been defined. Drift from a vocabulary that doesn't yet exist is invisible to the Linter.
+The Linter's `schema-check` pass validates that facet values match the defined vocabulary, but only after the vocabulary has been defined. Drift from a vocabulary that doesn't yet exist is invisible to the Linter.
 
 ## Why vocabulary stabilization is deferred
 
@@ -25,13 +25,13 @@ Early in a vault's life, forcing term consistency is counterproductive. The righ
 
 The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
 
-This is also why `research_area` is seeded from **OpenAlex topics** by the ingest operation: the vocabulary is free, consistent across sources, and applied mechanically, which removes one whole class of drift at intake. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
+This is also why `research_area` is seeded from **OpenAlex topics** by the ingest operation: topic signals are applied mechanically when they match the controlled vocabulary, and off-vocabulary winners are flagged for consolidation instead of silently landing. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
 
 ## Why drift fails silently
 
-Vocabulary drift — the same concept appearing as `topics: receptivity-detection` in some claims and `topics: opportune-moments` in others — produces no error. Queries return incomplete results; the PI infers thin coverage when coverage is adequate; research directions are shaped by a false gap signal. The failure is invisible until the vocabulary is audited.
+Vocabulary drift — the same concept appearing as `topics: receptivity-detection` in some claims and `topics: opportune-moments` in others — produces incomplete query results even when the YAML is valid. The PI infers thin coverage when coverage is adequate; research directions are shaped by a false gap signal. The failure is invisible until `schema-check` or a vocabulary audit runs.
 
-This is the class of failure the Linter's `lint:check-schema` pass is designed to catch, but only after the canonical vocabulary is defined. Before the canonical list exists, drift is entirely silent. See [Common pitfalls](common-pitfalls.md) for the concrete failure scenario and how it compounds over time.
+This is the class of failure the Linter's `schema-check` pass is designed to catch, but only after the canonical vocabulary is defined. Before the canonical list exists, drift is entirely silent. See [Common pitfalls](common-pitfalls.md) for the concrete failure scenario and how it compounds over time.
 
 ## Related
 

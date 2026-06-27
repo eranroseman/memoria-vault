@@ -27,7 +27,7 @@ bundled. Updater automation remains deferred by
 | --- | --- | --- |
 | obsidian-local-rest-api | `obsidian-local-rest-api` | Exposes the vault to Hermes via its native MCP over verified loopback HTTPS (default port 27124). Required for the control plane. |
 | agent-client | `agent-client` | ACP inside Obsidian — routes human conversations with Hermes through a chat pane. |
-| dataview | `dataview` | Powers every dashboard. Without it the dashboard layer is non-functional. |
+| dataview | `dataview` | Powers JSONL-backed system dashboards and inline rail counts. Bases own note-frontmatter views. |
 | templater-obsidian | `templater-obsidian` | Provides the template folder integration for manual template insertion. |
 | quickadd | `quickadd` | Registers all `Memoria:` command palette entries. |
 | cmdr | `cmdr` | Places the high-frequency `Memoria:` commands in the ribbon and page header so capture, delegation, and resolution do not require a palette round trip. |
@@ -73,7 +73,7 @@ Documented but not in the install set. Obsidian-side evaluated alternatives. (Zo
 | Plugin | Status | Notes |
 | --- | --- | --- |
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
-| Workspaces Plus | Evaluated, not shipped | Registers workspace-switching commands, but [ADR-81](../adr/81-persistent-gate-dashboards.md) keeps space switching in dashboard notes rather than saved workspace layouts. The core Workspaces plugin remains only as a reset layout. |
+| Workspaces Plus | Evaluated, not shipped | Registers workspace-switching commands, but the navigator rail keeps space switching out of saved workspace layouts. The core Workspaces plugin remains only as a reset layout. |
 | obsidian-linter | **Incompatible — do not install** ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
 
 ---

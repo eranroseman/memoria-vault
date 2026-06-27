@@ -190,7 +190,7 @@ def run(
     # layer raises it, like the identity flag above). Each applied/flagged decision
     # appends one audit line to system/logs/classify.jsonl.
     c_floor, c_margin = classify.thresholds(vault)
-    cls = classify.decide(m, c_floor, c_margin)
+    cls = classify.decide(m, c_floor, c_margin, classify.load_vocabulary(vault))
     if cls["status"] == "applied":
         fm["research_area"] = cls["research_area"]
     if cls["methodology"]:  # deterministic from S2 pub types —

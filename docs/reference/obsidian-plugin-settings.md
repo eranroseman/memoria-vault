@@ -99,7 +99,7 @@ clearly instead of silently skipping those paths.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; space switching lives in dashboard nav rows. |
+| `leftRibbon` | Capture fleeting, capture from Zotero selection, capture source from URL, delegate task, resolve inbox card. | The always-visible ribbon carries the commands needed for the capture → triage loop; space switching lives in the left-pane navigator rail. |
 | `pageHeader` | Capture fleeting, create linked claim note, write claim note, extract claims, link claim. | Fast capture and note-local actions sit beside the active note, where their active-note defaults are visible. |
 | `showAddCommand` | `false` | The shipped toolbar is curated; ad hoc personal buttons can still be added from Commander settings. |
 
@@ -119,7 +119,7 @@ chrome only; primary navigation stays in spaces and Bases views.
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `spaces[]` | Shortcuts for the vault homes behind Inbox, Library, Knowledge, and Project work. | Portals is supplemental reach-only navigation; no tag portals and no space switching. |
+| `spaces[]` | Folder-root shortcuts for browsing `inbox`, `catalog`, `notes/sources`, `notes/claims`, `notes/hubs`, and `projects`. | Portals is supplemental reach-only navigation; no tag portals and no space switching. |
 | `replaceFileExplorer` | `true` | Portals replaces the visible explorer surface through its own setting while the core `file-explorer` plugin remains enabled as fallback. |
 | `hiddenItems` | `{ "system": true, ".memoria": true }` | Runtime and generated infrastructure stay out of the PI-facing navigation pane. |
 | `tagNotesFolderPath` | `system/_tag-notes` | Keeps the plugin's tag-note folder out of the user namespace. |

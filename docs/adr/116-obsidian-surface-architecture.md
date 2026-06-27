@@ -80,17 +80,17 @@ The left pane has two tabs — the **rail** (`_nav.md`) and **Portals** (the fil
 
 - The **rail** carries **Now** — the two ambient signals: the action count (→ Queue) and a
   health band (drift + fleet → Maintenance / ops), answering *what needs me* and *is
-  anything wrong* without a click — over **Go**, the three durable spaces by **intent**
+  anything wrong* without a click — over **Places**, the three durable spaces by **intent**
   (selecting opens that space).
 - **Portals** is the **object browser** — the curated file-explorer replacement that hides
   `system/`/`.memoria/`. It answers *open a note*, navigating by folder.
 
-Intent navigation (the rail's Go) and object browsing (Portals) are **complementary axes**,
+Intent navigation (the rail's Places) and object browsing (Portals) are **complementary axes**,
 not competitors — kept as sibling tabs.
 
 > **Amendment (2026-06-23):** the original decision folded Portals into the rail as a single
-> stacked *Now / Go / Find* spine. That is **retired** — see Alternatives. The rail is Now +
-> Go; Portals stays its own tab, the arrangement
+> stacked *Now / Places / Find* spine. That is **retired** — see Alternatives. The rail is Now +
+> Places; Portals stays its own tab, the arrangement
 > [#908](https://github.com/eranroseman/memoria-vault/pull/908) settled.
 
 ### Edges
@@ -127,7 +127,7 @@ no new machinery.
 
 ## Alternatives considered
 
-- **Fold Portals into the rail as a stacked *Now / Go / Find* spine (the original Phase 3).**
+- **Fold Portals into the rail as a stacked *Now / Places / Find* spine (the original Phase 3).**
   Retired after review: stacking the file tree *under* the rail regresses its height (a
   sibling tab gives it the full pane), and — decisively — stacking is only *visual*. The
   intent-vs-storage overlap (Context #1) survives whether the two are tabs or stacked, so the

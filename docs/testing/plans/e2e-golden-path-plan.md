@@ -54,27 +54,27 @@ coverage.
 **C1. Human writes a claim** in `notes/claims/` citing `smithA` (this is human territory — agents can't).
 - ✓ Pass: claim note created (human write, not gated as an agent).
 
-**C2. Map the corpus.** `hermes -p memoria-librarian chat -s scope-project --project test-proj --output projects/test-proj/map/corpus-map.md`
+**C2. Map the corpus.** `hermes -p memoria-librarian chat -s map-scope-project --project test-proj --output projects/test-proj/map/corpus-map.md`
 - ✓ Pass: `corpus-map.md` under `map/`; audit row scoped to `map/`; **no** write outside it (map-lane write-wall).
 
 ---
 
 ## Part D — Draft → verify (Writer → Peer-reviewer)
 
-**D1. Draft.** `hermes -p memoria-writer chat -s draft "<question over the claim>"`
+**D1. Draft.** `hermes -p memoria-writer chat -s draft-write-section "<question over the claim>"`
 - ✓ Pass: `answer-note` in `inbox/`; its card → `done` and queued for review (lifecycle stays `proposed`); audit row.
 
-**D2. Cite-check the draft.** `hermes -p memoria-peer-reviewer chat -s cite-check <draft path>` (draft cites `smithA` + a bogus key)
+**D2. Cite-check the draft.** `hermes -p memoria-peer-reviewer chat -s verify-check-citation <draft path>` (draft cites `smithA` + a bogus key)
 - ✓ Pass: report flags the bogus cite, passes `smithA`; **dry-run** — draft byte-identical after (`git diff` empty).
 
 ---
 
-## Part E — Review gate → promote → export
+## Part E — Review gate → human approval → export
 
-**E1. Promotion is gated.** `hermes -p memoria-writer chat -s promote <claim>`
+**E1. Gated-zone writes stay dry-run.** Ask the Writer to revise a claim under `notes/claims/`.
 - ✓ Pass: the write into `notes/claims/` logs as **`dry_run`** in `audit.jsonl` — *no real write* without human approval. (The gate's whole point.)
 
-**E2. Human approves, then export.** Approve the card (advance its lifecycle to `current`), then `hermes -p memoria-engineer chat -s …` export to `projects/`.
+**E2. Human approves, then export.** Approve the card, then run the project export path from the Project space or the repo script under test.
 - ✓ Pass: after approval the gated write becomes `allow_with_log`; a deliverable lands in `projects/`. The chain reached the end.
 
 ---

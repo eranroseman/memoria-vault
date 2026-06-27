@@ -160,7 +160,7 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | Start project | Scaffolds `projects/<slug>/`, creates the initial active thesis, and opens the project gate index for triage. |
 | Refresh project gate | Rebuilds the project gate index from current thesis, links, saturation signals, and open risks. |
 | Supersede thesis | Creates a replacement thesis, marks the old one superseded, updates the project `active_thesis`, and raises an Inbox alert for re-confirmation. |
-| Open a space | Opens `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, or `spaces/project.md` from the left-pane navigator rail (**Now** / **Places**). |
+| Open a rail destination | Opens the Inbox queue (`spaces/inbox.md`) or a durable space (`spaces/library.md`, `spaces/knowledge.md`, `spaces/project.md`) from the left-pane navigator rail (**Now** / **Places**). |
 
 ### Review decisions
 
