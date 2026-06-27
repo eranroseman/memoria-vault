@@ -162,13 +162,12 @@ by-doing in a sitting — genre mismatch. It belongs in a practice guide.
 - **Implementation (follows acceptance + topic choice):** rewrite `docs/tutorials/`
   `00`–`05`, author the seed corpus, add the "Your first month" practice guide.
 - **Research basis (deep-research pass, 2026-06-22):** worked-example & cognitive-load —
-  [ACM ToCE 2025](https://dl.acm.org/doi/full/10.1145/3732791); subgoal/transfer-failure
+  ACM ToCE 2025, DOI 10.1145/3732791; subgoal/transfer-failure
   — [Catrambone 1994](https://link.springer.com/article/10.3758/BF03198399); fading &
-  completion —
-  [Renkl/Chen 2023](https://www.tandfonline.com/doi/full/10.1080/01443410.2023.2273762);
+  completion — Renkl/Chen 2023, DOI 10.1080/01443410.2023.2273762;
   expertise-reversal —
   [Kalyuga et al.](https://www.researchgate.net/publication/226748784_The_expertise_reversal_effect_and_worked_examples_in_tutored_problem_solving);
-  sample-corpus pedagogy — [MySQL Sakila](https://dev.mysql.com/doc/sakila/en/),
+  sample-corpus pedagogy — MySQL Sakila,
   [Dyer & Rogers, JISE 2015](https://jise.org/Volume26/n2/JISEv26n2p85.pdf); empty-state
   vs sample-data UX —
   [NN/g](https://www.nngroup.com/articles/empty-state-interface-design/).
