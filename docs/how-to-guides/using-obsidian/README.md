@@ -8,7 +8,7 @@ permalink: /how-to-guides/using-obsidian/
 
 # Using Obsidian
 
-Driving Memoria from inside Obsidian — the command palette, the Agent Client pane, and the dashboards. These are the day-to-day controls for the Obsidian-centred workflow; for terminal-side tasks see [Setup](../setup) and [Operate](../operate).
+Driving Memoria from inside Obsidian — the command palette, the Agent Client pane, and the dashboards. These are the day-to-day controls for the Obsidian-centred workflow; for terminal-side tasks see [Setup]({{ site.baseurl }}/how-to-guides/setup/) and [Operate]({{ site.baseurl }}/how-to-guides/operate/).
 
 | Guide | What it covers |
 | --- | --- |
