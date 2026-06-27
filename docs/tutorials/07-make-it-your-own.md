@@ -48,7 +48,7 @@ You've now done every recurring job Memoria exists to support. They aren't steps
 
 A paper in hand → capture; a deadline → synthesize and draft; a draft → verify; a thin spot → discover. None is the "first" step, because it's a loop, not a line ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)).
 
-The one thing these tutorials *can't* teach by doing is the real-time rhythm — capturing as you read over weeks, distilling once ~10 sources have piled up, mapping and drafting when a deadline appears, letting gaps pull the next batch. That months-long pace is a habit, not a few sessions, and it lives in the **[Your first month](../explanation/knowledge/your-first-month.md)** practice guide. The tutorials taught you the moves; that guide is where you learn the tempo.
+The one thing these tutorials *can't* teach by doing is the real-time rhythm — capturing as you read over weeks, distilling once ~10 sources have piled up, mapping and drafting when a deadline appears, letting gaps pull the next batch. That months-long pace is a habit, not a few sessions, and it lives in the **[Your first month](../how-to-guides/knowledge/your-first-month.md)** practice guide. The tutorials taught you the moves; that guide is where you learn the tempo.
 
 ---
 
@@ -66,7 +66,7 @@ You've completed the tutorials. The scaffold is gone, and the vault is yours.
 
 - [How-to guides](../how-to-guides/README.md) — each recurring task in depth, for when you hit it for real on your own vault.
 - [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md) — the loop you just turned, and the delegable jobs that serve it, explained as a system rather than a walkthrough.
-- [Your first month](../explanation/knowledge/your-first-month.md) — the real-time rhythm these tutorials compressed: what to do when, over your first weeks of real use.
+- [Your first month](../how-to-guides/knowledge/your-first-month.md) — the real-time rhythm these tutorials compressed: what to do when, over your first weeks of real use.
 
 ---
 

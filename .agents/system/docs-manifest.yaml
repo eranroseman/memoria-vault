@@ -2398,6 +2398,16 @@ entries:
     title: Always-on VPS design
   canonical_owner: false
   status: manual
+- path: docs/design/bootstrap-installer.md
+  title: Bootstrap installer
+  book: Developers
+  topic: null
+  frontmatter:
+    nav_order: 14
+    parent: Design Book
+    title: Bootstrap installer
+  canonical_owner: false
+  status: manual
 - path: docs/design/design-principles.md
   title: Design principles
   book: Developers
@@ -2407,6 +2417,16 @@ entries:
     nav_order: 3
     parent: Design Book
     title: Design principles
+  canonical_owner: false
+  status: manual
+- path: docs/design/design-system.md
+  title: Design system
+  book: Developers
+  topic: null
+  frontmatter:
+    nav_order: 13
+    parent: Design Book
+    title: Design system
   canonical_owner: false
   status: manual
 - path: docs/design/distribution-model.md
@@ -2936,31 +2956,10 @@ entries:
   book: Explanation
   topic: null
   frontmatter:
-    has_children: true
     nav_order: 9
     parent: Explanation
     permalink: /explanation/deployment/
     title: Deployment
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/deployment/bootstrap-installer.md
-  title: Bootstrap installer
-  book: Explanation
-  topic: null
-  frontmatter:
-    nav_order: 2
-    parent: Deployment
-    title: Bootstrap installer
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/deployment/deployment-options.md
-  title: Deployment options
-  book: Explanation
-  topic: null
-  frontmatter:
-    nav_order: 3
-    parent: Deployment
-    title: Deployment options
   canonical_owner: false
   status: manual
 - path: docs/explanation/kanban-board/README.md
@@ -3083,17 +3082,6 @@ entries:
     title: Vocabulary discipline
   canonical_owner: false
   status: manual
-- path: docs/explanation/knowledge/your-first-month.md
-  title: Your first month
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 3
-    parent: Knowledge
-    title: Your first month
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/obsidian/README.md
   title: Obsidian
   book: Explanation
@@ -3126,16 +3114,6 @@ entries:
     title: Callouts
   canonical_owner: false
   status: manual
-- path: docs/explanation/obsidian/design-system.md
-  title: Design system
-  book: Explanation
-  topic: null
-  frontmatter:
-    nav_order: 6
-    parent: Obsidian
-    title: Design system
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/obsidian/home.md
   title: Home welcome note
   book: Explanation
@@ -3163,7 +3141,6 @@ entries:
   book: Explanation
   topic: null
   frontmatter:
-    has_children: true
     nav_order: 1
     parent: Explanation
     permalink: /explanation/overview/
@@ -3487,6 +3464,17 @@ entries:
     nav_order: 1
     parent: Knowledge
     title: Write a claim note
+  canonical_owner: false
+  status: manual
+- path: docs/how-to-guides/knowledge/your-first-month.md
+  title: Your first month
+  book: How-to guides
+  topic: null
+  frontmatter:
+    grand_parent: How-to guides
+    nav_order: 9
+    parent: Knowledge
+    title: Your first month
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/library/README.md
@@ -4379,12 +4367,12 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/reference/sample-vault.md
-  title: The sample vault
+  title: Sample vault
   book: Reference
   topic: null
   frontmatter:
     parent: Reference
-    title: The sample vault
+    title: Sample vault
   canonical_owner: false
   status: manual
 - path: docs/reference/search.md

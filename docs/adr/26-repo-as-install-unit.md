@@ -56,7 +56,7 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 - **Supporting rationale:** [Distribution model](../design/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
 - **Related decisions:** [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles being deployed); [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
-- **Installer design:** [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) (rationale) + [Installer (bootstrap)](../reference/installer.md) (inventories).
+- **Installer design:** [Bootstrap installer](../design/bootstrap-installer.md) (rationale) + [Installer (bootstrap)](../reference/installer.md) (inventories).
 - **Proposals:** [Profile compilation from a shared base](42-profile-compilation.md) (the deferred compiler).
 - **How-to:** [Redeploy profiles](../how-to-guides/operate/redeploy-profiles.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 - **Source discussion:** retroactively records the distribution model in `distribution-model.md`; note this ADR follows the *current* repo-as-install-unit model, which has moved past the earlier vault-as-carrier framing.

@@ -60,4 +60,4 @@ You can remove it when you're done: **Memoria: remove sample vault** archives th
 - [What Memoria is](../design/what-memoria-is.md) — what the system is, and what it isn't
 - [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md) — the cycle these tutorials turn, and the six tasks you can hand off
 - [The Co-PI](../explanation/profiles/co-pi.md) — the one assistant you talk to, and why it hands every change to a background helper
-- [Your first month](../explanation/knowledge/your-first-month.md) — the real rhythm to settle into once the tutorials are done
+- [Your first month](../how-to-guides/knowledge/your-first-month.md) — the real rhythm to settle into once the tutorials are done

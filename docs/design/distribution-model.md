@@ -15,7 +15,7 @@ Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit
 | `src/` | **Source files only — never a live vault**: templates, profiles, skills, schemas, dashboards, patterns, and `.obsidian` config. The installer *scaffolds* the vault tree and *populates* it from here. | The installer (and contributors). |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
-The installer derives the running vault from `src/` at a working location (off OneDrive on Windows); the human opens **that deployed vault** in Obsidian. The deployed vault is self-contained — it does not carry `docs/`, so any reference from a vault-resident file (e.g. `../explanation/obsidian/home.md`) to `docs/` is a **GitHub Pages URL, never a relative path**. The installers live at the repo root (not inside `src/`) because the bootstrap is the clone/entry point; installing requires the whole repo. See [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) for the installer's design and [Installer (bootstrap)](../reference/installer.md) for the component inventories.
+The installer derives the running vault from `src/` at a working location (off OneDrive on Windows); the human opens **that deployed vault** in Obsidian. The deployed vault is self-contained — it does not carry `docs/`, so any reference from a vault-resident file (e.g. `../explanation/obsidian/home.md`) to `docs/` is a **GitHub Pages URL, never a relative path**. The installers live at the repo root (not inside `src/`) because the bootstrap is the clone/entry point; installing requires the whole repo. See [Bootstrap installer](bootstrap-installer.md) for the installer's design and [Installer (bootstrap)](../reference/installer.md) for the component inventories.
 
 Shipping `src/` rather than a live `vault/` template is deliberate ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): a live-vault template blurs "source of truth" with "a running instance," invites accidental edits to the template, and offers no recovery path. With `src/`, authoring (the repo) and restoring (the runtime golden copy) stay cleanly separate, and user content and system files are structurally distinct from the first minute.
 
@@ -64,7 +64,7 @@ For full isolation, use a distinct REST port **and** a separate `HERMES_HOME` pe
 
 ## Related
 
-- The installer's design: [Bootstrap installer](../explanation/deployment/bootstrap-installer.md)
+- The installer's design: [Bootstrap installer](bootstrap-installer.md)
 - The decisions: [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md), [ADR-26](../adr/26-repo-as-install-unit.md)
 - Profile structure: [Profiles](../explanation/profiles/README.md)
 - Operationalizes idempotent deployment: [Redeploy profiles](../how-to-guides/operate/redeploy-profiles.md)

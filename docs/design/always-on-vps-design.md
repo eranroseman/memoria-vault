@@ -7,7 +7,7 @@ nav_order: 24
 
 # Always-on VPS design
 
-> **Status — deferred.** The supported install path is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment options](../explanation/deployment/deployment-options.md), [Multi-machine deployment (topologies and secondary-device patterns)](../adr/63-multi-machine-deployment.md)). This page records the intended topology and validation shape; it is not a supported setup guide.
+> **Status — deferred.** The supported install path is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment](../explanation/deployment/README.md), [Multi-machine deployment (topologies and secondary-device patterns)](../adr/63-multi-machine-deployment.md)). This page records the intended topology and validation shape; it is not a supported setup guide.
 
 The always-on design moves Hermes from local WSL2 to a persistent VPS so scheduled crons can run overnight, board cards can process unattended, and the system can stay reachable from more than one device. The VPS becomes the **one dispatcher** for the vault; the desktop keeps Obsidian and Zotero; the vault files sync between them.
 
@@ -64,6 +64,6 @@ The topology is not ready until a future implementation issue proves all of thes
 ## Related
 
 - Local install prerequisite: [Quickstart](../how-to-guides/setup/quickstart.md)
-- The topology trade-offs and dispatcher rule: [Deployment options](../explanation/deployment/deployment-options.md)
+- The topology trade-offs and dispatcher rule: [Deployment](../explanation/deployment/README.md)
 - Profile configuration: [Configure a profile](../how-to-guides/hermes-agent/configuration.md)
 - Failure lookup table: [Failure modes](../reference/failure-modes.md)

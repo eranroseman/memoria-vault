@@ -20,3 +20,4 @@ Build durable synthesis — distill claims, connect them into the graph, and cur
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |
 | [Run a pattern](run-a-pattern.md) | Run a shipped prompt-transformation over the active note or a selection |
+| [Your first month](your-first-month.md) | Set the capture, distill, produce, discover, and review cadence after the tutorials |

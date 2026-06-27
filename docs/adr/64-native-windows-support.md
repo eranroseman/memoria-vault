@@ -42,7 +42,7 @@ Do the port as a two-script split, not as a runtime flag:
 - **Scheduling and always-on** — use Hermes's native Windows gateway and cron support. The deterministic wrappers remain shared for now and execute through Hermes's Windows shell strategy.
 - **Bridge removal** — the production path has no `/mnt/c` translation, no WSL2 gate, and no `windowsWslMode` requirement for ACP. The WSL bridge remains only in WSL-specific test docs.
 
-This **supersedes the WSL2-only rule** ([Bootstrap installer](../explanation/deployment/bootstrap-installer.md), the [installer platform matrix](../reference/installer.md)), **amends [ADR-26](26-repo-as-install-unit.md)** (`install.ps1` is a real installer), and **reinforces [ADR-22](22-build-on-hermes-runtime.md)** (Memoria builds on Hermes rather than reimplementing a runtime).
+This **supersedes the WSL2-only rule** ([Bootstrap installer](../design/bootstrap-installer.md), the [installer platform matrix](../reference/installer.md)), **amends [ADR-26](26-repo-as-install-unit.md)** (`install.ps1` is a real installer), and **reinforces [ADR-22](22-build-on-hermes-runtime.md)** (Memoria builds on Hermes rather than reimplementing a runtime).
 
 ## Consequences
 
@@ -61,5 +61,5 @@ This **supersedes the WSL2-only rule** ([Bootstrap installer](../explanation/dep
 
 - **Reinforced / assumed:** [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (Hermes is now native), [ADR-26 repo is the install unit](26-repo-as-install-unit.md) (`install.ps1` becomes a real installer).
 - **Affected decisions:** [ADR-31 native Obsidian MCP](31-native-obsidian-mcp.md) (bridge simplifies on one OS), [ADR-33 cluster MCP](33-cluster-mcp-bertopic.md) (the Windows wheel edge).
-- **Installer shape:** [Installer (bootstrap)](../reference/installer.md), [Bootstrap installer](../explanation/deployment/bootstrap-installer.md) (the WSL2-only rule this would supersede).
+- **Installer shape:** [Installer (bootstrap)](../reference/installer.md), [Bootstrap installer](../design/bootstrap-installer.md) (the WSL2-only rule this would supersede).
 - **Tracking issue:** [#414](https://github.com/eranroseman/memoria-vault/issues/414) — revisit at each release cadence.
