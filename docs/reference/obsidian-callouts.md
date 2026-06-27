@@ -62,12 +62,6 @@ For `[!brief]`, the audit-relevant part is the deterministic candidate set that 
 
 ---
 
-## Drift signals
-
-No shipped dashboard tracks `[!suggestions]` accept/reject ratios yet. The producer now exists, and the intended drift signal remains: ratio extremes should flag rubber-stamping versus over-strict scoring in fleet health. How to read and respond to these signals is covered in [Callouts](../explanation/obsidian/callouts.md).
-
----
-
 ## Related
 
 - Callout Manager plugin: [Obsidian plugins](obsidian-plugins.md)

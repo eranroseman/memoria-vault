@@ -43,7 +43,9 @@ bounded the way it is.
 | [Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md) | Why folders encode document type while lifecycle and topics live as state and links |
 | [Why hubs](hubs-and-navigation.md) | Why human-authored hubs are the vault's navigation layer |
 | [Visual-style discipline](visual-discipline.md) | Why the Obsidian UI uses a small, consistent visual vocabulary |
+| [Design system](design-system.md) | Why the cross-context visual and voice spec is portable and restrained |
 | [Distribution model](distribution-model.md) | Why Memoria ships as a repo-backed vault plus runtime configuration |
+| [Bootstrap installer](bootstrap-installer.md) | Why the installer is a one-command bootstrap with narrow automation boundaries |
 | [Always-on VPS design](always-on-vps-design.md) | Why the always-on topology is deferred and what would need validation |
 | [Why profile boundaries exist](why-profile-boundaries.md) | Why the Co-PI and four background lanes have distinct authority |
 | [Why the board is a state machine](why-board-state-machine.md) | Why long-running agent work lives on persistent cards instead of chat |

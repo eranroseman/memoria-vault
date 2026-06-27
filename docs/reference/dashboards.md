@@ -65,26 +65,6 @@ Obsidian Bases (`.base` files) are the database views the dashboards and space n
 | `patterns.base` | `system/patterns/` | The pattern library by mode and lifecycle. |
 | `worklists.base` | `system/worklists/` | Batch screening rows grouped by worklist, decision, or group; rows are `worklist-item` notes and one aggregate Inbox prompt points here. |
 
-### Verified Bases behavior
-
-The supported dashboard UI relies on these Obsidian 1.12.7 Bases behaviors:
-
-- Wikilinks inside nested `links:` maps register as backlinks, so typed edges such
-  as `links.contradicts` are visible both to contradiction views and to orphan
-  checks that use `file.backlinks`.
-- Native Bases filters handle nested relation presence checks such as
-  `!links.contradicts.isEmpty()`; no materialized `has_contradiction` field is
-  needed for the shipped contradiction view.
-- Warm-cache Bases rendering is not the current scale limit: a 7,004-row grouped
-  view with multi-key sort and formulas rendered in about 1.4 seconds in the
-  sandbox.
-- Cold metadata parsing is the scale risk: a 10,000-file bulk write took about
-  76 seconds before the metadata cache fully settled. Future projection work must
-  wait for cache settlement before signalling readiness; see
-  [ADR-102](../adr/102-disposable-projection-engine.md).
-
----
-
 ## Verdict band (Maintenance drift watch)
 
 Maintenance's Drift watch view rolls the Linter operation's detector findings up into
@@ -93,26 +73,13 @@ are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
 ## Trust score (fleet-health)
 
-A 0–100 composite per lane, computed by `src/.memoria/mcp/metrics_aggregate.py` into `system/metrics/`. Inputs: audit deny rate, structural-drift incidents, secret-field access attempts, retry rate, success rate, and accept/reject ratios on lanes producing proposals. The shipped `fleet-health.md` dashboard embeds a Dataview table over those `lane-metric` notes and shows PI attention fields (`time_on_gate_min`, `expand_then_accept_min`, `card_open_resolve_min`) plus blind re-review sample counts. Bands: **90+ healthy · 70–89 watch · < 70 act**. Suggestion-ratio extremes both down-weight: accept > ~90% = rubber-stamping; < ~20% = candidate scoring needs tuning.
+A 0–100 composite per lane, computed into `system/metrics/`. The formula and
+bands are owned by [Fleet metrics](fleet-metrics.md).
 
 ## Eval metrics (eval-trend)
 
-Per-quarter capability scores, computed by the deterministic scorer `src/.memoria/operations/telemetry/eval/eval_score.py` into `system/metrics/eval/runs.jsonl` ([ADR-11](../adr/11-vault-eval-maintenance.md)). Each metric is 0–1, higher is better: **recall@k** (gold citekeys in the top-k retrieved), **support-rate** (cited evidence resolving to real catalog records), **FAMA-clean** (no superseded/archived claim reused). A gold task whose card reported no machine-readable result shows as **unscored** — never a faked score. Diagnostic, not gating: a dip informs the PI; it does not pause scheduled work. Full contract: [Vault eval](vault-eval.md).
-
----
-
-## Design conventions (apply to all dashboards)
-
-- **One decision per dashboard** — each surfaces a single decision type.
-- **Empty is success** — a healthy vault shows near-empty tables.
-- **Sort by decision type** — queues oldest-first; logs newest-first.
-- **Graceful degradation** — a missing log or plugin shows an explanatory placeholder, never an error.
-
-The reasoning behind these conventions (and the synthesis-vs-structural actor split) is in [Dashboards](../explanation/dashboards/README.md).
-
----
-
-For the exact `lane-metric` fields and trust-score calculation, see [Fleet metrics](fleet-metrics.md) and [Telemetry log schemas](telemetry-logs.md).
+Per-quarter capability scores, computed into `system/metrics/eval/runs.jsonl`.
+The scoring contract is owned by [Vault eval](vault-eval.md).
 
 ## Related
 
@@ -120,3 +87,4 @@ For the exact `lane-metric` fields and trust-score calculation, see [Fleet metri
 - The audit-log schema fleet-health and audit-log read: [Memory substrates](memory.md)
 - The card types the Inbox board groups: [Document types](document-types.md)
 - Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)
+- Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)

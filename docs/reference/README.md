@@ -13,15 +13,17 @@ and runtime contracts. For design rationale and decision history, see
 [Explanation](../explanation).
 
 The files are grouped below by domain for scanning; the folder itself is flat.
+When a page mirrors machine-readable source, the description names the owner or
+marks the page as generated.
 
 ## Vault data model
 
 | File | What it covers |
 | --- | --- |
-| [Frontmatter fields](frontmatter.md) | Every YAML frontmatter field: type, allowed values, owner, namespace |
-| [Inbox card fields](inbox-card-fields.md) | Field-level contract for candidate, gap, flag, alert, and work-prompt cards |
-| [Document types](document-types.md) | The 25 document types: folder, template, lifecycle, promotion map |
-| [Vocabulary](vocabulary.md) | Controlled values for `research_area`, `methodology`, and claim `topics` |
+| [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter fields: type, allowed values, owner, namespace |
+| [Inbox card fields](inbox-card-fields.md) | Schema-owned field contract for candidate, gap, flag, alert, and work-prompt cards |
+| [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map |
+| [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` |
 | [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits |
 | [Glossary](glossary.md) | Term definitions, alphabetical |
@@ -34,7 +36,7 @@ The files are grouped below by domain for scanning; the folder itself is flat.
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract |
-| [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions |
+| [Profile capabilities](profiles.md) | Generated lane identifiers, capability table, invocation levels, folder permissions |
 | [Runtime Spec](runtime-spec.md) | Agent rules, generated profile policy, and runtime contract sources |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, the quarterly dispatch, idempotency keys, and the eval-task schema |

@@ -1,14 +1,14 @@
 ---
 title: Bootstrap installer
-parent: Deployment
-nav_order: 2
+parent: Design Book
+nav_order: 14
 ---
 
 # Bootstrap installer
 
 The bootstrap installers — [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) for native Windows production and [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) for Linux/WSL testing — take a user from nothing to a runnable Memoria install in one command: they scaffold and populate the vault from `src/`, stage the golden copy, provision the Hermes runtime and the five agent profiles, wire the crons, and guide Obsidian setup.
 
-This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../../reference/installer.md).
+This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
 ## Why a bootstrap
 
@@ -16,7 +16,7 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](../../design/distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../../reference/installer.md); the five-profile roster is [Profile capabilities](../../reference/profiles.md).
+What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../reference/installer.md); the five-profile roster is [Profile capabilities](../reference/profiles.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 
@@ -33,7 +33,7 @@ One installer-specific sequencing choice worth calling out: Zotero deliberately 
 
 - Writing the user's API keys for them.
 - Supporting macOS or non-Debian Linux distributions as first-class install targets.
-- In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md).
+- In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md).
 
 ## Entry point and safety model
 
@@ -41,7 +41,7 @@ The installer is offered two ways, with **inspect-first as the documented primar
 
 ## Production Windows and Linux testing
 
-Per [ADR-64](../../adr/64-native-windows-support.md), Memoria uses a two-script
+Per [ADR-64](../adr/64-native-windows-support.md), Memoria uses a two-script
 platform split:
 
 - **Windows production:** `scripts/install.ps1` is the native Windows installer. It runs the official Hermes Windows installer, copies `src/` into the production vault, creates the vault-local MCP venv, deploys profiles and the policy-gate plugin, and wires Hermes crons.
@@ -86,7 +86,7 @@ Each trades a little breadth for much less shell to build and maintain:
 
 ## Related
 
-- **Reference:** [Installer (bootstrap)](../../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
-- **Decisions:** [ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../../adr/26-repo-as-install-unit.md) (the repo is the install unit).
-- **Design:** [Distribution model](../../design/distribution-model.md), [Why Hermes](../../design/why-hermes.md) (the runtime the installer provisions).
-- **How-to:** [Quickstart](../../how-to-guides/setup/quickstart.md), [Set up the vault](../../how-to-guides/setup/set-up-the-vault.md).
+- **Reference:** [Installer (bootstrap)](../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
+- **Decisions:** [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../adr/26-repo-as-install-unit.md) (the repo is the install unit).
+- **Design:** [Distribution model](distribution-model.md), [Why Hermes](why-hermes.md) (the runtime the installer provisions).
+- **How-to:** [Quickstart](../how-to-guides/setup/quickstart.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).

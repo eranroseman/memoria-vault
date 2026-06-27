@@ -18,10 +18,9 @@ The vault stores durable knowledge organized type-first into category folders, w
 | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | [Document types and epistemic roles](document-types.md)                    | The three epistemic roles (source / synthesis / working) behind the document types, and why agent permissions follow from them.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, and why the vault compounds rather than merely accumulates.                      |
-| [Your first month](your-first-month.md)                            | The tempo of that cycle over your first weeks of real use — when to capture, distill, produce, and review so the vault compounds, not rots. |
 | [Note body structure](note-body-structure.md)                      | Why source notes, claim notes, and hubs have the body sections they do, and what each section makes the note able to do.                  |
 | [Why promotion is gated](promotion-model.md)                       | What promotion means, the one-way promotion map and its disallowed moves, and why the human gate sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 
-For the complete document-type reference (fields, templates, lifecycle tables), see [Document types](../../reference/document-types.md).
+For the complete document-type reference (fields, templates, lifecycle tables), see [Document types](../../reference/document-types.md). For the practice cadence that follows from this model, see [Your first month](../../how-to-guides/knowledge/your-first-month.md).

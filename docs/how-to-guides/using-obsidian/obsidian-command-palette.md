@@ -12,68 +12,31 @@ Open it with `Cmd-P` (`Ctrl-P` on Windows), then type `Memoria:` to filter to Me
 
 The palette is for **actions**, not navigation. To switch between spaces — the rooms you work in, like Library or Knowledge — use the navigator rail (the **Now** / **Places** strip in the left pane), not the palette.
 
-This guide covers the commands that ship pre-wired and how to make them fast.
+This guide covers how to use the palette quickly. The full command inventory
+lives in [Obsidian command palette](../../reference/obsidian-command-palette.md).
 
 ## Prerequisites
 
 - Obsidian open with the vault
 - QuickAdd and Commander ship bundled and enabled with the starter vault — no install needed (see [Set up Obsidian](../setup/set-up-obsidian.md))
-- The Memoria command catalog open for reference: [Obsidian command palette](../../reference/obsidian-command-palette.md)
+- The command reference if you need exact names: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 
 ## Steps
 
 **1. Open the palette and confirm the pre-wired commands are present.**
 
-`Cmd-P` (or `Ctrl-P`) → type `Memoria:`. The commands ship pre-wired in the starter vault, in four groups. The full catalog is in [Obsidian command palette](../../reference/obsidian-command-palette.md).
+`Cmd-P` (or `Ctrl-P`) → type `Memoria:`. The starter vault ships pre-wired
+capture, task, assist, inbox, and project commands. Confirm they appear; use the
+reference page only when you need an exact command name or implementation source.
 
-First, a few terms used below:
-
-- **Lane** — a kind of background work an agent does (catalog, extract, draft, verify). Lanes run on the **kanban board**, a column-per-lane task tracker.
-- **Card** — a tracked work item: a board card is a task on a lane; an **Inbox** card is something waiting for your attention. The Inbox is a **queue** — a list you work down to empty.
-- **Citekey** — a paper's short citation id, e.g. `smith2024`.
-
-**Capture and note creation** — entry points that must fire from inside the editor:
-
-- `Memoria: capture fleeting` — a quick-note form; writes one raw item to `notes/fleeting/`
-- `Memoria: write claim note` — a guided form; writes a claim note in `notes/claims/` (only you create these)
-- `Memoria: capture source from URL` — turns a pasted URL into a capture card on the Librarian lane
-- `Memoria: structured source capture` — a guided form; writes a proposed source note plus an Inbox candidate card
-- `Memoria: capture from Zotero selection` — the same capture card, citekey pre-filled from the current Zotero selection
-- `Memoria: resolve inbox card` — marks the active Inbox card resolved, in place
-- `Memoria: dismiss inbox card` — archives the active Inbox card without opening the resolve menu, then returns to the Inbox
-- `Memoria: open Inbox` — returns the active pane to the Inbox without resolving the current note
-
-**Per-task lane commands** ([#203](https://github.com/eranroseman/memoria-vault/issues/203)) — one command per lane task. Each prompts only for what that task needs, then raises a board card on the right lane:
-
-- `Memoria: catalog source` · `Memoria: extract claims` · `Memoria: link claim` · `Memoria: map corpus` — the Librarian's four tasks
-- `Memoria: retry map corpus and dismiss` — used by map-blocker tickets; queues the retry, archives the ticket, and returns to the Inbox
-- `Memoria: draft section` — the Writer's `draft` lane
-- `Memoria: verify draft` — the Peer-reviewer's `verify` lane
-- `Memoria: run pattern` — pick a runnable pattern from `system/patterns/`; the active note rides along
-- `Memoria: delegate task` — the generic fallback: pick any lane (including `code`) and type a free-form goal
-
-**Assist commands** — verb-shaped starts, from the palette, a pane conversation, or selected text:
-
-- `Memoria: assist find` · `Memoria: assist search` · `Memoria: assist patterns`
-- `Memoria: assist ask` · `Memoria: assist draft` · `Memoria: assist explore`
-
-From the palette or a selection, assist commands stage a card or draft for review. They never write directly to your canonical notes.
-
-**Project commands** — maintenance for a writing project:
-
-- `Memoria: start project` — scaffold `projects/<slug>/` with the project note, first thesis, and gate surface (a **gate** is the human approval step before work advances)
-- `Memoria: refresh project gate` — recalculate `project-gate-index.md` from the active project's state
-- `Memoria: supersede thesis` — create a replacement thesis, mark the old one superseded, and raise a re-confirmation alert
-
-Task commands default to the **active note** — the file open in your editor. `extract claims` runs on an open paper or source note, `link claim` on an open claim, `verify draft` on an open project file. Assist commands also carry the active note and any selected text as context.
+Task commands default to the **active note**. Assist commands also carry the
+active note and any selected text as context. Navigation commands are the
+exception: prefer the left-pane rail for spaces and Inbox.
 
 **2. Use the visible buttons for the main loop.**
 
-You don't have to type every command. The most frequent ones also appear as buttons.
-
-The left ribbon holds: capture fleeting, capture from Zotero selection, capture source from URL, delegate task, and resolve inbox card.
-
-The note page header holds: capture fleeting, create linked claim note, write claim note, extract claims, and link claim — so capture stays close while the active-note defaults stay visible.
+You don't have to type every command. The most frequent ones also appear as
+buttons in the left ribbon, note header, and left-pane rail.
 
 Navigation lives elsewhere: switch spaces and open the Inbox queue from the navigator rail (**Now** / **Places**) in the left pane, not from the palette.
 
@@ -102,7 +65,7 @@ Settings → Hotkeys → search for the command name → assign a key combinatio
 
 ## Verify
 
-- `Cmd-P` → type `Memoria:` returns the commands in the capture, task, assist, and project groups
+- `Cmd-P` → type `Memoria:` returns Memoria commands
 - The left ribbon exposes capture, delegate, and resolve controls; the navigator rail (**Now** / **Places**) handles space switching
 - `Memoria: capture fleeting` creates a new note in `notes/fleeting/` with `lifecycle: proposed` and `origin: human`, then surfaces it in the Inbox **Fleeting notes** queue
 - `Memoria: structured source capture` creates a proposed `notes/sources/` note and an Inbox `candidate` card

@@ -49,16 +49,8 @@ The final editor is effectively fixed at drafting time: switching from Obsidian 
 
 ---
 
-## Known failure modes per route
+Known route failures and recovery steps live in [Export a draft](../how-to-guides/project/export-a-draft.md).
 
-| Route | Failure mode | Mitigation |
-| --- | --- | --- |
-| Option B (Word + `zotero.lua`) | `lpeg` dependency on Windows requires Visual Studio to build — can take days to debug | Test on a single-citation document first |
-| Option B | `.docx` may be corrupt on first open | Rerun Pandoc |
-| Option A (Pandoc static) | Pandoc + BBT `.docx` corrupt with some citation styles | Rerun Pandoc; test on single-citation document first |
-| Option D (Google Docs) | No automated route — each citekey re-inserted by hand | Only viable for short documents or when real-time collaboration is essential |
-
----
 
 ## Export target folder
 

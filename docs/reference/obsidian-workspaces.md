@@ -7,12 +7,10 @@ parent: Reference
 
 Memoria ships one saved Obsidian workspace named **Memoria** in
 `src/.obsidian/workspaces.json`. It is a reset layout, not the space switcher
-([ADR-81](../adr/81-persistent-gate-dashboards.md)).
+([ADR-81](../adr/81-persistent-gate-dashboards.md)). Space switching happens
+through the pinned `_nav.md` rail note in the left pane.
 
-Space switching happens through the navigation rail — the pinned `_nav.md` note in
-the left pane. Its **Now** section surfaces the Inbox action count (proposed
-`candidate`, `gap`, and `work-prompt` cards) and the Maintenance/Fleet health band,
-and its **Places** section links the three durable spaces:
+## Rail targets
 
 | Space | Job | Dashboard |
 | --- | --- | --- |
@@ -20,18 +18,15 @@ and its **Places** section links the three durable spaces:
 | Knowledge | Build and test claims | `spaces/knowledge.md` |
 | Project | Steer bounded inquiry to output | `spaces/project.md` |
 
-The Inbox queue (`spaces/inbox.md`, `type: queue`) and Maintenance collection
-(`spaces/maintenance.md`, `type: maintenance`) are reached from the rail's **Now**,
-not from **Places**. Each space dashboard embeds the relevant Bases views; the rail
-owns switching, so the dashboards no longer carry a nav row. Clicking a rail link opens
-that dashboard in the active tab; it does not load a new workspace layout.
+The rail's **Now** section links the Inbox queue (`spaces/inbox.md`) and
+Maintenance collection (`spaces/maintenance.md`). Its **Places** section links the
+three durable spaces above.
 
-On launch QuickAdd runs the `Memoria: restore shell on startup` macro. It first lets
-Obsidian restore your previous session; if the pinned `_nav.md` rail is already present,
-the macro only reveals it and leaves the main pane where you were. If the rail is
-missing, it falls back to Obsidian's core Workspaces plugin and loads the saved
-**Memoria** workspace: `home.md` in the main pane, the pinned rail on the left, and the
-Co-PI pane on the right. There is no Homepage plugin and no Inbox forced landing.
+## Startup behavior
+
+On launch QuickAdd runs `Memoria: restore shell on startup`. If the pinned rail is
+already present, it reveals the shell and leaves the main pane where Obsidian
+restored it. If the rail is missing, it loads the saved **Memoria** workspace.
 
 ## Reset layout
 
@@ -44,15 +39,9 @@ The **Memoria** workspace has one shared shell:
   space dashboard; Portals is for browsing the underlying notes.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
-The core Workspaces plugin stays enabled so startup can repair a missing rail and so
-you can restore the reset shell manually with Obsidian's own **Manage workspaces**
-command if panes get rearranged. Space switching is not exposed through QuickAdd
-commands or loader scripts.
-
-Workspaces Plus was evaluated and rejected for the shipped path. It can register
-native workspace-switching commands, but Memoria models spaces as dashboard notes
-reached from the navigation rail, not saved workspace layouts; the rail and the
-dashboard notes in `spaces/` are the source of truth.
+The core Workspaces plugin stays enabled so startup can repair a missing rail and
+so you can restore the reset shell manually with Obsidian's own **Manage
+workspaces** command if panes get rearranged.
 
 ## Layout storage
 
