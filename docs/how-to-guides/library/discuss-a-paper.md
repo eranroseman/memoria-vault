@@ -8,6 +8,8 @@ nav_order: 5
 
 Think a source through with the Co-PI before writing a claim. The Co-PI is the one conversational agent — a reflective thinking-partner that questions and pushes back; it is read-only ([The Co-PI](../../explanation/profiles/co-pi.md)), so the thinking and the eventual claim note are yours.
 
+If the PI/Co-PI split is new, see [The model](../../the-model.md).
+
 ## Prerequisites
 
 - A source you've read, with a source note in `notes/sources/` ([Capture and ingest a source](capture-and-ingest.md))

@@ -1,13 +1,16 @@
 ---
 title: Reference
-nav_order: 4
+nav_order: 13
 has_children: true
 permalink: /reference/
+book: Operator Guide
 ---
 
 # Reference
 
-Lookup material for Memoria — fields, values, commands, schemas, folder paths. For design rationale and conceptual explanations, see [Explanation](../explanation).
+Lookup material for Memoria — fields, values, commands, schemas, folder paths. This
+section is part of the [Operator Guide](../operator-guide.md). For design rationale
+and conceptual explanations, see [Explanation](../explanation).
 
 The files are grouped below by domain for scanning; the folder itself is flat.
 

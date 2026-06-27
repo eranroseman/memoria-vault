@@ -7,6 +7,8 @@ parent: Reference
 
 Term definitions for Memoria, organized by domain. One definition per term; disambiguation noted where a term has multiple senses.
 
+For the short version of the core terms, see [The model](../the-model.md).
+
 ---
 
 ## System

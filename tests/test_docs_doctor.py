@@ -8,10 +8,12 @@ check_frontmatter = _m.check_frontmatter
 check_link_text = _m.check_link_text
 check_links = _m.check_links
 check_plugin_count_mirrors = _m.check_plugin_count_mirrors
+check_model_spine_link = _m.check_model_spine_link
 check_hermes_cli_skill_mirror = _m.check_hermes_cli_skill_mirror
 check_profile_skill_count_mirror = _m.check_profile_skill_count_mirror
 check_quickadd_command_reference_mirror = _m.check_quickadd_command_reference_mirror
 check_readmes = _m.check_readmes
+check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
 check_system_actions_skill_mirror = _m.check_system_actions_skill_mirror
 check_template_frontmatter = _m.check_template_frontmatter
@@ -21,6 +23,7 @@ check_wikilink_aliases = _m.check_wikilink_aliases
 check_wikilinks = _m.check_wikilinks
 gh_slug = _m.gh_slug
 heading_slugs = _m.heading_slugs
+site_excluded_dirs = _m._site_excluded_dirs
 
 
 def test_gh_slug_matches_github_heading_rules():
@@ -285,6 +288,60 @@ def test_check_site_local_links_allows_in_site_excluded_and_inline_code_links(tm
     assert doc_errs == []
     assert code_errs == []
     assert excluded_errs == []
+
+
+def test_site_excluded_dirs_are_read_from_jekyll_config(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "_config.yml").write_text(
+        'exclude:\n  - contributing/\n  - releasing/\n  - "**/tmp/"\n',
+        encoding="utf-8",
+    )
+    _m._SITE_EXCLUDE_CACHE.clear()
+
+    assert site_excluded_dirs(root) == {"contributing", "releasing"}
+
+
+def test_check_site_excluded_targets_blocks_published_links_to_excluded_docs(tmp_path):
+    root = tmp_path / "docs"
+    ref = root / "reference"
+    releasing = root / "releasing"
+    adr = root / "adr"
+    ref.mkdir(parents=True)
+    releasing.mkdir()
+    adr.mkdir()
+    (root / "_config.yml").write_text("exclude:\n  - releasing/\n", encoding="utf-8")
+    (releasing / "README.md").write_text("# Releasing\n", encoding="utf-8")
+    (adr / "README.md").write_text("# Decisions\n", encoding="utf-8")
+    page = ref / "page.md"
+    page.write_text("[bad](../releasing/README.md)\n[good](../adr/README.md)\n")
+    _m._SITE_EXCLUDE_CACHE.clear()
+
+    errs: list[str] = []
+    check_site_excluded_targets(page, root, errs)
+
+    assert len(errs) == 1
+    assert "excluded page" in errs[0]
+
+
+def test_check_model_spine_link_warns_when_model_is_repeated_without_spine_link(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    page = root / "overview.md"
+    page.write_text("Memoria is a research operating system with a Co-PI.\n", encoding="utf-8")
+    linked = root / "linked.md"
+    linked.write_text(
+        "Memoria is a research operating system. See [The model](the-model.md).\n",
+        encoding="utf-8",
+    )
+
+    warnings: list[str] = []
+    linked_warnings: list[str] = []
+    check_model_spine_link(page, root, warnings)
+    check_model_spine_link(linked, root, linked_warnings)
+
+    assert len(warnings) == 1
+    assert linked_warnings == []
 
 
 def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):

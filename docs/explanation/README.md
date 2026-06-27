@@ -1,15 +1,22 @@
 ---
 title: Explanation
-nav_order: 5
+nav_order: 21
 has_children: true
 permalink: /explanation/
+book: Design Book
 ---
 
 # Explanation
 
-This section is for **understanding** Memoria — what it is, how it thinks, and why it was built the way it was. These documents answer "why" and "what is" questions. They are for reading and reflection, not for following step-by-step.
+This section is the body of the [Design Book](../design-book.md). It is for
+**understanding** Memoria — what it is, how it thinks, and why it was built the way it
+was. These documents answer "why" and "what is" questions. They are for reading and
+reflection, not for following step-by-step.
 
-If you need to *do* something, see [how-to guides](../how-to-guides). If you need exact values, field names, or configuration formats, see [Reference](../reference). If you want a guided first experience, see [Tutorials](../tutorials).
+Start with [The model](../the-model.md) if the basic vocabulary is unfamiliar. If you
+need to *do* something, see [How-to guides](../how-to-guides). If you need exact
+values, field names, or configuration formats, see [Reference](../reference). If you
+want a guided first experience, see [Tutorials](../tutorials).
 
 ---
 

@@ -8,6 +8,8 @@ nav_order: 3
 
 Talk to the Co-PI from inside Obsidian without switching to a terminal. This guide covers opening the pane, attaching context, reading responses, and ending a session cleanly.
 
+For the shared agent and lane vocabulary, see [The model](../../the-model.md).
+
 ## Prerequisites
 
 - Obsidian open with the vault
