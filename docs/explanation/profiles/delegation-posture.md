@@ -31,5 +31,6 @@ However far an agent delegates, the **propose-not-dispose** rule holds for all f
 ## Related
 
 - The agents ranked above: [Profiles](README.md)
+- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
 - Why tasks go to specialists at all: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - The widest delegator and its external-agent handoff: [The Engineer](engineer.md)

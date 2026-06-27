@@ -1,13 +1,13 @@
 ---
-title: Why promotion is gated
+title: Promotion and gated zones
 parent: Knowledge
 grand_parent: Explanation
 nav_order: 5
 ---
 
-# Why promotion is gated
+# Promotion and gated zones
 
-Promotion is the act of making content canonical — confirming a claim into `notes/claims/`, curating a hub, accepting a proposed link. In Memoria it is always a human act. The rule for every actor that is not the PI is **propose, not dispose**: agents and operations stage proposals; the PI decides what becomes part of the record. This is not a safeguard bolted onto the system — it is the mechanism that keeps the vault trustworthy.
+Promotion is the act of making content canonical — confirming a claim into `notes/claims/`, curating a hub, accepting a proposed link. In Memoria it is always a human act. Agents and operations stage proposals; the PI decides what becomes part of the record.
 
 ---
 
@@ -50,14 +50,6 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 
 ---
 
-## Why this feels slow
-
-The human gate is the system's bottleneck by design, and that is the point — the full argument for why the review gate is structural rather than advisory is in [Why the review gate is structural](../../design/why-human-gate.md). Here the consequence: agents can catalog, extract, and draft faster than the PI can review, so the proposal queue grows unless the PI keeps pace.
-
-The right response to a full queue is not to automate review but to let the WIP limits and back-pressure bite — the board mechanism that makes the bottleneck visible instead of letting "reviewed" silently degrade into "rubber-stamped." That mechanism, and the rule that a rejected proposal spawns a fresh card rather than reopening the old one, are explained in [Board states and the review gate](../kanban-board/states.md). The gate is also instrumented — time-on-gate and accept-rate feed the fleet-health dashboard — so a gate that has stopped being a real decision shows up in the data.
-
----
-
 ## Related
 
 **Explanation**
@@ -66,6 +58,7 @@ The right response to a full queue is not to automate review but to let the WIP 
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/card-schema.md)
 - The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)
+- Why promotion is gated: [Why promotion is gated](../../design/why-promotion-is-gated.md)
 
 **Decisions**
 

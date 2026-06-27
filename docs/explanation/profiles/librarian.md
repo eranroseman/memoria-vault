@@ -25,14 +25,6 @@ The table below is an orienting illustration of what each lane does and the Inbo
 
 The lanes are individually triggered, not a pipeline — a human gate (often a long gap) sits between each. Gaps found in *map* raise Inbox `gap`s (one of the card types — `candidate` / `flag` / `gap` — see [Glossary](../../reference/glossary.md)) that re-trigger *catalog*: the loop that compounds.
 
-## Why it's designed this way
-
-**The operation/agent split.** The mechanical half of cataloging — fetch metadata, extract text, build entity `relationships`, create Catalog records — is the **ingest operation**, not the Librarian. The agent fills the two LLM holes: composing the comparative `[!brief]` and proposing the classification. Keeping the mechanics deterministic keeps the high-volume path reproducible, auditable, and cheap; the agent spends LLM judgment only where judgment is needed — the [hybrid select-then-compose pattern](../../design/why-computational-methods.md) applied to cataloging. Below a confidence floor the operation's fuzzy calls (entity resolution, dedup) emit a `flag` rather than merging silently ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)).
-
-**Faithful, not optimistic-and-loose.** The posture is generous about *inclusion* and strict about *representation*: a brief reports what the paper says, a coverage-report reports what the corpus holds, and neither editorializes. The review gate can only filter well if the proposals beneath it are faithful.
-
-**One external surface, fully gated.** The Librarian touches the most external data in the system (OpenAlex, Crossref, Semantic Scholar, …), and every lookup goes through MCP — discovery tools and the ingest facade — never raw web access. Concentrating the external surface in one agent and routing it through the policy boundary makes it auditable by construction.
-
 ## What the Librarian is not
 
 **Not a synthesizer.** It curates and maps evidence; the Writer composes arguments and the PI writes claims. It never writes `notes/claims/` or `notes/hubs/`.
@@ -47,4 +39,5 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 - The mechanical counterpart: [Operations](../operations/README.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
+- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
 - Why intake is separated from verification: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)

@@ -31,18 +31,9 @@ All five profiles ship; the Writer, Peer-reviewer, and Engineer run as backgroun
 
 The tables above orient by posture; the canonical lane→profile map, write-scope ceilings, and bundled-skills counts live in [Profile capabilities](../../reference/profiles.md).
 
-## Shared layer, unique layer
-
-Each agent is a **shared** layer (the vault's `AGENTS.md` house rules, one copy for all) plus a **unique** layer (its own posture, skills, model, and connections). How those layers are packaged and shipped is owned by [Distribution model](../../design/distribution-model.md); what matters here is the consequence — the agents share the house rules but each brings its own stance and toolset.
-
-The Co-PI is the sole memory carrier while the background lanes stay stateless propose-then-dispose executors (they suggest; only the PI decides) — the substrate split behind that is [The memory model](../architecture/memory-model.md). Two affordances are Co-PI-only — the Hermes self-improving loop and `/personality` tuning ([The Co-PI](co-pi.md)) — and the specialists' postures are fixed by design, stable traits rather than per-run knobs.
-
-## The bounded rule
-
-All five agents **propose**; the **PI disposes** — promotions, the `retracted` decision, and gated-zone writes are PI-only, enforced by the policy MCP. Why that gate is structural rather than a convention is [Why the review gate is structural](../../design/why-human-gate.md); how far each agent may hand support work onward is its [Delegation posture](delegation-posture.md).
-
 ## Where to go next
 
 - Why one Co-PI + four background lanes: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
 - The deterministic actors that left the profile set: [Operations](../operations/README.md)
 - How cards reach the lanes and come back: [The control plane](../architecture/control-plane.md)

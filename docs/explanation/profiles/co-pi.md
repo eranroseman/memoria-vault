@@ -34,4 +34,5 @@ Concentrating every conversation in one agent lets it run Hermes' self-improving
 
 - The lanes it delegates to: [Profiles](README.md)
 - How a delegated card travels: [The control plane](../architecture/control-plane.md)
+- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
 - Why one conversational front: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
