@@ -10,6 +10,8 @@ permalink: /explanation/architecture/
 
 Memoria is **seven layers** ([ADR-46](../../adr/46-seven-layer-architecture.md)): the **PI** (the human — Principal Investigator), the **Interface** (the Obsidian UI), the **Co-PI** (the one conversational agent), **Tasks** (the kanban board and its background lanes), **MCP** (the policy boundary), the **Operations** (deterministic mechanisms), and the **Vault** (the files — the knowledge itself). One flow rule governs the stack: **decisions flow down, information flows up.**
 
+The shared terms behind this section are defined in [The model](../../the-model.md).
+
 ```text
 L1  PI          the human — the only actor who promotes to canonical
 L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Project Workspaces

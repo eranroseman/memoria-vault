@@ -50,11 +50,8 @@ DROPPED_KEYS = (
 # published-docs bar.
 SCRATCH_DIRS = {"tmp"}
 
-# docs/ dirs kept in the repo for relative linking / github.com browsing but NOT
-# published to the Jekyll site (docs/_config.yml `exclude:`). A page in one of these
-# is read on github.com, where a relative link out to src/ still resolves — so the
-# "stay inside the site" rule below applies only to *published* pages.
-SITE_EXCLUDED_DIRS = {"contributing", "releasing", "testing"}
+DEFAULT_SITE_EXCLUDED_DIRS = {"contributing", "releasing", "testing"}
+_SITE_EXCLUDE_CACHE: dict[Path, set[str]] = {}
 
 
 def _scratch(p: Path, base: Path) -> bool:
@@ -63,10 +60,51 @@ def _scratch(p: Path, base: Path) -> bool:
     return any(part in SCRATCH_DIRS for part in p.relative_to(base).parts)
 
 
+def _config_root(base: Path) -> Path:
+    for candidate in (base, *base.parents):
+        if (candidate / "_config.yml").is_file():
+            return candidate
+    return base
+
+
+def _site_excluded_dirs(base: Path) -> set[str]:
+    root = _config_root(base).resolve()
+    if root in _SITE_EXCLUDE_CACHE:
+        return _SITE_EXCLUDE_CACHE[root]
+    config = root / "_config.yml"
+    if not config.is_file():
+        _SITE_EXCLUDE_CACHE[root] = set(DEFAULT_SITE_EXCLUDED_DIRS)
+        return _SITE_EXCLUDE_CACHE[root]
+    excludes: set[str] = set()
+    in_exclude = False
+    for line in read(config).splitlines():
+        if re.match(r"^exclude:\s*$", line):
+            in_exclude = True
+            continue
+        if in_exclude and line and not line.startswith((" ", "\t", "-")):
+            break
+        if not in_exclude:
+            continue
+        item = re.match(r"\s*-\s+(.+?)\s*(?:#.*)?$", line)
+        if not item:
+            continue
+        value = item.group(1).strip().strip("\"'").strip("/")
+        if value and "/" not in value and not re.search(r"[*?\[]", value):
+            excludes.add(value)
+    _SITE_EXCLUDE_CACHE[root] = excludes
+    return excludes
+
+
 def _site_excluded(p: Path, base: Path) -> bool:
-    if set(base.parts) & SITE_EXCLUDED_DIRS:
+    excluded = _site_excluded_dirs(base)
+    if set(base.parts) & excluded:
         return True
-    return bool(set(p.relative_to(base).parts) & SITE_EXCLUDED_DIRS)
+    root = _config_root(base)
+    try:
+        parts = p.relative_to(root).parts
+    except ValueError:
+        parts = p.relative_to(base).parts
+    return bool(set(parts) & excluded)
 
 
 def _published(md: Path, root: Path) -> bool:
@@ -87,6 +125,12 @@ WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
 COUNT_RE = re.compile(r"\b(\d+)\b")
+MODEL_SPINE = "the-model.md"
+MODEL_RESTATEMENT_RE = re.compile(
+    r"\b(research operating system|single-researcher operating system|five terms|"
+    r"board, workers, vault|agents propose; the PI disposes|one conversational agent)\b",
+    re.IGNORECASE,
+)
 
 
 def read(path: Path) -> str:
@@ -327,6 +371,41 @@ def check_site_local_links(md: Path, root: Path, errors: list[str]) -> None:
                 f"{md}: relative link '{path_part}' leaves the published site (docs/) — "
                 f"src/ is not on the Jekyll site; use inline code or an absolute github.com blob URL"
             )
+
+
+def check_site_excluded_targets(md: Path, root: Path, errors: list[str]) -> None:
+    if not _published(md, root):
+        return
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    for raw in LINK_RE.findall(text):
+        target = raw.strip()
+        if target.startswith(("http://", "https://", "mailto:", "#")) or "{{" in target:
+            continue
+        path_part = re.split(r"\s+", target.partition("#")[0].strip())[0]
+        if not path_part:
+            continue
+        tgt = (md.parent / path_part).resolve()
+        if not tgt.exists():
+            continue
+        try:
+            tgt.relative_to(_config_root(root))
+        except ValueError:
+            continue
+        if _site_excluded(tgt, root) or _scratch(tgt, _config_root(root)):
+            errors.append(
+                f"{md}: link '{path_part}' targets a docs/_config.yml excluded page — "
+                "use an absolute github.com blob URL or publish the target"
+            )
+
+
+def check_model_spine_link(md: Path, root: Path, warnings: list[str]) -> None:
+    if not _published(md, root) or md.name == MODEL_SPINE or "adr" in md.relative_to(root).parts:
+        return
+    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
+    if MODEL_SPINE in text or "/the-model/" in text:
+        return
+    if MODEL_RESTATEMENT_RE.search(text):
+        warnings.append(f"{md}: restates the system model without linking docs/the-model.md")
 
 
 def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
@@ -633,6 +712,8 @@ def main() -> int:
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_site_local_links(md, root, errors)
+        check_site_excluded_targets(md, root, errors)
+        check_model_spine_link(md, root, warnings)
         check_bare_adr_codes(md, root, errors)
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)

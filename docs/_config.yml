@@ -37,10 +37,9 @@ plugins:
   - jekyll-seo-tag
 
 # Repo-internal documentation, kept in docs/ for relative linking but NOT
-# published to the site. The public site is the four Diátaxis quadrants
-# (tutorials/ how-to-guides/ reference/ explanation/) plus the ADRs.
+# published to the site. The public site includes the operator/design books
+# plus the ADR decision records.
 exclude:
-  - adr/
   - contributing/
   - releasing/
   - testing/

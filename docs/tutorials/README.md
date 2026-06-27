@@ -1,13 +1,17 @@
 ---
 title: Tutorials
-nav_order: 2
+nav_order: 11
 has_children: true
 permalink: /tutorials/
+book: Operator Guide
 ---
 
 # Tutorials
 
-These tutorials teach Memoria by building one small thing end to end: a short, well-sourced paragraph you could defend. You work in Obsidian, one concrete step at a time, and finish with real notes in your own vault.
+These tutorials are part of the [Operator Guide](../operator-guide.md). They teach
+Memoria by building one small thing end to end: a short, well-sourced paragraph you
+could defend. You work in Obsidian, one concrete step at a time, and finish with real
+notes in your own vault.
 
 You don't need any prior Memoria experience — each new idea is explained the first time it comes up. Plan for **three short sessions**, about a focused day of work in total.
 

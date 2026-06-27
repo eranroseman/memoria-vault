@@ -8,10 +8,10 @@ permalink: /
 
 A research operating system for a single researcher (the PI) — a Co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
-**[Read about what Memoria is](explanation/overview/what-memoria-is.md)**, what it's not, and why it exists. Everything else builds on this.
-If you want a guided first experience, see [Tutorials](tutorials).
-If you need to _do_ something, see [how-to guides](how-to-guides).
-If you need exact values, field names, or configuration formats, see [Reference](reference).
+Start with [The model](the-model.md): the five terms, the working loop, and the
+four books. If you want a guided first experience, see [Tutorials](tutorials).
+If you need to _do_ something, see [How-to guides](how-to-guides). If you need
+exact values, field names, or configuration formats, see [Reference](reference).
 
 **v0.1** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
@@ -19,24 +19,11 @@ If you need exact values, field names, or configuration formats, see [Reference]
 
 ---
 
-## Five words first
-
-Memoria runs on five terms. Learn these and most of the docs read easily:
-
-- **PI** — you, the principal investigator. Memoria is single-user by design; every judgment about what enters the vault is yours.
-- **Co-PI** — the one agent you converse with. It questions, explains, and delegates, but writes nothing itself.
-- **Lanes** — the four background agents (Librarian, Writer, Peer-reviewer, Engineer) the Co-PI delegates to. They propose; you dispose.
-- **Board** — the Kanban control plane where delegated work moves through states under a review gate.
-- **Vault** — your Obsidian folder tree, where the notes, claims, and drafts you produce actually live.
-
-Full definitions are in the [Glossary](reference/glossary.md); each term is also explained where it first comes up.
-
----
-
 ## Where do you want to go?
 
 | I want to…                                  | Go here                                                                                           |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Understand the system model**             | [The model](the-model.md)                                                                         |
 | **Get set up for the first time**           | [Quickstart — set up your vault](how-to-guides/setup/quickstart.md)                                |
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
@@ -57,25 +44,26 @@ The sections below are organized the Diátaxis way — by what you're trying to 
 
 **Understand the system (read in order)**
 
-1. [What Memoria is](explanation/overview/what-memoria-is.md) — the central insight, and what it deliberately is not
-2. [Intellectual foundations](explanation/overview/intellectual-foundations.md) — where the design comes from
-3. [Design principles](explanation/overview/design-principles.md) — the rules the framing produces
-4. [Architecture](explanation/architecture/README.md) — the layered structure
-5. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
-6. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
-7. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
-8. [Profiles](explanation/profiles/README.md) — the Co-PI and the four background lanes
-9. [Operations](explanation/operations/README.md) — the deterministic layer beneath the agents
-10. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
-11. [The workflow model](explanation/workflows/README.md) — how work moves, with review as a first-class state
-12. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
-13. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
-14. [Design rationale](explanation/rationale/README.md) — why each major decision went the way it did
+1. [The model](the-model.md) — the shared vocabulary and working loop
+2. [What Memoria is](explanation/overview/what-memoria-is.md) — the central insight, and what it deliberately is not
+3. [Intellectual foundations](explanation/overview/intellectual-foundations.md) — where the design comes from
+4. [Design principles](explanation/overview/design-principles.md) — the rules the framing produces
+5. [Architecture](explanation/architecture/README.md) — the layered structure
+6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
+7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
+8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
+9. [Profiles](explanation/profiles/README.md) — the Co-PI and the four background lanes
+10. [Operations](explanation/operations/README.md) — the deterministic layer beneath the agents
+11. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
+12. [The workflow model](explanation/workflows/README.md) — how work moves, with review as a first-class state
+13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
+14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
+15. [Design rationale](explanation/rationale/README.md) — why each major decision went the way it did
 
 **Then learn it by doing**
 
-15. [Tutorials 01–07](tutorials/README.md) — build one small, well-sourced paragraph end to end
-16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
+16. [Tutorials 01–07](tutorials/README.md) — build one small, well-sourced paragraph end to end
+17. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
 
 ---
 
@@ -132,10 +120,12 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 ## Browse the docs
 
-[**Tutorials**](tutorials/README.md) — Guided first experiences, work through in order.
+[**The model**](the-model.md) — Shared vocabulary and the working loop.
 
-[**How-to guides**](how-to-guides/README.md) — Task-oriented recipes. Setup · Using Obsidian · Using Hermes Agent · Sources · Writing · Maintenance · Recovery.
+[**Operator Guide**](operator-guide.md) — Tutorials, how-to guides, and reference.
 
-[**Explanation**](explanation/README.md) — Why Memoria is built the way it is. Architecture · Knowledge model · Profiles · Workflows · Obsidian surfaces.
+[**Design Book**](design-book.md) — Explanation, design rationale, and architecture.
 
-[**Reference**](reference/README.md) — Exact values, schemas, commands. Frontmatter · Document types · Profiles · Hermes CLI · Policy MCP · Failure modes · Glossary.
+[**Decision records**](adr/) — ADRs at every lifecycle state.
+
+[**Runtime Spec**](runtime-spec.md) — Agent guidance, generated profile policy, and runtime contracts.

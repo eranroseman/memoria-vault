@@ -74,6 +74,10 @@ def _registry() -> dict[str, Any]:
     return yaml.safe_load(REGISTRY.read_text(encoding="utf-8")) or {}
 
 
+def load_registry() -> dict[str, Any]:
+    return _registry()
+
+
 def _tools_for(profile: str, registry: dict[str, Any]) -> list[str]:
     groups = registry["groups"]
     out: list[str] = []
@@ -83,6 +87,10 @@ def _tools_for(profile: str, registry: dict[str, Any]) -> list[str]:
             if toolset not in out:
                 out.append(toolset)
     return sorted(out, key=lambda item: TOOLSET_ORDER.index(item) if item in TOOLSET_ORDER else 99)
+
+
+def toolsets_for(profile: str, registry: dict[str, Any]) -> list[str]:
+    return _tools_for(profile, registry)
 
 
 def _mcp_tools_for(profile: str, registry: dict[str, Any]) -> dict[str, list[str]]:
@@ -96,6 +104,10 @@ def _mcp_tools_for(profile: str, registry: dict[str, Any]) -> dict[str, list[str
             if name not in out.setdefault(server, []):
                 out[server].append(name)
     return out
+
+
+def mcp_tools_for(profile: str, registry: dict[str, Any]) -> dict[str, list[str]]:
+    return _mcp_tools_for(profile, registry)
 
 
 def render_profile(path: Path, registry: dict[str, Any]) -> str:

@@ -42,6 +42,8 @@ jobs:
         run: ruff format --check memoria scripts src/.memoria .github/scripts tests
       - name: docs-doctor
         run: python scripts/docs_doctor.py docs
+      - name: profile-reference
+        run: python scripts/gen_profiles_ref.py --check
       - name: docs-links
         run: bash scripts/check-vault-links.sh
       - name: check-test-refs

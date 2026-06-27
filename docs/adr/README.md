@@ -1,10 +1,12 @@
 ---
-title: Decisions
+title: Decision records
 has_children: true
 topic: decisions
+nav_order: 90
+permalink: /adr/
 ---
 
-# Decisions
+# Decision records
 
 Architecture Decision Records for Memoria. Each file records one choice: what was
 decided, why, which alternatives were weighed, and the consequences. ADRs are the
