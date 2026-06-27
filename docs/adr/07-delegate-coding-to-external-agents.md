@@ -2,6 +2,7 @@
 topic: decisions
 id: 07
 title: Code agent attachment
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-15
 date_resolved: 2026-05-15

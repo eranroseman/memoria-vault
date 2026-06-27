@@ -2,6 +2,7 @@
 topic: decisions
 id: 50
 title: One lifecycle chain for everything; maturity is a claim property; reference dropped; MOC renamed hub
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

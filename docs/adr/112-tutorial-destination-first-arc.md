@@ -2,6 +2,7 @@
 topic: decisions
 id: 112
 title: "Onboarding is one destination-first project arc"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-22
 date_resolved: 2026-06-22

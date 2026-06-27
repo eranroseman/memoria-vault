@@ -2,6 +2,7 @@
 topic: decisions
 id: 18
 title: Rename `agent_verdict` → `agent_recommendation`
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-31
 date_resolved: 2026-06-01

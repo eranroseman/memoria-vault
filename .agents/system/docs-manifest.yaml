@@ -20,6 +20,7 @@ entries:
     date_proposed: 2026-05-01
     date_resolved: 2026-05-01
     id: 1
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 46
@@ -37,6 +38,7 @@ entries:
     date_proposed: 2026-05-01
     date_resolved: 2026-05-01
     id: 2
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 48
@@ -54,6 +56,7 @@ entries:
     date_proposed: 2026-05-01
     date_resolved: 2026-05-01
     id: 3
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -70,6 +73,7 @@ entries:
     date_proposed: 2026-05-01
     date_resolved: 2026-05-01
     id: 4
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 47
@@ -87,6 +91,7 @@ entries:
     date_proposed: 2026-05-01
     date_resolved: 2026-05-01
     id: 5
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -103,6 +108,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-05-15
     id: 6
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -119,6 +125,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-05-15
     id: 7
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -135,6 +142,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-05-29
     id: 08
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 52
@@ -152,6 +160,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-05-29
     id: 09
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -168,6 +177,7 @@ entries:
     date_proposed: 2026-05-29
     date_resolved: 2026-05-29
     id: 10
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -186,6 +196,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 100
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -206,6 +217,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 101
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -228,6 +240,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 102
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes: []
@@ -249,6 +262,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 103
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes: []
@@ -269,6 +283,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 104
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -288,6 +303,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 105
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -307,6 +323,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 106
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -330,6 +347,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 107
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes: []
@@ -348,6 +366,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 108
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes: []
@@ -370,6 +389,7 @@ entries:
     date_proposed: 2026-06-20
     date_resolved: 2026-06-20
     id: 109
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -386,6 +406,7 @@ entries:
     date_proposed: 2026-05-29
     date_resolved: 2026-05-29
     id: 11
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -402,6 +423,7 @@ entries:
     date_proposed: 2026-06-20
     date_resolved: 2026-06-20
     id: 110
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -436,6 +458,7 @@ entries:
     date_proposed: 2026-06-22
     date_resolved: 2026-06-22
     id: 112
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -474,6 +497,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 114
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -494,6 +518,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 115
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -513,6 +538,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 115
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -534,6 +560,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 116
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -554,6 +581,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 117
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -575,6 +603,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 118
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -598,6 +627,7 @@ entries:
     date_proposed: 2026-06-23
     date_resolved: 2026-06-23
     id: 119
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -615,6 +645,7 @@ entries:
     date_proposed: 2026-05-29
     date_resolved: 2026-05-29
     id: 12
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -631,6 +662,7 @@ entries:
     date_proposed: 2026-05-29
     date_resolved: 2026-05-29
     id: 13
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 115
@@ -648,6 +680,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-05-30
     id: 14
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -664,6 +697,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-05-30
     id: 15
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -680,6 +714,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-06-01
     id: 16
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -696,6 +731,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-06-16
     id: 17
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 50
@@ -714,6 +750,7 @@ entries:
     date_proposed: 2026-05-31
     date_resolved: 2026-06-01
     id: 18
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -730,6 +767,7 @@ entries:
     date_proposed: 2026-05-31
     date_resolved: 2026-06-01
     id: 19
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -746,6 +784,7 @@ entries:
     date_proposed: 2026-05-27
     date_resolved: 2026-06-01
     id: 20
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -762,6 +801,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-01
     id: 21
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -778,6 +818,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-01
     id: 22
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -794,6 +835,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-02
     id: 23
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -810,6 +852,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-01
     id: 24
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -828,6 +871,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-12
     id: 25
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -844,6 +888,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-01
     id: 26
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -861,6 +906,7 @@ entries:
     date_proposed: 2026-06-01
     date_resolved: 2026-06-01
     id: 27
+    nav_exclude: true
     status: accepted
     superseded_by:
     - 28
@@ -879,6 +925,7 @@ entries:
     date_proposed: 2026-06-02
     date_resolved: 2026-06-02
     id: 28
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -896,6 +943,7 @@ entries:
     date_proposed: 2026-06-02
     date_resolved: 2026-06-02
     id: 29
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -912,6 +960,7 @@ entries:
     date_proposed: 2026-06-03
     date_resolved: 2026-06-03
     id: 30
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -928,6 +977,7 @@ entries:
     date_proposed: 2026-06-04
     date_resolved: 2026-06-04
     id: 31
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -944,6 +994,7 @@ entries:
     date_proposed: 2026-06-04
     date_resolved: 2026-06-04
     id: 32
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -960,6 +1011,7 @@ entries:
     date_proposed: 2026-06-04
     date_resolved: 2026-06-04
     id: 33
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -976,6 +1028,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-06-16
     id: 34
+    nav_exclude: true
     status: rejected
     superseded_by: []
     supersedes: []
@@ -992,6 +1045,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-06-19
     id: 35
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1008,6 +1062,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-06-10
     id: 36
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 51
@@ -1025,6 +1080,7 @@ entries:
     date_proposed: 2026-05-15
     date_resolved: 2026-06-10
     id: 37
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 48
@@ -1043,6 +1099,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-06-19
     id: 38
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1059,6 +1116,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-06-19
     id: 39
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1075,6 +1133,7 @@ entries:
     date_proposed: 2026-05-30
     date_resolved: 2026-06-16
     id: 40
+    nav_exclude: true
     status: rejected
     superseded_by: []
     supersedes: []
@@ -1091,6 +1150,7 @@ entries:
     date_proposed: 2026-05-31
     date_resolved: 2026-06-19
     id: 41
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1107,6 +1167,7 @@ entries:
     date_proposed: 2026-05-31
     date_resolved: 2026-06-10
     id: 42
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 48
@@ -1125,6 +1186,7 @@ entries:
     date_proposed: 2026-05-31
     date_resolved: 2026-06-12
     id: 43
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1142,6 +1204,7 @@ entries:
     date_proposed: 2026-06-09
     date_resolved: 2026-06-09
     id: 44
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1159,6 +1222,7 @@ entries:
     date_proposed: 2026-06-08
     date_resolved: 2026-06-08
     id: 45
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1176,6 +1240,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 46
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1194,6 +1259,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 47
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1213,6 +1279,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 48
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1233,6 +1300,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 49
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1250,6 +1318,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 50
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1269,6 +1338,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 51
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1290,6 +1360,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 52
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1309,6 +1380,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 53
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1328,6 +1400,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 54
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1347,6 +1420,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 55
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1365,6 +1439,7 @@ entries:
     date_proposed: 2026-06-10
     date_resolved: 2026-06-10
     id: 56
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1384,6 +1459,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-11
     id: 57
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1401,6 +1477,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 58
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 84
@@ -1424,6 +1501,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 59
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 89
@@ -1448,6 +1526,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 60
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1466,6 +1545,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 61
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 95
@@ -1487,6 +1567,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-16
     id: 62
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1506,6 +1587,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 63
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1524,6 +1606,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-16
     id: 64
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1542,6 +1625,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 65
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 98
@@ -1564,6 +1648,7 @@ entries:
     date_proposed: 2026-06-11
     date_resolved: 2026-06-19
     id: 66
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1584,6 +1669,7 @@ entries:
     date_proposed: 2026-06-12
     date_resolved: 2026-06-12
     id: 67
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1602,6 +1688,7 @@ entries:
     date_proposed: 2026-06-12
     date_resolved: 2026-06-12
     id: 68
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 81
@@ -1620,6 +1707,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 69
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1639,6 +1727,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 70
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1657,6 +1746,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 71
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1674,6 +1764,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 72
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1691,6 +1782,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 73
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1710,6 +1802,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-18
     id: 74
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1727,6 +1820,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-14
     id: 75
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1748,6 +1842,7 @@ entries:
     date_proposed: 2026-06-14
     date_resolved: 2026-06-19
     id: 76
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1770,6 +1865,7 @@ entries:
     date_proposed: 2026-06-16
     date_resolved: 2026-06-16
     id: 77
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1788,6 +1884,7 @@ entries:
     date_proposed: 2026-06-16
     date_resolved: 2026-06-16
     id: 78
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1808,6 +1905,7 @@ entries:
     date_proposed: 2026-06-16
     date_resolved: 2026-06-16
     id: 79
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1828,6 +1926,7 @@ entries:
     date_proposed: 2026-06-16
     date_resolved: 2026-06-17
     id: 80
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1849,6 +1948,7 @@ entries:
     date_proposed: 2026-06-18
     date_resolved: 2026-06-18
     id: 81
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1869,6 +1969,7 @@ entries:
     date_proposed: 2026-06-18
     date_resolved: 2026-06-18
     id: 82
+    nav_exclude: true
     status: superseded
     superseded_by:
     - 101
@@ -1891,6 +1992,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 83
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes: []
@@ -1908,6 +2010,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: 2026-06-19
     id: 84
+    nav_exclude: true
     status: accepted
     superseded_by: []
     supersedes:
@@ -1927,6 +2030,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 85
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -1945,6 +2049,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 86
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -1964,6 +2069,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 87
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -1983,6 +2089,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 88
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2002,6 +2109,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 89
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2021,6 +2129,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 90
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2040,6 +2149,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 91
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2058,6 +2168,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 92
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2076,6 +2187,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 93
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2095,6 +2207,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 94
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2114,6 +2227,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 95
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2132,6 +2246,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 96
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2151,6 +2266,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 97
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2170,6 +2286,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 98
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2188,6 +2305,7 @@ entries:
     date_proposed: 2026-06-19
     date_resolved: null
     id: 99
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes:
@@ -2217,6 +2335,7 @@ entries:
     date_proposed: YYYY-MM-DD
     date_resolved: null
     id: NN
+    nav_exclude: true
     status: proposed
     superseded_by: []
     supersedes: []

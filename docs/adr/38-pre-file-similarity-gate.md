@@ -2,6 +2,7 @@
 topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
+nav_exclude: true
 status: accepted
 assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against. Trigger (a) "live qmd index in retrieval" is now MET (qmd is wired into the Librarian/Writer/Peer-reviewer skills); only (b) dense-corpus tuning + building the find-duplicates sweep remain
 date_proposed: 2026-05-30

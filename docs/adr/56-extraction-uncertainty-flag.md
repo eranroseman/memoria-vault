@@ -2,6 +2,7 @@
 topic: decisions
 id: 56
 title: Low-confidence extraction routes to a flag — the ingest engine never merges identities silently
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

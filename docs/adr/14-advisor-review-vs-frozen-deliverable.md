@@ -2,6 +2,7 @@
 topic: decisions
 id: 14
 title: Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-30
 date_resolved: 2026-05-30

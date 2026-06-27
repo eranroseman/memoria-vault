@@ -2,6 +2,7 @@
 topic: decisions
 id: 92
 title: Discovery relevance scoring
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

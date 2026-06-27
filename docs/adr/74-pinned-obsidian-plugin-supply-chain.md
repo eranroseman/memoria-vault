@@ -2,6 +2,7 @@
 topic: decisions
 id: 74
 title: Manage bundled Obsidian plugins with a pinned provenance manifest
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-18

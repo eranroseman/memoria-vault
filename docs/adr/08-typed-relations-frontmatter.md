@@ -2,6 +2,7 @@
 topic: decisions
 id: 08
 title: Typed relations frontmatter
+nav_exclude: true
 status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-05-29

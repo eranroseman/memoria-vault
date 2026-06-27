@@ -2,6 +2,7 @@
 topic: decisions
 id: 119
 title: "Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is the single source"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

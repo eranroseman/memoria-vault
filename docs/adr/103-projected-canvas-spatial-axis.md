@@ -2,6 +2,7 @@
 topic: decisions
 id: 103
 title: Projected Canvas spatial axis
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

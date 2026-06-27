@@ -2,6 +2,7 @@
 topic: decisions
 id: 110
 title: "Ruff: formatter owns layout (line-length 100), curated lint ruleset"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-20
 date_resolved: 2026-06-20

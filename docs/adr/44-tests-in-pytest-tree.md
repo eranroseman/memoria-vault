@@ -2,6 +2,7 @@
 topic: decisions
 id: 44
 title: L1 component tests live in a repo-side pytest tree, not inline in shipped modules
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-09
 date_resolved: 2026-06-09

@@ -2,6 +2,7 @@
 topic: decisions
 id: 84
 title: Read-only Obsidian Inspector
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19

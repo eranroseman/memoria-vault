@@ -2,6 +2,7 @@
 topic: decisions
 id: 58
 title: Adjacent tool integrations and added surfaces
+nav_exclude: true
 status: superseded
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

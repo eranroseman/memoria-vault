@@ -2,6 +2,7 @@
 topic: decisions
 id: 54
 title: Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

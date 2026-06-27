@@ -2,6 +2,7 @@
 topic: decisions
 id: 116
 title: "Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

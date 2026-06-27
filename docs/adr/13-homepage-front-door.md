@@ -2,6 +2,7 @@
 topic: decisions
 id: 13
 title: Homepage front-door note, auto-opened by obsidian-homepage
+nav_exclude: true
 status: superseded
 date_proposed: 2026-05-29
 date_resolved: 2026-05-29

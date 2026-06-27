@@ -2,6 +2,7 @@
 topic: decisions
 id: 91
 title: Classical prose metrics for the export gate
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

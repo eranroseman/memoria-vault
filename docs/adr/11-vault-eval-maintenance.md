@@ -2,6 +2,7 @@
 topic: decisions
 id: 11
 title: vault-eval as a maintenance capability
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-29
 date_resolved: 2026-05-29

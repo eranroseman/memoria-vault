@@ -2,6 +2,7 @@
 topic: decisions
 id: 30
 title: Tiered ingest pipeline (capture → fallback-chained enrichment → gated write)
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-03
 date_resolved: 2026-06-03

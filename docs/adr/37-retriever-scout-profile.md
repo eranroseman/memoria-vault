@@ -2,6 +2,7 @@
 topic: decisions
 id: 37
 title: Retriever / Scout as a separate profile
+nav_exclude: true
 status: superseded
 superseded_by: [48]  # one Librarian posture spans catalog·extract·link·map, find included (D27/D34)
 assumes: []

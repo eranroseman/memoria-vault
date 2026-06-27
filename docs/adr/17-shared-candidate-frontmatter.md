@@ -2,6 +2,7 @@
 topic: decisions
 id: 17
 title: Shared candidate frontmatter format
+nav_exclude: true
 status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-06-16

@@ -2,6 +2,7 @@
 topic: decisions
 id: 45
 title: Release management — gates as a tracking-issue checklist, release-please for versioning
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-08
 date_resolved: 2026-06-08

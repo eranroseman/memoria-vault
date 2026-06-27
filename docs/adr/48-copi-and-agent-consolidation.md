@@ -2,6 +2,7 @@
 topic: decisions
 id: 48
 title: One Co-PI fronts everything; specialists consolidate to posture-defined agents
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

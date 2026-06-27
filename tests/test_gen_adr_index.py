@@ -21,6 +21,7 @@ def _frontmatter(**overrides):
         "topic": "decisions",
         "id": "28",
         "title": "Write gate, a plugin",
+        "nav_exclude": "true",
         "status": "accepted",
         "date_proposed": "2026-06-01",
         "date_resolved": "2026-06-01",
@@ -38,6 +39,7 @@ def test_parse_adr_reads_typed_frontmatter_fields():
 
     assert adr["id"] == 28
     assert adr["title"] == "Write gate, a plugin"
+    assert adr["nav_exclude"] is True
     assert adr["status"] == "accepted"
     assert adr["superseded_by"] == []
     assert validate_adr(_m.Path("docs/adr/28-x.md"), adr) == []
@@ -63,6 +65,7 @@ def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
     )
 
     assert any("missing frontmatter key `assumes`" in e for e in bad_errs)
+    assert any("missing frontmatter key `nav_exclude`" in e for e in bad_errs)
     assert any("must leave date_resolved blank" in e for e in bad_errs)
     assert any(
         "accepted ADR must set date_resolved" in e
@@ -93,6 +96,14 @@ def test_validate_adr_accepts_unresolved_proposals():
     )
 
     assert validate_adr(_m.Path("docs/adr/06-proposed.md"), proposed) == []
+
+
+def test_validate_adr_requires_pages_hidden_from_global_nav():
+    visible = parse_adr(_frontmatter(id="7", title="Visible", nav_exclude="false"))
+
+    errors = validate_adr(_m.Path("docs/adr/07-visible.md"), visible)
+
+    assert any("nav_exclude must be true" in e for e in errors)
 
 
 def test_render_table_sorts_by_id_and_uses_zero_padded_links():

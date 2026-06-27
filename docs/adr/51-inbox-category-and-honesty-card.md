@@ -2,6 +2,7 @@
 topic: decisions
 id: 51
 title: The Inbox category and the honesty card — argument for/against, what tipped it, certainty; no verdict on proposals
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

@@ -2,6 +2,7 @@
 topic: decisions
 id: 66
 title: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

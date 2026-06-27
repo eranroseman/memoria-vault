@@ -2,6 +2,7 @@
 topic: decisions
 id: 93
 title: Keyphrase extraction for tag candidates
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

@@ -2,6 +2,7 @@
 topic: decisions
 id: 22
 title: Build on the Hermes Agent runtime rather than a bespoke one
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01

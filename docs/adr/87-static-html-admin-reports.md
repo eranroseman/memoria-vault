@@ -2,6 +2,7 @@
 topic: decisions
 id: 87
 title: Static-HTML admin reports
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

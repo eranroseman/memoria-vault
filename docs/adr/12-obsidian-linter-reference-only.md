@@ -2,6 +2,7 @@
 topic: decisions
 id: 12
 title: obsidian-linter is reference-only, not a control-plane formatter
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-29
 date_resolved: 2026-05-29

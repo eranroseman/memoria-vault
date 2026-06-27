@@ -2,6 +2,7 @@
 topic: decisions
 id: 77
 title: Project gate
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16

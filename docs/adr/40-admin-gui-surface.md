@@ -2,6 +2,7 @@
 topic: decisions
 id: 40
 title: Admin/forensic GUI surface (hermes-workspace)
+nav_exclude: true
 status: rejected
 assumes: []
 date_proposed: 2026-05-30

@@ -2,6 +2,7 @@
 topic: decisions
 id: 29
 title: A layered testing framework, not a pile of plans
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02

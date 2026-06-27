@@ -2,6 +2,7 @@
 topic: decisions
 id: 70
 title: Navigation — intent-named gates, ambient maintenance, JTBD dashboards
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14

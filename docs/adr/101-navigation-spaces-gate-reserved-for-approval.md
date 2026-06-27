@@ -2,6 +2,7 @@
 topic: decisions
 id: 101
 title: Navigation surfaces are "spaces"; "gate" is reserved for the approval gate
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19

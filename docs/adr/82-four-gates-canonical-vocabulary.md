@@ -2,6 +2,7 @@
 topic: decisions
 id: 82
 title: The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming
+nav_exclude: true
 status: superseded
 date_proposed: 2026-06-18
 date_resolved: 2026-06-18

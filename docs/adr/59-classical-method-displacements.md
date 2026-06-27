@@ -2,6 +2,7 @@
 topic: decisions
 id: 59
 title: Classical method displacements over LLM calls
+nav_exclude: true
 status: superseded
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

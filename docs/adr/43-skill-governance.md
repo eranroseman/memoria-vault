@@ -2,6 +2,7 @@
 topic: decisions
 id: 43
 title: Skill governance and lifecycle
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-31
 date_resolved: 2026-06-12

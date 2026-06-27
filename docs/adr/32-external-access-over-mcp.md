@@ -2,6 +2,7 @@
 topic: decisions
 id: 32
 title: Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04

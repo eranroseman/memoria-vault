@@ -2,6 +2,7 @@
 topic: decisions
 id: 114
 title: "Left pane is a navigation rail: Now over Places"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

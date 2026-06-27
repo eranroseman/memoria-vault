@@ -2,6 +2,7 @@
 topic: decisions
 id: 62
 title: Measurement and verification harnesses
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-16

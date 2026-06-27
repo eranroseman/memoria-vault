@@ -2,6 +2,7 @@
 topic: decisions
 id: 55
 title: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

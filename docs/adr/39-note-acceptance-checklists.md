@@ -2,6 +2,7 @@
 topic: decisions
 id: 39
 title: Per-note-type acceptance checklists ("frozen evaluator")
+nav_exclude: true
 status: accepted
 assumes: []
 date_proposed: 2026-05-30

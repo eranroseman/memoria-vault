@@ -2,6 +2,7 @@
 topic: decisions
 id: 25
 title: Two separate session logs — hash-paired audit vs. per-session digests
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-12

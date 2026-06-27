@@ -2,6 +2,7 @@
 topic: decisions
 id: 69
 title: Operations — name the deterministic layer and its four categories
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14

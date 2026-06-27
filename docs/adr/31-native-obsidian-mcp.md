@@ -2,6 +2,7 @@
 topic: decisions
 id: 31
 title: Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04

@@ -2,6 +2,7 @@
 topic: decisions
 id: 19
 title: Agent-proposed hubs (threshold alert and Mapper handoff)
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-31
 date_resolved: 2026-06-01

@@ -2,6 +2,7 @@
 topic: decisions
 id: 115
 title: "Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

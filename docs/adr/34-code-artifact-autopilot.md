@@ -2,6 +2,7 @@
 topic: decisions
 id: 34
 title: Code-artifact autopilot
+nav_exclude: true
 status: rejected
 assumes: []
 date_proposed: 2026-05-15

@@ -2,6 +2,7 @@
 topic: decisions
 id: 109
 title: Project management uses native views over project notes
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-20
 date_resolved: 2026-06-20

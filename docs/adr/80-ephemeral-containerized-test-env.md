@@ -2,6 +2,7 @@
 topic: decisions
 id: 80
 title: Ephemeral containerized Linux test-env harness
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-17

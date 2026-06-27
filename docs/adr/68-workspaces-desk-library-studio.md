@@ -2,6 +2,7 @@
 topic: decisions
 id: 68
 title: Workspaces v2 — Desk / Library / Studio, home.md as control panel
+nav_exclude: true
 status: superseded
 date_proposed: 2026-06-12
 date_resolved: 2026-06-12
