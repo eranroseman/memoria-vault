@@ -42,7 +42,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Release design scratch | `docs/releasing/<version>/tmp/` while in progress | Status doctor and release playbook |
 | Release prose | `docs/releasing/<version>/release-plan-*.md` | Release index and status doctor |
 | Product decisions | `docs/adr/` | Current docs and implementation |
-| Public system model | `docs/the-model.md` | Tutorials, how-to guides, Reference, Explanation, Design Book |
+| Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design Book |
 | Docs routing manifest | `.agents/system/docs-manifest.yaml` | Co-PI and agent doc-routing prompts |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 

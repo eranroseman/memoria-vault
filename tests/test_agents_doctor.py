@@ -17,8 +17,8 @@ def test_docs_manifest_routes_model_and_runtime_surfaces():
     assert entries["docs/design/README.md"]["book"] == "Developers"
     assert entries["docs/explanation/README.md"]["book"] == "Explanation"
     assert entries["docs/reference/runtime-spec.md"]["book"] == "Reference"
-    assert entries["docs/the-model.md"]["book"] == "Model spine"
-    assert entries["docs/the-model.md"]["canonical_owner"] is True
+    assert entries["docs/README.md"]["book"] == "Model spine"
+    assert entries["docs/README.md"]["canonical_owner"] is True
 
 
 def test_change_impact_registry_has_paths_and_checks():

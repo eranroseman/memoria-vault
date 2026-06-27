@@ -9,7 +9,7 @@ nav_order: 10
 
 Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. The argument was first made for three layers ([ADR-01](../adr/01-three-layer-architecture.md): board, workers, vault) and survives intact in the seven-layer stack that superseded it ([ADR-46](../adr/46-seven-layer-architecture.md)) — the refinement added layers; it never weakened the separation.
 
-For the current shared vocabulary, start with [The model](../the-model.md).
+For the current shared vocabulary, start with [Home](../README.md).
 
 ---
 

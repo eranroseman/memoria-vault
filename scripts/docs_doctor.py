@@ -125,7 +125,11 @@ WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
 COUNT_RE = re.compile(r"\b(\d+)\b")
-MODEL_SPINE = "the-model.md"
+MODEL_SPINE = "README.md"
+MODEL_SPINE_LINK_RE = re.compile(
+    r"\]\((?:\.\./)*README\.md(?:#[^)]+)?\)|"
+    r"https://eranroseman\.github\.io/memoria-vault/?(?:#[^)]+)?"
+)
 MODEL_RESTATEMENT_RE = re.compile(
     r"\b(research operating system|single-researcher operating system|five terms|"
     r"board, workers, vault|agents propose; the PI disposes|one conversational agent)\b",
@@ -399,13 +403,32 @@ def check_site_excluded_targets(md: Path, root: Path, errors: list[str]) -> None
 
 
 def check_model_spine_link(md: Path, root: Path, warnings: list[str]) -> None:
-    if not _published(md, root) or md.name == MODEL_SPINE or "adr" in md.relative_to(root).parts:
+    if not _published(md, root) or md == root / MODEL_SPINE or "adr" in md.relative_to(root).parts:
         return
     text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
-    if MODEL_SPINE in text or "/the-model/" in text:
+    if MODEL_SPINE_LINK_RE.search(text):
         return
     if MODEL_RESTATEMENT_RE.search(text):
-        warnings.append(f"{md}: restates the system model without linking docs/the-model.md")
+        warnings.append(f"{md}: restates the system model without linking docs/README.md")
+
+
+def check_hidden_compatibility_page(md: Path, root: Path, errors: list[str]) -> None:
+    if "adr" in md.relative_to(root).parts or md.name.startswith("_"):
+        return
+    match = FRONTMATTER_RE.match(read(md))
+    if not match:
+        return
+    block = match.group(1)
+    hidden = re.search(r"^nav_exclude:\s*true\s*$", block, re.MULTILINE)
+    compatibility = re.search(
+        r"^(permalink|redirect_from|redirect_to|aliases?):\s*",
+        block,
+        re.MULTILINE,
+    )
+    if hidden and compatibility:
+        errors.append(
+            f"{md}: hidden compatibility pages are forbidden; update links and delete the page"
+        )
 
 
 def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
@@ -714,6 +737,7 @@ def main() -> int:
         check_site_local_links(md, root, errors)
         check_site_excluded_targets(md, root, errors)
         check_model_spine_link(md, root, warnings)
+        check_hidden_compatibility_page(md, root, errors)
         check_bare_adr_codes(md, root, errors)
         check_wikilinks(md, errors, doc_md_names)
         check_link_text(md, errors)

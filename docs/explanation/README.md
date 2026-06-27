@@ -12,7 +12,7 @@ profiles, workflows, dashboards, deployment, and the Obsidian surface. It explai
 how the system is shaped so you can use and evaluate it without reading the full
 design argument.
 
-Start with [The model](../the-model.md) if the basic vocabulary is unfamiliar. If you
+Start with [Home](../README.md) if the basic vocabulary is unfamiliar. If you
 need to *do* something, see [How-to guides](../how-to-guides). If you need exact
 values, field names, runtime contracts, or configuration formats, see
 [Reference](../reference). If you want the maintained rationale and decision
@@ -50,7 +50,7 @@ the deeper argument, it points to the Design Book or ADRs.
 
 ## Entry points by background
 
-**New to Memoria:** Read [The model](../the-model.md), then
+**New to Memoria:** Read [Home](../README.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
 [Workflows](workflows/README.md). The Design Book explains why those choices were
 made.

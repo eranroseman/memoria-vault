@@ -124,7 +124,7 @@ def _heading_title(path: Path) -> str:
 
 
 def _book_for(relative: str) -> str:
-    if relative == "docs/the-model.md":
+    if relative == "docs/README.md":
         return "Model spine"
     if relative == "docs/developers.md":
         return "Developers"
@@ -160,7 +160,7 @@ def _generated_status(path: Path) -> str:
 def _canonical_owner(relative: str) -> bool:
     return (
         relative == "AGENTS.md"
-        or relative == "docs/the-model.md"
+        or relative == "docs/README.md"
         or relative.startswith("docs/adr/")
         or relative == ".agents/system/source-of-truth-map.md"
     )

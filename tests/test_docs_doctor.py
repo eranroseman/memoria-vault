@@ -5,6 +5,7 @@ import docs_doctor as _m
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
 check_bare_adr_codes = _m.check_bare_adr_codes
 check_frontmatter = _m.check_frontmatter
+check_hidden_compatibility_page = _m.check_hidden_compatibility_page
 check_link_text = _m.check_link_text
 check_links = _m.check_links
 check_plugin_count_mirrors = _m.check_plugin_count_mirrors
@@ -331,7 +332,7 @@ def test_check_model_spine_link_warns_when_model_is_repeated_without_spine_link(
     page.write_text("Memoria is a research operating system with a Co-PI.\n", encoding="utf-8")
     linked = root / "linked.md"
     linked.write_text(
-        "Memoria is a research operating system. See [The model](the-model.md).\n",
+        "Memoria is a research operating system. See [Home](README.md#the-model).\n",
         encoding="utf-8",
     )
 
@@ -342,6 +343,28 @@ def test_check_model_spine_link_warns_when_model_is_repeated_without_spine_link(
 
     assert len(warnings) == 1
     assert linked_warnings == []
+
+
+def test_check_hidden_compatibility_page_rejects_hidden_permalink_stub(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    page = root / "old-page.md"
+    page.write_text(
+        "---\n"
+        "title: Old page\n"
+        "nav_exclude: true\n"
+        "permalink: /old-page/\n"
+        "---\n\n"
+        "# Old page\n\n"
+        "Moved.\n",
+        encoding="utf-8",
+    )
+
+    errors: list[str] = []
+    check_hidden_compatibility_page(page, root, errors)
+
+    assert len(errors) == 1
+    assert "hidden compatibility pages are forbidden" in errors[0]
 
 
 def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):
