@@ -61,7 +61,8 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 **How a release runs:** scope is the GitHub milestone and Project view, readiness is
 the parent "Release vX.Y" issue plus readiness/stage sub-issues, prose lives in
 `docs/releasing/<version>/`, and version/CHANGELOG/Release are owned by release-please.
-That model is defined in AGENTS.md ("Release plans") and [Releasing](../releasing/README.md).
+That model is defined in AGENTS.md ("Release plans") and
+[Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md).
 
 ## Checklists
 

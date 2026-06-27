@@ -30,7 +30,7 @@ give it away:
   researcher actually enters. People arrive holding a paper they're reading or a thing
   they have to write; nobody arrives wanting to "create a fleeting note."
 - **It is drawn as a line, but the system is a loop.** [The knowledge
-  cycle](../explanation/knowledge/knowledge-cycle.md) is explicit that the cycle "is not
+  cycle]({{ site.baseurl }}/explanation/knowledge/knowledge-cycle.html) is explicit that the cycle "is not
   a linear path"; `06` even names the "compounding loop." Real use is not one pass 1→7.
 
 Stripped to user motivation rather than our nouns, Memoria has **one meta-use-case** —
@@ -156,7 +156,7 @@ by-doing in a sitting — genre mismatch. It belongs in a practice guide.
 ## Related
 
 - **Builds on:** [What Memoria is](../design/what-memoria-is.md) (the two
-  failure modes), [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)
+  failure modes), [The knowledge cycle]({{ site.baseurl }}/explanation/knowledge/knowledge-cycle.html)
   (the loop, the six delegable tasks), and the current
   [Tutorials](../tutorials/README.md).
 - **Implementation (follows acceptance + topic choice):** rewrite `docs/tutorials/`

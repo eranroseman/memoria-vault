@@ -70,5 +70,5 @@ process and decision prose, not the live board.
 ## Related
 
 - **Workflows affected:** [Issue tracking](../contributing/issue-tracking.md),
-  [Releasing](../releasing/README.md)
+  [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)
 - **Related decisions / Depends on:** [ADR-45](45-release-management-model.md)
