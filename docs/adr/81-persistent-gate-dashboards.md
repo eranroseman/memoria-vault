@@ -2,6 +2,7 @@
 topic: decisions
 id: 81
 title: Persistent gate dashboards
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-18
 date_resolved: 2026-06-18

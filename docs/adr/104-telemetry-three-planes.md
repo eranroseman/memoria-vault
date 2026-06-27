@@ -2,6 +2,7 @@
 topic: decisions
 id: 104
 title: Telemetry as three planes — audit, analytics, diagnostic
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19

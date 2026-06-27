@@ -2,6 +2,7 @@
 topic: decisions
 id: 15
 title: Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-30
 date_resolved: 2026-05-30

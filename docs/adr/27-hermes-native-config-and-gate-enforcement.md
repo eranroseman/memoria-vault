@@ -2,6 +2,7 @@
 topic: decisions
 id: 27
 title: Configure Hermes the way Hermes reads config; the review gate enforces via a toolset allowlist with obsidian as the only write path
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01

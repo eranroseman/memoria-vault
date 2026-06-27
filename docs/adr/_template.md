@@ -2,6 +2,7 @@
 topic: decisions
 id: NN
 title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
+nav_exclude: true
 status: proposed  # proposed | accepted | rejected | superseded
 date_proposed: YYYY-MM-DD
 date_resolved:
@@ -26,10 +27,11 @@ superseded_by: []
 > - `superseded` — replaced by a later ADR (set `superseded_by`).
 > - `rejected` — decided against; kept with the reasoning so it isn't re-litigated.
 >
-> **Proposed ADRs** carry `nav_exclude: true` (unlisted on the site until accepted)
-> and add a *When this matters* section in place of the retired "Adoption trigger"/
-> "Guard" — describe the conditions that would raise priority as context for the
-> cadence review, never as an automatic gate.
+> **All ADR files** carry `nav_exclude: true` so the public sidebar links to the
+> Decision records index instead of listing every decision as a top-level page.
+> Proposed ADRs add a *When this matters* section in place of the retired "Adoption
+> trigger"/"Guard" — describe the conditions that would raise priority as context
+> for the cadence review, never as an automatic gate.
 >
 > Delete this how-to-use block when copying the template.
 

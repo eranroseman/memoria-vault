@@ -35,6 +35,7 @@ REQUIRED_KEYS = (
     "topic",
     "id",
     "title",
+    "nav_exclude",
     "status",
     "date_proposed",
     "date_resolved",
@@ -53,6 +54,7 @@ def parse_adr(text: str) -> dict[str, object]:
     out: dict[str, object] = {
         "id": None,
         "title": "",
+        "nav_exclude": False,
         "status": "",
         "date_proposed": "",
         "date_resolved": "",
@@ -71,6 +73,8 @@ def parse_adr(text: str) -> dict[str, object]:
             out["id"] = int(val) if val.isdigit() else None
         elif key == "title":
             out["title"] = val.strip('"').strip("'")
+        elif key == "nav_exclude":
+            out["nav_exclude"] = val.split("#", 1)[0].strip().lower() == "true"
         elif key == "status":
             # drop any trailing YAML inline comment (e.g. "accepted  # rationale …")
             out["status"] = val.split("#", 1)[0].strip()
@@ -97,6 +101,8 @@ def validate_adr(path: Path, adr: dict[str, object]) -> list[str]:
         for key in REQUIRED_KEYS:
             if key not in keys:
                 errs.append(f"{rel}: missing frontmatter key `{key}`")
+    if adr.get("nav_exclude") is not True:
+        errs.append(f"{rel}: nav_exclude must be true so ADR pages stay out of site nav")
 
     status = str(adr["status"])
     if status not in ADR_STATUSES:

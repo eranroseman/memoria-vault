@@ -2,6 +2,7 @@
 topic: decisions
 id: 65
 title: Retrieval and schema extensions
+nav_exclude: true
 status: superseded
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

@@ -2,6 +2,7 @@
 topic: decisions
 id: 47
 title: Type-first category folders — catalog · notes · projects · inbox · system
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

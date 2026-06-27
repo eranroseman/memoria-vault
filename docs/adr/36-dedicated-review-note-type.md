@@ -2,6 +2,7 @@
 topic: decisions
 id: 36
 title: Dedicated review-note type
+nav_exclude: true
 status: superseded
 superseded_by: [51]  # the Inbox category + universal lifecycle (D18) — a card in `proposed` IS the review surface; durable review provenance = disposition.jsonl + the audit chain
 assumes: []

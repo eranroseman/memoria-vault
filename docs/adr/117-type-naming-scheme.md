@@ -2,6 +2,7 @@
 topic: decisions
 id: 117
 title: "Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

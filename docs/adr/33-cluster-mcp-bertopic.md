@@ -2,6 +2,7 @@
 topic: decisions
 id: 33
 title: The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04

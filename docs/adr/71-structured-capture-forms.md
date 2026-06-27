@@ -2,6 +2,7 @@
 topic: decisions
 id: 71
 title: Structured capture — forms at entry, the Linter as authority, one schema per type
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14

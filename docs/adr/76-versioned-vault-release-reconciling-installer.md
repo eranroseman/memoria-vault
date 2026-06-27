@@ -2,6 +2,7 @@
 topic: decisions
 id: 76
 title: Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-19

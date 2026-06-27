@@ -2,6 +2,7 @@
 topic: decisions
 id: 63
 title: Multi-machine deployment topologies and secondary-device patterns
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

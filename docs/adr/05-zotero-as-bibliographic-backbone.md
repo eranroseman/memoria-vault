@@ -2,6 +2,7 @@
 topic: decisions
 id: 05
 title: Zotero + Better BibTeX as the bibliographic backbone
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01

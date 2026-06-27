@@ -2,6 +2,7 @@
 topic: decisions
 id: 106
 title: Cost and disposition capture — Hermes session store and the review action
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19

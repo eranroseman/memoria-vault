@@ -2,6 +2,7 @@
 topic: decisions
 id: 90
 title: Claim-sentence classification
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

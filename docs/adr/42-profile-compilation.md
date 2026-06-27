@@ -2,6 +2,7 @@
 topic: decisions
 id: 42
 title: Profile compilation from a shared base
+nav_exclude: true
 status: superseded
 superseded_by: [48]  # the shared AGENTS.md layer + unique SOUL/skills/config (D46) removes the drift problem the compiler addressed
 assumes: []

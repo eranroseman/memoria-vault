@@ -2,6 +2,7 @@
 topic: decisions
 id: 105
 title: Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19

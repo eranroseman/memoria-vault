@@ -2,6 +2,7 @@
 topic: decisions
 id: 108
 title: LiteParse as the local document-parsing engine
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

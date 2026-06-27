@@ -2,6 +2,7 @@
 topic: decisions
 id: 26
 title: The repo is the install unit; profiles are hand-authored and idempotently deployed
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01

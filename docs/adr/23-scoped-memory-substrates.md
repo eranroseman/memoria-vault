@@ -2,6 +2,7 @@
 topic: decisions
 id: 23
 title: Memory is seven scoped substrates, not one store
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-01
 date_resolved: 2026-06-02

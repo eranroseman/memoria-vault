@@ -2,6 +2,7 @@
 topic: decisions
 id: 53
 title: The pattern library — curated prompt-transformations as data in system/patterns/, one runner
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

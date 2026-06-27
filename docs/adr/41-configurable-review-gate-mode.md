@@ -2,6 +2,7 @@
 topic: decisions
 id: 41
 title: Configurable review-gate mode (blocking / advisory) for comparison studies
+nav_exclude: true
 status: accepted
 assumes: []
 date_proposed: 2026-05-31

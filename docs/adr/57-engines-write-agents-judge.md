@@ -2,6 +2,7 @@
 topic: decisions
 id: 57
 title: Engines write, agents judge — no LLM agent as a mechanical writer
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-11

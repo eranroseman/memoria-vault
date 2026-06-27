@@ -2,6 +2,7 @@
 topic: decisions
 id: 20
 title: Publication path — vault-eval benchmark first, capture-now
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-27
 date_resolved: 2026-06-01

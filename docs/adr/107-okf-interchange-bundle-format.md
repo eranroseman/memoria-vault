@@ -2,6 +2,7 @@
 topic: decisions
 id: 107
 title: OKF as Memoria's import/export bundle format
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

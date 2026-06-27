@@ -2,6 +2,7 @@
 topic: decisions
 id: 01
 title: Three-layer architecture — board, workers, vault
+nav_exclude: true
 status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01

@@ -2,6 +2,7 @@
 topic: decisions
 id: 49
 title: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

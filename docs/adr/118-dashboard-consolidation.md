@@ -2,6 +2,7 @@
 topic: decisions
 id: 118
 title: "Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23

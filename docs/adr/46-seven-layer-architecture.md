@@ -2,6 +2,7 @@
 topic: decisions
 id: 46
 title: Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10

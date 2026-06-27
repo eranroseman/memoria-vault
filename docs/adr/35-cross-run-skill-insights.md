@@ -2,6 +2,7 @@
 topic: decisions
 id: 35
 title: Cross-run skill-insights memory
+nav_exclude: true
 status: accepted
 assumes: []
 date_proposed: 2026-05-15

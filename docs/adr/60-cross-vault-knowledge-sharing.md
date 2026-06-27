@@ -2,6 +2,7 @@
 topic: decisions
 id: 60
 title: Cross-vault and cross-project knowledge sharing
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19

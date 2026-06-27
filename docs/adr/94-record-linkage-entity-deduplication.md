@@ -2,6 +2,7 @@
 topic: decisions
 id: 94
 title: Record linkage for entity deduplication
+nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:

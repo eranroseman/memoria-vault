@@ -2,6 +2,7 @@
 topic: decisions
 id: 67
 title: Drift procedures under the golden-copy model — keep or retire
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-12
 date_resolved: 2026-06-12

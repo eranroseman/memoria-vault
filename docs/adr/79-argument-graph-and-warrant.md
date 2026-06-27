@@ -2,6 +2,7 @@
 topic: decisions
 id: 79
 title: Argument graph and warrant
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16

@@ -2,6 +2,7 @@
 topic: decisions
 id: 75
 title: Use GitHub Project fields and release sub-issues for live work state
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14

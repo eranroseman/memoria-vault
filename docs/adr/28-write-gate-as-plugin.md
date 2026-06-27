@@ -2,6 +2,7 @@
 topic: decisions
 id: 28
 title: The vault write gate is a Hermes Python plugin, not a shell hook
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02

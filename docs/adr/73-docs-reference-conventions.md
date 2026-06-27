@@ -2,6 +2,7 @@
 topic: decisions
 id: 73
 title: Documentation references — source links, ADR links, and per-operation Diátaxis split
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14

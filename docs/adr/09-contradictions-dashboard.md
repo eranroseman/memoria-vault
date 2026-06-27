@@ -2,6 +2,7 @@
 topic: decisions
 id: 09
 title: Contradictions / tensions dashboard
+nav_exclude: true
 status: accepted
 date_proposed: 2026-05-15
 date_resolved: 2026-05-29

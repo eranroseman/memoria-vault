@@ -2,6 +2,7 @@
 topic: decisions
 id: 64
 title: "Native Windows support: production on Windows, testing on Linux"
+nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-16
