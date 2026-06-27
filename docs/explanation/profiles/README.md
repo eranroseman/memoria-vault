@@ -10,7 +10,7 @@ permalink: /explanation/profiles/
 
 Memoria runs **one conversational agent — the Co-PI — and four background agents** it delegates to ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The PI talks to exactly one agent; everything else runs as a lane (a background worker on the board — see [Glossary](../../reference/glossary.md)) on the board (the kanban board), invisible until it has something for you. A profile's stable trait is its **posture** — a stance like *faithful* or *skeptical* — while the skills it runs attach per lane.
 
-For the shared PI, Co-PI, lanes, board, and vault terms, see [The model](../../the-model.md).
+For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README.md).
 
 ## The one you talk to
 

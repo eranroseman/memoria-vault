@@ -3,13 +3,14 @@ version: 1
 entries:
 - path: docs/README.md
   title: Home
-  book: Internal
-  topic: null
+  book: Model spine
+  topic: overview
   frontmatter:
     nav_order: 1
     permalink: /
     title: Home
-  canonical_owner: false
+    topic: overview
+  canonical_owner: true
   status: manual
 - path: docs/adr/01-three-layer-architecture.md
   title: "Three-layer architecture \u2014 board, workers, vault"
@@ -4955,17 +4956,6 @@ entries:
   topic: null
   frontmatter: {}
   canonical_owner: false
-  status: manual
-- path: docs/the-model.md
-  title: The model
-  book: Model spine
-  topic: overview
-  frontmatter:
-    nav_order: 2
-    permalink: /the-model/
-    title: The model
-    topic: overview
-  canonical_owner: true
   status: manual
 - path: docs/tutorials/01-orient.md
   title: 'Tutorial 01: See what you''re building'
