@@ -27,7 +27,7 @@ For what ingest decides and how, see [Ingest routing](../../reference/ingest.md)
 
 **1. Handle any `flag` card first.**
 
-Open your queue from the navigator rail on the left: **Now** → **Needs you** opens the **Inbox** queue; its **Needs me** view lists what's waiting. If ingest hit genuine ambiguity, you'll see a card titled something like "Ambiguous research area for `<citekey>`". It reports the `finding` and the scored candidates, but states no verdict — you choose. Pick the right value, write it into the paper's frontmatter at `catalog/papers/<citekey>.md`, then resolve the card ([Work the review queue](../inbox/work-the-review-queue.md)).
+Open your queue from the navigator rail on the left: **Now** → **Action queue** opens the **Inbox** queue; its **Needs me** view lists what's waiting. If ingest hit genuine ambiguity, you'll see a card titled something like "Ambiguous research area for `<citekey>`". It reports the `finding` and the scored candidates, but states no verdict — you choose. Pick the right value, write it into the paper's frontmatter at `catalog/papers/<citekey>.md`, then resolve the card ([Work the review queue](../inbox/work-the-review-queue.md)).
 
 **2. Open the paper and check what ingest applied.**
 

@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 """archive_inbox.py — the inbox archival sweep (#338).
 
-The resolve affordance (QuickAdd "Memoria: resolve inbox card",
-src/system/scripts/resolve-inbox-card.js) flips a card's frontmatter
-``lifecycle:`` to a schema-valid inbox outcome and stamps ``resolved:``. Accepted
-cards stay in ``inbox/`` as ``current`` so the verdict remains visible while it is
-fresh; rejected/no-action cards go straight to ``archived``. This sweep is the
-second half of the drain: a card whose lifecycle is a *resolved-but-not-archived*
-value (``current``) AND whose ``resolved:`` stamp is
-older than N days flips to ``lifecycle: archived``, leaving every active view
-(``transient_prefixes`` — items converge to ``archived``). The inbox therefore
-demonstrably converges to empty once cards are handled.
+The current resolve affordance (QuickAdd "Memoria: resolve inbox card",
+src/system/scripts/resolve-inbox-card.js) stamps ``resolved:`` and archives the
+card immediately. This sweep is retained for legacy cards created by older
+resolvers: a card whose lifecycle is a *resolved-but-not-archived* value
+(``current``) AND whose ``resolved:`` stamp is older than N days flips to
+``lifecycle: archived``, leaving every active view (``transient_prefixes`` —
+items converge to ``archived``). The inbox therefore demonstrably converges to
+empty once cards are handled.
 
 Mechanics mirror the resolve script: a **frontmatter flip in place** — the card
 schema defines ``archived`` as a lifecycle value, not a file move, so the file

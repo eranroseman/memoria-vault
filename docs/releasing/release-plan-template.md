@@ -11,21 +11,21 @@ nav_order: 2
 
 <!-- ===========================================================================
   THIS IS A TEMPLATE. It is a single, self-contained release-plan prose file:
-  scope, reasoning, gate/stage definitions, limitations, and cut/checkpoint
+  scope, reasoning, readiness/stage definitions, limitations, and cut/checkpoint
   procedure. Placeholders are written as {{ fill me }}.
 
   ── To start a new release ──────────────────────────────────────────────────
   1. Copy this file to  docs/releasing/<version>/release-plan-<version>.md.
   2. Bump `release:`, set `status: draft`, and set `released: false`.
-  3. Create the "Release vX.Y" parent issue with one sub-issue per gate/stage.
+  3. Create the "Release vX.Y" parent issue with one sub-issue per readiness item.
   4. Rewrite the per-release prose (status line, scope, limitations).
   5. Start a sibling  release-plan-<version>-appendix.md  for anything too
      detailed to belong in a crisp plan (see §12).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
-  SINGLE SOURCE OF STATE. This file holds PROSE, not state. Gate (G#) and Stage
+  SINGLE SOURCE OF STATE. This file holds PROSE, not state. Release Gate (G#) and Stage
   (S#) STATE lives ONLY in the "Release vX.Y" parent issue and its sub-issues; §2/§3
-  here list the gate/stage DEFINITIONS, not their state. Scope = the milestone +
+  here list the readiness/stage DEFINITIONS, not their state. Scope = the milestone +
   Memoria Issue Tracker view; build gaps = GitHub issues; automated evidence =
   Actions runs/artifacts; scope cuts = GitHub issues with Readiness: Later; version
   + notes = release-please. Edit each fact in exactly one place.
@@ -91,7 +91,7 @@ evidence from the release issue.
      gate table and the issue tracker. State the rule, then point. -->
 
 Not enumerated here — a second list would drift. **By definition the blockers
-are** any open gate/stage sub-issue, plus any open High-priority blocker in
+are** any open readiness/stage sub-issue, plus any open High-priority blocker in
 [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1).
 
 ## 5. Out of scope (later)
@@ -128,7 +128,7 @@ Before the release candidate is approved, complete a fresh documentation sweep:
 6. **Third-party and example freshness:** verify claims, commands, config keys, snippets, and examples that mention Hermes, Obsidian, Zotero, bundled plugins, skills, package managers, or external CLIs against the current implementation or upstream docs when relevant.
 7. **ADR capture:** any durable decision, scope cut, or design rationale discovered during the release is captured in `docs/adr/` or folded into an existing ADR; release `tmp/` files are not the only record of a decision.
 
-Record the sweep's output in the relevant gate/stage issue or appendix when it
+Record the sweep's output in the relevant readiness/stage issue or appendix when it
 should remain durable. Findings are grouped **Critical / Major / Minor**, and each
 finding cites `file:line`, issue type, reasoning, and the recommended edit. Include
 the checker summary (`docs_doctor`, docs links, `status_doctor`, cspell, and any

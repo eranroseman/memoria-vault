@@ -37,8 +37,8 @@ plugins:
   - jekyll-seo-tag
 
 # Repo-internal documentation, kept in docs/ for relative linking but NOT
-# published to the site. The public site includes the operator/design books
-# plus the ADR decision records.
+# published to the site. The public site includes the Diátaxis docs, maintained
+# design arguments, and ADR decision records.
 exclude:
   - contributing/
   - releasing/

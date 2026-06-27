@@ -20,7 +20,7 @@ formal releases. The *live readiness state* lives outside the file — see below
 | Thing | Lives in |
 |---|---|
 | **Scope** (what's in this release) | the GitHub **milestone** `vX.Y` plus the [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1) view filtered to that milestone |
-| **Readiness** (gate + validation-stage state) | the parent **"Release vX.Y"** issue and its gate/stage sub-issues |
+| **Readiness** (promotion-gate + validation-stage state) | the parent **"Release vX.Y"** issue and its readiness/stage sub-issues |
 | **Prose** (scope summary, limitations, cut steps, roadmap) | `docs/releasing/<version>/release-plan-<version>.md` |
 | **Build gaps** | GitHub issues |
 | **Scope cuts** | GitHub issues with Readiness `Later`; ADRs only when the cut records a decision or durable rationale |
@@ -30,7 +30,7 @@ formal releases. The *live readiness state* lives outside the file — see below
 | **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |
 | **Close-out evidence worth preserving** | the relevant issue comments, Actions artifacts, or optional `validation-log.md` |
 
-The plan file holds **prose, not state tables**. Gate/stage state is in the release
+The plan file holds **prose, not state tables**. Readiness/stage state is in the release
 issue/sub-issues; routine automated evidence is in Actions. Everything else points,
 never restates.
 
@@ -45,8 +45,8 @@ never restates.
    issues that scope it. In [Memoria Issue Tracker](https://github.com/users/eranroseman/projects/1),
    use a table filtered to the milestone and sorted by Priority as the live release plan.
 3. **Parent issue + sub-issues = readiness.** Open a **"Release vX.Y"** issue
-   (label `release`, milestone `vX.Y`). Add one sub-issue per gate/stage (`G#`,
-   `S#`) so GitHub shows sub-issue progress and each gate can carry its own evidence,
+   (label `release`, milestone `vX.Y`). Add one sub-issue per release gate or
+   validation stage (`G#`, `S#`) so GitHub shows sub-issue progress and each gate can carry its own evidence,
    owner, and comments. Do not hand-maintain a markdown state table.
 4. **In-work design notes** (optional) → `tmp/`. These files are tracked so a branch
    can cite design research while the release is being shaped, but they are not
@@ -56,7 +56,7 @@ never restates.
 
 ## Cutting a release
 
-1. Every gate/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
+1. Every readiness/stage sub-issue is closed; required CI green on `main`; no open High-priority blocker.
    The automated prefix for the candidate is `scripts/verify rc`; attach or link its
    `summary.json` evidence from the release issue.
 2. **Documentation integrity is complete.** Shipped functionality is covered in
@@ -89,7 +89,7 @@ never restates.
 | File | Holds |
 |---|---|
 | `README.md` | Thin index of this release's files |
-| `release-plan-<version>.md` | Prose: scope, gate/stage *definitions*, docs/runtime bars, blockers rule, cut procedure, roadmap |
+| `release-plan-<version>.md` | Prose: scope, readiness/stage *definitions*, docs/runtime bars, blockers rule, cut procedure, roadmap |
 | `release-plan-<version>-appendix.md` | *(optional)* phase roadmap + investigation detail |
 | `validation-log.md` | *(optional)* curated release evidence worth preserving after the GitHub issue/Actions trail |
 | `tmp/` | *(temporary)* tracked in-work design notes; remove when the release is done |

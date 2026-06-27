@@ -40,13 +40,13 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Navigator rail** — the left-pane surface for everyday navigation (`_nav.md`, [ADR-116](../adr/116-obsidian-surface-architecture.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
 
-**Now** — the rail's top band: what is waiting on you right now — **Needs you** (your Inbox queue), **Drift** (open integrity flags), and **Fleet** (background-worker health).
+**Now** — the rail's top band: what is waiting on you right now — **Action queue** (your Inbox queue), **Drift** (open integrity flags), and **Fleet** (background-worker health).
 
 **Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
 
 **Space** — a navigation surface that is also a dashboard-as-note (`type: space`): Library, Knowledge, Project, each embedding Bases views over the vault. "Gate" is reserved for the approval gate, never a space ([ADR-101](../adr/101-navigation-spaces-gate-reserved-for-approval.md)).
 
-**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily attention surface reached from **Now → Needs you**. It shows in-process Activity, then `Needs me` action cards (`candidate`, `gap`, `work-prompt`), then fleeting captures. Clearing it to empty is the goal.
+**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily attention surface reached from **Now → Action queue**. It shows in-process Activity, then `Needs me` action cards (`candidate`, `gap`, `work-prompt`), then fleeting captures. Clearing it to empty is the goal.
 
 **Maintenance** — the weekly structural-debt surface (`type: maintenance`): Drift watch, Loose ends, the worker board, and "new this week".
 

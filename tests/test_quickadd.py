@@ -566,14 +566,11 @@ def test_capture_and_catalog_cards_request_source_note_stub():
 def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     script = (SCRIPTS / "resolve-inbox-card.js").read_text(encoding="utf-8")
     assert '"retracted"' not in script
-    assert '"Keep as reminder": "current"' in script
+    assert '"Keep as reminder": "current"' not in script
     assert '"Dismiss": "archived"' in script
-    assert '"Keep as reminder": "accepted"' in script
     assert 'ATTENTION_LOG = "system/logs/attention.jsonl"' in script
     assert 'TRIAGE_LOG = "system/logs/triage.jsonl"' in script
-    assert 'DISPOSITION_LOG = "system/logs/disposition.jsonl"' in script
     assert 'event: "inbox_card_resolved"' in script
-    assert 'event: "work_prompt_reviewed"' in script
     assert "duration_minutes: durationMinutes(openedAt, resolvedAt)" in script
     assert "appendJsonl(app, ATTENTION_LOG, attentionRow)" in script
     assert "configuredOutcome" in script
@@ -585,7 +582,7 @@ def test_resolve_inbox_card_uses_schema_valid_lifecycles():
     assert dismiss["path"] == "system/scripts/resolve-inbox-card.js"
     assert dismiss["settings"] == {"Outcome": "Dismiss"}
     assert "appendJsonl(app, TRIAGE_LOG, triageRow)" in script
-    assert "appendJsonl(app, DISPOSITION_LOG, dispositionRow)" in script
+    assert "appendJsonl(app, DISPOSITION_LOG, dispositionRow)" not in script
 
 
 def test_map_retry_and_inbox_navigation_commands_are_wired():

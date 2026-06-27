@@ -49,9 +49,9 @@ For why each behaves this way, see [Callouts](../explanation/obsidian/callouts.m
 
 ---
 
-## How content is produced (hybrid pattern)
+## Producer mechanics
 
-The shipped `[!brief]` producer uses a deterministic candidate-selection step followed by an LLM composition step. The `[!suggestions]` and `[!verification]` producers ship the deterministic preflight now; their delegated lane cards are where optional one-line explanations and support judgments happen.
+Producer steps by callout:
 
 | Callout | Deterministic step | LLM step |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ The shipped `[!brief]` producer uses a deterministic candidate-selection step fo
 | `[!suggestions]` | Top-10 local candidates ranked deterministically by claim/source token overlap, truncated to 5 forward + 5 backward | Optional Librarian one-line explanation per candidate on the delegated card |
 | `[!verification]` | Regex extraction of claim links and citekeys from the draft; writes the trace scaffold inline | Peer-reviewer judges whether the cited material supports the draft claims |
 
-For `[!brief]`, the audit-relevant part is the deterministic candidate set that the Librarian composes over. For the link and verify callouts, the deterministic preflight is visible immediately and the delegated lane card carries any judgment/prose that should not be done by the UI script.
+For the rationale behind the hybrid pattern, see [Callouts](../explanation/obsidian/callouts.md).
 
 ---
 

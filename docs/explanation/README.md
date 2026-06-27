@@ -36,15 +36,16 @@ the deeper argument, it points to the Design Book or ADRs.
 
 ## Reading map
 
-1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
-2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
-3. **[Profiles](profiles/README.md)** — the Co-PI and the four background lanes.
-4. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
-5. **[Workflows](workflows/README.md)** — how work moves through the system.
-6. **[Obsidian](obsidian/README.md)** — how the human works in the vault.
-7. **[Dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
-8. **[Deployment](deployment/README.md)** — how Memoria is packaged and installed.
-9. **[Operations](operations/README.md)** — the deterministic layer below the agents.
+1. **[Overview](overview/README.md)** — the operational shape in one page.
+2. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
+3. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
+4. **[Profiles](profiles/README.md)** — the Co-PI and the four background lanes.
+5. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
+6. **[Workflows](workflows/README.md)** — how work moves through the system.
+7. **[Obsidian](obsidian/README.md)** — how the human works in the vault.
+8. **[Dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
+9. **[Deployment](deployment/README.md)** — how Memoria is packaged and installed.
+10. **[Operations](operations/README.md)** — the deterministic layer below the agents.
 
 ---
 
@@ -69,6 +70,7 @@ The curated path above is a reading order, not a full index. The sidebar lists
 every page; the sections are:
 
 - [Architecture](architecture/README.md) — what each layer and surface is
+- [Overview](overview/README.md) — the short operational model
 - [Knowledge](knowledge/README.md) — how durable knowledge is organized
 - [Profiles](profiles/README.md) — the five profiles and their delegation posture
 - [Kanban board](kanban-board/README.md) — board states, card schema, and Obsidian projection

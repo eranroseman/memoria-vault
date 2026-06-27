@@ -10,13 +10,13 @@ nav_order: 1
 
 A **profile** is the per-worker configuration for one Hermes worker. Editing a profile changes how that worker behaves: which model it routes to, what it is allowed to write, and which API credentials it uses. Each background worker on the kanban board is a **lane**; the conversational agent you talk to is the **Co-PI**.
 
-This page collects the common configuration tasks. Each section is a self-contained procedure: change the model overlay, change auxiliary models, change write permissions, add or remove a skill, update API credentials, and verify your change.
+This page collects the common configuration tasks: change the model overlay, change auxiliary models, change write permissions, add or remove a skill, update API credentials, and verify your change.
 
 Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. For what each one can do, see [Profile capabilities](../../reference/profiles.md).
 
 > **Don't hand-edit tool allowlists.** To change which tools a profile can use, edit `src/.memoria/tool-registry.yaml` and run `scripts/render_profile_configs.py --write`. Do not hand-edit the generated `platform_toolsets` block (the rendered list of built-in tool groups) or the MCP `tools.include` blocks — they are regenerated from the registry.
 
-## Where profile files live
+## Edit the vault source
 
 Each profile exists in two places. Edit the first; the installer copies it to the second.
 
@@ -31,21 +31,7 @@ Always edit the vault source, then re-deploy to push your changes to the deploye
 bash scripts/install.sh --profiles-only --vault <vault>
 ```
 
-Never edit the deployed copy directly. The next install overwrites it.
-
-## File roles
-
-These are the files inside a profile directory and what each one controls.
-
-| File | Controls | Who edits |
-| --- | --- | --- |
-| `SOUL.md` | Profile identity, posture, behavioral constraints | Author (you) |
-| `config.yaml` | Model routing, `mcp_servers`, generated capability blocks, and the `plugins` block enabling the `memoria-policy-gate` write gate | Author plus `scripts/render_profile_configs.py` (installer substitutes Python, vault, qmd, and model tokens) |
-| `distribution.yaml` | Packages the profile for `hermes profile install` | Author |
-| `skills/` | Skill packages the profile can load | Author |
-| `.env` (deployed copy only) | API keys and secrets | **Human only** — never committed to git |
-
-One piece of configuration lives *outside* the profile directory: the **lane ceiling**, the maximum write scope a lane is allowed. It sits at `<vault>/.memoria/lane-overrides/<name>.yaml`. See [Change write permissions](#change-write-permissions-lane-overrides) below.
+Never edit the deployed copy directly. The next install overwrites it. For exact file roles and generated blocks, use [Profile capabilities](../../reference/profiles.md) and [Memoria configuration](../../reference/configuration.md).
 
 ## Change the model overlay
 
@@ -107,7 +93,7 @@ Then restart Hermes to pick up the global config change.
 
 > **`compression` needs a large context window.** It must hold at least the main model's full window. That is why the example uses DeepSeek's 1M-token context; GLM's 202K is too tight.
 
-To find valid kilocode model ids, request `GET https://api.kilo.ai/api/gateway/models` (no auth required).
+Valid Kilo model ids are listed by Kilo's `/models` endpoint; keep this page to the chosen id and redeploy step.
 
 ## Change write permissions (lane overrides)
 

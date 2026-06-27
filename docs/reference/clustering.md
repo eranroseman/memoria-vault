@@ -6,9 +6,9 @@ grand_parent: Reference
 
 # Clustering
 
-The cluster MCP (`src/.memoria/mcp/cluster_mcp.py`): three tools over the vault's **typed graph** and note text that drive the `map:*` lanes and the claim-debate canvas ([ADR-33](../adr/33-cluster-mcp-bertopic.md)). The operation decides *how to display*, never *what is canonical* — every result echoes its parameters, defaults come from `.memoria/schemas/calibration.yaml` (drift-bound — recalibrate on a model-version change), and runs are deterministic for identical input (fixed seed). The text-similarity counterpart is [Search](search.md); the Canvas artifact it emits is what you arrange in [Use canvas for argument mapping](../how-to-guides/project/use-canvas-for-argument-mapping.md).
+The cluster MCP (`src/.memoria/mcp/cluster_mcp.py`) exposes three read/display tools over the vault's typed graph and source-note text. Results echo parameters; defaults come from `.memoria/schemas/calibration.yaml`; identical input plus seed produces identical output.
 
-The graph is built from authored `links:` edges on notes (`notes/claims`, `notes/hubs`, `notes/sources`) and the given `relationships` on Catalog entities (`catalog/papers`, `catalog/people`, `catalog/organizations`, `catalog/venues`, `catalog/datasets`, `catalog/repositories`) — see [Links vs relationships](../adr/52-links-vs-relationships.md).
+Inputs: authored `links:` edges on notes and given `relationships` on Catalog entities. Field contracts: [Frontmatter fields](frontmatter.md). Text retrieval counterpart: [Search](search.md).
 
 ---
 

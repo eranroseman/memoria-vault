@@ -8,6 +8,8 @@ grand_parent: Reference
 
 Every action the system can perform, with its performer. Three performer kinds: **deterministic operations** (zero-LLM Python, report-only or idempotent), **agents** (LLM lanes acting through gated MCP tools and skills), and the **PI** (palette actions and review decisions). Where a topic has its own reference page, that page is authoritative for the details — this catalog is the map.
 
+This page is a guarded mirror, not the source of truth. Action implementation lives in the referenced Python modules, QuickAdd scripts, profile skills, and linked reference pages; docs checks keep the mirror linked.
+
 ## Deterministic operations
 
 ### Ingest pipeline (`operations/processing/ingest/`)
@@ -44,7 +46,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | --- | --- | --- |
 | Reconcile | sweeps operation (`reconcile.py`) | Finds capture-intake anchors with no note on disk and enqueues idempotent re-ingest cards. |
 | Retry tier-0 | sweeps operation (`reconcile.py`) | Finds notes stuck at `ingest_status: tier0` and enqueues idempotent re-ingest cards. |
-| Archive inbox | sweeps operation (`archive_inbox.py`) | Flips accepted inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30) to `lifecycle: archived` so the inbox converges to empty. |
+| Archive inbox | sweeps operation (`archive_inbox.py`) | Archives legacy resolved Inbox cards (`lifecycle: current` with a `resolved:` stamp older than `inbox.archive_after_days`, default 30); current resolver actions archive cards immediately. |
 | Eval dispatch | sweeps operation (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
 | Eval score | sweeps operation (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | sweeps operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |

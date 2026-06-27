@@ -101,4 +101,4 @@ coverage.
 | E | gate blocks promote → approve → export | | |
 | F | board / audit / gate / dashboards held | | |
 
-**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record the result in the relevant gate/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.
+**L4 green** when one source traverses A→E end-to-end and all F invariants hold. Record the result in the relevant readiness/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.

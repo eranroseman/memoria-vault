@@ -1,26 +1,19 @@
 /*
  * QuickAdd user script — "Memoria: resolve inbox card".
  *
- * Resolves the ACTIVE inbox card in place: prompts for an outcome, flips the
- * frontmatter `lifecycle:` to a schema-valid inbox value and stamps `resolved:` with
- * today's date. It also appends Obsidian-side attention, triage, and review
- * disposition rows. Pure Obsidian app API — no shelling, so it works
- * identically on every platform.
+ * Resolves the ACTIVE inbox card in place: prompts for dismissal, flips the
+ * frontmatter `lifecycle:` to a schema-valid inbox value and stamps `resolved:`
+ * with today's date. It also appends Obsidian-side attention and triage rows.
+ * Pure Obsidian app API — no shelling, so it works identically on every platform.
  */
 
 // Outcome label → lifecycle value written to the card.
 const VERDICTS = {
-  "Keep as reminder": "current",
   "Dismiss": "archived",
-};
-
-const DISPOSITIONS = {
-  "Keep as reminder": "accepted",
 };
 
 const ATTENTION_LOG = "system/logs/attention.jsonl";
 const TRIAGE_LOG = "system/logs/triage.jsonl";
-const DISPOSITION_LOG = "system/logs/disposition.jsonl";
 
 function todayIsoDate() {
   return new Date().toISOString().slice(0, 10);
@@ -100,7 +93,6 @@ async function entry(params, settings = {}) {
   const resolvedAt = nowIso();
   let attentionRow = null;
   let triageRow = null;
-  let dispositionRow = null;
   try {
     await app.fileManager.processFrontMatter(file, (fm) => {
       const openedAt = frontmatterDate(fm, "attention_opened_at")
@@ -132,21 +124,6 @@ async function entry(params, settings = {}) {
         lifecycle_to: lifecycle,
         source: "quickadd.resolve-inbox-card",
       };
-      if ((fm.type || "") === "work-prompt" && fm.task_id && DISPOSITIONS[verdict]) {
-        dispositionRow = {
-          timestamp: resolvedAt,
-          event: "work_prompt_reviewed",
-          path: file.path,
-          lane: fm.lane || fm.assignee || "unknown",
-          task_id: fm.task_id || "",
-          disposition: DISPOSITIONS[verdict],
-          outcome: verdict,
-          lifecycle_from: fm.lifecycle || "",
-          lifecycle_to: lifecycle,
-          agent_recommendation: fm.agent_recommendation || "",
-          source: "quickadd.resolve-inbox-card",
-        };
-      }
       fm.lifecycle = lifecycle;
       fm.resolved = today;
     });
@@ -155,9 +132,6 @@ async function entry(params, settings = {}) {
     }
     if (triageRow) {
       await appendJsonl(app, TRIAGE_LOG, triageRow);
-    }
-    if (dispositionRow) {
-      await appendJsonl(app, DISPOSITION_LOG, dispositionRow);
     }
     if (verdict === "Dismiss") {
       try {
@@ -181,7 +155,7 @@ module.exports = {
       Outcome: {
         type: "text",
         defaultValue: "",
-        placeholder: "Keep as reminder | Dismiss",
+        placeholder: "Dismiss",
       },
     },
   },

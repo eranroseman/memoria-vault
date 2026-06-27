@@ -32,7 +32,7 @@ Without `--from-json`, the exporter shells out to `hermes kanban list --json`. C
 | `system/board/<task_id>.md` | One markdown projection per live card for board-state dashboards; the Inbox Activity view shows only in-process statuses. QuickAdd and Co-PI delegation may seed this immediately, and export reconciles it from Hermes. |
 | `system/logs/board-state.jsonl` | Queue-depth snapshot, one row per export run. |
 | `system/logs/board-transitions.jsonl` | Per-card status and review-state transitions derived from the previous export cache. |
-| `system/logs/disposition.jsonl` | Review decisions: `accept`, `edit`, or `reject`. |
+| `system/logs/disposition.jsonl` | Optional legacy/imported review decisions: `accepted`, `edited`, or `rejected`. |
 | `system/logs/cost.jsonl` | API spend and token counts per completed card when the Hermes session join succeeds. |
 | `system/logs/cost-misses.jsonl` | Completed cards whose Hermes session/cost join could not be completed. |
 | `system/logs/blind-review-samples.jsonl` | Deterministic sample requests for blind re-review. |

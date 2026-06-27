@@ -12,7 +12,7 @@ Reusable, version-agnostic test **plans** (procedures) — not the executable te
 (that's `tests/` at the repo root), and not routine run results. A *plan* is the
 steps to validate something; a *run* is a plan executed with results recorded.
 Plans live here. Routine automated run evidence lives in GitHub Actions logs and
-artifacts; manual release-run state lives in the relevant release gate/stage
+artifacts; manual release-run state lives in the relevant release readiness/stage
 sub-issue. A release folder gets a `validation-log.md` only when curated evidence
 is worth preserving after the GitHub trail.
 
@@ -23,7 +23,7 @@ is worth preserving after the GitHub trail.
 | [Test coverage matrix](coverage-matrix.md) | Keystone index: every component → coverage layer → which plan validates it → automated? → status |
 | [{{Subject}} test plan](test-plan-template.md) | Copy this to author a new plan |
 | [Test plans](plans/) | The reusable plans (browse the directory) |
-| [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release gate/stage sub-issues |
+| [Release-candidate runbook](plans/release-candidate-runbook.md) | The reusable S0–S5 + G9–G11 run sheet a release follows; record state in the release readiness/stage sub-issues |
 | [scripts/verify](../../scripts/verify) | Stable verification front door: `pr`, `package`, `runtime`, `rc`, and `live`; writes a JSON evidence bundle. |
 | [scripts/test.sh](../../scripts/test.sh) | Direct `static-contract` + `component` runner — historical L0/L1 static checks plus the `pytest` suite (`tests/`, ADR-44). Prefer `scripts/verify pr` before pushing; use this for bisection. |
 | [scripts/e2e-smoke.sh](../../scripts/e2e-smoke.sh) | Offline `vault-assembly` + `workflow-replay` smoke; shell entrypoint with assertions in `scripts/e2e_smoke.py`, including the ADR-80 Phase 1 cassette replay for the model-free path. |
@@ -33,7 +33,7 @@ is worth preserving after the GitHub trail.
 Plans are **version-agnostic** and shared across every release; runs are
 **version-specific** evidence for one cut. Merging them would tie reusable procedures
 to a single version. So: reusable procedure -> `testing/plans/`; automated evidence
--> Actions run/artifact; manual release evidence -> the relevant gate/stage sub-issue;
+-> Actions run/artifact; manual release evidence -> the relevant readiness/stage sub-issue;
 curated long-lived summary -> `docs/releasing/<version>/validation-log.md` only when
 the issue/Actions trail is not enough.
 

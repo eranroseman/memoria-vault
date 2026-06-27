@@ -43,7 +43,7 @@ Below the floor, the bundle carries a `flag_needed` block instead of a silent be
 
 ## Automated classification
 
-classify is **not a gate** ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): low-stakes metadata a human would rubber-stamp is automated, audited, and correctable. `classify.py` reads the **scored OpenAlex topics already in the enrichment payload** (no new network call), rolls them up to their subfield (the research-area granularity, best score per area), and decides:
+`classify.py` reads the scored OpenAlex topics already in the enrichment payload (no new network call), rolls them up to their subfield, and decides:
 
 - **Clear winner** — the top score clears the floor _and_ beats the runner-up by the near-tie margin → `research_area` is applied silently. A `methodology` facet is applied whenever it is derivable from the S2 publication types (Review, MetaAnalysis, ClinicalTrial, CaseReport, Dataset — deterministic, independent of topic ambiguity).
 - **Genuine ambiguity** — below the floor or within the margin → the field **stays unset** and ingest raises **one** Inbox `flag` card: what was ambiguous and the top candidates with scores, never a verdict (the [ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty rules).
@@ -56,11 +56,11 @@ The thresholds live beside the entity-resolution floor in `src/.memoria/schemas/
 | `classify.confidence_floor` | `0.6` | Below this top-candidate score, nothing is applied. |
 | `classify.near_tie_margin` | `0.15` | The top candidate must beat the runner-up by at least this much. |
 
-Every applied or flagged decision appends **one JSONL audit line** to `system/logs/classify.jsonl` (timestamp, run id, citekey, decision, the candidates with scores, the reason, and the thresholds in force) — the audit trail that makes the automation correctable: the PI edits the frontmatter, never approves a card.
+Every applied or flagged decision appends one JSONL audit line to `system/logs/classify.jsonl` with timestamp, run id, citekey, decision, candidates, reason, and thresholds.
 
 ### Project membership proposal ([ADR-15](../adr/15-project-membership-from-topic-hint.md))
 
-When an optional `.memoria/project-hints.yaml` exists ([Configure project hints](../how-to-guides/setup/configure-project-hints.md)), the classify stage also **proposes** project membership by simple overlap: each project's `primary_topics` is scored against the paper's OpenAlex topic names and subfields (both kebab-case normalized; a hint matches a signal when equal to it or when all the hint's tokens appear in it). Every project with at least one overlapping hint topic is proposed, ranked by overlap count, into `_proposed_classification.projects` — confirmed or corrected by the PI at triage, **never** applied to the `projects` field. Each decision (proposed or no-match) appends one `stage: project_hints` line to the same `system/logs/classify.jsonl`, carrying the candidates with their matched topics and overlap counts ([ADR-51](../adr/51-inbox-category-and-honesty-card.md) honesty — counts, not confidence). An absent hints file means fully manual project tagging (a silent no-op); a malformed one warns once on stderr and degrades to manual.
+When `.memoria/project-hints.yaml` exists ([Configure project hints](../how-to-guides/setup/configure-project-hints.md)), the classify stage also proposes project membership by topic overlap. Matches write to `_proposed_classification.projects`, never directly to `projects`. Each proposed or no-match decision appends one `stage: project_hints` line to `system/logs/classify.jsonl` with candidates, matched topics, and overlap counts.
 
 ---
 

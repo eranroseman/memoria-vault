@@ -58,7 +58,7 @@ Duplicates → close the newer issue with `Duplicate of #X` and the `duplicate` 
 - A **breaking change** in Memoria is: renaming a profile `config.yaml` field, restructuring the vault folder layout, removing a profile capability or skill, or changing ADR-frontmatter required fields.
 
 **How a release runs:** scope is the GitHub milestone and Project view, readiness is
-the parent "Release vX.Y" issue plus gate/stage sub-issues, prose lives in
+the parent "Release vX.Y" issue plus readiness/stage sub-issues, prose lives in
 `docs/releasing/<version>/`, and version/CHANGELOG/Release are owned by release-please.
 That model is defined in AGENTS.md ("Release plans") and [Releasing](../releasing/README.md).
 

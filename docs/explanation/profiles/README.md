@@ -25,7 +25,7 @@ For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README
 | **[The Librarian](librarian.md)** | faithful | catalog · extract · link · map | The four processing tasks — intake, distillation, connection, and corpus mapping. Proposes generously; the review gate (the human approval step — see [Glossary](../../reference/glossary.md)) filters. |
 | **[The Writer](writer.md)** | generative, draft-only | draft | Composes prose and outlines into project scratch. Never canonizes, never self-verifies. |
 | **[The Peer-reviewer](peer-reviewer.md)** | skeptical, independent | verify | The formal review gate: judgment checks and the conceptual red-team. Flags, never fixes. |
-| **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit gate. Writes no code itself. |
+| **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit/revert checkpoint. Writes no code itself. |
 
 All five profiles ship; the Writer, Peer-reviewer, and Engineer run as background lanes, and the Project space (a navigation surface and dashboard-as-note — see [Glossary](../../reference/glossary.md)) those lanes write around — project folders, active theses, and structural-impact cache — ships alongside them. Deterministic work — ingest, search, clustering, the project structural-impact operation, verification sweeps, and the Linter — is [Operations](../operations/README.md), not agents: no posture, no board lane.
 
@@ -35,5 +35,6 @@ The tables above orient by posture; the canonical lane→profile map, write-scop
 
 - Why one Co-PI + four background lanes: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
+- How far each profile may delegate: [Delegation posture](delegation-posture.md)
 - The deterministic actors that left the profile set: [Operations](../operations/README.md)
 - How cards reach the lanes and come back: [The control plane](../architecture/control-plane.md)

@@ -252,5 +252,5 @@ Then open `system/dashboards/audit-log.md`.
 
 **S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-relevant gate/stage sub-issue under the current release parent issue; preserve run
+relevant readiness/stage sub-issue under the current release parent issue; preserve run
 details in that release folder's `validation-log.md` only when a curated summary is worth keeping.

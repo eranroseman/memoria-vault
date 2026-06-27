@@ -3,6 +3,7 @@ title: Zotero
 parent: How-to guides
 has_children: true
 nav_order: 10
+permalink: /how-to-guides/zotero/
 ---
 
 # Zotero

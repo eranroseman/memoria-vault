@@ -18,11 +18,14 @@ A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-ag
 
 ## Delegation: the tasks MCP
 
-Co-PI-shaped task handoffs use `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`):
+Co-PI-shaped task handoffs use `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`).
 
-1. The task lane resolves to its owning profile (table above; an unknown lane is refused).
-2. **Ceiling validation:** every `allowed_paths` prefix must sit inside the lane-override's `routing.write_scope`. Paths may _narrow_ but never _widen_ the lane (lane = ceiling, payload = floor); a violation returns `ceiling-violation` and no card is created. An empty write scope (the Co-PI's own) can never receive a delegation.
-3. The card body is assembled from the handoff payload and created via `hermes kanban create --assignee <profile> --created-by memoria-copi` (optionally with `--idempotency-key`), so board semantics — WIP, dedup, dispatch — stay Hermes-native.
+| Check | Result |
+| --- | --- |
+| Unknown lane | Refused. |
+| Empty write scope | Refused. |
+| `allowed_paths` outside the lane ceiling | `ceiling-violation`; no card created. |
+| Valid handoff | Creates a Hermes-native card with `--assignee <profile>` and `--created-by memoria-copi`. |
 
 ### Handoff payload
 
@@ -64,7 +67,7 @@ Three orthogonal dimensions keep an agent verdict from rubber-stamping a human d
 
 ### Terminal states → optional action prompts
 
-The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — in-process task status appears in **Inbox Activity** from `system/board/`, while `Needs me` stays reserved for human action. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done` with `review_status: requested`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — open the result, then keep it as a reminder or dismiss it. A blocked card similarly raises one blocker prompt or domain-specific gap. Honesty rules apply: action + what happened + where to look, never a verdict.
+The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — in-process task status appears in **Inbox Activity** from `system/board/`, while `Needs me` stays reserved for human action. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done` with `review_status: requested`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — open the result, then dismiss the prompt when no action remains. A blocked card similarly raises one blocker prompt or domain-specific gap. Honesty rules apply: action + what happened + where to look, never a verdict.
 
 The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same review request never produces two prompts across cron runs. On a fresh cache (first run), only review-requested cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
 

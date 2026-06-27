@@ -7,13 +7,7 @@ grand_parent: Reference
 
 # Telemetry & logs
 
-Every signal Memoria records about its own operation, with the log inventory,
-capture posture, and shared conventions. Audit and analytics logs live under
-`system/logs/`; the diagnostic plane is the deliberate exception and lives
-outside the vault under the OS state directory. For the design rationale — why these particular signals and how they
-map to a publication — see [ADR-20 (publication path)](../adr/20-publication-path.md),
-the deferred [ADR-62 (measurement and verification harnesses)](../adr/62-measurement-and-verification-harnesses.md),
-and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
+Every signal Memoria records about its own operation, with log inventory and shared conventions. Audit and analytics logs live under `system/logs/`; the diagnostic plane lives outside the vault under the OS state directory. Rationale: [ADR-20](../adr/20-publication-path.md), [ADR-62](../adr/62-measurement-and-verification-harnesses.md), [ADR-105](../adr/105-diagnostic-plane.md).
 
 ## Conventions (apply to every log)
 
@@ -30,7 +24,7 @@ and [ADR-105 (diagnostic plane)](../adr/105-diagnostic-plane.md).
 | `audit.jsonl` | policy MCP | per gated decision | one policy decision (`allow` / `allow_with_log` / `deny` / `dry_run`) |
 | `board-state.jsonl` | `board_export.py` | per export run | a snapshot of per-lane queue counts |
 | `board-transitions.jsonl` | `board_export.py` | per export run | one card changing `status` or `review_status` |
-| `disposition.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one human review disposition over a work prompt |
+| `disposition.jsonl` | legacy/imported review signal | optional | one human review disposition over a work prompt |
 | `cost.jsonl` | `board_export.py` | per export run | one completed card joined to a Hermes session cost row |
 | `cost-misses.jsonl` | `board_export.py` | per export run | one completed card whose Hermes session join could not be completed |
 | `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |

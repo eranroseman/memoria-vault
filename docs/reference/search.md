@@ -73,15 +73,7 @@ Found-by-keyword-but-not-by-meaning (or the reverse) is the diagnostic that dist
 
 ## The index
 
-The index lives **inside the vault** and is gitignored — never commit it. It is built once and maintained incrementally in normal operation:
-
-```bash
-cd <vault>
-qmd collection add <vault> --name vault   # one-time: register the collection
-qmd embed                                  # build / fully rebuild the index
-```
-
-A full `qmd embed` re-embeds every note (roughly 1–5 min under 500 notes, up to 15–30 min past 2000). The installer wires **no** qmd cron — embedding is incremental during normal use, and a full rebuild is the manual fix when results go stale. The when-and-how of rebuilding is owned by [Rebuild the search index](../how-to-guides/operate/rebuild-the-search-index.md).
+The index lives inside the vault and is gitignored. It is registered once, maintained incrementally in normal operation, and rebuilt manually when results go stale. The rebuild procedure is owned by [Rebuild the search index](../how-to-guides/operate/rebuild-the-search-index.md).
 
 ---
 

@@ -76,35 +76,7 @@ grep -A2 "policy" ~/.hermes/profiles/memoria-librarian/config.yaml | head
 
 The `policy` server's entry should point at the vault venv's Python and an absolute path ending in `.memoria/mcp/policy_mcp.py`. If you see `{{PYTHON}}`, `{{VAULT_PATH}}`, or `{{MODEL_*}}`, re-run `bash scripts/install.sh --profiles-only --vault <vault>` on Linux/WSL2 or `.\scripts\install.ps1 -ProfilesOnly -Vault <vault>` on Windows.
 
-**4. Install the upstream MCP servers (Librarian + Peer-reviewer).**
-
-The research lanes reach external services over MCP, not direct HTTP (their `web` toolset is disabled — see [ADR-32](../../adr/32-external-access-over-mcp.md)). Two of those servers are upstream `pip` installs; the rest ship in the vault. Install them where Hermes can launch them:
-
-```bash
-<vault>/.memoria/.venv/bin/python -m pip install paper-search-mcp
-python -m pip install --user zotero-mcp
-```
-
-```powershell
-& "<vault>\.memoria\.venv\Scripts\python.exe" -m pip install paper-search-mcp
-py -m pip install --user zotero-mcp
-```
-
-`paper_search` runs under the vault venv's Python. `pyzotero` is launched as the
-`pyzotero-mcp` executable, so install `zotero-mcp` somewhere on the PATH Hermes
-uses.
-
-**5. Seed the retraction dataset.**
-
-The Peer-reviewer's retraction check indexes a local Retraction Watch CSV; a monthly cron wrapper (`retraction-refresh-cron.sh`) keeps it fresh thereafter. Seed it now:
-
-```bash
-python3 .memoria/operations/integrity/retraction/retraction.py --refresh
-```
-
-Until the CSV is present, retraction checks degrade to the live CrossRef + Open Retractions sources.
-
-**6. Smoke-test the Co-PI.**
+**4. Smoke-test the Co-PI.**
 
 ```bash
 hermes -p memoria-copi chat
@@ -112,9 +84,11 @@ hermes -p memoria-copi chat
 
 Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the pane runs one agent, the Co-PI ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
-**7. Test the ingest path end-to-end.**
+**5. Test the ingest path end-to-end.**
 
 In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL. If you are still shaping the request, use the Co-PI for conversation, then run the matching capture command. Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
+
+The installer owns the upstream MCP dependency inventory and the Retraction Watch refresh wrapper; see [Installer](../../reference/installer.md) and [Run a retraction sweep](../operate/run-a-retraction-sweep.md) when you need those operator details.
 
 ## Verify
 

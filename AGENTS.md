@@ -172,7 +172,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 
 | Check | Validates |
 |---|---|
-| `pr-policy` | Three-tier gate: auto-approve docs-only, flag sensitive paths, block untrusted |
+| `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
 | `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
@@ -241,7 +241,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44).
-- **Standard PR gate:** `scripts/verify pr` runs the Source Gate (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available.
+- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
 
@@ -256,7 +256,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
 | Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `src/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
 | Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with gate/stage sub-issues; release-please owns version/notes |
+| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with readiness/stage sub-issues; release-please owns version/notes |
 
 Skills and plugins are accelerators, not prerequisites. If a named command is
 unavailable, use the matching portable playbook under
@@ -378,7 +378,7 @@ Transient scratch that never graduates to a decision stays in the gitignored
 
 ### Release plans (`docs/releasing/`)
 
-One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, gate rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its gate/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
+One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, readiness rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its readiness/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
 
 ---
 
@@ -390,7 +390,7 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone `vX.Y` (assigned issues) + Memoria Issue Tracker view filtered to that milestone |
-| Release readiness (gates/stages) | the **"Release vX.Y" parent issue** and its gate/stage sub-issues, *not* the plan §2/§3 |
+| Release readiness | the **"Release vX.Y" parent issue** and its readiness/stage sub-issues, *not* the plan §2/§3 |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
 | In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |

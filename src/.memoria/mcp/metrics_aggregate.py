@@ -14,8 +14,7 @@ Trust score (glossary "Trust score"): combines audit **deny rate**, **retry rate
 **success rate**, **drift incidents**, **secret hits**, and accept/reject ratios;
 bands **90+ healthy / 70-89 watch / <70 act**. The docs pin the inputs and bands
 but NOT the weights, so the composition below is Memoria's own -- documented and
-tunable at the top of the file. The CRS-shaped `pass^k` consistency target needs
-repeated-run data per task and is a TODO (noted in the dashboard design).
+tunable at the top of the file.
 
     python metrics_aggregate.py --vault <path>                 # reads `hermes kanban list --json`
     python metrics_aggregate.py --vault <path> --from-json cards.json
@@ -415,7 +414,6 @@ def compute_lane(
         "cost": round(c.get("cost", 0.0), 4),
         "input_tokens": int(c.get("input_tokens", 0)),
         "output_tokens": int(c.get("output_tokens", 0)),
-        "consistency_passk": None,  # pass^k needs repeated-run data; harness TODO (see header)
     }
 
 
@@ -442,7 +440,6 @@ def lane_note(m: dict, period: str, now: datetime) -> str:
         "cost": m["cost"],
         "input_tokens": m["input_tokens"],
         "output_tokens": m["output_tokens"],
-        "consistency_passk": m["consistency_passk"],
         "samples": m["samples"],
         "computed_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
     }

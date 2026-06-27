@@ -128,4 +128,4 @@ bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test
 | E | flags (`--profiles-only` / `--only` / `--skip-*`) | | |
 | F | native Windows `install.ps1` (+ bootstrap) | | |
 
-**S0-S3 green** when A-E pass on Linux/WSL testing and F1 passes on native Windows production. Record the result in the relevant gate/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.
+**S0-S3 green** when A-E pass on Linux/WSL testing and F1 passes on native Windows production. Record the result in the relevant readiness/stage sub-issue under the current release parent issue; preserve run details in that release folder's `validation-log.md` only when a curated summary is worth keeping.

@@ -157,7 +157,7 @@ Zhengxin Zhang, Ning Wang, Sainyam Galhotra, and Claire Cardie. 2026. How Far Ar
 
 ## Broader literature foundations
 
-Pivotal works from the wider literature review — ~400 papers read end-to-end and judged adopt/borrow/reject for the design (`_papers/`, reviewed 2026-06; the working corpus is the Zotero export `_papers/Exported Items.bib`). These ground the cross-cutting choices cited in [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md) and [Intellectual foundations](../design/intellectual-foundations.md): the HCI human-augmentation tradition behind the review gate, generator–verifier and evidence-grounded verification, temporal retrieval, and the indirect-prompt-injection case for the MCP sandbox.
+Selected works from the wider literature review (`_papers/`, reviewed 2026-06; Zotero export `_papers/Exported Items.bib`). Design synthesis lives in [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md) and [Intellectual foundations](../design/intellectual-foundations.md).
 
 <a id="abdallah2026tempo"></a>
 Abdelrahman Abdallah, Mohammed Ali, Muhammad Abdul-Mageed, and Adam Jatowt. 2026. TEMPO: A Realistic Multi-Domain Benchmark for Temporal Reasoning-Intensive Retrieval. arXiv:2601.09523. Retrieved from https://arxiv.org/abs/2601.09523
