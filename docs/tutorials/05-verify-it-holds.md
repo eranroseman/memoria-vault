@@ -31,7 +31,7 @@ Either way, this hands a **verify** task to the **Peer-reviewer** — the backgr
 - **It's independent by design.** It is deliberately *not* the worker that gathered the evidence or wrote the prose. Whoever proposes and whoever checks are kept separate on purpose.
 - **It traces, checks, and attacks.** It follows each claim back to its cited source, checks that the citations resolve, and hunts the argument for gaps and overreach.
 
-For project drafts, saving and committing the draft also queues a verify pass automatically, so verification keeps up with your actual edits ([Verify and revise a draft](../how-to-guides/project/verify-and-revise.md)).
+If your runtime vault is a git repo, committing a changed project draft queues a verify pass automatically, so verification keeps up with your actual edits ([Verify and revise a draft](../how-to-guides/project/verify-and-revise.md)).
 
 ---
 

@@ -22,12 +22,12 @@ Sit down once and sweep the queue — high-cardinality decisions belong in one w
 **2. Read each card the right way round.**
 
 - **Proposals** (`candidate`, `gap`) carry the honesty body — read `argument_against` and `certainty` first; the card existing *is* the recommendation, so there is no verdict field.
-- **Work prompts** (`work-prompt`) tell you what finished, blocked, or needs a batch pass. Read the reason, inspect the target, then keep it as a reminder or dismiss it.
+- **Work prompts** (`work-prompt`) tell you what finished, blocked, or needs a batch pass. Read the reason, inspect the target, then dismiss it when no action remains.
 - **Verification cards** (`flag`, `alert`) are not part of daily **Needs me**. Work them from Maintenance's Drift watch unless a card also raises a work prompt for same-day action.
 
 **3. Act, then resolve.**
 
-Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. Then flip the card in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. **Keep as reminder** sets `lifecycle: current`; **Dismiss** sets `lifecycle: archived`; both stamp `resolved:`. The archival sweep flips resolved `current` cards to `lifecycle: archived` once the stamp is older than `inbox.archive_after_days` (default 30, set in calibration.yaml), so reminders stay visible while fresh and the Inbox converges to empty; empty is success.
+Acting on a card is whatever the card proposes — write the link, fix the claim, queue the discovery task, apply the gated write yourself. If you still need the card as a reminder, leave it open. When no action remains, clear it in place: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. The command sets `lifecycle: archived` and stamps `resolved:`, so the Inbox converges to empty; empty is success.
 
 **4. Reject cleanly.**
 

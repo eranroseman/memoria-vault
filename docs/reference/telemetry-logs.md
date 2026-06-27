@@ -51,26 +51,25 @@ The card-level state-change stream — the spine the other event logs hang off. 
 
 ## disposition.jsonl
 
-The **un-backfillable** signal: what the human actually did with a finished work
-prompt. Emitted by the `Memoria: resolve inbox card` / `Memoria: dismiss inbox card`
-QuickAdd commands at the same
-moment it writes `attention.jsonl` and `triage.jsonl`; it is not inferred from
-board metadata or terminal `review_status`.
+The optional finished-work review signal. The metrics aggregator still reads
+legacy or imported rows when present, but the current dismiss-only Inbox resolver
+does not infer acceptance from clearing a card.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "work_prompt_reviewed", "path": "inbox/work-prompt-review-x.md", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "accepted", "outcome": "Keep as reminder", "agent_recommendation": "clean", "source": "quickadd.resolve-inbox-card"}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "work_prompt_reviewed", "path": "inbox/work-prompt-review-x.md", "task_id": "TASK-2026-05-31-003", "lane": "memoria-writer", "disposition": "accepted", "outcome": "accepted", "agent_recommendation": "clean", "source": "imported-review-signal"}
 ```
 
 | Field | Values |
 | --- | --- |
 | `event` | currently `work_prompt_reviewed` |
 | `path` | vault-relative Inbox card path |
-| `disposition` | `accepted` when the human keeps the finished-work prompt as a reminder |
-| `outcome` | visible resolve choice, currently `Keep as reminder` |
+| `disposition` | `accepted`, `edited`, or `rejected` when a finished-work review signal exists |
+| `outcome` | source-specific visible choice or normalized outcome |
 | `agent_recommendation` | what the agent proposed (values in the [Glossary](glossary.md) Verdicts table); pairs the agent's self-assessment against the human's call |
-| `source` | currently `quickadd.resolve-inbox-card` |
+| `source` | emitting surface |
 
-Only `work-prompt` cards with a `task_id` write a disposition row. `Dismiss` remains a generic Inbox cleanup outcome and does not count as a finished-work review.
+`Dismiss` remains a generic Inbox cleanup outcome and does not count as a
+finished-work review.
 
 ## cost.jsonl
 
@@ -112,7 +111,7 @@ quality counters, not cost facts, and downstream spend totals must ignore them.
 The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` and `Memoria: dismiss inbox card` QuickAdd commands append one row when the active Inbox card is resolved. This is the only signal emitted from the actual human action surface rather than from the board exporter.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Keep as reminder", "lifecycle_from": "proposed", "lifecycle_to": "current", "opened_at": "2026-06-01T11:00:00Z", "resolved_at": "2026-06-01T11:30:00Z", "duration_minutes": 30.0}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Dismiss", "lifecycle_from": "proposed", "lifecycle_to": "archived", "opened_at": "2026-06-01T11:00:00Z", "resolved_at": "2026-06-01T11:30:00Z", "duration_minutes": 30.0}
 ```
 
 | Field | Meaning |
@@ -130,7 +129,7 @@ The Obsidian-side PI attention signal. The `Memoria: resolve inbox card` and `Me
 The PI's Inbox decision stream. The same resolver path behind `Memoria: resolve inbox card` and `Memoria: dismiss inbox card` also appends one triage row with the selected outcome and lifecycle transition.
 
 ```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Keep as reminder", "lifecycle_from": "proposed", "lifecycle_to": "current", "source": "quickadd.resolve-inbox-card"}
+{"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Dismiss", "lifecycle_from": "proposed", "lifecycle_to": "archived", "source": "quickadd.resolve-inbox-card"}
 ```
 
 ## pre-file-similarity.jsonl
@@ -220,7 +219,6 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 | `card_open_resolve_min` | `attention.jsonl` | median open-marker-to-resolve latency, minutes |
 | `blind_rereview_samples` | `blind-review-samples.jsonl` | count of terminal reviews sampled for blind re-review |
 | `cost` / `input_tokens` / `output_tokens` | `cost.jsonl` | period totals |
-| `consistency_passk` | reserved | placeholder (`null`) for a future pass^k harness |
 
 ### The trust-score composite
 
@@ -263,7 +261,8 @@ By design, to keep capture minimal and the consent story simple:
 
 - **No note content** ever enters a log — only paths, IDs, counts, severities, and the human verdict.
 - **No keystroke- or token-level provenance** inside a draft; cost is per-card, not per-edit.
-- **No `pass^k` consistency runs** — the `consistency_passk` field exists but the harness that would populate it is deferred.
+- **No pass-at-k consistency runs** — no field is emitted until a repeated-run
+  harness exists.
 
 ## Related
 

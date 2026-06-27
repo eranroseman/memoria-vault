@@ -4,7 +4,8 @@
 ![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Memoria turns your Obsidian vault into an active research workspace — an AI research team — a Co-PI you converse with and four background agents that read your notes, surface connections, pull in papers, and write alongside you.
+Memoria is a research operating system for a single researcher: a Co-PI you
+converse with and four bounded background agents inside your Obsidian vault.
 
 Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A fail-closed policy gate audits lane writes, allows only lane-scoped staging/scratch paths, and keeps canonical synthesis review-gated.
 
@@ -17,21 +18,8 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 
 ---
 
-## The agents
-
-| Agent | Role |
-|---|---|
-| **Co-PI** | The one agent you converse with (the ACP pane) — questions your thinking, explains the system, and delegates every write to a background lane; read-only by design |
-| **Librarian** | The four processing lanes (catalog · extract · link · map) — fetches and enriches sources, proposes classifications, link candidates, and corpus maps |
-| **Writer** | Turns evidence into draft prose (outlines, sections) in project scratch — review-gated, never directly into canonical synthesis |
-| **Peer-reviewer** | The independent verify gate — traces claims to sources, validates every `[@citekey]`, and red-teams arguments for soundness; flags, never fixes |
-| **Engineer** | Scaffolds handoffs to an external coding agent and owns the commit/revert gate |
-
-Deterministic **operations** do the mechanical work — run by cron, CI, or you; agents reach them only through the policy MCP. The full roster: [Operations — the deterministic layer](docs/explanation/operations/README.md).
-
-Canonical roster, postures, and write-scope ceilings for each agent: [Profile capabilities](docs/reference/profiles.md). Design rationale per agent: [`docs/explanation/profiles/`](docs/explanation/profiles).
-
----
+For the system model, start at [Home](docs/README.md). For exact profile names,
+postures, and write-scope ceilings, see [Profile capabilities](docs/reference/profiles.md).
 
 ## How it works
 
@@ -87,7 +75,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
-| `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), the decision record (`adr/`), design notes (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
+| `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), maintained design arguments (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
 
 ## Documentation
 

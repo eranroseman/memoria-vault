@@ -96,5 +96,5 @@ connectivity, GUI/Bases/dashboard rendering, and screenshot or visual checks are
 release-candidate runbook or a future nightly/self-hosted runner until stable enough
 to gate every PR.
 
-Record release-specific evidence in the active release gate/stage issues. Keep this
+Record release-specific evidence in the active release readiness/stage issues. Keep this
 page as the reusable procedure.

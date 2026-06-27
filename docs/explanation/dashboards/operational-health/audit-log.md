@@ -15,7 +15,7 @@ The dashboard reads directly from `system/logs/audit.jsonl` — the append-only 
 
 A second view lists **writes to review-gated zones** (`notes/claims/`, `notes/hubs/`) for periodic audit. Even when these writes were allowed, they warrant occasional review because they represent changes to canonical content.
 
-Further views round out the forensic picture: **per-profile activity over the last 24 hours** (who wrote what, at a glance), **hash drift / tamper detection** (vault-hash mismatches between consecutive entries), **anomalies** (malformed or out-of-order entries in the stream itself), and a **log size** check (when to rotate).
+Further views round out the forensic picture: **per-profile activity over the last 24 hours** (who wrote what, at a glance), **hash drift / tamper detection** (vault-hash mismatches between consecutive entries), **anomalies** (malformed or out-of-order entries in the stream itself), and a **log size** advisory.
 
 ## What it is not
 

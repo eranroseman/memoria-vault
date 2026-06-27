@@ -4,7 +4,7 @@
 #   bash scripts/dev-setup.sh                 # toolchain + repo-local qmd index
 #   bash scripts/dev-setup.sh --with-hooks    # also wire qmd auto-refresh git hooks
 #
-# This sets up the CONTRIBUTOR toolchain (the pre-commit gate + linters). It does
+# This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters). It does
 # NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
 # safe to re-run. Optional system tools (shellcheck, node/npx) are reported, not
 # auto-installed (they need a package manager); the pre-commit hook skips them
@@ -71,7 +71,7 @@ if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
     note "npm install failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
   fi
 else
-  note "Node >=22 not found — repo code search skipped (not required for the commit gate)."
+  note "Node >=22 not found — repo code search skipped (not required for the pre-commit hook)."
   note "  fnm gives a standalone Node (independent of any runtime): https://github.com/Schniz/fnm"
   note "  then: fnm install 22 && npm install && bash scripts/qmd-codebase-index.sh"
 fi
@@ -85,4 +85,4 @@ for t in shellcheck npx; do
   fi
 done
 
-echo "==> Done. The pre-commit gate is active. Bypass a single block with: git commit --no-verify"
+echo "==> Done. The pre-commit hook is active. Bypass a single block with: git commit --no-verify"

@@ -6,24 +6,7 @@ grand_parent: Reference
 
 # Dashboards
 
-The primary dashboards are the three durable space notes under `spaces/`
-(`src/spaces`): Library, Knowledge, and Project. The Inbox queue (`spaces/inbox.md`,
-`type: queue`) and Maintenance collection (`spaces/maintenance.md`, `type: maintenance`)
-sit alongside them by cadence: daily action vs weekly structural debt. Both are reached
-from the navigation rail's **Now**. Five read-only system dashboards and the
-claim/source/fleeting Bases live under `system/dashboards/` (`src/system/dashboards`);
-other Bases live beside their data folders. Space
-switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
-All dashboards are Dataview / Bases consumers: they render existing vault state and
-logs, never write, and a healthy vault shows action queues near-empty.
-
-The daily glance starts in the rail's **Now**: action count opens the Inbox queue,
-while the health band opens Maintenance and Fleet health. **Board-state is the Inbox
-board** — a thin page embedding `inbox.base`.
-
-No standalone status-line widget ships in the current Obsidian surface. The rail health
-band is the ambient glance for structural and fleet health; the Inbox queue stays the
-action surface.
+Dashboard and Bases inventory for the shipped Obsidian surface. Dashboards are consumers: they render vault state and logs, never write. Space switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
 
 ---
 

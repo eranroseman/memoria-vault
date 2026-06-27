@@ -9,16 +9,9 @@ nav_order: 5
 
 Memoria has a few different surfaces, and it is easy to lose track of which one answers which question. This guide maps everyday situations to the exact place to look.
 
-You move around Memoria from the **navigator rail** on the left. It has two parts:
+You move around Memoria from the **navigator rail** on the left: **Now** for the daily action queue and health links, **Places** for Library, Knowledge, and Project. The full dashboard inventory is [Dashboards](../../reference/dashboards.md); this page only tells you where to go for common situations.
 
-- **Now** — what is waiting for you right now. Three entries: **Needs you** (your action queue), **Drift** (integrity flags), and **Fleet** (the health of the background workers).
-- **Places** — the three working **spaces** you switch between: **Library** (sources you are reading), **Knowledge** (claims you are synthesizing), and **Project** (drafts you are steering toward output).
-
-Two more surfaces hang off *Now*. The **Inbox** is your daily attention queue — open it from *Now → Needs you*; it shows in-process Activity first, then **Needs me**, then fleeting captures. **Maintenance** is a separate weekly surface for structural cleanup and status review; it holds Drift watch, Loose ends, the Board, and a "new this week" digest.
-
-Behind those surfaces sit **5 read-only system dashboards** under `system/dashboards/`. They are Dataview-backed views that report state and never change anything. The space surfaces themselves are built from Obsidian Bases (database-style views over your notes). For the full roster and what each one shows, see [Dashboards](../../reference/dashboards.md).
-
-A few orientation notes: startup preserves Obsidian's previous session when the rail is present, and uses the saved **Memoria** shell only to repair a missing rail; see [Use the reset workspace](use-workspaces.md). You still navigate through the left rail, not by switching saved workspaces. `home.md` is a reset/welcome screen, not a navigation hub, so do not treat it as your home base.
+Startup preserves Obsidian's previous session when the rail is present, and uses the saved **Memoria** shell only to repair a missing rail; see [Use the reset workspace](use-workspaces.md). You still navigate through the left rail, not by switching saved workspaces. `home.md` is a reset/welcome screen, not a navigation hub.
 
 To open anything that is not on the rail, follow a link from a space, or press `Cmd/Ctrl-P` → Omnisearch → the dashboard name.
 
@@ -28,7 +21,7 @@ To open anything that is not on the rail, follow a link from a space, or press `
 
 ### "What needs attention right now?"
 
-Open the **Inbox** (`spaces/inbox.md`) from *Now → Needs you*.
+Open the **Inbox** (`spaces/inbox.md`) from *Now → Action queue*.
 
 The Inbox answers two quick questions: what is currently queued or running, and what action needs you now. Glance at Activity first, then work **Needs me** if it has rows. Empty means nothing is waiting; a full read takes under 30 seconds.
 

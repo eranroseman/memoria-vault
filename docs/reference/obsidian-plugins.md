@@ -12,7 +12,7 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 
 ## Required Obsidian plugins (13)
 
-Memoria breaks without these. The starter vault **ships all thirteen bundled and configured** in `.obsidian/plugins/` — twelve third-party plugins plus the Memoria-authored Inspector, with no manual install. Enable community plugins (turn off Restricted mode) on first launch; see [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
+Memoria breaks without these. The starter vault ships all thirteen bundled and configured in `.obsidian/plugins/` — twelve third-party plugins plus the Memoria-authored Inspector. First-launch steps live in [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 The provenance lock for the bundled artifacts is
 `src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's

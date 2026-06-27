@@ -8,7 +8,7 @@ grand_parent: Reference
 
 The bootstrap installers (`scripts/install.ps1` for native Windows production; `scripts/install.sh` for Linux/WSL testing): what each step does, the flags, and the crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `src/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `src/`, and stages a restorable golden copy of every system file.
 
-Safety posture: no silent privilege escalation (every `sudo` is printed and confirmed), `--dry-run` echoes everything and touches nothing, and the recommended invocation is inspect-first (`curl -o install.sh`, read it, then run it).
+Safety features: no silent privilege escalation, `--dry-run` echoes commands and touches nothing, and `--yes` is the only non-interactive path.
 
 ---
 
@@ -79,8 +79,8 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 | Item | Where |
 | --- | --- |
 | `KILOCODE_API_KEY` (production model access; not used by the `MEMORIA_ENV=test` local model block), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
-| Obsidian first launch | Open the vault folder; disable Restricted mode so the bundled plugins load |
-| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; then initialize the runtime vault with `git init && git add -A && git commit`. obsidian-git, the pre-commit hook, verify-on-commit, rollback, and history need a real repo. |
+| Obsidian first launch | Open the vault folder and allow the bundled community plugins to load |
+| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; obsidian-git, hooks, rollback, and history need the runtime vault to be a repo. |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
 ---

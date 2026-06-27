@@ -52,7 +52,7 @@ results table at the end.
 
 ---
 
-## Part A — {{Group title, e.g. "App opens and plugins load"}} ({{gate/stage}})
+## Part A — {{Group title, e.g. "App opens and plugins load"}} ({{readiness/stage}})
 
 **A1. {{Step title}}.** {{Action — the exact thing to do.}}
 - {{**Expected:** describe the result if it needs context.}}
@@ -76,7 +76,7 @@ results table at the end.
 
 ---
 
-## Part B — {{Group title}} ({{gate/stage}})
+## Part B — {{Group title}} ({{readiness/stage}})
 
 **B1. {{Step title}}.** {{Action.}}
 ```
@@ -100,6 +100,6 @@ results table at the end.
 | {{…}} | {{…}} | | |
 
 **{{Gate/stage}} green** when {{the explicit condition across the Parts}}. Record
-the outcome in the relevant gate/stage sub-issue under the current release parent
+the outcome in the relevant readiness/stage sub-issue under the current release parent
 issue. If the run itself is worth preserving beyond the issue/Actions trail, copy
 the Results table into that release folder's `validation-log.md`.

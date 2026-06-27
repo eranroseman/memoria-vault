@@ -175,7 +175,7 @@ def test_disposition_cost_and_decision_time_feed_lane_metrics(tmp_path):
     assert "accept_ratio: 0.6" in note
     assert "decision_time_min: 30.0" in note
     assert "cost: 0.4" in note
-    assert "consistency_passk: null" in note
+    assert "consistency_passk" not in note
 
 
 def test_attention_and_blind_review_metrics_feed_lane_notes(tmp_path):
@@ -191,8 +191,8 @@ def test_attention_and_blind_review_metrics_feed_lane_notes(tmp_path):
                     "path": "inbox/work-prompt-review-x.md",
                     "lane": "memoria-writer",
                     "task_id": "x",
-                    "outcome": "Keep as reminder",
-                    "lifecycle_to": "current",
+                    "outcome": "Dismiss",
+                    "lifecycle_to": "archived",
                     "opened_at": "2026-05-28T10:00:00Z",
                     "resolved_at": "2026-05-28T10:30:00Z",
                     "duration_minutes": 30.0,
@@ -243,10 +243,10 @@ def test_attention_and_blind_review_metrics_feed_lane_notes(tmp_path):
     note = (tmp_path / METRICS_RELDIR / "lane-writer-2026-W22.md").read_text(encoding="utf-8")
 
     assert attention["memoria-writer"]["card_open_resolve_min"] == 37.5
-    assert attention["memoria-writer"]["expand_then_accept_min"] == 30.0
+    assert attention["memoria-writer"]["expand_then_accept_min"] is None
     assert blind["memoria-writer"] == 1
     assert "time_on_gate_min: 180.0" in note
-    assert "expand_then_accept_min: 30.0" in note
+    assert "expand_then_accept_min: 20.0" in note
     assert "card_open_resolve_min: 37.5" in note
     assert "blind_rereview_samples: 1" in note
 

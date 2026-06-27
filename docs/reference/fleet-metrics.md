@@ -47,7 +47,8 @@ The score starts at `100` and subtracts bounded penalties:
 
 The final score is rounded and clamped to `0..100`. Bands are fixed: `90+` is `healthy`, `70..89` is `watch`, and `<70` is `act`. When the combined sample count is below `5`, the score is still written but the band becomes `insufficient-data`.
 
-`consistency_passk` is currently `null`; repeated-run pass-at-k needs a future harness.
+No pass-at-k consistency field is emitted yet; repeated-run consistency needs a
+future harness before it becomes a lane-metric contract.
 
 ## Outputs
 

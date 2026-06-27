@@ -15,7 +15,7 @@ recording each [gate](../../adr/29-testing-framework.md) green. Work top
 to bottom; if a step fails, stop and file it — a candidate is green only when
 every row is.
 
-**Per release:** record each result in the relevant gate/stage sub-issue under the
+**Per release:** record each result in the relevant readiness/stage sub-issue under the
 release parent issue. Copy the [sign-off template](#sign-off-template) into that
 release's `validation-log.md` only when the issue/Actions trail needs a curated
 long-lived summary. Gate/stage **state** never lives in this file (the procedure)
@@ -143,7 +143,7 @@ ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings,cost}
 
 - [ ] `board-state`, `board-transitions`, `audit`, and `lint-findings` all gain rows from the live activity above.
 - [ ] The cost doctor passes before live export trusts the Hermes session-store join; any missing cost rows are counted in `cost-misses.jsonl`, not treated as zero.
-- [ ] Resolve at least one `work-prompt` through `Memoria: resolve inbox card` with **Keep as reminder** and confirm `disposition.jsonl` gains an `accepted` row from the human action surface.
+- [ ] Resolve at least one `work-prompt` through `Memoria: resolve inbox card` with **Dismiss** and confirm `attention.jsonl` plus `triage.jsonl` gain one row from the human action surface.
 
 ## G7 — no High-priority blockers
 
@@ -160,7 +160,7 @@ Only after every row above is green:
 
 ## Sign-off template
 
-Record these results in the relevant release gate/stage sub-issues. Copy this table
+Record these results in the relevant release readiness/stage sub-issues. Copy this table
 into the release's `validation-log.md` only when a curated summary is worth keeping.
 Record commit `__________` and date `__________`.
 

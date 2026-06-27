@@ -480,7 +480,7 @@ def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
     assert fm["lifecycle"] == "proposed"
     assert fm["prompt_kind"] == "review"
     assert fm["title"] == "Completed work: Draft answer"
-    assert fm["action"] == "Open the result, then keep it as a reminder or dismiss it."
+    assert fm["action"] == "Open the result, then dismiss this prompt when no action remains."
     assert fm["title"] != fm["action"]
     assert "agent_recommendation" not in fm  # ADR-51: never a verdict
     body = files[0].read_text(encoding="utf-8")

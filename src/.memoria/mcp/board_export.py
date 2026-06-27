@@ -390,7 +390,7 @@ def export_review_prompts(vault: Path, prev: dict, cards: list[dict]) -> int:
         path = inbox.write_work_prompt(
             vault,
             title=f"Completed work: {card['title']}",
-            action="Open the result, then keep it as a reminder or dismiss it.",
+            action="Open the result, then dismiss this prompt when no action remains.",
             what_happened=(
                 f'Lane {card["assignee"]} finished "{card["title"]}" (card {card["task_id"]}).'
             ),

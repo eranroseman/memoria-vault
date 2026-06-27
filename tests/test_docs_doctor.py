@@ -1,5 +1,7 @@
 """L1 component tests for docs_doctor (ADR-44)."""
 
+import json
+
 import docs_doctor as _m
 
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
@@ -14,6 +16,7 @@ check_hermes_cli_skill_mirror = _m.check_hermes_cli_skill_mirror
 check_profile_skill_count_mirror = _m.check_profile_skill_count_mirror
 check_quickadd_command_reference_mirror = _m.check_quickadd_command_reference_mirror
 check_readmes = _m.check_readmes
+check_reference_readme_index = _m.check_reference_readme_index
 check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
 check_site_nav_hierarchy = _m.check_site_nav_hierarchy
@@ -216,6 +219,50 @@ def test_check_broken_vault_wikilinks_validates_note_targets_and_ignores_assets_
     assert anchor_errs == []
     assert asset_errs == []
     assert code_errs == []
+
+
+def test_quickadd_command_reference_mirror_flags_duplicate_rows(tmp_path):
+    data = tmp_path / "src" / ".obsidian" / "plugins" / "quickadd" / "data.json"
+    data.parent.mkdir(parents=True)
+    data.write_text(
+        json.dumps(
+            {
+                "choices": [
+                    {"name": "Memoria: write claim note", "command": True},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    doc = tmp_path / "docs" / "reference" / "obsidian-command-palette.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "| Command | Use |\n"
+        "| --- | --- |\n"
+        "| `Memoria: write claim note` | Capture |\n"
+        "| `Memoria: write claim note` | Utility |\n",
+        encoding="utf-8",
+    )
+
+    errors: list[str] = []
+    check_quickadd_command_reference_mirror(tmp_path, errors)
+
+    assert len(errors) == 1
+    assert "duplicates command row(s): Memoria: write claim note" in errors[0]
+
+
+def test_reference_readme_index_flags_missing_reference_pages(tmp_path):
+    reference = tmp_path / "docs" / "reference"
+    reference.mkdir(parents=True)
+    (reference / "README.md").write_text("[A](a.md)\n", encoding="utf-8")
+    (reference / "a.md").write_text("# A\n", encoding="utf-8")
+    (reference / "b.md").write_text("# B\n", encoding="utf-8")
+
+    errors: list[str] = []
+    check_reference_readme_index(tmp_path, errors)
+
+    assert len(errors) == 1
+    assert "reference index omits page(s): b.md" in errors[0]
 
 
 def test_check_template_frontmatter_validates_yaml_fences(tmp_path):
@@ -505,7 +552,10 @@ def test_check_quickadd_command_reference_mirror_compares_command_names(tmp_path
         '{"choices":[{"name":"Memoria: one","command":true},{"name":"Hidden","command":false}]}',
         encoding="utf-8",
     )
-    (doc_dir / "obsidian-command-palette.md").write_text("`Memoria: one`\n", encoding="utf-8")
+    (doc_dir / "obsidian-command-palette.md").write_text(
+        "| Command | Use |\n| --- | --- |\n| `Memoria: one` | One |\n",
+        encoding="utf-8",
+    )
 
     errs: list[str] = []
     check_quickadd_command_reference_mirror(repo, errs)

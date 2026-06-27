@@ -36,6 +36,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 DROPPED_KEYS = (
@@ -628,13 +629,38 @@ def check_quickadd_command_reference_mirror(repo: Path, errors: list[str]) -> No
         return
     payload = json.loads(data.read_text(encoding="utf-8"))
     commands = {choice["name"] for choice in payload.get("choices", []) if choice.get("command")}
-    doc_commands = set(re.findall(r"`(Memoria:[^`]+)`", read(doc)))
+    doc_command_list = []
+    for line in read(doc).splitlines():
+        match = re.match(r"\|\s*`(Memoria:[^`]+)`\s*\|", line)
+        if match:
+            doc_command_list.append(match.group(1))
+    duplicates = sorted(name for name, count in Counter(doc_command_list).items() if count > 1)
+    if duplicates:
+        errors.append(
+            f"{doc}: command palette mirror duplicates command row(s): {', '.join(duplicates)}"
+        )
+    doc_commands = set(doc_command_list)
     if commands != doc_commands:
         errors.append(
             f"{doc}: command palette mirror differs from QuickAdd data "
             f"(missing: {sorted(commands - doc_commands) or 'none'}; "
             f"extra: {sorted(doc_commands - commands) or 'none'})"
         )
+
+
+def check_reference_readme_index(repo: Path, errors: list[str]) -> None:
+    index = repo / "docs" / "reference" / "README.md"
+    reference_dir = index.parent
+    if not index.is_file() or not reference_dir.is_dir():
+        return
+    linked = {
+        Path(target.partition("#")[0]).name
+        for target in re.findall(r"\]\(([^)]+\.md(?:#[^)]+)?)\)", read(index))
+    }
+    expected = sorted(path.name for path in reference_dir.glob("*.md") if path.name != "README.md")
+    missing = [name for name in expected if name not in linked]
+    if missing:
+        errors.append(f"{index}: reference index omits page(s): {', '.join(missing)}")
 
 
 def check_plugin_count_mirrors(repo: Path, errors: list[str]) -> None:
@@ -793,6 +819,7 @@ def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
     check_profile_skill_count_mirror(repo, errors)
     check_system_actions_skill_mirror(repo, errors)
     check_hermes_cli_skill_mirror(repo, errors)
+    check_reference_readme_index(repo, errors)
 
 
 def main() -> int:

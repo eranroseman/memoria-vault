@@ -134,7 +134,7 @@ Design Book foundations, then the Explanation pages in this order.
 | **Librarian**     | The four processing lanes (catalog · extract · link · map) — intake to corpus maps |
 | **Writer**        | Turns evidence into draft prose — lands in review, never direct to canonical  |
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
-| **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert gate  |
+| **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert checkpoint |
 
 Five deterministic **operations** (ingest · search · clustering · sweeps · Linter) do the mechanical work, behind the policy MCP.
 

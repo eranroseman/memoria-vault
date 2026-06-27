@@ -1,5 +1,5 @@
 ---
-title: Runtime Spec
+title: Runtime contracts
 parent: Agents and control
 grand_parent: Reference
 nav_order: 23
@@ -7,10 +7,9 @@ permalink: /reference/runtime-spec/
 topic: reference
 ---
 
-# Runtime Spec
+# Runtime contracts
 
-Use this book when you need the current runtime contract rather than a tutorial or
-design argument.
+Intentional permalink page for current runtime contracts rather than tutorial or design material.
 
 | Contract | Source |
 | --- | --- |

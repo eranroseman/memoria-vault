@@ -18,7 +18,7 @@ So each pattern Memoria encountered is sorted into one of four verdicts:
 - **Reference** — informs framing or positioning without contributing a borrowable pattern (surveys, position papers, taxonomies).
 - **Ignore** — evaluated and explicitly refused; each refusal is a specific judgment, not a default.
 
-The evidence base is a survey of ~47 contemporary AI-research systems, platforms, and benchmarks, now sitting inside a wider review of ~400 papers (`_papers/`, judged adopt/borrow/reject; verdicts in `_papers/REVIEW-SUMMARY.md`) spanning the bodies of work those systems build on — HCI/CSCW, faithful extraction and claim verification, evaluation discipline, and retrieval/temporal reasoning. The wider review mostly *validates and sharpens* rather than adds new agent-system patterns. The rest of this page summarizes the four verdicts with representative exemplars; the full per-system catalog lives in the survey, not inline here.
+The evidence base is a survey of ~47 contemporary AI-research systems, platforms, and benchmarks, now sitting inside a wider review of ~400 papers (`_papers/`, judged adopt/borrow/reject; verdicts in `_papers/REVIEW-SUMMARY.md`) spanning the bodies of work those systems build on — HCI/CSCW, faithful extraction and claim verification, evaluation discipline, and retrieval/temporal reasoning. The wider review mostly *validates and sharpens* rather than adds new agent-system patterns. This page keeps only the four verdicts and representative exemplars.
 
 The headline patterns are summarized in [Intellectual foundations](intellectual-foundations.md). The autonomy boundary that rejects several patterns wholesale is in [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md).
 
@@ -90,7 +90,7 @@ This makes the architecture more reliable (errors surface at phase gates), easie
 
 ## The underlying survey
 
-The ~47-system agent-research slice that grounds the four verdicts above is catalogued in full in the survey, not inline on this page. The wider ~400-paper corpus it sits inside — including the HCI, extraction, evaluation, and retrieval works behind the [cross-cutting findings](#cross-cutting-findings-from-the-full-literature-review) — lives in `_papers/` (Zotero export `_papers/Exported Items.bib`) with verdicts in `_papers/REVIEW-SUMMARY.md`. The surveyed agent systems span pipeline / role-based systems (LitSearch, ResearchArena, SciLitLLM, LitLLM, LatteReview, ResearchAgent, Idea2Story, AI Scientist v1/v2, Agent Laboratory, Sibyl, AutoResearchClaw, AI-Researcher, Auto-Research, OmegaWiki, CORAL, AIDE ML, MLR-Copilot, ScientistOne, ARA, Sibyl-AutoResearch), persistent-knowledge / cross-run systems (Karpathy Autoresearch, AI co-scientist, AiScientist long-horizon engineering, AgentRxiv, PARNESS, AI-Supervisor, NanoResearch, Omni-SimpleMem), retrieval / citation / structured-handoff systems (SciMON, MOOSE, CiteME, MetaGPT, Knows), runtime substrates (AutoGen, OpenHands, CycleResearcher), and the surveys and position papers (Gridach et al., [Chen 2026](../reference/bibliography.md#chen2026copilots), Huang et al. 2025, Ren et al. 2025, Xu & Peng 2025, MASSW, Qi et al. 2023, Bisht et al. 2026, Feng & Liu 2026, Yue et al. 2026, Zhang et al. 2026, AutoResearchBench).
+The full survey is not inline on this page. The ~47-system agent-research slice and the wider ~400-paper corpus live in `_papers/` (Zotero export `_papers/Exported Items.bib`) with verdicts in `_papers/REVIEW-SUMMARY.md`. This page keeps only the design conclusions and representative citations.
 
 ---
 

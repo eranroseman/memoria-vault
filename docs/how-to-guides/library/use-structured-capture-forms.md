@@ -50,7 +50,7 @@ The form stages two files: a `source` note at `lifecycle: proposed` under `notes
 
 **4. Judge the candidate.**
 
-Open the Inbox queue's **Needs me** view and resolve the card: keep the source (resolve to `current`) or archive it. Resolving is one palette command — [Work the review queue](../inbox/work-the-review-queue.md).
+Open the Inbox queue's **Needs me** view and resolve the card: keep the source by acting on it, or skip it. When no action remains, dismiss the card with one palette command — [Work the review queue](../inbox/work-the-review-queue.md).
 
 ## Verify
 

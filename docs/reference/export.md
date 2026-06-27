@@ -50,7 +50,7 @@ The final editor is effectively fixed at drafting time: switching from Obsidian 
 
 ---
 
-Known route failures and recovery steps live in [Export a draft](../how-to-guides/project/export-a-draft.md).
+Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft.md).
 
 
 ## Export target folder
@@ -66,7 +66,7 @@ Drafts live in their project's scratch, and every export lands beside them under
 
 ---
 
-## Default Pandoc command
+## Pandoc command shape
 
 ```bash
 pandoc projects/<project>/composition/<chapter>.md \

@@ -36,7 +36,7 @@ Within a couple of minutes, the Librarian has finished bringing the paper in. It
 - Created the **catalog entity** — Memoria's record of the paper itself, at `catalog/papers/<citekey>.md`. It holds `type: paper`, the merged metadata (title, DOI, authors, year, venue — each field tracing back to where it came from: Semantic Scholar, OpenAlex, Crossref, or PubMed/NCBI), and a **`relationships`** block linking the paper to its authors, its venue, and the papers it cites — each of those a record Memoria finds or creates alongside.
 - Created a **source note** for it (still just a stub) in `notes/sources/`, so it shows up in your reading queue.
 
-Open the **Library** space, find your new paper in its **Catalog** view (`catalog.base`), and look at the `relationships` block. These links came for free, from the paper's own metadata — the links *you* make come later, on the notes you write. Compare it to one of the sample's papers: same shape, real metadata. Full reference: [Ingest routing](../reference/ingest.md).
+Open the **Library** space, find your new paper in its **Catalog** view (`catalog.base`), and look at the `relationships` block. These links came for free, from the paper's own metadata — the links *you* make come later, on the notes you write. Compare it to one of the sample's papers: same shape, real metadata. After the tutorial, the full pipeline contract is in [Ingest routing](../reference/ingest.md).
 
 ---
 
@@ -52,7 +52,7 @@ The card makes an argument, not a ruling: a proposed `action`, the case for and 
 
 Read the paper — or at least its abstract and conclusions — with its catalog entity open in a split pane (from the **Library** space's **Catalog** view) for the metadata and links. Watch for one or two things worth keeping, not a summary of everything.
 
-Then open the source note from the **Library** space's Reading pipeline. This note is *your* reading record — written in your words, never the agent's. Behind the scenes it carries frontmatter like:
+Then open the source note from the **Library** space's Reading pipeline. This note is *your* reading record — written in your words, never the agent's. Behind the scenes it carries a small frontmatter header:
 
 ```yaml
 type: source
@@ -61,8 +61,7 @@ entity: "[[<citekey>]]"
 source_type: paper
 ```
 
-- **`entity`** — a link back to the catalog entity from Step 2. Every source note is *about* exactly one paper.
-- **`lifecycle: proposed`** — a source note starts out `proposed` and moves forward as you work it into claims (the full progression: [Frontmatter fields](../reference/frontmatter.md)).
+For now, just notice that `entity` points back to the paper record and `lifecycle` says the note still needs work. The full field list is in [Frontmatter fields](../reference/frontmatter.md).
 
 Fill in the three sections the template gives you. This is where the sample notes earn their keep: open the **PREDIMED** source note (`estruch2018-predimed`) beside yours, notice *how* it's written, and write yours the same way about your own paper:
 

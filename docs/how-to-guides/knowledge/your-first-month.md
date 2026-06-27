@@ -7,42 +7,55 @@ nav_order: 9
 
 # Your first month
 
-The [tutorials](../../tutorials/README.md) compress the loop into a focused day on a pre-built sample: you orient, capture, distill, draft, verify, and close the loop in a few hours because the corpus is already there. Real use is the same loop at a different tempo — spread across weeks, on your own reading. This guide is that tempo: what to do *when*, so the vault **compounds** instead of either rotting (sources pile up, never synthesized) or stalling (claims accumulate, never written from). The tutorials taught you the moves; this is the rhythm.
+Use this checklist after the [tutorials](../../tutorials/README.md). It turns the sample-vault moves into the first month of real work on your own corpus.
 
-## The rhythm, in one line
+## Before you start
 
-The four jobs do not run at the same cadence. **Capture** is continuous — you do it whenever you read. **Distill** is periodic — you do it once enough has accumulated to be worth connecting. **Produce** is event-driven — pulled by a real deadline, not a daily habit. **Discover** is gap-driven — triggered by what your producing exposes. And one standing ritual, the **weekly review**, keeps all of it honest. None of these is "step N"; they interleave.
+- Pick one real topic.
+- Put that topic in `research-focus.md`.
+- Set up source capture: [Capture and ingest](../library/capture-and-ingest.md).
+- Schedule one weekly review: [Run the weekly review](../inbox/run-the-weekly-review.md).
 
-## Week 1 — capture, and resist synthesizing
+## Week 1 — capture sources
 
-As you read, capture sources ([Capture and ingest](../library/capture-and-ingest.md)) and write each one's source note in your own words. That is the whole job this week. The temptation is to start distilling claims immediately — resist it. A thin corpus distills into thin, isolated claims; the value of a claim is the connections it makes to *other* claims, and there is nothing to connect to yet. Let sources accumulate first.
+1. Capture every source you actually read.
+2. Write each source note in your own words.
+3. Leave premature claims alone unless one is already clear.
+4. End the week by opening the Library space and clearing obvious source candidates.
 
-## Weeks 2–3 — distill once it's worth connecting
+Check: you have several source notes with useful prose, not only catalog records.
 
-When a cluster of related sources has built up — roughly ten on a topic — start distilling claims and linking them ([Write a claim note](write-a-claim-note.md)). This is where the vault begins to compound, and the asset is **claim density, not source count**: fifty sources with five claims is a sophisticated reading list; fifty sources with forty connected claims is something you can write from. Distill in batches as clusters mature, not source-by-source.
+## Weeks 2-3 — distill and link
 
-## When a deadline appears — produce
+1. When a cluster reaches roughly ten sources, write claim notes from the strongest sources: [Write a claim note](write-a-claim-note.md).
+2. Link related claims as you create them: [Link related claims](link-related-claims.md).
+3. Keep source notes moving toward `current` only after their useful claims have been pulled out.
+4. Run the weekly review and clear stale Inbox items.
 
-Producing is an *event*, not a daily habit — it is pulled by a real deliverable (a section, a grant background, a review). When one arrives, switch modes: open a project, map the corpus for coverage, draft from your claims, and verify ([Assess your corpus](../project/assess-your-corpus.md) → [Draft with the Writer](../project/draft-with-writer.md) → [Verify and revise](../project/verify-and-revise.md)). The map will tell you honestly where the corpus is thin — and that thinness becomes your next reading.
+Check: the topic has a small connected claim layer, not just a reading list.
 
-## Continuously — let the gaps pull the next reading
+## When a deliverable appears — produce
 
-The gaps that map and verify surface are not failures; they are the draft pointing at the next source. Hand them back to discovery ([Find new sources](../library/find-new-sources.md)) and the loop closes: producing exposes a gap, the gap pulls new reading, new reading feeds the next produce. Each turn leaves the corpus denser than the last — that is what *compounding* means, concretely.
+1. Start a project: [Start a writing project](../project/start-a-writing-project.md).
+2. Map the corpus: [Assess your corpus](../project/assess-your-corpus.md).
+3. Draft from claims: [Draft with the Writer](../project/draft-with-writer.md).
+4. Verify and revise: [Verify and revise](../project/verify-and-revise.md).
+5. Turn any gap cards into the next reading task: [Find new sources](../library/find-new-sources.md).
 
-## Every week — the review keeps it from rotting
+Check: the draft cites claims and sources already in the vault, and open gaps are visible.
 
-Left alone, queues age and gaps go stale. The [weekly review](../inbox/run-the-weekly-review.md) — a ~20–30 minute Friday pass — is the heartbeat: refresh your research focus, sweep the Inbox toward empty (kept/skipped/triaged), advance settled claims. **An empty Inbox is success.** It is the single discipline that separates a vault that compounds from one that quietly accumulates.
+## Every week — keep queues short
 
-## The two failure modes the rhythm prevents
+1. Open the Inbox and clear the action queue.
+2. Open Maintenance and review drift, loose ends, and board health.
+3. Promote settled claims; leave uncertain claims provisional.
+4. Update `research-focus.md` if the next reading target changed.
 
-A research vault fails in one of two ways ([What Memoria is](../../design/what-memoria-is.md)), and the tempo above exists to keep both halves coupled:
+Check: Inbox is empty or intentionally deferred, and Maintenance has no surprising blockers.
 
-- **Capture without synthesis** — you read and file constantly but never distill. The vault grows; it does not compound. (The fix is Weeks 2–3: distill once clusters mature.)
-- **Synthesis without rigor** — you write claims that no longer trace to a source. (The fix is the provenance discipline the tutorials drilled: every evidence line cites a citekey, and verification before anything ships.)
+## End-of-month check
 
-## What a month looks like
-
-By the end of your first month you should have a **connected claim layer on a real topic of your own** — dense enough to draft from directly, the way the sample let you draft on day one, but built from your own reading and defensible because you built it. From there the loop just keeps turning, at whatever tempo your work demands.
+By the end of the month, you should have a real topic with source notes, connected claims, and at least one visible project or gap that tells you what to read next. If you only have catalog entries, spend the next week distilling. If you only have claims without source traces, run verification before drafting.
 
 ## Related
 

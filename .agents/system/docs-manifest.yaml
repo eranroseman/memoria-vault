@@ -4061,6 +4061,7 @@ entries:
     has_children: true
     nav_order: 10
     parent: How-to guides
+    permalink: /how-to-guides/zotero/
     title: Zotero
   canonical_owner: false
   status: manual
@@ -4501,7 +4502,7 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/reference/runtime-spec.md
-  title: Runtime Spec
+  title: Runtime contracts
   book: Reference
   topic: reference
   frontmatter:
@@ -4509,7 +4510,7 @@ entries:
     nav_order: 23
     parent: Agents and control
     permalink: /reference/runtime-spec/
-    title: Runtime Spec
+    title: Runtime contracts
     topic: reference
   canonical_owner: false
   status: manual

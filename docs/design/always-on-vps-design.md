@@ -7,13 +7,13 @@ nav_order: 24
 
 # Always-on VPS design
 
-> **Status — deferred.** The supported install path is documented around the `local-only` pattern; the `always-on` topology is designed but not validated end-to-end (tracked in [#383](https://github.com/eranroseman/memoria-vault/issues/383); design: [Deployment](../explanation/deployment/README.md), [Multi-machine deployment (topologies and secondary-device patterns)](../adr/63-multi-machine-deployment.md)). This page records the intended topology and validation shape; it is not a supported setup guide.
+> **Status — deferred.** The supported install path is local-only. Always-on deployment is not a supported setup path until [#383](https://github.com/eranroseman/memoria-vault/issues/383) validates it end to end. This page records the design boundary; the topology proposal lives in [ADR-63](../adr/63-multi-machine-deployment.md).
 
-The always-on design moves Hermes from local WSL2 to a persistent VPS so scheduled crons can run overnight, board cards can process unattended, and the system can stay reachable from more than one device. The VPS becomes the **one dispatcher** for the vault; the desktop keeps Obsidian and Zotero; the vault files sync between them.
+The always-on idea moves Hermes from a sleep-prone desktop to a persistent host so scheduled crons can run overnight. The design is acceptable only if it preserves Memoria's single-dispatcher rule and does not turn the vault into a multi-writer system.
 
 ## Design intent
 
-The topology exists to solve one specific problem: a laptop or desktop is not always awake when Memoria's maintenance loop should run. A persistent host gives the board dispatcher, sweeps, lint, metrics, eval dispatch, and qmd index a stable place to live.
+The topology exists to solve one problem: a laptop or desktop is not always awake when Memoria's maintenance loop should run. A persistent host gives scheduled maintenance a stable place to live.
 
 The design does **not** make Memoria multi-writer. It preserves the solo-researcher premise by keeping exactly one machine responsible for dispatch and cron writes. Obsidian remains the human interface on the desktop, and the VPS is infrastructure: it runs deterministic maintenance and background lane work against the synced runtime vault.
 
@@ -28,9 +28,9 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 | `.memoria/memoria.bib` distribution avoids mid-transfer reads | The ingest path depends on stable citekey metadata; partial sync is a real failure mode. |
 | Audit rows remain content-free and append-only | Multi-machine topology must not weaken the audit-memory contract. |
 
-## Intended topology
+## Boundary
 
-| Component | Intended home |
+| Component | Required owner |
 | --- | --- |
 | Obsidian and Zotero | Desktop |
 | Hermes dispatch and scheduled crons | VPS |
@@ -38,18 +38,11 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 | Co-PI conversation | Either desktop or VPS over an explicit ACP launch path |
 | Runtime vault files | Synced between desktop and VPS |
 
-The design assumes an Ubuntu-class VPS and a desktop that can reach it over SSH, but those platform details are validation concerns, not a supported setup contract yet.
+The owner split above is a boundary, not an install recipe. Platform details stay in ADR-63 and the implementation issue until the topology is proven.
 
-## Validation shape
+## Validation before support
 
-The topology is not ready until a future implementation issue proves all of these behaviors end-to-end:
-
-- The VPS registers the five `memoria-*` profiles and the maintenance crons.
-- The desktop crons are disabled while the VPS crons are active.
-- A desktop capture can sync to the VPS, process through ingest, and sync the resulting Catalog entity and Inbox card back to the desktop.
-- `system/logs/audit.jsonl` records the VPS-side gated writes.
-- `system/logs/cron-heartbeat.jsonl` shows fresh rows for scheduled jobs after their expected cadence.
-- A stale or missing heartbeat leads to an operator-visible failure path, not silent drift.
+Support requires one live proof: a desktop capture syncs to the VPS, processes through ingest, records policy-audited writes, and syncs the resulting Catalog and Inbox state back to the desktop while desktop crons stay disabled. Missing heartbeats must surface as an operator-visible failure, not silent drift.
 
 ## Failure modes to design against
 

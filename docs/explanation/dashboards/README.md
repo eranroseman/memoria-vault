@@ -14,15 +14,14 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
 | [Daily glance](daily-glance/README.md)             | Rail Now, Inbox queue action view                            | Start of every session — "what needs me?"         |
 | [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
-| Project space                                      | Project gate                                                   | When steering a bounded inquiry to output          |
 | [Structural health](structural-health/README.md)   | Maintenance collection, Drift watch, Loose ends, Board state  | Weekly maintenance and drift checks               |
 | [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
 **Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query
-page. Project gate is the Project space's steering surface: active thesis, saturation,
-and structural-impact cache state. The synthesis-vs-structural split is by *actor*:
+page. The Project space's gate is its own steering surface, not part of the dashboard
+collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.
 

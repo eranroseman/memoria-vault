@@ -8,9 +8,7 @@ grand_parent: Reference
 
 The `Memoria:` command-palette surface — the in-Obsidian commands, registered by QuickAdd (`Cmd-P → Memoria: …`). Commander mirrors the highest-frequency entries into the ribbon and page header: capture, delegate, resolve, and note-local claim/source actions. Space switching is handled by the left-pane navigator rail (**Now** / **Places**); the command palette is for actions, not navigation.
 
-**Action parity rule:** if an action creates a card, note, draft, report, capture, resolved Inbox item, or any other durable artifact, it must be reachable without asking the Co-PI ([ADR-72](../adr/72-command-surfacing.md)). The Co-PI conversation is a convenient route for agent tasks — you tell the Co-PI what you want and it delegates a ceiling-validated card to the right lane via the tasks MCP (see [Kanban board reference](kanban-board.md)) — but durable actions are also reachable from the palette ([#203](https://github.com/eranroseman/memoria-vault/issues/203)): direct commands for the six non-code lane tasks, the generic delegate fallback for code or unusual work, a pattern runner, the capture entry points that must fire from inside the editor, the inbox resolve action, and verb-shaped assist commands for Find/Search/Patterns/Ask/Draft/Explore.
-
-The allowed Co-PI-only surface is conversation-bound, not action-bound: synchronous read-only sparring, source questioning, lens reading, memory-backed coaching, and `/personality` tuning. When that conversation should produce something durable, leave the pane and use the matching command or delegated card path.
+Action parity rule: durable actions are reachable from the palette without asking the Co-PI ([ADR-72](../adr/72-command-surfacing.md)). The Co-PI remains the conversational route; durable output still becomes a command result or a delegated board card.
 
 ---
 
@@ -28,7 +26,7 @@ The allowed Co-PI-only surface is conversation-bound, not action-bound: synchron
 | `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `src/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
 | `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a source candidate in **Needs me**; the Librarian ingest task lands in **Activity**. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
-| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) flipped in place: **Keep as reminder** sets `lifecycle: current`; **Dismiss** sets `lifecycle: archived`; both stamp `resolved:` with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
+| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) archived in place with `lifecycle: archived` and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
 | `Memoria: dismiss inbox card` | The **active** Inbox card archived in place with no menu, then the pane returns to the Inbox. Generated ticket buttons use this when the only immediate action is to clear the ticket. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (`Outcome: Dismiss`) |
 | `Memoria: open Inbox` | Opens `spaces/inbox.md` in the active pane without changing the active note. Generated tickets use this for a **Back to Inbox** button. | QuickAdd Macro → `src/system/scripts/open-inbox.js` |
 
@@ -77,7 +75,6 @@ not create board cards.
 
 | Command | Use | Implementation |
 | --- | --- | --- |
-| `Memoria: write claim note` | Create a standalone claim note through the guided claim form. | QuickAdd Macro → `src/system/scripts/write-claim.js` |
 | `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
 | `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `src/system/scripts/refresh-project-gate.js` |
 | `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `src/system/scripts/supersede-thesis.js` |

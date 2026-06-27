@@ -41,7 +41,7 @@ wire_commit_gate() {
     run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
     ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
   else
-    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit gate)"
+    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit hook)"
   fi
 }
 
