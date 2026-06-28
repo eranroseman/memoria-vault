@@ -21,7 +21,7 @@ The board's central design move is to keep three dimensions separate — the hid
 | [Board states and the review gate](states.md)                 | What a card carries; why execution, review, and PI-facing lifecycle are separate; and why rejection spawns a new card. |
 | [The honesty card](honesty-card.md)                            | The card the PI actually reads: argument for, argument against, what tipped it, certainty — and no verdict on proposals; finding-first verification cards; graded loudness.               |
 | [Decision points](decision-points.md)                         | Approval gates, work prompts, batch worklists, and automated steps. |
-| [How the board surfaces in Obsidian](obsidian-projection.md)  | The read-only projections — the `inbox.base` board embedded in Home and the `system/board/` worker-card export — that let Obsidian read the authoritative `kanban.db`.                    |
+| [How the board surfaces in Obsidian](obsidian-projection.md)  | The read-only projections — the Inbox queue view and the `system/board/` worker-card export — that let Obsidian read the authoritative `kanban.db`.                    |
 | [WIP limits and back-pressure](wip-limits.md)                 | Why lane concurrency and review caps intentionally slow work before review quality degrades. |
 
 For the state lookup tables (enums, lane assignments, WIP caps, dispatch settings, and the post-rejection paths), see the [Kanban board reference](../../reference/kanban-board.md).

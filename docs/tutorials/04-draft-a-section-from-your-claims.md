@@ -72,7 +72,7 @@ This is the payoff the dense cluster bought you: cited prose, in a single sittin
 
 ## What's next
 
-[Tutorial 05: Verify it holds](05-verify-it-holds.md) — hand the draft to the independent verifier, read the findings it raises, and turn it into a section you'd defend.
+[Tutorial 05: Verify it holds](05-verify-it-holds.md) — hand the draft to the Peer-reviewer, read the findings it raises, and turn it into a section you'd defend.
 
 ---
 

@@ -65,24 +65,22 @@ graph walk lands outside `notes/claims/` — treat as untraced, not traced); and
 citekey present but no claim notes derived from that source yet (fall through to route 3
 rather than auto-failing).
 
-## 3. Duplicate check, filing-time (similarity-check)
+## 3. Duplicate check, filing-time
 
-A point-of-action check run when a new claim note is about to be filed. It computes cosine
-similarity between the new claim's embedding and the existing claim notes through the **shared
-`qmd` vector index** — the same similarity primitive the Librarian uses for the `[!brief]`
-neighbours and the map lane for `find related`, just with the Peer-reviewer's own threshold — returns
-the top 3 by score, and flags at roughly 0.8. It is **fully deterministic — no LLM call** —
-and it never blocks filing.
+A point-of-action shadow check run by QuickAdd when a new claim note is about to be filed.
+It computes cosine similarity between the new claim's embedding and the existing claim notes
+through the **shared `qmd` vector index** — the same similarity primitive the Librarian uses
+for the `[!brief]` neighbours and the map lane for `find related`, just with the
+Peer-reviewer's own threshold — returns the top 3 by score, and flags at roughly 0.8. It is
+**fully deterministic — no LLM call** — and it never blocks filing.
 
 A flag attaches a `near-duplicate-candidate` marker to the card and surfaces the top matches
 as a callout comment. The human decides whether to file, merge, or extend; the check never
 auto-merges and never auto-files.
 
-There is a human-invoked variant via the `Memoria: similarity-check this claim` command in
-the command palette. That surface returns results in a transient ACP chat **without** writing
-an audit entry — useful for an ad-hoc pre-filing duplicate check. The card-time
-`similarity-check` is the one that produces the audit-trail entry; the two should not be
-confused when reading the audit log.
+No standalone `similarity-check` command ships today. The shipped surface is the QuickAdd
+shadow report plus `system/logs/pre-file-similarity.jsonl`; retrospective duplicate sweeps
+remain planned operation work.
 
 False-positive handling: a high similarity score between two claims that are genuinely
 distinct (e.g., same topic, opposite finding) is expected and is exactly why the check is

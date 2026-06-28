@@ -116,6 +116,9 @@ def test_detectors():
             # stray top-level folder -> misplaced-note LOW finding
             (v / "70-misc").mkdir(parents=True, exist_ok=True)
             (v / "70-misc/scratch.md").write_text("notes", encoding="utf-8")
+            # shipped hidden implementation folders are not authored vault homes
+            (v / ".githooks").mkdir(parents=True, exist_ok=True)
+            (v / ".githooks/post-commit").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
             # audit chain: an unpaired mutating allow older than 1h -> MEDIUM
             # finding; a paired one and a fresh (<1h) unpaired one stay silent.
             import json as _json
@@ -270,6 +273,10 @@ def test_detectors():
             check(
                 "misplaced-note flags stray top-level folder",
                 any(x.path == "70-misc" for x in by("misplaced-note")),
+            )
+            check(
+                "misplaced-note ignores shipped hidden implementation folder",
+                not any(x.path == ".githooks" for x in by("misplaced-note")),
             )
             check(
                 "audit-unpaired-writes flags the stale unpaired allow",

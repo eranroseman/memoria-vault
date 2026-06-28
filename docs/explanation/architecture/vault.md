@@ -24,7 +24,7 @@ The top level is organized by **category** — one content kind per folder, no l
 │   fleeting/ · sources/ · claims/ 🔒 · hubs/ 🔒 · indexes/
 ├── projects/       ← PROJECTS: work artifacts, project-scoped
 ├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
-├── spaces/         ← SPACES: persistent Obsidian dashboard notes for the four working modes
+├── spaces/         ← SPACES: three durable spaces plus the Inbox queue and Maintenance
 ├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
 └── .memoria/       ← hidden runtime (MCP, profiles, schemas, golden copy)

@@ -41,5 +41,5 @@ This matters more than ordinary word-choice because the board's central design m
 
 ## Dependencies
 
-- A complete inventory of consumers: card schema, `board_export.py`, `metrics_aggregate.py`, board-state + fleet-health dashboards, review-as-state / board-as-state-machine / kanban-board docs, and any Linter/Verifier output that writes the field.
+- A complete inventory of consumers: card schema, `board_export.py`, `metrics_aggregate.py`, board-state + fleet-health dashboards, review-as-state / board-as-state-machine / kanban-board docs, and any Linter/Peer-reviewer output that writes the field.
 - Best sequenced alongside any other v0.1 frontmatter/metadata migration so the consumer sweep runs once.

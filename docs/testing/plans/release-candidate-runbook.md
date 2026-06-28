@@ -100,11 +100,11 @@ Detail: [Installer test plan](installer-test-plan.md).
 
 Detail: [Hermes CLI test plan](hermes-cli-test-plan.md), [Headless test plan](headless-test-plan.md).
 
-## G9 — deterministic spine (zero-LLM card)  → records G9
+## G9 — dispatched-card spine  → records G9
 
-- [ ] A *dispatched, zero-LLM* card (Linter operation `health-report` or Peer-reviewer `similarity-check`) completes live: dispatch → claim → run → **gated write** → audit → `done`.
+- [ ] A dispatched card on a shipped lane completes live: dispatch → claim → run → **gated write** → audit → `done`.
 
-Detail: [Deterministic-spine test plan (G9)](g9-spine-plan.md).
+Detail: [Dispatched-card spine test plan (G9)](g9-spine-plan.md).
 
 ## G10 — ingest value loop (the product)  → records G10
 
@@ -184,7 +184,7 @@ Record commit `__________` and date `__________`.
 | S3 / G1 | real install, 5 profiles, idempotent | ☐ | |
 | S4 / G3 | runtime-integration: model + REST bridge live | ☐ | |
 | G2 | gate enforced (`-z` / gateway / cron) | ☐ | |
-| G9 | deterministic spine card | ☐ | |
+| G9 | dispatched-card spine | ☐ | |
 | G10 | ingest value loop end-to-end | ☐ | |
 | G11 | review loop closes | ☐ | |
 | S5 / G4 | GUI + 13 support dashboards render | ☐ | |

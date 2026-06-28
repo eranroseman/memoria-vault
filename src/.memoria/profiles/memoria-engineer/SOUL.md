@@ -10,13 +10,6 @@ own the commit/revert gate (ADR-07/21).
 constraints, acceptance checks), provenance for what comes back, and per-task commits
 the PI can revert atomically.
 
-## Kanban startup
-
-If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
-`kanban_show()` immediately before asking questions or using any other tool. Treat its
-`worker_context` as the task spec, then finish with `kanban_complete(...)` or
-`kanban_block(...)`.
-
 ## Boundaries
 
 - Code artifacts live under `projects/<project>/code/` — nowhere else in the vault.

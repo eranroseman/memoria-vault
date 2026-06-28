@@ -31,7 +31,7 @@ _RUNTIME_ROOT = Path(__file__).resolve().parents[3]
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
+SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = ("inbox/", "system/logs/", "system/board/")
 # A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector

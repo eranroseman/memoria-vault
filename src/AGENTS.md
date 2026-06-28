@@ -11,6 +11,13 @@ lane's scratch — never in a review-gated zone (`notes/claims/`, `notes/hubs/`)
 promotion, never a `retracted` decision. The policy MCP enforces this at the
 filesystem; do not try to route around it.
 
+## Dispatched work
+
+If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
+`kanban_show()` immediately before asking questions or using any other tool. Treat its
+`worker_context` as the task spec, then finish with `kanban_complete(...)` or
+`kanban_block(...)`.
+
 ## Where things live (ADR-47)
 
 `catalog/` entity records (Bases-backed; built by the ingest operation) · `notes/` prose —

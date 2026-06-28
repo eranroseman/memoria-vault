@@ -9,8 +9,9 @@ nav_order: 1
 
 The vault-root `home.md` is a thin welcome note — a "start here" screen for the
 Memoria Obsidian shell. On launch QuickAdd asks Obsidian's core Workspaces plugin to
-restore that shell: `home.md` in the main pane, the pinned rail on the left, and the
-Co-PI pane on the right ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
+repair that shell when the pinned rail is missing: `home.md` in the main pane, the
+pinned rail on the left, and the Co-PI pane on the right
+([ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)).
 
 ---
 
@@ -26,12 +27,10 @@ it owns no custom renderer.
 
 ## Home is a consumer, never a producer
 
-The welcome note contains no bespoke computation. Where it surfaces anything live, it
-embeds Bases views whose data lives in the notes and system projections rather than
-computing its own. The reason is single-source-of-truth: if `home.md` ran its own health
-queries, those queries would inevitably drift from the authoritative dashboard/Bases and
-rail definitions, and the human would have two slightly different answers to "is anything
-wrong?"
+The welcome note contains no bespoke computation and no embedded live views. The reason is
+single-source-of-truth: if `home.md` ran its own health queries, those queries would
+inevitably drift from the authoritative dashboard/Bases and rail definitions, and the
+human would have two slightly different answers to "is anything wrong?"
 
 ---
 
@@ -48,4 +47,5 @@ This is the same discipline applied to the dashboards themselves: the human-faci
 - What Home links *to*: [the dashboards](../dashboards/README.md)
 - The visual restraint Home participates in: [Visual discipline](../../design/visual-discipline.md)
 - The plugin inventory behind these surfaces: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- The welcome-note decision history: [ADR-13](../../adr/13-homepage-front-door.md)
+- Current welcome-note decision: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)
+- Retired homepage history: [ADR-13](../../adr/13-homepage-front-door.md)
