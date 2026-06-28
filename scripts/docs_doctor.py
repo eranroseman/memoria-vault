@@ -670,7 +670,7 @@ def check_plugin_count_mirrors(repo: Path, errors: list[str]) -> None:
     count = len(json.loads(community.read_text(encoding="utf-8")))
     for doc in (
         repo / "docs" / "reference" / "obsidian-plugins.md",
-        repo / "docs" / "testing" / "plans" / "gui-test-plan.md",
+        repo / "docs" / "testing" / "plans" / "manual-gui-checks.md",
     ):
         if not doc.is_file():
             continue

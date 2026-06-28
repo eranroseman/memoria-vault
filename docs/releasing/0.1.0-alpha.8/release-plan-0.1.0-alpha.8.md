@@ -116,7 +116,7 @@ Related links, terminology/glossary drift, third-party/example freshness, ADR
 capture). For alpha.8 specifically: ADR-76, ADR-29, ADR-65, ADR-84, ADR-100, and
 ADRs 104–106 must match the shipped implementation, and `docs/reference/policy-mcp.md`,
 `docs/reference/installer.md`, `docs/reference/operations.md`, `docs/testing/README.md`,
-and `docs/testing/coverage-matrix.md` must reflect the moved module paths and new
+and `docs/testing/verification-matrix.md` must reflect the moved module paths and new
 commands. Group findings Critical / Major / Minor with `file:line` citations and the
 checker summary.
 

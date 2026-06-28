@@ -4727,153 +4727,131 @@ entries:
     topic: tests
   canonical_owner: false
   status: manual
-- path: docs/testing/coverage-matrix.md
-  title: Test coverage matrix
-  book: Internal
-  topic: tests
-  frontmatter:
-    nav_order: 10
-    parent: Testing
-    status: draft
-    title: Test coverage matrix
-    topic: tests
-  canonical_owner: false
-  status: manual
 - path: docs/testing/plans/README.md
   title: Test plans
   book: Internal
   topic: tests
   frontmatter:
-    grand_parent: Documentation
     has_children: true
-    nav_order: 11
+    nav_order: 20
     parent: Testing
     title: Test plans
     topic: tests
   canonical_owner: false
   status: manual
-- path: docs/testing/plans/e2e-golden-path-plan.md
-  title: Golden-path end-to-end test plan
+- path: docs/testing/plans/failure-recovery-checks.md
+  title: Failure Recovery Checks
   book: Internal
   topic: tests
   frontmatter:
     grand_parent: Testing
-    nav_order: 12
+    nav_order: 60
     parent: Test plans
     status: draft
-    title: Golden-path end-to-end test plan
+    title: Failure Recovery Checks
     topic: tests
   canonical_owner: false
   status: manual
-- path: docs/testing/plans/g10-ingest-plan.md
-  title: Ingest-value-loop test plan (G10)
+- path: docs/testing/plans/manual-gui-checks.md
+  title: Manual GUI Checks
   book: Internal
   topic: tests
   frontmatter:
     grand_parent: Testing
-    nav_order: 13
-    parent: Test plans
-    status: draft
-    title: Ingest-value-loop test plan (G10)
-    topic: tests
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/g9-spine-plan.md
-  title: Dispatched-card spine test plan (G9)
-  book: Internal
-  topic: tests
-  frontmatter:
-    grand_parent: Testing
-    nav_order: 14
-    parent: Test plans
-    status: draft
-    title: Dispatched-card spine test plan (G9)
-    topic: tests
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/gui-test-plan.md
-  title: "GUI test plan \u2014 v0.1 (S5 + G4)"
-  book: Internal
-  topic: plans
-  frontmatter:
-    grand_parent: Testing
-    nav_order: 15
-    parent: Test plans
-    status: draft
-    title: "GUI test plan \u2014 v0.1 (S5 + G4)"
-    topic: plans
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/headless-test-plan.md
-  title: Headless test plan
-  book: Internal
-  topic: tests
-  frontmatter:
-    grand_parent: Testing
-    nav_order: 16
-    parent: Test plans
-    status: draft
-    title: Headless test plan
-    topic: tests
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/hermes-cli-test-plan.md
-  title: Hermes CLI test plan
-  book: Internal
-  topic: null
-  frontmatter:
-    created: 2026-06-02
-    grand_parent: Testing
-    nav_order: 17
-    parent: Test plans
-    status: draft
-    title: Hermes CLI test plan
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/installer-test-plan.md
-  title: Installer test plan
-  book: Internal
-  topic: tests
-  frontmatter:
-    grand_parent: Testing
-    nav_order: 18
-    parent: Test plans
-    status: draft
-    title: Installer test plan
-    topic: tests
-  canonical_owner: false
-  status: manual
-- path: docs/testing/plans/release-candidate-runbook.md
-  title: Release-candidate run runbook
-  book: Internal
-  topic: tests
-  frontmatter:
-    grand_parent: Testing
-    nav_order: 19
+    nav_order: 50
     parent: Test plans
     status: stable
-    title: Release-candidate run runbook
+    title: Manual GUI Checks
     topic: tests
   canonical_owner: false
   status: manual
-- path: docs/testing/plans/test-env-harness-plan.md
-  title: Test-env harness plan
+- path: docs/testing/plans/package-gate.md
+  title: Package Gate
   book: Internal
   topic: tests
   frontmatter:
     grand_parent: Testing
-    nav_order: 13
+    nav_order: 20
     parent: Test plans
-    status: draft
-    title: Test-env harness plan
+    status: stable
+    title: Package Gate
     topic: tests
   canonical_owner: false
   status: manual
-- path: docs/testing/test-plan-template.md
-  title: "{{Subject}} test plan{{ \u2014 scope, e.g. \"v0.1 (component X)\"}}"
+- path: docs/testing/plans/product-gate.md
+  title: Product Gate
   book: Internal
-  topic: null
-  frontmatter: {}
+  topic: tests
+  frontmatter:
+    grand_parent: Testing
+    nav_order: 40
+    parent: Test plans
+    status: stable
+    title: Product Gate
+    topic: tests
+  canonical_owner: false
+  status: manual
+- path: docs/testing/plans/release-gate.md
+  title: Release Gate
+  book: Internal
+  topic: tests
+  frontmatter:
+    grand_parent: Testing
+    nav_order: 70
+    parent: Test plans
+    status: stable
+    title: Release Gate
+    topic: tests
+  canonical_owner: false
+  status: manual
+- path: docs/testing/plans/runtime-gate.md
+  title: Runtime Gate
+  book: Internal
+  topic: tests
+  frontmatter:
+    grand_parent: Testing
+    nav_order: 30
+    parent: Test plans
+    status: stable
+    title: Runtime Gate
+    topic: tests
+  canonical_owner: false
+  status: manual
+- path: docs/testing/plans/source-gate.md
+  title: Source Gate
+  book: Internal
+  topic: tests
+  frontmatter:
+    grand_parent: Testing
+    nav_order: 10
+    parent: Test plans
+    status: stable
+    title: Source Gate
+    topic: tests
+  canonical_owner: false
+  status: manual
+- path: docs/testing/templates/test-plan-template.md
+  title: Test plan template
+  book: Internal
+  topic: tests
+  frontmatter:
+    nav_order: 90
+    parent: Testing
+    status: template
+    title: Test plan template
+    topic: tests
+  canonical_owner: false
+  status: manual
+- path: docs/testing/verification-matrix.md
+  title: Verification matrix
+  book: Internal
+  topic: tests
+  frontmatter:
+    nav_order: 10
+    parent: Testing
+    status: stable
+    title: Verification matrix
+    topic: tests
   canonical_owner: false
   status: manual
 - path: docs/tutorials/01-see-what-you-are-building.md

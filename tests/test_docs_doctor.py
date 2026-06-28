@@ -574,7 +574,7 @@ def test_check_plugin_count_mirrors_compares_community_plugins(tmp_path):
     (repo / "docs" / "reference" / "obsidian-plugins.md").write_text(
         "## Required Obsidian plugins (3)\n", encoding="utf-8"
     )
-    (repo / "docs" / "testing" / "plans" / "gui-test-plan.md").write_text(
+    (repo / "docs" / "testing" / "plans" / "manual-gui-checks.md").write_text(
         "Confirm all 2 required plugins.\n", encoding="utf-8"
     )
 

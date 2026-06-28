@@ -86,7 +86,7 @@ Tick each plugin that is enabled and validated:
 - [x] **A3 Pass (8/8)**
 
 > **A-note (private configs).** Use the maintained private-config note in
-> [GUI test plan](../../testing/plans/gui-test-plan.md#part-b--local-rest-api-bridge-the-write-gates-lifeline).
+> [Manual GUI Checks](../../testing/plans/manual-gui-checks.md).
 
 ---
 
