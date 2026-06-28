@@ -39,6 +39,9 @@ For each page, record:
 - Link and publication-boundary problems.
 - Action: stay, move, merge, split, rename, generate, or delete.
 
+Apply the [Documentation review](docs-review.md) checks to every page changed by
+the audit.
+
 Treat `docs/explanation/` and `docs/design/` as one conceptual surface split by
 "how it works" vs. "why this design." Ordinary docs describe the current system;
 history belongs only in `docs/adr/` and `docs/releasing/`.

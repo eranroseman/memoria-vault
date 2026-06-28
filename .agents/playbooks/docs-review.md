@@ -4,6 +4,10 @@ Use this playbook for changes under `docs/` or documentation changes elsewhere.
 [`AGENTS.md`](../../AGENTS.md) owns the documentation rules; this file is the
 portable procedure for applying them.
 
+For a fresh whole-docs audit and repair pass, use
+[Documentation audit](docs-audit.md). This playbook is for reviewing a docs
+change or PR.
+
 ## 1. Route by reader intent
 
 For each published page, choose exactly one Diátaxis purpose:
@@ -24,6 +28,8 @@ match their filename and index link text.
   repository paths. Prefer inline paths or an absolute GitHub blob/tree URL.
 - Repo-internal pages under `docs/releasing/`, `docs/testing/`, and excluded
   `tmp/` directories may link to repository files.
+- `docs/contributing/` is published; `docs/releasing/` and `docs/testing/` are
+  not.
 - Link text should name the destination concept, not merely repeat a filename.
 
 Run:
@@ -49,6 +55,12 @@ Distinguish blocking failures from known advisory warnings.
 - Put new citations in `docs/reference/bibliography.md` using the existing format.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
+- If a reference page repeats generated or source-owned contracts, run the
+  matching generator check (`gen_reference_refs.py --check`,
+  `gen_profiles_ref.py --check`) or route the change to the source/generator.
+- If routes, navigation, `baseurl`-sensitive links, or public outbound links
+  changed, run the live docs link checker after deploy or record why it was not
+  applicable.
 
 ## 5. Report
 
