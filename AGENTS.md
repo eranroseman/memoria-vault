@@ -251,6 +251,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 | Stage | Skill | Use when |
 |---|---|---|
+| Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) *(portable playbook)* | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
 | Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
