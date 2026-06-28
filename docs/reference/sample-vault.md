@@ -7,7 +7,7 @@ grand_parent: Reference
 # Sample vault
 
 Reference for the bundled Mediterranean-diet tutorial corpus. To load or remove
-it, see [Load and remove the sample vault](../how-to-guides/setup/sample-vault.md).
+it, see [Load and remove the sample vault](../how-to-guides/setup/load-sample-vault.md).
 The tutorial rationale is [ADR-112](../adr/112-tutorial-destination-first-arc.md).
 
 ## Bundle location

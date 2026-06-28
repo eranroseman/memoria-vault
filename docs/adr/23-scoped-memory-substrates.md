@@ -82,4 +82,4 @@ A **substrate** is one of these seven categories; its **backing** is the store b
 
 - **Supporting rationale:** [the memory model](../explanation/architecture/memory-model.md) (the substrate table, per-scope reasoning, and the memory-vs-configuration test).
 - **Related decisions:** [ADR-01 three-layer architecture](01-three-layer-architecture.md) and [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (substrates 1–3 are Hermes-native); [ADR-25 session logging](25-session-logging-two-logs.md) (the append-only audit substrate's enforcement).
-- **Reference:** [Memory substrates](../reference/memory.md) (the substrate table as lookup).
+- **Reference:** [Memory substrates](../reference/memory-substrates.md) (the substrate table as lookup).

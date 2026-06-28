@@ -1,13 +1,13 @@
 ---
-title: Work the review queue
+title: Work the action queue
 parent: Inbox
 grand_parent: How-to guides
 nav_order: 3
 ---
 
-# Work the review queue
+# Work the action queue
 
-Clear the decisions waiting on you. The review surface is the **Inbox**: task status stays in **Activity**, and only work needing your judgment lands in **Needs me** as typed cards (`candidate` / `gap` / `work-prompt`) at `lifecycle: proposed`. Flags and alerts live in **Maintenance** unless they emit a same-day work prompt. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
+Clear the decisions waiting on you. The daily action surface is the **Inbox**: task status stays in **Activity**, and only work needing your judgment lands in **Needs me** as typed cards (`candidate` / `gap` / `work-prompt`) at `lifecycle: proposed`. Flags and alerts live in **Maintenance** unless they emit a same-day work prompt. Anything an agent wanted to write into a **review-gated zone** (`notes/claims/`, `notes/hubs/`) was degraded to `dry_run` by the policy MCP — the proposal reaches you as a card; the write only happens by your hand.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ Clear the decisions waiting on you. The review surface is the **Inbox**: task st
 
 **1. Open the queue and work it as one batch.**
 
-Sit down once and sweep the queue — high-cardinality decisions belong in one worklist worked in one sitting, never N cards trickling at you ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+Sit down once and sweep the action queue — high-cardinality decisions belong in one worklist worked in one sitting, never N cards trickling at you ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each card the right way round.**
 
@@ -35,7 +35,7 @@ Rejecting costs one decision and leaves nothing behind — the proposed write ne
 
 **5. Mind the back-pressure.**
 
-The board caps `done` cards awaiting you at 5 — when the queue fills, the dispatcher slows new work on that lane. That's the system protecting your review capacity, not a malfunction. If a lane stalls, clear your queue rather than wishing the cap away.
+The board caps `done` cards awaiting you at 5 — when the action queue fills, the dispatcher slows new work on that lane. That's the system protecting your review capacity, not a malfunction. If a lane stalls, clear the queue rather than wishing the cap away.
 
 **6. Watch your own accept rate.**
 
@@ -52,4 +52,4 @@ The fleet-health dashboard tracks accept/reject ratios per proposing lane — ve
 - Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
 - The card shapes and their fields: [Document types](../../reference/document-types.md)
 - The gate that holds agent writes: [Policy MCP](../../reference/policy-mcp.md)
-- Why review is structural, not a convention: [Why a human gate](../../design/why-human-gate.md)
+- Why review is structural, not a convention: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

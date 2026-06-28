@@ -14,7 +14,7 @@ Every note in the vault is somewhere in a long-term progression from catalogued 
 The PI works at the three spaces — **Library**, **Knowledge**, and **Project** —
 plus the **Inbox** queue. Beneath them, background lanes can catalog, extract,
 link, map, draft, and verify; the authoritative task-lane → profile map lives in
-[Profile capabilities](../../reference/profiles.md).
+[Profile capabilities](../../reference/profile-capabilities.md).
 
 These tasks are **individually triggered, not a set**. A human gate — often a
 long gap — sits between each: a source is catalogued; much later, if ever,
@@ -55,7 +55,7 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 - The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
 - The cycle's tempo over your first weeks of real use: [Your first month](../../how-to-guides/knowledge/your-first-month.md)
 - The epistemic roles of document types: [Document types and epistemic roles](document-types.md)
-- Why promotion is gated: [Why promotion is gated](promotion-model.md)
+- Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
 
 **How-to**

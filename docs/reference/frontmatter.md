@@ -220,7 +220,7 @@ is; nothing in the system blocks on it.
 
 Notes (`source`, `claim`, `hub`) carry the authored `links:` map; catalog
 entities carry the given `relationships` map. The authored-vs-given distinction
-is owned by [Wikilink and link conventions](linking.md).
+is owned by [Wikilink and link conventions](wikilink-and-link-conventions.md).
 
 Project-gate argument edges may carry an optional `warrant` attribute on a
 `supports` relation when the author wants to state the grounds-to-claim inference

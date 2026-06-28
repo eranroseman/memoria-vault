@@ -32,7 +32,7 @@ Memoria supplies the *conventions on top*: the review-gate overlay in card `meta
 
 A bespoke agent runtime would be a large, ongoing engineering commitment whose hardest parts — durable state across crashes, atomic card claiming, retry semantics, memory tiers, an MCP host — are exactly what Hermes already solves. Reimplementing them would produce a worse copy and a maintenance burden, the same reasoning that keeps the [Engineer](../explanation/profiles/engineer.md) MCP-only rather than a reimplementation of an external coding runtime.
 
-Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../explanation/kanban-board/card-schema.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
+Building on Hermes also keeps Memoria compatible with stock `hermes` tooling: the board works with any standard Hermes install, and Memoria's overlay lives in `metadata` that Hermes treats as opaque (see [the card schema](../explanation/kanban-board/honesty-card.md)). The cost of this choice is a dependency on an external runtime's release cadence and conventions; the benefit is that Memoria's design effort goes entirely into the *knowledge* layer, which is where its actual contribution lies.
 
 This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenance.md) sense: Hermes's persistent-Kanban-plus-worker-lanes pattern is adopted wholesale; what Memoria declines from other runtimes is, e.g., chat-as-substrate (AutoGen) and sandbox-vs-host permission models (OpenHands), because those route durable state or permissions through the wrong layer.
 
@@ -40,7 +40,7 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 ## The programmatic surface (the API server)
 
-The API server is where programs connect to Memoria: file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. Humans use Obsidian, the CLI, or Telegram instead ([Interaction channels](../explanation/architecture/human-channels.md)).
+The API server is where programs connect to Memoria: file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. Humans use Obsidian, the CLI, or Telegram instead ([Interaction channels](../explanation/architecture/interaction-channels.md)).
 
 The API grants no extra power. Every write still passes through the policy MCP, so the caller has only the permissions of the profile it acts as. See [Policy MCP](../reference/policy-mcp.md) and [Hermes CLI](../reference/hermes-cli.md#api-server).
 
@@ -66,10 +66,10 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 
 **Explanation**
 
-- What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-three-layers.md)
+- What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-layered-architecture.md)
 - The board as a state machine: [Board states and the review gate](../explanation/kanban-board/states.md)
-- The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/card-schema.md)
-- The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/human-channels.md)
+- The honesty-card overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/honesty-card.md)
+- The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/interaction-channels.md)
 
 **Reference**
 

@@ -45,7 +45,7 @@ The layered design follows a principle that several independent research systems
 
 **PARNESS** ([Wang and Luan 2026](../reference/bibliography.md#wang2026parness)) names "no existing tool persists cross-run knowledge in a form that can be retrieved into a finite LLM context" as one of five structural problems in the field — and addresses it with a persistent knowledge layer. The defining difference is that PARNESS is fully autonomous where Memoria has a blocking human gate.
 
-Unrelated systems, different architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. (A further corroboration at the claim grain is catalogued in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md).)
+Unrelated systems, different architectures, one finding: long-horizon agent work fails when state lives in chat and succeeds when state lives in files. (A further corroboration at the claim grain is catalogued in the [Pattern provenance table](../reference/pattern-provenance.md).)
 
 ---
 
@@ -84,9 +84,9 @@ The separation is maintained by rules that cannot be violated without breaking t
 
 - The seven layers described: [Architecture](../explanation/architecture/README.md)
 - How the agent layer is structured: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
-- Why the vault's review gate is structural: [Why the review gate is structural](why-human-gate.md)
+- Why the vault's review gate is structural: [Why the review gate is structural](why-review-gate-is-structural.md)
 
 **Reference**
 
 - The guard layer in detail: [Policy MCP](../reference/policy-mcp.md)
-- The thick-state substrate: [Memory substrates](../reference/memory.md)
+- The thick-state substrate: [Memory substrates](../reference/memory-substrates.md)

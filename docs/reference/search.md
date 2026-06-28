@@ -107,4 +107,4 @@ The index lives inside the vault and is gitignored. It is registered once, maint
 - Querying conversationally: [Query the vault](../how-to-guides/knowledge/query-the-vault.md)
 - Where qmd sits among external tools: [External integrations](integrations.md)
 - The typed-graph counterpart: [Clustering](clustering.md)
-- The deterministic and hybrid methods catalog: [Retrieval and analysis methods](computational-toolbox.md)
+- The deterministic and hybrid methods catalog: [Retrieval and analysis methods](retrieval-and-analysis-methods.md)

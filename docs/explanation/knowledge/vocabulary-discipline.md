@@ -2,7 +2,7 @@
 title: Vocabulary discipline
 parent: Knowledge
 grand_parent: Explanation
-nav_order: 6
+nav_order: 5
 ---
 
 # Vocabulary discipline
@@ -35,7 +35,7 @@ This is the class of failure the Linter's `schema-check` pass is designed to cat
 
 ## Related
 
-- The operation that validates the vocabulary: [Operations](../operations/README.md)
+- The operation that validates the vocabulary: [Operations](../operations.md)
 - The common-pitfalls scenario this addresses: [Common pitfalls](common-pitfalls.md)
 - The how-to for the vocabulary: [Manage your topic vocabulary](../../how-to-guides/knowledge/manage-vocabulary.md)
 - Field definitions: [Frontmatter fields](../../reference/frontmatter.md)

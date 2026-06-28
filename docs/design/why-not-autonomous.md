@@ -39,7 +39,7 @@ Confidence routing, such as SmartPause in AutoResearchClaw ([Liu et al. 2026](..
 
 | Reason | Why it matters |
 | --- | --- |
-| Confident-wrong is the failure mode | Hallucinated citations and fabricated numbers often arrive fluent and confident; see [Why the review gate is structural](why-human-gate.md). |
+| Confident-wrong is the failure mode | Hallucinated citations and fabricated numbers often arrive fluent and confident; see [Why the review gate is structural](why-review-gate-is-structural.md). |
 | The cost model is inverted | A wrong high-confidence output in Memoria becomes durable, cited knowledge rather than a wasted run. |
 
 The real insight in that ablation — that gating everything is worse than gating well — Memoria keeps, but spends on the other side: **make each review cheaper, not fewer reviews**. A better Peer-reviewer (pre-verified material, structured evidence chains) lets the human review faster without removing the human from the loop.
@@ -85,6 +85,6 @@ Memoria is L3. The background lanes execute multi-step work unattended within a 
 
 ## Related
 
-- Why the review gate is structural: [Why the review gate is structural](why-human-gate.md)
+- Why the review gate is structural: [Why the review gate is structural](why-review-gate-is-structural.md)
 - The intellectual foundations of this position: [Intellectual foundations](intellectual-foundations.md)
-- Full borrow/adapt/ignore table: [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md)
+- Borrow/adapt/ignore table: [Pattern provenance table](../reference/pattern-provenance.md)

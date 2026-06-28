@@ -1,11 +1,11 @@
 ---
-title: Use the reset workspace
+title: Reset workspace
 parent: Using Obsidian
 grand_parent: How-to guides
 nav_order: 2
 ---
 
-# Use the reset workspace
+# Reset workspace
 
 Memoria's daily navigation is the left-pane rail, not saved workspace switching.
 Use the saved **Memoria** workspace manually only when you want to reset a rearranged window.
@@ -50,5 +50,5 @@ keeps the Agent Client pane on the right.
 
 - Workspace reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Conversation surface: [Agent Client pane](use-the-agent-client-pane.md)
-- Opening dashboards: [Navigate the dashboards](navigate-the-dashboards.md)
+- Opening surfaces: [Navigate Memoria surfaces](navigate-memoria-surfaces.md)
 - The dashboard decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)

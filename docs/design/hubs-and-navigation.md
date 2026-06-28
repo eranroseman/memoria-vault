@@ -26,7 +26,7 @@ A hub adds perspective a query cannot produce: framing, curation, and a diagnosi
 
 ## Why curation can't be delegated
 
-Hubs live under `notes/hubs/`, a review-gated prefix: an agent write there degrades to a dry-run ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/linking.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
+Hubs live under `notes/hubs/`, a review-gated prefix: an agent write there degrades to a dry-run ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
 
 So the agent stops at the threshold of judgment. The Librarian's `map` lane may propose that a dense cluster needs a hub, but only as a **bare member list plus threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates membership, and names gaps.
 
@@ -40,13 +40,13 @@ So the agent stops at the threshold of judgment. The Librarian's `map` lane may 
 | Too late | The cluster is already hard to navigate. |
 | Threshold crossing | The Linter can prompt the human without auto-creating the hub. |
 
-The current threshold is roughly **15-20 notes** ([Wikilink and link conventions](../reference/linking.md#hub-thresholds)). It is advisory only: when one branch grows too large, the human splits it into a child hub rather than letting one map become a dumping ground.
+The current threshold is roughly **15-20 notes** ([Wikilink and link conventions](../reference/wikilink-and-link-conventions.md#hub-thresholds)). It is advisory only: when one branch grows too large, the human splits it into a child hub rather than letting one map become a dumping ground.
 
 ---
 
 ## Where hubs sit in the knowledge model
 
-Claims are the atomic units: what the PI has come to think, in their own words ([Why promotion is gated](../explanation/knowledge/promotion-model.md)). Hubs keep those units findable as they multiply. They are human-owned end to end because navigation of one's own knowledge does not survive full delegation. To build one, see [Build a hub](../how-to-guides/knowledge/build-a-moc.md).
+Claims are the atomic units: what the PI has come to think, in their own words ([Why promotion is gated](../explanation/knowledge/promotion-and-gated-zones.md)). Hubs keep those units findable as they multiply. They are human-owned end to end because navigation of one's own knowledge does not survive full delegation. To build one, see [Build a hub](../how-to-guides/knowledge/build-a-hub.md).
 
 ---
 
@@ -56,4 +56,4 @@ Claims are the atomic units: what the PI has come to think, in their own words (
 - What the three hub body sections each make the note able to do: [Note body structure](../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)
 - The hub-as-folder-dump failure mode: [Common pitfalls](../explanation/knowledge/common-pitfalls.md)
 - The machine surfaces a hub is *not*: [Search](../reference/search.md), [Clustering](../reference/clustering.md)
-- Building one: [Build a hub](../how-to-guides/knowledge/build-a-moc.md)
+- Building one: [Build a hub](../how-to-guides/knowledge/build-a-hub.md)

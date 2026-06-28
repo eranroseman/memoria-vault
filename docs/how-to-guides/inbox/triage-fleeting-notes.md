@@ -64,4 +64,4 @@ The Linter flags stale fleeting notes but never promotes or deletes them — tha
 **Explanation**
 
 - The fleeting note's role: [Document types and epistemic roles](../../explanation/knowledge/document-types.md)
-- Triage as the first promotion decision: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)
+- Triage as the first promotion decision: [Why promotion is gated](../../explanation/knowledge/promotion-and-gated-zones.md)

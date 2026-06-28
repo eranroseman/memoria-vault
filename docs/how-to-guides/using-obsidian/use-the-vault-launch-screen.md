@@ -17,7 +17,7 @@ On startup — and after a layout reset — you land on the vault-root `home.md`
 
 **1. Land on the welcome note.**
 
-On startup or a layout reset, the saved **Memoria** workspace seeds `home.md` — a welcome note. It is a "start here" screen, not a dashboard: load the tutorial sample, capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](use-workspaces.md)).
+On startup or a layout reset, the saved **Memoria** workspace seeds `home.md` — a welcome note. It is a "start here" screen, not a dashboard: load the tutorial sample, capture your first source, meet the three places, and ask the Co-PI. To return to this clean layout at any time, use the saved Memoria workspace ([Use the reset workspace](reset-workspace.md)).
 
 **2. Switch spaces from the rail.**
 
@@ -29,7 +29,7 @@ Use the ribbon or command palette for capture/delegation actions: **Capture flee
 
 **4. Drill down from the index.**
 
-The three spaces group the day-to-day views by job: Library, Knowledge, and Project, with the Inbox queue as the triage surface. For the full dashboard roster see [Dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate the dashboards](navigate-the-dashboards.md).
+The three spaces group the day-to-day views by job: Library, Knowledge, and Project, with the Inbox queue as the triage surface. For the full dashboard roster see [Surfaces, Bases, and dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate Memoria surfaces](navigate-memoria-surfaces.md).
 
 Keep `research-focus.md` current — the Librarian reads it at the start of every session to set discovery targets. Update it at least weekly during the Friday ritual.
 

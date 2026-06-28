@@ -68,7 +68,7 @@ If you suspect the deployed copies still don't match the vault source, compare t
 
 ## Related
 
-- Profile configuration guide: [Configure a profile](../hermes-agent/configuration.md)
+- Profile configuration guide: [Configure a profile](../hermes-agent/configure-a-profile.md)
 - Fix profile drift: [Fix profile drift](../troubleshooting/fix-profile-drift.md)
 - Set up profiles (first install): [Set up Hermes](../setup/set-up-hermes.md)
 - The flags and the idempotency mechanism: [Installer (bootstrap)](../../reference/installer.md)

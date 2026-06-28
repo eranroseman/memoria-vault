@@ -12,8 +12,8 @@ Operational guides for the Hermes CLI — profile configuration and interactive 
 
 | Guide                                       | What it covers                                        |
 | ------------------------------------------- | ----------------------------------------------------- |
-| [Configure a profile](configuration.md)     | Model routing, write permissions, skills, API keys    |
-| [Run a CLI chat session](chat-with-hermes.md) | Start a session, run skill commands, use dry-run mode |
+| [Configure a profile](configure-a-profile.md)     | Model routing, write permissions, skills, API keys    |
+| [Run a CLI chat session](run-a-cli-chat-session.md) | Start a session, run skill commands, use dry-run mode |
 
 First-time install configures the profiles for you — see [Set up Hermes](../setup/set-up-hermes.md). **Configure a profile** is for *editing* a profile afterward (changing model routing, skills, or keys).
 

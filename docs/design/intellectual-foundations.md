@@ -52,7 +52,7 @@ The ~400-paper review (`_papers/`) grounds the design in what the field has trie
 
 Its main result is convergence. Separate research lines re-derive the structural review gate, durable vault-as-memory, MCP-only sandbox, deterministic ingest, and stage-gated handoffs. It also scopes what Memoria rejects: advisory-only LLM review, scalar keep/revert loops, and tree search over synthesis.
 
-The pattern-by-pattern judgment is in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md). The confident-wrong argument behind the human gate is in [Why the review gate is structural](why-human-gate.md).
+The pattern-by-pattern judgment is in [Pattern provenance table](../reference/pattern-provenance.md). The confident-wrong argument behind the human gate is in [Why the review gate is structural](why-review-gate-is-structural.md).
 
 ---
 
@@ -73,7 +73,7 @@ The design is not a novel invention — it is an integration of patterns that al
 ## Related
 
 - What the foundations produced: [Design principles](design-principles.md)
-- Full borrow/adapt/ignore breakdown: [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md)
+- Full borrow/adapt/ignore breakdown: [Pattern provenance table](../reference/pattern-provenance.md)
 - What Memoria is: [What Memoria is](what-memoria-is.md)
 - The layered architecture (structural form of thin-control-thick-state): [Architecture](../explanation/architecture/README.md)
 - Why the autonomy boundary is where it is: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)

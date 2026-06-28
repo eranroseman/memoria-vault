@@ -132,7 +132,7 @@ deploying a real runtime vault. Development verification uses the test vault.
 
 ## Related references
 
-- Profile surfaces and capability gates: [Profile capabilities](profiles.md)
+- Profile surfaces and capability gates: [Profile capabilities](profile-capabilities.md)
 - Installer rendering and environment overlays: [Installer (bootstrap)](installer.md)
 - Write-gate contract: [Policy MCP](policy-mcp.md)
 - Obsidian plugin files: [Obsidian plugin data files](obsidian-plugin-data-files.md)

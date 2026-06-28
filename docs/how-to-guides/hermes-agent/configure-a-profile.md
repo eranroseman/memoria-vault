@@ -12,7 +12,7 @@ A **profile** is the per-worker configuration for one Hermes worker. Editing a p
 
 This page collects the common configuration tasks: change the model overlay, change auxiliary models, change write permissions, add or remove a skill, update API credentials, and verify your change.
 
-Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. For what each one can do, see [Profile capabilities](../../reference/profiles.md).
+Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. For what each one can do, see [Profile capabilities](../../reference/profile-capabilities.md).
 
 > **Don't hand-edit tool allowlists.** To change which tools a profile can use, edit `src/.memoria/tool-registry.yaml` and run `scripts/render_profile_configs.py --write`. Do not hand-edit the generated `platform_toolsets` block (the rendered list of built-in tool groups) or the MCP `tools.include` blocks — they are regenerated from the registry.
 
@@ -31,7 +31,7 @@ Always edit the vault source, then re-deploy to push your changes to the deploye
 bash scripts/install.sh --profiles-only --vault <vault>
 ```
 
-Never edit the deployed copy directly. The next install overwrites it. For exact file roles and generated blocks, use [Profile capabilities](../../reference/profiles.md) and [Memoria configuration](../../reference/configuration.md).
+Never edit the deployed copy directly. The next install overwrites it. For exact file roles and generated blocks, use [Profile capabilities](../../reference/profile-capabilities.md) and [Memoria configuration](../../reference/configuration.md).
 
 ## Change the model overlay
 
@@ -179,4 +179,4 @@ This reports the deployed `SOUL.md`, MCP servers, skills, and `.env` key names (
 - Deploy vault source to profiles: [Redeploy profiles](../operate/redeploy-profiles.md)
 - Fix profile drift (deployed ≠ source): [Fix profile drift](../troubleshooting/fix-profile-drift.md)
 - Lane-override reference: [Policy MCP](../../reference/policy-mcp.md)
-- The five profiles and their ceilings: [Profile capabilities](../../reference/profiles.md)
+- The five profiles and their ceilings: [Profile capabilities](../../reference/profile-capabilities.md)

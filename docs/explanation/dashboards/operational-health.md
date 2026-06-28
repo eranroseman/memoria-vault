@@ -1,6 +1,6 @@
 ---
 title: Operational health
-parent: Dashboards
+parent: Surfaces and dashboards
 nav_order: 4
 grand_parent: Explanation
 permalink: /explanation/dashboards/operational-health/
@@ -23,7 +23,7 @@ Three dashboards sit close together but answer different questions at different 
 
 - **Audit log** is the *raw event stream*: one entry per policy-MCP write decision (per-decision forensics, newest-first).
 - **Fleet health** *aggregates* those entries (and other signals) into rolled-up per-lane trend metrics over time — quality and cost of completed work, headlined by the trust score.
-- **[Drift watch](../structural-health/README.md#drift-watch)** is *structural*, not operational: it is the Maintenance view over the Linter operation's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
+- **[Drift watch](structural-health.md#drift-watch)** is *structural*, not operational: it is the Maintenance view over the Linter operation's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
 
 In short: audit log is per-decision, fleet health is aggregated-operational, Drift watch is aggregated-structural.
 
@@ -32,7 +32,7 @@ In short: audit log is per-decision, fleet health is aggregated-operational, Dri
 Fleet health tracks per-lane cost, success rate, retry frequency, review latency,
 PI attention timing, blind re-review sample counts, and the headline trust score.
 The trust-score formula and bands are specified in the [Dashboards
-reference](../../../reference/dashboards.md#trust-score-fleet-health).
+reference](../../reference/dashboards.md#trust-score-fleet-health).
 
 It is not board state. Board state shows current work; fleet health summarizes
 completed work over time. Low-volume lanes are marked `insufficient-data` rather
@@ -46,7 +46,7 @@ scheduled run needs forensic review.
 
 It is not editable. The audit log records before/after hash pairs for gated
 writes; editing the log would defeat the tamper signal. The field schema and
-hash-pairing contract live in [Policy MCP](../../../reference/policy-mcp.md).
+hash-pairing contract live in [Policy MCP](../../reference/policy-mcp.md).
 
 ## Eval trend
 
@@ -55,7 +55,7 @@ capability scores: `recall@k`, support-rate, and FAMA-clean. It is diagnostic,
 never a gate; capability scores are noisy enough that blocking work on them would
 invite false halts.
 
-The scoring contract is in [Vault eval](../../../reference/vault-eval.md).
+The scoring contract is in [Vault eval](../../reference/vault-eval.md).
 
 ## Skill state
 
@@ -68,6 +68,6 @@ the dashboard only renders mismatches for review.
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
-- Policy log schema: [Policy MCP](../../../reference/policy-mcp.md)
-- Profile capability matrix: [Profile capabilities](../../../reference/profiles.md)
+- Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
+- Policy log schema: [Policy MCP](../../reference/policy-mcp.md)
+- Profile capability matrix: [Profile capabilities](../../reference/profile-capabilities.md)

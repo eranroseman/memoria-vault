@@ -60,7 +60,7 @@ Topical *navigation* is built on top by **hubs** (`notes/hubs/`): curated notes 
 ## Related
 
 - The type system the folders encode: [Document types and epistemic roles](../explanation/knowledge/document-types.md)
-- How state changes are gated: [Why promotion is gated](../explanation/knowledge/promotion-model.md)
+- How state changes are gated: [Why promotion is gated](../explanation/knowledge/promotion-and-gated-zones.md)
 - The decisions: [ADR-47](../adr/47-type-first-category-folders.md), [ADR-50](../adr/50-universal-lifecycle-and-maturity.md)
 - The folder tree itself: [The vault](../explanation/architecture/vault.md)
 - The facet fields: [Frontmatter fields](../reference/frontmatter.md)

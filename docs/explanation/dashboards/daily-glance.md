@@ -1,6 +1,6 @@
 ---
 title: Daily glance
-parent: Dashboards
+parent: Surfaces and dashboards
 nav_order: 1
 grand_parent: Explanation
 permalink: /explanation/dashboards/daily-glance/
@@ -47,6 +47,6 @@ It is read-only. Editing worker projections does not change Hermes board state.
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
-- Operating the Inbox: [Work the review queue](../../../how-to-guides/inbox/work-the-review-queue.md)
-- Troubleshooting stuck work: [Fix a stuck card](../../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
+- Operating the Inbox: [Work the action queue](../../how-to-guides/inbox/work-the-action-queue.md)
+- Troubleshooting stuck work: [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md)

@@ -1,10 +1,10 @@
 ---
-title: Dashboards
+title: Surfaces, Bases, and dashboards
 parent: Agents and control
 grand_parent: Reference
 ---
 
-# Dashboards
+# Surfaces, Bases, and dashboards
 
 Dashboard and Bases inventory for the shipped Obsidian surface. Dashboards are consumers: they render vault state and logs, never write. Space switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
 
@@ -68,7 +68,7 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 ## Related
 
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
-- The audit-log schema fleet-health and audit-log read: [Memory substrates](memory.md)
+- The audit-log schema fleet-health and audit-log read: [Memory substrates](memory-substrates.md)
 - The card types the Inbox board groups: [Document types](document-types.md)
 - Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)
 - Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)

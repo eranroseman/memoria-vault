@@ -45,7 +45,7 @@ or `MEMORIA_MODEL_CONTEXT_LENGTH` for an explicit local endpoint.
 
 > Auxiliary slots (title/approval/mcp/skills-hub/compression) are already cheap and
 > set in the **global** `~/.hermes/config.yaml`; leave them. See
-> [configuration.md § Auxiliary models](../../how-to-guides/hermes-agent/configuration.md).
+> [configuration.md § Auxiliary models](../../how-to-guides/hermes-agent/configure-a-profile.md).
 
 ### 1.2 Runtime prerequisites
 
@@ -244,7 +244,7 @@ These assert the *architecture*, independent of any one command — run after th
 | X3 | **Review-gate degradation** — Writer/agent write to `notes/claims/` or `notes/hubs/` | logged as `dry_run`, not `allow_with_log` — no real write without human approval |
 | X4 | **Audit pairing integrity** — after a batch of writes | every `allow_with_log` row carries `before_hash`/`after_hash` and a paired `write_complete` (`lint`'s `audit-unpaired-writes` reports clean) |
 | X5 | **Dry-run safety** — Peer-reviewer skills and deterministic operations with `--dry-run` | produce reports but leave target files byte-identical (`git diff` empty for those paths) |
-| X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profiles.md)) |
+| X6 | **Per-lane write scope** — sample each lane's audit rows | every `allow_with_log` path falls inside that lane's declared write scope ([Profiles](../../reference/profile-capabilities.md)) |
 | X7 | **Model in effect** — `profile show` for all 5 | all on `meta-llama/llama-4-scout` during the run; restored to Claude tiers after (§1.5) |
 
 ---

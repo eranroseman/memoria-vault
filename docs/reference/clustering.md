@@ -85,7 +85,7 @@ The discipline across all three tools: a **fixed seed** (so identical input yiel
 ## Related
 
 - The decision and the opt-in dependency split: [ADR-33: Cluster MCP and BERTopic](../adr/33-cluster-mcp-bertopic.md)
-- The graph's edge vocabulary: [Wikilink and link conventions](linking.md)
+- The graph's edge vocabulary: [Wikilink and link conventions](wikilink-and-link-conventions.md)
 - Where the map lane's output lands: [System actions](system-actions.md)
 - The text-similarity surface: [Search](search.md)
-- The methods catalog this sits in: [Retrieval and analysis methods](computational-toolbox.md)
+- The methods catalog this sits in: [Retrieval and analysis methods](retrieval-and-analysis-methods.md)

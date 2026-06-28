@@ -37,7 +37,7 @@ If your runtime vault is a git repo, committing a changed project draft queues a
 
 ## Step 2 — Read the findings
 
-Open **Maintenance** → **Drift watch**. Findings arrive as **flag cards**. A flag card leads with the finding itself: the `finding` comes first, the recommendation rides along in a separate `agent_recommendation` field, and the card names its `target`. Why a verification card is built this way: [The honesty card](../explanation/kanban-board/card-schema.md); the exact fields: [Inbox card fields](../reference/inbox-card-fields.md).
+Open **Maintenance** → **Drift watch**. Findings arrive as **flag cards**. A flag card leads with the finding itself: the `finding` comes first, the recommendation rides along in a separate `agent_recommendation` field, and the card names its `target`. Why a verification card is built this way: [The honesty card](../explanation/kanban-board/honesty-card.md); the exact fields: [Inbox card fields](../reference/inbox-card-fields.md).
 
 A `clean` flag closes nothing on its own, and an `issues-found` flag changes nothing on its own — **you act, the agent only flags.** Read each finding as a question about your draft, not a verdict on it.
 

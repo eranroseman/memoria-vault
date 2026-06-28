@@ -104,6 +104,6 @@ Tools evaluated and not in the current design:
 ## Related
 
 - Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
-- Profile permissions (which profiles can call which integrations): [Profile capabilities](profiles.md)
+- Profile permissions (which profiles can call which integrations): [Profile capabilities](profile-capabilities.md)
 - Where the API keys are configured: [Set up Hermes](../how-to-guides/setup/set-up-hermes.md)
 - Librarian design (the profile that calls most of these): [The Librarian](../explanation/profiles/librarian.md)

@@ -2,7 +2,7 @@
 title: Telemetry architecture
 parent: Architecture
 grand_parent: Explanation
-nav_order: 6
+nav_order: 5
 ---
 
 # Telemetry architecture

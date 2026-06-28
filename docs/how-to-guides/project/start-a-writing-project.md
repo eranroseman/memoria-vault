@@ -32,6 +32,6 @@ Use this when a cluster has become more than a topic: you have a question, an in
 
 ## Related
 
-- The synthesis layer a project stands on: [Write a claim note](../knowledge/write-a-claim-note.md) and [Build a hub](../knowledge/build-a-moc.md)
+- The synthesis layer a project stands on: [Write a claim note](../knowledge/write-a-claim-note.md) and [Build a hub](../knowledge/build-a-hub.md)
 - Readiness check: [Assess your corpus](assess-your-corpus.md)
 - Drafting today: [Draft with the Writer](draft-with-writer.md)

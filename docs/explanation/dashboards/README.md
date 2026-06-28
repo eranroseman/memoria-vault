@@ -1,21 +1,21 @@
 ---
-title: Dashboards
+title: Surfaces and dashboards
 parent: Explanation
-nav_order: 8
+nav_order: 7
 has_children: true
 permalink: /explanation/dashboards/
 ---
 
-# Dashboards
+# Surfaces and dashboards
 
 The **Inbox** is the *action queue* — discrete things that need you now. **Dashboards** are *browsable health views* — where things stand. They live in `spaces/`, `system/dashboards/`, and related Base files, are Bases/Dataview-backed and consumer-only, and a healthy vault shows them near-empty. Each answers one type of question; they are grouped by the kind of attention they demand:
 
 | Group                                              | Dashboards                                                      | When you look                                     |
 | -------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------- |
-| [Daily glance](daily-glance/README.md)             | Rail Now, Inbox queue action view                            | Start of every session — "what needs me?"         |
-| [Synthesis agenda](synthesis-agenda/README.md)     | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
-| [Structural health](structural-health/README.md)   | Maintenance collection, Drift watch, Loose ends, Board state  | Weekly maintenance and drift checks               |
-| [Operational health](operational-health/README.md) | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
+| [Daily glance](daily-glance.md)                    | Rail Now, Inbox queue action view                            | Start of every session — "what needs me?"         |
+| [Synthesis agenda](synthesis-agenda.md)            | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
+| [Structural health](structural-health.md)          | Maintenance collection, Drift watch, Loose ends, Board state  | Weekly maintenance and drift checks               |
+| [Operational health](operational-health.md)        | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
@@ -32,5 +32,5 @@ The exact shipped views, sources, and sort orders are in
 
 ## Related
 
-- How to operate the dashboards: [Navigate the dashboards](../../how-to-guides/using-obsidian/navigate-the-dashboards.md)
+- How to operate the dashboards: [Navigate Memoria surfaces](../../how-to-guides/using-obsidian/navigate-memoria-surfaces.md)
 - The primary weekly entry point: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)

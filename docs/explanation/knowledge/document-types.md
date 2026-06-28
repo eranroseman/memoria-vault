@@ -51,7 +51,7 @@ two notes.
 Claims live in `notes/claims/` — a **review-gated zone** (🔒). Agents draft claim
 stubs into staging, but the canonical claim is human-made.
 
-Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). The values and the "signal, not a gate" rule are owned by [Why promotion is gated](promotion-model.md); the field is defined in [Frontmatter fields](../../reference/frontmatter.md).
+Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). The values and the "signal, not a gate" rule are owned by [Why promotion is gated](promotion-and-gated-zones.md); the field is defined in [Frontmatter fields](../../reference/frontmatter.md).
 
 ### Hubs: authored navigation
 
@@ -69,7 +69,7 @@ A **fleeting note** (`type: fleeting`) is raw capture — a thought, a URL, a qu
 
 The **Inbox** (`inbox/`) is the agent→human message category — the signal end of every background loop ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)). Its five types are *transient cards*, not knowledge, and they sort into three shapes by epistemic role: **proposals** to judge (`candidate`, `gap`), **verification cards** to adjudicate (`flag`, `alert`), and a **work prompt** for work waiting on the PI (`work-prompt`). The exhaustive list — required fields, who raises each — lives in [Document types](../../reference/document-types.md#inbox-cards-5).
 
-A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/card-schema.md).
+A card awaiting you is simply in the `proposed` state — there is no separate `review-request` type. Cards carry the honesty-card fields rather than verdicts; see [The honesty card](../kanban-board/honesty-card.md).
 
 ---
 
@@ -86,7 +86,7 @@ A card awaiting you is simply in the `proposed` state — there is no separate `
 ## Related
 
 - Why folders carry the type and frontmatter carries the state: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
-- How material crosses the review gate: [Why promotion is gated](promotion-model.md)
+- How material crosses the review gate: [Why promotion is gated](promotion-and-gated-zones.md)
 - The *how* of note bodies: [Note body structure](note-body-structure.md)
-- The card format in depth: [The honesty card](../kanban-board/card-schema.md)
+- The card format in depth: [The honesty card](../kanban-board/honesty-card.md)
 - Complete type reference (fields, templates): [Document types](../../reference/document-types.md)

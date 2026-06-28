@@ -10,7 +10,7 @@ is_sensitive = _m.is_sensitive
 def test_is_safe_accepts_only_safe_prose_prefixes():
     assert is_safe("docs/reference/policy-mcp.md")
     assert is_safe("docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md")
-    assert is_safe("docs/explanation/architecture/human-channels.md")
+    assert is_safe("docs/explanation/architecture/interaction-channels.md")
     assert is_safe("_notes/scratch.md")
 
 
@@ -57,7 +57,9 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
 
 def test_decide_auto_approves_trusted_safe_prose_only():
     decision, _reason = decide(
-        ["docs/reference/policy-mcp.md", "docs/reference/profiles.md"], "eranroseman", False
+        ["docs/reference/policy-mcp.md", "docs/reference/profile-capabilities.md"],
+        "eranroseman",
+        False,
     )
 
     assert decision == "auto_approve"

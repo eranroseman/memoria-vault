@@ -1,11 +1,11 @@
 ---
-title: Why Memoria uses deterministic methods alongside LLMs
+title: Why deterministic methods
 parent: Design Book
 grand_parent: Developers
 nav_order: 15
 ---
 
-# Why Memoria uses deterministic methods alongside LLMs
+# Why deterministic methods
 
 Every task Memoria performs is classified as deterministic, hybrid, or generative. The class determines which method to use, what the cost looks like, and what can be audited. Without this classification, every task gets routed to an LLM "because it's text" — and the system becomes expensive, slow, and untestable.
 
@@ -48,5 +48,5 @@ Without an explicit classification, there is pressure to route every task to an 
 
 - [Callouts](../explanation/obsidian/callouts.md) — how the hybrid pattern produces callout content
 - Which profile handles which task type: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
-- The zero-LLM operation this rationale produces: [The Linter](../explanation/operations/README.md)
-- [Retrieval and analysis methods](../reference/computational-toolbox.md) — the catalog of specific deterministic methods Memoria uses
+- The zero-LLM operation this rationale produces: [The Linter](../explanation/operations.md)
+- [Retrieval and analysis methods](../reference/retrieval-and-analysis-methods.md) — the catalog of specific deterministic methods Memoria uses

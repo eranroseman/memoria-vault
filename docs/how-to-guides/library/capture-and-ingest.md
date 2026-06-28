@@ -44,7 +44,7 @@ The Librarian claims the card and runs the ingest for you ([Ingest routing](../.
 
 Your Inbox is a queue. Open its **Needs me** view, in `inbox.base`. Read `argument_against` first — it carries the most information ([Frontmatter fields](../../reference/frontmatter.md)).
 
-Then decide. To keep the paper, resolve the card to `current`, act on it, then mark it `archived`. To skip it, resolve straight to `archived`; the catalog entity stays as a record either way. Resolving a card is one palette command ([Work the review queue](../inbox/work-the-review-queue.md)).
+Then decide. To keep the paper, resolve the card to `current`, act on it, then mark it `archived`. To skip it, resolve straight to `archived`; the catalog entity stays as a record either way. Resolving a card is one palette command ([Work the action queue](../inbox/work-the-action-queue.md)).
 
 **5. Write your source note.**
 

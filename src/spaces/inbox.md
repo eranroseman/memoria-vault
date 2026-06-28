@@ -40,6 +40,6 @@ Step-by-step for working this queue:
 
 - [Triage fleeting notes](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/triage-fleeting-notes.html)
 - [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions.html)
-- [Work the review queue](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/work-the-review-queue.html)
+- [Work the action queue](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/work-the-action-queue.html)
 - [Run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/run-the-weekly-review.html)
 - [Return to work](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/return-to-work.html)

@@ -10,5 +10,5 @@ nav_order: 2
 Profiles, policy gates, operations, command surfaces, and agent-facing control
 planes.
 
-Start with [Profile capabilities](profiles.md) for lane capabilities and
+Start with [Profile capabilities](profile-capabilities.md) for lane capabilities and
 [Policy MCP](policy-mcp.md) for write enforcement.

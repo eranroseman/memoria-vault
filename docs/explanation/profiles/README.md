@@ -1,7 +1,7 @@
 ---
 title: Profiles
 parent: Explanation
-nav_order: 4
+nav_order: 3
 has_children: true
 permalink: /explanation/profiles/
 ---
@@ -27,9 +27,9 @@ For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README
 | **[The Peer-reviewer](peer-reviewer.md)** | skeptical, independent | verify | The formal review gate: judgment checks and the conceptual red-team. Flags, never fixes. |
 | **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit/revert checkpoint. Writes no code itself. |
 
-All five profiles ship. Deterministic work — ingest, search, clustering, project structural impact, verification sweeps, and the Linter — is [Operations](../operations/README.md), not agents: no posture, no board lane.
+All five profiles ship. Deterministic work — ingest, search, clustering, project structural impact, verification sweeps, and the Linter — is [Operations](../operations.md), not agents: no posture, no board lane.
 
-The tables above orient by posture; the canonical lane→profile map, write-scope ceilings, and bundled-skills counts live in [Profile capabilities](../../reference/profiles.md).
+The tables above orient by posture; the canonical lane→profile map, write-scope ceilings, and bundled-skills counts live in [Profile capabilities](../../reference/profile-capabilities.md).
 
 ## Delegation posture
 
@@ -51,5 +51,5 @@ originating lane's write ceiling, and the PI disposes.
 
 - Why one Co-PI + four background lanes: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
-- The deterministic actors that left the profile set: [Operations](../operations/README.md)
+- The deterministic actors that left the profile set: [Operations](../operations.md)
 - How cards reach the lanes and come back: [The Kanban board](../kanban-board/README.md)

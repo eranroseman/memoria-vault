@@ -64,11 +64,12 @@ Memoria addresses both: the agent handles the maintenance discipline that humans
 
 ---
 
-## Where it sits on the autonomy spectrum
+## Autonomy boundary
 
-On [Chen 2026](../reference/bibliography.md#chen2026copilots)'s (*From Copilots to Colleagues*) L1–L5 autonomy taxonomy, **Memoria targets L3 with a structurally enforced ceiling** — multi-step work runs unattended within a card, but the human sets the strategy and the review gate blocks every promotion. Why L4 and L5 are out of reach for knowledge work, and where the taxonomy sits in full, is in [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md).
-
-Two 2026 perspectives anchor this positioning. [Feng and Liu 2026](../reference/bibliography.md#feng2026visionary) describe "vibe researching" — the human keeps the intellectual steering wheel while agents handle labor — as the appropriate posture for research. [Bisht et al. 2026](../reference/bibliography.md#bisht2026agentic) argue current systems are co-scientists, not autonomous scientists, for structural reasons that sit upstream of capability. Memoria is vibe researching made durable (the vault) and gated (blocking review).
+Memoria targets multi-step execution under human-set strategy and review. The
+agent can do unattended work inside a card; the PI still decides what becomes
+canonical. The full autonomy argument lives in
+[Why Memoria doesn't pursue full autonomy](why-not-autonomous.md).
 
 ---
 
@@ -78,7 +79,7 @@ Two 2026 perspectives anchor this positioning. [Feng and Liu 2026](../reference/
 
 - The intellectual roots of the design: [Intellectual foundations](intellectual-foundations.md)
 - The seven-layer architecture: [Architecture](../explanation/architecture/README.md)
-- Why the human gate is structural: [Why the review gate is structural](why-human-gate.md)
+- Why the human gate is structural: [Why the review gate is structural](why-review-gate-is-structural.md)
 - Why L3 is the ceiling: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - The principles this framing produces: [Design principles](design-principles.md)
 

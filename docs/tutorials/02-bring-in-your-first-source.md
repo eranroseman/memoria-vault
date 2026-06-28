@@ -13,7 +13,7 @@ parent: Tutorials
 
 **You'll use:** the Obsidian command palette, the Inbox, and the Agent Client pane.
 
-**Prerequisite:** [Tutorial 01: See what you're building](01-orient.md) complete — the sample vault loaded and a project opened over it.
+**Prerequisite:** [Tutorial 01: See what you're building](01-see-what-you-are-building.md) complete — the sample vault loaded and a project opened over it.
 
 ---
 
@@ -44,7 +44,7 @@ Open the **Library** space, find your new paper in its **Catalog** view (`catalo
 
 Bringing a paper in doesn't happen silently: a **candidate card** lands in your Inbox, with Memoria proposing that you keep this source and asking you to decide. Open the **Inbox queue** → **Needs me** view.
 
-The card makes an argument, not a ruling: a proposed `action`, the case for and against, what tipped the balance, and how certain it is. Read the `argument_against` field first — it's the one that actually tells you something. Then decide, and resolve the card from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. For this tutorial, keep the source (`current`). If you skip one instead, its card goes to `archived` and the catalog record stays as a trace. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/card-schema.md).
+The card makes an argument, not a ruling: a proposed `action`, the case for and against, what tipped the balance, and how certain it is. Read the `argument_against` field first — it's the one that actually tells you something. Then decide, and resolve the card from the palette: `Cmd/Ctrl-P` → **Memoria: resolve inbox card**. For this tutorial, keep the source (`current`). If you skip one instead, its card goes to `archived` and the catalog record stays as a trace. Why a card argues instead of ruling: [The honesty card](../explanation/kanban-board/honesty-card.md).
 
 ---
 
@@ -96,4 +96,4 @@ The paper is now part of your vault; the source note is your own reading of it. 
 
 ---
 
-← [Tutorial 01: See what you're building](01-orient.md) · [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) →
+← [Tutorial 01: See what you're building](01-see-what-you-are-building.md) · [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) →

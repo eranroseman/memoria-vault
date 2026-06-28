@@ -50,7 +50,7 @@ need is forensic visibility, not another write-capable workspace.
 ## Related
 
 - **Tracking issue:** [#373](https://github.com/eranroseman/memoria-vault/issues/373) — revisit each release cadence.
-- **Existing surfaces:** CLI (forensic), dashboards (state), Telegram (push) — see [Interaction channels](../explanation/architecture/human-channels.md)
+- **Existing surfaces:** CLI (forensic), dashboards (state), Telegram (push) — see [Interaction channels](../explanation/architecture/interaction-channels.md)
 - **Invariant protected:** the human review gate (`review_status`) and the [policy MCP](../reference/policy-mcp.md)
 - **Adjacent future idea:** the read-only Memoria Inspector Obsidian plugin from
   [Adjacent tool integrations](58-adjacent-tool-integrations.md) covers part of

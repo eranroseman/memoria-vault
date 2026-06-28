@@ -1,6 +1,6 @@
 # Audit log
 
-Policy-MCP write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).
+Policy-MCP write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profile-capabilities) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).
 
 ## Recent denies and dry-runs
 

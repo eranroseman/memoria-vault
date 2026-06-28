@@ -57,4 +57,4 @@ Auditing uses **per-write SHA-256 hash pairing, not a cross-entry chain**: each 
 ## Related
 
 - Runtime gate: [Policy MCP](policy-mcp.md)
-- Audit-memory substrate: [Memory substrates](memory.md)
+- Audit-memory substrate: [Memory substrates](memory-substrates.md)

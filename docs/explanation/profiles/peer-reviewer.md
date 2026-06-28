@@ -9,7 +9,7 @@ nav_order: 4
 
 The Peer-reviewer runs the **verify** lane — the formal, independent review gate before anything ships, the academic peer-review pass. Its posture is **skeptical, and deliberately independent**: flag, don't fix. It runs the *judgment* checks — citekey resolution, claim→source tracing, near-duplicate adjudication — and the conceptual red-team, reading a draft *for soundness, not just facts*. Its findings land as Inbox `gap` and `flag` cards; it writes nowhere else. It receives work from deliberate verify requests and from the project-draft post-commit trigger.
 
-The Peer-reviewer owns judgment checks; deterministic verification work — retraction lookups, duplicate and broken-citation sweeps — lives in verification-sweep operations, scheduled on cron, no posture, no lane ([Operations](../operations/README.md)). ADR-48 records the consolidation decision.
+The Peer-reviewer owns judgment checks; deterministic verification work — retraction lookups, duplicate and broken-citation sweeps — lives in verification-sweep operations, scheduled on cron, no posture, no lane ([Operations](../operations.md)). ADR-48 records the consolidation decision.
 
 ---
 
@@ -25,7 +25,7 @@ The Peer-reviewer owns judgment checks; deterministic verification work — retr
 
 ## Related
 
-- The deterministic half of verification: [Operations](../operations/README.md)
+- The deterministic half of verification: [Operations](../operations.md)
 - The proposer it stays independent of: [The Librarian](librarian.md)
 - Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
-- Why review is human-driven: [Why the review gate is structural](../../design/why-human-gate.md)
+- Why review is human-driven: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

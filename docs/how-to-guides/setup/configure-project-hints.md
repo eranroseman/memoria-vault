@@ -45,7 +45,7 @@ projects:
 
 **3. Draw `primary_topics` from the topic signals papers actually carry.**
 
-Prefer terms that appear verbatim in the OpenAlex topics your papers resolve to (use `mhealth`, not `just-in-time-adaptive-interventions`) — at classify time hints are matched against those signals by simple overlap, so a term that never shows up in them contributes nothing ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)). Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/linking.md#vocabulary-discipline)).
+Prefer terms that appear verbatim in the OpenAlex topics your papers resolve to (use `mhealth`, not `just-in-time-adaptive-interventions`) — at classify time hints are matched against those signals by simple overlap, so a term that never shows up in them contributes nothing ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)). Keep to the ~30-term vocabulary discipline ([Wikilink and link conventions](../../reference/wikilink-and-link-conventions.md#vocabulary-discipline)).
 
 **4. Keep it a hint, not a matrix.**
 
@@ -64,7 +64,7 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 ## Related
 
 - Where the proposed project is confirmed: [Classify a source](../library/classify-a-source.md)
-- Topic vocabulary discipline: [linking.md — Vocabulary discipline](../../reference/linking.md#vocabulary-discipline)
+- Topic vocabulary discipline: [Wikilink and link conventions — Vocabulary discipline](../../reference/wikilink-and-link-conventions.md#vocabulary-discipline)
 - The profile that reads it: [The Librarian](../../explanation/profiles/librarian.md)
 - The ~30-term topic vocabulary discipline: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
 - The decision and its rationale: [ADR-15](../../adr/15-project-membership-from-topic-hint.md)

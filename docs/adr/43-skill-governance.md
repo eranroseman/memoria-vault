@@ -95,5 +95,5 @@ store).
 
 - **Tracking issue:** [#368](https://github.com/eranroseman/memoria-vault/issues/368) — the trigger firing and the shape decision.
 - **System of record:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
-- **The dashboard:** `system/dashboards/skill-state.md`; rationale in [skill-state dashboard](../explanation/dashboards/operational-health/README.md#skill-state).
+- **The dashboard:** `system/dashboards/skill-state.md`; rationale in [skill-state dashboard](../explanation/dashboards/operational-health.md#skill-state).
 - **Scope premise:** [ADR-24](24-single-researcher-scope.md) — single researcher; one judgment owner.

@@ -56,5 +56,5 @@ either run with enough data and dependencies or degrade cleanly.
 ## Related
 
 - **Depends on / extends:** [ADR-32](32-external-access-over-mcp.md) (compute over MCP; posture isolation at the agent layer), [ADR-30](30-deterministic-ingest-pipeline.md) (the deterministic-pipeline-as-MCP precedent).
-- **Files affected (on implementation):** `vault/.memoria/mcp/cluster_mcp.py` (new), `vault/.memoria/profiles/memoria-mapper/config.yaml` (`mcp_servers`), `vault/.memoria/lane-overrides/mapper.yaml` (drop `scikit-learn`/`umap-learn`), `vault/.memoria/profiles/memoria-mapper/skills/cluster-mapping/` (call the MCP), `docs/reference/installer.md` + `docs/reference/profiles.md`.
+- **Files affected (on implementation):** `vault/.memoria/mcp/cluster_mcp.py` (new), `vault/.memoria/profiles/memoria-mapper/config.yaml` (`mcp_servers`), `vault/.memoria/lane-overrides/mapper.yaml` (drop `scikit-learn`/`umap-learn`), `vault/.memoria/profiles/memoria-mapper/skills/cluster-mapping/` (call the MCP), `docs/reference/installer.md` + `docs/reference/profile-capabilities.md`.
 - **Source discussion:** the profile audit (PR #210) — the clustering gap surfaced while minimizing the capability duplication ADR-32 names.

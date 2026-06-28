@@ -2,7 +2,7 @@
 title: Distribution model
 parent: Design Book
 grand_parent: Developers
-nav_order: 23
+nav_order: 24
 ---
 
 # Distribution model

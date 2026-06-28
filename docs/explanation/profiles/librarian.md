@@ -17,7 +17,7 @@ A research librarian does both intake and literature search, so corpus work (sco
 
 ## The four lanes
 
-The table below is an orienting illustration of what each lane does and the Inbox signal (a proposal card in your queue — see [Glossary](../../reference/glossary.md)) it raises; [Profile capabilities](../../reference/profiles.md) owns the canonical lane definitions (task-lane ids, write scopes, MCP servers).
+The table below is an orienting illustration of what each lane does and the Inbox signal (a proposal card in your queue — see [Glossary](../../reference/glossary.md)) it raises; [Profile capabilities](../../reference/profile-capabilities.md) owns the canonical lane definitions (task-lane ids, write scopes, MCP servers).
 
 | Lane | Work | Inbox signal |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 ## Related
 
-- The mechanical counterpart: [Operations](../operations/README.md)
+- The mechanical counterpart: [Operations](../operations.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
 - Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why intake is separated from verification: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)

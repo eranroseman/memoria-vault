@@ -93,9 +93,9 @@ Design Book foundations, then the Explanation pages in this order.
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
 8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
 9. [Profiles](explanation/profiles/README.md) — the Co-PI and the four background lanes
-10. [Operations](explanation/operations/README.md) — the deterministic layer beneath the agents
+10. [Operations](explanation/operations.md) — the deterministic layer beneath the agents
 11. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
-12. [The workflow model](explanation/workflows/README.md) — how work moves, with review as a first-class state
+12. [Decision points](explanation/kanban-board/decision-points.md) — how approvals, prompts, worklists, and triggers differ
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
 14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
 15. [Design Book](design/README.md) — why each major decision went the way it did
@@ -110,7 +110,7 @@ Design Book foundations, then the Explanation pages in this order.
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Vault launch screen](how-to-guides/using-obsidian/use-the-vault-launch-screen.md) · [Use workspaces](how-to-guides/using-obsidian/use-workspaces.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Vault launch screen](how-to-guides/using-obsidian/use-the-vault-launch-screen.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
 
 **Daily work — sources**
 [Find new sources](how-to-guides/library/find-new-sources.md) · [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Write a claim note](how-to-guides/knowledge/write-a-claim-note.md)
@@ -138,7 +138,7 @@ Design Book foundations, then the Explanation pages in this order.
 
 Deterministic **operations** do the mechanical work, behind the policy MCP.
 
-→ [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profiles.md)
+→ [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profile-capabilities.md)
 
 ---
 
@@ -147,7 +147,7 @@ Deterministic **operations** do the mechanical work, behind the policy MCP.
 Memoria is at **v0.1**: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
 
 - **No end-to-end run on a live runtime** — continuous, unattended operation through all workflow stages is not yet demonstrated.
-- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/human-channels.md).
+- **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
 - **Writability and readiness scoring are not implemented** — `map:score-writability` / `map:score-readiness` are deferred ([Hermes CLI](reference/hermes-cli.md)).
 - **Single-user only** — team and multi-user review are out of scope by design.

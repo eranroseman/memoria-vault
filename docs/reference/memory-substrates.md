@@ -66,5 +66,5 @@ The audit trail (`system/logs/audit.jsonl`) records every policy decision with i
 ## Related
 
 - The writer of the audit log: [Policy MCP](policy-mcp.md)
-- The capability allowlist that disables specialist memory: [Profile capabilities](profiles.md)
+- The capability allowlist that disables specialist memory: [Profile capabilities](profile-capabilities.md)
 - The handoff payload schema: [Kanban board reference](kanban-board.md)

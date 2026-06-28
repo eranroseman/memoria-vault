@@ -12,7 +12,7 @@ Lookup tables for the Hermes Kanban board — the control plane for every unit o
 
 ## Lanes = the four background agents
 
-A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. The lane → profile map (which task lanes each assignee serves) is owned by [Profile capabilities](profiles.md).
+A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. The lane → profile map (which task lanes each assignee serves) is owned by [Profile capabilities](profile-capabilities.md).
 
 ---
 
@@ -104,7 +104,7 @@ Back-pressure protects the human bottleneck:
 
 ## Related
 
-- The lane ceilings the delegation is validated against: [Profile capabilities](profiles.md)
+- The lane ceilings the delegation is validated against: [Profile capabilities](profile-capabilities.md)
 - The per-write enforcement of `allowed_paths`: [Policy MCP](policy-mcp.md)
 - The board CLI: [Hermes CLI](hermes-cli.md)
 - The Inbox the results surface in: [Dashboards](dashboards.md)
