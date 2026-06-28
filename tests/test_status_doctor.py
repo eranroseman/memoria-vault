@@ -80,7 +80,10 @@ def test_check_file_flags_release_status_frontmatter_inconsistencies(tmp_path):
 
 
 def test_targets_include_docs_testing_release_tmp_and_release_playbook(tmp_path):
+    contributing = tmp_path / "CONTRIBUTING.md"
+    contributing.write_text("[adr](docs/adr)\n")
     (tmp_path / "docs" / "testing").mkdir(parents=True)
+    (tmp_path / "docs" / "adr").mkdir(parents=True)
     testing = tmp_path / "docs" / "testing" / "g9.md"
     testing.write_text("see [r](missing/x.md)\n")
     release_tmp = tmp_path / "docs" / "releasing" / "0.1.0-alpha.3" / "tmp"
@@ -93,6 +96,7 @@ def test_targets_include_docs_testing_release_tmp_and_release_playbook(tmp_path)
 
     found = targets(tmp_path)
 
+    assert contributing in found
     assert testing in found
     assert scratch in found
     assert playbook in found

@@ -34,7 +34,8 @@ Release readiness lives in a **"Release vX.Y" parent issue** with one sub-issue 
 gate or validation stage, instead of a single checklist embedded in the release
 plan or parent issue body.
 
-> **Current field set (see [Issue tracking](../contributing/issue-tracking.md)):**
+> **Current field set (see
+> [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md)):**
 > the live Project carries `Status` and `Readiness` only. The original `Area`, `Type`,
 > and `Priority` fields were retired as unused planning overhead, and `Readiness` was
 > added to separate "is it decided" from "is it ready to build." The decision to model
@@ -48,10 +49,9 @@ plan or parent issue body.
   process docs point to it instead of copying its state.
 - Labels are simpler and less likely to conflict with Project fields or automation.
 - Some live state remains GitHub-only. That is acceptable for planning metadata, while
-  durable rationale still belongs in ADRs and durable process prose remains in `docs/`.
+  durable rationale still belongs in ADRs and durable process prose remains in the repo.
 - GitHub Project field configuration is not versioned in this repository, so
-  `docs/contributing/issue-tracking.md` documents the expected field vocabulary and
-  colors for human repair.
+  `CONTRIBUTING.md` documents the expected field vocabulary for human repair.
 
 ## Alternatives considered
 
@@ -63,12 +63,13 @@ or blocked discussion.
 repo search metadata and bot hooks, not a planning schema. Project fields model this
 more directly and avoid a large label taxonomy.
 
-**Track planning state in markdown under `docs/`.** Rejected for live state because it
-reintroduces the drift class ADR-45 removed. Markdown remains the home for durable
-process and decision prose, not the live board.
+**Track planning state in markdown.** Rejected for live state because it reintroduces
+the drift class ADR-45 removed. Markdown remains the home for durable process and
+decision prose, not the live board.
 
 ## Related
 
-- **Workflows affected:** [Issue tracking](../contributing/issue-tracking.md),
+- **Workflows affected:**
+  [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md),
   [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)
 - **Related decisions / Depends on:** [ADR-45](45-release-management-model.md)

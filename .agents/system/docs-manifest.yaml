@@ -2345,40 +2345,6 @@ entries:
     topic: decisions
   canonical_owner: true
   status: manual
-- path: docs/contributing/README.md
-  title: Contributing
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 4
-    parent: Developers
-    permalink: /contributing/
-    title: Contributing
-  canonical_owner: false
-  status: manual
-- path: docs/contributing/issue-tracking.md
-  title: Issue tracking
-  book: Internal
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 2
-    parent: Contributing
-    title: Issue tracking
-  canonical_owner: false
-  status: manual
-- path: docs/contributing/process.md
-  title: Contributing workflow
-  book: Internal
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 1
-    parent: Contributing
-    title: Contributing workflow
-  canonical_owner: false
-  status: manual
 - path: docs/design/README.md
   title: Design Book
   book: Developers

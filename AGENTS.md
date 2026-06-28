@@ -173,7 +173,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (`docs/` release/test/contributing link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (release/test/contributor link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -329,7 +329,7 @@ without it qmd falls back to CPU (slower, still works).
 Mixed-purpose pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `src/` (vault-tree) files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) and contributing docs (`docs/contributing/`) are published, so links to them are ordinary intra-`docs/` relative links. `docs/releasing/` and `docs/testing/` are **build-excluded** from the site (see `docs/_config.yml`) — they have no Pages route, so links to them (and to non-doc files under `src/`/`scripts/`) use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), same as any other unpublished target.
+  - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, `docs/releasing/`, and `docs/testing/` are **build-excluded** from the site (see `docs/_config.yml`) — they have no Pages route, so links to them use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), same as any other unpublished target.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
@@ -396,7 +396,7 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 | In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
-- GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see `docs/contributing/issue-tracking.md`.
+- GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Status and Readiness live in Project fields; release scope lives in milestones.
 - Milestones are releases. No milestone = unscheduled backlog.
 - ADR/issue alignment: proposed ADRs link open shaping issues; accepted implemented

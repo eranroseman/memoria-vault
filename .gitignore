@@ -10,7 +10,6 @@ __pycache__/
 
 # Claude Code local worktrees (per-branch checkouts; never part of the repo)
 .claude/worktrees/
-/.worktrees/
 
 # qmd local semantic-search index (per-machine; absolute paths in index.yml)
 /.qmd/

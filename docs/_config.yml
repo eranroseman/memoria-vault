@@ -38,7 +38,7 @@ plugins:
 
 # Repo-internal documentation, kept in docs/ for relative linking but NOT
 # published to the site. The public site includes the Diátaxis docs, maintained
-# design arguments, contributing docs, and ADR decision records.
+# design arguments, and ADR decision records.
 exclude:
   - releasing/
   - testing/
