@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import tasks_mcp
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 
 
 def _vault(tmp_path: Path) -> Path:

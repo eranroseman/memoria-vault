@@ -38,7 +38,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - name: cspell over prose markdown
         # Scope lives only in cspell.json: `files: ["**/*.md"]` selects all markdown,
-        # `enableGlobDot: true` reaches dot-directories like src/.memoria/ and
+        # `enableGlobDot: true` reaches dot-directories like vault-template/.memoria/ and
         # .agents/ that a plain `**` glob would skip, and `ignorePaths` holds every
         # exclusion. `--gitignore` keeps this to tracked files. The pre-commit hook
         # defers to the same cspell.json, so there is no file list to keep aligned.

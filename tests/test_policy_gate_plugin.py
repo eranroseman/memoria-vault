@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PLUGIN = ROOT / "src" / ".memoria" / "plugins" / "memoria-policy-gate" / "__init__.py"
+PLUGIN = ROOT / "vault-template" / ".memoria" / "plugins" / "memoria-policy-gate" / "__init__.py"
 
 
 def _load_plugin():
@@ -21,7 +21,7 @@ def _vault_with_writer_policy(tmp_path):
     lane_dir = tmp_path / ".memoria" / "lane-overrides"
     lane_dir.mkdir(parents=True)
     (tmp_path / ".memoria" / "tool-registry.yaml").write_text(
-        (ROOT / "src/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
+        (ROOT / "vault-template/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     (lane_dir / "writer.yaml").write_text(

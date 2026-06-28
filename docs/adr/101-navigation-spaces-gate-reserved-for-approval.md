@@ -23,7 +23,7 @@ So "gate" carried two heavily-used senses at once — a navigation surface (a pl
 
 **"Gate" is reserved for the gating sense — the approval/policy/review checkpoint. The navigation surfaces are renamed "spaces."**
 
-1. **Navigation surfaces → spaces.** The four surfaces are the **Inbox · Library · Knowledge · Project spaces**. The note type is `space` (`type: space`, `space:` enum field), they live in `src/spaces/`, and the `gate: gates` type→folder map becomes `space: spaces`. "Spaces" is chosen over the other candidate, "views," because Obsidian already uses **view** natively (Reading view, graph view, `ItemView`) — reusing it would relocate the overload, not remove it. "Space" is clean in Obsidian's vocabulary and keeps the destination feel the surfaces need.
+1. **Navigation surfaces → spaces.** The four surfaces are the **Inbox · Library · Knowledge · Project spaces**. The note type is `space` (`type: space`, `space:` enum field), they live in `vault-template/spaces/`, and the `gate: gates` type→folder map becomes `space: spaces`. "Spaces" is chosen over the other candidate, "views," because Obsidian already uses **view** natively (Reading view, graph view, `ItemView`) — reusing it would relocate the overload, not remove it. "Space" is clean in Obsidian's vocabulary and keeps the destination feel the surfaces need.
 2. **"Gate" = the approval checkpoint, always stated fully.** The structural human gate is written **review gate / human gate / policy gate / write gate** — never a bare "gate" where the surrounding text does not already establish it ([ADR-03](03-structural-review-gate.md), [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md) are unchanged).
 3. **Pre-commit is a hook, not a gate.** The git schema-validation check is the **pre-commit hook**; CI enforcement is **required status checks** — not "the commit gate."
 4. **The runtime entry point is the gateway.** Always "gateway"; never abbreviated to "gate."
@@ -32,7 +32,7 @@ So "gate" carried two heavily-used senses at once — a navigation surface (a pl
 
 ## Consequences
 
-- Data model: `schemas/types/gate.yaml` → `space.yaml` (type, category, enum field); `folders.yaml`, the Linter `detectors.py` folder maps, and the installer `manifest.sh` skeleton all move `gates` → `spaces`; the four `src/gates/*.md` notes move to `src/spaces/`.
+- Data model: `schemas/types/gate.yaml` → `space.yaml` (type, category, enum field); `folders.yaml`, the Linter `detectors.py` folder maps, and the installer `manifest.sh` skeleton all move `gates` → `spaces`; the four `vault-template/gates/*.md` notes move to `vault-template/spaces/`.
 - App config follows the move: the Homepage startup target and the saved-workspace layout point at `spaces/inbox`; the plugin-provenance lock digest for `homepage/data.json` is re-pinned to match.
 - ~190 navigation prose references across the live docs and `src/` change `gate` → `space`; the approval-gate references (the majority) are left in place or qualified, never renamed.
 - ADR and `releasing/` decision prose is **not** rewritten — those are historical records in the vocabulary of their time; only broken vault **paths** (`gates/` → `spaces/`) are repointed where a checker validates them.

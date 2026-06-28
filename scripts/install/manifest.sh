@@ -3,7 +3,7 @@
 # shellcheck disable=SC2034  # sourced declaration is consumed by install.sh
 
 # Canonical empty-folder skeleton. Keep this list aligned with
-# src/.memoria/schemas/folders.yaml; tests/test_installer_skeleton.py enforces it.
+# vault-template/.memoria/schemas/folders.yaml; tests/test_installer_skeleton.py enforces it.
 SKELETON_DIRS=(
   .memoria/csl
   .memoria/lane-overrides

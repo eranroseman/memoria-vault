@@ -32,7 +32,7 @@ superseded_by: []
 > single gated path sufficient is the **plugin's own behaviour**, which the code
 > already gets right: `policy_hook` **independently hard-denies** `file`/`terminal`/
 > `code_execution` and **defaults to block** for any unknown tool
-> (`src/.memoria/mcp/policy_hook.py:82-96, 204, 264`), explicitly "rather than trusting
+> (`vault-template/.memoria/mcp/policy_hook.py:82-96, 204, 264`), explicitly "rather than trusting
 > the capability layer." Read the Decision below with that correction: `disabled_toolsets`
 > is UX (keeps the model from seeing the tool); the plugin's hard-deny + default-deny is
 > the enforcement. Per AGENTS.md "Enforcement is a mechanism, not a label."
@@ -88,7 +88,7 @@ a shell hook. The plugin registers two lifecycle hooks on the plugin manager:
 - `post_tool_call` → complete the audit record (paired `after_hash`).
 
 It **reuses the tested decision core verbatim** — `policy_hook.evaluate_pre` /
-`evaluate_post` and `memoria.runtime.policy.PolicyEngine` — so no policy logic is
+`evaluate_post` and `memoria_vault.runtime.policy.PolicyEngine` — so no policy logic is
 duplicated.
 The `hooks:` block is removed from every profile `config.yaml`; the plugin is
 turned on per lane via `plugins.enabled` and deployed (with `{{PROFILE}}` /

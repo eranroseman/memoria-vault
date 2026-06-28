@@ -29,7 +29,7 @@ assert_executable() {
 vault_assembly() {
   echo "== $(stage vault-assembly-1) =="
   require_git
-  if command -v rsync >/dev/null; then rsync -a --exclude '.git' "$ROOT/src/" "$V/"; else cp -R "$ROOT/src/." "$V/"; fi
+  if command -v rsync >/dev/null; then rsync -a --exclude '.git' "$ROOT/vault-template/" "$V/"; else cp -R "$ROOT/vault-template/." "$V/"; fi
   "$PY" "$HELPER" vault-skeleton "$ROOT" "$V"
 
   echo "== $(stage vault-assembly-2) =="
@@ -80,7 +80,7 @@ workflow_replay() {
   "$PY" "$ROOT/scripts/test_env_harness.py" replay --root "$ROOT" --vault "$V" >/dev/null \
     || fail "test-env harness replay failed"
   "$PY" "$HELPER" workflow-artifacts "$V"
-  echo "   cassette replay reached the model-free L4 path"
+  echo "   cassette replay reached the model-free package-gate path"
 }
 
 final_integrity() {

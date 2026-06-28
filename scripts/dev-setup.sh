@@ -32,8 +32,8 @@ if [ -n "$PY" ]; then
   else
     note "editable install failed — run manually: $PY -m pip install -e ."
   fi
-  if [ -f src/.memoria/mcp/requirements.txt ]; then
-    if "$PY" -m pip install --quiet -r src/.memoria/mcp/requirements.txt; then
+  if [ -f vault-template/.memoria/mcp/requirements.txt ]; then
+    if "$PY" -m pip install --quiet -r vault-template/.memoria/mcp/requirements.txt; then
       note "MCP deps installed (self-tests will run)"
     else
       note "MCP requirements not installed — the .py --self-tests may skip deps"

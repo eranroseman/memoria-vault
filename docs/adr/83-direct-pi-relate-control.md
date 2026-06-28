@@ -89,8 +89,8 @@ the control is the human confirmation surface.
 
 - **Workflows affected:** Knowledge synthesis, claim linking, Project argument
   graph work, and agent-proposed relation review.
-- **Files affected:** `src/system/scripts/`, `src/.obsidian/plugins/quickadd/data.json`,
-  `src/.obsidian/plugins/cmdr/data.json`, `src/spaces/knowledge.md`, `docs/reference/wikilink-and-link-conventions.md`,
+- **Files affected:** `vault-template/system/scripts/`, `vault-template/.obsidian/plugins/quickadd/data.json`,
+  `vault-template/.obsidian/plugins/cmdr/data.json`, `vault-template/spaces/knowledge.md`, `docs/reference/wikilink-and-link-conventions.md`,
   `docs/reference/frontmatter.md`, and the claim-linking how-to.
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
   [ADR-71](71-structured-capture-forms.md),

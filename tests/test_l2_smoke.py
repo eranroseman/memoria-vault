@@ -56,7 +56,7 @@ def test_l2_smoke_profile_uses_filesystem_obsidian_shim(tmp_path):
     profile_stage = tmp_path / "profile"
 
     l2_smoke.write_profile(
-        ROOT / "src/.memoria/profiles/memoria-writer",
+        ROOT / "vault-template/.memoria/profiles/memoria-writer",
         profile_stage,
         repo_root=ROOT,
         vault=vault,
@@ -90,7 +90,7 @@ def test_l2_smoke_deploys_policy_plugin_with_repo_import_path(tmp_path):
 
     plugin = (profile_dir / "plugins/memoria-policy-gate/__init__.py").read_text(encoding="utf-8")
     assert 'PROFILE = "memoria-writer"' in plugin
-    assert f"sys.path.insert(0, {str(ROOT)!r})" in plugin
+    assert f"sys.path.insert(0, {str(ROOT / 'src')!r})" in plugin
 
 
 def test_l2_smoke_asserts_artifact_and_audit_row(tmp_path, capsys):

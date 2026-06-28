@@ -13,19 +13,20 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+for path in (ROOT / "src", ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
-from memoria.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.jsonl import iter_jsonl
 
 STAGE_LABELS = {
-    "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from src/)",
+    "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
     "vault-assembly-2": "2. vault-assembly: golden copy + git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed claim blocks, valid claim passes",
     "offline-ingest-1": "5. offline-ingest: entity + honesty card",
     "offline-ingest-2": "6. offline-ingest: typed graph (optional: networkx)",
-    "workflow-replay": "7. workflow-replay: ADR-80 Phase 1 test-env harness",
+    "workflow-replay": "7. workflow-replay: package-gate test-env harness",
     "final-integrity": "8. final-integrity: lint over the worked vault",
 }
 STAGE_ORDER = tuple(STAGE_LABELS)
@@ -36,7 +37,7 @@ def print_stage_label(name: str) -> None:
 
 
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
-    folders = yaml.safe_load((root / "src/.memoria/schemas/folders.yaml").read_text())
+    folders = yaml.safe_load((root / "vault-template/.memoria/schemas/folders.yaml").read_text())
     for folder in folders["skeleton"]:
         (vault / folder).mkdir(parents=True, exist_ok=True)
     missing = [folder for folder in folders["skeleton"] if not (vault / folder).is_dir()]
@@ -68,8 +69,8 @@ def assert_executable(path: Path, label: str) -> None:
 def add_repo_paths(root: Path) -> None:
     for path in (
         root,
-        root / "src/.memoria",
-        root / "src/.memoria/mcp",
+        root / "vault-template/.memoria",
+        root / "vault-template/.memoria/mcp",
     ):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))
@@ -120,7 +121,7 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
         return
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
-    sys.path.insert(0, str(root / "src/.memoria/mcp"))
+    sys.path.insert(0, str(root / "vault-template/.memoria/mcp"))
     import cluster_mcp
 
     graph: dict[str, list[dict[str, Any]]] = cluster_mcp.build_graph(vault, seed=7)

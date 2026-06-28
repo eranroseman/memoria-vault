@@ -12,7 +12,7 @@ grand_parent: Reference
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as typed documents — `type: eval-task`, schema `src/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
+Gold tasks live in `system/eval/` as typed documents — `type: eval-task`, schema `vault-template/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ Like patterns, eval tasks are authored directly — the files *are* the instance
 
 ## Dispatch
 
-`src/.memoria/operations/telemetry/eval/eval_dispatch.py` — a sweeps-shaped operation: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
+`vault-template/.memoria/operations/telemetry/eval/eval_dispatch.py` — a sweeps-shaped operation: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
 - One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the Co-PI's `tasks_mcp.py`; a test guards the parity).
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
@@ -53,7 +53,7 @@ python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault> --dry
 
 ## Scoring
 
-`src/.memoria/operations/telemetry/eval/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
+`vault-template/.memoria/operations/telemetry/eval/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
 
 **The result contract.** A lane never writes the vault; it ends its card report with one fenced `json` block (the card body shows the exact template, pre-filled with the task id and quarter):
 

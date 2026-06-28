@@ -24,9 +24,9 @@ Lane skills use the **`<task>-<verb>-<object>`** kebab-case convention — the t
 
 So `catalog-enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`. When serialized as an MCP tool the separators collapse to underscores: `catalog_enrich_record`.
 
-The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`):
+The on-disk registry under `vault-template/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`):
 
-| Actor | Skills (all shipped in `src/.memoria/profiles/<profile>/skills/`) |
+| Actor | Skills (all shipped in `vault-template/.memoria/profiles/<profile>/skills/`) |
 | --- | --- |
 | **Co-PI** (pane) | `ask-question-source` · `ask-read-lens` · `explore-framings` · `route-task` · `explain-system` |
 | **Librarian** (catalog · extract · link · map) | `catalog-find-source` · `catalog-enrich-record` · `catalog-classify-source` · `catalog-rank-candidate` · `extract-stub-claim` · `extract-flag-distill` · `link-suggest-claim` · `link-surface-tension` · `map-scope-project` · `map-report-coverage` · `map-cluster-corpus` · `map-seed-canvas` · `map-graph-claims` · `map-canvas-hub` |
@@ -35,7 +35,7 @@ The on-disk registry under `src/.memoria/profiles/<profile>/skills/` matches the
 
 Deterministic operation entrypoints are MCP tools, cron wrappers, or repo scripts, not Hermes chat skills. Use [Operations](operations.md), [Ingest routing](ingest.md), [Search](search.md), [Clustering](clustering.md), [Linter](linter.md), and [Sweeps](sweeps.md) for their current commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
 
-Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`src/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
+Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`vault-template/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
 
 ---
 

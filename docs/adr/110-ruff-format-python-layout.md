@@ -50,7 +50,7 @@ between concurrent agent sessions.
 ### Formatter — owns layout
 
 Adopt `ruff format` as the single source of truth for Python layout in `memoria/`,
-`scripts/`, `src/.memoria/`, `.github/scripts/`, and `tests/`, at **line-length 100**.
+`scripts/`, `vault-template/.memoria/`, `.github/scripts/`, and `tests/`, at **line-length 100**.
 
 Enforcement mirrors the existing `ruff check` wiring: a `ruff-format` pre-commit hook,
 a `ruff format --check` step in the CI `lint` job, and the same in `scripts/test.sh`

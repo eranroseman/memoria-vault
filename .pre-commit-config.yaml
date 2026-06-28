@@ -97,8 +97,8 @@ repos:
       - id: dashboard-schema-drift
         name: dashboard-schema-drift
         language: system
-        entry: python src/.memoria/operations/integrity/linter/detectors.py --vault src --gate dashboard-field-drift
-        files: ^src/system/dashboards/.*\.md$|^src/system/templates/.*\.md$
+        entry: python vault-template/.memoria/operations/integrity/linter/detectors.py --vault vault-template --gate dashboard-field-drift
+        files: ^vault-template/system/dashboards/.*\.md$|^vault-template/system/templates/.*\.md$
         pass_filenames: false
 
       # Block 9: markdownlint structural rules

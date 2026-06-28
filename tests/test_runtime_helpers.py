@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 
-from memoria.runtime.jsonl import append_jsonl, iter_jsonl
-from memoria.runtime.time import parse_iso, utc_z
-from memoria.runtime.vaultio import (
+from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
+from memoria_vault.runtime.paths import resolve_vault
+from memoria_vault.runtime.time import parse_iso, utc_z
+from memoria_vault.runtime.vaultio import (
     iter_markdown,
     parse_frontmatter,
     read_frontmatter,
@@ -63,6 +64,18 @@ def test_append_jsonl_creates_parent_directory(tmp_path) -> None:
     append_jsonl(path, [{"name": "one"}, {"name": "two"}])
 
     assert list(iter_jsonl(path)) == [{"name": "one"}, {"name": "two"}]
+
+
+def test_resolve_vault_error_lists_default_env_vars(monkeypatch) -> None:
+    monkeypatch.delenv("MEMORIA_VAULT_PATH", raising=False)
+    monkeypatch.delenv("OBSIDIAN_VAULT_PATH", raising=False)
+
+    try:
+        resolve_vault(None)
+    except SystemExit as exc:
+        assert "MEMORIA_VAULT_PATH or OBSIDIAN_VAULT_PATH" in str(exc)
+    else:
+        raise AssertionError("resolve_vault should exit without a vault path")
 
 
 def test_iter_markdown_prunes_skip_dirs_during_walk(tmp_path) -> None:

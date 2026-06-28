@@ -31,7 +31,7 @@ bash scripts/install.sh --dry-run
 ```
 
 `dev-setup.sh` sets up the contributor toolchain only; it does not install or run
-Memoria. Runtime vault dependencies stay under `src/.memoria/mcp/requirements.txt`.
+Memoria. Runtime vault dependencies stay under `vault-template/.memoria/mcp/requirements.txt`.
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
 
 See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install walkthrough.
@@ -61,13 +61,13 @@ taxonomies as labels.
 ## Coding conventions
 
 - **Python:** Ruff is both linter and formatter for repo tooling and runtime code
-  (`scripts/`, `.github/scripts/`, `src/.memoria/`, and `tests/`). `ruff format`
+  (`src/memoria_vault/`, `scripts/`, `.github/scripts/`, `vault-template/.memoria/`, and `tests/`). `ruff format`
   owns layout at line length 100.
 - **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Run `shellcheck`
   before submitting installer changes.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
-- **Profiles:** profile source lives under `src/.memoria/profiles/`; keep the
+- **Profiles:** profile source lives under `vault-template/.memoria/profiles/`; keep the
   existing `SOUL.md`, `config.yaml`, `distribution.yaml`, and `skills/` shape.
 - **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
   guides direct, reference informs, and explanation discusses.

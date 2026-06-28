@@ -23,7 +23,7 @@ postures, and write-scope ceilings, see [Profile capabilities](docs/reference/pr
 
 ## How it works
 
-The installer copies `src/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes, deploys the five `memoria-*` profiles, and sets you up to add your API keys — see [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
+The installer copies `vault-template/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes, deploys the five `memoria-*` profiles, and sets you up to add your API keys — see [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. The policy gate blocks denied paths, logs allowed writes, and turns review-gated synthesis edits into proposals.
 
@@ -45,7 +45,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-**Prefer to read it first?** Clone and run from the **repo root** (the installers live there, not inside `src/`):
+**Prefer to read it first?** Clone and run from the **repo root**:
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
@@ -74,7 +74,8 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 | Path | What |
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
-| `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
+| `src/memoria_vault/` | The installable Python package |
+| `vault-template/` | The vault source tree — the installer copies it out as your Obsidian vault |
 | `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), maintained design arguments (`design/`), and the `releasing/` · `testing/` process docs |
 
 ## Documentation
@@ -94,7 +95,7 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 ## Development
 
-For fast UI/system-file iteration on the disposable sandbox, run `bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from `src/`, preserve runtime state, and restage the golden copy. After editing profile source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
+For fast UI/system-file iteration on the disposable sandbox, run `bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from `vault-template/`, preserve runtime state, and restage the golden copy. After editing profile source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
 
 ## Citation
 

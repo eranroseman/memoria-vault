@@ -69,9 +69,9 @@ necessary escape valves.
 
 ## Related
 
-- **Files affected:** `src/.memoria/schemas/types/thesis.yaml`,
-  `src/.memoria/schemas/types/project.yaml`, `src/system/templates/`,
-  `src/projects/`.
+- **Files affected:** `vault-template/.memoria/schemas/types/thesis.yaml`,
+  `vault-template/.memoria/schemas/types/project.yaml`, `vault-template/system/templates/`,
+  `vault-template/projects/`.
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-77](77-project-gate.md).
 - **Source discussion:** alpha.5 schema workstream

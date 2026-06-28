@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import plugin_provenance_doctor as doctor
 
 ROOT = Path(__file__).resolve().parent.parent
-OBSIDIAN = ROOT / "src" / ".obsidian"
+OBSIDIAN = ROOT / "vault-template" / ".obsidian"
 PLUGINS = OBSIDIAN / "plugins"
 LOCK = OBSIDIAN / "plugin-provenance-lock.json"
 COMMUNITY = OBSIDIAN / "community-plugins.json"
@@ -46,7 +46,7 @@ def test_plugin_provenance_lock_covers_enabled_plugins_and_artifacts():
 
 def test_plugin_provenance_doctor_flags_undeclared_executables(tmp_path):
     root = _copy_plugin_fixture(tmp_path)
-    extra = root / "src/.obsidian/plugins/dataview/extra.js"
+    extra = root / "vault-template/.obsidian/plugins/dataview/extra.js"
     extra.write_text("console.log('extra');\n", encoding="utf-8")
 
     findings = doctor.check(root)
@@ -57,7 +57,7 @@ def test_plugin_provenance_doctor_flags_undeclared_executables(tmp_path):
 
 def test_plugin_provenance_doctor_flags_bad_digest(tmp_path):
     root = _copy_plugin_fixture(tmp_path)
-    lock_path = root / "src/.obsidian/plugin-provenance-lock.json"
+    lock_path = root / "vault-template/.obsidian/plugin-provenance-lock.json"
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
     lock["plugins"][0]["sha256"]["plugins/dataview/main.js"] = "0" * 64
     lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
@@ -69,7 +69,7 @@ def test_plugin_provenance_doctor_flags_bad_digest(tmp_path):
 
 def test_plugin_provenance_doctor_flags_duplicate_lock_entries(tmp_path):
     root = _copy_plugin_fixture(tmp_path)
-    lock_path = root / "src/.obsidian/plugin-provenance-lock.json"
+    lock_path = root / "vault-template/.obsidian/plugin-provenance-lock.json"
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
     lock["plugins"].append(dict(lock["plugins"][0]))
     lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
@@ -81,7 +81,7 @@ def test_plugin_provenance_doctor_flags_duplicate_lock_entries(tmp_path):
 
 def _copy_plugin_fixture(tmp_path: Path) -> Path:
     root = tmp_path / "repo"
-    obsidian = root / "src/.obsidian"
+    obsidian = root / "vault-template/.obsidian"
     obsidian.mkdir(parents=True)
     shutil.copy2(COMMUNITY, obsidian / "community-plugins.json")
     shutil.copy2(LOCK, obsidian / "plugin-provenance-lock.json")

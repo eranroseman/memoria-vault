@@ -25,7 +25,7 @@ Bases views while ordinary internal links reuse the active tab.
 ## Decision
 
 > **Superseded slice (see [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)):**
-> the directory is now `src/spaces/`, not `src/gates/`, and these navigation surfaces are
+> the directory is now `vault-template/spaces/`, not `vault-template/gates/`, and these navigation surfaces are
 > called **spaces** — "gate" is now reserved for the approval/review checkpoint. The
 > dashboard decision below still stands; only the path and the "gate" naming changed, and
 > the historical wording is kept as-authored.
@@ -92,10 +92,10 @@ metaphor.
 
 ## Related
 
-- **Files affected:** `src/spaces/`, `src/home.md`, `src/.obsidian/workspaces.json`,
-  `src/.obsidian/plugins/homepage/data.json`, `src/.obsidian/plugins/quickadd/data.json`,
-  `src/.obsidian/plugins/cmdr/data.json`, `src/.obsidian/app.json`,
-  `src/.obsidian/core-plugins.json`.
+- **Files affected:** `vault-template/spaces/`, `vault-template/home.md`, `vault-template/.obsidian/workspaces.json`,
+  `vault-template/.obsidian/plugins/homepage/data.json`, `vault-template/.obsidian/plugins/quickadd/data.json`,
+  `vault-template/.obsidian/plugins/cmdr/data.json`, `vault-template/.obsidian/app.json`,
+  `vault-template/.obsidian/core-plugins.json`.
 - **Related decisions / Depends on:** [ADR-13](13-homepage-front-door.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md),
   [ADR-70](70-navigation-gates-dashboards.md),

@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Clustering
 
-The cluster MCP (`src/.memoria/mcp/cluster_mcp.py`) exposes three read/display tools over the vault's typed graph and source-note text. Results echo parameters; defaults come from `.memoria/schemas/calibration.yaml`; identical input plus seed produces identical output.
+The cluster MCP (`vault-template/.memoria/mcp/cluster_mcp.py`) exposes three read/display tools over the vault's typed graph and source-note text. Results echo parameters; defaults come from `.memoria/schemas/calibration.yaml`; identical input plus seed produces identical output.
 
 Inputs: authored `links:` edges on notes and given `relationships` on Catalog entities. Field contracts: [Frontmatter fields](frontmatter.md). Text retrieval counterpart: [Search](search.md).
 

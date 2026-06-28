@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Installer (bootstrap)
 
-The bootstrap installers (`scripts/install.ps1` for native Windows production; `scripts/install.sh` for Linux/WSL testing): what each step does, the flags, and the crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `src/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `src/`, and stages a restorable golden copy of every system file.
+The bootstrap installers (`scripts/install.ps1` for native Windows production; `scripts/install.sh` for Linux/WSL testing): what each step does, the flags, and the crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `vault-template/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `vault-template/`, and stages a restorable golden copy of every system file.
 
 Safety features: no silent privilege escalation, `--dry-run` echoes commands and touches nothing, and `--yes` is the only non-interactive path.
 
@@ -45,7 +45,7 @@ The model overlay changes only the Hermes model block. The Obsidian MCP remains 
 | 1. Prerequisites | Ensures `git` and `pandoc` (Hermes provisions uv-Python, Node, ripgrep, ffmpeg itself). |
 | 2. Fetch the repo | Clones `memoria-vault` to a temp staging dir (or uses a local checkout). |
 | 3. Hermes | Runs the official Hermes installer for the host OS. On Windows this is Hermes's native PowerShell installer; on Linux/WSL this is the shell installer. |
-| 4. Scaffold + populate | Copies `src/` into a new vault, then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). A full install refuses an existing Memoria vault; use a fresh target for a new release. |
+| 4. Scaffold + populate | Copies `vault-template/` into a new vault, then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). A full install refuses an existing Memoria vault; use a fresh target for a new release. |
 | 4a. Golden copy | Stages the shipped system files and SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden_restore.py stage`). |
 | 4b. Git hooks | If the vault is a git repo, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue Peer-reviewer verification. (The vault is _your_ repo; the installer never `git init`s for you.) |
 | 4c. Obsidian CSS snippets | Preserves `.obsidian/appearance.json` but reconciles `enabledCssSnippets` so the Memoria link-color and property-badge snippets are on by default. Missing shipped snippet files are copied back; other appearance settings are left alone. |
@@ -70,7 +70,7 @@ All five are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappe
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
 | `memoria-eval` | `0 7 1 */3 *` | `operations/telemetry/eval/eval_score.py` + `eval_dispatch.py` | Quarterly vault-eval: scores the previous quarter's run into `system/metrics/eval/runs.jsonl`, then fans the `system/eval/` gold set out as one idempotent eval card per task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |
 
-A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/scripts/retraction-refresh-cron.sh` — `retraction.py --refresh` + `--sweep`).
+A further wrapper ships for the monthly Retraction Watch refresh (`vault-template/.memoria/scripts/retraction-refresh-cron.sh` — `retraction.py --refresh` + `--sweep`).
 
 ---
 

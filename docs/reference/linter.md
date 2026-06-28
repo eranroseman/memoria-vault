@@ -10,7 +10,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 
 | Question | Answer |
 | --- | --- |
-| What is it? | Deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. |
+| What is it? | Deterministic, zero-LLM Python under `vault-template/.memoria/operations/integrity/linter`. |
 | What blocks? | The pre-commit hook blocks schema-invalid notes from being committed. |
 | What reports? | The daily cron reports everything else, including live in-app edits caught by the next sweep. |
 | What never happens? | Detectors do not auto-move or auto-archive files; findings surface for the PI. |
@@ -19,7 +19,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 
 ## The detectors
 
-`src/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
+`vault-template/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.obsidian/`, `.git/`, `.memoria/`, `node_modules/`) and work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
-| `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `src/` ships no empty dirs. |
+| `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `vault-template/` ships no empty dirs. |
 | `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). Tier 2 is the separate `hub_handoff.py` operation, which delegates a staged proposal to the `map` lane without widening into `notes/hubs/`. |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
@@ -53,13 +53,13 @@ python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--t
 
 ## The pre-commit hook
 
-The pre-commit hook ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `src/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `src/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`src/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The pre-commit hook ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `vault-template/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `vault-template/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`vault-template/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
 ## The golden copy
 
-`src/.memoria/operations/integrity/linter/golden_restore.py` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+`vault-template/.memoria/operations/integrity/linter/golden_restore.py` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
 This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
@@ -76,7 +76,7 @@ The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../ad
 
 ## Per-session digests
 
-`src/.memoria/operations/integrity/linter/session_summary.py` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
+`vault-template/.memoria/operations/integrity/linter/session_summary.py` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |

@@ -25,9 +25,9 @@ superseded_by: []
 > The split does not *enforce* that — it **describes** it. Enforcement lives in three
 > mechanisms, none of them the taxonomy: (1) cross-profile isolation = per-profile
 > directories (own session store + `MEMORY.md`) **plus** every profile denying
-> `session_search`/`moa`/`delegation` (`src/.memoria/profiles/memoria-*/config.yaml`)
+> `session_search`/`moa`/`delegation` (`vault-template/.memoria/profiles/memoria-*/config.yaml`)
 > **plus** the kanban card as the only shared channel; (2) durable-write access = the
-> policy gate's **per-lane path globs** (`src/.memoria/mcp/policy_hook.py:13`); (3) the
+> policy gate's **per-lane path globs** (`vault-template/.memoria/mcp/policy_hook.py:13`); (3) the
 > card as the structured cross-profile unit. Two consequences: the "keep durable out of
 > capped stores" clause is **placement correctness, not access control** (better served
 > by a write-time lint than a category); and substrate **#3 (Session history) is

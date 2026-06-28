@@ -20,7 +20,7 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
     assert not is_safe("docs/_data/nav.yml")
     assert not is_safe("scripts/install.py")
     assert not is_safe(".github/workflows/ci.yml")
-    assert not is_safe("src/.memoria/mcp/policy_mcp.py")
+    assert not is_safe("vault-template/.memoria/mcp/policy_mcp.py")
     assert not is_safe("scripts/README.md")
 
 
@@ -36,12 +36,12 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         ".kilo/config.md",
         "scripts/install.sh",
         "scripts/README.md",
-        "src/.memoria/profiles/memoria-linter/detectors.py",
-        "src/.memoria/mcp/policy_mcp.py",
-        "src/.memoria/lane-overrides/coder.yaml",
-        "src/.memoria/operations/processing/ingest/runner.py",
-        "src/.memoria/schemas/folders.yaml",
-        "src/.memoria/design-system.md",
+        "vault-template/.memoria/profiles/memoria-linter/detectors.py",
+        "vault-template/.memoria/mcp/policy_mcp.py",
+        "vault-template/.memoria/lane-overrides/coder.yaml",
+        "vault-template/.memoria/operations/processing/ingest/runner.py",
+        "vault-template/.memoria/schemas/folders.yaml",
+        "vault-template/.memoria/design-system.md",
         "docs/adr/29-testing-framework.md",
     ]
 
@@ -71,7 +71,7 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
     )
     adr_decision, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)
     mixed_decision, _ = decide(
-        ["docs/reference/glossary.md", "src/.obsidian/app.json"], "eranroseman", False
+        ["docs/reference/glossary.md", "vault-template/.obsidian/app.json"], "eranroseman", False
     )
     root_decision, _ = decide(["README.md"], "eranroseman", False)
 

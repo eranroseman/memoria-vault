@@ -6,7 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "refresh-test-vault.sh"
-WORKSPACES = ROOT / "src" / ".obsidian" / "workspaces.json"
+WORKSPACES = ROOT / "vault-template" / ".obsidian" / "workspaces.json"
 
 
 def _script() -> str:

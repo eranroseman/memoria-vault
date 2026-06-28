@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "src"
+SRC = ROOT / "vault-template"
 PROFILES = SRC / ".memoria" / "profiles"
 LANES = SRC / ".memoria" / "lane-overrides"
 
@@ -177,7 +177,7 @@ def test_test_model_overlay_wires_profiles_to_kilo_llama_scout():
 
 
 def test_dispatched_profiles_spell_out_kanban_startup():
-    shared = (ROOT / "src" / "AGENTS.md").read_text(encoding="utf-8")
+    shared = (ROOT / "vault-template" / "AGENTS.md").read_text(encoding="utf-8")
     assert "`work kanban task t_...`" in shared
     assert "Call\n`kanban_show()` immediately" in shared
     assert "`kanban_complete(...)` or\n`kanban_block(...)`" in shared

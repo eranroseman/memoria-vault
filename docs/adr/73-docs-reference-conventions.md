@@ -25,7 +25,7 @@ subject).
 ## Decision
 
 1. **Never link into `src/` from a published page.** Reference a source file as an
-   **inline-code path** (`` `src/.memoria/…` ``) by default; use an **absolute,
+   **inline-code path** (`` `vault-template/.memoria/…` ``) by default; use an **absolute,
    tag-pinned** `https://github.com/eranroseman/memoria-vault/blob/<tag>/…` URL only
    when a click genuinely adds value. `docs-doctor` blocks published→`src/` relative
    links via `check_site_local_links`.

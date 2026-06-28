@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from _util import CheckHarness
 
-from memoria.runtime.policy import (
+from memoria_vault.runtime.policy import (
     AUDIT_RELPATH,
     EMPTY_SHA256,
     LANE_OVERRIDE_RELDIR,
@@ -19,7 +19,7 @@ from memoria.runtime.policy import (
     path_matches,
     sha256_file,
 )
-from memoria.runtime.policy.lanes import yaml
+from memoria_vault.runtime.policy.lanes import yaml
 
 
 def test_policy_mcp():
@@ -383,7 +383,7 @@ def test_shipped_lanes_deny_template_mutations():
     (tests/test_golden_restore.py)."""
     if yaml is None:
         pytest.skip("PyYAML not installed")
-    src = Path(__file__).resolve().parent.parent / "src"
+    src = Path(__file__).resolve().parent.parent / "vault-template"
     path = "system/templates/claim.md"
     for profile in SHIPPED_PROFILES:
         lane = load_lane(src, profile)
@@ -440,8 +440,8 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
 
 
 def test_split_policy_decision_core_imports_without_mcp_server():
-    from memoria.runtime.policy.decision import decide
-    from memoria.runtime.policy.model import LanePolicy
+    from memoria_vault.runtime.policy.decision import decide
+    from memoria_vault.runtime.policy.model import LanePolicy
 
     lane = LanePolicy(profile="memoria-test", allow_write=["inbox/**"], require=["audit_log"])
     result = decide("memoria-test", "write", "inbox/card.md", lane)

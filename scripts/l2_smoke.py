@@ -11,10 +11,11 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+for path in (ROOT / "src", ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
-from memoria.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.jsonl import iter_jsonl
 
 DISABLED_TOOLSETS = [
     "browser",
@@ -46,7 +47,7 @@ SMOKE_PLATFORM_TOOLSETS = ["skills", "obsidian"]
 def prepare_vault(root: Path, vault: Path) -> None:
     if vault.exists():
         shutil.rmtree(vault)
-    shutil.copytree(root / "src", vault, dirs_exist_ok=True)
+    shutil.copytree(root / "vault-template", vault, dirs_exist_ok=True)
     (vault / "projects/l2-smoke").mkdir(parents=True, exist_ok=True)
     (vault / "system/logs").mkdir(parents=True, exist_ok=True)
     audit = vault / "system/logs/audit.jsonl"
@@ -116,7 +117,7 @@ def write_profile(
 
 
 def deploy_policy_plugin(root: Path, profile_dir: Path, profile: str, vault: Path) -> None:
-    source = root / "src/.memoria/plugins/memoria-policy-gate"
+    source = root / "vault-template/.memoria/plugins/memoria-policy-gate"
     target = profile_dir / "plugins/memoria-policy-gate"
     target.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source / "plugin.yaml", target / "plugin.yaml")
@@ -126,8 +127,8 @@ def deploy_policy_plugin(root: Path, profile_dir: Path, profile: str, vault: Pat
         "if str(_MCP_DIR) not in sys.path:\n    sys.path.insert(0, str(_MCP_DIR))\n",
         "if str(_MCP_DIR) not in sys.path:\n"
         "    sys.path.insert(0, str(_MCP_DIR))\n"
-        f"if {str(root)!r} not in sys.path:\n"
-        f"    sys.path.insert(0, {str(root)!r})\n",
+        f"if {str(root / 'src')!r} not in sys.path:\n"
+        f"    sys.path.insert(0, {str(root / 'src')!r})\n",
     )
     (target / "__init__.py").write_text(text, encoding="utf-8")
 

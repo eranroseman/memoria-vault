@@ -3,7 +3,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILLS = ROOT / "src" / ".memoria" / "profiles" / "memoria-librarian" / "skills"
+SKILLS = ROOT / "vault-template" / ".memoria" / "profiles" / "memoria-librarian" / "skills"
 METHODS = SKILLS / "map-cluster-corpus" / "references" / "methods.md"
 
 

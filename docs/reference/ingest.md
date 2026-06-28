@@ -6,13 +6,13 @@ grand_parent: Reference
 
 # Ingest routing
 
-The ingest operation (`src/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`src/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the operation itself writes no vault notes.
+The ingest operation (`vault-template/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`vault-template/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the operation itself writes no vault notes.
 
 ---
 
 ## The pipeline
 
-`src/.memoria/operations/processing/ingest/runner.py` chains four deterministic stages into a single **draft bundle**:
+`vault-template/.memoria/operations/processing/ingest/runner.py` chains four deterministic stages into a single **draft bundle**:
 
 | Stage | Module | Does |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relatio
 
 ## The uncertainty floor
 
-The operation never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across Semantic Scholar, OpenAlex, Crossref, and PubMed when they resolve) in `[0,1]`; the floor comes from `src/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
+The operation never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across Semantic Scholar, OpenAlex, Crossref, and PubMed when they resolve) in `[0,1]`; the floor comes from `vault-template/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
 
 Below the floor, the bundle carries a `flag_needed` block instead of a silent best-source-wins merge: the Librarian raises a **near-tie `flag` card** in the Inbox ("Identity disagreement on `<citekey>`", with the agreement score and the disagreements), and the PI decides. One source found = trusted (1.0) — the floor measures _disagreement_, not coverage.
 
@@ -52,7 +52,7 @@ Below the floor, the bundle carries a `flag_needed` block instead of a silent be
 | Genuine ambiguity | Score below floor, near tie, or outside controlled vocabulary. | Leave the field unset and raise one Inbox `flag` card with candidates and scores, never a verdict ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). |
 | No data | Enrichment off or no topics resolved. | No-op. |
 
-The thresholds live beside the entity-resolution floor in `src/.memoria/schemas/calibration.yaml`, under the same drift-bound discipline:
+The thresholds live beside the entity-resolution floor in `vault-template/.memoria/schemas/calibration.yaml`, under the same drift-bound discipline:
 
 | Knob | Default | Means |
 | --- | --- | --- |

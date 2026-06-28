@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the ADR-80 Phase 1 model-free test-env cassette.
+"""Replay the package-gate model-free test-env cassette.
 
 The cassette records tool-call shape plus deterministic fixture arguments. Replay
 builds or reuses a disposable vault, drives real Memoria operations where possible,
@@ -23,14 +23,15 @@ from urllib import error, request
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+for path in (ROOT / "src", ROOT):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
-from memoria.runtime.jsonl import iter_jsonl
-from memoria.runtime.paths import load_json
-from memoria.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.paths import load_json
+from memoria_vault.runtime.vaultio import read_frontmatter
 
-DEFAULT_CASSETTE = Path("fixtures/test-env/cassettes/alpha6-l4-golden-path.json")
+DEFAULT_CASSETTE = Path("tests/fixtures/test-env/cassettes/package-gate-golden-path.json")
 SKIP_COPY = {".git"}
 
 
@@ -95,8 +96,8 @@ def write_recorded_cassette(cassette: dict[str, Any], path: Path) -> None:
 
 def add_operation_paths(root: Path) -> None:
     for rel in (
-        "src/.memoria",
-        "src/.memoria/mcp",
+        "vault-template/.memoria",
+        "vault-template/.memoria/mcp",
     ):
         path = str(root / rel)
         if path not in sys.path:
@@ -104,12 +105,12 @@ def add_operation_paths(root: Path) -> None:
 
 
 def populate_vault(root: Path, vault: Path) -> None:
-    src = root / "src"
+    src = root / "vault-template"
     if not vault.exists() or not any(vault.iterdir()):
         shutil.copytree(src, vault, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*SKIP_COPY))
     from operations.lib import schema
 
-    folders = schema.load_folders(root / "src/.memoria/schemas")
+    folders = schema.load_folders(root / "vault-template/.memoria/schemas")
     for folder in folders["skeleton"]:
         (vault / folder).mkdir(parents=True, exist_ok=True)
 
@@ -203,7 +204,7 @@ def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> 
         '    - "inbox/"\n',
         encoding="utf-8",
     )
-    plugin = root / "src/.memoria/plugins/memoria-policy-gate/__init__.py"
+    plugin = root / "vault-template/.memoria/plugins/memoria-policy-gate/__init__.py"
     spec = importlib.util.spec_from_file_location("memoria_policy_gate_harness", plugin)
     if spec is None or spec.loader is None:
         raise HarnessError("cannot load memoria-policy-gate plugin")

@@ -8,21 +8,21 @@ grand_parent: Reference
 
 Deterministic mechanisms that agents, cron, CI, and the PI can invoke. Agents reach processing operations through MCP facades; trusted local callers may use direct entries. Integrity, cleanup, and telemetry operations run directly because they are not agent-facing.
 
-Shared dependency-light helpers for operation code live under `memoria.runtime`
+Shared dependency-light helpers for operation code live under `memoria_vault.runtime`
 (`vaultio`, `jsonl`, `time`, and `paths`). MCP modules import those helpers
 directly; package code owns the behavior.
 
 | Operation | Primary entry point | MCP facade | Direct callers | What it does |
 | --- | --- | --- | --- | --- |
-| Ingest | `src/.memoria/operations/processing/ingest/runner.py` | `src/.memoria/mcp/ingest_mcp.py` | PI, tests, debug sessions | Fetches metadata, extracts text, builds entity `relationships`, and prepares Catalog records. |
-| Project structural impact | `src/.memoria/operations/processing/project/structural_impact.py` | None | PI, tests, Project space command palette | Traverses the thesis-rooted `supports`/`contradicts` argument graph and writes one generated Project gate index note with `impact`, `on_path`, gap findings/advisories, `evidence_saturation`, `argument_stage`, and `computed_at`. |
+| Ingest | `vault-template/.memoria/operations/processing/ingest/runner.py` | `vault-template/.memoria/mcp/ingest_mcp.py` | PI, tests, debug sessions | Fetches metadata, extracts text, builds entity `relationships`, and prepares Catalog records. |
+| Project structural impact | `vault-template/.memoria/operations/processing/project/structural_impact.py` | None | PI, tests, Project space command palette | Traverses the thesis-rooted `supports`/`contradicts` argument graph and writes one generated Project gate index note with `impact`, `on_path`, gap findings/advisories, `evidence_saturation`, `argument_stage`, and `computed_at`. |
 | Search | qmd plus Obsidian MCP | Profile MCP tools | PI, debug sessions | Performs deterministic retrieval over the vault. |
-| Clustering | `src/.memoria/mcp/cluster_mcp.py` | `src/.memoria/mcp/cluster_mcp.py` | PI, tests, debug sessions | Builds typed link-structure graphs, topic models, and claim-debate Canvas artifacts. |
-| Integrity retraction | `src/.memoria/operations/integrity/retraction/retraction.py` | None | Cron, CI, PI | Runs retraction lookups, surfacing findings as Inbox cards. |
-| Cleanup sweeps | `src/.memoria/operations/cleanup/*.py` | None | Cron, CI, PI | Reconciles capture gaps and archives resolved Inbox cards. |
-| Eval telemetry | `src/.memoria/operations/telemetry/eval/*.py` | None | Cron, CI, PI | Dispatches and scores vault-eval runs. |
-| Linter | `src/.memoria/operations/integrity/linter/detectors.py`; `hub_handoff.py` | None | Cron, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, golden-copy drift, session digests, and opt-in hub-threshold handoffs. |
-| Batch worklists | `src/.memoria/operations/lib/worklists.py` | None | Reports, tests, PI | Emits ADR-54 `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
+| Clustering | `vault-template/.memoria/mcp/cluster_mcp.py` | `vault-template/.memoria/mcp/cluster_mcp.py` | PI, tests, debug sessions | Builds typed link-structure graphs, topic models, and claim-debate Canvas artifacts. |
+| Integrity retraction | `vault-template/.memoria/operations/integrity/retraction/retraction.py` | None | Cron, CI, PI | Runs retraction lookups, surfacing findings as Inbox cards. |
+| Cleanup sweeps | `vault-template/.memoria/operations/cleanup/*.py` | None | Cron, CI, PI | Reconciles capture gaps and archives resolved Inbox cards. |
+| Eval telemetry | `vault-template/.memoria/operations/telemetry/eval/*.py` | None | Cron, CI, PI | Dispatches and scores vault-eval runs. |
+| Linter | `vault-template/.memoria/operations/integrity/linter/detectors.py`; `hub_handoff.py` | None | Cron, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, golden-copy drift, session digests, and opt-in hub-threshold handoffs. |
+| Batch worklists | `vault-template/.memoria/operations/lib/worklists.py` | None | Reports, tests, PI | Emits ADR-54 `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
 
 ## Related
 

@@ -10,7 +10,7 @@ import yaml
 from operations.lib import schema
 from operations.telemetry.eval import eval_dispatch
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 EVAL = SRC / "system" / "eval"
 
 REQUIRED_SECTIONS = ("## Input", "## Expected behavior", "## Scoring rubric")
@@ -141,7 +141,7 @@ def test_dispatch_records_last_run(tmp_path, monkeypatch):
 
 def test_card_body_carries_the_noncommitting_contract():
     tasks = eval_dispatch.load_gold_tasks(SRC)
-    assert len(tasks) >= 8  # the shipped gold set loads from src/
+    assert len(tasks) >= 8  # the shipped gold set loads from vault-template/
     card = eval_dispatch.card_for(tasks[0], "2026-Q2")
     assert "Do NOT write to the vault" in card["body"]
     assert card["goal"].startswith("vault-eval 2026-Q2:")

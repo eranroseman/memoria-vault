@@ -12,14 +12,15 @@ license = { file = "LICENSE" }
 authors = [{ name = "Eran Roseman" }]
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["memoria*"]
+where = ["src"]
+include = ["memoria_vault*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [
-  "src/.memoria",
-  "src/.memoria/mcp",
+  "src",
+  "vault-template/.memoria",
+  "vault-template/.memoria/mcp",
   "scripts",
   ".github/scripts",
 ]
@@ -92,6 +93,6 @@ ignore = [
 "tests/**" = ["S", "E402"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
 "scripts/e2e_smoke.py" = ["S101"]
-# src/.memoria scripts run with a custom sys.path set before imports.
-"src/.memoria/**" = ["E402"]
+# vault-template/.memoria scripts run with a custom sys.path set before imports.
+"vault-template/.memoria/**" = ["E402"]
 "scripts/**" = ["E402"]

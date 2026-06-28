@@ -2,7 +2,7 @@ name: python-selftest
 
 # Runs the L1 pytest suite (tests/) for the vault's Python tooling + repo scripts
 # against the real runtime deps (ADR-44), then gates dashboard schema-drift over the
-# real src/ tree (a dashboard querying a field no template emits shows an empty
+# real vault-template tree (a dashboard querying a field no template emits shows an empty
 # table forever — silent, so CI must catch it).
 #
 # policy_mcp degrades without PyYAML, but policy_hook's test writes a lane YAML and
@@ -37,12 +37,12 @@ jobs:
           cache: pip
           cache-dependency-path: |
             requirements-dev.txt
-            src/.memoria/mcp/requirements.txt
+            vault-template/.memoria/mcp/requirements.txt
       - name: Install runtime + dev test deps
         # runtime deps so the modules import; dev deps provide pytest and shared tooling.
         run: |
           python -m pip install --quiet -r requirements-dev.txt
-          python -m pip install --quiet -r src/.memoria/mcp/requirements.txt
+          python -m pip install --quiet -r vault-template/.memoria/mcp/requirements.txt
       - name: Run L1 component tests (pytest)
         # ADR-44: the former per-module --self-test suites now live in tests/.
         run: python -m pytest tests/ -q
@@ -52,11 +52,11 @@ jobs:
         # Only dashboard-field-drift blocks; vault content findings (broken
         # wikilinks, schema-check) stay advisory — they're not this gate's job.
         run: |
-          python src/.memoria/operations/integrity/linter/detectors.py \
-            --vault src --gate dashboard-field-drift
+          python vault-template/.memoria/operations/integrity/linter/detectors.py \
+            --vault vault-template --gate dashboard-field-drift
 
       - name: E2E smoke (offline vault build + the Library loop)
-        # Builds a vault from src/ exactly as the installer would, then walks
+        # Builds a vault from vault-template/ exactly as the installer would, then walks
         # scaffold -> golden -> commit gate -> offline ingest -> honesty card ->
         # lint. Caught two real bugs the unit suite missed; pure-local, no network.
         run: bash scripts/e2e-smoke.sh

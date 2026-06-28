@@ -80,8 +80,8 @@ default; per-note stamps need a specific rendering constraint to justify them.
 
 ## Related
 
-- **Files affected:** `src/projects/`, `src/system/templates/`,
-  `src/.memoria/schemas/types/`, `src/.memoria/operations/`, workspace/dashboard
+- **Files affected:** `vault-template/projects/`, `vault-template/system/templates/`,
+  `vault-template/.memoria/schemas/types/`, `vault-template/.memoria/operations/`, workspace/dashboard
   files.
 - **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md),
   [ADR-70](70-navigation-gates-dashboards.md),

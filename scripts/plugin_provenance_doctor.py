@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-OBSIDIAN_REL = Path("src/.obsidian")
+OBSIDIAN_REL = Path("vault-template/.obsidian")
 PLUGINS_REL = OBSIDIAN_REL / "plugins"
 LOCK_REL = OBSIDIAN_REL / "plugin-provenance-lock.json"
 COMMUNITY_REL = OBSIDIAN_REL / "community-plugins.json"
@@ -237,7 +237,9 @@ def _check_artifacts(
             continue
         artifact_path = _safe_artifact_path(obsidian, relpath)
         if artifact_path is None:
-            findings.append(Finding(relpath, "artifact path must stay under src/.obsidian"))
+            findings.append(
+                Finding(relpath, "artifact path must stay under vault-template/.obsidian")
+            )
             continue
         declared.add(relpath)
         if not artifact_path.is_file():

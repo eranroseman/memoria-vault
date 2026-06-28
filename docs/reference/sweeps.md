@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Sweeps
 
-Deterministic maintenance passes under `src/.memoria/operations`. Re-ingest and retraction sweeps surface review work through the board or Inbox; the inbox archival sweep is a deterministic direct write that only flips eligible resolved cards to `lifecycle: archived`.
+Deterministic maintenance passes under `vault-template/.memoria/operations`. Re-ingest and retraction sweeps surface review work through the board or Inbox; the inbox archival sweep is a deterministic direct write that only flips eligible resolved cards to `lifecycle: archived`.
 
 ## Re-ingest backstops
 
@@ -24,8 +24,8 @@ Deterministic maintenance passes under `src/.memoria/operations`. Re-ingest and 
 `archive_inbox.py` is the direct-write cleanup pass in the same cron wrapper. It archives handled Inbox cards after the freshness window expires:
 
 ```bash
-python src/.memoria/operations/cleanup/archive_inbox.py --vault <vault>
-python src/.memoria/operations/cleanup/archive_inbox.py --vault <vault> --dry-run
+python vault-template/.memoria/operations/cleanup/archive_inbox.py --vault <vault>
+python vault-template/.memoria/operations/cleanup/archive_inbox.py --vault <vault> --dry-run
 ```
 
 The retention window comes from `.memoria/schemas/calibration.yaml` at `inbox.archive_after_days`; when the value cannot be read, the operation warns once and uses the default of `30` days. `--days <n>` overrides calibration for a single run.

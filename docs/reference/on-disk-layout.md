@@ -8,10 +8,10 @@ grand_parent: Reference
 
 Where every file lives.
 
-- The repo ships the vault source under **`src/`**.
-- The installer scaffolds a runtime vault, then populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+- The repo ships the vault source under **`vault-template/`**.
+- The installer scaffolds a runtime vault, then populates it from `vault-template/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
 - Repo and runtime vault share the same internal shape; runtime-only artifacts are listed below.
-- The legal root categories come from [ADR-47](../adr/47-type-first-category-folders.md) and `src/.memoria/schemas/folders.yaml`.
+- The legal root categories come from [ADR-47](../adr/47-type-first-category-folders.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
@@ -56,7 +56,7 @@ The six vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `spaces`
 
 ## `.memoria/` — the runtime tooling layer
 
-Hidden from Obsidian; everything agents and operations need, shipped in `src/.memoria`:
+Hidden from Obsidian; everything agents and operations need, shipped in `vault-template/.memoria`:
 
 ```text
 .memoria/
@@ -91,11 +91,11 @@ Hidden from Obsidian; everything agents and operations need, shipped in `src/.me
 
 The policy gate's stable deployed entrypoint stays in `.memoria/mcp/`, while its
 behavior-preserving decision/audit/engine modules live in the installed
-`memoria.runtime.policy` package.
+`memoria_vault.runtime.policy` package.
 
 ## `.githooks/` — source hooks
 
-Shipped in `src/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `projects/`.
+Shipped in `vault-template/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `projects/`.
 
 Runtime-only (created in the deployed vault, never shipped):
 
@@ -139,6 +139,6 @@ The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox
 
 ## Related
 
-- How `src/` becomes a runtime vault: [Installer (bootstrap)](installer.md)
+- How `vault-template/` becomes a runtime vault: [Installer (bootstrap)](installer.md)
 - The type → folder homes in table form: [Document types](document-types.md)
 - What keeps the deployed tree honest: [Linter: detectors and auto-fix](linter.md)

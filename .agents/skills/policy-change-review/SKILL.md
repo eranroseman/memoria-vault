@@ -5,8 +5,8 @@ description: Review changes to Memoria profile capabilities, lane write scopes, 
 
 # Policy change review
 
-Use this skill when a diff touches `src/.memoria/tool-registry.yaml`,
-`src/.memoria/lane-overrides/`, profile MCP/tool configuration, policy MCP/hook
+Use this skill when a diff touches `vault-template/.memoria/tool-registry.yaml`,
+`vault-template/.memoria/lane-overrides/`, profile MCP/tool configuration, policy MCP/hook
 code, the write-gate plugin, task delegation, or PR policy.
 
 ## Authority and maps

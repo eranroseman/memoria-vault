@@ -28,7 +28,7 @@ def test_policy_hook_bootstraps_vault_venv_runtime_package(tmp_path):
     shutil.copy(mcp_src / "_shared.py", mcp / "_shared.py")
 
     runtime = vault / ".memoria" / ".venv" / "lib" / "python9.9" / "site-packages"
-    package = runtime / "memoria"
+    package = runtime / "memoria_vault"
     runtime_pkg = package / "runtime"
     runtime_pkg.mkdir(parents=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
@@ -129,9 +129,9 @@ def _vault_with_policy(tmp_path):
     lanes.mkdir(parents=True)
     (vault / ".memoria" / "mcp").mkdir(parents=True)
     (vault / ".memoria" / "tool-registry.yaml").write_text(
-        (Path(__file__).resolve().parents[1] / "src/.memoria/tool-registry.yaml").read_text(
-            encoding="utf-8"
-        ),
+        (
+            Path(__file__).resolve().parents[1] / "vault-template/.memoria/tool-registry.yaml"
+        ).read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     mcp_src = Path(_m.__file__).resolve().parent

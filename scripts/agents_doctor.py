@@ -67,8 +67,8 @@ def _render_impact(data: dict) -> str:
 
 def _profile_rows() -> list[tuple[str, str, str, str]]:
     rows = []
-    profiles = ROOT / "src/.memoria/profiles"
-    overrides = ROOT / "src/.memoria/lane-overrides"
+    profiles = ROOT / "vault-template/.memoria/profiles"
+    overrides = ROOT / "vault-template/.memoria/lane-overrides"
     for directory in sorted(p for p in profiles.iterdir() if p.is_dir()):
         config = yaml.safe_load((directory / "config.yaml").read_text(encoding="utf-8")) or {}
         distribution = (

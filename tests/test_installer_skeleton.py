@@ -42,14 +42,14 @@ def test_installer_deploys_exactly_the_shipped_profiles():
     text = INSTALL.read_text(encoding="utf-8")
     m = re.search(r'ALL_PROFILES="([^"]+)"', text)
     listed = set(m.group(1).split())
-    shipped = {p.name for p in (ROOT / "src/.memoria/profiles").iterdir() if p.is_dir()}
+    shipped = {p.name for p in (ROOT / "vault-template/.memoria/profiles").iterdir() if p.is_dir()}
     assert listed == shipped, f"ALL_PROFILES {listed ^ shipped} out of sync with src profiles"
 
 
 def test_cron_wrappers_exist_for_wired_jobs():
     text = INSTALL.read_text(encoding="utf-8")
     for wrapper in re.findall(r"\.memoria/scripts/([a-z-]+\.sh)", text):
-        assert (ROOT / "src/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
+        assert (ROOT / "vault-template/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
 
 
 def test_installer_cron_helper_keeps_all_job_schedules():
@@ -72,13 +72,13 @@ def test_installer_cron_helper_keeps_all_job_schedules():
 
 
 def test_lint_cron_writes_lint_findings_telemetry():
-    text = (ROOT / "src/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
+    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
 
 
 def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
-    runner = ROOT / "src/.memoria/scripts/cron-runner.sh"
+    runner = ROOT / "vault-template/.memoria/scripts/cron-runner.sh"
     result = subprocess.run(
         ["bash", str(runner), "board-export"],
         env={"MEMORIA_PYTHON": "/bin/true", "MEMORIA_VAULT": str(tmp_path)},
@@ -208,7 +208,7 @@ def test_installers_refuse_existing_vaults_instead_of_refreshing():
 
 def test_fresh_installer_copies_the_runtime_src_tree():
     text = INSTALL.read_text(encoding="utf-8")
-    assert (ROOT / "src" / "_nav.md").is_file()
+    assert (ROOT / "vault-template" / "_nav.md").is_file()
     assert 'rsync -a --exclude \'.git\' "$src"/ "$VAULT_PATH"/' in text
     assert 'cp -R \\"$src\\"/. \\"$VAULT_PATH\\"/' in text
 

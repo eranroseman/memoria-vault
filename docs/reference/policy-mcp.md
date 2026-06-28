@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Policy MCP
 
-The runtime write-gate (`src/.memoria/mcp/policy_mcp.py`): it intercepts every vault action, checks the lane-override rules, and returns a decision before any content reaches disk. The stable deployed entrypoint is `policy_mcp.py`; the behavior-preserving core is split under `memoria.runtime.policy` (`model`, `paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped by `src/.memoria/mcp/policy_server.py`. Every rule lives in a versioned lane-override file — the gate is not a substitute for the review gate, not a content checker, and not a hidden controller.
+The runtime write-gate (`vault-template/.memoria/mcp/policy_mcp.py`): it intercepts every vault action, checks the lane-override rules, and returns a decision before any content reaches disk. The stable deployed entrypoint is `policy_mcp.py`; the behavior-preserving core is split under `memoria_vault.runtime.policy` (`model`, `paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped by `vault-template/.memoria/mcp/policy_server.py`. Every rule lives in a versioned lane-override file — the gate is not a substitute for the review gate, not a content checker, and not a hidden controller.
 
 ---
 
@@ -55,7 +55,7 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 
 **Two rules override lane configuration entirely:**
 
-1. **Review-gated zones are never auto-written.** The gated prefixes are loaded from `src/.memoria/schemas/folders.yaml` (`gated_prefixes`) — currently `notes/claims/` and `notes/hubs/`. The dependency-free fallback tuple in `memoria.runtime.policy.paths` mirrors them (test-enforced to stay in sync). An otherwise-allowed mutating action there degrades to `dry_run` regardless of the lane's `policy.allow`. No profile can bypass this.
+1. **Review-gated zones are never auto-written.** The gated prefixes are loaded from `vault-template/.memoria/schemas/folders.yaml` (`gated_prefixes`) — currently `notes/claims/` and `notes/hubs/`. The dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` mirrors them (test-enforced to stay in sync). An otherwise-allowed mutating action there degrades to `dry_run` regardless of the lane's `policy.allow`. No profile can bypass this.
 2. **Auto-fix is class-gated.** Only `flags.class ∈ {safe-and-unambiguous, authorized-targeted}` may proceed; `schema-content` is pinned to `dry_run` and `review-gated-edit` to `deny`, regardless of who asks.
 
 ---
@@ -137,7 +137,7 @@ The auto-fix classes and their dispositions live in [Policy auto-fix](policy-aut
 
 ## The five lane-overrides
 
-The policy manifest for each profile lives in `src/.memoria/lane-overrides` — `copi.yaml`, `librarian.yaml`, `writer.yaml`, `peer-reviewer.yaml`, `engineer.yaml`. Shape:
+The policy manifest for each profile lives in `vault-template/.memoria/lane-overrides` — `copi.yaml`, `librarian.yaml`, `writer.yaml`, `peer-reviewer.yaml`, `engineer.yaml`. Shape:
 
 ```yaml
 profile: memoria-librarian
@@ -180,7 +180,7 @@ Globs use doublestar semantics: `**` crosses path segments, `*` stays within one
 
 ## Enforcement: the policy-gate plugin
 
-`check_permission` only decides — the bridge that actually stops a write is the **`memoria-policy-gate` Hermes plugin** (deployed per profile by the installer; it reuses `src/.memoria/mcp/policy_hook.py`'s decision core):
+`check_permission` only decides — the bridge that actually stops a write is the **`memoria-policy-gate` Hermes plugin** (deployed per profile by the installer; it reuses `vault-template/.memoria/mcp/policy_hook.py`'s decision core):
 
 - **`pre_tool_call`** maps the obsidian tool to a policy action, calls the decision core, and blocks on `deny`/`dry_run`; on an allowed write it stashes the `before_hash`. **Fail-closed:** any error inside the gate blocks.
 - **`post_tool_call`** computes `after_hash` and appends the paired `write_complete` audit record.

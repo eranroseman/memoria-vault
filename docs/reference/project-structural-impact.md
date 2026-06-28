@@ -6,13 +6,13 @@ grand_parent: Reference
 
 # Project structural impact
 
-`src/.memoria/operations/processing/project/structural_impact.py` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a Hermes chat skill.
+`vault-template/.memoria/operations/processing/project/structural_impact.py` computes the thesis-rooted argument graph for one Project and writes a generated Project gate index note. It is deterministic operation code, not a Hermes chat skill.
 
 ## Command
 
 ```bash
-python src/.memoria/operations/processing/project/structural_impact.py --vault <vault> --project <project-slug>
-python src/.memoria/operations/processing/project/structural_impact.py --vault <vault> --project <project-slug> --dry-run --json
+python vault-template/.memoria/operations/processing/project/structural_impact.py --vault <vault> --project <project-slug>
+python vault-template/.memoria/operations/processing/project/structural_impact.py --vault <vault> --project <project-slug> --dry-run --json
 ```
 
 | Option | Contract |
