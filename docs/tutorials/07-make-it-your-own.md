@@ -21,7 +21,13 @@ You've run a full turn with training wheels on. This tutorial takes them off: it
 
 ## Step 1 — Name the rhythm: the weekly review
 
-You don't babysit this loop, but you can't leave it alone either — queues age and gaps go stale. One standing habit keeps it honest: the **weekly review**, a Friday pass through the Inbox, Maintenance, and Knowledge views. Once the vault is established it takes about 20–30 minutes. You update `research-focus.md` so discovery aims at what you mean to read next, clear the Inbox to empty (candidates kept or skipped, gaps turned into discovery tasks, flags acted on — **empty is the goal**), and advance the claims that have genuinely settled. Full ritual: [Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md). It's what keeps every background worker's output from piling up unread — the difference between a vault that compounds and one that quietly rots.
+You don't babysit this loop, but you can't leave it alone either — queues age and gaps go stale. One standing habit keeps it honest: the **weekly review**, a Friday pass through Inbox, Maintenance, and Knowledge. Once the vault is established, it takes about 20–30 minutes:
+
+- Update `research-focus.md` so discovery aims at what you mean to read next.
+- Clear the Inbox to empty: keep or skip candidates, turn gaps into discovery tasks, and act on flags.
+- Advance claims that have genuinely settled.
+
+Full ritual: [Run the weekly review](../how-to-guides/inbox/run-the-weekly-review.md). This is what keeps background output from piling up unread.
 
 ---
 
@@ -29,7 +35,7 @@ You don't babysit this loop, but you can't leave it alone either — queues age 
 
 Now the handoff, in three moves.
 
-**Archive the sample.** It did its job — a dense cluster to learn the moves on, fast. You don't delete it, you **archive** it: run **Memoria: remove sample vault**. Archiving is a change of state, not a deletion — the command finds the live notes labeled `sample: true`, sets them to `lifecycle: archived`, and stamps the date. That label is exactly its reach: the sample pieces you finished while distilling (the stub you backed, the link you made) carry the label too, so they archive with the rest — while the claim you distilled from your *own* source was never labeled, so it stays live. Archived notes drop out of your active views but stay on disk, and **no link breaks** — so the handoff isn't a cliff. Details: [the sample vault](../reference/sample-vault.md).
+**Archive the sample.** It did its job: a dense cluster to learn on. Run **Memoria: remove sample vault**. The command finds live notes labeled `sample: true`, sets them to `lifecycle: archived`, and stamps the date. Sample pieces you edited archive with the rest; the claim from your own source stays live. Archived notes drop out of active views, stay on disk, and keep links intact. Details: [the sample vault](../reference/sample-vault.md).
 
 **Bring in your own library.** In these tutorials you brought sources in one at a time. For real work, point Memoria at your reference manager so reading flows in as fast as you read. Set up Zotero once ([Set up Zotero](../how-to-guides/zotero/set-up-zotero.md)), then capture from a selection or run **Memoria: capture source from URL** with a DOI — or, if you're still deciding what to bring in, talk it through with the Co-PI first. Discovery now runs against *your* catalog, surfacing what *your* corpus is missing.
 

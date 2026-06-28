@@ -15,12 +15,14 @@ If Memoria is *what you keep* — the vault, the knowledge, the schema — Herme
 
 ## What Hermes provides
 
-Memoria needs an execution substrate with four properties, and Hermes ships all four:
+Memoria needs four runtime properties, and Hermes ships them:
 
-- **A persistent Kanban board** (`kanban.db`) — a durable state machine across sessions and retries. When a session closes, work state survives; the next worker picks the card up from its last known state. This is the [thin-control-over-thick-state](why-three-layers.md) requirement made concrete.
-- **Profiles with lanes** — each agent is a named profile (`SOUL.md` identity, `config.yaml` model routing, lane-override permissions) that claims cards on its lane. Memoria's five profiles *are* Hermes profiles.
-- **A dispatcher** — claims `ready` cards for matching profiles, runs them, advances state, retries on recoverable failure. Memoria adds routing *rules*, not a routing *agent* (there is no Orchestrator — see [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)).
-- **Native memory, MCP, and an API** — agent memory (`MEMORY.md`/`USER.md`), an MCP server interface (which Memoria's policy gate plugs into), and a network endpoint for programmatic triggers.
+| Memoria need | Hermes feature | Memoria overlay |
+| --- | --- | --- |
+| Durable task state | Kanban board (`kanban.db`) | Review metadata on cards. |
+| Role separation | Profiles with lanes | Five Memoria profile directories and lane ceilings. |
+| Background execution | Dispatcher | Routing rules, not an Orchestrator agent. |
+| Controlled integration | Memory, MCP, API server | Policy MCP, profile memory rules, and programmatic triggers. |
 
 Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy MCP that gates writes, the five profile `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points.
 
@@ -38,13 +40,9 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 ## The programmatic surface (the API server)
 
-Hermes exposes an **API server** (port 8642) — the surface where *programs*, not humans, connect to Memoria. File-system watchers, Zotero/Better BibTeX hooks, git `post-commit` hooks, calendar integrations, and cross-machine dispatch all enter here.
+The API server is where programs connect to Memoria: file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. Humans use Obsidian, the CLI, or Telegram instead ([Interaction channels](../explanation/architecture/human-channels.md)).
 
-**Why a separate surface at all.** Programmatic integration needs a different interface than human operation. A file-system watcher that fires on a PDF drop cannot use the command palette; a Better BibTeX script that fires on Zotero save needs a network endpoint. The API is the integration surface for automation; Obsidian, the CLI, and Telegram (see [Interaction channels](../explanation/architecture/human-channels.md)) are the interaction surfaces for humans. The same operations available through the API are exposed to humans through the palette and CLI with better affordances — so humans never need to touch the API directly.
-
-**It grants no extra power.** Every write through the API still passes through the policy MCP. A program calling the API has exactly the permissions of the profile it acts as — no elevation. The API is a different *door*, not a different *key*. See [Policy MCP](../reference/policy-mcp.md) for enforcement details.
-
-This is why the API server lives here, with Hermes, rather than in [Interaction channels](../explanation/architecture/human-channels.md): it is a Hermes integration surface that humans never operate, not a human channel.
+The API grants no extra power. Every write still passes through the policy MCP, so the caller has only the permissions of the profile it acts as. See [Policy MCP](../reference/policy-mcp.md) and [Hermes CLI](../reference/hermes-cli.md#api-server).
 
 ---
 
@@ -69,7 +67,7 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 **Explanation**
 
 - What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-three-layers.md)
-- The board as a state machine: [The board as a state machine (the control plane)](../explanation/workflows/board-as-state-machine.md)
+- The board as a state machine: [Board states and the review gate](../explanation/kanban-board/states.md)
 - The card-schema overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/card-schema.md)
 - The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/human-channels.md)
 

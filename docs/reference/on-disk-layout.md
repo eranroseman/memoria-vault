@@ -6,7 +6,13 @@ grand_parent: Reference
 
 # On-disk layout
 
-Where every file lives. The repo ships the vault under **`src/`**; the installer scaffolds the folder skeleton in your chosen runtime vault (default `~/Memoria`) and populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Repo and deployed vault have the same internal shape; the deployed vault additionally grows the runtime-only artifacts listed at the end. The tree itself is fixed by [ADR-47](../adr/47-type-first-category-folders.md): six legal vault-root categories, with the type → folder map living in `src/.memoria/schemas/folders.yaml`. `.memoria/` is never opened by the PI; if a workflow tells the PI to open a `.memoria/...` path, that workflow is wrong.
+Where every file lives.
+
+- The repo ships the vault source under **`src/`**.
+- The installer scaffolds a runtime vault, then populates it from `src/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+- Repo and runtime vault share the same internal shape; runtime-only artifacts are listed below.
+- The legal root categories come from [ADR-47](../adr/47-type-first-category-folders.md) and `src/.memoria/schemas/folders.yaml`.
+- `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
 
@@ -106,7 +112,13 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## `.obsidian/` — app configuration
 
-Shipped in `src/.obsidian`: `app.json`, `appearance.json` (starter snippet toggles), `core-plugins.json`, `community-plugins.json`, `graph.json` (link color-groups), `snippets/` (`memoria-link-colors.css`, `memoria-property-badges.css`), and per-plugin config under `plugins/` (QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, Portals). `src/.obsidian/workspaces.json` ships one reset layout named **Memoria**; QuickAdd restores it on startup, with `src/home.md` in the main pane and the pinned `src/_nav.md` rail on the left. Space switching is handled by the rail over the space dashboards `src/spaces/library.md`, `src/spaces/knowledge.md`, and `src/spaces/project.md`, with the Inbox queue at `src/spaces/inbox.md` and Maintenance collection at `src/spaces/maintenance.md` (see [Obsidian workspaces](obsidian-workspaces.md)).
+| Config area | Files | Purpose |
+| --- | --- | --- |
+| App/core settings | `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` | Starter appearance, enabled plugins, and graph color groups. |
+| CSS snippets | `snippets/memoria-link-colors.css`, `snippets/memoria-property-badges.css` | Vault-local visual conventions. |
+| Plugin config | `plugins/` | QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, and Portals. |
+| Reset workspace | `workspaces.json` | The **Memoria** layout: `home.md` in the main pane and pinned `_nav.md` rail on the left. |
+| Space switching | `_nav.md` plus `spaces/*.md` | Rail links to Library, Knowledge, Project, Inbox, and Maintenance; see [Obsidian workspaces](obsidian-workspaces.md). |
 
 ### The Bases views
 

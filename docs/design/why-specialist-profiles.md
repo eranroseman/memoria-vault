@@ -35,6 +35,12 @@ A profile is a **posture** — a stance bound to a write-permission — not a ta
 
 One posture per agent, one agent per posture. The fragmentation cost of going finer is real: more lanes to route between, more permission matrices, and — decisively — a fragmented learning loop.
 
+The boundary matters because each posture carries different authority. The Co-PI
+is memory-carrying and read-only; the lanes are scoped, stateless executors; the
+PI is the only actor that disposes. That split prevents conversation from
+becoming writing, production from grading itself, and deterministic operations
+from masquerading as judgment-bearing agents.
+
 ## Why one Co-PI fronts everything
 
 Splitting conversation across many agents creates a real UX failure: *who do I talk to?* Every profile becomes a possible conversation, so no conversation compounds. Concentrating all dialogue in **one Co-PI** fixes both halves:

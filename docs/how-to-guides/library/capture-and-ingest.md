@@ -23,7 +23,7 @@ By the end you have three things: a **catalog entity** (Memoria's record of the 
 **1. Capture the source.** Pick one of three routes. Each hands the same capture card to the Librarian.
 
 - **From Zotero:** Add the source to Zotero. Better BibTeX pins the citekey for you. Select the item. Then, in Obsidian, press `Cmd/Ctrl-P` and run **Memoria: capture from Zotero selection**.
-- **From a URL:** Press `Cmd/Ctrl-P` and run **Memoria: capture source from URL**, then paste the paper's URL. A URL with a resolvable DOI ingests on its own. A bare or proxied URL prompts you for the DOI or citekey.
+- **From a URL:** Press `Cmd/Ctrl-P`, run **Memoria: capture source from URL**, and paste the paper's URL. A URL with a resolvable DOI ingests on its own; a bare or proxied URL prompts for the DOI or citekey.
 - **With Co-PI help:** The Co-PI is the one agent you talk to, in the Agent Client pane. If you are unsure how to frame the capture, open that pane and ask. Once the request is clear, use the matching palette route, or let the Co-PI hand off the same card for you.
 
 **2. Clean the metadata in Zotero (Zotero route only).**

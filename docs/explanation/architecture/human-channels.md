@@ -7,9 +7,7 @@ nav_order: 4
 
 # Interaction channels
 
-Memoria has one daily human surface and two secondary human channels. The point of
-the split is simple: frequent work belongs in Obsidian, forensic or admin work
-belongs in the CLI, and urgent mobile signals belong in Telegram.
+Memoria has one daily human surface and two secondary human channels:
 
 | Channel | Mode | Purpose |
 | --- | --- | --- |

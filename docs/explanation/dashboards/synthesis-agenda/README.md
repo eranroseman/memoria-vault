@@ -3,7 +3,6 @@ title: Synthesis agenda
 parent: Dashboards
 nav_order: 2
 grand_parent: Explanation
-has_children: true
 permalink: /explanation/dashboards/synthesis-agenda/
 ---
 
@@ -13,7 +12,45 @@ Library and Knowledge views that surface what to read, discuss, and reconcile �
 
 | View | Question it answers |
 |---|---|
-| [Reading pipeline](reading-pipeline.md) | What's awaiting reading and distillation, and what claims came out of it? |
-| [Discuss queue](discuss-queue.md) | Which read sources are worth a pass with the Co-PI before the claims firm up? |
-| [Open questions](open-questions.md) | Which claims are still unconnected — the synthesis backlog? |
-| [Contradictions](contradictions.md) | Which claims disagree with each other? |
+| Reading pipeline | What's awaiting reading and distillation, and what claims came out of it? |
+| Discuss queue | Which read sources are worth a pass with the Co-PI before the claims firm up? |
+| Open questions | Which claims are still unconnected — the synthesis backlog? |
+| Contradictions | Which claims disagree with each other? |
+
+## Reading pipeline
+
+Reading pipeline shows Library work in flight: proposed source notes awaiting
+reading, provisional sources read but not yet distilled, and claims grouped by
+maturity. It prevents intake from looking healthy when reading is not becoming
+synthesis.
+
+It is not a board view. It reads note state, not cards.
+
+## Discuss queue
+
+Discuss queue is the narrower read-but-not-distilled slice: source notes at
+`lifecycle: provisional`. A long queue means intake is outrunning thought; the
+next move is a Co-PI discussion followed by PI-authored claims.
+
+## Open questions
+
+Open questions surfaces current claim notes with no inbound links. These are
+claims captured but not yet integrated into hubs or other claims.
+
+It does not propose links or track a separate resolved state. A claim drops off
+the list when the corpus links to it.
+
+## Contradictions
+
+Contradictions surfaces current claims with confirmed `links.contradicts`
+relationships. It is a synthesis starting point, not an error list and not a
+truth judgment.
+
+A contradiction is an open tension between current claims; supersession is a
+resolved temporal replacement.
+
+## Related
+
+- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
+- Discussing a source: [Discuss a paper](../../../how-to-guides/library/discuss-a-paper.md)
+- Linking claim tensions: [Link related claims](../../../how-to-guides/knowledge/link-related-claims.md)

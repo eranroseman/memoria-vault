@@ -51,9 +51,11 @@ When it's done, a card appears in your Inbox with the draft's location under `pr
 
 The Writer's output is a starting point, never the deliverable. Open the draft and read it as an editor:
 
-- **Every citation should be a citekey you recognize** — one that sits on a claim in your cluster. The draft can't invent a citation, but it can lean on the wrong claim. If a sentence cites `[@estruch2018]` for something PREDIMED didn't show, fix the sentence.
-- **Don't let an unsupported sentence stand.** If a line asserts something with no claim behind it, stop: write the claim from a source you hold, or cut the line. Verification in Tutorial 05 will catch it anyway — cheaper to fix now.
-- **The gap belongs in the prose, named.** A defensible section says where its evidence stops. One clause does it: *"…in high-risk adults; the trials say nothing about primary prevention in low-risk people or populations outside the Mediterranean."* That sentence is the seed of Tutorial 06.
+| Check | What to do |
+| --- | --- |
+| Every citation is a citekey you recognize | Make sure it sits on a claim in your cluster. If `[@estruch2018]` is used for something PREDIMED did not show, fix the sentence. |
+| No unsupported sentence stands | If a line has no claim behind it, write the missing claim from a source you hold or cut the line. |
+| The gap is named in the prose | State where the evidence stops, for example: *"…in high-risk adults; the trials say nothing about primary prevention in low-risk people or populations outside the Mediterranean."* |
 
 To revise, send a corrected request rather than nudging the same card; small fixes you just make in the file yourself.
 

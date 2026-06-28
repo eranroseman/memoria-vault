@@ -31,47 +31,40 @@ What each substrate holds, its scope and lifespan, and where it is stored is tab
 
 ## Why each substrate has its scope
 
-The scoping isn't arbitrary — it follows from what each substrate holds, and the cost of getting it wrong.
+Store facts at the narrowest scope that can safely own them:
 
-**Program memory** is program-wide and persistent because it's the standing strategy you set for the whole research effort — what to pursue (`research-focus`) and how to screen (`screening-protocol`). Every agent that touches the program reads it; you refresh it on your own cadence. It never archives, because the program outlives any one sub-project.
-
-**Project memory** is scoped to a single sub-project and archives with it. A project in `projects/<project>/` is a bounded, transient effort; its open questions and decisions are working state that matters while the project is live and becomes provenance once it ships. Keeping it separate from program memory holds "what I want pursued overall" apart from "where this one project's thinking is" — different scope, different lifespan.
-
-**Audit memory** is append-only because its value is the complete, unmodified record. Agents read it; the Policy MCP writes an entry at every gated write. The constraint is enforced, not advisory — every gated write is hash-paired so it can be reversed and tamper is detectable; that mechanism is owned by [Policy MCP](../../reference/policy-mcp.md), and audit memory is the immutable substrate it writes to. Capture must start from day one, because the cost and human-loop trends it tracks can't be reconstructed retroactively.
-
-**Handoff memory** is per-card rather than per-agent because the handoff is the unit of cross-lane communication. When a card moves from the Librarian lane to the Writer lane, the payload travels with it; the Writer inherits the structured handoff, never the Librarian's session context. That's what makes cross-lane handoffs reliable without agents sharing session state.
-
-**Agent memory** belongs to the Co-PI and is frozen at session start because it's injected as a snapshot into the system prompt. The token caps on `MEMORY.md` (~800) and `USER.md` (~500) are load-bearing: anything larger gets truncated. So it holds stable facts only — in-flight task state belongs in handoff memory, cross-project state in program or project memory.
-
-**Session history** is the cross-session recall channel but carries no authority. It's searchable history — useful for "did we discuss X before?" — but it never gates promotion and is never authoritative over the vault. A session-history result that contradicts a vault note loses; the vault is ground truth.
-
-**Working memory** is correctly session-scoped because it's the agent's active reasoning state. Sharing it across agents would bleed one lane's in-flight reasoning into another's. Discarding it on `/clear` costs nothing — anything worth keeping must be written to a durable substrate.
+| Substrate | Scope choice | Why it matters |
+| --- | --- | --- |
+| Program memory | Program-wide, persistent | Holds standing strategy: what to pursue and how to screen. |
+| Project memory | One project, archived with it | Keeps a project's working state separate from program strategy. |
+| Audit memory | Append-only record | Preserves hash-paired write provenance; see [Policy MCP](../../reference/policy-mcp.md). |
+| Handoff memory | One board card | Carries context across lanes without sharing session state. |
+| Agent memory | Co-PI only, loaded at session start | Holds stable recall; token caps make it unsuitable for task state. |
+| Session history | Searchable recall | Helps answer "did we discuss this?" but never outranks the vault. |
+| Working memory | One live session | Keeps active reasoning from leaking across agents or sessions. |
 
 ---
 
 ## Why the split matters
 
-This is thin-control-over-thick-state applied to memory. The Hermes-native substrates are deliberately thin — bounded working memory, capped agent notes, on-demand session history — so an agent carries minimal persistent state. The durable, compounding knowledge lives in thick files: the board's handoff payloads while work is in flight, and the vault while it's settled.
+This is thin-control-over-thick-state applied to memory. Hermes-native memory stays thin: working memory, capped Co-PI notes, and searchable history. Durable state lives in files: handoff payloads while work is in flight, and the vault after review.
 
-The vault side then splits by *purpose and lifespan*: **program memory** is your standing steering (persistent, program-wide); **project memory** is one effort's working state (bounded, archives with the project); **audit memory** is the immutable record of what happened. Collapsing program and project into one bucket — as the model originally did — hid that a program-wide steering file and per-project scratch are different kinds of memory, on different scopes and lifespans ([ADR-23](../../adr/23-scoped-memory-substrates.md)).
-
-Without the split, every cross-session question collapses into "store it and hope," and agents either share too much (leaking context between lanes) or too little (re-deriving the goal every session). The substrates make "where does X live?" answerable by scope and lifespan.
+The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([ADR-23](../../adr/23-scoped-memory-substrates.md)).
 
 ---
 
 ## Configuration is not memory
 
-A frequent miscategorization is storing a *fact* in a *config* file, or a *rule* in a memory substrate. The seven substrates hold state the system produces and reads back as **recall**; configuration is input you author that the agent reads as **rules**. Keep them distinct:
+A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
+in a memory substrate. The test is: **memory is read back as recall;
+configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the
+scoping-review project" is a rule (config → [Configure project
+hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers
+British spelling" is recall (agent memory).
 
-| If the thing is… | It belongs in… | Not in… |
-| --- | --- | --- |
-| A durable fact or convention the agent should recall | Agent `MEMORY.md` | `project-hints.yaml` (that's config, not recall) |
-| Your working style or preferences | Agent `USER.md` | `MEMORY.md` (keep identity vs. preference separate) |
-| What you want the system to pursue | Program memory (`research-focus`) | `project-hints.yaml` |
-| Which topics map to which project | `.memoria/project-hints.yaml` (config) | a memory substrate |
-| A synthesized claim or finding | Vault notes (`notes/claims/`) | any memory substrate |
-
-The test: **memory is read back as recall; configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the scoping-review project" is a rule (config → [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers British spelling" is recall (agent memory).
+For the exact "what lives where" lookup table, use [Memory
+substrates](../../reference/memory.md). This page owns the rationale, not the
+field-by-field routing matrix.
 
 ---
 

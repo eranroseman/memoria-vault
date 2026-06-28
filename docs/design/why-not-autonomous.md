@@ -35,13 +35,12 @@ An autonomous keep/revert loop is only safe when all three conditions hold. The 
 
 ## Why confidence-routing doesn't help
 
-One tempting refinement: route to the human only when the agent's self-assessed confidence is low (SmartPause, as in AutoResearchClaw — [Liu et al. 2026](../reference/bibliography.md#liu2026autoresearchclaw)). Their ablation finds targeted gating beats both full autonomy and dense step-by-step oversight.
+Confidence routing, such as SmartPause in AutoResearchClaw ([Liu et al. 2026](../reference/bibliography.md#liu2026autoresearchclaw)), routes to the human only when self-assessed confidence is low. Memoria refuses it for two reasons:
 
-Memoria declines this approach for two reasons:
-
-**Confident-wrong is the failure mode.** Hallucinated citations and fabricated numbers are emitted with high fluency and high confidence, not with visible hesitation — the argument is developed in [Why the review gate is structural](why-human-gate.md). Confidence-routing is the specific casualty: it routes on the agent's self-assessed confidence, the one signal that is gameable by exactly the outputs the review gate exists to catch.
-
-**The cost model is inverted.** In a throughput-optimizing autonomous system, the cost of a wrong high-confidence output is a wasted run. In Memoria's vault, the cost is a wrongly-promoted claim that persists and compounds. Confidence-routing is worth the bet when errors are cheap; it isn't when the vault is durable.
+| Reason | Why it matters |
+| --- | --- |
+| Confident-wrong is the failure mode | Hallucinated citations and fabricated numbers often arrive fluent and confident; see [Why the review gate is structural](why-human-gate.md). |
+| The cost model is inverted | A wrong high-confidence output in Memoria becomes durable, cited knowledge rather than a wasted run. |
 
 The real insight in that ablation — that gating everything is worse than gating well — Memoria keeps, but spends on the other side: **make each review cheaper, not fewer reviews**. A better Peer-reviewer (pre-verified material, structured evidence chains) lets the human review faster without removing the human from the loop.
 
@@ -49,13 +48,15 @@ The real insight in that ablation — that gating everything is worse than gatin
 
 ## Why code could be the exception — and why none exists today
 
-Code is the one domain where the three preconditions could hold. Code artifacts have:
+Code is the one domain where the three preconditions could hold:
 
-- **Monotonic metrics**: tests pass or fail; runtime either improves or doesn't; coverage rises or falls.
-- **Reversible changes**: `git reset` recovers the diff; the next run starts from known state.
-- **Independent experiments**: one code experiment doesn't depend on the conclusions of another.
+| Precondition | Code analogue |
+| --- | --- |
+| Monotonic metric | Tests, runtime, or coverage improve or they do not. |
+| Reversible change | Git can restore the previous state. |
+| Independent experiment | One code experiment need not depend on another's conclusion. |
 
-All three hold for code work, so in principle an autonomous experiment loop — iterate against a test suite, measure, keep or revert — would be admissible there in a way it never is for synthesis.
+So a bounded code experiment loop could be admissible in principle.
 
 **But no autonomy exception exists anywhere in the current system** ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)). The Engineer is **MCP-only with no terminal, file, or execution capability**. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and owns the per-task commit/revert checkpoint while the substantive coding happens in an external agent the PI reviews. No lane carries an autonomous keep/revert loop.
 

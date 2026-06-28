@@ -39,21 +39,20 @@ Zettelkasten's weakness in modern workflows is that it is entirely human-maintai
 
 ## Bush's Memex
 
-[Vannevar Bush](../reference/bibliography.md#bush1945)'s 1945 vision: a personal interconnected knowledge machine where _associations_ are first-class objects. The device would let a researcher leave "trails" through a document collection — associative links that persist and can be revisited.
-
-What Bush identified is that memory is associative, not taxonomic. A subject-area folder structure doesn't model how thinking actually works. What makes a knowledge base useful is not whether items are correctly classified, but whether the associations between them are preserved.
-
-Memoria's vault is the Memex made operational: the graph of wikilinks, typed relations, entity links, and hubs is the associative layer. The folders are a secondary organizational scheme; the graph is the primary one. A claim note that has no incoming links hasn't made it into the knowledge graph — it may as well not exist.
+[Vannevar Bush](../reference/bibliography.md#bush1945)'s Memex matters here for
+one design move: durable associative trails. Memoria implements that as
+wikilinks, typed relations, entity links, and hubs; folders stay secondary. A
+claim note that has no incoming links has not entered the knowledge graph.
 
 ---
 
 ## The literature review
 
-A full review of ~400 papers (`_papers/`, each read end-to-end and judged for what Memoria should adopt, borrow, or reject) grounds the design in what the field has actually tried. It subsumes an earlier ~47-system survey of agent-driven research platforms and extends across the bodies of work those systems sit on: the HCI/CSCW human-augmentation tradition (mixed-initiative interfaces, Find-Fix-Verify, the social-technical gap), faithful information-extraction and claim-verification methods, evaluation and benchmark discipline, and retrieval with temporal reasoning.
+The ~400-paper review (`_papers/`) grounds the design in what the field has tried: AI-research systems, HCI/CSCW, extraction and claim verification, evaluation, and temporal retrieval.
 
-The headline finding is that this wider literature does not merely *permit* Memoria's design — it independently *re-derives* it. The structural review gate ("engines write, agents judge, PI approves"), the durable vault-as-memory, the MCP-only agent sandbox, and deterministic ingest are each re-arrived-at by separate research lines. The patterns Memoria borrows — stage-gated pipelines, thin control over thick state, explicit agent roles, structured outputs at handoffs, persistent knowledge graphs — recur across nearly every end-to-end system, and Memoria's layered split is the structural form of them. The review also fixes what Memoria *declines* (advisory-only LLM review, scalar-metric keep/revert, tree-search-over-synthesis) and contributes two sharpenings to the knowledge model: build contradiction and supersession on entailment rather than embedding similarity, and treat temporal coverage as a first-class retrieval dimension.
+Its main result is convergence. Separate research lines re-derive the structural review gate, durable vault-as-memory, MCP-only sandbox, deterministic ingest, and stage-gated handoffs. It also scopes what Memoria rejects: advisory-only LLM review, scalar keep/revert loops, and tree search over synthesis.
 
-The pattern-by-pattern judgment — what was borrowed as-is, taken with the autonomy stripped, referenced for framing, or refused, plus the [cross-cutting findings](why-pattern-provenance.md#cross-cutting-findings-from-the-full-literature-review) from the wider corpus — is in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md); the confident-wrong argument behind the structural human gate is in [Why the review gate is structural](why-human-gate.md).
+The pattern-by-pattern judgment is in [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md). The confident-wrong argument behind the human gate is in [Why the review gate is structural](why-human-gate.md).
 
 ---
 

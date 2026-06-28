@@ -34,7 +34,13 @@ The top level is organized by **category** — one content kind per folder, no l
 
 ## Types and their homes
 
-Each category houses a fixed set of types — Catalog entity records, the prose Notes (fleeting, source, claim 🔒, hub 🔒), project work artifacts, Inbox cards, Space notes, and System infrastructure. The architectural distinction is the trust posture each carries: Catalog frontmatter is **given facts** built by ingest and **not gated** (one escape valve — low-confidence extraction routes to a `flag`, [ADR-56](../../adr/56-extraction-uncertainty-flag.md)), while the claim and hub are the PI's **judgment**. The full type roster and its folder homes are in [Document types](../../reference/document-types.md).
+Each category carries a different trust posture. The full roster and folder map live in [Document types](../../reference/document-types.md).
+
+| Area | Examples | Trust posture |
+| --- | --- | --- |
+| Catalog | papers, people, organizations | Given facts from ingest; ungated except low-confidence extraction `flag`s ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)). |
+| Notes | fleeting, source, claim 🔒, hub 🔒 | Human-authored or human-approved knowledge; claim and hub are gated judgment. |
+| Projects, Inbox, Spaces, System | work artifacts, cards, dashboards, infrastructure | Operational surfaces with type-specific lifecycle rules. |
 
 ## Gated zones
 
@@ -42,13 +48,15 @@ The review-gated zones 🔒 are structurally protected: no agent writes there wi
 
 ## Archived is a state, not a folder
 
-Everything the PI sees uses one lifecycle chain ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md), enumerated in [Frontmatter fields](../../reference/frontmatter.md)), each type using a subset. The architectural point is that a state change is a frontmatter edit, never a file move: an archived note stays in its type-home and drops from active views, preserving links and provenance. There is no archive folder. Likewise `links:` on notes are authored connections the PI confirms, while `relationships` on entities are given facts built by ingest ([ADR-52](../../adr/52-links-vs-relationships.md)) — two kinds of connection, two trust models; their field contract is in [Frontmatter fields](../../reference/frontmatter.md).
+Everything the PI sees uses one lifecycle chain ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)); each type uses a subset. A state change is a frontmatter edit, never a file move: archived notes stay in their type-home, drop from active views, and keep their links. There is no archive folder.
+
+The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-52](../../adr/52-links-vs-relationships.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
 ## Bases is the view layer; the Linter keeps it sound
 
 Catalog entities (and the Inbox board, and the per-type note queues) surface through **Obsidian Bases** — saved database views over frontmatter. Every row is a file; the records are the source of truth; nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
 
-Bases has no integrity guarantees — no schema, no constraints. That gap is the **Linter operation's** job: it validates every record against its type schema in `.memoria/schemas/` (required fields, value types, enum vocabularies, `links:`/`relationships` resolving to real targets) and flags drift as Inbox `flag`s. It is a **monitor plus pre-commit schema check**: a pre-commit `schema-check` blocks malformed git-tracked writes at commit, and the cron/CI sweep monitors between commits. It does not block a live in-app edit — between a bad edit and the next sweep a Base can briefly serve a malformed record; that window is accepted under the solo premise and bounded by the pre-commit hook. On detected drift in system files, the Linter can restore from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
+Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through cron/CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. System-file drift can be restored from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ---
 

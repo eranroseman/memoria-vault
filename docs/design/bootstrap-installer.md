@@ -17,28 +17,34 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-What the installer ships and stages — the `src/`-not-a-live-vault separation and the hashed `<vault>/.memoria/golden/` restore baseline — is the distribution mechanism, owned by [Distribution model](distribution-model.md). What the installer adds is the *flow* over that mechanism: **scaffold** the folder tree (checked against the machine-read folder map `.memoria/schemas/folders.yaml`), **populate** it from `src/`, **stage the golden copy**, then wire the pre-commit hook, install Hermes and the five profiles, offer the optional cluster stack, install Obsidian if absent, and wire the crons. The ordered install-flow steps, the component checklist, and the cron list are owned by [Installer (bootstrap)](../reference/installer.md); the five-profile roster is [Profile capabilities](../reference/profiles.md).
+The distribution mechanism is `src/` plus the hashed `<vault>/.memoria/golden/` restore baseline ([Distribution model](distribution-model.md)). The installer adds the flow:
+
+| Step | Purpose |
+| --- | --- |
+| Scaffold | Create the folder tree from `.memoria/schemas/folders.yaml`. |
+| Populate | Copy system files from `src/`. |
+| Stage golden copy | Save the restore baseline. |
+| Wire runtime | Add the pre-commit hook, Hermes profiles, optional cluster stack, Obsidian guidance, and crons. |
+
+Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profiles.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 
-## Goals and non-goals
-
-**Goals**
-
-- One command from zero to a runnable vault on native Windows production and Linux/WSL testing.
-- Fresh-install by default, with an idempotent per-profile deployment path (`scripts/install.sh --profiles-only`) for profile source and secret changes.
-- Detect-then-install; never clobber existing apps, credentials, or user content.
-- Honest about what it cannot do (secrets, GUI steps) — explain, don't fake.
-
-**Non-goals**
-
-- Writing the user's API keys for them.
-- Supporting macOS or non-Debian Linux distributions as first-class install targets.
-- In-place migration between releases — releases are delivered fresh-install, per [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md).
+The install contract is narrow: fresh install by default, idempotent profile
+redeploy for source/secret changes, detect-then-install, no clobbering user
+content, no writing secrets, and no in-place release migration
+([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ## Entry point and safety model
 
-The installer is offered two ways, with **inspect-first as the documented primary** (download, read, then run) and the `curl | bash` / `irm | iex` one-liner shown only as the convenience option. The standard precautions for a piped installer are applied: the entire script body is wrapped in a `main` function invoked on the last line, so a truncated download cannot execute a half-command; it prints a numbered plan and prompts for consent (skippable with `--yes` for CI); `--dry-run` prints every action without executing; and it never silently elevates — if a step needs `sudo`/admin it stops and prints the exact command. These rails are cheap insurance for a script that installs system software, and `--dry-run` doubles as the WSL command transcript (below).
+The primary path is inspect-first: download, read, then run. The one-liner is convenience only.
+
+| Risk | Rail |
+| --- | --- |
+| Truncated piped download | Script body lives in `main`, invoked only at the last line. |
+| Surprise actions | Numbered plan plus consent prompt; `--yes` is for CI. |
+| Unclear effects | `--dry-run` prints actions without executing them. |
+| Silent elevation | The installer stops and prints the exact `sudo`/admin command. |
 
 ## Production Windows and Linux testing
 
@@ -54,36 +60,27 @@ Windows. WSL-specific test docs open the ext4 test vault with Linux Obsidian on
 the native path; mirrored networking is only relevant for an explicit split
 where WSL Hermes talks to Windows Obsidian serving a Windows-hosted vault.
 
-## Architecture: two installers, one source tree
-
-There are two installers because production and testing deliberately run on
-different operating systems:
-
-- **`scripts/install.ps1` (PowerShell)** is the native Windows production installer. It owns Windows app guidance, Hermes native install, vault population, MCP deps, profile deployment, policy plugin deployment, and cron wiring.
-- **`scripts/install.sh` (bash)** is the Linux/WSL testing installer. It keeps the same vault/profile contracts so CI and disposable Linux validation exercise the same authored source under `src/`.
-
-Both files live at the repo root because the bootstrap is the clone/entry point,
-not a vault-internal artifact. The duplication is intentional at the shell
-boundary; shared behavior stays in the deployed vault source and deterministic
-Python operations.
-
 ## Simplifying decisions
 
-Each trades a little breadth for much less shell to build and maintain:
+Each trades breadth for less installer code:
 
-- **Guide app install, don't fully automate.** Detect Obsidian; if absent, print the exact `winget`/`apt` one-liner and run it on consent — no version parsing, no silent installs.
-- **Presence checks, not version gates.** Check a tool is there; let `pip`/Hermes surface a clear error if the installed tool lacks a required capability.
-- **Don't install language runtimes.** The Hermes installer provisions uv, Python, Node, ripgrep, and ffmpeg; the bootstrap adds only **Git** (pre-Hermes) and **Pandoc** (not provisioned by Hermes).
-- **Assume `local-only` deployment.** No Syncthing/VPS/sync logic — multi-device is a later phase.
-- **Default the vault off OneDrive** (`%USERPROFILE%\Memoria` on Windows, `~/Memoria` on Linux; prompt to override) — OneDrive fights Obsidian indexes and file locks, and Git is the backup, so losing OneDrive sync of the vault is fine.
-- **The vault's git repo is the user's own.** The installer never `git init`s under a synthetic author; it prints the commands and the user commits with their own identity.
+| Choice | Keeps out |
+| --- | --- |
+| Guide app installs instead of fully automating them | Version parsing and silent installs. |
+| Presence checks instead of version gates | Duplicating upstream installer logic. |
+| Do not install language runtimes | Competing with Hermes for uv, Python, Node, ripgrep, and ffmpeg. |
+| Assume `local-only` deployment | Syncthing/VPS/sync branching. |
+| Default vaults off OneDrive | Obsidian index and file-lock conflicts. |
+| Leave git identity to the user | Synthetic authorship and installer-owned repos. |
 
 ## Trade-offs
 
-- **Surface area** is still nontrivial (native Windows plus Linux/WSL installers, cron wiring), cut hard by the simplifying decisions above; the residue leans on upstream installers and on guidance for the secret steps that genuinely can't be automated.
-- **`curl | bash` trust** is inherent to the pattern; mitigated by inspect-first framing, the `main`-guard, consent, and `--dry-run`.
-- **Partial automation can imply full automation** — the secrets steps are assisted, not automatic, so the UX must make that explicit.
-- **Fresh release installs replace in-place migration.** This keeps the bootstrap small and avoids half-migrated vault states; profile redeploy remains the narrow idempotent path.
+| Trade-off | Accepted cost |
+| --- | --- |
+| Native Windows plus Linux/WSL installers | More surface area, reduced by leaning on upstream installers. |
+| One-line installer option | Inherent trust cost, mitigated by inspect-first docs and `--dry-run`. |
+| Assisted secrets setup | The UX must say when automation stops. |
+| Fresh release installs | No in-place migrations; profile redeploy remains the idempotent path. |
 
 ## Related
 

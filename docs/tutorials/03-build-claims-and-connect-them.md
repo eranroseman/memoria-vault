@@ -26,7 +26,7 @@ So you learn it in three passes, each with less help. First you **study** a fini
 Open the **Knowledge** space and find the sample claim **"A Mediterranean diet reduces major cardiovascular events…"** (`meddiet-reduces-major-cv-events`) in its **Claims by maturity** view (`claims.base`). Read its three sections and notice what makes it a claim, not a summary:
 
 - **Claim** — one sentence. Not a paragraph, not a topic. One assertion you could defend, or be wrong about.
-- **Evidence** — every line ends in a citekey (`[estruch2018]`, `[delorgeril1999]`) that also appears in the note's `sources` field. This is the rule that keeps claims honest: an evidence line that traces to no source is the exact failure Memoria exists to prevent. If you can't cite it, it isn't a claim yet — it's a hunch (a fleeting note).
+- **Evidence** — every line ends in a citekey (`[estruch2018]`, `[delorgeril1999]`) that also appears in the note's `sources` field. This is the rule that keeps claims honest. If an evidence line traces to no source, it is exactly the failure Memoria exists to prevent: a hunch dressed as a claim.
 - **Connections** — the prose around its links. Look at the frontmatter `links` block: this claim `contradicts` `observational-associations-confounded`. Your claims are meant to hold disagreement; a tension like this is information, not a bug to fix.
 
 That shape — one sentence, traced evidence, typed links — is what you're about to reproduce twice.

@@ -27,7 +27,7 @@ The card-metadata field that holds the Verifier's or Linter's assessment of a `d
 
 ## Why
 
-The field's name is in tension with its documented role. Every gloss describes it as a *recommendation* the human may override — "what does the checking agent advise? — separate from the human's decision" ([The board as a state machine (the control plane)](../explanation/workflows/board-as-state-machine.md)). But "verdict" connotes a *ruling*: final, authoritative, decided.
+The field's name is in tension with its documented role. Every gloss describes it as a *recommendation* the human may override — "what does the checking agent advise? — separate from the human's decision" ([Board states and the review gate](../explanation/kanban-board/states.md)). But "verdict" connotes a *ruling*: final, authoritative, decided.
 
 This matters more than ordinary word-choice because the board's central design move is keeping three dimensions distinct precisely so the agent's view cannot masquerade as the human's judgment ([Kanban board](../explanation/kanban-board/README.md)). "verdict" is the one word that quietly competes with `review_status` for "who decided" — eroding, in the field name itself, the very separation the three-dimension split exists to protect. `agent_recommendation` makes the name self-correcting: it reads as an input, not a decision, reinforcing "agents propose, humans dispose" without relying on the reader catching the gloss.
 

@@ -15,8 +15,10 @@ The vault's types are not arbitrary — each one answers a different question ab
 
 The Catalog/Notes split revives Luhmann's two-box system: he kept a **bibliographic index** (who wrote what, where) physically separate from the **main slip-box** (his own thinking). Memoria does the same (see [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten)):
 
-- **`catalog/` — entity records.** Structured facts about things in the world: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Built by the **ingest operation** from metadata APIs, surfaced through Obsidian Bases, not review-gated — they are extractions of given facts, not judgments. Entities carry `relationships` (cited-by, authored-by, published-in): **given** connections the operation derives mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)).
-- **`notes/` — prose.** What a source says, what you think, how it all hangs together. Written by the PI or proposed by an agent. Notes carry `links:` — **authored** connections (supports, contradicts, hub membership) that an agent may propose but only the PI confirms.
+| Box | Holds | Connection type |
+| --- | --- | --- |
+| `catalog/` | Structured facts: a paper's DOI and authors, a person's ORCID, a venue's ISSN. Ingest builds these from metadata APIs and surfaces them through Obsidian Bases. | `relationships`: given edges such as cited-by, authored-by, and published-in, derived mechanically ([ADR-52](../../adr/52-links-vs-relationships.md)). |
+| `notes/` | Prose: what a source says, what you think, and how it all hangs together. The PI writes it or an agent proposes it. | `links`: authored edges such as supports, contradicts, and hub membership. Agents may propose them; only the PI confirms them. |
 
 "Relationships are given; links are authored." A connection between two entities is always a relationship; `links:` endpoints are always notes. Keeping the two boxes separate is what lets the mechanical half run ungated while the judgment half stays human.
 
@@ -34,21 +36,28 @@ An entity record never contains anyone's reading of the source — that is what 
 
 ### Source notes: describing the world
 
-A **`source`** note records what a source says — the brief, the key concepts, the limitations, the critique. It is written from an outside perspective: a source note never says what the PI thinks; it says what the source argues. That constraint is the mechanism that makes citation tracing work. If source notes expressed opinions, the boundary between "what the source says" and "what I think" would collapse, and provenance would become unverifiable.
-
-A source note is one prose type regardless of whether the entity behind it is a paper, repository, dataset, report, or other source. Identification lives on the Catalog entity; the prose record stays focused on what the source says.
+A **`source`** note records what a source says: its claims, limits, critique, and
+open questions. It is written from an outside perspective, so provenance remains
+traceable: "what the source argues" never collapses into "what the PI thinks."
+Identification stays on the Catalog entity; the source note is the prose record.
 
 ### Claim notes: the synthesis atom
 
-A **`claim`** is one durable assertion in the PI's own words, linked to the sources that support it. It is the most important document type and the one that distinguishes a research vault from a document store. A vault full of source notes is a bibliography with annotations; a vault with interlinked claims is a knowledge graph the PI can write from.
+A **`claim`** is one durable assertion in the PI's own words, linked to the
+sources that support it. Claims are atomic because links and supersession need a
+single target: if the title contains an "and" doing real conceptual work, it is
+two notes.
 
-Claims live in `notes/claims/` — a **review-gated zone** (🔒): agents draft claim *stubs* into staging, but the canonical claim is human-made. The discipline is atomicity — one claim per note, Luhmann's one-idea-per-slip rule — because wikilinks citing a multi-claim note are ambiguous, and a multi-claim note cannot be cleanly superseded when evidence changes. The test: if the title contains an "and" doing real conceptual work, it is two notes.
+Claims live in `notes/claims/` — a **review-gated zone** (🔒). Agents draft claim
+stubs into staging, but the canonical claim is human-made.
 
 Claims carry `maturity` — a soft, PI-set signal of how *developed* the claim is, never a gate: a `seedling` claim is fully `current` ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). The values and the "signal, not a gate" rule are owned by [Why promotion is gated](promotion-model.md); the field is defined in [Frontmatter fields](../../reference/frontmatter.md).
 
 ### Hubs: authored navigation
 
-A **`hub`** is a curated, annotated view of an area: what it is about, what matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also gated 🔒, because a hub is an act of judgment about what belongs together, not a query result. Agents can propose additions; the PI curates.
+A **`hub`** is a curated, annotated view of an area: what it is about, what
+matters most in it, and where it needs work. Hubs live in `notes/hubs/` — also
+gated 🔒 — because deciding what belongs together is judgment, not a query result.
 
 ### Fleeting notes
 

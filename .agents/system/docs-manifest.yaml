@@ -2512,39 +2512,6 @@ entries:
     title: What the literature pushes back on
   canonical_owner: false
   status: manual
-- path: docs/design/why-agent-client-pane.md
-  title: Why the Agent Client pane exists
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 29
-    parent: Design Book
-    title: Why the Agent Client pane exists
-  canonical_owner: false
-  status: manual
-- path: docs/design/why-board-state-machine.md
-  title: Why the board is a state machine
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 26
-    parent: Design Book
-    title: Why the board is a state machine
-  canonical_owner: false
-  status: manual
-- path: docs/design/why-callouts.md
-  title: Why callouts exist
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 30
-    parent: Design Book
-    title: Why callouts exist
-  canonical_owner: false
-  status: manual
 - path: docs/design/why-computational-methods.md
   title: Why Memoria uses deterministic methods alongside LLMs
   book: Developers
@@ -2598,39 +2565,6 @@ entries:
     nav_order: 30
     parent: Design Book
     title: 'Pattern provenance: borrow, adapt, ignore'
-  canonical_owner: false
-  status: manual
-- path: docs/design/why-profile-boundaries.md
-  title: Why profile boundaries exist
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 25
-    parent: Design Book
-    title: Why profile boundaries exist
-  canonical_owner: false
-  status: manual
-- path: docs/design/why-promotion-is-gated.md
-  title: Why promotion is gated
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 28
-    parent: Design Book
-    title: Why promotion is gated
-  canonical_owner: false
-  status: manual
-- path: docs/design/why-review-is-state.md
-  title: Why review is a state
-  book: Developers
-  topic: null
-  frontmatter:
-    grand_parent: Developers
-    nav_order: 27
-    parent: Design Book
-    title: Why review is a state
   canonical_owner: false
   status: manual
 - path: docs/design/why-specialist-profiles.md
@@ -2688,17 +2622,6 @@ entries:
     parent: Explanation
     permalink: /explanation/architecture/
     title: Architecture
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/architecture/control-plane.md
-  title: The control plane
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 3
-    parent: Architecture
-    title: The control plane
   canonical_owner: false
   status: manual
 - path: docs/explanation/architecture/human-channels.md
@@ -2774,33 +2697,10 @@ entries:
   topic: null
   frontmatter:
     grand_parent: Explanation
-    has_children: true
     nav_order: 1
     parent: Dashboards
     permalink: /explanation/dashboards/daily-glance/
     title: Daily glance
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/daily-glance/board-state.md
-  title: The board-state dashboard
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 2
-    parent: Daily glance
-    title: The board-state dashboard
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/daily-glance/daily-health.md
-  title: The daily glance view
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 1
-    parent: Daily glance
-    title: The daily glance view
   canonical_owner: false
   status: manual
 - path: docs/explanation/dashboards/operational-health/README.md
@@ -2809,55 +2709,10 @@ entries:
   topic: null
   frontmatter:
     grand_parent: Explanation
-    has_children: true
     nav_order: 4
     parent: Dashboards
     permalink: /explanation/dashboards/operational-health/
     title: Operational health
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/operational-health/audit-log.md
-  title: audit-log dashboard
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 2
-    parent: Operational health
-    title: audit-log dashboard
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/operational-health/eval-trend.md
-  title: eval-trend dashboard
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 3
-    parent: Operational health
-    title: eval-trend dashboard
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/operational-health/fleet-health.md
-  title: fleet-health dashboard
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 1
-    parent: Operational health
-    title: fleet-health dashboard
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/operational-health/skill-state.md
-  title: skill-state dashboard
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 3
-    parent: Operational health
-    title: skill-state dashboard
   canonical_owner: false
   status: manual
 - path: docs/explanation/dashboards/structural-health/README.md
@@ -2866,44 +2721,10 @@ entries:
   topic: null
   frontmatter:
     grand_parent: Explanation
-    has_children: true
     nav_order: 3
     parent: Dashboards
     permalink: /explanation/dashboards/structural-health/
     title: Structural health
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/structural-health/drift-watch.md
-  title: Drift watch
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 1
-    parent: Structural health
-    title: Drift watch
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/structural-health/loose-ends.md
-  title: Loose ends
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 2
-    parent: Structural health
-    title: Loose ends
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/structural-health/weekly-review.md
-  title: Weekly review
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 3
-    parent: Structural health
-    title: Weekly review
   canonical_owner: false
   status: manual
 - path: docs/explanation/dashboards/synthesis-agenda/README.md
@@ -2912,55 +2733,10 @@ entries:
   topic: null
   frontmatter:
     grand_parent: Explanation
-    has_children: true
     nav_order: 2
     parent: Dashboards
     permalink: /explanation/dashboards/synthesis-agenda/
     title: Synthesis agenda
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/synthesis-agenda/contradictions.md
-  title: Contradictions
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 4
-    parent: Synthesis agenda
-    title: Contradictions
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/synthesis-agenda/discuss-queue.md
-  title: Discuss queue
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 2
-    parent: Synthesis agenda
-    title: Discuss queue
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/synthesis-agenda/open-questions.md
-  title: Open questions
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 3
-    parent: Synthesis agenda
-    title: Open questions
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/dashboards/synthesis-agenda/reading-pipeline.md
-  title: Reading pipeline
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Dashboards
-    nav_order: 1
-    parent: Synthesis agenda
-    title: Reading pipeline
   canonical_owner: false
   status: manual
 - path: docs/explanation/deployment/README.md
@@ -3154,17 +2930,6 @@ entries:
     title: "Operations \u2014 the deterministic layer"
   canonical_owner: false
   status: manual
-- path: docs/explanation/overview/README.md
-  title: Overview
-  book: Explanation
-  topic: null
-  frontmatter:
-    nav_order: 1
-    parent: Explanation
-    permalink: /explanation/overview/
-    title: Overview
-  canonical_owner: false
-  status: manual
 - path: docs/explanation/profiles/README.md
   title: Profiles
   book: Explanation
@@ -3186,17 +2951,6 @@ entries:
     nav_order: 1
     parent: Profiles
     title: The Co-PI
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/profiles/delegation-posture.md
-  title: Delegation posture
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 8
-    parent: Profiles
-    title: Delegation posture
   canonical_owner: false
   status: manual
 - path: docs/explanation/profiles/engineer.md
@@ -3248,44 +3002,10 @@ entries:
   book: Explanation
   topic: null
   frontmatter:
-    has_children: true
     nav_order: 6
     parent: Explanation
     permalink: /explanation/workflows/
     title: Workflows
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/workflows/board-as-state-machine.md
-  title: The board as a state machine (the control plane)
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 2
-    parent: Workflows
-    title: The board as a state machine (the control plane)
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/workflows/review-as-state.md
-  title: Review as a first-class state
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 3
-    parent: Workflows
-    title: Review as a first-class state
-  canonical_owner: false
-  status: manual
-- path: docs/explanation/workflows/verify-on-commit.md
-  title: Verify-on-commit
-  book: Explanation
-  topic: null
-  frontmatter:
-    grand_parent: Explanation
-    nav_order: 4
-    parent: Workflows
-    title: Verify-on-commit
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/README.md
@@ -4502,19 +4222,6 @@ entries:
     grand_parent: Reference
     parent: Agents and control
     title: Project structural impact
-  canonical_owner: false
-  status: manual
-- path: docs/reference/runtime-spec.md
-  title: Runtime contracts
-  book: Reference
-  topic: reference
-  frontmatter:
-    grand_parent: Reference
-    nav_order: 23
-    parent: Agents and control
-    permalink: /reference/runtime-spec/
-    title: Runtime contracts
-    topic: reference
   canonical_owner: false
   status: manual
 - path: docs/reference/sample-vault.md

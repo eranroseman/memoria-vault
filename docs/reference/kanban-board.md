@@ -67,9 +67,16 @@ Three orthogonal dimensions keep an agent verdict from rubber-stamping a human d
 
 ### Terminal states → optional action prompts
 
-The Inbox is the PI's single slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)) — in-process task status appears in **Inbox Activity** from `system/board/`, while `Needs me` stays reserved for human action. When the board-export cron (`src/.memoria/mcp/board_export.py`) observes a card transition into `done` with `review_status: requested`, it writes **one `work-prompt` card** to `inbox/` through the shared card writer: which lane finished, the card's goal, the `expected_outputs` path(s) as the card's `target`, and the action — open the result, then dismiss the prompt when no action remains. A blocked card similarly raises one blocker prompt or domain-specific gap. Honesty rules apply: action + what happened + where to look, never a verdict.
+The Inbox is the PI's slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
 
-The emit is idempotent: transitions are diffed against the export's state cache (`system/logs/.board-state-cache.json`), and the prompt's filename derives from the card id (`inbox/work-prompt-review-<task_id>.md`), so the same review request never produces two prompts across cron runs. On a fresh cache (first run), only review-requested cards done within the last 24 hours raise a prompt — the board's history never floods the Inbox.
+| Board state | Export output | Inbox effect |
+| --- | --- | --- |
+| `triage`, `todo`, `ready`, `running` | `system/board/<task_id>.md` projection | Shows in **Inbox Activity**. |
+| `done` + `review_status: requested` | One `inbox/work-prompt-review-<task_id>.md` card | Shows in **Needs me** with result path and next action. |
+| `blocked` | One blocker prompt or domain-specific gap | Shows in **Needs me** only when the PI can act. |
+| `done` without review | Projection only / terminal telemetry | No Inbox action card. |
+
+Emits are idempotent: export diffs against `system/logs/.board-state-cache.json`, and prompt filenames derive from the card id. On a fresh cache, only review-requested cards done within the last 24 hours raise a prompt, so old board history does not flood the Inbox.
 
 ---
 

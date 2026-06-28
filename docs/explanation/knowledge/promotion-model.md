@@ -58,7 +58,7 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/card-schema.md)
 - The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)
-- Why promotion is gated: [Why promotion is gated](../../design/why-promotion-is-gated.md)
+- Why promotion is gated: [Why the review gate is structural](../../design/why-human-gate.md)
 
 **Decisions**
 

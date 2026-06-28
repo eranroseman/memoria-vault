@@ -1,6 +1,6 @@
 # Skill state
 
-Which skills are active in which lane — read live from the runtime layer (`.memoria/lane-overrides/*.yaml` + `.memoria/profiles/*/skills/`), which is the system of record for skill governance (ADR-43: dashboard-only). Open after adding or moving a skill, after editing a lane override, or when a lane behaves as if a skill is missing. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles) · design: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/skill-state).
+Which skills are active in which lane — read live from the runtime layer (`.memoria/lane-overrides/*.yaml` + `.memoria/profiles/*/skills/`), which is the system of record for skill governance (ADR-43: dashboard-only). Open after adding or moving a skill, after editing a lane override, or when a lane behaves as if a skill is missing. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profiles) · design: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#skill-state).
 
 The **consistency checks** table is the decision queue — a row means the lane policy and the shipped skills disagree; fix the override or the skill folder. Empty is success. The two tables above it are the inventory the checks are computed from.
 

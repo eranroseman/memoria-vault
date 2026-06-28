@@ -83,7 +83,16 @@ not create board cards.
 ---
 ## The Co-PI delegation path
 
-For work where the lane is unknown or spans several tasks, the conversational path runs through the Agent Client pane (the Co-PI, with the active note available as a readable reference): a free-form request triggers a `delegate_route_task` call, the handoff is validated against the lane's write-scope ceiling, the card lands on the board, status appears in **Inbox → Activity**, and **Needs me** changes only when the result needs PI action. The mechanics are in [Kanban board reference](kanban-board.md).
+For work where the lane is unknown or spans several tasks, use the Agent Client pane:
+
+1. The PI asks the Co-PI in free form; the active note is available as a readable reference.
+2. The Co-PI calls `delegate_route_task`.
+3. The handoff is validated against the lane's write-scope ceiling.
+4. A board card is created.
+5. Status appears in **Inbox → Activity**.
+6. **Needs me** changes only when the result needs PI action.
+
+The mechanics are in [Kanban board reference](kanban-board.md).
 
 ---
 

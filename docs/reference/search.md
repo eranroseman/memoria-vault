@@ -90,14 +90,14 @@ The index lives inside the vault and is gitignored. It is registered once, maint
 
 ## Limits
 
-- **Read-only and local.** Search never mutates the vault and never calls out to a network service; it cannot be the cause of a denied write or a leaked note.
-- **Current by default.** Superseded claim notes are hidden from agent retrieval
-  unless a caller explicitly requests historical results. Raw CLI checks may show
-  them because the CLI bypasses the Memoria wrapper.
-- **Index can lag.** A new note isn't searchable until it's embedded; staleness is silent and surfaces as "the Co-PI misses notes I know exist" — the dominant search failure mode ([Failure modes](failure-modes.md)).
-- **Pre-file similarity is shadow-only.** QuickAdd surfaces neighbours in a `[!similarity]` callout and logs `pre-file-similarity.jsonl`, but it never blocks filing, auto-merges notes, or uses a calibrated threshold. qmd failures become warnings, not write failures.
-- **No standalone duplicate sweep ships today.** Retrospective duplicate detection is still skill/sub-check work, not a `sweep:find-duplicates` command. The shipped creation-time surface is the QuickAdd shadow report above.
-- **Text, not graph.** `qmd` ranks by text similarity. Relationship-aware retrieval (`supports` / `contradicts` edges, communities, centrality) is the typed-graph surface in [Clustering](clustering.md), not here.
+| Limit | Meaning | User symptom |
+| --- | --- | --- |
+| Read-only and local | Search never mutates the vault or calls a network service. | It cannot cause a denied write or leaked note. |
+| Current by default | Superseded claims are hidden unless `include_superseded: true`; raw CLI checks bypass this wrapper. | CLI and agent results may differ. |
+| Index can lag | A new note is not searchable until embedded. | "The Co-PI misses notes I know exist" ([Failure modes](failure-modes.md)). |
+| Pre-file similarity is shadow-only | QuickAdd reports neighbours and logs `pre-file-similarity.jsonl`; it never blocks filing or auto-merges. | qmd failures are warnings, not write failures. |
+| No standalone duplicate sweep | Retrospective duplicate detection is still skill/sub-check work. | The shipped duplicate surface is the creation-time QuickAdd shadow report. |
+| Text, not graph | `qmd` ranks by text similarity. | Relationship-aware retrieval belongs to [Clustering](clustering.md). |
 
 ---
 

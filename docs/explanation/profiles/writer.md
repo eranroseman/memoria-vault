@@ -23,5 +23,5 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 - The agent that checks its output: [The Peer-reviewer](peer-reviewer.md)
 - Where its drafts live: [The vault](../architecture/vault.md)
-- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
+- Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

@@ -20,7 +20,7 @@ nav_order: 4
 ## Prerequisites
 
 - The policy MCP wired and running — it writes `system/logs/audit.jsonl`. Until the gate runs live, that log does not exist; a missing *file* is a wiring problem, not a denial.
-- The [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md) available in Obsidian
+- The [audit-log dashboard](../../explanation/dashboards/operational-health/README.md#audit-log) available in Obsidian
 
 ## Steps
 
@@ -40,7 +40,13 @@ Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field
 Hermes fails open on hook errors, so a broken hook or unregistered MCP can let an attempt pass without ever logging a decision. Check, in order:
 
 - Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
-- Smoke-test the gate live: `python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'`. It must return `"decision": "deny"` — `notes/claims/` is review-gated. If it errors or allows, the gate logic is broken. (The full component test suite is `scripts/test.sh l1` from the repo clone.)
+- Smoke-test the gate live:
+
+  ```bash
+  python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'
+  ```
+
+  Expected result: `"decision": "deny"` because `notes/claims/` is review-gated. If the command errors or allows the write, the gate logic is broken. The full component test suite is `scripts/test.sh l1` from the repo clone.
 - Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's HTTPS server is on, its port matches `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` points at the exported PEM certificate/CA bundle ([Set up Obsidian](../setup/set-up-obsidian.md)).
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.
@@ -65,4 +71,4 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 - Other troubleshooting procedures: [Troubleshooting](README.md)
 - The audit event schema: [Policy audit log](../../reference/policy-audit-log.md)
 - The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
-- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/audit-log.md)
+- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/README.md#audit-log)
