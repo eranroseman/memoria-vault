@@ -4,7 +4,7 @@ import json
 import re
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 WORKSPACES = SRC / ".obsidian" / "workspaces.json"
 NAV = SRC / "_nav.md"
 QUICKADD = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
@@ -244,14 +244,14 @@ def test_space_dashboards_hide_obsidian_properties_panel():
     assert "display: none;" in snippet
 
 
-def test_every_pinned_file_exists_under_src():
+def test_every_pinned_file_exists_under_vault_template():
     for name, ws in _workspace_data()["workspaces"].items():
         for pane in ("main", "left", "right"):
             for leaf in _leaves(ws[pane]):
                 file = leaf.get("state", {}).get("file")
                 if file is not None:
                     assert (SRC / file).is_file(), (
-                        f"{name}/{pane}: pinned file {file} missing under src/"
+                        f"{name}/{pane}: pinned file {file} missing under vault-template/"
                     )
 
 

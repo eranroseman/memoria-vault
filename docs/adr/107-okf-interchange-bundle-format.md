@@ -122,7 +122,7 @@ corpus; deferring it is a sequencing choice, not a different decision.
 
 - **Workflows affected:** publication / open-artifact release, navigation-space
   export, OKF-bundle ingest.
-- **Files affected:** future OKF (de)serializer under `src/.memoria/operations/`,
+- **Files affected:** future OKF (de)serializer under `vault-template/.memoria/operations/`,
   the projection registry ([ADR-102](102-disposable-projection-engine.md)), the
   ingest pipeline source-type registry ([ADR-30](30-deterministic-ingest-pipeline.md)),
   schema/Linter conformance for emitted bundles.

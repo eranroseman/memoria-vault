@@ -67,7 +67,7 @@ troubleshooting) is dropped.
 Two mechanisms support the panel:
 
 - **Buttons** (shabegom/buttons) is adopted as a **bundled (required) plugin** —
-  vendored under `src/.obsidian/plugins/buttons/`, listed in
+  vendored under `vault-template/.obsidian/plugins/buttons/`, listed in
   `community-plugins.json`, golden-copy-covered. Standing rule: **command-type
   buttons only.** The plugin's `template` / `text` / `calculate` button types write
   to notes outside the policy gate and are banned.
@@ -118,9 +118,9 @@ minimal writing-free mechanism.
 
 ## Related
 
-- **Files affected:** `src/.obsidian/workspaces.json`, `src/home.md`,
-  `src/system/scripts/load-workspace.js`, `src/.obsidian/plugins/buttons/`,
-  `src/.obsidian/plugins/quickadd/data.json`, `src/.obsidian/community-plugins.json`.
+- **Files affected:** `vault-template/.obsidian/workspaces.json`, `vault-template/home.md`,
+  `vault-template/system/scripts/load-workspace.js`, `vault-template/.obsidian/plugins/buttons/`,
+  `vault-template/.obsidian/plugins/quickadd/data.json`, `vault-template/.obsidian/community-plugins.json`.
 - **Related decisions:** [ADR-13](13-homepage-front-door.md) (the front door —
   unchanged; its note is now the control panel), [ADR-48](48-copi-and-agent-consolidation.md)
   (the Co-PI the right pane pins), [ADR-49](49-catalog-in-bases-linter-monitor.md)

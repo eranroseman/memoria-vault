@@ -1411,7 +1411,7 @@ entries:
   canonical_owner: true
   status: manual
 - path: docs/adr/55-src-scaffold-populate-golden-copy.md
-  title: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable
+  title: The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable
   book: Developers
   topic: decisions
   frontmatter:
@@ -1425,7 +1425,7 @@ entries:
     status: accepted
     superseded_by: []
     supersedes: []
-    title: The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable
+    title: The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable
     topic: decisions
   canonical_owner: true
   status: manual

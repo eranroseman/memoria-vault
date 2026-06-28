@@ -11,7 +11,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-SCHEMAS = ROOT / "src/.memoria/schemas"
+SCHEMAS = ROOT / "vault-template/.memoria/schemas"
 TYPES = SCHEMAS / "types"
 START = "<!-- REFERENCE:START -->"
 END = "<!-- REFERENCE:END -->"
@@ -153,8 +153,8 @@ grand_parent: Reference
         f"""# Document types
 
 The document-type schemas are authoritative: every type is defined by one YAML
-file under `src/.memoria/schemas/types`, and the type-to-folder map lives in
-`src/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)).
+file under `vault-template/.memoria/schemas/types`, and the type-to-folder map lives in
+`vault-template/.memoria/schemas/folders.yaml` ([ADR-47](../adr/47-type-first-category-folders.md)).
 This generated page is the lookup view for folder homes, lifecycle subsets, and
 field presence. For field semantics, see [Frontmatter fields](frontmatter.md).
 
@@ -233,10 +233,10 @@ grand_parent: Reference
 
 The frontmatter contract for every typed document. **The single source is
 `.memoria/schemas/`**: per-document-type field schemas in
-`src/.memoria/schemas/types`, the type-to-folder map in
-`src/.memoria/schemas/folders.yaml`, and calibrated thresholds in
-`src/.memoria/schemas/calibration.yaml`. The shared loader/validator is
-`src/.memoria/operations/lib/schema.py`; the Linter, pre-commit hook, and
+`vault-template/.memoria/schemas/types`, the type-to-folder map in
+`vault-template/.memoria/schemas/folders.yaml`, and calibrated thresholds in
+`vault-template/.memoria/schemas/calibration.yaml`. The shared loader/validator is
+`vault-template/.memoria/operations/lib/schema.py`; the Linter, pre-commit hook, and
 installer-skeleton tests all read it. This generated page explains the grammar
 and universal fields; the per-type tables live in [Document types](document-types.md).
 
@@ -437,7 +437,7 @@ grand_parent: Reference
         f"""# Inbox card fields
 
 Schema fields for Inbox cards under `inbox/`. The source of truth is
-`src/.memoria/schemas/types/`; this generated page is the lookup view for the
+`vault-template/.memoria/schemas/types/`; this generated page is the lookup view for the
 PI-facing card shapes. The daily **Needs me** view embeds only proposed
 `candidate`, `gap`, and `work-prompt` cards. `flag` and `alert` cards remain
 Inbox cards, but Maintenance owns their drift and health views unless they raise
@@ -525,31 +525,31 @@ files or this generator, not this page.
 
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
-| Hermes profile config | `src/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source; regenerate capability blocks from `tool-registry.yaml`; then redeploy profiles | `tests/test_profiles.py` |
-| Profile metadata | `src/.memoria/profiles/memoria-*/distribution.yaml` | Hermes profile manifest | Memoria | Edit source | `tests/test_profiles.py` |
-| Profile identity | `src/.memoria/profiles/memoria-*/SOUL.md` | Hermes profile directory | Memoria, with PI customization inside release limits | Edit source; reconcile runtime drift intentionally | profile docs and tests |
-| Bundled profile skills | `src/.memoria/profiles/*/skills/` | Hermes profile directory | Memoria | Edit source | profile tests |
-| Tool capability registry | `src/.memoria/tool-registry.yaml` | vault source and runtime vault | Memoria | Edit source | `tests/test_profiles.py` |
-| Lane policy overlays | `src/.memoria/lane-overrides/*.yaml` | vault source and runtime vault | Memoria | Edit source | policy tests |
-| Policy gate plugin | `src/.memoria/plugins/memoria-policy-gate/plugin.yaml` | Hermes profile plugins | Memoria | Edit source | policy tests |
+| Hermes profile config | `vault-template/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source; regenerate capability blocks from `tool-registry.yaml`; then redeploy profiles | `tests/test_profiles.py` |
+| Profile metadata | `vault-template/.memoria/profiles/memoria-*/distribution.yaml` | Hermes profile manifest | Memoria | Edit source | `tests/test_profiles.py` |
+| Profile identity | `vault-template/.memoria/profiles/memoria-*/SOUL.md` | Hermes profile directory | Memoria, with PI customization inside release limits | Edit source; reconcile runtime drift intentionally | profile docs and tests |
+| Bundled profile skills | `vault-template/.memoria/profiles/*/skills/` | Hermes profile directory | Memoria | Edit source | profile tests |
+| Tool capability registry | `vault-template/.memoria/tool-registry.yaml` | vault source and runtime vault | Memoria | Edit source | `tests/test_profiles.py` |
+| Lane policy overlays | `vault-template/.memoria/lane-overrides/*.yaml` | vault source and runtime vault | Memoria | Edit source | policy tests |
+| Policy gate plugin | `vault-template/.memoria/plugins/memoria-policy-gate/plugin.yaml` | Hermes profile plugins | Memoria | Edit source | policy tests |
 | MCP server config | embedded in each profile `config.yaml` | Hermes profile config | Memoria | Edit source, then redeploy profiles | profile and MCP tests |
-| MCP Python dependencies | `src/.memoria/mcp/requirements*.txt` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall deps | installer tests |
-| Project hints | `src/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
-| Schema config | `src/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
-| Calibration | `src/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
-| Obsidian plugin settings | `src/.obsidian/plugins/**` | runtime vault `.obsidian/plugins/**` | Memoria except local secrets | Shipped config; reconcile intentionally | plugin docs and status checks |
+| MCP Python dependencies | `vault-template/.memoria/mcp/requirements*.txt` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall deps | installer tests |
+| Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
+| Schema config | `vault-template/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
+| Calibration | `vault-template/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
+| Obsidian plugin settings | `vault-template/.obsidian/plugins/**` | runtime vault `.obsidian/plugins/**` | Memoria except local secrets | Shipped config; reconcile intentionally | plugin docs and status checks |
 | Local REST API secrets | example files only | runtime plugin `data.json` plus profile `.env` | PI machine | Never commit live secrets | setup docs |
 | Profile environment variables | `env_requires` in each profile's `distribution.yaml` | `~/.hermes/profiles/<profile>/.env` or `%LOCALAPPDATA%\\hermes\\profiles\\<profile>\\.env` | PI machine | Never commit; seed from shared Hermes env | installer smoke |
 | Shared Hermes environment seed | not in repo | `~/.hermes/.env` or `%LOCALAPPDATA%\\hermes\\.env` | PI machine | Never commit; rerun profiles-only after changes | installer propagation |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
-| Cron wrappers | `src/.memoria/scripts/*.sh` | vault source and Hermes cron commands | Memoria | Edit source | shellcheck |
+| Cron wrappers | `vault-template/.memoria/scripts/*.sh` | vault source and Hermes cron commands | Memoria | Edit source | shellcheck |
 
 {render_configuration().rstrip()}
 
 ## Rendered versus authored
 
-`src/.memoria/profiles/**/config.yaml` is checked-in source. Its mechanical
-capability blocks are generated from `src/.memoria/tool-registry.yaml` by
+`vault-template/.memoria/profiles/**/config.yaml` is checked-in source. Its mechanical
+capability blocks are generated from `vault-template/.memoria/tool-registry.yaml` by
 `scripts/render_profile_configs.py`; profile-specific server wiring and model
 placeholders remain in the profile config.
 
@@ -617,13 +617,13 @@ grand_parent: Reference
 ---""",
         f"""# Calibration
 
-`src/.memoria/schemas/calibration.yaml` is the source of truth for shared
+`vault-template/.memoria/schemas/calibration.yaml` is the source of truth for shared
 thresholds. Every calibrated value follows the same discipline: grounded in real
 Memoria data, bounded by an explicit error budget, recalibrated on drift, and
 shadow-first before it affects routing or automation.
 
 Regenerate with `python scripts/gen_reference_refs.py --write`; edit
-`src/.memoria/schemas/calibration.yaml`, not this page.
+`vault-template/.memoria/schemas/calibration.yaml`, not this page.
 
 ## Production rule
 

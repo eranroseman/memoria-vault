@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OBSIDIAN = ROOT / "src" / ".obsidian"
+OBSIDIAN = ROOT / "vault-template" / ".obsidian"
 PLUGIN = OBSIDIAN / "plugins" / "memoria-inspector"
 MAIN = PLUGIN / "main.js"
 

@@ -17,7 +17,7 @@ superseded_by: []
 > says cross-vault read-only access works "with the policy MCP enforcing the boundary."
 > On the installed gate that mechanism **does not exist**: `policy_hook.vault_root()`
 > governs a single local vault and the decision core has no foreign-vault scope
-> (`src/.memoria/mcp/policy_hook.py:155`). This ADR is `accepted`-shape but unscheduled
+> (`vault-template/.memoria/mcp/policy_hook.py:155`). This ADR is `accepted`-shape but unscheduled
 > ("the scheduling waits on the trigger"), so it is a *deferred* design, not shipped — it
 > must not be read as a live guarantee. When built, cross-vault read-only requires a real
 > foreign-vault scope **and** a deny-write test proving the foreign vault rejects writes.

@@ -34,7 +34,7 @@ def _vault_with_registry(tmp_path: Path) -> Path:
     registry = tmp_path / ".memoria" / "tool-registry.yaml"
     registry.parent.mkdir(parents=True)
     registry.write_text(
-        (ROOT / "src/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
+        (ROOT / "vault-template/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
     return tmp_path

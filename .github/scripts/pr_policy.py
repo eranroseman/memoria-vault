@@ -10,7 +10,7 @@ causes the workflow to enable auto-merge. Safe PRs can be any size — a single
 docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
 docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
 
-Block: any PR touching sensitive paths (.github/, src/.memoria/, scripts/, or
+Block: any PR touching sensitive paths (.github/, vault-template/.memoria/, scripts/, or
 ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
 human review. Agent instruction surfaces are also sensitive: they can change
 what future automation is allowed or encouraged to do.
@@ -46,7 +46,7 @@ SENSITIVE_PREFIXES = (
     ".codex/",
     ".kilo/",
     "scripts/",
-    "src/.memoria/",
+    "vault-template/.memoria/",
     "docs/adr/",
 )
 SENSITIVE_PATHS = {

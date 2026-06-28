@@ -2,7 +2,7 @@ version: 1
 areas:
   - area: Type schema
     paths:
-      - src/.memoria/schemas/types/**
+      - vault-template/.memoria/schemas/types/**
     inspect:
       - Matching template and folder home
       - Bases and dashboard queries
@@ -12,7 +12,7 @@ areas:
       - python -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
   - area: Folder home, gated prefix, or skeleton
     paths:
-      - src/.memoria/schemas/folders.yaml
+      - vault-template/.memoria/schemas/folders.yaml
     inspect:
       - Type schemas and templates
       - Policy and pattern fallback constants
@@ -22,9 +22,9 @@ areas:
       - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_policy_mcp.py tests/test_patterns.py tests/test_detectors.py
   - area: Profile capability or path policy
     paths:
-      - src/.memoria/tool-registry.yaml
-      - src/.memoria/lane-overrides/**
-      - src/.memoria/profiles/**
+      - vault-template/.memoria/tool-registry.yaml
+      - vault-template/.memoria/lane-overrides/**
+      - vault-template/.memoria/profiles/**
     inspect:
       - Tool registry and matching profile config
       - Lane override and delegation ceiling
@@ -34,11 +34,11 @@ areas:
       - python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_state_dashboard.py
   - area: Runtime policy
     paths:
-      - src/.memoria/mcp/policy_mcp.py
-      - src/.memoria/mcp/policy_server.py
-      - src/.memoria/mcp/policy_hook.py
-      - src/.memoria/plugins/memoria-policy-gate/**
-      - memoria/runtime/policy/**
+      - vault-template/.memoria/mcp/policy_mcp.py
+      - vault-template/.memoria/mcp/policy_server.py
+      - vault-template/.memoria/mcp/policy_hook.py
+      - vault-template/.memoria/plugins/memoria-policy-gate/**
+      - src/memoria_vault/runtime/policy/**
     inspect:
       - Lane overrides and gated-prefix schema
       - Audit contract
@@ -48,11 +48,11 @@ areas:
       - python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_schemas.py
   - area: Runtime helpers
     paths:
-      - memoria/runtime/vaultio.py
-      - memoria/runtime/jsonl.py
-      - memoria/runtime/time.py
-      - memoria/runtime/paths.py
-      - src/.memoria/mcp/_shared.py
+      - src/memoria_vault/runtime/vaultio.py
+      - src/memoria_vault/runtime/jsonl.py
+      - src/memoria_vault/runtime/time.py
+      - src/memoria_vault/runtime/paths.py
+      - vault-template/.memoria/mcp/_shared.py
     inspect:
       - Frontmatter parsing behavior and PyYAML-free fallback
       - JSONL append/iterate tolerance and parent creation
@@ -63,9 +63,9 @@ areas:
       - python -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
   - area: Ingest or linter operation
     paths:
-      - src/.memoria/operations/processing/ingest/**
-      - src/.memoria/operations/integrity/linter/**
-      - src/.memoria/mcp/ingest_mcp.py
+      - vault-template/.memoria/operations/processing/ingest/**
+      - vault-template/.memoria/operations/integrity/linter/**
+      - vault-template/.memoria/mcp/ingest_mcp.py
     inspect:
       - Calibration and schemas
       - Inbox card contract and shared writers
@@ -89,9 +89,9 @@ areas:
       - bash scripts/e2e-smoke.sh
   - area: Bundled Obsidian plugin provenance
     paths:
-      - src/.obsidian/community-plugins.json
-      - src/.obsidian/plugin-provenance-lock.json
-      - src/.obsidian/plugins/**
+      - vault-template/.obsidian/community-plugins.json
+      - vault-template/.obsidian/plugin-provenance-lock.json
+      - vault-template/.obsidian/plugins/**
       - scripts/plugin_provenance_doctor.py
     inspect:
       - Enabled plugin roster and bundled plugin directories
@@ -106,7 +106,7 @@ areas:
       - scripts/e2e-smoke.sh
       - scripts/e2e_smoke.py
       - scripts/test_env_harness.py
-      - fixtures/test-env/**
+      - tests/fixtures/test-env/**
     inspect:
       - Stage names and ordering
       - Disposable-vault assembly assertions

@@ -9,7 +9,7 @@ grand_parent: Reference
 The shipped runnable patterns, pattern-note schema, and `patterns_list` / `patterns_run` contract.
 
 - Patterns are data: markdown prompt transformations in `system/patterns/`.
-- The patterns MCP (`src/.memoria/mcp/patterns_mcp.py`) is the audited runner ([ADR-53](../adr/53-pattern-library.md)).
+- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) is the audited runner ([ADR-53](../adr/53-pattern-library.md)).
 - The runner composes prompts; it never writes content.
 - To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).

@@ -17,7 +17,7 @@ superseded_by: []
 
 ADR-48 made the old SOUL/profile compiler unnecessary: the five profile postures are
 short and genuinely distinct. The drift that remains is narrower. ADR-27 makes
-`src/.memoria/tool-registry.yaml` the source for each profile's positive
+`vault-template/.memoria/tool-registry.yaml` the source for each profile's positive
 `platform_toolsets` and MCP tool filters, but the checked-in `config.yaml` files
 still repeated those derived blocks by hand.
 
@@ -27,7 +27,7 @@ Hermes v0.17 reads plain per-profile `config.yaml`; the local docs and
 ## Decision
 
 Keep plain checked-in Hermes `config.yaml` files, but materialize their capability
-blocks from `src/.memoria/tool-registry.yaml` with
+blocks from `vault-template/.memoria/tool-registry.yaml` with
 `scripts/render_profile_configs.py`.
 
 The render script owns only the mechanical parts:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HARNESS = ROOT / "scripts" / "test_env_harness.py"
-CASSETTE = ROOT / "fixtures" / "test-env" / "cassettes" / "alpha6-l4-golden-path.json"
+CASSETTE = ROOT / "tests" / "fixtures" / "test-env" / "cassettes" / "package-gate-golden-path.json"
 
 
 def _load_harness():
@@ -22,6 +22,7 @@ def test_cassette_matches_tool_name_and_arg_shape():
     cassette = harness.load_cassette(CASSETTE)
 
     assert cassette["match"] == "tool_name+arg_shape"
+    assert cassette["gates"] == ["source", "package"]
     assert [step["id"] for step in cassette["steps"]][:3] == [
         "ingest-source",
         "classify-source",
@@ -37,7 +38,7 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     result = harness.replay(ROOT, tmp_path, CASSETTE)
     summary = result.as_dict()
 
-    assert summary["cassette"] == "alpha6-l4-golden-path"
+    assert summary["cassette"] == "package-gate-golden-path"
     assert "catalog/papers/harness2026.md" in summary["artifacts"]
     assert "projects/harness/project-gate-index.md" in summary["artifacts"]
     assert "projects/harness/exports/harness-section.md" in summary["artifacts"]

@@ -90,7 +90,7 @@ when the actual value is absent. Token counts use the explicit Hermes field name
 `billing_provider`, `pricing_version`, `model`, `source`) preserve where the number
 came from.
 
-Run `python src/.memoria/mcp/board_export.py --cost-doctor` to validate the
+Run `python vault-template/.memoria/mcp/board_export.py --cost-doctor` to validate the
 current Hermes session-store contract. Schema drift or a `hermes kanban show`
 contract change fails closed; missing data is reported separately and never
 materialized as zero spend.
@@ -188,7 +188,7 @@ The wrappers do not write a success heartbeat after a failed command. Missing or
 
 ## lint-findings.jsonl
 
-One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `src/.memoria/operations/integrity/linter/detectors.py`; serialized as:
+One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `vault-template/.memoria/operations/integrity/linter/detectors.py`; serialized as:
 
 ```json
 {"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "projects/draft-x/notes/n.md", "message": "cites superseded claim [[oldclaim]]"}
@@ -222,7 +222,7 @@ The per-pass `PASS` / `REVIEW` / `FAIL` verdict is computed from severities (per
 
 ### The trust-score composite
 
-`trust_score` is the lane's headline 0–100 number, computed by `src/.memoria/mcp/metrics_aggregate.py` from the signals above. It starts at 100 and subtracts weighted penalties, each capped so no single signal can sink the score alone:
+`trust_score` is the lane's headline 0–100 number, computed by `vault-template/.memoria/mcp/metrics_aggregate.py` from the signals above. It starts at 100 and subtracts weighted penalties, each capped so no single signal can sink the score alone:
 
 | Penalty | Weight | Cap | Driven by |
 | --- | --- | --- | --- |

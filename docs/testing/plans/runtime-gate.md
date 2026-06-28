@@ -39,7 +39,7 @@ This runs Source, Package, then the opt-in live Hermes smoke.
 | Gate allow path | Allowed Obsidian write logs `allow_with_log` and `write_complete`. |
 | Gate deny path | Forbidden write creates no file and logs `deny`. |
 | Run modes | Gate enforcement holds in `hermes -z`, gateway, and cron. |
-| Hermes drift | `python src/.memoria/mcp/hermes_contract_doctor.py --vault <vault>` exits 0. |
+| Hermes drift | `python vault-template/.memoria/mcp/hermes_contract_doctor.py --vault <vault>` exits 0. |
 | Cron | `hermes cron list` shows installed Memoria crons; one safe cron runs. |
 
 ## Evidence Home

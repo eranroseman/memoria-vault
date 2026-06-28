@@ -335,7 +335,7 @@ def test_design_system_drift_detects_visual_anti_patterns(tmp_path):
 
 
 def test_design_system_drift_accepts_shipped_vault_tree():
-    src = _Path(__file__).resolve().parent.parent / "src"
+    src = _Path(__file__).resolve().parent.parent / "vault-template"
     assert _m.design_system_drift(src) == []
 
 
@@ -531,5 +531,5 @@ def test_skeleton_drift(tmp_path):
 
 
 def test_skeleton_drift_skips_uninstalled_trees(tmp_path):
-    """No golden manifest = never scaffolded (e.g. the repo's src/) -> silent."""
+    """No golden manifest = never scaffolded (e.g. vault-template/) -> silent."""
     assert _m.skeleton_drift(tmp_path) == []

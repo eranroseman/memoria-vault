@@ -19,7 +19,7 @@ superseded_by: []
 > column. There is no on-box code that refuses a board column advance based on
 > `review_status`; the guarantee that matters is enforced by the policy decision
 > core, where a review-gated path resolves to `dry_run`/block
-> (`memoria/runtime/policy/decision.py`). The same wording in ADR-03/77/78 should be
+> (`src/memoria_vault/runtime/policy/decision.py`). The same wording in ADR-03/77/78 should be
 > read this way. The decision stands; only the locus of enforcement is corrected.
 > Per AGENTS.md, enforcement is a mechanism, not a label.
 

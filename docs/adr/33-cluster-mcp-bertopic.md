@@ -35,7 +35,7 @@ Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and
 
 ## Current implementation mapping
 
-`src/.memoria/mcp/cluster_mcp.py` is the shipped cluster MCP. Its default,
+`vault-template/.memoria/mcp/cluster_mcp.py` is the shipped cluster MCP. Its default,
 PR-safe surface is lightweight and deterministic: `cluster_build_graph` builds a
 typed NetworkX graph from authored note `links:` and entity `relationships`,
 computes communities/centrality/layout, and `cluster_emit_canvas` writes a staged

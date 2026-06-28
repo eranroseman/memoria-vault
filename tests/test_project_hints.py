@@ -179,7 +179,10 @@ def test_shipped_example_parses_when_copied_into_place(tmp_path):
     from pathlib import Path
 
     example = (
-        Path(__file__).resolve().parent.parent / "src" / ".memoria" / "project-hints.yaml.example"
+        Path(__file__).resolve().parent.parent
+        / "vault-template"
+        / ".memoria"
+        / "project-hints.yaml.example"
     )
     _write_hints(tmp_path, example.read_text(encoding="utf-8"))
     hints = classify.load_project_hints(tmp_path)

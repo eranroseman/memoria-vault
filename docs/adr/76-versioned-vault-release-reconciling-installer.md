@@ -78,14 +78,14 @@ The runtime is a real, single-rooted `memoria` package (`pyproject.toml` as the 
 The policy-gate runs in the MCP host's process, whose interpreter the installer
 does not pin. The small, dependency-free **policy core** (the mutating-action set,
 path matching, lane loading, and review-gated decision logic) now lives under the
-installed package path `memoria/runtime/policy/`, imported by both the MCP servers
+installed package path `src/memoria_vault/runtime/policy/`, imported by both the MCP servers
 and the gate hook. What remains for the full versioned-release spine is tightening
 the host import story so the gate shim imports the installed core directly and
 fails closed if that import is unavailable.
 
 The preferred implementation is for the gate to import the **single installed
 policy core** from the vault venv's package install, not a committed duplicate. The
-import chain from `memoria` to `memoria.runtime.policy` must stay stdlib-only and
+import chain from `memoria` to `memoria_vault.runtime.policy` must stay stdlib-only and
 is guarded by a bare-interpreter CI test. If the host cannot import the installed
 core, the gate fails closed. A generated vendored fallback is allowed only if
 in-process import proves infeasible; a hand-maintained vendored copy is rejected
@@ -109,7 +109,7 @@ Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible
    until their modules move behind the package root in later slices.
 3. **Shared runtime helpers (alpha.8, #728):** centralize dependency-light
    frontmatter, JSONL, timestamp, and vault path primitives under
-   `memoria.runtime.{vaultio,jsonl,time,paths}`; keep MCP `_shared.py` as a
+   `memoria_vault.runtime.{vaultio,jsonl,time,paths}`; keep MCP `_shared.py` as a
    compatibility facade while operations migrate to the package root.
 4. **Packaging continuation:** delete the remaining runtime `__file__`/`sys.path`
    bootstraps as modules move, then wire console scripts where they replace existing

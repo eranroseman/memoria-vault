@@ -11,8 +11,8 @@ grand_parent: Reference
 The five Memoria profiles ([ADR-48](../adr/48-copi-and-agent-consolidation.md)):
 posture, board lanes, write scopes, MCP servers, and bundled skills. Every value
 on this page is read from the shipped sources: profile packages under
-`src/.memoria/profiles`, lane ceilings under `src/.memoria/lane-overrides`, and
-the per-profile tool allowlist in `src/.memoria/tool-registry.yaml`.
+`vault-template/.memoria/profiles`, lane ceilings under `vault-template/.memoria/lane-overrides`, and
+the per-profile tool allowlist in `vault-template/.memoria/tool-registry.yaml`.
 
 Regenerate with `python scripts/gen_profiles_ref.py --write`; edit the profile,
 lane, and tool-registry sources, not this page.
@@ -22,7 +22,7 @@ lane, and tool-registry sources, not this page.
 
 ## The five profiles
 
-This block is generated from `src/.memoria/profiles`, `src/.memoria/lane-overrides`, `src/.memoria/tool-registry.yaml`, and `src/.memoria/mcp/tasks_mcp.py`.
+This block is generated from `vault-template/.memoria/profiles`, `vault-template/.memoria/lane-overrides`, `vault-template/.memoria/tool-registry.yaml`, and `vault-template/.memoria/mcp/tasks_mcp.py`.
 
 ### Package metadata
 

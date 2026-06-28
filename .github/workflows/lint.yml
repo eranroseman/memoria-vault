@@ -36,10 +36,10 @@ jobs:
         run: python -m pip install --quiet -r requirements-dev.txt
       - name: ruff
         # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
-        run: ruff check memoria scripts src/.memoria .github/scripts tests
+        run: ruff check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
       - name: ruff-format
         # Layout is enforced by `ruff format`; this fails if anything is unformatted.
-        run: ruff format --check memoria scripts src/.memoria .github/scripts tests
+        run: ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
       - name: docs-doctor
         run: python scripts/docs_doctor.py docs
       - name: profile-reference

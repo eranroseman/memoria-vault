@@ -13,7 +13,7 @@ import json
 import re
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 DATA = SRC / ".obsidian" / "plugins" / "quickadd" / "data.json"
 SCRIPTS = SRC / "system" / "scripts"
 PROFILES = SRC / ".memoria" / "profiles"
@@ -89,7 +89,9 @@ def test_macro_choices_reference_existing_scripts():
             if cmd["type"] != "UserScript":
                 continue
             script = SRC / cmd["path"]
-            assert script.is_file(), f"{choice['name']}: script {cmd['path']} missing under src/"
+            assert script.is_file(), (
+                f"{choice['name']}: script {cmd['path']} missing under vault-template/"
+            )
             assert cmd["path"].startswith("system/scripts/"), (
                 f"{choice['name']}: script {cmd['path']} outside system/scripts/"
             )

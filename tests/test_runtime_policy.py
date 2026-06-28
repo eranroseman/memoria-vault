@@ -2,8 +2,9 @@
 
 import pytest
 
-from memoria.runtime.policy import (
+from memoria_vault.runtime.policy import (
     glob_to_regex,
+    is_review_gated,
     normalize_path,
     path_matches,
     within_scope,
@@ -21,3 +22,9 @@ def test_lane_globs_and_scopes_share_one_semantics():
     assert not path_matches("projects/demo/draft.md", ["projects/*/code/**"])
     assert within_scope("projects/demo/code", ["projects/*/code/"])
     assert glob_to_regex("**") == "^.*$"
+
+
+def test_review_gated_exact_root_counts_as_gated():
+    assert is_review_gated("notes/claims")
+    assert is_review_gated("notes/claims/c.md")
+    assert not is_review_gated("notes/claims-adjacent/c.md")

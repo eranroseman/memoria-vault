@@ -6,13 +6,13 @@ grand_parent: Reference
 
 # Fleet metrics
 
-`src/.memoria/mcp/metrics_aggregate.py` rolls board history, policy audit rows, lint findings, review dispositions, cost rows, and attention timing into weekly lane-metric notes. These notes are the source queried by the Fleet health dashboard.
+`vault-template/.memoria/mcp/metrics_aggregate.py` rolls board history, policy audit rows, lint findings, review dispositions, cost rows, and attention timing into weekly lane-metric notes. These notes are the source queried by the Fleet health dashboard.
 
 ## Command
 
 ```bash
-python src/.memoria/mcp/metrics_aggregate.py --vault <vault>
-python src/.memoria/mcp/metrics_aggregate.py --vault <vault> --from-json cards.json
+python vault-template/.memoria/mcp/metrics_aggregate.py --vault <vault>
+python vault-template/.memoria/mcp/metrics_aggregate.py --vault <vault> --from-json cards.json
 ```
 
 `--from-json` supplies a saved board JSON payload for tests/offline runs. All other inputs are read from the vault logs listed below and degrade gracefully when absent.

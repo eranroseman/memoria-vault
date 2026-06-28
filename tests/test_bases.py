@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 from operations.lib import schema
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 
 # properties Obsidian provides on every note
 _BUILTIN_PREFIXES = ("file.", "formula.", "this.")

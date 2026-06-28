@@ -34,7 +34,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --quiet -r requirements-dev.txt
-      - name: yamllint tracked YAML (excludes src/.obsidian, uses .yamllint)
+      - name: yamllint tracked YAML (excludes vault-template/.obsidian, uses .yamllint)
         run: git ls-files '*.yaml' '*.yml' | grep -v 'src/\.obsidian/' | xargs -r yamllint
 
   actionlint:

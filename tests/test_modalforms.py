@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 SCHEMA_DIR = SRC / ".memoria" / "schemas" / "types"
 VOCABULARY = SRC / "system" / "vocabulary.md"
 MODALFORMS = SRC / ".obsidian" / "plugins" / "modalforms" / "data.json"

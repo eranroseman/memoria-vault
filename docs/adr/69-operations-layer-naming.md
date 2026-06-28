@@ -51,7 +51,7 @@ output**:
 Each **leaf operation** has **one bare-verb token** (`ingest`, `search`, `cluster`,
 `verify`, `lint`) used identically as its proper name, directory, module stem, and CLI
 verb. The code tree is restructured by category:
-`src/.memoria/operations/{processing,integrity,cleanup,telemetry}/`. Generic
+`vault-template/.memoria/operations/{processing,integrity,cleanup,telemetry}/`. Generic
 shape-names are retired in the move — `ingest/pipeline.py` → a responsibility name
 (`runner.py` or `catalog.py`), `lib/` dissolved, `golden.py` → `golden_restore.py`.
 
@@ -113,7 +113,7 @@ in alpha.3 ahead of the rename.
 
 ## Related
 
-- **Files affected:** `src/.memoria/engines/` (→ `operations/`), `tests/conftest.py`,
+- **Files affected:** `vault-template/.memoria/engines/` (→ `operations/`), `tests/conftest.py`,
   `scripts/test.sh`, `scripts/e2e-smoke.sh`, `scripts/install.sh`,
   `tests/test_precommit_schema.py`, `docs/explanation/engines/` (→ renamed),
   `docs/reference/system-actions.md`

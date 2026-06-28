@@ -14,7 +14,7 @@ This page collects the common configuration tasks: change the model overlay, cha
 
 Memoria ships five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. For what each one can do, see [Profile capabilities](../../reference/profile-capabilities.md).
 
-> **Don't hand-edit tool allowlists.** To change which tools a profile can use, edit `src/.memoria/tool-registry.yaml` and run `scripts/render_profile_configs.py --write`. Do not hand-edit the generated `platform_toolsets` block (the rendered list of built-in tool groups) or the MCP `tools.include` blocks — they are regenerated from the registry.
+> **Don't hand-edit tool allowlists.** To change which tools a profile can use, edit `vault-template/.memoria/tool-registry.yaml` and run `scripts/render_profile_configs.py --write`. Do not hand-edit the generated `platform_toolsets` block (the rendered list of built-in tool groups) or the MCP `tools.include` blocks — they are regenerated from the registry.
 
 ## Edit the vault source
 

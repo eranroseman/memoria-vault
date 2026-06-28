@@ -86,7 +86,7 @@ status.
 | [52](52-links-vs-relationships.md) | Notes carry authored links:, entities carry given relationships — two kinds of connection | accepted |
 | [53](53-pattern-library.md) | The pattern library — curated prompt-transformations as data in system/patterns/, one runner | accepted |
 | [54](54-two-decision-kinds-batch-worklists.md) | Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality | accepted |
-| [55](55-src-scaffold-populate-golden-copy.md) | The repo ships src/, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
+| [55](55-src-scaffold-populate-golden-copy.md) | The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
 | [58](58-adjacent-tool-integrations.md) | Adjacent tool integrations and added surfaces | superseded → ADR-84, ADR-85, ADR-86, ADR-87, ADR-88 |

@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 from operations.lib import schema
 
-TEMPLATES = Path(__file__).resolve().parent.parent / "src" / "system" / "templates"
+TEMPLATES = Path(__file__).resolve().parent.parent / "vault-template" / "system" / "templates"
 
 _PLACEHOLDER = re.compile(r'"?\{\{[^}]*\}\}"?')
 

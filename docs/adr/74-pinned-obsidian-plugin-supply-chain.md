@@ -16,12 +16,12 @@ superseded_by: []
 ## Context
 
 Memoria commits the built files for its required Obsidian plugins under
-`src/.obsidian/plugins/` so a fresh vault works without downloading plugins at
+`vault-template/.obsidian/plugins/` so a fresh vault works without downloading plugins at
 install time. This supports the repo-as-install-unit and offline, reproducible
 vault image chosen in [ADR-26](26-repo-as-install-unit.md) and
 [ADR-55](55-src-scaffold-populate-golden-copy.md). The repository now records a
 static, machine-readable provenance lock for those bundled artifacts in
-`src/.obsidian/plugin-provenance-lock.json`: plugin identity, upstream repository,
+`vault-template/.obsidian/plugin-provenance-lock.json`: plugin identity, upstream repository,
 pinned local version, artifact SHA-256 digests, license assertion, and local-patch
 status. That lock makes manual review auditable, but update automation is still
 future work: CI validates the static lock against committed artifacts, while a
@@ -31,7 +31,7 @@ later increment.
 ## Decision
 
 Memoria keeps bundled Obsidian plugin build artifacts committed in
-`src/.obsidian/plugins/`; installation remains network-independent and does not
+`vault-template/.obsidian/plugins/`; installation remains network-independent and does not
 download executable plugin code. The accepted supply-chain model is incremental:
 
 - A versioned lock manifest beside the plugin inventory. For each bundled
@@ -75,7 +75,7 @@ before any automation can rewrite artifacts.
 
 ## Current implementation mapping
 
-The lock is implemented in `src/.obsidian/plugin-provenance-lock.json` and
+The lock is implemented in `vault-template/.obsidian/plugin-provenance-lock.json` and
 validated by `scripts/plugin_provenance_doctor.py` in the required lint and local
 L0 gates. `tests/test_plugin_provenance.py` shares the doctor core so test
 fixtures and CI enforce the same contract: enabled-plugin coverage, exactly one
@@ -122,7 +122,7 @@ long-term model.
 
 ## Related
 
-- **Files affected:** [`src/.obsidian/plugins/`](https://github.com/eranroseman/memoria-vault/tree/main/src/.obsidian/plugins),
+- **Files affected:** [`vault-template/.obsidian/plugins/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/.obsidian/plugins),
   [`scripts/plugin_provenance_doctor.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/plugin_provenance_doctor.py),
   [Obsidian plugin reference](../reference/obsidian-plugins.md)
 - **Related decisions / Depends on:** [ADR-26](26-repo-as-install-unit.md),

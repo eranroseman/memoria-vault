@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "name": "package-gate-golden-path",
+  "description": "Model-free package-gate cassette (ADR-80 Phase 1): source -> ingest -> classify -> discuss -> claim -> project gate -> draft -> verify -> export, plus the deny assertion.",
+  "match": "tool_name+arg_shape",
+  "gates": ["source", "package"],
+  "steps": [
+    {
+      "id": "ingest-source",
+      "tool": "ingest.paper",
+      "arg_shape": {
+        "bibtex": "str",
+        "citekey": "str"
+      },
+      "args": {
+        "citekey": "harness2026",
+        "bibtex": "@article{harness2026,\n  title = {Harnessed Workflows for Durable Research},\n  author = {Ada, River and Lin, Morgan},\n  year = {2026},\n  journal = {Journal of Testable Systems},\n  doi = {10.1000/harness.2026},\n  abstract = {A fixture paper for the Memoria test environment harness.}\n}\n"
+      },
+      "expect": {
+        "writes": ["catalog/papers/harness2026.md"]
+      }
+    },
+    {
+      "id": "classify-source",
+      "tool": "classify.apply",
+      "arg_shape": {
+        "citekey": "str",
+        "merged": {
+          "publication_types": ["str"],
+          "topics_scored": [
+            {
+              "name": "str",
+              "score": "float",
+              "subfield": "str"
+            }
+          ]
+        }
+      },
+      "args": {
+        "citekey": "harness2026",
+        "merged": {
+          "topics_scored": [
+            {
+              "name": "Research software engineering",
+              "subfield": "software engineering",
+              "score": 0.91
+            },
+            {
+              "name": "Knowledge management",
+              "subfield": "information systems",
+              "score": 0.61
+            }
+          ],
+          "publication_types": ["review"]
+        }
+      },
+      "expect": {
+        "writes": ["system/logs/classify.jsonl"]
+      }
+    },
+    {
+      "id": "seed-project",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "projects/harness/project.md",
+        "content": "---\ntype: project\nlifecycle: current\ntitle: Harness project\nslug: harness\nscope_topics: [software engineering]\ninquiry: {}\nfiner: {}\noutput_mode: thesis\nquestion_version: 1\nquestion_log: []\nactive_thesis: '[[thesis]]'\nrefutation_sufficiency: true\n---\n\n# Harness project\n"
+      },
+      "expect": {
+        "writes": ["projects/harness/project.md"]
+      }
+    },
+    {
+      "id": "seed-thesis",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "projects/harness/thesis.md",
+        "content": "---\ntype: thesis\nlifecycle: provisional\ntitle: Harness thesis\nproject: '[[harness]]'\nsources: [\"@harness2026\"]\n---\n\n# Harness thesis\n\nHarnessed workflows make durable research systems testable.\n"
+      },
+      "expect": {
+        "writes": ["projects/harness/thesis.md"]
+      }
+    },
+    {
+      "id": "seed-supporting-claim",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "notes/claims/harness-support.md",
+        "content": "---\ntype: claim\nschema_version: 2\nlifecycle: current\ntitle: Harness support\nmaturity: budding\nsources: [\"@harness2026\"]\ntopics: [software engineering]\nlinks:\n  supports: ['[[thesis]]']\n---\n\nHarnessed workflows support the project thesis.\n"
+      },
+      "expect": {
+        "writes": ["notes/claims/harness-support.md"]
+      }
+    },
+    {
+      "id": "seed-refuting-claim",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "notes/claims/harness-refutation.md",
+        "content": "---\ntype: claim\nschema_version: 2\nlifecycle: current\ntitle: Harness refutation\nmaturity: seedling\nsources: [\"@harness2026\"]\ntopics: [software engineering]\nlinks:\n  contradicts: ['[[thesis]]']\n---\n\nSparse fixtures can miss live-runtime failures.\n"
+      },
+      "expect": {
+        "writes": ["notes/claims/harness-refutation.md"]
+      }
+    },
+    {
+      "id": "discuss-gap",
+      "tool": "inbox.write_proposal",
+      "arg_shape": {
+        "action": "str",
+        "argument_against": "str",
+        "argument_for": "str",
+        "card_type": "str",
+        "certainty": "str",
+        "raised_by": "str",
+        "title": "str",
+        "what_tipped_it": "str"
+      },
+      "args": {
+        "card_type": "gap",
+        "title": "Harness discussion gap",
+        "action": "Discuss whether the cassette covers the deterministic path.",
+        "argument_for": "The cassette exercises real deterministic operations.",
+        "argument_against": "It does not judge live model quality.",
+        "what_tipped_it": "ADR-80 Phase 1 draws the line at model-free package-gate wiring.",
+        "certainty": "likely",
+        "raised_by": "test-env-harness"
+      },
+      "expect": {
+        "writes_prefix": ["inbox/gap-harness-discussion-gap"]
+      }
+    },
+    {
+      "id": "project-gate",
+      "tool": "project.structural_impact",
+      "arg_shape": {
+        "project": "str"
+      },
+      "args": {
+        "project": "projects/harness/project"
+      },
+      "expect": {
+        "writes": ["projects/harness/project-gate-index.md"]
+      }
+    },
+    {
+      "id": "draft-section",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "projects/harness/drafts/harness-section.md",
+        "content": "# Harness section\n\nHarnessed workflows are testable when deterministic operations can replay the source, claim, gate, draft, and verification path from a cassette.\n"
+      },
+      "expect": {
+        "writes": ["projects/harness/drafts/harness-section.md"]
+      }
+    },
+    {
+      "id": "verify-draft",
+      "tool": "inbox.write_finding",
+      "arg_shape": {
+        "card_type": "str",
+        "evidence": "str",
+        "finding": "str",
+        "raised_by": "str",
+        "target": "str",
+        "title": "str"
+      },
+      "args": {
+        "card_type": "flag",
+        "title": "Harness verification note",
+        "finding": "The draft is structurally present and cites the cassette-backed claim path; live quality remains out of scope.",
+        "target": "projects/harness/drafts/harness-section.md",
+        "raised_by": "test-env-harness",
+        "evidence": "projects/harness/project-gate-index.md"
+      },
+      "expect": {
+        "writes_prefix": ["inbox/flag-harness-verification-note"]
+      }
+    },
+    {
+      "id": "deny-assertion",
+      "tool": "policy.deny_assertion",
+      "arg_shape": {
+        "content": "str",
+        "path": "str",
+        "profile": "str",
+        "task_id": "str",
+        "tool_name": "str"
+      },
+      "args": {
+        "profile": "memoria-writer",
+        "tool_name": "mcp_obsidian_vault_write",
+        "path": "notes/claims/blocked-by-harness.md",
+        "content": "must not land",
+        "task_id": "HARNESS-DENY"
+      },
+      "expect": {
+        "audit_decision": "deny",
+        "not_exists": ["notes/claims/blocked-by-harness.md"]
+      }
+    },
+    {
+      "id": "done-prompt",
+      "tool": "inbox.write_work_prompt",
+      "arg_shape": {
+        "action": "str",
+        "lane": "str",
+        "raised_by": "str",
+        "target": "str",
+        "task_id": "str",
+        "title": "str",
+        "what_happened": "str"
+      },
+      "args": {
+        "title": "Review harness draft",
+        "action": "Review the cassette-backed harness draft and verification card.",
+        "what_happened": "The model-free package-gate harness replay reached the done handoff.",
+        "target": "projects/harness/drafts/harness-section.md",
+        "task_id": "HARNESS-PACKAGE",
+        "lane": "memoria-writer",
+        "raised_by": "test-env-harness"
+      },
+      "expect": {
+        "writes_prefix": ["inbox/work-prompt-review-harness-draft"]
+      }
+    },
+    {
+      "id": "export",
+      "tool": "vault.write_markdown",
+      "arg_shape": {
+        "content": "str",
+        "path": "str"
+      },
+      "args": {
+        "path": "projects/harness/exports/harness-section.md",
+        "content": "# Harness export\n\nThe cassette-backed deterministic path produced an exportable section.\n"
+      },
+      "expect": {
+        "writes": ["projects/harness/exports/harness-section.md"]
+      }
+    }
+  ],
+  "final_assertions": {
+    "exists": [
+      "catalog/papers/harness2026.md",
+      "system/logs/classify.jsonl",
+      "projects/harness/project-gate-index.md",
+      "projects/harness/drafts/harness-section.md",
+      "projects/harness/exports/harness-section.md",
+      "system/logs/audit.jsonl"
+    ],
+    "not_exists": ["notes/claims/blocked-by-harness.md"],
+    "project_gate": {
+      "path": "projects/harness/project-gate-index.md",
+      "min_relation_count": 2,
+      "expected_saturation_state": "unsaturated"
+    }
+  }
+}

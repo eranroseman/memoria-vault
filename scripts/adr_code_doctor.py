@@ -27,7 +27,7 @@ CHECKS = (
         name="ADR-55 golden restore has no shipped upgrade command",
         adr="docs/adr/55-src-scaffold-populate-golden-copy.md",
         required_paths=(
-            "src/.memoria/operations/integrity/linter/golden_restore.py",
+            "vault-template/.memoria/operations/integrity/linter/golden_restore.py",
             "tests/test_golden_restore.py",
         ),
         required_text=(
@@ -40,21 +40,30 @@ CHECKS = (
     Check(
         name="ADR-41 review gate names the write mechanism, not board motion",
         adr="docs/adr/41-configurable-review-gate-mode.md",
-        required_paths=("memoria/runtime/policy/decision.py",),
-        required_text=("memoria/runtime/policy/decision.py", "hard stop is at the write"),
-        forbidden_text=("dispatch refuses to advance a card", "src/.memoria/mcp/decision.py"),
+        required_paths=("src/memoria_vault/runtime/policy/decision.py",),
+        required_text=("src/memoria_vault/runtime/policy/decision.py", "hard stop is at the write"),
+        forbidden_text=(
+            "dispatch refuses to advance a card",
+            "vault-template/.memoria/mcp/decision.py",
+        ),
     ),
     Check(
         name="ADR-76 policy core path matches the package root",
         adr="docs/adr/76-versioned-vault-release-reconciling-installer.md",
-        required_paths=("memoria/runtime/policy/__init__.py", "memoria/runtime/policy/decision.py"),
-        required_text=("memoria/runtime/policy/",),
-        forbidden_text=("src/.memoria/memoria_runtime/policy/",),
+        required_paths=(
+            "src/memoria_vault/runtime/policy/__init__.py",
+            "src/memoria_vault/runtime/policy/decision.py",
+        ),
+        required_text=("src/memoria_vault/runtime/policy/",),
+        forbidden_text=("vault-template/.memoria/memoria_runtime/policy/",),
     ),
     Check(
         name="ADR-10 supersession default query filter is implemented",
         adr="docs/adr/10-claim-supersession.md",
-        required_paths=("src/.memoria/mcp/qmd_filter_mcp.py", "tests/test_qmd_filter_mcp.py"),
+        required_paths=(
+            "vault-template/.memoria/mcp/qmd_filter_mcp.py",
+            "tests/test_qmd_filter_mcp.py",
+        ),
         required_text=("qmd_filter_mcp.py", "include_superseded: true"),
     ),
 )

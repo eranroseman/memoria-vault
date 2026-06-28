@@ -2,7 +2,7 @@
 
 The set of spell-checked files must be defined once, in cspell.json (`files` +
 `enableGlobDot` + `ignorePaths`). CI and pre-commit defer to it; neither may
-reintroduce a hand-rolled file list (the old `git ls-files | grep 'docs/|src/'`
+reintroduce a hand-rolled file list (the old `git ls-files | grep 'docs/|vault-template/'`
 form), which is exactly the drift this PR removed. These tests fail if a future
 change re-splits the scope across files.
 """
@@ -30,7 +30,7 @@ def test_cspell_json_owns_the_scope():
     config = json.loads(CSPELL_JSON.read_text(encoding="utf-8"))
     assert config.get("files") == ["**/*.md"], "cspell.json must select all markdown"
     assert config.get("enableGlobDot") is True, (
-        "dot-dirs (.agents/, src/.memoria/) need enableGlobDot"
+        "dot-dirs (.agents/, vault-template/.memoria/) need enableGlobDot"
     )
     assert config.get("ignorePaths"), "exclusions must live in cspell.json ignorePaths"
 
@@ -38,7 +38,9 @@ def test_cspell_json_owns_the_scope():
 def test_workflow_defers_to_cspell_json():
     run = CSPELL_WORKFLOW.read_text(encoding="utf-8")
     assert "git ls-files" not in run, "scope must not be re-derived from a file list"
-    assert "docs/|src/" not in run, "scope must not be re-split across docs/src/root"
+    assert "docs/|vault-template/" not in run, (
+        "scope must not be re-split across docs/vault-template/root"
+    )
     assert '"**/*.md"' in run and "--gitignore" in run
 
 

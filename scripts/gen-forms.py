@@ -11,7 +11,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
+SRC = ROOT / "vault-template"
 SCHEMA_DIR = SRC / ".memoria" / "schemas" / "types"
 VOCABULARY = SRC / "system" / "vocabulary.md"
 FORM_TYPES = ("fleeting", "source", "claim", "project")

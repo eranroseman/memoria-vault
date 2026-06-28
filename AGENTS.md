@@ -173,7 +173,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `src/` resolve), `check-test-refs`, `status-doctor` (release/test/contributor link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault-template/` resolve), `check-test-refs`, `status-doctor` (release/test/contributor link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -202,7 +202,7 @@ behavior.
 | `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `src/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
+Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -255,7 +255,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `src/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
+| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
 | Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
 | New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with readiness/stage sub-issues; release-please owns version/notes |
 
@@ -280,13 +280,13 @@ the manual security review and is a first line against the "never commit
 - **Build on the installed version; upgrade by verifying, not by reading.** `hermes --version` + the on-box docs/source are the truth for what the system does *now* — never assert or depend on a feature you haven't run. A newer tag's release notes are an **upgrade hypothesis, not a fact**: to adopt one, upgrade in the **test vault** (Memoria-test), verify the feature on-box, then build against it — the [ADR-106](docs/adr/106-cost-and-disposition-capture.md) order (upgrade → verify the join → re-enable). Tag claims by evidence strength — `on-box ✓` (verified against installed source/docs), `claim-only` (a newer tag's note, unverified), `untested`. The rule blocks shipping on marketing; it does not block upgrading.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to LF. Working on ext4 avoids CRLF churn.
 - **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-27).
-- **Profiles:** `src/.memoria/profiles/memoria-*/` — every profile has
+- **Profiles:** `vault-template/.memoria/profiles/memoria-*/` — every profile has
   `SOUL.md`, `config.yaml`, and `distribution.yaml`; optional `skills/` holds
   profile-owned skills. `.no-bundled-skills` records that Memoria owns deployed
   profile skills: the installer refreshes source `skills/` when present and
   clears stale deployed skills when they are absent.
   These are distinct from Hermes-global bundled skills under `~/.hermes/skills`.
-  Cron wrappers are shared under `src/.memoria/scripts/`, not stored per profile.
+  Cron wrappers are shared under `vault-template/.memoria/scripts/`, not stored per profile.
   Keep shared profile contracts in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
@@ -328,7 +328,7 @@ without it qmd falls back to CPU (slower, still works).
 
 Mixed-purpose pages are wrong — split them.
 
-- **Links:** `docs/` files → relative links; `src/` (vault-tree) files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
+- **Links:** `docs/` files → relative links; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
   - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, `docs/releasing/`, and `docs/testing/` are **build-excluded** from the site (see `docs/_config.yml`) — they have no Pages route, so links to them use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), same as any other unpublished target.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.

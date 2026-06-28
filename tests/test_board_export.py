@@ -12,7 +12,7 @@ import yaml
 from _util import CheckHarness
 from operations.lib import schema as _schema
 
-from memoria.runtime.time import now_iso
+from memoria_vault.runtime.time import now_iso
 
 BOARD_RELDIR = _m.BOARD_RELDIR
 BLIND_REVIEW_RELPATH = _m.BLIND_REVIEW_RELPATH

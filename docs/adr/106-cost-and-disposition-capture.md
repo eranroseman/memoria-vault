@@ -61,6 +61,6 @@ This matters as soon as the publication benchmark ([ADR-20](20-publication-path.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-20 (publication path)](20-publication-path.md) (the capture-now mandate these signals serve); [ADR-22 (build on the Hermes runtime)](22-build-on-hermes-runtime.md) (the runtime whose store is read); [ADR-104 (telemetry three planes)](104-telemetry-three-planes.md) (the analytics plane and per-machine partitioning).
-- **Files affected:** [`src/.memoria/mcp/board_export.py`](https://github.com/eranroseman/memoria-vault/blob/main/src/.memoria/mcp/board_export.py) (the exporter CLI/orchestrator) and [`src/.memoria/mcp/board_export_cost.py`](https://github.com/eranroseman/memoria-vault/blob/main/src/.memoria/mcp/board_export_cost.py) (the session-store join and cost doctor).
+- **Files affected:** [`vault-template/.memoria/mcp/board_export.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/.memoria/mcp/board_export.py) (the exporter CLI/orchestrator) and [`vault-template/.memoria/mcp/board_export_cost.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/.memoria/mcp/board_export_cost.py) (the session-store join and cost doctor).
 - **Tracking issue:** [#737](https://github.com/eranroseman/memoria-vault/issues/737) — implementation readiness and Hermes cost doctor.
 - **Reference:** [Telemetry & logs](../reference/telemetry.md) (cost/disposition schemas and the corrected mechanism note); [Hermes CLI](../reference/hermes-cli.md).

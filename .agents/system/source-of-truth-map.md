@@ -9,23 +9,23 @@ find the owning file, then fix the stale consumer rather than the source.
 | Contract | Authoritative source | Important consumers and checks |
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
-| Vault document types and fields | `src/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
-| Type homes, gated zones, skeleton | `src/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
-| Calibrated thresholds | `src/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
-| Profile tool capabilities | `src/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
-| Profile path permissions | `src/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
-| Hermes profile runtime wiring | `src/.memoria/profiles/*/config.yaml` | Installer deployment, MCP process startup |
-| Agent posture | `src/.memoria/profiles/*/SOUL.md` | Profile-owned skills and shared `src/AGENTS.md` |
-| Profile package metadata | `src/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
-| Task lane to profile routing | `src/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
-| Runtime path and glob semantics | `memoria/runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
-| Runtime helper primitives | `memoria/runtime/{vaultio,jsonl,time,paths}.py` | MCP modules, operations, test harnesses |
-| Runtime write decisions and audit | `memoria/runtime/policy/{model,decision,lanes,audit,engine}.py` | `src/.memoria/mcp/policy_mcp.py`, `src/.memoria/mcp/policy_server.py`, policy hook/plugin, lane overrides, audit log |
-| Write interception | `src/.memoria/plugins/memoria-policy-gate/` and `src/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
-| Shared schema validation | `src/.memoria/operations/lib/schema.py` | Linter, pre-commit, installer and schema tests |
-| Inbox card rendering and loudness routing | `src/.memoria/operations/lib/inbox.py` + `src/.memoria/operations/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
-| Runtime vault image | `src/` | `scripts/install.sh`, golden-copy staging |
-| Bundled Obsidian plugin provenance | `src/.obsidian/plugin-provenance-lock.json` | `scripts/plugin_provenance_doctor.py`, CI lint, `tests/test_plugin_provenance.py`, plugin reference |
+| Vault document types and fields | `vault-template/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
+| Type homes, gated zones, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
+| Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
+| Profile tool capabilities | `vault-template/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
+| Profile path permissions | `vault-template/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
+| Hermes profile runtime wiring | `vault-template/.memoria/profiles/*/config.yaml` | Installer deployment, MCP process startup |
+| Agent posture | `vault-template/.memoria/profiles/*/SOUL.md` | Profile-owned skills and shared `vault-template/AGENTS.md` |
+| Profile package metadata | `vault-template/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
+| Task lane to profile routing | `vault-template/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
+| Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
+| Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | MCP modules, operations, test harnesses |
+| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,lanes,audit,engine}.py` | `vault-template/.memoria/mcp/policy_mcp.py`, `vault-template/.memoria/mcp/policy_server.py`, policy hook/plugin, lane overrides, audit log |
+| Write interception | `vault-template/.memoria/plugins/memoria-policy-gate/` and `vault-template/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
+| Shared schema validation | `vault-template/.memoria/operations/lib/schema.py` | Linter, pre-commit, installer and schema tests |
+| Inbox card rendering and loudness routing | `vault-template/.memoria/operations/lib/inbox.py` + `vault-template/.memoria/operations/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
+| Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
+| Bundled Obsidian plugin provenance | `vault-template/.obsidian/plugin-provenance-lock.json` | `scripts/plugin_provenance_doctor.py`, CI lint, `tests/test_plugin_provenance.py`, plugin reference |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |
 | Offline e2e smoke stages | `scripts/e2e_smoke.py` | `scripts/e2e-smoke.sh`, ADR-80/testing docs, release stage evidence |

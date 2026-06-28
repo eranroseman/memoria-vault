@@ -467,7 +467,7 @@ def check_wiki_engine() -> Check:
 
 
 def check_plugin() -> Check:
-    plugin = ROOT / "src/.obsidian/plugins/memoria-inspector"
+    plugin = ROOT / "vault-template/.obsidian/plugins/memoria-inspector"
     main = plugin / "main.js"
     manifest = plugin / "manifest.json"
     text = main.read_text(encoding="utf-8") if main.exists() else ""

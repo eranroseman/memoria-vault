@@ -30,8 +30,8 @@ jobs:
           - [ ] Read changelog entries newer than the installed version
           - [ ] Decide: stay pinned, test-upgrade in `~/Memoria-test`, or open an upgrade checkpoint
           - [ ] If testing/upgrading, run:
-            - `python src/.memoria/mcp/hermes_contract_doctor.py --vault /home/eranr/Memoria-test --json`
-            - `python src/.memoria/mcp/board_export.py --cost-doctor`
+            - `python vault-template/.memoria/mcp/hermes_contract_doctor.py --vault /home/eranr/Memoria-test --json`
+            - `python vault-template/.memoria/mcp/board_export.py --cost-doctor`
             - profile redeploy
             - one live deny-path test
             - one Obsidian/MCP smoke pass

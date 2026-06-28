@@ -1,6 +1,6 @@
 # Security review
 
-Use this playbook for changes touching `scripts/`, `.github/`, `src/.memoria/`,
+Use this playbook for changes touching `scripts/`, `.github/`, `vault-template/.memoria/`,
 secrets, external integrations, or another trust boundary. It complements
 available security tools; it does not depend on a particular plugin.
 
@@ -42,7 +42,7 @@ Treat MCP as a policy boundary, not an operating-system sandbox.
   security invariant.
 - For `.github/`, verify event type, token permissions, checkout target,
   expression handling, dependency pinning, and concurrency behavior.
-- For `src/.memoria/`, verify tool capability and path scope separately.
+- For `vault-template/.memoria/`, verify tool capability and path scope separately.
 - For installer changes, use dry-run and a disposable vault, never `~/Memoria`.
 - Run the narrow tests and `scripts/test.sh all` when practical.
 

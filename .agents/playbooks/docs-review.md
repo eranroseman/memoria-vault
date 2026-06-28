@@ -24,7 +24,7 @@ match their filename and index link text.
 ## 2. Check links and publication boundaries
 
 - Links between `docs/` pages are relative.
-- Published pages must not use relative links into `src/` or other unpublished
+- Published pages must not use relative links into `vault-template/` or other unpublished
   repository paths. Prefer inline paths or an absolute GitHub blob/tree URL.
 - Repo-internal pages under `docs/releasing/`, `docs/testing/`, and excluded
   `tmp/` directories may link to repository files.

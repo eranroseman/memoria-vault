@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 DASHBOARD = SRC / "system" / "dashboards" / "skill-state.md"
 LANES = SRC / ".memoria" / "lane-overrides"
 PROFILES = SRC / ".memoria" / "profiles"
@@ -73,7 +73,7 @@ def _skill_files():
 
 
 def test_dashboard_ships_and_reads_the_runtime_layer():
-    assert DASHBOARD.is_file(), "skill-state.md missing from src/system/dashboards/"
+    assert DASHBOARD.is_file(), "skill-state.md missing from vault-template/system/dashboards/"
     text = DASHBOARD.read_text(encoding="utf-8")
     assert "```dataviewjs" in text
     assert '".memoria/lane-overrides"' in text, "dashboard no longer reads lane-overrides"

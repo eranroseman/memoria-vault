@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-SRC = Path(__file__).resolve().parent.parent / "src"
+SRC = Path(__file__).resolve().parent.parent / "vault-template"
 ROOT = SRC.parent
 SAMPLE = SRC / ".memoria" / "samples" / "mediterranean-diet"
 SCRIPTS = SRC / "system" / "scripts"

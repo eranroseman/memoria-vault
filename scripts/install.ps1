@@ -10,7 +10,7 @@
     This script:
       1. Guides Windows GUI app installation with winget.
       2. Runs the official native Hermes installer.
-      3. Copies src/ into the runtime vault.
+      3. Copies vault-template/ into the runtime vault.
       4. Creates the vault-local MCP venv.
       5. Installs the five Hermes profiles with native Windows paths.
       6. Deploys the fail-closed policy-gate plugin per profile.
@@ -139,7 +139,7 @@ function Get-RepoRoot {
     if ($PSCommandPath) {
         $scriptRoot = Split-Path -Parent $PSCommandPath
         $localRoot = Split-Path -Parent $scriptRoot
-        if (Test-Path (Join-Path $localRoot 'src/.memoria/profiles')) {
+        if (Test-Path (Join-Path $localRoot 'vault-template/.memoria/profiles')) {
             return $localRoot
         }
     }
@@ -152,7 +152,7 @@ function Get-LocalRepoRoot {
     if ($PSCommandPath) {
         $scriptRoot = Split-Path -Parent $PSCommandPath
         $localRoot = Split-Path -Parent $scriptRoot
-        if (Test-Path (Join-Path $localRoot 'src/.obsidian')) {
+        if (Test-Path (Join-Path $localRoot 'vault-template/.obsidian')) {
             return $localRoot
         }
     }
@@ -235,8 +235,8 @@ function Invoke-Python {
 function Copy-VaultSource {
     param([string]$RepoRoot)
     Write-Header 'Scaffold and populate vault'
-    $src = Join-Path $RepoRoot 'src'
-    if (-not (Test-Path $src)) { Stop-Install "Missing src tree at $src." }
+    $src = Join-Path $RepoRoot 'vault-template'
+    if (-not (Test-Path $src)) { Stop-Install "Missing vault-template tree at $src." }
     if (Test-Path (Join-Path $Vault '.memoria')) {
         Stop-Install "$Vault is already a Memoria vault. This installer is fresh-install only; choose an empty target or move the existing vault aside."
     }
@@ -248,7 +248,7 @@ function Copy-VaultSource {
 function Enable-MemoriaCssSnippets {
     param([string]$RepoRoot)
     Write-Header 'Obsidian CSS snippets'
-    $srcSnippets = if ($RepoRoot) { Join-Path $RepoRoot 'src/.obsidian/snippets' } else { Join-Path $Vault '.obsidian/snippets' }
+    $srcSnippets = if ($RepoRoot) { Join-Path $RepoRoot 'vault-template/.obsidian/snippets' } else { Join-Path $Vault '.obsidian/snippets' }
     $dstSnippets = Join-Path $Vault '.obsidian/snippets'
     if (-not $DryRun) {
         New-Item -ItemType Directory -Path $dstSnippets -Force | Out-Null

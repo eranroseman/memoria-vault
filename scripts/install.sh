@@ -141,14 +141,14 @@ python_install_guidance() {
 }
 
 ensure_memoria_css_snippets() {
-  local src="${REPO_DIR:-}/src"
+  local src="${REPO_DIR:-}/vault-template"
   if [ ! -d "$src/.obsidian" ]; then
     local script_dir=""
     if [ -f "${BASH_SOURCE[0]:-}" ]; then
       script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     fi
-    if [ -n "$script_dir" ] && [ -d "$script_dir/../src/.obsidian" ]; then
-      src="$(cd "$script_dir/.." && pwd)/src"
+    if [ -n "$script_dir" ] && [ -d "$script_dir/../vault-template/.obsidian" ]; then
+      src="$(cd "$script_dir/.." && pwd)/vault-template"
     else
       src="$VAULT_PATH"
     fi
@@ -307,15 +307,15 @@ ensure_prereqs() {
 # =============================================================================
 resolve_repo() {
   hdr "Memoria vault source"
-  # Running from inside a clone? (script dir or cwd has src/.memoria)
+  # Running from inside a clone? (script dir or cwd has vault-template/.memoria)
   local sdir=""
   if [ -f "${BASH_SOURCE[0]:-}" ]; then
     sdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   fi
-  if [ -n "$sdir" ] && [ -d "$sdir/src/.memoria" ]; then
+  if [ -n "$sdir" ] && [ -d "$sdir/vault-template/.memoria" ]; then
     REPO_DIR="$sdir"; ok "Using the clone this script lives in: $REPO_DIR"; return
   fi
-  if [ -d "./src/.memoria" ]; then
+  if [ -d "./vault-template/.memoria" ]; then
     REPO_DIR="$(pwd)"; ok "Using the clone in the current directory: $REPO_DIR"; return
   fi
   # Piped (curl | bash): clone fresh into a temp/staging dir (removed on exit).
@@ -323,7 +323,7 @@ resolve_repo() {
   STAGING_REPO="$REPO_DIR"
   say "Not run from a clone — fetching the repo to a staging dir."
   run git clone --depth 1 --branch "$REPO_BRANCH" "$REPO_URL" "$REPO_DIR"
-  [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/src/.memoria" ] || die "Clone did not contain src/.memoria."
+  [ "$DRY_RUN" -eq 1 ] || [ -d "$REPO_DIR/vault-template/.memoria" ] || die "Clone did not contain vault-template/.memoria."
   ok "Cloned to $REPO_DIR"
 }
 
@@ -375,8 +375,8 @@ copy_vault() {
   case "$target" in "~"/*) target="$HOME/${target#~/}" ;; "~") target="$HOME" ;; esac
   VAULT_PATH="$target"
 
-  local src="$REPO_DIR/src"
-  [ -d "$src/.memoria" ] || die "No vault at $src (.memoria missing)."
+  local src="$REPO_DIR/vault-template"
+  [ -d "$src/.memoria" ] || die "No vault template at $src (.memoria missing)."
 
   if [ -d "$VAULT_PATH/.memoria" ]; then
     die "$VAULT_PATH is already a Memoria vault. This installer is fresh-install only; choose an empty target or move the existing vault aside."
@@ -910,7 +910,7 @@ print_next_steps() {
 # =============================================================================
 resolve_vault_for_profiles() {
   if [ -n "$VAULT_OVERRIDE" ]; then VAULT_PATH="$VAULT_OVERRIDE"
-  elif [ -d "./src/.memoria" ]; then VAULT_PATH="$(cd ./src && pwd)"
+  elif [ -d "./vault-template/.memoria" ]; then VAULT_PATH="$(cd ./vault-template && pwd)"
   elif [ -d "$DEFAULT_TARGET/.memoria" ]; then VAULT_PATH="$DEFAULT_TARGET"
   else die "Cannot find a vault. Pass --vault DIR (the folder containing .memoria/)."; fi
   case "$VAULT_PATH" in "~"/*) VAULT_PATH="$HOME/${VAULT_PATH#~/}" ;; esac

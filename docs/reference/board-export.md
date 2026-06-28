@@ -6,14 +6,14 @@ grand_parent: Reference
 
 # Board export
 
-`src/.memoria/mcp/board_export.py` is the one-way projection from the Hermes Kanban database into vault files and telemetry logs. The Hermes board at `~/.hermes/kanban.db` remains authoritative; the exported files are consumer views for Obsidian dashboards, Inbox Activity, Dataview, metrics aggregation, review prompts, and blocker tickets.
+`vault-template/.memoria/mcp/board_export.py` is the one-way projection from the Hermes Kanban database into vault files and telemetry logs. The Hermes board at `~/.hermes/kanban.db` remains authoritative; the exported files are consumer views for Obsidian dashboards, Inbox Activity, Dataview, metrics aggregation, review prompts, and blocker tickets.
 
 ## Command
 
 ```bash
-python src/.memoria/mcp/board_export.py --vault <vault>
-python src/.memoria/mcp/board_export.py --vault <vault> --from-json cards.json
-python src/.memoria/mcp/board_export.py --cost-doctor
+python vault-template/.memoria/mcp/board_export.py --vault <vault>
+python vault-template/.memoria/mcp/board_export.py --vault <vault> --from-json cards.json
+python vault-template/.memoria/mcp/board_export.py --cost-doctor
 ```
 
 | Option | Contract |

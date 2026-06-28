@@ -49,5 +49,5 @@ immediately blocking on corpus size.
 ## Source of truth
 
 The source files live under
-[`src/.memoria/samples/mediterranean-diet/`](https://github.com/eranroseman/memoria-vault/tree/main/src/.memoria/samples/mediterranean-diet).
+[`vault-template/.memoria/samples/mediterranean-diet/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/.memoria/samples/mediterranean-diet).
 If this page disagrees with the bundle, the bundle wins.

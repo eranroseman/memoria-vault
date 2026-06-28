@@ -7,7 +7,7 @@ grand_parent: Reference
 # Obsidian workspaces
 
 Memoria ships one saved Obsidian workspace named **Memoria** in
-`src/.obsidian/workspaces.json`. It is a reset layout, not the space switcher
+`vault-template/.obsidian/workspaces.json`. It is a reset layout, not the space switcher
 ([ADR-81](../adr/81-persistent-gate-dashboards.md)). Space switching happens
 through the pinned `_nav.md` rail note in the left pane.
 

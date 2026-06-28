@@ -1,3 +1,4 @@
+import gzip
 import json
 import os
 import tarfile
@@ -6,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria.runtime import diagnostics
+from memoria_vault.runtime import diagnostics
 
 
 def test_record_event_writes_content_light_outside_vault(tmp_path, monkeypatch):
@@ -127,6 +128,23 @@ def test_redacted_bundle_excludes_raw_by_default(tmp_path):
     assert "README.txt" in names
     assert "api_key" not in text
     assert "payload_sha256" in text
+
+
+def test_redacted_bundle_tolerates_bad_rotated_jsonl(tmp_path):
+    state = tmp_path / "state"
+    state.mkdir()
+    with gzip.open(state / "diagnostics-2026-06-19.jsonl.1.gz", "wt", encoding="utf-8") as gz:
+        gz.write(json.dumps({"component": "bundle", "level": "error", "code": "ok"}) + "\n")
+        gz.write("not-json\n")
+        gz.write(json.dumps(["not", "an", "object"]) + "\n")
+
+    bundle = diagnostics.create_redacted_bundle(tmp_path / "bundle.tgz", state_dir=state)
+
+    with tarfile.open(bundle, "r:gz") as tar:
+        payload = tar.extractfile("diagnostics-2026-06-19.jsonl.1.redacted.jsonl")
+        text = payload.read().decode("utf-8") if payload else ""
+
+    assert '"code": "ok"' in text
 
 
 def test_redaction_self_test_blocks_known_sensitive_strings():

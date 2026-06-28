@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""docs-doctor — structural linter for the Memoria docs/ tree (+ src/ link text).
+"""docs-doctor — structural linter for docs/ plus vault-template link text.
 
 Enforces the conventions from the mode-first refactor plan. These are all
 *structural* checks; classifying a file by reading mode is a human concern and
@@ -16,9 +16,9 @@ Checks:
                         docs and on the vault note templates' fenced frontmatter.
   4. No wikilinks     — a [[wikilink]] that resolves to a docs file must be a
                         relative Markdown link (GitHub does not render wikilinks).
-  5. Link text        — across docs/ AND src/, a link's visible text must be the
-                        target's page title, not its filename; bare [[wikilinks]] in
-                        vault notes must be aliased with the title.
+  5. Link text        — across docs/ and vault-template/, a link's visible text
+                        must be the target's page title, not its filename; bare
+                        [[wikilinks]] in vault notes must be aliased with the title.
   6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
                         vault note (an aliased link to a missing note is otherwise
                         silent).
@@ -351,12 +351,11 @@ def check_broken_vault_wikilinks(md: Path, errors: list[str], vault_stems: set[s
 
 def check_site_local_links(md: Path, root: Path, errors: list[str]) -> None:
     # A *published* docs page must not link to a file outside the published site (docs/).
-    # The recurring case is a relative link into src/: it resolves on disk and on
-    # github.com, but src/ is a sibling of docs/ and is NOT part of the Jekyll site
-    # (docs/_config.yml), so the link 404s on the live site at *any* path depth — fixing
-    # the number of ../ never helps. Use inline code for a source path (`src/…`), or an
-    # absolute github.com/eranroseman/memoria-vault/blob/main/… URL when a click is
-    # genuinely wanted.
+    # The recurring case is a relative link into repository source: it resolves on disk
+    # and on github.com, but paths such as vault-template/ and src/ are siblings of docs/
+    # and are NOT part of the Jekyll site (docs/_config.yml). Use inline code for a
+    # source path, or an absolute github.com/eranroseman/memoria-vault/blob/main/… URL
+    # when a click is genuinely wanted.
     if not _published(md, root):
         return
     site = root.resolve()
@@ -374,7 +373,7 @@ def check_site_local_links(md: Path, root: Path, errors: list[str]) -> None:
         except ValueError:
             errors.append(
                 f"{md}: relative link '{path_part}' leaves the published site (docs/) — "
-                f"src/ is not on the Jekyll site; use inline code or an absolute github.com blob URL"
+                f"repo source paths are not on the Jekyll site; use inline code or an absolute github.com blob URL"
             )
 
 
@@ -617,7 +616,7 @@ def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
             missing = sorted(source_terms[field] - doc_terms[field])
             extra = sorted(doc_terms[field] - source_terms[field])
             errors.append(
-                f"{doc}: {field} vocabulary mirror differs from src/system/vocabulary.md"
+                f"{doc}: {field} vocabulary mirror differs from vault-template/system/vocabulary.md"
                 f" (missing: {missing or 'none'}; extra: {extra or 'none'})"
             )
 

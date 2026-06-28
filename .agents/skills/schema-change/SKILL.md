@@ -30,7 +30,7 @@ Read:
    - `schemas/folders.yaml` for homes, prefixes, and skeleton
    - `schemas/calibration.yaml` for thresholds
 3. Inspect and update affected consumers:
-   - Matching `src/system/templates/<type>.md`
+   - Matching `vault-template/system/templates/<type>.md`
    - `.base` views and dashboard queries
    - Shared card writer or engine emitters
    - Linter/pre-commit behavior

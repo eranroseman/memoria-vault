@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers — [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) for native Windows production and [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) for Linux/WSL testing — take a user from nothing to a runnable Memoria install in one command: they scaffold and populate the vault from `src/`, stage the golden copy, provision the Hermes runtime and the five agent profiles, wire the crons, and guide Obsidian setup.
+The bootstrap installers — [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) for native Windows production and [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) for Linux/WSL testing — take a user from nothing to a runnable Memoria install in one command: they scaffold and populate the vault from `vault-template/`, stage the golden copy, provision the Hermes runtime and the five agent profiles, wire the crons, and guide Obsidian setup.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -17,12 +17,12 @@ Before the bootstrap, the shipped installer did only one of the setup steps — 
 
 ## The flow: scaffold, populate, golden copy
 
-The distribution mechanism is `src/` plus the hashed `<vault>/.memoria/golden/` restore baseline ([Distribution model](distribution-model.md)). The installer adds the flow:
+The distribution mechanism is `vault-template/` plus the hashed `<vault>/.memoria/golden/` restore baseline ([Distribution model](distribution-model.md)). The installer adds the flow:
 
 | Step | Purpose |
 | --- | --- |
 | Scaffold | Create the folder tree from `.memoria/schemas/folders.yaml`. |
-| Populate | Copy system files from `src/`. |
+| Populate | Copy system files from `vault-template/`. |
 | Stage golden copy | Save the restore baseline. |
 | Wire runtime | Add the pre-commit hook, Hermes profiles, optional cluster stack, Obsidian guidance, and crons. |
 
@@ -51,7 +51,7 @@ The primary path is inspect-first: download, read, then run. The one-liner is co
 Per [ADR-64](../adr/64-native-windows-support.md), Memoria uses a two-script
 platform split:
 
-- **Windows production:** `scripts/install.ps1` is the native Windows installer. It runs the official Hermes Windows installer, copies `src/` into the production vault, creates the vault-local MCP venv, deploys profiles and the policy-gate plugin, and wires Hermes crons.
+- **Windows production:** `scripts/install.ps1` is the native Windows installer. It runs the official Hermes Windows installer, copies `vault-template/` into the production vault, creates the vault-local MCP venv, deploys profiles and the policy-gate plugin, and wires Hermes crons.
 - **Linux/WSL testing:** `scripts/install.sh` remains the Linux/WSL test installer and CI/disposable-vault path.
 
 The production path has no `/mnt/c` vault path, no WSL2 gate in the PowerShell
@@ -85,6 +85,6 @@ Each trades breadth for less installer code:
 ## Related
 
 - **Reference:** [Installer (bootstrap)](../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
-- **Decisions:** [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md) (src/ + scaffold-populate + golden copy), [ADR-26](../adr/26-repo-as-install-unit.md) (the repo is the install unit).
+- **Decisions:** [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md) (vault source + scaffold-populate + golden copy), [ADR-26](../adr/26-repo-as-install-unit.md) (the repo is the install unit).
 - **Design:** [Distribution model](distribution-model.md), [Why Hermes](why-hermes.md) (the runtime the installer provisions).
 - **How-to:** [Quickstart](../how-to-guides/setup/quickstart.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).

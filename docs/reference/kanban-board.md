@@ -18,7 +18,7 @@ A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-ag
 
 ## Delegation: the tasks MCP
 
-Co-PI-shaped task handoffs use `delegate_route_task` on the tasks MCP (`src/.memoria/mcp/tasks_mcp.py`).
+Co-PI-shaped task handoffs use `delegate_route_task` on the tasks MCP (`vault-template/.memoria/mcp/tasks_mcp.py`).
 
 | Check | Result |
 | --- | --- |

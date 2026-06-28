@@ -22,7 +22,7 @@ runtime check, not a required PR CI gate.
 
 Prerequisites:
   - hermes on PATH with MCP support
-  - Python runtime deps installed (src/.memoria/mcp/requirements.txt)
+  - Python runtime deps installed (vault-template/.memoria/mcp/requirements.txt)
   - git on PATH
   - Kilo Code model access, an OpenAI-compatible endpoint override, or the
     built-in deterministic smoke endpoint used by default
@@ -67,7 +67,7 @@ command -v hermes >/dev/null 2>&1 || skip "hermes is not on PATH"
 command -v git >/dev/null 2>&1 || skip "git is not on PATH"
 PYTHON_BIN="${PYTHON:-$(command -v python3 || command -v python || true)}"
 [ -n "$PYTHON_BIN" ] || skip "python3/python is not on PATH"
-"$PYTHON_BIN" - <<'PY' || skip "missing Python runtime deps; run python -m pip install -r src/.memoria/mcp/requirements.txt"
+"$PYTHON_BIN" - <<'PY' || skip "missing Python runtime deps; run python -m pip install -r vault-template/.memoria/mcp/requirements.txt"
 import mcp.server.fastmcp  # noqa: F401
 import yaml  # noqa: F401
 PY
@@ -134,7 +134,7 @@ git -C "$VAULT" add .
 git -C "$VAULT" commit -q -m "seed disposable vault"
 
 "$PYTHON_BIN" "$ROOT/scripts/l2_smoke.py" write-profile \
-  --profile-src "$ROOT/src/.memoria/profiles/memoria-writer" \
+  --profile-src "$ROOT/vault-template/.memoria/profiles/memoria-writer" \
   --profile-stage "$PROFILE_STAGE" \
   --repo-root "$ROOT" \
   --vault "$VAULT" \

@@ -84,7 +84,7 @@ does not solve operator-facing dashboard ergonomics.
 
 - **Workflows affected:** Operational-health dashboards, board projection, eval
   trend, skill state, and future integrity projections.
-- **Files affected:** future projection engine under `src/.memoria/operations/`,
+- **Files affected:** future projection engine under `vault-template/.memoria/operations/`,
   projection registry, dashboard references, Linter/projector conformance tests.
 - **Related decisions / Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
   [ADR-57](57-engines-write-agents-judge.md),

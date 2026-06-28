@@ -6,12 +6,12 @@ grand_parent: Reference
 
 # Worklists
 
-`src/.memoria/operations/lib/worklists.py` turns a high-cardinality report into one file-backed batch review surface. The operation writes many `worklist-item` notes and raises exactly one aggregate Inbox `work-prompt` for the PI.
+`vault-template/.memoria/operations/lib/worklists.py` turns a high-cardinality report into one file-backed batch review surface. The operation writes many `worklist-item` notes and raises exactly one aggregate Inbox `work-prompt` for the PI.
 
 ## Command
 
 ```bash
-python src/.memoria/operations/lib/worklists.py emit --vault <vault> --report report.json --title "Batch title"
+python vault-template/.memoria/operations/lib/worklists.py emit --vault <vault> --report report.json --title "Batch title"
 ```
 
 | Option | Contract |

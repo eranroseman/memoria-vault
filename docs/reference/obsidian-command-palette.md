@@ -20,15 +20,15 @@ Action parity rule: durable actions are reachable from the palette without askin
 | `Memoria: archive fleeting note` | The **active** fleeting note (must be under `notes/fleeting/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-active-note.js` (`Type: fleeting`) |
 | `Memoria: write claim note` | Opens the `memoria-claim-capture` Modal Forms form, writes a standalone claim in the **review-gated home** (`notes/claims/`), runs the pre-file similarity shadow check, and opens the note. | QuickAdd Macro → `system/scripts/write-claim.js` |
 | `Memoria: archive claim note` | The **active** claim note (must be under `notes/claims/`) flipped in place to `lifecycle: archived` and stamped with `archived:`. | QuickAdd Macro → `system/scripts/archive-active-note.js` (`Type: claim`) |
-| `Memoria: load sample vault` | Copies the bundled `.memoria/samples/mediterranean-diet/` `catalog/` and `notes/` files into the live vault, skipping existing files so user work is not overwritten. | QuickAdd Macro → `src/system/scripts/load-sample-vault.js` |
-| `Memoria: remove sample vault` | Archives live `catalog/` and `notes/` files labeled `sample: true`, leaving the hidden bundle in place. | QuickAdd Macro → `src/system/scripts/remove-sample-vault.js` |
-| `Memoria: capture source from URL` | A source candidate lands in **Needs me**; the Librarian ingest task lands in **Activity**. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `src/system/scripts/capture-from-url.js` → `hermes kanban create` |
-| `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `src/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
-| `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `src/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
-| `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a source candidate in **Needs me**; the Librarian ingest task lands in **Activity**. | QuickAdd Macro → `src/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
-| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) archived in place with `lifecycle: archived` and `resolved:` stamped with today's date. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
-| `Memoria: dismiss inbox card` | The **active** Inbox card archived in place with no menu, then the pane returns to the Inbox. Generated ticket buttons use this when the only immediate action is to clear the ticket. | QuickAdd Macro → `src/system/scripts/resolve-inbox-card.js` (`Outcome: Dismiss`) |
-| `Memoria: open Inbox` | Opens `spaces/inbox.md` in the active pane without changing the active note. Generated tickets use this for a **Back to Inbox** button. | QuickAdd Macro → `src/system/scripts/open-inbox.js` |
+| `Memoria: load sample vault` | Copies the bundled `.memoria/samples/mediterranean-diet/` `catalog/` and `notes/` files into the live vault, skipping existing files so user work is not overwritten. | QuickAdd Macro → `vault-template/system/scripts/load-sample-vault.js` |
+| `Memoria: remove sample vault` | Archives live `catalog/` and `notes/` files labeled `sample: true`, leaving the hidden bundle in place. | QuickAdd Macro → `vault-template/system/scripts/remove-sample-vault.js` |
+| `Memoria: capture source from URL` | A source candidate lands in **Needs me**; the Librarian ingest task lands in **Activity**. A URL with a resolvable DOI ingests; a bare/proxied URL blocks asking for the DOI or citekey. | QuickAdd Macro → `vault-template/system/scripts/capture-from-url.js` → `hermes kanban create` |
+| `Memoria: structured source capture` | Opens the `memoria-source-capture` Modal Forms form, writes a schema-valid `source` note at `lifecycle: proposed` under `notes/sources/`, and raises an Inbox `candidate` pointing at it. | QuickAdd Macro → `vault-template/system/scripts/structured-source-capture.js` (Modal Forms API + Obsidian adapter) |
+| `Memoria: start project` | Opens the Project start form, scaffolds `projects/<slug>/` with `project.md`, `thesis.md`, and empty `code/`, `drafts/`, and `exports/` folders. | QuickAdd Macro → `vault-template/system/scripts/start-project.js` (Modal Forms API + Obsidian adapter) |
+| `Memoria: capture from Zotero selection` | A Tier-0 Catalog stub plus a source candidate in **Needs me**; the Librarian ingest task lands in **Activity**. | QuickAdd Macro → `vault-template/system/scripts/capture-from-zotero.js` (Better BibTeX JSON-RPC) → `hermes kanban create` |
+| `Memoria: resolve inbox card` | The **active** note (must be under `inbox/`) archived in place with `lifecycle: archived` and `resolved:` stamped with today's date. | QuickAdd Macro → `vault-template/system/scripts/resolve-inbox-card.js` (pure Obsidian API — no shelling) |
+| `Memoria: dismiss inbox card` | The **active** Inbox card archived in place with no menu, then the pane returns to the Inbox. Generated ticket buttons use this when the only immediate action is to clear the ticket. | QuickAdd Macro → `vault-template/system/scripts/resolve-inbox-card.js` (`Outcome: Dismiss`) |
+| `Memoria: open Inbox` | Opens `spaces/inbox.md` in the active pane without changing the active note. Generated tickets use this for a **Back to Inbox** button. | QuickAdd Macro → `vault-template/system/scripts/open-inbox.js` |
 
 Template-based document creation starts from the templates in `system/templates/` — see [Document types](document-types.md). Claim and fleeting capture use Modal Forms wrappers that render their templates, so the form prompts, note body, and note-local command buttons stay aligned.
 
@@ -40,15 +40,15 @@ One command per non-code lane task, each prompting only for what that task needs
 
 | Command | Lane → agent (skill) | Prompts for | Implementation |
 | --- | --- | --- | --- |
-| `Memoria: catalog source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → `src/system/scripts/catalog-source.js` |
-| `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/sources/`, otherwise prompts for a path or citekey. | QuickAdd Macro → `src/system/scripts/extract-claims.js` |
-| `Memoria: link claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `src/system/scripts/link-claim.js` |
-| `Memoria: map corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `src/system/scripts/map-corpus.js` |
-| `Memoria: retry map corpus and dismiss` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. Generated map-blocker tickets use it to queue the retry, archive the ticket, and return to the Inbox. | QuickAdd Macro → `src/system/scripts/retry-map-corpus-and-dismiss.js` |
-| `Memoria: draft section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `src/system/scripts/draft-section.js` |
-| `Memoria: verify draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `src/system/scripts/verify-draft.js` |
-| `Memoria: delegate task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `src/system/scripts/delegate-task.js` |
-| `Memoria: run pattern` | Librarian card invoking `patterns_run` ([ADR-53](../adr/53-pattern-library.md)) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → `src/system/scripts/run-pattern.js` |
+| `Memoria: catalog source` | catalog → Librarian (`catalog-enrich-record`) | Citekey or URL, optional goal. | QuickAdd Macro → `vault-template/system/scripts/catalog-source.js` |
+| `Memoria: extract claims` | extract → Librarian (`extract-stub-claim`) | The source note — defaults to the active note when it's under `catalog/papers/` or `notes/sources/`, otherwise prompts for a path or citekey. | QuickAdd Macro → `vault-template/system/scripts/extract-claims.js` |
+| `Memoria: link claim` | link → Librarian (`link-suggest-claim`) | The claim note — defaults to the active note when it's under `notes/claims/`. | QuickAdd Macro → `vault-template/system/scripts/link-claim.js` |
+| `Memoria: map corpus` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. | QuickAdd Macro → `vault-template/system/scripts/map-corpus.js` |
+| `Memoria: retry map corpus and dismiss` | map → Librarian (`map-cluster-corpus`) | Scope (folder or hub note) — optional; Enter maps the whole corpus. Generated map-blocker tickets use it to queue the retry, archive the ticket, and return to the Inbox. | QuickAdd Macro → `vault-template/system/scripts/retry-map-corpus-and-dismiss.js` |
+| `Memoria: draft section` | draft → Writer (`draft-write-section`) | The goal or outline ref. | QuickAdd Macro → `vault-template/system/scripts/draft-section.js` |
+| `Memoria: verify draft` | verify → Peer-reviewer (`verify-check-citation`) | The draft — defaults to the active note when it's under `projects/`. | QuickAdd Macro → `vault-template/system/scripts/verify-draft.js` |
+| `Memoria: delegate task` | Any lane (you pick from a suggester; no skill pinned) | Lane + free-form goal — the generic fallback for work that doesn't fit a single-task command. | QuickAdd Macro → `vault-template/system/scripts/delegate-task.js` |
+| `Memoria: run pattern` | Librarian card invoking `patterns_run` ([ADR-53](../adr/53-pattern-library.md)) | A pattern, from a suggester over the runnable (`lifecycle: current`) patterns in `system/patterns/`; the active note rides along as `input_ref`. | QuickAdd Macro → `vault-template/system/scripts/run-pattern.js` |
 
 The lane → agent mapping mirrors `LANE_PROFILE` in `.memoria/mcp/tasks_mcp.py` (the `code` lane has no single-task command — use `Memoria: delegate task`).
 
@@ -75,10 +75,10 @@ not create board cards.
 
 | Command | Use | Implementation |
 | --- | --- | --- |
-| `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `src/system/scripts/create-linked-claim.js` |
-| `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `src/system/scripts/refresh-project-gate.js` |
-| `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `src/system/scripts/supersede-thesis.js` |
-| `Memoria: record exploration trace` | Capture a rejected direction/dead end beside an active or selected map/gap report under `notes/fleeting/maps/`. | QuickAdd Macro → `src/system/scripts/record-exploration-trace.js` |
+| `Memoria: create linked claim note` | From an active source note, create a claim in `notes/claims/`, add the source citekey to `sources`, link it under **Worth distilling**, and open the claim. | QuickAdd Macro → `vault-template/system/scripts/create-linked-claim.js` |
+| `Memoria: refresh project gate` | From an active project file, runs the deterministic Project structural-impact operation and refreshes `project-gate-index.md`. | QuickAdd Macro → `vault-template/system/scripts/refresh-project-gate.js` |
+| `Memoria: supersede thesis` | From an active thesis note, creates a proposed replacement, marks `superseded_by` on the old thesis, updates the project `active_thesis`, and raises a re-confirmation alert. | QuickAdd Macro → `vault-template/system/scripts/supersede-thesis.js` |
+| `Memoria: record exploration trace` | Capture a rejected direction/dead end beside an active or selected map/gap report under `notes/fleeting/maps/`. | QuickAdd Macro → `vault-template/system/scripts/record-exploration-trace.js` |
 
 ---
 ## The Co-PI delegation path

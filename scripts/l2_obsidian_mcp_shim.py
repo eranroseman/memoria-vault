@@ -48,7 +48,7 @@ def serve(vault: Path) -> None:
     except ImportError as exc:
         raise SystemExit(
             "Missing MCP SDK. Install runtime deps first: "
-            "python -m pip install -r src/.memoria/mcp/requirements.txt"
+            "python -m pip install -r vault-template/.memoria/mcp/requirements.txt"
         ) from exc
 
     mcp = FastMCP("l2-obsidian-shim")

@@ -17,7 +17,7 @@
   ],
   "ignorePaths": [
     "docs/reference/bibliography.md",
-    "src/.obsidian/**",
+    "vault-template/.obsidian/**",
     "_papers/**",
     "_notes/**",
     "**/tmp/**",

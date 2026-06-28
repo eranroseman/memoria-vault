@@ -15,7 +15,7 @@ Obsidian plugin inventory, install status, and load-bearing configuration for Me
 Memoria breaks without these. The starter vault ships all thirteen bundled and configured in `.obsidian/plugins/` — twelve third-party plugins plus the Memoria-authored Inspector. First-launch steps live in [Set up Obsidian](../how-to-guides/setup/set-up-obsidian.md).
 
 The provenance lock for the bundled artifacts is
-`src/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
+`vault-template/.obsidian/plugin-provenance-lock.json`: it records each required plugin's
 upstream repository, pinned local version, artifact SHA-256 digests, license assertion,
 and local patch status. `python scripts/plugin_provenance_doctor.py` validates the
 lock in the required gate: every enabled plugin is represented once, declared

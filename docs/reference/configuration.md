@@ -20,29 +20,29 @@ files or this generator, not this page.
 
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
-| Hermes profile config | `src/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source; regenerate capability blocks from `tool-registry.yaml`; then redeploy profiles | `tests/test_profiles.py` |
-| Profile metadata | `src/.memoria/profiles/memoria-*/distribution.yaml` | Hermes profile manifest | Memoria | Edit source | `tests/test_profiles.py` |
-| Profile identity | `src/.memoria/profiles/memoria-*/SOUL.md` | Hermes profile directory | Memoria, with PI customization inside release limits | Edit source; reconcile runtime drift intentionally | profile docs and tests |
-| Bundled profile skills | `src/.memoria/profiles/*/skills/` | Hermes profile directory | Memoria | Edit source | profile tests |
-| Tool capability registry | `src/.memoria/tool-registry.yaml` | vault source and runtime vault | Memoria | Edit source | `tests/test_profiles.py` |
-| Lane policy overlays | `src/.memoria/lane-overrides/*.yaml` | vault source and runtime vault | Memoria | Edit source | policy tests |
-| Policy gate plugin | `src/.memoria/plugins/memoria-policy-gate/plugin.yaml` | Hermes profile plugins | Memoria | Edit source | policy tests |
+| Hermes profile config | `vault-template/.memoria/profiles/memoria-*/config.yaml` | `~/.hermes/profiles/memoria-*/config.yaml` | Memoria | Edit source; regenerate capability blocks from `tool-registry.yaml`; then redeploy profiles | `tests/test_profiles.py` |
+| Profile metadata | `vault-template/.memoria/profiles/memoria-*/distribution.yaml` | Hermes profile manifest | Memoria | Edit source | `tests/test_profiles.py` |
+| Profile identity | `vault-template/.memoria/profiles/memoria-*/SOUL.md` | Hermes profile directory | Memoria, with PI customization inside release limits | Edit source; reconcile runtime drift intentionally | profile docs and tests |
+| Bundled profile skills | `vault-template/.memoria/profiles/*/skills/` | Hermes profile directory | Memoria | Edit source | profile tests |
+| Tool capability registry | `vault-template/.memoria/tool-registry.yaml` | vault source and runtime vault | Memoria | Edit source | `tests/test_profiles.py` |
+| Lane policy overlays | `vault-template/.memoria/lane-overrides/*.yaml` | vault source and runtime vault | Memoria | Edit source | policy tests |
+| Policy gate plugin | `vault-template/.memoria/plugins/memoria-policy-gate/plugin.yaml` | Hermes profile plugins | Memoria | Edit source | policy tests |
 | MCP server config | embedded in each profile `config.yaml` | Hermes profile config | Memoria | Edit source, then redeploy profiles | profile and MCP tests |
-| MCP Python dependencies | `src/.memoria/mcp/requirements*.txt` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall deps | installer tests |
-| Project hints | `src/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
-| Schema config | `src/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
-| Calibration | `src/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
-| Obsidian plugin settings | `src/.obsidian/plugins/**` | runtime vault `.obsidian/plugins/**` | Memoria except local secrets | Shipped config; reconcile intentionally | plugin docs and status checks |
+| MCP Python dependencies | `vault-template/.memoria/mcp/requirements*.txt` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall deps | installer tests |
+| Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
+| Schema config | `vault-template/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
+| Calibration | `vault-template/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
+| Obsidian plugin settings | `vault-template/.obsidian/plugins/**` | runtime vault `.obsidian/plugins/**` | Memoria except local secrets | Shipped config; reconcile intentionally | plugin docs and status checks |
 | Local REST API secrets | example files only | runtime plugin `data.json` plus profile `.env` | PI machine | Never commit live secrets | setup docs |
 | Profile environment variables | `env_requires` in each profile's `distribution.yaml` | `~/.hermes/profiles/<profile>/.env` or `%LOCALAPPDATA%\hermes\profiles\<profile>\.env` | PI machine | Never commit; seed from shared Hermes env | installer smoke |
 | Shared Hermes environment seed | not in repo | `~/.hermes/.env` or `%LOCALAPPDATA%\hermes\.env` | PI machine | Never commit; rerun profiles-only after changes | installer propagation |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
-| Cron wrappers | `src/.memoria/scripts/*.sh` | vault source and Hermes cron commands | Memoria | Edit source | shellcheck |
+| Cron wrappers | `vault-template/.memoria/scripts/*.sh` | vault source and Hermes cron commands | Memoria | Edit source | shellcheck |
 
 <!-- REFERENCE:START -->
 <!-- Generated by scripts/gen_reference_refs.py; edit schema sources instead. -->
 
-Generated from `src/.memoria/schemas/folders.yaml`.
+Generated from `vault-template/.memoria/schemas/folders.yaml`.
 
 ## Folder controls
 
@@ -97,8 +97,8 @@ Generated from `src/.memoria/schemas/folders.yaml`.
 
 ## Rendered versus authored
 
-`src/.memoria/profiles/**/config.yaml` is checked-in source. Its mechanical
-capability blocks are generated from `src/.memoria/tool-registry.yaml` by
+`vault-template/.memoria/profiles/**/config.yaml` is checked-in source. Its mechanical
+capability blocks are generated from `vault-template/.memoria/tool-registry.yaml` by
 `scripts/render_profile_configs.py`; profile-specific server wiring and model
 placeholders remain in the profile config.
 

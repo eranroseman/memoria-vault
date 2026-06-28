@@ -304,7 +304,7 @@ def test_gated_prefix_fallbacks_match_folders_yaml():
     schema.load_gated_prefixes is the one loader for in-repo consumers."""
     import patterns_mcp
 
-    from memoria.runtime.policy import REVIEW_GATED_PREFIXES
+    from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
     canonical = tuple(schema.load_folders()["gated_prefixes"])
     assert canonical == schema.load_gated_prefixes()

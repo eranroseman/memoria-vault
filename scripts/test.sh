@@ -17,7 +17,7 @@
 # Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = collect-only, no run
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
-P=src/.memoria
+P=vault-template/.memoria
 fail=0
 run() { printf '→ %s\n' "$*"; if "$@" >/tmp/mt.$$ 2>&1; then sed 's/^/    /' /tmp/mt.$$ | tail -2; else sed 's/^/    /' /tmp/mt.$$; echo "    ✗ FAILED"; fail=1; fi; rm -f /tmp/mt.$$; }
 
@@ -45,8 +45,8 @@ check_paths() {
 
 l0() {
   echo "── L0: static + schema ──"
-  run ruff check memoria scripts src/.memoria .github/scripts tests
-  run ruff format --check memoria scripts src/.memoria .github/scripts tests
+  run ruff check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
+  run ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
   run python3 scripts/gen_profiles_ref.py --check
   run python3 scripts/gen_reference_refs.py --check
@@ -58,18 +58,18 @@ l0() {
   run python3 scripts/plugin_provenance_doctor.py
   if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
   else echo "→ check-test-refs    (not on this branch — skipped)"; fi
-  run python3 -m py_compile scripts/verify scripts/test_env_harness.py memoria/*.py memoria/runtime/*.py memoria/runtime/policy/*.py
+  run python3 -m py_compile scripts/verify scripts/test_env_harness.py src/memoria_vault/*.py src/memoria_vault/runtime/*.py src/memoria_vault/runtime/policy/*.py
   run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/test-l2.sh
   if command -v shellcheck >/dev/null 2>&1; then
-    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh src/.memoria/operations/integrity/linter/pre-commit src/.githooks/post-commit "$P"/scripts/*.sh
+    run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh vault-template/.memoria/operations/integrity/linter/pre-commit vault-template/.githooks/post-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi
   # Vault lint over the live tree. dashboard-field-drift and design-system-drift are
   # GATED: dashboard field drift is a silent failure, and design drift means the
   # shipped vault no longer matches its visual source of truth.
   # content findings (broken wikilinks, schema-check) print but stay advisory.
-  run python3 "$P/operations/integrity/linter/detectors.py" --vault src --gate dashboard-field-drift,design-system-drift
+  run python3 "$P/operations/integrity/linter/detectors.py" --vault vault-template --gate dashboard-field-drift,design-system-drift
 }
 
 case "${1:-all}" in

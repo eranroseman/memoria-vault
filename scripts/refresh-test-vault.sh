@@ -2,7 +2,7 @@
 # Fast local refresh for the disposable ~/Memoria-test sandbox.
 # cspell:words pathlib
 #
-# This updates source-owned vault files from src/ without doing a fresh install.
+# This updates source-owned vault files from vault-template/ without doing a fresh install.
 # It preserves runtime state (.git, venv, logs, exports, local Obsidian plugin
 # secrets) and refreshes the golden copy so drift checks match the new source.
 set -euo pipefail
@@ -20,7 +20,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/refresh-test-vault.sh [--vault DIR] [--profiles auto|always|never] [--dry-run]
 
-Fast-refresh an existing disposable Memoria test vault from src/.
+Fast-refresh an existing disposable Memoria test vault from vault-template/.
 
 Options:
   --vault DIR                 Target vault (default: ~/Memoria-test)
@@ -96,8 +96,8 @@ case "$PROFILES" in
   *) die "--profiles must be auto, always, or never" ;;
 esac
 
-SRC="$ROOT/src"
-[ -d "$SRC/.memoria" ] || die "cannot find src/.memoria under $ROOT"
+SRC="$ROOT/vault-template"
+[ -d "$SRC/.memoria" ] || die "cannot find vault-template/.memoria under $ROOT"
 [ -d "$VAULT/.memoria" ] || die "$VAULT is not an existing Memoria vault; run scripts/install.sh first"
 need rsync
 
