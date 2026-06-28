@@ -9,16 +9,11 @@ nav_order: 9
 
 Read the audit trail and the per-session summaries from the terminal — filter by lane, date, decision, or card — when you need to answer "what did the system actually do?" without waiting for a dashboard. This is the ad-hoc path beneath the audit-log and fleet-health dashboards ([Dashboards](../../reference/dashboards.md)); they render the same data — this is for one-off questions and scripting.
 
-Both logs are append-only JSONL and **read-only** — never edit them; an out-of-band edit is exactly what the Linter's tamper detectors exist to catch.
-
-## The two logs
-
-| Log | Path | One row / file |
-| --- | --- | --- |
-| Policy audit log | `system/logs/audit.jsonl` | One gated decision (`allow` / `allow_with_log` / `deny` / `dry_run`), plus a paired `write_complete` record per write. |
-| Per-session summaries | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | One deterministic digest per session — a header plus one record per touched path. |
-
-The audit log is forensic and grows forever; the per-session summaries are digests the Linter writes once a session has been quiet for 24 h. The design is in [Session logging](../../explanation/architecture/session-logging.md); the audit field schema is owned by [Policy MCP](../../reference/policy-mcp.md).
+Both logs are append-only JSONL and **read-only** — never edit them; an
+out-of-band edit is exactly what the Linter's tamper detectors exist to catch.
+The two-log design is in [Session
+logging](../../explanation/architecture/session-logging.md); the audit field
+schema is owned by [Policy MCP](../../reference/policy-mcp.md).
 
 ## Prerequisites
 

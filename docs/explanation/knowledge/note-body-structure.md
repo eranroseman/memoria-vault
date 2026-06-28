@@ -47,14 +47,6 @@ The three questions a hub body should answer — what is this area about, what b
 
 ---
 
-## How the body sections honor the epistemic separation
-
-The body structures above only work if the underlying separation holds: a source note records what a source says from an external perspective, a claim records what the PI thinks in their own words, and a hub is a navigational surface rather than a synthesis destination. Why that separation exists, why mixing it breaks citation tracing, and why it lets agent permissions be cleanly scoped are developed in [Document types and epistemic roles](document-types.md).
-
-Taking the separation as given, the body sections are what enforce it concretely. The source note's external-perspective Summary and Critique keep the PI's conclusions out of the record of what the paper argues; the claim note's Claim-plus-Evidence shape forces an asserted position rather than a paraphrase; the hub's three questions keep it a framing-and-planning surface rather than a place synthesis accidentally lands.
-
----
-
 ## Related
 
 - The three epistemic roles explained: [Document types and epistemic roles](document-types.md)

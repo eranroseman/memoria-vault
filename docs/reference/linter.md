@@ -6,7 +6,14 @@ grand_parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)): deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. Its contract is **gates at commit, monitors between** — the pre-commit hook blocks schema-invalid notes from being committed, and the daily cron reports everything else. Scope: detection only. Live in-app edits are caught by the next sweep, and every detector is report-only — findings surface for the PI to act on; nothing is auto-moved or auto-archived.
+The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)).
+
+| Question | Answer |
+| --- | --- |
+| What is it? | Deterministic, zero-LLM Python under `src/.memoria/operations/integrity/linter`. |
+| What blocks? | The pre-commit hook blocks schema-invalid notes from being committed. |
+| What reports? | The daily cron reports everything else, including live in-app edits caught by the next sweep. |
+| What never happens? | Detectors do not auto-move or auto-archive files; findings surface for the PI. |
 
 ---
 
@@ -69,7 +76,15 @@ The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-67](../ad
 
 ## Per-session digests
 
-`src/.memoria/operations/integrity/linter/session_summary.py` writes the second of [ADR-25](../adr/25-session-logging-two-logs.md)'s two logs: a **deterministic digest** of each session's audit activity (the Linter is zero-LLM — no narrative). It groups `audit.jsonl` entries by `task_id` and writes one `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` per finished session (named from the session's first timestamp; a deterministic `-2` suffix disambiguates a shared start minute): a header record (task, profiles, start/end, counts by action and decision) plus one record per touched path (actions, final decision, final `after_hash`). Idempotent — an already-digested `task_id` is never rewritten — and sessions active within the last **24 h** (`--quiet-hours`) are left for a later run so in-flight work isn't summarized early.
+`src/.memoria/operations/integrity/linter/session_summary.py` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
+
+| Aspect | Contract |
+| --- | --- |
+| Input | `audit.jsonl`, grouped by `task_id`. |
+| Output | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl`. |
+| Records | One header plus one row per touched path. |
+| Idempotency | An already-digested `task_id` is never rewritten. |
+| Quiet window | Sessions active within the last **24 h** (`--quiet-hours`) wait for a later run. |
 
 ```bash
 python3 .memoria/operations/integrity/linter/session_summary.py --vault <vault> [--quiet-hours H]

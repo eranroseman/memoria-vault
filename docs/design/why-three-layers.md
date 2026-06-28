@@ -27,14 +27,11 @@ The failure mode of most single-agent or single-document systems is that these t
 
 ## What happens when they collapse
 
-**Orchestration + execution collapsed (no separate board):**
-Work state lives in agent memory or chat context. When a session ends, the state is gone. The next session starts fresh: it doesn't know what was already done, what failed and why, or where the previous worker left off. Retries duplicate work. Handoffs lose context. Long-horizon tasks that span multiple sessions become unreliable.
-
-**Execution + knowledge collapsed (agents write canon directly):**
-There is no gate between "the agent finished" and "this is now trusted information." A confidently-wrong agent writes claims that downstream work cites — and those errors compound.
-
-**Orchestration + knowledge collapsed (tasks and knowledge share a store):**
-Task history pollutes the knowledge graph. In-flight notes get confused with settled notes, and there is no structural way to tell them apart. Queries against the vault return noise.
+| Collapse | Failure | Layered fix |
+| --- | --- | --- |
+| Orchestration + execution | Work state lives in chat or agent memory; retries duplicate work and handoffs lose context. | A board card records state, lane, handoff payload, and failure history. |
+| Execution + knowledge | Agents write canon directly; confident errors become cited knowledge. | The review gate separates "finished" from "trusted." |
+| Orchestration + knowledge | Task history pollutes the knowledge graph. | Tasks stay on the board; settled knowledge stays in the vault. |
 
 ---
 

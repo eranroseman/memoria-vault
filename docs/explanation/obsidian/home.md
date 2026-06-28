@@ -43,12 +43,6 @@ This is the same discipline applied to the dashboards themselves: the human-faci
 
 ---
 
-## Graceful degradation
-
-On a freshly cloned vault, before any data exists, the welcome note shows its "start here" guidance and the dashboards behind it show mostly empty states. That is intentional and matches how the dashboards degrade — empty is a valid state, not a broken one. Because the welcome note owns no custom computation, it should never fail just because the vault is new.
-
----
-
 ## Related
 
 - What Home links *to*: [the dashboards](../dashboards/README.md)

@@ -118,7 +118,7 @@ Tier 0 is effectively free (local). Tier 1 is a handful of HTTP calls — the me
 
 ### Future options
 
-Subscription publisher APIs are deliberately out of scope (open-access full text via S2ORC/CORE/PMC/arXiv/Unpaywall covers the OA slice). Deferred: heavier domain NLP (scispaCy, an RCT/PICO classifier) only if the embedding/zero-shot tag layer proves insufficient; the S2 Recommendations API and `/snippet/search` for discovery; an API-POST capture transport ([The control plane](../explanation/architecture/control-plane.md) ideal) once the Hermes API is stood up — the script front-end ships first.
+Subscription publisher APIs are deliberately out of scope (open-access full text via S2ORC/CORE/PMC/arXiv/Unpaywall covers the OA slice). Deferred: heavier domain NLP (scispaCy, an RCT/PICO classifier) only if the embedding/zero-shot tag layer proves insufficient; the S2 Recommendations API and `/snippet/search` for discovery; an API-POST capture transport ([Kanban board](../explanation/kanban-board/README.md) ideal) once the Hermes API is stood up — the script front-end ships first.
 
 ## Consequences
 

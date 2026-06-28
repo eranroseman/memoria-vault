@@ -39,7 +39,7 @@ Memoria builds **on** Hermes rather than implementing its own runtime. Hermes ow
 
 **OpenHands-style sandbox-vs-host permission model.** Rejected: it routes permissions through a sandbox boundary, whereas Memoria needs permissions enforced per-profile at the write layer (the policy MCP), independent of where execution runs.
 
-**Render the board with the Obsidian Kanban plugin.** Rejected: the authoritative board is Hermes's `kanban.db`, surfaced via the Dataview-backed [`board-state`](../explanation/dashboards/daily-glance/board-state.md) dashboard. The plugin reads only its own single-file Kanban-format markdown (`kanban-plugin: board` frontmatter), of which there is none. Bridging them — the `hermes-kanban` translation layer — works but couples two state machines for no gain; the Hermes Workspace board view and the `board-state` dashboard already cover visualization. (Obsidian Kanban remains fine for standalone personal boards unrelated to the Hermes board.)
+**Render the board with the Obsidian Kanban plugin.** Rejected: the authoritative board is Hermes's `kanban.db`, surfaced via the Dataview-backed [`board-state`](../explanation/dashboards/daily-glance/README.md#board-state-support) dashboard. The plugin reads only its own single-file Kanban-format markdown (`kanban-plugin: board` frontmatter), of which there is none. Bridging them — the `hermes-kanban` translation layer — works but couples two state machines for no gain; the Hermes Workspace board view and the `board-state` dashboard already cover visualization. (Obsidian Kanban remains fine for standalone personal boards unrelated to the Hermes board.)
 
 ## Related
 

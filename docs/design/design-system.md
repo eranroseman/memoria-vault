@@ -29,17 +29,11 @@ What the design system adds is *scope*: this fixed-palette rule applies to every
 
 ---
 
-## Why system fonts, not custom stacks
+## Fonts and spacing
 
-The typography section specifies system-ui fallback stacks rather than custom font families. The reason is export portability. A custom font that isn't installed on the recipient's machine causes Pandoc or a PDF renderer to fall back silently, producing inconsistent output that's hard to diagnose. System stacks resolve on every machine — the font the author sees is the font the collaborator sees.
-
-The monospace stack (`JetBrains Mono, Consolas, Courier New`) is the one exception: code blocks need a consistent monospace baseline, and JetBrains Mono is widely installed alongside development tooling. If it's absent, the Consolas/Courier New fallback is indistinguishable in a code context.
-
----
-
-## Why 4pt spacing base
-
-The spacing section is built on multiples of 4px. This isn't aesthetic minimalism — it's precision enforcement. Multiples of 4 produce consistent visual rhythm because the human perceptual system responds to proportional relationships, not to absolute sizes. An arbitrary `7px` gap between elements breaks the rhythm in a way that `8px` (2×base) doesn't. The rule is: if a spacing value isn't on the `4n` grid, it should be changed to the nearest grid point, not kept as a one-off.
+System font stacks and a 4px spacing base keep Obsidian, Pandoc, and web renders
+close without shipping fonts or per-consumer spacing overrides. The exact values
+live in `.memoria/design-system.md`.
 
 ---
 

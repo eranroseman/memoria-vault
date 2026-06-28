@@ -76,4 +76,4 @@ Closing the pane exports the transcript for later review ([Agent Client pane](..
 **Explanation**
 
 - The agent in the Agent Client pane: [The Co-PI](../../explanation/profiles/co-pi.md)
-- The queue this works down: [Discuss queue](../../explanation/dashboards/synthesis-agenda/discuss-queue.md)
+- The queue this works down: [Discuss queue](../../explanation/dashboards/synthesis-agenda/README.md#discuss-queue)

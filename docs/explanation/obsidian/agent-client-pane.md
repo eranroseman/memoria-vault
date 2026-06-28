@@ -9,6 +9,11 @@ nav_order: 4
 
 The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. The pane hosts **one agent — the Co-PI** (Memoria's single conversational agent — see [Glossary](../../reference/glossary.md)) ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes** (background workers on the kanban board — see [Glossary](../../reference/glossary.md)), not conversation partners, and the Co-PI delegates cards (units of delegated work) to them.
 
+Most Memoria work belongs on the board because it produces a reviewable artifact.
+The pane exists for synchronous, exploratory thinking where the useful output is
+a clearer PI. That split keeps conversation and production separate: read-only
+conversation in one place, scoped artifact production on the board.
+
 For *how to operate* the pane — opening it, attaching a note as context, reading responses, ending a session — see the how-to guide [Agent Client pane](../../how-to-guides/using-obsidian/use-the-agent-client-pane.md). For the `data.json` keys, load-bearing settings, hotkeys, and per-device install discipline, see [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) and [Obsidian plugin data files](../../reference/obsidian-plugin-data-files.md).
 
 ---
@@ -27,8 +32,7 @@ A pane session that keeps producing things you wish were files is the signal to 
 ## Related
 
 - The one agent in the pane: [The Co-PI](../profiles/co-pi.md)
-- Why the pane exists: [Why the Agent Client pane exists](../../design/why-agent-client-pane.md)
 - Operating the pane: [Agent Client pane](../../how-to-guides/using-obsidian/use-the-agent-client-pane.md)
-- Where delegated work goes: [The control plane](../architecture/control-plane.md)
+- Where delegated work goes: [The Kanban board](../kanban-board/README.md)
 - Plugin settings: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
 - Plugin data-file conventions: [Obsidian plugin data files](../../reference/obsidian-plugin-data-files.md)

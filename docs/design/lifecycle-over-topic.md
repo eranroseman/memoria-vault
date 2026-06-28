@@ -11,15 +11,14 @@ Two organizational decisions shape the vault: **a note's position in the system 
 
 ---
 
-## Why topic folders fail
+## Why folders encode type
 
-Topic folders seem natural. "Put all my cognitive science notes in `cognitive-science/`." The problem is that topics are **many-to-many**:
-
-A paper on attention and working memory belongs in `cognitive-science/`, and in `neuroscience/`, and in `HCI/`, and possibly in a project's orbit if it's relevant to current work. A topic folder forces a choice: pick one folder and lose the connections to the others, or create duplicates that immediately diverge.
-
-Most knowledge systems respond by letting notes exist in multiple places (aliases, copies) or by moving topics to tags. But that creates a different problem: the folder is now redundant. If topics live in frontmatter and links, the folder adds no information. If the folder adds information, it must mean something other than topic.
-
-**What a folder can uniquely encode is what a note *is*.** A note is exactly one kind of thing: a catalog entity, a source note, a claim, a hub, an Inbox card. That one-to-one fact is the folder's job. Topics live in frontmatter facets (`research_area`, `methodology`) and in links, where many-to-many can be expressed properly. This is a **Zettelkasten** inheritance: Luhmann's slip-box had no subject folders, only a web of cross-references, precisely because a fixed hierarchy can't express a note's many relationships (see [Intellectual foundations](intellectual-foundations.md#luhmanns-zettelkasten)).
+Topics are many-to-many; a folder is one location. Memoria therefore reserves
+folders for the one fact that is one-to-one: what kind of file this is — catalog
+entity, source note, claim, hub, Inbox card. Topics live in frontmatter facets
+(`research_area`, `methodology`) and authored links, following the Zettelkasten
+link-first inheritance described in [Intellectual
+foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
 ---
 

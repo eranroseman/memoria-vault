@@ -185,7 +185,14 @@ Globs use doublestar semantics: `**` crosses path segments, `*` stays within one
 - **`pre_tool_call`** maps the obsidian tool to a policy action, calls the decision core, and blocks on `deny`/`dry_run`; on an allowed write it stashes the `before_hash`. **Fail-closed:** any error inside the gate blocks.
 - **`post_tool_call`** computes `after_hash` and appends the paired `write_complete` audit record.
 
-It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin.md)): Hermes registers MCP tools as `mcp_<server>_<tool>`, shell hooks are consent-gated and fail-open — the plugin runs in-process in every mode, matches in Python, receives the `task_id`, and is fail-closed. The hook hard-denies the native `vault_delete`/`vault_move` and `command_execute` (no path to gate), hard-denies direct-world/history tools, allows Hermes `memory` only where the registry grants it, and denies `session_search` everywhere. It also enforces the per-profile tool capability registry before lane path checks; writes then narrow through lane policy.
+It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin.md)):
+
+| Layer | Enforcement |
+| --- | --- |
+| Plugin choice | Hermes registers MCP tools as `mcp_<server>_<tool>`; shell hooks are consent-gated and fail-open. The plugin runs in-process, receives `task_id`, and fails closed. |
+| Hard denies | Native `vault_delete` / `vault_move`, `command_execute`, direct-world/history tools, and `session_search`. |
+| Capability check | The per-profile tool registry is enforced before lane path checks; Hermes `memory` is allowed only where the registry grants it. |
+| Lane policy | Writes then narrow through the lane override. |
 
 ---
 

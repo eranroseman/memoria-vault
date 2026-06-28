@@ -19,7 +19,7 @@ tunable at the top of the file.
     python metrics_aggregate.py --vault <path>                 # reads `hermes kanban list --json`
     python metrics_aggregate.py --vault <path> --from-json cards.json
 
-[fleet-health dashboard]: docs/explanation/dashboards/operational-health/fleet-health.md
+[fleet-health dashboard]: docs/explanation/dashboards/operational-health/README.md#fleet-health
 """
 
 from __future__ import annotations

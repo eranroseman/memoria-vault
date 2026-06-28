@@ -46,7 +46,6 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 | --- | --- |
 | [The vault](vault.md) | The vault's category folders, type homes, gated zones, archived-as-state, and how Bases and the Linter keep it sound. |
 | [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the Co-PI is the sole memory carrier. |
-| [The control plane](control-plane.md) | The board, the lanes, the hidden execution mechanic vs the PI-facing lifecycle, and the handoff payload. |
 | [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |
 | [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes with different retention and content rules. |

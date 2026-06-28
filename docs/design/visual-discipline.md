@@ -7,9 +7,10 @@ nav_order: 22
 
 # Visual-style discipline
 
-Plugin choice is only half of how the vault feels to use. The other half is **restraint** about how the vault looks and behaves. A vault that becomes a cockpit of indicators is a vault that gets abandoned. The defaults below are deliberate, and the reasoning behind each is the point — any deviation should be equally deliberate.
-
-The defaults below make concrete the principle that governs this whole section — the architecture is invisible during normal use and legible when something goes wrong ([Obsidian — the human surface](README.md)): indicators surface only when something specific demands attention.
+Memoria's Obsidian surface keeps the architecture invisible during normal use and
+legible when something goes wrong ([Obsidian — the human
+surface](../explanation/obsidian/README.md)). The rules below keep indicators
+tied to real decisions rather than turning the vault into a cockpit.
 
 ---
 
@@ -24,8 +25,6 @@ Emoji in note *titles* break filename portability across operating systems — a
 ---
 
 ## Why chrome is hidden by default
-
-The vault should feel like writing during normal operation. Chrome — tab bars, sidebars, status indicators — is noise during focused reading and writing, and becomes signal when something needs attention. Hiding it by default preserves the signal-to-noise ratio: when the sidebar opens, it *means* something is happening.
 
 Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the rail's **Now**: the Inbox action count and Maintenance/Fleet health band stay visible without adding a separate always-on indicator.
 
@@ -45,16 +44,6 @@ The saved **Memoria** workspace remains useful as a reset shell: home in the mai
 navigation on the left, Co-PI on the right. Daily mode switching happens through the
 left-pane rail, not layout swaps. The exact layout and space list are reference material:
 [Obsidian workspaces](../reference/obsidian-workspaces.md).
-
----
-
-## The success condition
-
-Three months in, the mouse hand barely moves and there is no conscious tracking of which
-layout is active. The vault looks like a writing environment, and the only time an
-indicator pulls the eye is when something genuinely needs a decision. That is what
-visual-style discipline is for — not minimalism for its own sake, but preserving
-attention for the moments that deserve it.
 
 ---
 

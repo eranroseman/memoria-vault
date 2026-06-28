@@ -13,9 +13,11 @@ Classifying tags a paper with its field of study. When a source comes in, ingest
 
 Three situations bring you in:
 
-- **Genuine ambiguity.** Ingest couldn't pick a value, so it left the field blank and raised a card in your queue. (A `flag` card is one type of Inbox card; it reports a finding and lists the top candidates with scores, but never decides for you.)
-- **A draft to review.** The Librarian (the background worker that does library setup) often drafts a suggested classification. It parks the draft in a `_proposed_classification` block — a holding area in the paper's frontmatter, kept separate from the real fields until you accept it.
-- **A correction.** Ingest applied a value you disagree with. You edit the frontmatter directly; no card is involved.
+| Situation | What it means |
+| --- | --- |
+| Genuine ambiguity | Ingest left the field blank and raised a `flag` card with candidate values and scores. It reports; you decide. |
+| Draft to review | The Librarian parked a suggested value in `_proposed_classification`, separate from the real fields. |
+| Correction | Ingest applied a value you disagree with; edit the frontmatter directly. |
 
 For what ingest decides and how, see [Ingest routing](../../reference/ingest.md).
 

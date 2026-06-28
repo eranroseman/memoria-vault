@@ -7,7 +7,12 @@ nav_order: 12
 
 # Why the review gate is structural
 
-Memoria's review gate is **structural**: the policy MCP blocks writes to canonical zones regardless of which profile requests them. It is not advisory (a suggestion the agent could override), not configurable (a setting the human could relax), and not prompt-based (an instruction the agent is expected to follow). This document explains why.
+Memoria's review gate is **structural**: the policy MCP blocks writes to canonical zones regardless of profile. It is not an advisory suggestion, a setting the human can relax, or a prompt instruction. This page explains why.
+
+Promotion makes content canonical: a claim, hub, link, or project thesis now
+represents a PI decision and downstream work may trust it. The rule is
+**propose, not dispose**. Agents and operations can stage proposals; the PI
+decides what becomes part of the record.
 
 ---
 
@@ -74,6 +79,9 @@ The Peer-reviewer and the operations (the Linter, the sweeps) can attach a recom
 
 The structural gate makes the human a bottleneck. Review doesn't auto-scale; if the human doesn't review, done cards pile up in the `awaiting-review` state and the WIP cap eventually slows new work.
 
+That visible slowness is deliberate. A full review queue should slow the system
+rather than silently redefine "reviewed" as "agent finished."
+
 This is the design. The bottleneck is the point: the human must stay in contact with what the agents produce. A system that can autonomously move synthesis to canonical without human attention has removed the epistemic guarantee that makes the vault trustworthy.
 
 The cost reduction that an advisory gate would buy (less time in review) is not worth the structural guarantee it would spend (canonical synthesis is always human-approved).
@@ -86,7 +94,7 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 - Why specialist profiles support this: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
 - Why the vault won't autonomize synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
-- How the review state works in the workflow: [Review as a first-class state](../explanation/workflows/review-as-state.md)
+- How the review state works on the board: [Board states and the review gate](../explanation/kanban-board/states.md)
 - What the gate enforces at the synthesis boundary: [Why promotion is gated](../explanation/knowledge/promotion-model.md)
 
 **Reference**

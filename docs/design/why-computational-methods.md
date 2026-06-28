@@ -29,7 +29,10 @@ The most common pattern in Memoria is deterministic narrowing followed by LLM en
 N candidates → deterministic ranking → K candidates (K ≪ N) → LLM composes over K
 ```
 
-This matters for two reasons beyond cost. First, the deterministic step is auditable — you can show which candidates were selected, by what score, and why. The LLM's prose is visible but opaque; the selection is what the audit trail and the fleet-health accept/reject ratios actually measure. Second, it makes the system testable: the deterministic layer has a single right answer you can assert in a test; the LLM's composition layer doesn't.
+This matters beyond cost:
+
+- **Auditability:** the deterministic step shows which candidates were selected, by what score, and why. The LLM prose is visible but opaque; selection is what the audit trail and fleet-health ratios measure.
+- **Testability:** the deterministic layer has a single answer you can assert in tests. The LLM composition layer does not.
 
 Concrete examples:
 

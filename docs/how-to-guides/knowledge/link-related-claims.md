@@ -76,5 +76,5 @@ For a `contradicts` link, open the Knowledge space's **Contradictions** view. Th
 
 **Explanation**
 
-- The consumer: [Contradictions](../../explanation/dashboards/synthesis-agenda/contradictions.md)
+- The consumer: [Contradictions](../../explanation/dashboards/synthesis-agenda/README.md#contradictions)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

@@ -27,5 +27,5 @@ The Peer-reviewer owns judgment checks; deterministic verification work — retr
 
 - The deterministic half of verification: [Operations](../operations/README.md)
 - The proposer it stays independent of: [The Librarian](librarian.md)
-- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
+- Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why review is human-driven: [Why the review gate is structural](../../design/why-human-gate.md)

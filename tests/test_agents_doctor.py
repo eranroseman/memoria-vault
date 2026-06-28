@@ -16,7 +16,7 @@ def test_docs_manifest_routes_model_and_runtime_surfaces():
     assert entries["docs/adr/README.md"]["book"] == "Developers"
     assert entries["docs/design/README.md"]["book"] == "Developers"
     assert entries["docs/explanation/README.md"]["book"] == "Explanation"
-    assert entries["docs/reference/runtime-spec.md"]["book"] == "Reference"
+    assert entries["docs/reference/README.md"]["book"] == "Reference"
     assert entries["docs/README.md"]["book"] == "Model spine"
     assert entries["docs/README.md"]["canonical_owner"] is True
 

@@ -6,7 +6,13 @@ grand_parent: Reference
 
 # Pattern library
 
-The shipped runnable patterns, the pattern-note schema, and the `patterns_list` / `patterns_run` contract. Patterns are *data* — markdown prompt-transformations in `system/patterns/` — and the patterns MCP (`src/.memoria/mcp/patterns_mcp.py`) is the single audited chokepoint that runs them ([ADR-53](../adr/53-pattern-library.md)). The runner never writes content: it composes a prompt and hands it back through the gated path the calling agent already uses. To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md); for why provenance is recorded, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
+The shipped runnable patterns, pattern-note schema, and `patterns_list` / `patterns_run` contract.
+
+- Patterns are data: markdown prompt transformations in `system/patterns/`.
+- The patterns MCP (`src/.memoria/mcp/patterns_mcp.py`) is the audited runner ([ADR-53](../adr/53-pattern-library.md)).
+- The runner composes prompts; it never writes content.
+- To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md).
+- For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
 ---
 
@@ -87,7 +93,16 @@ Every run is prefixed with the shared voice preamble at `system/patterns/_preamb
 
 ## Gated-target dry-run
 
-A pattern is a *proposal* tool — propose-not-dispose holds. `patterns_run` refuses to hand back a sanctioned write target inside a review-gated zone: when `output_target` is empty, or starts with a gated prefix (read from `.memoria/schemas/folders.yaml` `gated_prefixes`, falling back to the policy core's `REVIEW_GATED_PREFIXES`), the run degrades to `dry_run: true` and the Linter flags the pattern file. The shipped patterns target only staging homes (`projects/` scratch and `notes/fleeting/`), so they run live; a pattern pointed at `notes/claims/` or `catalog/` would dry-run by design. The product still reaches canonical notes only through the normal human gate.
+A pattern is a *proposal* tool: propose, never dispose.
+
+| `output_target` | Result |
+| --- | --- |
+| Empty | `dry_run: true`; no sanctioned write target. |
+| Review-gated prefix from `folders.yaml` | `dry_run: true`; the Linter flags the pattern file. |
+| Staging home such as `projects/` or `notes/fleeting/` | Live run; caller still writes through its normal gated path. |
+| Canonical target such as `notes/claims/` | Dry-run by design. |
+
+The product reaches canonical notes only through the normal human gate.
 
 ---
 

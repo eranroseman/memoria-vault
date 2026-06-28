@@ -15,7 +15,7 @@ superseded_by: [115]
 
 ## Context
 
-Obsidian's default is to reopen the last-open notes, so a Memoria session lands wherever it left off. Memoria already designates [Daily Health](../explanation/dashboards/daily-glance/daily-health.md) as the dashboards' entry point, but there is no *vault* front door and no deterministic landing. The community offers two shapes: plugins that render their own start-page UI (e.g., obsidian-startpage), and plugins that simply open a chosen note on launch (obsidian-homepage). The choice is constrained by two Memoria invariants — every canonical write flows through the Policy MCP / audit trail ([ADR-12](12-obsidian-linter-reference-only.md)), and UI surfaces are **Dataview notes**, not plugin-rendered views ([obsidian](../explanation/obsidian/README.md)).
+Obsidian's default is to reopen the last-open notes, so a Memoria session lands wherever it left off. Memoria already designates [Daily Health](../explanation/dashboards/daily-glance/README.md#rail-now) as the dashboards' entry point, but there is no *vault* front door and no deterministic landing. The community offers two shapes: plugins that render their own start-page UI (e.g., obsidian-startpage), and plugins that simply open a chosen note on launch (obsidian-homepage). The choice is constrained by two Memoria invariants — every canonical write flows through the Policy MCP / audit trail ([ADR-12](12-obsidian-linter-reference-only.md)), and UI surfaces are **Dataview notes**, not plugin-rendered views ([obsidian](../explanation/obsidian/README.md)).
 
 ## Decision
 
@@ -41,4 +41,4 @@ Memoria ships a **plain Markdown front door** and opens it on startup with **[ob
 
 - **Files affected:** [Home — the vault front door](../explanation/obsidian/home.md) (the front-door design + runtime scaffold), [Obsidian plugins](../reference/obsidian-plugins.md) (the obsidian-homepage plugin; recommended 10→11).
 - **Related decisions:** [ADR-12 obsidian-linter reference-only](12-obsidian-linter-reference-only.md) — same control-plane test, opposite verdict (homepage opens a view and writes nothing; the linter wrote on save).
-- **Surfaces:** [The Daily Health dashboard](../explanation/dashboards/daily-glance/daily-health.md) (Home leads with it), [Obsidian](../explanation/obsidian/README.md).
+- **Surfaces:** [The Daily Health dashboard](../explanation/dashboards/daily-glance/README.md#rail-now) (Home leads with it), [Obsidian](../explanation/obsidian/README.md).

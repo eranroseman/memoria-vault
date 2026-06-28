@@ -47,9 +47,11 @@ A `clean` flag closes nothing on its own, and an `issues-found` flag changes not
 
 The cluster you finished was never all agreement, and verification is what brings that out. Expect the Peer-reviewer to put its finger on the tension you wrote across:
 
-- **The causal claim leans harder than the evidence.** Your section says a Mediterranean diet *reduces* cardiovascular events. The standing counter-claim — `observational-associations-confounded` — warns that cohort signals may be confounded by an overall healthy lifestyle. A good flag asks: does your prose make clear that the *trials* are what let the causal reading survive that caution, or does it quietly borrow confidence from the cohort data the caution is about?
-- **The trial evidence has a catch too.** If the draft treats PREDIMED (`[@estruch2018]`) as clean, a flag may surface `predimed-randomization-caveat`: the 2013 report was retracted over randomization problems, and it's the 2018 re-analysis that left the result standing. A section you'd defend says so, rather than hoping no reviewer knows.
-- **A claim resting on thin evidence.** If your `meddiet-and-stroke-risk` claim or your own claim rests on a single source, the flag says so — verification finding the same thin spot the map did.
+| Finding | Why it matters | What to do |
+| --- | --- | --- |
+| Causal claim leans too hard | `observational-associations-confounded` warns that cohort signals may reflect a generally healthy lifestyle. | Make clear that the *trials* carry the causal reading, not the cohort data. |
+| PREDIMED treated as clean | The 2013 report was retracted over randomization problems; the 2018 re-analysis is what left the result standing. | Name the caveat instead of hoping no reviewer knows it. |
+| Claim rests on thin evidence | `meddiet-and-stroke-risk` or your own claim may rest on one source. | Say so, or add more support before leaning on it. |
 
 This is the system working as intended: the tension was planted so verification has something real to catch. A draft that survives it is stronger than one that was never challenged.
 

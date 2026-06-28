@@ -11,6 +11,17 @@ This page explains why the board's state machine is shaped the way it is: why th
 
 ---
 
+## What a card carries
+
+A card is not just a task title. It carries execution state (`status`), review
+state (`review_status`), an optional `agent_recommendation`, a handoff payload
+(`summary`, `metadata.allowed_paths`, `metadata.expected_outputs`,
+`metadata.promote_target`), and retry/blocking history. Those fields make the
+card persistent, queryable, and safe to hand to another profile.
+
+The key invariant: **a card never closes on a worker's say-so**. The worker can
+finish execution; the human still decides whether the result becomes trusted.
+
 ## The execution chain is the hidden mechanic
 
 Hermes runs every card through its native execution `status`: `triage → todo → ready → running → done → blocked → archived`. This chain is real and load-bearing — it is what the dispatcher schedules on — but the **PI never sees it**. It is plumbing, and its design serves the workers:
@@ -38,6 +49,19 @@ A card carries three independent signals, and keeping them separate is what prev
 A worker finishing implies nothing about acceptance; a `clean` recommendation never substitutes for the PI acting. The review gate is enforced, not advisory: state transitions are lifecycle operations the state machine controls, backed by the policy MCP — a worker cannot declare its own output approved.
 
 **Rejection creates a new card, not a revision of the old one.** A rejected card is archived; rework begins on a fresh card that records what it `supersedes` — mirroring claim supersession. Each card is one attempt with one stated outcome, so the history of attempts stays traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.
+
+## Cards and notes are different things
+
+A card is **work**: transient, scheduled on the board, and archived when the
+attempt is over. A note is **knowledge**: durable, linkable, and preserved in the
+vault. A card can reference or produce a note, but it never *is* a note. Mixing
+card fields (`status`, `review_status`, `assignee`) with note fields
+(`lifecycle`, `maturity`, `type`, `citekey`) confuses what has been done with
+what has been established.
+
+That split is why the board can retry and block work without polluting the
+knowledge graph, and why the vault can preserve provenance without becoming a
+task tracker.
 
 ---
 

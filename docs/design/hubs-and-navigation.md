@@ -7,7 +7,7 @@ nav_order: 21
 
 # Why hubs
 
-The vault organizes notes type-first into category folders and carries topic in links and frontmatter, not in folders ([Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)). That choice buys a lot — a claim can belong to many topics at once, and reorganizing a topic never means moving files — but it removes the thing a folder quietly provided: a place to *go* when you want to see everything about a subject. A **hub** is that place, rebuilt as a first-class note. This page explains why the vault needs a human-curated navigation layer at all, and why hubs are authored rather than generated.
+The vault organizes notes by type and carries topic in links and frontmatter, not folders ([Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)). That keeps claims reusable across topics and avoids file moves during reorganization. It also removes one useful folder affordance: a place to *go* for a subject. A **hub** restores that place as a first-class note.
 
 > **Lineage.** The hub is Memoria's name for the **Map of Content** from the evergreen-notes tradition, itself descended from Luhmann's structure notes ([Intellectual foundations](intellectual-foundations.md#luhmanns-zettelkasten)). As elsewhere in the knowledge model, the method is borrowed; what Memoria adds is the *delegation boundary* — which parts of maintaining a Map of Content an agent may help with, and which it may not.
 
@@ -15,33 +15,38 @@ The vault organizes notes type-first into category folders and carries topic in 
 
 ## A hub is navigation, not retrieval
 
-The vault already has machine ways to gather notes on a topic: [Search](../reference/search.md) ranks notes by text similarity, [Clustering](../reference/clustering.md) computes communities over the typed graph, and a Dataview or Bases view lists every note matching a field. All three are fast, and all three are *re-derived on demand* — you run the query, read the result, and the result evaporates.
+| Surface | Answers | Lifespan |
+| --- | --- | --- |
+| Search, clustering, Bases | "What notes touch this topic?" | Re-derived on demand. |
+| Hub | "What does this topic hold, and where should I look first?" | Durable, curated note. |
 
-A hub is the opposite kind of object. It is a durable note you return to, and what it adds over any query is **perspective a query cannot produce**: a framing of what the cluster is about, a curation of what matters most in it right now, and a diagnosis of where it is thin or contested ([Note body structure](../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)). A hub that is merely a flat list of links is a failed hub — no one opens it, because a Base does the same listing faster. The value is in the judgment: *these* notes belong, in *this* framing, with *these* gaps still open.
-
-So the division of labor is clean. Retrieval (search, clustering, queries) answers "what notes touch this topic?" — a question machines answer well. Navigation (hubs) answers "what does this topic *hold*, and where should I look first?" — a question that is an act of synthesis. Keeping them separate is what lets the machine surfaces stay ephemeral and the hub stay a stable, curated home.
+A hub adds perspective a query cannot produce: framing, curation, and a diagnosis of thin or contested areas ([Note body structure](../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)). A flat link list is a failed hub; a Base can list links faster.
 
 ---
 
 ## Why curation can't be delegated
 
-Hubs live under `notes/hubs/`, which is a review-gated prefix: an agent's write there degrades to a dry-run ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/linking.md)). That is deliberate, and it follows directly from what a hub is for. The curation *is* the hub — the framing and the "why these belong together" annotations are the entire value-add over a query. An agent can list the notes that mention a topic, but a list that *looks* curated without being curated is worse than no hub: it invites the reader to trust an organization no one actually performed, which is precisely the "hub-as-folder-dump" failure the design warns against ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
+Hubs live under `notes/hubs/`, a review-gated prefix: an agent write there degrades to a dry-run ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/linking.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
 
-This is why the agent's role around hubs stops at the threshold of judgment. The Librarian's `map` lane can notice that a cluster has grown dense and propose that a hub is due — but the proposal it is allowed to make is a **bare member list plus the threshold evidence**, written to staging, never the annotations and never into `notes/hubs/` itself ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates the membership, and names the gaps. The agent absorbs the bookkeeping (counting notes per topic) that the system is built to absorb; it does not absorb the synthesis, which is the part that defines the type.
+So the agent stops at the threshold of judgment. The Librarian's `map` lane may propose that a dense cluster needs a hub, but only as a **bare member list plus threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates membership, and names gaps.
 
 ---
 
 ## Why a threshold, not on-demand or always-on
 
-A hub is worth creating only when there is something to navigate. Below roughly **15–20 notes** on a topic, the friction of a missing hub is lower than the cost of maintaining a premature one — an early hub is structure imposed before the shape of the topic is known, and it has to be rebuilt as the cluster actually forms ([Wikilink and link conventions](../reference/linking.md#hub-thresholds)). Much past that, the cluster is already hard to move through, and the hub arrives late.
+| Timing | Problem |
+| --- | --- |
+| Too early | The topic's shape is not known, so the hub becomes premature structure. |
+| Too late | The cluster is already hard to navigate. |
+| Threshold crossing | The Linter can prompt the human without auto-creating the hub. |
 
-Rather than make the human watch note counts by hand, the Linter's `hub-threshold` detector makes the crossing visible — "topic *X* has 18 notes and no hub; consider one" — as a low-priority advisory, never an auto-creation ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The threshold is a prompt to the human's judgment, not a trigger for the machine's. The same logic governs splitting: when one branch of a hub outgrows it, the hub spawns a child hub and the parent links to it, so navigation scales as a shallow hierarchy of curated maps rather than one ever-growing list.
+The current threshold is roughly **15-20 notes** ([Wikilink and link conventions](../reference/linking.md#hub-thresholds)). It is advisory only: when one branch grows too large, the human splits it into a child hub rather than letting one map become a dumping ground.
 
 ---
 
 ## Where hubs sit in the knowledge model
 
-Hubs are the navigational layer over the durable knowledge the vault accumulates. Claims are the atomic units — what the PI has come to think, in their own words ([Why promotion is gated](../explanation/knowledge/promotion-model.md)); hubs are how those units stay findable and legible as they multiply, the difference between a vault that compounds and one that merely accumulates ([The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)). They are the one structural document type the human owns end to end, because navigation of one's own knowledge is not a task that survives being handed off. To build one in practice, see [Build a hub](../how-to-guides/knowledge/build-a-moc.md).
+Claims are the atomic units: what the PI has come to think, in their own words ([Why promotion is gated](../explanation/knowledge/promotion-model.md)). Hubs keep those units findable as they multiply. They are human-owned end to end because navigation of one's own knowledge does not survive full delegation. To build one, see [Build a hub](../how-to-guides/knowledge/build-a-moc.md).
 
 ---
 

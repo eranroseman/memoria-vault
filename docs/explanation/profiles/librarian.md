@@ -7,7 +7,9 @@ nav_order: 2
 
 # The Librarian
 
-The Librarian runs Memoria's four processing lanes (background worker paths on the board — see [Glossary](../../reference/glossary.md)) — **catalog · extract · link · map** — covering everything between "a source exists somewhere" and "the corpus is mapped for a project." Its defining posture is **faithful**: include generously, report state accurately, and let the review gate (the human approval step — see [Glossary](../../reference/glossary.md)) filter. The cost of a missing source is invisible; the cost of an over-inclusive candidate is one human decision. Given that asymmetry, generosity is the right policy for an intake agent — and fidelity to the source material is what keeps the generosity honest.
+The Librarian runs four background lanes: **catalog · extract · link · map**. Together they cover the span from "a source exists somewhere" to "the corpus is mapped for a project."
+
+Its posture is **faithful**: include generously, report state accurately, and let the review gate filter. A missing source is invisible; an over-inclusive candidate costs one human decision. That asymmetry makes generosity the right intake policy, and fidelity keeps it honest.
 
 A research librarian does both intake and literature search, so corpus work (scope reports, gap analysis, cluster maps) belongs in this agent ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)): the **map** lane is the same faithful posture pointed at what the vault already holds.
 
@@ -40,5 +42,5 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 - The mechanical counterpart: [Operations](../operations/README.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
-- Why the profile boundaries are strict: [Why profile boundaries exist](../../design/why-profile-boundaries.md)
+- Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why intake is separated from verification: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)

@@ -9,8 +9,9 @@ permalink: /explanation/operations/
 # Operations — the deterministic layer
 
 Operations are Memoria's deterministic mechanisms. They ingest, lint, cluster,
-sweep, clean up, and measure without adopting an agent posture. You run an
-operation; you delegate to an agent.
+sweep, clean up, and measure without adopting an agent posture. An operation
+should produce the same result for the same input; anything requiring a stance,
+judgment, or recommendation belongs to an agent or to the PI.
 
 ## Invocation rule
 
@@ -24,13 +25,6 @@ The path follows the caller:
 Processing operations expose MCP facades when agents need them. Integrity,
 cleanup, and telemetry operations run directly because cron, CI, or the PI are
 the callers.
-
-## Why they are not agents
-
-An operation should produce the same result for the same input. That makes it fit
-for audit trails, CI gates, scheduled sweeps, and reproducible dashboard metrics.
-Anything requiring a stance, judgment, or recommendation belongs to an agent or
-to the PI.
 
 ## Related
 

@@ -56,6 +56,12 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 
 ---
 
+## API server
+
+Hermes's API server is the programmatic surface for non-human triggers such as file watchers, Zotero hooks, git hooks, and cross-machine dispatch. Memoria treats it as another entry point into the same profile and policy model: API writes still pass through the policy MCP. The default port is `8642`.
+
+---
+
 ## Board management
 
 | Command | What it does |

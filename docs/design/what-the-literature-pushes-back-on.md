@@ -11,13 +11,15 @@ nav_order: 31
 
 The claims to scope back:
 
-- **Least-privilege allowlists are *necessary blast-radius control, not sufficient security*.** Removing send/exec tools genuinely breaks the exfiltration step, but the dominant threat to Memoria is untrusted *data* — a poisoned ingested paper whose legitimate read-and-reason path *is* the attack — which no allowlist stops. The gate plus provenance and channel separation are the integrity controls, and none is foolproof.
-- **The human gate buys provenance and control, not guaranteed accuracy.** In the one corpus study that measured it, human-plus-machine accuracy did not beat human-alone, and a confidently wrong recommendation dragged the reviewer *below* their own baseline. Treat "the PI approves" as control and auditability, and calibrate whether approved writes are actually more correct — or the gate is theater.
-- **The gate should be sparse and uncertainty-routed, not item-by-item.** Dense per-step approval erases the automation it guards; route to the PI only on high-uncertainty or high-leverage items, and accept that low-stakes writes are not meaningfully human-verified.
-- **Superseded claims stay retrievable.** Hard-excluding a superseded claim breaks the cross-period and trend queries that need the historical baseline. Don't present a stale claim *as current*; keep it tagged and reachable.
-- **Atomic claims need explicit context fields.** A claim ripped from its source loses temporal scope, tense, and hedging. Carry those as first-class fields, and treat the atomic claim as an *index over* the verbatim contextual unit rather than the stored unit itself.
-- **Contradiction and dedup must pass an adversarial overlap test.** Entailment models inherit the same "shared words ⇒ same meaning" blind spot as cosine; require a high-overlap/opposite-meaning fixture as an acceptance gate before any comparator is allowed to gate dedup or supersession.
-- **Constrained decoding buys structural validity only.** A schema can force a well-formed list; it cannot force the model to *omit* an absent claim or preserve negation. Keep existence-gating and explicit abstain paths as engine stages, and validate content even on schema-valid output.
+| Claim | Pushback | Design consequence |
+| --- | --- | --- |
+| Least-privilege allowlists are sufficient security | Poisoned input can attack through a legitimate read-and-reason path. | Keep allowlists, but rely on gate, provenance, and channel separation for integrity. |
+| Human approval guarantees accuracy | Human-plus-machine can underperform human-alone when the machine is confidently wrong. | Treat approval as control and auditability; measure whether it improves correctness. |
+| More approval is always safer | Dense item-by-item approval erases automation and trains rubber-stamping. | Route only high-uncertainty or high-leverage items. |
+| Superseded claims can disappear | Historical queries need the old baseline. | Mark them non-current, but keep them retrievable. |
+| Atomic claims are self-sufficient | Stripped claims lose temporal scope, tense, and hedging. | Carry context fields and source-span provenance. |
+| Similar wording means same meaning | Entailment models can still confuse high-overlap opposites. | Require adversarial overlap fixtures before dedup or supersession gates. |
+| Schema-valid output is content-valid | Constrained decoding preserves shape, not truth or negation. | Keep existence checks, abstain paths, and content validation. |
 
 These are scoping corrections, not refutations of the design. The skeleton holds; the superstructure should claim less.
 

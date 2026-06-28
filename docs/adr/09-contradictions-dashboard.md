@@ -36,6 +36,6 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 ## Related
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies the contradicts edges — now `links.contradicts` after [ADR-52](52-links-vs-relationships.md)).
-- **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda/contradictions.md) (new), [Dashboards](../explanation/dashboards/README.md) (index).
+- **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda/README.md#contradictions) (new), [Dashboards](../explanation/dashboards/README.md) (index).
 - **Future proposer:** [Classical method displacements](59-classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).
