@@ -19,6 +19,7 @@ copying their implementation details.
 | Playbook | Use |
 |---|---|
 | [Code review](playbooks/code-review.md) | Review a patch for defects, regressions, complexity, and missing tests |
+| [Documentation audit](playbooks/docs-audit.md) | Run a fresh whole-docs consistency, Diátaxis, generated-reference, terminology, coverage, and live-link audit |
 | [Documentation review](playbooks/docs-review.md) | Check Diátaxis placement, links, indexing, and terminology |
 | [ExecPlan](playbooks/exec-plan.md) | Author and run a self-contained living plan for a complex, multi-hour task |
 | [Release](playbooks/release.md) | Start, manage, or cut a release using the GitHub-first release model |
