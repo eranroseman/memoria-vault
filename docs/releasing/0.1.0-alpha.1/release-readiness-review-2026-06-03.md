@@ -49,7 +49,7 @@ Each gate must be green before the next is meaningful. The chosen v0.1 *workflow
 A registered profile, **dispatched a board card**, runs against the live obsidian MCP + policy gate, writes its artifact, the write is gated + audited, and the card **completes**.
 - [x] Sub-proof done: a writer agent wrote `10-inbox/02-answers/…` through the bridge + gate (`hermes -z`).
 - [ ] **Not done: the full card-dispatch → claim → agent-run → complete → review cycle, observed end-to-end.**
-- **De-risk it:** prove this with the *leanest* agent first — a **deterministic** one with no external API and no ingest (Linter `health-report` / drift scan, or Verifier `similarity-check`, or Mapper `corpus-map`). That isolates "does dispatch→run→gate→write→complete work live" from the harder ingest risks. The Linter is the safest: `detectors.py` already runs, zero-LLM, cron-wired.
+- **De-risk it:** prove this with the leanest shipped lane first — a Peer-reviewer verify card that writes only an Inbox `gap` or `flag`. That isolates "does dispatch→run→gate→write→complete work live" from the harder ingest risks. The Linter remains the cheap off-board preflight: `detectors.py` already runs zero-LLM through direct CLI/cron wrappers.
 
 ### Gate 2 — One *valuable* workflow end-to-end — **RED — the long pole**
 The actual product loop. Most likely **capture → ingest → gated write → review** (the primary intake).
@@ -84,7 +84,7 @@ Cutting these is what makes "ship one loop" tractable — none blocks a defensib
 ## Risks that could sink the slice
 
 1. **The end-to-end agent run has never been done.** Unknown unknowns once a real model on the cheap tier drives the skills: tool-use reliability, and whether the **SOUL.md-procedure orchestration** (20 of 28 "skills" are prompt procedures, not packaged skills) actually executes the multi-step work. *Highest-uncertainty item.*
-2. **ADR-30 ingest is the least-built path** *and* carries the round-2 merge-correctness + OCR-install + tag-quality risks. If the value loop is ingest, this is the long pole — consider proving Gate 1 with a deterministic agent first so the spine is trusted before betting it on ingest.
+2. **ADR-30 ingest is the least-built path** *and* carries the round-2 merge-correctness + OCR-install + tag-quality risks. If the value loop is ingest, this is the long pole — prove Gate 1 with the smallest shipped lane first so the spine is trusted before betting it on ingest.
 3. **Install fragility** — PDF/OCR deps (`ocr-and-documents` already fails to fetch); the very dependency class ADR-30 cites as its motivation. A clean install on a fresh box is itself unproven for the agent path.
 4. **Docs claim more than the build delivers.** The design docs describe a complete system; the build is a scaffold. `implementation-status.md` tracks this, but external readers (and a release announcement) will over-read the docs. Keep the status tags honest and the README's claims scoped to what's operable.
 
@@ -93,7 +93,7 @@ Cutting these is what makes "ship one loop" tractable — none blocks a defensib
 ## Bottom line for the "can we ship?" call
 
 - **Not as an agentic product today** — no agent has completed a verified workflow; the command surface and review loop aren't operable end-to-end.
-- **The path is narrow and concrete, not a rebuild:** Gate 1 (prove the spine e2e with a *deterministic* agent — low risk, establishes dispatch→gate→write→complete works live) → Gate 2 (build + verify *one* value workflow, likely ingest) → Gates 3–4 (close review + observe). Cut everything in the OUT list.
+- **The path is narrow and concrete, not a rebuild:** Gate 1 (prove the shipped dispatched-card spine e2e — low risk, establishes dispatch→gate→write→complete works live) → Gate 2 (build + verify *one* value workflow, likely ingest) → Gates 3–4 (close review + observe). Cut everything in the OUT list.
 - **It's mid-build, not stalled:** #85 is the first capture brick; ADR-30 is the intake redesign; the gate + bridge are proven. The differentiator is in progress.
 
-**Recommended next concrete step:** pick the Gate-1 deterministic loop (Linter `health-report` or Verifier `similarity-check`) and drive it through `hermes -p <profile>` against a live install — card dispatched → run → gated write/audit → complete. That single run converts "we think the spine works" into "the spine works," and tells you whether the much riskier ingest loop (Gate 2) is standing on solid ground.
+**Recommended next concrete step:** run the G9 dispatched-card smoke against a live install — card dispatched → run → gated write/audit → complete. That single run converts "we think the spine works" into "the spine works," and tells you whether the much riskier ingest loop (Gate 2) is standing on solid ground.

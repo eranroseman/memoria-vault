@@ -65,7 +65,7 @@ Project steers a piece of work toward output. Refresh it from a project file, th
 
 Open **Maintenance** from *Now*, then read its **Drift watch** view. You can also reach drift flags directly from *Now → Drift*.
 
-Drift watch flags integrity problems — the kind of thing that makes agents behave oddly or queries return wrong results. It shows a `PASS` / `REVIEW` / `FAIL` band. A `FAIL` pauses scheduled work until you resolve it ([Run the Linter](../operate/run-the-linter.md)).
+Drift watch flags integrity problems — the kind of thing that makes agents behave oddly or queries return wrong results. It shows a `PASS` / `REVIEW` / `FAIL` band. A `FAIL` blocks new delegation and review-gated promotion until the blocking finding is acknowledged or resolved ([Run the Linter](../operate/run-the-linter.md)).
 
 ### "Are my workers performing well? Is API cost increasing?"
 

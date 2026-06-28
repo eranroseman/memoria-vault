@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-SKIP_DIRS = {".obsidian", ".git", ".memoria", "node_modules"}
+SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 _HEX_COLOR = re.compile(r"#[0-9A-Fa-f]{3,8}\b")
 _PX_VALUE = re.compile(r"font(?:-size)?\s*:[^;\n]*?\b(\d+(?:\.\d+)?)px\b", re.I)
 _CALLOUT_LINE = re.compile(r"^\s*>\s*\[!([^\]|\n]+)(?:\|([^\]\n]+))?\]", re.I | re.M)

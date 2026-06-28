@@ -36,7 +36,7 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 ## Consequences
 
-- Data model: new `queue` type; `space` enum loses `inbox`; `folders.yaml` and the Linter `detectors.py` folder map gain `queue → spaces/`. Type count 24 → 25; templates exclude `queue` (authored, not template-created), so the template count stays 20.
+- Data model: new `queue` type; `space` enum loses `inbox`; `folders.yaml` and the Linter `detectors.py` folder map gain `queue → spaces/`. Type count 24 → 25; templates exclude `queue` and the operation/system-only types that are not template-created, so the template count stays 19.
 - App config: `community-plugins.json` drops `homepage`; `src/.obsidian/plugins/homepage/` is deleted and removed from `plugin-provenance-lock.json`; the **Memoria** workspace's main leaf points at `home.md` and pins `_nav.md`.
 - `home.md` is rewritten from a homepage-fallback into the welcome note. The launch repair path depends on the already-bundled QuickAdd startup hook plus Obsidian's core Workspaces plugin — no new community plugin or provenance lock.
 - Live docs are updated to current-state: the Inbox is "the queue" (not a space), the spaces are three, and the launch surface is the saved **Memoria** shell restored on startup. ADR and `releasing/` prose are left in their own vocabulary; only [ADR-13](13-homepage-front-door.md) is marked superseded.

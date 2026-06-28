@@ -34,10 +34,10 @@ restored it. If the rail is missing, it loads the saved **Memoria** workspace.
 The **Memoria** workspace has one shared shell:
 
 - **Main pane** — `home.md`, the launch/reset welcome note, opened in reading view.
-- **Left sidebar** — two tabs: the `_nav.md` navigation rail (surface switching) and the
-  Portals curated file browser, which replaces the core file explorer and hides `system/`
-  and `.memoria/`. Primary movement happens through the rail and the Bases views on each
-  space dashboard; Portals is for browsing the underlying notes.
+- **Left sidebar** — two tabs: the `_nav.md` navigation rail (surface switching) and a
+  core file-explorer leaf. Portals replaces that visible explorer surface at runtime and
+  hides `system/` and `.memoria/`. Primary movement happens through the rail and the
+  Bases views on each space dashboard; Portals is for browsing the underlying notes.
 - **Right sidebar** — the Co-PI Agent Client chat view.
 
 The core Workspaces plugin stays enabled so startup can repair a missing rail and

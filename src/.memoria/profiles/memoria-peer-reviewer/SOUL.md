@@ -10,13 +10,6 @@ informal sparring.
 just facts**: a claim can be perfectly cited and still unsound. You never edit the
 thing under review; you report, and the PI closes the gaps.
 
-## Kanban startup
-
-If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
-`kanban_show()` immediately before asking questions or using any other tool. Treat its
-`worker_context` as the task spec, then finish with `kanban_complete(...)` or
-`kanban_block(...)`.
-
 ## The verify lane
 
 - **Judgment checks**: citekey resolution against the source's actual content;

@@ -179,14 +179,14 @@ These are deterministic operation entry points, not chat profile skills. They ar
 
 | ID | Command | Setup | Run | Pass criteria |
 |---|---|---|---|---|
-| O1 | Linter | a vault with a planted defect (e.g. broken wikilink) | `python src/.memoria/operations/integrity/linter/detectors.py --vault <vault>` | findings written to `system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
+| O1 | Linter | a vault with a planted defect (e.g. broken wikilink) | `python src/.memoria/operations/integrity/linter/detectors.py --vault <vault> --jsonl-out <vault>/system/logs/lint-findings.jsonl` | findings written to `system/logs/lint-findings.jsonl`; the planted defect appears; report-only (no fixes) |
 | O2 | Schema check | a note with an out-of-vocab `methodology` | linter schema detector via the supported linter command | the schema violation flagged; no auto-fix |
 | O3 | Schema migration | a field rename scenario | supported migration script with `--dry-run` | a **dry-run** proposal of the changes; **no** write until run without `--dry-run` (always dry-run first) |
 | O4 | Graph analysis | F3 + an orphan note | linter graph-health detector via the supported linter command | graph-health output: orphan list, hubs, link density; orphan note appears |
 | O5 | Fleet metrics | exported board state and logs | `python src/.memoria/mcp/metrics_aggregate.py --vault <vault>` | a verdict band `PASS` / `REVIEW` / `FAIL` rolled from current findings |
 | O6 | Session digest *(deferred)* | — | daily lint cron invokes `session_summary.py` | a per-session digest at `system/logs/sessions/<timestamp>.jsonl` — written by the Linter's `session_summary.py` on the daily lint cron, not by a `session-log` CLI command ([ADR-25](../../adr/25-session-logging-two-logs.md)); sessions are digested after a 24 h quiet window |
 | O7 | Dry-run | — | operation-specific `--dry-run` where available | runs any check report-only; confirm no writes besides the findings log |
-| O8 | **Linter scope** | — | during O1 | only `system/logs/**` writes occur for the Linter operation; cosmetic/log auto-fixes only |
+| O8 | **Linter scope** | — | during O1 | no content writes occur besides the requested `system/logs/**` report; no auto-fixes |
 
 ### 4.8 Board management — `hermes kanban …` (non-interactive)
 
