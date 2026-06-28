@@ -1,136 +1,130 @@
 # Contributing to Memoria
 
-Thanks for your interest in contributing. Memoria is a research operating system built on [Hermes Agent](https://hermes-agent.nousresearch.com) and [Obsidian](https://obsidian.md) — contributions to the installer, agent profiles, vault templates, and docs are all welcome.
+Memoria is a research operating system built on
+[Hermes Agent](https://hermes-agent.nousresearch.com) and
+[Obsidian](https://obsidian.md). Contributions to the installer, agent profiles,
+vault templates, and docs are welcome.
 
 ## Before you start
 
-- Check [open issues](https://github.com/eranroseman/memoria-vault/issues) to avoid duplicating work.
-- For significant changes (new agents, installer overhauls, new profile capabilities), open an issue to discuss first.
-- For small fixes (docs, typos, script bugs), a PR is fine without prior discussion.
+- Check [open issues](https://github.com/eranroseman/memoria-vault/issues) to avoid duplicate work.
+- Open an issue first for significant changes: new agents, installer overhauls, profile capabilities, schema changes, or architecture decisions.
+- Small docs, typo, script, and test fixes can go straight to a PR.
+- AI agents must follow [AGENTS.md](AGENTS.md); it is authoritative for worktrees, branch safety, PR flow, docs routing, and required checks.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 (Windows) or Linux, a `KILOCODE_API_KEY`.
+**Requirements:** Git, WSL2 or Linux, and the product keys needed for the flow you
+are testing. The normal install path needs `KILOCODE_API_KEY`; full source ingest
+also needs `OPENALEX_API_KEY`.
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
-# One-time: wire the local quality gate (installs requirements-dev.txt tooling,
-# pre-commit hooks, and MCP self-test deps). Git does NOT activate repo hooks on clone.
+# One-time contributor tooling: dev requirements, pre-commit hooks, qmd if available.
 bash scripts/dev-setup.sh
 
-# Validate the installer without running it
+# Installer syntax and dry-run checks.
 bash -n scripts/install.sh
-
-# Dry-run (shows every command, changes nothing)
 bash scripts/install.sh --dry-run
 ```
 
-`dev-setup.sh` sets up the **contributor toolchain** only; it does not install or run
-the Memoria product (that's `scripts/install.sh`). The root `requirements-dev.txt`
-is for local/CI tooling such as `pre-commit`, `pytest`, `ruff`, and `yamllint`;
-vault runtime dependencies stay under `src/.memoria/mcp/requirements.txt`. The
-setup script runs `pre-commit install` to wire the hooks defined in
-`.pre-commit-config.yaml` — a fast local mirror of the required CI checks. The
-hooks also run an advisory grammar check with
-[harper](https://github.com/elijah-potter/harper) (output is informational; it never
-blocks a commit). Bypass all hooks for a single commit, rarely, with
-`git commit --no-verify`. Recommended VS Code extensions are listed in
-[.vscode/extensions.json](.vscode/extensions.json) (VS Code prompts to install them on
-first open).
+`dev-setup.sh` sets up the contributor toolchain only; it does not install or run
+Memoria. Runtime vault dependencies stay under `src/.memoria/mcp/requirements.txt`.
+Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
 
-If Node ≥22 is present, `dev-setup.sh` also installs the repo-local
-[qmd](https://github.com/tobi/qmd) code-search engine (a `devDependency`, never deployed)
-and builds a project-local `./.qmd/` index of this repo for coding agents — see
-[Searching the codebase (qmd)](AGENTS.md#searching-the-codebase-qmd). It is optional and
-not part of the commit gate; if Node is missing the step is skipped with a pointer to
-install it. Run `bash scripts/qmd-codebase-index.sh --embed` to add semantic vectors.
+See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install walkthrough.
 
-See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the install walkthrough.
+## Where work lives
 
-### Optional: a git safety alias
-
-The most common foot-gun is losing uncommitted work to `reset --hard` or `checkout` (see AGENTS.md §4). This makes "stash everything first" one keystroke:
-
-```bash
-git config --global alias.save 'stash push -u -m wip'   # save → git save  ·  restore → git stash pop
-```
-
-The structural fix is a worktree per branch (AGENTS.md §1/§4): switching becomes `cd`, so there's no dirty tree to lose.
-
-## What to work on
-
-| Area | Where |
+| Work | Home |
 |---|---|
-| Installer (`scripts/install.sh` / `scripts/install.ps1`) | `scripts/` |
-| Agent profiles | `src/.memoria/profiles/memoria-*/` |
-| Vault templates & structure | `src/` |
-| Documentation (Diátaxis) | `docs/` — tutorials, how-to-guides, reference, explanation |
-| Scripts | `scripts/` |
+| Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
+| Live planning state | Memoria Issue Tracker project fields |
+| Release scope | GitHub milestones |
+| Decisions and durable rationale | [ADRs](docs/adr/) |
+| Release prose | `docs/releasing/<version>/` |
+
+The Project carries two fields:
+
+| Field | Values | Rule |
+|---|---|---|
+| Status | `Backlog`, `In progress`, `In review`, `Done` | Workflow state only |
+| Readiness | `Ready`, `Needs shaping`, `Blocked`, `Later` | Why work is or is not ready |
+
+Labels stay minimal: use `bug` and `documentation` for repo-wide search, plus
+bot-managed labels such as `dependencies`, `python`, `github_actions`, `release`,
+and `autorelease:*`. Do not recreate status, readiness, priority, or subsystem
+taxonomies as labels.
 
 ## Coding conventions
 
-- **Python:** Ruff is both the linter and the formatter for repo tooling and runtime
-  code (`scripts/`, `.github/scripts/`, `src/.memoria/`, and `tests/`). `ruff format`
-  (line-length 100) owns layout so style stays consistent across the many agent
-  sessions that generate this code — run it (or `pre-commit`) before submitting; CI
-  fails on unformatted code via `ruff format --check`.
-- **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Use `shellcheck` before submitting. Avoid bashisms if POSIX portability matters.
-- **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on a real Windows machine or WSL2 bridge.
-- **Profiles:** Agent profiles live under `src/.memoria/profiles/`. Follow the existing `SOUL.md` / `config.yaml` / `distribution.yaml` / `skills/` structure used by the existing five profiles (the shared `AGENTS.md` layer is vault-level, not per-profile).
-- **Docs:** Follow the [Diátaxis](https://diataxis.fr/) framework — tutorials teach, how-to guides direct, reference informs, explanation discusses. Keep docs in the right quadrant.
-- **Markdown:** one shared config, `.markdownlint.json`, holds the structural rule set (5 rules that catch real rendering bugs on `docs/`, with no Obsidian false positives). The editor, pre-commit, and CI all enforce exactly that set. The editor additionally shows style-only hints (e.g. MD013 line-length) via the `markdownlint.config` key in `.vscode/settings.json` — those do **not** gate a PR, so the editor intentionally flags a little more than CI blocks.
+- **Python:** Ruff is both linter and formatter for repo tooling and runtime code
+  (`scripts/`, `.github/scripts/`, `src/.memoria/`, and `tests/`). `ruff format`
+  owns layout at line length 100.
+- **Shell:** `scripts/install.sh` targets Bash on Ubuntu/WSL2. Run `shellcheck`
+  before submitting installer changes.
+- **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
+  Windows when the change affects Windows behavior.
+- **Profiles:** profile source lives under `src/.memoria/profiles/`; keep the
+  existing `SOUL.md`, `config.yaml`, `distribution.yaml`, and `skills/` shape.
+- **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
+  guides direct, reference informs, and explanation discusses.
+- **Markdown:** `.markdownlint.json` holds the structural rules enforced locally
+  and in CI. Editor-only style hints in `.vscode/settings.json` do not gate PRs.
 
-## Submitting a pull request
+## Pull requests
 
-Branch off `main`, test your change (`--dry-run` at minimum, plus `bash -n scripts/install.sh` and `markdownlint '**/*.md'` if you touched docs), then open a PR against `main` and fill out the template. The authoritative branch, PR, and merge-discipline rules live in [AGENTS.md](https://github.com/eranroseman/memoria-vault/blob/main/AGENTS.md); the human-facing checklists and recovery steps are in [Contributing workflow](docs/contributing/process.md).
+Keep one scope per branch and PR. For agents, branch creation happens through the
+worktree flow in [AGENTS.md](AGENTS.md#1-session-isolation--git-worktree).
+
+Before opening a PR:
+
+- Claim or reference the issue when one exists.
+- Rebase on `origin/main`.
+- Stage only files you changed.
+- Run the smallest relevant check, then the standard repo check when the change
+  is broader: `scripts/verify pr`.
+- Open the PR against `main` and fill out the template.
+
+Required CI checks and merge discipline are defined in [AGENTS.md](AGENTS.md).
 
 ## Commit style
 
-Use short, lowercase imperative subject lines following [Conventional Commits](https://www.conventionalcommits.org/):
+Use short, lowercase imperative subject lines following
+[Conventional Commits](https://www.conventionalcommits.org/):
 
 ```text
 fix: installer fails when KILOCODE_API_KEY is unset
 docs: add WSL2 troubleshooting section
-profiles: extend Librarian skill for Zotero groups
+profiles: extend librarian skill for zotero groups
 ```
 
 | Type | Use for | Version intent |
 |---|---|---|
 | `feat` | New capability or integration | Minor |
 | `fix` | Bug fix, regression, broken automation | Patch |
-| `docs` | Documentation only | — |
-| `refactor` | Code change with no behavior change | — |
-| `chore` | Tooling, deps, config, maintenance | — |
-| `test` | Test plans or `--self-test` coverage | — |
-| `research` | Evaluation or investigation outcomes | — |
+| `docs` | Documentation only | - |
+| `refactor` | Code change with no behavior change | - |
+| `chore` | Tooling, deps, config, maintenance | - |
+| `test` | Test plans or self-test coverage | - |
+| `research` | Evaluation or investigation outcomes | - |
 
-### Breaking changes
+Breaking changes use `!` in the header or a `BREAKING CHANGE:` footer, and must
+state what changed, who is affected, what action is required, and the replacement
+path. In Memoria, breaking changes include profile config field renames, vault
+folder restructuring, removed profile capabilities or skills, and required
+ADR-frontmatter changes.
 
-Mark a breaking change with `!` in the header or a `BREAKING CHANGE:` footer, and state **what changed**, **who is affected**, **what action is required**, and **the replacement path**:
+## Releases and changelog
 
-```text
-feat!: rename profile config field `enabled_agents` → `agents.enabled`
-
-BREAKING CHANGE: existing config.yaml files must rename the field before upgrading.
-```
-
-What counts as a breaking change in Memoria, and how the commit types map to SemVer, is defined in [Contributing workflow](docs/contributing/process.md).
-
-## Changelog
-
-User-visible changes go in [Changelog](CHANGELOG.md) at the repo root, which follows
-[Keep a Changelog](https://keepachangelog.com/) + [SemVer](https://semver.org/). Keep an
-`[Unreleased]` section at the top; entries move into a versioned section when a release is cut.
-
-- **Sections:** Added · Changed · Fixed · Removed · Deprecated · Security.
-- **Each bullet** starts with a verb, names the affected system, and explains user impact
-  (not implementation detail). Include migration guidance for breaking changes.
-- **Include:** new user-facing features, behavior/schema changes, breaking changes, and
-  integration changes (GitHub, vault, Hermes).
-- **Exclude:** pure refactors, routine dependency bumps, and test-only changes.
+Milestones are releases. Versioning, release notes, tags, GitHub Releases, and
+`CHANGELOG.md` are release-maintainer work owned by release-please when formal
+release automation is active. Do not hand-cut a release, hand-tag, or hand-edit
+the changelog as part of an ordinary PR.
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions) or file an issue with the `question` label.
+Open a [GitHub Discussion](https://github.com/eranroseman/memoria-vault/discussions)
+or file an issue. Use `bug` or `documentation` only when they apply.

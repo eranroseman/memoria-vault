@@ -28,8 +28,8 @@ match their filename and index link text.
   repository paths. Prefer inline paths or an absolute GitHub blob/tree URL.
 - Repo-internal pages under `docs/releasing/`, `docs/testing/`, and excluded
   `tmp/` directories may link to repository files.
-- `docs/contributing/` is published; `docs/releasing/` and `docs/testing/` are
-  not.
+- Root `CONTRIBUTING.md`, `docs/releasing/`, and `docs/testing/` are not
+  published.
 - Link text should name the destination concept, not merely repeat a filename.
 
 Run:

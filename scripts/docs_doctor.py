@@ -513,7 +513,7 @@ def check_site_nav_hierarchy(root: Path, errors: list[str]) -> None:
 
 def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
     # Current public docs should link ADR references so readers can jump to the decision
-    # record. ADR files themselves and repo-internal release/testing/contributing docs keep
+    # record. ADR files themselves and repo-internal release/testing docs keep
     # historical prose and are excluded by _published().
     if not _published(md, root) or "adr" in md.relative_to(root).parts:
         return

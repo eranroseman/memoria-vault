@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""status-doctor — keep release/test/contributing docs from rotting.
+"""status-doctor — keep release/test/contributor docs from rotting.
 
 The project/ tree is prose plus pointers, and no other check covers its internal
 links. (ADRs are guarded by docs-doctor's general link check; this adds release
-state/path and tracked-scratch portability guards over release/test/contributing
+state/path and tracked-scratch portability guards over release/test/contributor
 prose.) Guards six drift modes:
 
   1. Stale path renames — old `project/releases/`/`project/tests/` paths and
@@ -18,7 +18,7 @@ prose.) Guards six drift modes:
   5. Scratch `tmp/` dirs may exist only under `docs/releasing/<version>/tmp/`.
   6. Release agent guidance lives in the portable `.agents` playbook.
 
-Scope: docs/{releasing,testing,contributing}/**/*.md + .agents/playbooks/release.md.
+Scope: docs/{releasing,testing}/**/*.md + CONTRIBUTING.md + .agents/playbooks/release.md.
 Exit 0 if clean, 1 if any issue. Usage: python scripts/status_doctor.py [--self-test]
 """
 
@@ -49,11 +49,14 @@ RELEASE_PLAYBOOK = Path(".agents/playbooks/release.md")
 
 
 def targets(root: Path) -> list[Path]:
-    # The release/test/contributing prose moved from project/ into docs/; docs-doctor
+    # The release/test prose moved from project/ into docs/; docs-doctor
     # checks docs/ links generally, this adds the released-flag consistency guard.
     files: list[Path] = []
-    for sub in ("releasing", "testing", "contributing"):
+    for sub in ("releasing", "testing"):
         files += sorted((root / "docs" / sub).rglob("*.md"))
+    contributing = root / "CONTRIBUTING.md"
+    if contributing.is_file():
+        files.append(contributing)
     playbook = root / RELEASE_PLAYBOOK
     if playbook.is_file():
         files.append(playbook)

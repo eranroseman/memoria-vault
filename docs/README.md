@@ -168,4 +168,4 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
 
-[**Developers**](developers.md) — Design Book, decision records, and contributing workflow.
+[**Developers**](developers.md) — Design Book, decision records, and root contribution workflow.

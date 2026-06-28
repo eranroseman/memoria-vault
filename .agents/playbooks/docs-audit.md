@@ -21,7 +21,7 @@ Read the full documentation surface:
 - `docs/adr/`
 - `docs/releasing/`
 - `docs/testing/`
-- `docs/contributing/`
+- root `CONTRIBUTING.md`
 
 Scan the rest of the repository only where needed to verify implementation
 truth: `src/`, `scripts/`, schemas, generated-reference inputs, commands,

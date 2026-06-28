@@ -9,11 +9,12 @@ topic: development
 # Developers
 
 Implementation-facing docs: maintained design arguments and decision history.
-Agent rules and generated inventories live in Reference.
+Agent rules and generated inventories live in Reference. Human contribution
+workflow lives in the repo root.
 
 | Section | Use it for |
 | --- | --- |
 | [Design Book](design/README.md) | Maintained arguments for the major design choices. |
 | [Decision records]({{ site.baseurl }}/adr/) | Dated ADR records for decisions at every lifecycle state. |
-| [Contributing](contributing/README.md) | Human-facing contribution workflow and issue-tracking model. |
+| [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md) | Human-facing contribution workflow and issue-tracking model. |
 | [Reference: agents and control](reference/README.md#agents-and-control) | Agent rules, generated profile policy, and runtime contract sources. |

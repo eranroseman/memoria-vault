@@ -75,7 +75,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/` | The vault source tree — the installer copies it out as your Obsidian vault |
-| `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), maintained design arguments (`design/`), and the `contributing/` · `releasing/` · `testing/` process docs |
+| `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), maintained design arguments (`design/`), and the `releasing/` · `testing/` process docs |
 
 ## Documentation
 
