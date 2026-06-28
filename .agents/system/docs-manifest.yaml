@@ -4497,6 +4497,13 @@ entries:
   frontmatter: {}
   canonical_owner: false
   status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/pre-approval-test-results.md
+  title: Alpha.11 pre-approval test results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
 - path: docs/releasing/0.1.0-alpha.11/tmp/start-blocker-verification-results.md
   title: Alpha.11 start-blocker verification results
   book: Internal
