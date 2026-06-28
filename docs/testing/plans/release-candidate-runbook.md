@@ -154,11 +154,16 @@ ls -l "$RV/system/logs/"{board-state,board-transitions,audit,lint-findings,cost}
 Only after every row above is green:
 
 - [ ] **Published docs link check** — after GitHub Pages deploys the candidate commit,
-  crawl `https://eranroseman.github.io/memoria-vault/`; fail on broken internal
-  targets, missing internal fragments, or hard-broken external targets. Validate
-  same-repo GitHub `blob/main` / `tree/main` links against local candidate paths so
-  GitHub rate limits do not create false failures. Record the crawl summary in the
-  release issue.
+  run:
+
+  ```bash
+  python scripts/check_live_docs_links.py --base-url https://eranroseman.github.io/memoria-vault/
+  ```
+
+  The crawler fails on broken internal targets, missing internal fragments, or
+  hard-broken external targets. It validates same-repo GitHub `blob/main` /
+  `tree/main` links against local candidate paths so GitHub rate limits do not
+  create false failures. Record the crawl summary in the release issue.
 - [ ] Confirm `version: vX.Y.0` across the five `src/.memoria/profiles/*/distribution.yaml`.
 - [ ] **Version + CHANGELOG + tag + GitHub Release** are owned by **release-please** — merge its open release PR; that cuts the tag, finalizes `CHANGELOG [vX.Y.0]`, and publishes the Release. Don't hand-tag or hand-edit the CHANGELOG. (See [Releases](../../releasing/README.md).)
 - [ ] Flip `released: false → true` / `status: draft → released` in that release's `release-plan-<v>.md` frontmatter.
