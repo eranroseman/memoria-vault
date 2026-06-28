@@ -2,7 +2,7 @@
 title: Common pitfalls
 parent: Knowledge
 grand_parent: Explanation
-nav_order: 7
+nav_order: 6
 ---
 
 # Common pitfalls
@@ -57,13 +57,13 @@ The failures above share a root, and naming it directly is the best defense. A r
 
 Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate (the human approval step before content is trusted — see [Glossary](../../reference/glossary.md)) exists to prevent.
 
-For the explicit mapping of tasks to their appropriate owner, see [Profile capabilities](../../reference/profiles.md).
+For the explicit mapping of tasks to their appropriate owner, see [Profile capabilities](../../reference/profile-capabilities.md).
 
 ---
 
 ## Related
 
-- Why promotion is gated: [Why promotion is gated](promotion-model.md)
-- The fix for compound notes: [Refactor claim notes](../../how-to-guides/knowledge/refactor-a-note.md)
+- Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
+- The fix for compound notes: [Refactor claim notes](../../how-to-guides/knowledge/refactor-claim-notes.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
-- Lane (a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) permissions referenced here: [Profile capabilities](../../reference/profiles.md)
+- Lane (a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) permissions referenced here: [Profile capabilities](../../reference/profile-capabilities.md)

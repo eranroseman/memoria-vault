@@ -51,4 +51,4 @@ Sorted by severity, then topic.
 ## Related
 
 - The troubleshooting how-to guides: [Troubleshooting](../how-to-guides/troubleshooting/README.md)
-- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../design/why-human-gate.md)
+- Why the CRITICAL self-review failure can't happen: [Why the review gate is structural](../design/why-review-gate-is-structural.md)

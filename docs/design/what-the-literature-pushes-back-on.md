@@ -28,5 +28,5 @@ These are scoping corrections, not refutations of the design. The skeleton holds
 ## Related
 
 - Where the corpus *supports* these bets: [Pattern provenance: borrow, adapt, ignore](why-pattern-provenance.md)
-- The gate this scopes: [Why the review gate is structural](why-human-gate.md)
-- The sandbox this scopes: [Why the architecture is layered](why-three-layers.md)
+- The gate this scopes: [Why the review gate is structural](why-review-gate-is-structural.md)
+- The sandbox this scopes: [Why the architecture is layered](why-layered-architecture.md)

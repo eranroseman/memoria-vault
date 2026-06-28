@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([deployment](../explanation/deployment/README.md)). That default requires the workstation to be on and offers neither auto-sync nor unattended automation. Two felt needs push past it: working the vault from a second device (laptop, phone, tablet), and running discovery/ingest overnight without a human kickoff. Both require a sync topology *and* a safe answer to "what may a non-primary device do against a vault the primary is also dispatching against?" — without one, two machines race on card writes and corrupt the audit log. The topologies are additive and cost nothing to defer, so they are settled here and scheduled later. The deployment explanation defers the past-`local-only` substrate *to* this decision, which is its authoritative target.
+The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([Deployment](../explanation/deployment.md)). That default requires the workstation to be on and offers neither auto-sync nor unattended automation. Two felt needs push past it: working the vault from a second device (laptop, phone, tablet), and running discovery/ingest overnight without a human kickoff. Both require a sync topology *and* a safe answer to "what may a non-primary device do against a vault the primary is also dispatching against?" — without one, two machines race on card writes and corrupt the audit log. The topologies are additive and cost nothing to defer, so they are settled here and scheduled later. The deployment explanation defers the past-`local-only` substrate *to* this decision, which is its authoritative target.
 
 ## Decision
 
@@ -46,7 +46,7 @@ Per topology, a concrete signal — context for the cadence review, not a gate:
 
 ## Related
 
-- **Authoritative target / adopted baseline:** [deployment](../explanation/deployment/README.md) — defers the past-`local-only` substrate to this decision; documents the `local-only` default and the common conventions (Git history, `memoria.bib` in-vault, one dispatcher per vault, `.env` per-machine) these patterns presuppose.
+- **Authoritative target / adopted baseline:** [Deployment](../explanation/deployment.md) — defers the past-`local-only` substrate to this decision; documents the `local-only` default and the common conventions (Git history, `memoria.bib` in-vault, one dispatcher per vault, `.env` per-machine) these patterns presuppose.
 - **Related decisions / Depends on:** [ADR-24](24-single-researcher-scope.md) (single-researcher scope); [ADR-26](26-repo-as-install-unit.md) (repo as install unit); [ADR-55](55-src-scaffold-populate-golden-copy.md) (src scaffold).
 - **Cross-machine capabilities:** [ADR-60 cross-vault knowledge sharing](60-cross-vault-knowledge-sharing.md) — the capabilities that ride this substrate; the two are designed to move together.
 - **Tracking issue:** [#413](https://github.com/eranroseman/memoria-vault/issues/413) — implementation readiness lives on the issue.

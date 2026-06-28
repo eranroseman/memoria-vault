@@ -35,7 +35,7 @@ The generated field lists are in [Inbox card fields](../../reference/inbox-card-
 | `alert` | Push-worthy. |
 | `block` | Push-worthy and pauses delegation / review-gated promotion until resolved. |
 
-The 30-minute test is owned by [Interaction channels](../architecture/human-channels.md): does this change what the PI should do in the next 30 minutes?
+The 30-minute test is owned by [Interaction channels](../architecture/interaction-channels.md): does this change what the PI should do in the next 30 minutes?
 
 ---
 
@@ -53,6 +53,6 @@ The 30-minute test is owned by [Interaction channels](../architecture/human-chan
 
 - Conceptual overview: [Kanban board](README.md)
 - State machine: [Board states and the review gate](states.md)
-- The decision-kind model the card serves: [Why promotion is gated](../knowledge/promotion-model.md)
+- The decision-kind model the card serves: [Decision points](decision-points.md)
 - The card types in the type system: [Document types and epistemic roles](../knowledge/document-types.md)
 - How policy gates writes: [Policy MCP](../../reference/policy-mcp.md)

@@ -34,7 +34,7 @@ No move, no rename, no lifecycle change — `lifecycle: current` was already the
 
 **4. Give it a navigational home.**
 
-If a hub for the topic exists in `notes/hubs/`, add the claim to its `members` list. If this is the third or fourth settled claim on a topic with no hub, create one: [Build a hub](../knowledge/build-a-moc.md).
+If a hub for the topic exists in `notes/hubs/`, add the claim to its `members` list. If this is the third or fourth settled claim on a topic with no hub, create one: [Build a hub](../knowledge/build-a-hub.md).
 
 **5. Handle supersession separately.**
 
@@ -60,6 +60,6 @@ The Linter's `fama-exposure` detector then flags any downstream note still wikil
 ## Related
 
 - Where claims are born: [Write a claim note](write-a-claim-note.md)
-- The hub the evergreen claim joins: [Build a hub](../knowledge/build-a-moc.md)
+- The hub the evergreen claim joins: [Build a hub](../knowledge/build-a-hub.md)
 - Maturity vs lifecycle, and why `reference` was dropped: [Frontmatter fields](../../reference/frontmatter.md)
-- The promotion rules: [Why promotion is gated](../../explanation/knowledge/promotion-model.md)
+- The promotion rules: [Why promotion is gated](../../explanation/knowledge/promotion-and-gated-zones.md)

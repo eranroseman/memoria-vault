@@ -2,7 +2,7 @@
 title: How the board surfaces in Obsidian
 parent: Kanban board
 grand_parent: Explanation
-nav_order: 3
+nav_order: 4
 ---
 
 # How the board surfaces in Obsidian
@@ -13,7 +13,7 @@ The authoritative board lives in `kanban.db` — a database Obsidian cannot quer
 
 ## The Inbox board: `inbox.base`
 
-The board the PI works is **one Obsidian Base over `inbox/`** — `inbox.base`, grouped by card type, filtered on the lifecycle chain. Its **"Needs me" view** (proposed `candidate`, `gap`, and `work-prompt` cards) is shown on the Inbox queue ([ADR-81](../../adr/81-persistent-gate-dashboards.md)); flags and alerts are read from Maintenance. The full board (every card, every state) is the same Base's wider view, surfaced as the [board-state dashboard](../dashboards/daily-glance/README.md#board-state-support). No plugin, no custom renderer: cards are markdown notes with frontmatter, and Bases is the vault's standard view layer.
+The board the PI works is **one Obsidian Base over `inbox/`** — `inbox.base`, grouped by card type, filtered on the lifecycle chain. Its **"Needs me" view** (proposed `candidate`, `gap`, and `work-prompt` cards) is shown on the Inbox queue ([ADR-81](../../adr/81-persistent-gate-dashboards.md)); flags and alerts are read from Maintenance. The full board (every card, every state) is the same Base's wider view, surfaced as the [board-state dashboard](../dashboards/daily-glance.md#board-state-support). No plugin, no custom renderer: cards are markdown notes with frontmatter, and Bases is the vault's standard view layer.
 
 This is why the board needs no bespoke UI — the Inbox category *is* agent→human messaging ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)), and a Base over it is automatically the kanban view, grouped by type, converging to empty.
 
@@ -38,6 +38,6 @@ Editing a projected file in `system/board/` does nothing to the board — the ex
 ## Related
 
 - Conceptual overview: [Kanban board](README.md)
-- The dashboard built on `inbox.base`: [The board-state dashboard](../dashboards/daily-glance/README.md#board-state-support)
+- The dashboard built on `inbox.base`: [The board-state dashboard](../dashboards/daily-glance.md#board-state-support)
 - Export file schemas (`board-state.jsonl`, frontmatter fields): [Telemetry log schemas](../../reference/telemetry-logs.md)
-- The separate fleet-health metrics roll-up: [fleet-health dashboard](../dashboards/operational-health/README.md#fleet-health)
+- The separate fleet-health metrics roll-up: [fleet-health dashboard](../dashboards/operational-health.md#fleet-health)

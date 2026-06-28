@@ -2,7 +2,7 @@
 title: Always-on VPS design
 parent: Design Book
 grand_parent: Developers
-nav_order: 24
+nav_order: 26
 ---
 
 # Always-on VPS design
@@ -57,6 +57,6 @@ Support requires one live proof: a desktop capture syncs to the VPS, processes t
 ## Related
 
 - Local install prerequisite: [Quickstart](../how-to-guides/setup/quickstart.md)
-- The topology trade-offs and dispatcher rule: [Deployment](../explanation/deployment/README.md)
-- Profile configuration: [Configure a profile](../how-to-guides/hermes-agent/configuration.md)
+- The topology trade-offs and dispatcher rule: [Deployment](../explanation/deployment.md)
+- Profile configuration: [Configure a profile](../how-to-guides/hermes-agent/configure-a-profile.md)
 - Failure lookup table: [Failure modes](../reference/failure-modes.md)

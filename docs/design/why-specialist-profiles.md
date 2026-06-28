@@ -60,7 +60,7 @@ Memoria omits two roles that comparable multi-agent systems include:
 
 **No Orchestrator profile.** Routing lives in the Co-PI's `route-task` and the board's dispatch rules — auditable mechanism, not a reasoning agent whose routing mistakes are hard to trace. If the rules can't decide, the card waits for a human.
 
-**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the operations produce *recommendations* that inform the PI's judgment; the review gate itself is always human ([Why the review gate is structural](why-human-gate.md)).
+**No Reviewer profile.** An LLM reviewer that decides whether work is good enough converts a structural gate into a probabilistic one. The Peer-reviewer and the operations produce *recommendations* that inform the PI's judgment; the review gate itself is always human ([Why the review gate is structural](why-review-gate-is-structural.md)).
 
 ---
 
@@ -73,6 +73,6 @@ Dividing by posture still has its price: the same *technique* can live in severa
 ## Related
 
 - The five agents described: [Profiles](../explanation/profiles/README.md)
-- The deterministic actors that are not agents: [Operations](../explanation/operations/README.md)
-- Why the layers separate concerns: [Why the architecture is layered](why-three-layers.md)
-- Why the review gate is human-owned: [Why the review gate is structural](why-human-gate.md)
+- The deterministic actors that are not agents: [Operations](../explanation/operations.md)
+- Why the layers separate concerns: [Why the architecture is layered](why-layered-architecture.md)
+- Why the review gate is human-owned: [Why the review gate is structural](why-review-gate-is-structural.md)

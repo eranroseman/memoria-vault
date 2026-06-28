@@ -29,13 +29,13 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 
 ## Alternatives considered
 
-**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)) independently confirms LLM memory/similarity judgments are unreliable.
+**LLM-judged contradictions** (let an LLM read the corpus and flag tensions): rejected — LLM-as-similarity-judge has the calibration problem named in [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md); different runs surface different tensions with no stable ground truth. The memory-benchmark review ([Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)) independently confirms LLM memory/similarity judgments are unreliable.
 
-**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
+**Ship the NLI proposer in v1**: deferred, not rejected — NLI is deterministic and the right eventual proposer ([Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)), but building it before the manual dashboard proves demand inverts the expansion-threshold rule. v1 ships the surface; the proposer graduates later.
 
 ## Related
 
 - **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies the contradicts edges — now `links.contradicts` after [ADR-52](52-links-vs-relationships.md)).
-- **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda/README.md#contradictions) (new), [Dashboards](../explanation/dashboards/README.md) (index).
+- **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda.md#contradictions) (new), [Dashboards](../explanation/dashboards/README.md) (index).
 - **Future proposer:** [Classical method displacements](59-classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

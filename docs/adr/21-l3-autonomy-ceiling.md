@@ -37,7 +37,7 @@ Memoria targets **L3 on the [Chen et al. 2026](../reference/bibliography.md#chen
 
 ## Related
 
-- **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md) (the preconditions argument and the Coder exception), [Why the review gate is structural](../design/why-human-gate.md), [What Memoria is](../design/what-memoria-is.md) (autonomy-spectrum positioning, "vibe researching").
+- **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md) (the preconditions argument and the Coder exception), [Why the review gate is structural](../design/why-review-gate-is-structural.md), [What Memoria is](../design/what-memoria-is.md) (autonomy-spectrum positioning, "vibe researching").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the mechanism that enforces this ceiling); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (the Coder lane this ADR carves the exception for).
 - **Proposals bounded by this ADR:** the code-lane keep/revert experiment loop
   tracked in [ADR-61](61-nightly-discovery-loop.md); [Configurable review-gate mode

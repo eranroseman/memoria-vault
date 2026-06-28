@@ -8,7 +8,7 @@ nav_order: 1
 
 # Quickstart
 
-Four steps from zero to an installed vault. For the full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md). Once you're installed, learn Memoria itself with [Tutorial 01: See what you're building](../../tutorials/01-orient.md).
+Four steps from zero to an installed vault. For the full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md) through [Set up Hermes](set-up-hermes.md). Once you're installed, learn Memoria itself with [Tutorial 01: See what you're building](../../tutorials/01-see-what-you-are-building.md).
 
 ## Prerequisites
 

@@ -88,5 +88,5 @@ A further wrapper ships for the monthly Retraction Watch refresh (`src/.memoria/
 ## Related
 
 - What the populated tree looks like: [On-disk layout](on-disk-layout.md)
-- The five profiles the install deploys: [Profile capabilities](profiles.md)
+- The five profiles the install deploys: [Profile capabilities](profile-capabilities.md)
 - The gate and plugin the installer wires per lane: [Policy MCP](policy-mcp.md)

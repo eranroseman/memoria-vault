@@ -8,7 +8,7 @@ grand_parent: Reference
 
 Deterministic and hybrid methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in ADRs and explanation pages, not in the active reference contract.
 
-For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md).
+For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md).
 
 ---
 
@@ -128,5 +128,5 @@ llm_backend_fallback: generic | none
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and the [operations](../explanation/operations/README.md) (Linter, Clustering, Sweeps)
-- Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-computational-methods.md)
+- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and [Operations — the deterministic layer](../explanation/operations.md) (Linter, Clustering, Sweeps)
+- Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)

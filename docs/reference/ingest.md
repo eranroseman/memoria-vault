@@ -101,6 +101,6 @@ Re-ingest and retraction maintenance are deterministic sweep operations rather t
 ## Related
 
 - The schemas and field kinds these notes must satisfy: [Frontmatter fields](frontmatter.md)
-- The lane that runs the pipeline: [Profile capabilities](profiles.md)
+- The lane that runs the pipeline: [Profile capabilities](profile-capabilities.md)
 - The crons that wire the sweeps: [Installer (bootstrap)](installer.md)
 - The cards the sweeps and flags land in: [Kanban board reference](kanban-board.md)

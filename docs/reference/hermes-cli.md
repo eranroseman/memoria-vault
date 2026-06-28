@@ -14,7 +14,7 @@ Command structure: `hermes <command> [subcommand] [args]` — runs from any dire
 
 ## The profile set
 
-Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profiles.md)).
+Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profile-capabilities.md)).
 
 ---
 
@@ -113,6 +113,6 @@ Hermes's API server is the programmatic surface for non-human triggers such as f
 ## Related
 
 - In-Obsidian command palette (`Memoria:` entries): [Obsidian command palette](obsidian-command-palette.md)
-- The lane identifiers the commands map to: [Profile capabilities](profiles.md)
+- The lane identifiers the commands map to: [Profile capabilities](profile-capabilities.md)
 - The delegation path behind the board: [Kanban board reference](kanban-board.md)
 - What the installer wires for you: [Installer (bootstrap)](installer.md)

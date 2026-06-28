@@ -33,9 +33,9 @@ Installing profiles, configuring environments, rebuilding indexes, and recoverin
 | Section | Use it for |
 | --- | --- |
 | [Setup]({{ site.baseurl }}/how-to-guides/setup/) | One-time machine, vault, Obsidian, Hermes, optional sample, and second-vault setup |
-| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Day-to-day Obsidian controls: home, dashboards, workspaces, ACP, and the command palette |
+| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Day-to-day Obsidian controls: home, surfaces, reset workspace, ACP, and the command palette |
 | [Using Hermes Agent]({{ site.baseurl }}/how-to-guides/hermes-agent/) | Profile configuration and terminal chat sessions |
-| [Inbox]({{ site.baseurl }}/how-to-guides/inbox/) | Triage, review queues, weekly review, and returning to work |
+| [Inbox]({{ site.baseurl }}/how-to-guides/inbox/) | Triage, action queue, weekly review, and returning to work |
 | [Library]({{ site.baseurl }}/how-to-guides/library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
 | [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, exporting, and code-artifact handoff |

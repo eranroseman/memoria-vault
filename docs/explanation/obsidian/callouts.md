@@ -34,5 +34,5 @@ The placement, cap values, collapse states, and drift-signal cutoffs are in the 
 
 ## Related
 
-- The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../../design/why-computational-methods.md)
+- The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../../design/why-deterministic-methods.md)
 - Callout field reference: [Obsidian callouts](../../reference/obsidian-callouts.md)

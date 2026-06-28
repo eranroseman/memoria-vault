@@ -18,7 +18,7 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
 
-**Operation** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Operations compute and propose; agents judge; the PI decides. The shipped operations are listed in [Operations — the deterministic layer](../explanation/operations/README.md).
+**Operation** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Operations compute and propose; agents judge; the PI decides. The shipped operations are listed in [Operations — the deterministic layer](../explanation/operations.md).
 
 **Hermes** — the Nous Research agent runtime Memoria runs on: Kanban, profile management, MCP server connections, skills, cron, and the gateway process.
 
@@ -28,7 +28,7 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Agent** — a running instance of the model doing work, operating under exactly one **profile**. Two kinds: the **Co-PI**, the interactive agent the PI talks to (it runs off the board), and **background agents**, which execute operations in **lanes**. An agent is a *process*; its permissions come from its profile, and its place on the board is its lane. Contrast *profile* (the configured posture) and *lane* (the board slot).
 
-**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. A profile is *configuration* — a posture — not a running process; the process that runs under it is an **agent** and its board slot is a **lane**. Permissions live on the profile, so "agent permissions" and "a lane's permissions" are shorthand for the permissions of the profile that agent or lane runs. See [Profile capabilities](profiles.md).
+**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. A profile is *configuration* — a posture — not a running process; the process that runs under it is an **agent** and its board slot is a **lane**. Permissions live on the profile, so "agent permissions" and "a lane's permissions" are shorthand for the permissions of the profile that agent or lane runs. See [Profile capabilities](profile-capabilities.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
@@ -86,7 +86,7 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (the PI-facing state of any item); `maturity` is a claim **property** describing how settled it is — never a gate. Both chains and their values are specified in [Frontmatter fields](frontmatter.md).
 
-**Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](linking.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
+**Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
 
 **Document type** — one of the 25 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Document types](document-types.md).
 
@@ -126,5 +126,5 @@ For the short version of the core terms, see [Home](../README.md).
 
 - Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
 - The document types referenced throughout: [Document types](document-types.md)
-- Lane and profile terms: [Profile capabilities](profiles.md)
+- Lane and profile terms: [Profile capabilities](profile-capabilities.md)
 - Board and delegation terms: [Kanban board reference](kanban-board.md)

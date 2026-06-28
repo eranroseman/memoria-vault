@@ -66,6 +66,6 @@ For the rationale behind the hybrid pattern, see [Callouts](../explanation/obsid
 ## Related
 
 - Callout Manager plugin: [Obsidian plugins](obsidian-plugins.md)
-- Computational toolbox (scoring functions): [Retrieval and analysis methods](computational-toolbox.md)
+- Computational toolbox (scoring functions): [Retrieval and analysis methods](retrieval-and-analysis-methods.md)
 - Fleet-health dashboard: [explanation/dashboards/](../explanation/dashboards)
 - The callout explanation page: [Callouts](../explanation/obsidian/callouts.md)

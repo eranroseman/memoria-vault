@@ -1,7 +1,7 @@
 ---
 title: Architecture
 parent: Explanation
-nav_order: 2
+nav_order: 1
 has_children: true
 permalink: /explanation/architecture/
 ---
@@ -14,7 +14,7 @@ The shared terms behind this section are defined in [Home](../../README.md).
 
 ```text
 L1  PI          the human — the only actor who promotes to canonical
-L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Project Workspaces
+L2  Interface   the Obsidian UI: Home, dashboards, Inbox, Library/Knowledge/Project spaces
 L3  Co-PI       the permanent conversational agent (Agent Client pane); read-only, delegates writes
 L4  Tasks       ephemeral agent lanes + the kanban board + cards
 L5  MCP         the policy boundary — agents reach operations and the Vault only through it
@@ -32,7 +32,7 @@ Three kinds of actor work across the structural layers:
 | **Agents** | the Co-PI (L3) + the Task lanes (L4) | posture + LLM judgment; propose, never dispose |
 | **Operations** | ingest · search · clustering · sweeps · Linter (L6) | deterministic, no posture; never on the board |
 
-The "is it an agent or an operation?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane. Agents propose and only the PI disposes; why that gate is structural rather than a convention is [Why the review gate is structural](../../design/why-human-gate.md).
+The "is it an agent or an operation?" question is decided by posture and LLM judgment, not invocation style — deterministic work never occupies a board lane. Agents propose and only the PI disposes; why that gate is structural rather than a convention is [Why the review gate is structural](../../design/why-review-gate-is-structural.md).
 
 ## The layering binds the agent write-path only
 
@@ -46,13 +46,13 @@ The strict each-layer-depends-only-on-the-one-below contract holds along the **a
 | --- | --- |
 | [The vault](vault.md) | The vault's category folders, type homes, gated zones, archived-as-state, and how Bases and the Linter keep it sound. |
 | [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the Co-PI is the sole memory carrier. |
-| [Interaction channels](human-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
+| [Interaction channels](interaction-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |
 | [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes with different retention and content rules. |
 
 ## Where to go next
 
-- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-three-layers.md)
+- **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-layered-architecture.md)
 - **The agents that occupy L3 and L4** → [Profiles](../profiles/README.md)
-- **The deterministic L6 operations** → [Operations](../operations/README.md)
+- **The deterministic L6 operations** → [Operations](../operations.md)
 - **The board state machine** under the Tasks layer → [Kanban board](../kanban-board/README.md)

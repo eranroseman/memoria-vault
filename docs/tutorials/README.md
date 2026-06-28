@@ -29,7 +29,7 @@ Seven short tutorials, grouped into three sessions. Do one session, take a break
 
 | # | Tutorial | What you'll do | What you'll have |
 | --- | --- | --- | --- |
-| 01 | [See what you're building](01-orient.md) | Load the sample, open a project, and read its narrated map — a dense cluster of claims, and the one gap it leaves open. | A project that names your goal, and a clear destination |
+| 01 | [See what you're building](01-see-what-you-are-building.md) | Load the sample, open a project, and read its narrated map — a dense cluster of claims, and the one gap it leaves open. | A project that names your goal, and a clear destination |
 | 02 | [Bring in your first source](02-bring-in-your-first-source.md) | Capture a real source of your own, judge the card Memoria raises, and write its source note in your own words. | Your own catalog entity and source note |
 | 03 | [Build claims and connect them](03-build-claims-and-connect-them.md) | Study one worked claim, finish the sample's half-built claim and link, then distill claims from your own source and connect them. | A connected cluster of claims, dense enough to write from |
 

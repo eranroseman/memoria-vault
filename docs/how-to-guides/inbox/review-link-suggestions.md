@@ -33,7 +33,7 @@ For each callout row or `gap` card, ask: *would I want this link to exist when I
 
 **3. Approve by writing the link yourself.**
 
-To accept a suggestion, *you* open the claim and add the entry to its `links:` map, exactly as you would type one by hand ([Link related claims](../knowledge/link-related-claims.md)). Then resolve the card from `current` to `archived` ([Work the review queue](../inbox/work-the-review-queue.md)). Memoria proposed; your edit to the file is the approval.
+To accept a suggestion, *you* open the claim and add the entry to its `links:` map, exactly as you would type one by hand ([Link related claims](../knowledge/link-related-claims.md)). Then resolve the card from `current` to `archived` ([Work the action queue](../inbox/work-the-action-queue.md)). Memoria proposed; your edit to the file is the approval.
 
 **4. Reject the rest. Don't leave them pending.**
 
@@ -65,4 +65,4 @@ The fleet-health dashboard tracks your accept/reject ratio. A too-high rate mean
 
 **Explanation**
 
-- Why proposals carry arguments, not verdicts: [The honesty card](../../explanation/kanban-board/card-schema.md)
+- Why proposals carry arguments, not verdicts: [The honesty card](../../explanation/kanban-board/honesty-card.md)

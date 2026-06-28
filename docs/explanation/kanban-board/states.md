@@ -7,7 +7,11 @@ nav_order: 1
 
 # Board states and the review gate
 
-This page explains why the board's state machine is shaped the way it is: why the execution chain is hidden, why the PI sees only the lifecycle chain, why rejection spawns a new card, and why the WIP limits are set where they are. For the state lookup tables — the `status` enum, lane assignments, and the WIP-cap values — see the [Kanban board reference](../../reference/kanban-board.md).
+This page explains why the board's state machine is shaped the way it is: why
+the execution chain is hidden, why the PI sees only the lifecycle chain, and why
+rejection spawns a new card. For lookup tables — the `status` enum, lane
+assignments, WIP caps, and dispatch settings — see the
+[Kanban board reference](../../reference/kanban-board.md).
 
 ---
 
@@ -63,36 +67,17 @@ That split is why the board can retry and block work without polluting the
 knowledge graph, and why the vault can preserve provenance without becoming a
 task tracker.
 
----
-
-## Why the WIP limits
-
-Three distinct caps, each motivated by a different failure mode (dispatcher polls every 60 seconds):
-
-**One `running` card per lane.** Parallel runs of the same agent would contend for the same write scope and make the audit trail ambiguous about which run touched what file. One running card per lane keeps per-write attribution unambiguous.
-
-**Review queue = 5 `done` cards.** The bottleneck is human attention, not machine capacity. An unbounded review queue grows faster than the PI can clear it, and the excess silently converts "reviewed" into "rubber-stamped." When the queue hits its cap, the dispatcher stops releasing new work — back-pressure that makes the queue depth visible before it becomes invisible.
-
-**Writer lane bounded.** Too many drafts in flight means synthesis quality drops because evidence cannot be fully integrated. The cap protects synthesis quality, not throughput.
-
----
-
-## The Co-PI and the operations are not lanes
-
-**The Co-PI has no lane.** It is the one agent the PI converses with, interactively, in the Agent Client pane. It is read-only itself: every *write* it wants goes out as a delegated task card to a background lane. It never claims a card and never produces a `done` card — that is the design, not a gap.
-
-**Operations have no lanes either.** Ingest, search, clustering, the verification sweeps, and the Linter are deterministic — no posture, no LLM judgment — so they run on cron and CI, off the board. Their findings still arrive in the Inbox (as `flag`/`alert` cards), but the work itself is never dispatched as a card.
-
----
-
 ## Related
 
 **Explanation**
 
 - Conceptual overview: [Kanban board](README.md)
-- The card the PI reads: [The honesty card](card-schema.md)
-- Why review is human-only: [Why the review gate is structural](../../design/why-human-gate.md)
-- The decision-kind model the gate implements: [Why promotion is gated](../knowledge/promotion-model.md)
+- The card the PI reads: [The honesty card](honesty-card.md)
+- Why WIP limits exist: [WIP limits and back-pressure](wip-limits.md)
+- Why the Co-PI is not a lane: [Profiles](../profiles/README.md)
+- Why operations are not lanes: [Operations](../operations.md)
+- Why review is human-only: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
+- The decision-kind model the gate implements: [Decision points](decision-points.md)
 
 **How-to**
 

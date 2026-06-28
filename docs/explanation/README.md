@@ -8,9 +8,9 @@ permalink: /explanation/
 # Explanation
 
 This section is Memoria's operational overview: architecture, knowledge, profiles,
-workflows, dashboards, deployment, and the Obsidian surface. It explains how the
-system is shaped so you can use and evaluate it without reading the full design
-argument.
+operations, board coordination, dashboards, deployment, and the Obsidian surface.
+It explains how the system is shaped so you can use and evaluate it without
+reading the full design argument.
 
 Memoria is a vault-first research system. The vault holds durable knowledge, the
 board holds transient work, Hermes runs the specialist profiles that propose
@@ -28,12 +28,11 @@ history, see [Developers](../developers.md).
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
 3. **[Profiles](profiles/README.md)** — the Co-PI and the four background lanes.
-4. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
-5. **[Workflows](workflows/README.md)** — workflow-specific triggers on top of the board.
+4. **[Operations](operations.md)** — the deterministic layer below the agents.
+5. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
 6. **[Obsidian](obsidian/README.md)** — how the human works in the vault.
-7. **[Dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
-8. **[Deployment](deployment/README.md)** — how Memoria is packaged and installed.
-9. **[Operations](operations/README.md)** — the deterministic layer below the agents.
+7. **[Surfaces and dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
+8. **[Deployment](deployment.md)** — how Memoria is packaged and installed.
 
 ---
 
@@ -41,14 +40,14 @@ history, see [Developers](../developers.md).
 
 **New to Memoria:** Read [Home](../README.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
-[Workflows](workflows/README.md). The Design Book explains why those choices were
-made.
+[Kanban board](kanban-board/README.md). The Design Book explains why those choices
+were made.
 
 **Coming from another agent system:** The key differences are specialist lanes,
 a structural human gate, and no reasoning orchestrator. Start with
 [Profiles](profiles/README.md), [Kanban board](kanban-board/README.md),
 then the Design Book pages on [specialist profiles](../design/why-specialist-profiles.md)
-and [the review gate](../design/why-human-gate.md).
+and [the review gate](../design/why-review-gate-is-structural.md).
 
 ## For decisions and direction
 

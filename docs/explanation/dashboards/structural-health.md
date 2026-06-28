@@ -1,6 +1,6 @@
 ---
 title: Structural health
-parent: Dashboards
+parent: Surfaces and dashboards
 nav_order: 3
 grand_parent: Explanation
 permalink: /explanation/dashboards/structural-health/
@@ -8,7 +8,7 @@ permalink: /explanation/dashboards/structural-health/
 
 # Structural health
 
-Views that surface drift, loose ends, board state, and the weekly maintenance agenda — the *Linter operation's* structural debt plus the worker-board view. The Maintenance collection (`spaces/maintenance.md`) is the rail target for this cadence. The synthesis-agenda group is the PI's unfinished thinking; the actor-split rationale is in [Dashboards](../README.md).
+Views that surface drift, loose ends, board state, and the weekly maintenance agenda — the *Linter operation's* structural debt plus the worker-board view. The Maintenance collection (`spaces/maintenance.md`) is the rail target for this cadence. The synthesis-agenda group is the PI's unfinished thinking; the actor-split rationale is in [Surfaces and dashboards](README.md).
 
 | View | Question it answers |
 |---|---|
@@ -44,10 +44,10 @@ see what Hermes is executing underneath.
 Weekly review is the scheduled structural-health pass. It gathers Inbox cleanup,
 Maintenance, new content, and claim state into one deliberate rhythm. The
 step-by-step ritual lives in [Run the weekly
-review](../../../how-to-guides/inbox/run-the-weekly-review.md).
+review](../../how-to-guides/inbox/run-the-weekly-review.md).
 
 ## Related
 
-- Exact shipped surfaces: [Dashboards](../../../reference/dashboards.md)
-- Detector severity reference: [Linter: detectors and auto-fix](../../../reference/linter.md)
-- The card format behind `flag` and `alert`: [The honesty card](../../kanban-board/card-schema.md)
+- Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
+- Detector severity reference: [Linter: detectors and auto-fix](../../reference/linter.md)
+- The card format behind `flag` and `alert`: [The honesty card](../kanban-board/honesty-card.md)

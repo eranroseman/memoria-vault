@@ -1,7 +1,7 @@
 ---
 title: Obsidian
 parent: Explanation
-nav_order: 7
+nav_order: 6
 has_children: true
 permalink: /explanation/obsidian/
 ---
@@ -24,7 +24,7 @@ One principle runs through every page below: **the architecture is invisible dur
 
 | Page                                            | What it explains                                                                                                                                                                         |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Visual-style discipline](../../design/visual-discipline.md) | The restraint that makes the above work — a fixed callout palette, hidden chrome, space dashboards as notes, and why each default is deliberate.                                    |
+| [Visual discipline](../../design/visual-discipline.md) | The restraint that makes the above work — a fixed callout palette, hidden chrome, space dashboards as notes, and why each default is deliberate.                                    |
 | [Design system](../../design/design-system.md)               | The cross-context visual and voice spec — why a portable design system exists, and why the specific choices are what they are. |
 
 The **dashboards** are also an Obsidian surface, but they have their own section: [explanation/dashboards/](../dashboards/README.md).

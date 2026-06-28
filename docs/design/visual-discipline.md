@@ -1,11 +1,11 @@
 ---
-title: Visual-style discipline
+title: Visual discipline
 parent: Design Book
 grand_parent: Developers
 nav_order: 22
 ---
 
-# Visual-style discipline
+# Visual discipline
 
 Memoria's Obsidian surface keeps the architecture invisible during normal use and
 legible when something goes wrong ([Obsidian — the human

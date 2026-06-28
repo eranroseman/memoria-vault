@@ -71,9 +71,9 @@ Closing the pane exports the transcript for later review ([Agent Client pane](..
 
 **Reference**
 
-- The full permission matrix: [Profile capabilities](../../reference/profiles.md)
+- The full permission matrix: [Profile capabilities](../../reference/profile-capabilities.md)
 
 **Explanation**
 
 - The agent in the Agent Client pane: [The Co-PI](../../explanation/profiles/co-pi.md)
-- The queue this works down: [Discuss queue](../../explanation/dashboards/synthesis-agenda/README.md#discuss-queue)
+- The queue this works down: [Discuss queue](../../explanation/dashboards/synthesis-agenda.md#discuss-queue)

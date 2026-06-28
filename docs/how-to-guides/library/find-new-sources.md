@@ -37,7 +37,7 @@ It searches over the `paper_search` MCP (20+ scholarly databases) and compares h
 - **Keep:** the paper enters the Tutorial 04 flow (Catalog entity, reading queue, proposed source note).
 - **Skip:** skipping generously offered candidates is the system working, not failing.
 
-Resolving a card flips it in place ([Work the review queue](../inbox/work-the-review-queue.md)). Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+Resolving a card flips it in place ([Work the action queue](../inbox/work-the-action-queue.md)). Don't leave candidates undecided — a drip-feed of stale cards trains you to wave things through ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **4. Feed it from gaps.**
 

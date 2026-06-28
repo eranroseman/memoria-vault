@@ -64,5 +64,5 @@ Bases has no schema or constraints. The **Linter operation** supplies that layer
 
 - The full stack the vault sits under: [Architecture](README.md)
 - The agent→human signal folder in depth: [ADR-51](../../adr/51-inbox-category-and-honesty-card.md)
-- The operations that maintain the vault: [Operations](../operations/README.md)
-- Why the review gate is structural: [Why the review gate is structural](../../design/why-human-gate.md)
+- The operations that maintain the vault: [Operations](../operations.md)
+- Why the review gate is structural: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

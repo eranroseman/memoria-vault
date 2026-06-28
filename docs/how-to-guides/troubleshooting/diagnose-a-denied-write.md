@@ -20,7 +20,7 @@ nav_order: 4
 ## Prerequisites
 
 - The policy MCP wired and running — it writes `system/logs/audit.jsonl`. Until the gate runs live, that log does not exist; a missing *file* is a wiring problem, not a denial.
-- The [audit-log dashboard](../../explanation/dashboards/operational-health/README.md#audit-log) available in Obsidian
+- The [audit-log dashboard](../../explanation/dashboards/operational-health.md#audit-log) available in Obsidian
 
 ## Steps
 
@@ -33,7 +33,7 @@ From `home.md` → the audit-log dashboard. Its primary view is recent **denies 
 Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema: [Policy audit log](../../reference/policy-audit-log.md); lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md)):
 
 - **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `notes/claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
-- **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the review queue](../inbox/work-the-review-queue.md).
+- **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the action queue](../inbox/work-the-action-queue.md).
 
 **3. No matching entry at all? The write never reached the gate.**
 
@@ -67,8 +67,8 @@ A sudden rise in denies, especially right after ingesting a PDF, can indicate an
 
 ## Related
 
-- Approving a held (`dry_run`) write: [Work the review queue](../inbox/work-the-review-queue.md)
+- Approving a held (`dry_run`) write: [Work the action queue](../inbox/work-the-action-queue.md)
 - Other troubleshooting procedures: [Troubleshooting](README.md)
 - The audit event schema: [Policy audit log](../../reference/policy-audit-log.md)
 - The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
-- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health/README.md#audit-log)
+- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health.md#audit-log)

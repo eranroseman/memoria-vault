@@ -358,7 +358,10 @@ def test_buttons_plugin_is_still_bundled_but_home_has_no_buttons():
     home = (SRC / "home.md").read_text(encoding="utf-8")
     assert "```button" not in home
     assert "Memoria: load sample vault" in home
-    assert "https://eranroseman.github.io/memoria-vault/tutorials/01-orient.html" in home
+    assert (
+        "https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html"
+        in home
+    )
 
 
 def test_property_badge_snippet_ships_state_accents():

@@ -51,6 +51,6 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 - **Tracking issues (resolved):** [#391](https://github.com/eranroseman/memoria-vault/issues/391) (per-session digests), [#392](https://github.com/eranroseman/memoria-vault/issues/392) (`vault-hash-drift`), [#393](https://github.com/eranroseman/memoria-vault/issues/393) (append-only-forever).
 - **Supporting rationale:** [Session logging](../explanation/architecture/session-logging.md) (the two-log table and the not-pre-created rationale).
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (the audit trail makes the gate's writes accountable); [ADR-23 memory substrates](23-scoped-memory-substrates.md) (audit memory is the append-only substrate); [ADR-24 single-researcher scope](24-single-researcher-scope.md) (multi-machine, single-user safety).
-- **Profiles affected:** the [Linter](../explanation/operations/README.md) (reads `99-system/logs/`; runs the `audit-unpaired-writes`, `vault-hash-drift`, and `audit-log-size` integrity checks; writes the per-session digests).
+- **Profiles affected:** the [Linter](../explanation/operations.md) (reads `99-system/logs/`; runs the `audit-unpaired-writes`, `vault-hash-drift`, and `audit-log-size` integrity checks; writes the per-session digests).
 - **Reference:** [Policy MCP](../reference/policy-mcp.md) (audit log format and enforcement).
 - **Source discussion:** retroactively records the two-log separation already embedded in `session-logging.md`.

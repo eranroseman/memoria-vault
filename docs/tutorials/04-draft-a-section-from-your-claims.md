@@ -15,7 +15,7 @@ parent: Tutorials
 
 **Prerequisite:** [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) complete — the sample cluster finished (the `meddiet-and-stroke-risk` stub backed, the missing `supports` link made) and your own source distilled into at least one claim connected to the cluster.
 
-You opened a project and read its map back in [Tutorial 01](01-orient.md), and since then your cluster has grown — your own claim joined it in Tutorial 03. Now you switch from gathering to writing: decide what the section can stand behind, then draft it. Keep the gap from the map in view — a section you can defend is honest about where its evidence runs out.
+You opened a project and read its map back in [Tutorial 01](01-see-what-you-are-building.md), and since then your cluster has grown — your own claim joined it in Tutorial 03. Now you switch from gathering to writing: decide what the section can stand behind, then draft it. Keep the gap from the map in view — a section you can defend is honest about where its evidence runs out.
 
 ---
 

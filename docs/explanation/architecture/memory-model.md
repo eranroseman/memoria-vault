@@ -21,7 +21,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 **Handoff memory** (what travels with a card between lanes), **agent memory** (the Co-PI's `MEMORY.md` + `USER.md`, the **sole memory carrier** — the background lanes are stateless), **session history**, and **working memory** (the live session's reasoning).
 
-What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory.md); the rest of this page explains *why* each has the scope it does.
+What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory-substrates.md); the rest of this page explains *why* each has the scope it does.
 
 `SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
 
@@ -63,7 +63,7 @@ hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers
 British spelling" is recall (agent memory).
 
 For the exact "what lives where" lookup table, use [Memory
-substrates](../../reference/memory.md). This page owns the rationale, not the
+substrates](../../reference/memory-substrates.md). This page owns the rationale, not the
 field-by-field routing matrix.
 
 ---
@@ -72,7 +72,7 @@ field-by-field routing matrix.
 
 **Explanation**
 
-- Board handoff payload (handoff memory travels here): [The honesty card](../kanban-board/card-schema.md)
+- Board handoff payload (handoff memory travels here): [The honesty card](../kanban-board/honesty-card.md)
 - Architecture overview: [Architecture](README.md)
 
 **How-to**
@@ -82,7 +82,7 @@ field-by-field routing matrix.
 **Reference**
 
 - Audit log format: [Policy MCP](../../reference/policy-mcp.md)
-- The substrate table as reference: [Memory substrates](../../reference/memory.md)
+- The substrate table as reference: [Memory substrates](../../reference/memory-substrates.md)
 
 **Background**
 

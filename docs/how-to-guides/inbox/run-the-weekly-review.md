@@ -22,7 +22,7 @@ Open `research-focus.md`. Confirm or update the active questions and reading foc
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
-Open the Inbox queue's **Needs me** view of `inbox/inbox.base` and work the proposed action cards as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, and work prompts dismissed once no action remains ([Work the review queue](../inbox/work-the-review-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
+Open the Inbox queue's **Needs me** view of `inbox/inbox.base` and work the proposed action cards as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, and work prompts dismissed once no action remains ([Work the action queue](../inbox/work-the-action-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Notice-level findings (5 min).**
 
@@ -57,7 +57,7 @@ Use the fleet-health dashboard from the rail health band — per-lane trust scor
 
 ## Related
 
-- The Inbox discipline: [Work the review queue](../inbox/work-the-review-queue.md)
+- The Inbox discipline: [Work the action queue](../inbox/work-the-action-queue.md)
 - Fleeting triage in depth: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
 - The detectors behind Maintenance drift watch: [Run the Linter](../operate/run-the-linter.md)
 - The dashboard inventory: [Dashboards](../../reference/dashboards.md)

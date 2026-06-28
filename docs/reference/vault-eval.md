@@ -96,7 +96,7 @@ The installer wires the quarterly `memoria-eval` cron (schedule and wrapper owne
 ## Related
 
 - The decision: [ADR-11](../adr/11-vault-eval-maintenance.md)
-- The lanes the cards route to: [Profile capabilities](profiles.md)
+- The lanes the cards route to: [Profile capabilities](profile-capabilities.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - The other scheduled jobs: [Installer (bootstrap)](installer.md)

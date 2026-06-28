@@ -93,11 +93,11 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 
 **Steps.**
 
-1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [Wikilink and link conventions](../../reference/linking.md#hub-thresholds)).
+1. **Create the first MOC** when a topic crosses the topic-MOC threshold (≥ 15–20 papers + claim notes combined; see [Wikilink and link conventions](../../reference/wikilink-and-link-conventions.md#hub-thresholds)).
 2. Activate ingest-to-triage lag metrics once board-state transition history accrues (triage completion is a Kanban board state, not a note field).
 3. Begin Canvas sessions for chapter planning.
 4. Start systematic discovery (`hermes -p memoria-librarian chat -s find`) for active scoping work.
-5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [Wikilink and link conventions](../../reference/linking.md#hub-thresholds)).
+5. Build child MOCs as clusters densify (> 20 claim notes + > 10 paper notes on a branch; see [Wikilink and link conventions](../../reference/wikilink-and-link-conventions.md#hub-thresholds)).
 6. Begin drafting from the reference layer.
 7. Migrate the existing corpus into the new structure (one folder at a time, with Linter dry-runs at each stage).
 8. Add scheduled tasks: nightly enrichment refresh, weekly lint, monthly stale-note check. Also wire `metrics_aggregate.py` on a weekly cadence — it needs real run volume before trust-score bands are meaningful, so Phase 3 is the right trigger for this one (unlike `board_export.py`, which runs from Phase 1).
@@ -116,7 +116,7 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 
 **Steps.**
 
-1. **Choose a deployment pattern.** The adopted `local-only` default and the common conventions are in [deployment](../../explanation/deployment/README.md); the multi-machine patterns and their full comparison are the [multi-machine deployment proposal](../../adr/63-multi-machine-deployment.md). `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
+1. **Choose a deployment pattern.** The adopted `local-only` default and the common conventions are in [Deployment](../../explanation/deployment.md); the multi-machine patterns and their full comparison are the [multi-machine deployment proposal](../../adr/63-multi-machine-deployment.md). `local-mesh` (Syncthing, peer-to-peer) suits most setups; `always-on` (Syncthing + VPS) is for unattended overnight ingest. Pick based on whether the secondary device is always reachable.
 2. **Determine the secondary device's role.** Install only the profiles that device's role justifies. `memoria-copi` is the safe baseline for any secondary. Add Writer or Peer-reviewer only for explicit, justified use cases. Never install Librarian or Engineer on a secondary — these profiles own state that must not be duplicated across devices.
 3. **Keep all five profiles and dispatch ownership on the primary.** The primary is the single source of truth for card dispatch. A secondary that runs Librarian or issues dispatch commands creates split ownership and audit gaps.
 4. **For developer secondaries only:** install all five profiles, but isolate with `HERMES_HOME` pointed at a test vault — never the production vault. This is the one exception to the rule above, and the isolation is what makes it safe.

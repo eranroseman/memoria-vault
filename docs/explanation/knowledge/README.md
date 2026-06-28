@@ -1,7 +1,7 @@
 ---
 title: Knowledge
 parent: Explanation
-nav_order: 3
+nav_order: 2
 has_children: true
 permalink: /explanation/knowledge/
 ---
@@ -19,7 +19,7 @@ The vault stores durable knowledge organized type-first into category folders, w
 | [Document types and epistemic roles](document-types.md)                    | The three epistemic roles (source / synthesis / working) behind the document types, and why agent permissions follow from them.              |
 | [The knowledge cycle](knowledge-cycle.md)                          | The progression from ingested source to written output, and why the vault compounds rather than merely accumulates.                      |
 | [Note body structure](note-body-structure.md)                      | Why source notes, claim notes, and hubs have the body sections they do, and what each section makes the note able to do.                  |
-| [Why promotion is gated](promotion-model.md)                       | What promotion means, the one-way promotion map and its disallowed moves, and why the human gate sits at the synthesis boundary.         |
+| [Why promotion is gated](promotion-and-gated-zones.md)                       | What promotion means, what canonical zones are gated, and why the human gate sits at the synthesis boundary.         |
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 

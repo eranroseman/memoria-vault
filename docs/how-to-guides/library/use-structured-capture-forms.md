@@ -50,7 +50,7 @@ The form stages two files: a `source` note at `lifecycle: proposed` under `notes
 
 **4. Judge the candidate.**
 
-Open the Inbox queue's **Needs me** view and resolve the card: keep the source by acting on it, or skip it. When no action remains, dismiss the card with one palette command — [Work the review queue](../inbox/work-the-review-queue.md).
+Open the Inbox queue's **Needs me** view and resolve the card: keep the source by acting on it, or skip it. When no action remains, dismiss the card with one palette command — [Work the action queue](../inbox/work-the-action-queue.md).
 
 ## Verify
 
@@ -63,5 +63,5 @@ Open the Inbox queue's **Needs me** view and resolve the card: keep the source b
 - The enriched capture path for papers with a DOI/citekey: [Capture and ingest a source](capture-and-ingest.md)
 - The palette command behind the form: [Obsidian command palette](../../reference/obsidian-command-palette.md)
 - The `source` note schema: [Frontmatter fields](../../reference/frontmatter.md), [Document types](../../reference/document-types.md)
-- Resolving the candidate it raises: [Work the review queue](../inbox/work-the-review-queue.md)
+- Resolving the candidate it raises: [Work the action queue](../inbox/work-the-action-queue.md)
 - The decision: [ADR-71: Structured capture forms](../../adr/71-structured-capture-forms.md)

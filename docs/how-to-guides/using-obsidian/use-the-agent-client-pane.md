@@ -23,7 +23,7 @@ The pane runs exactly one agent: the **Co-PI** (`memoria-copi`) — the only pro
 ## Opening the pane
 
 The saved **Memoria** reset workspace keeps the pane in the right sidebar, so restoring
-the shell brings the Co-PI back beside the active space ([Workspaces](use-workspaces.md)).
+the shell brings the Co-PI back beside the active space ([Reset workspace](reset-workspace.md)).
 Space switching does not reset the chat session because spaces are notes, not workspace
 layout swaps. To open it manually: `Cmd/Ctrl+P` -> **Agent Client: Open chat view** or
 the Hermes icon in the left ribbon.

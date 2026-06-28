@@ -2,7 +2,7 @@
 title: Bootstrap installer
 parent: Design Book
 grand_parent: Developers
-nav_order: 14
+nav_order: 25
 ---
 
 # Bootstrap installer
@@ -26,7 +26,7 @@ The distribution mechanism is `src/` plus the hashed `<vault>/.memoria/golden/` 
 | Stage golden copy | Save the restore baseline. |
 | Wire runtime | Add the pre-commit hook, Hermes profiles, optional cluster stack, Obsidian guidance, and crons. |
 
-Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profiles.md).
+Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profile-capabilities.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial.
 

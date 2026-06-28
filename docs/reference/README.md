@@ -24,7 +24,7 @@ manual mirrors.
 | [Inbox card fields](inbox-card-fields.md) | Schema-owned field contract for candidate, gap, flag, alert, and work-prompt cards | Generated |
 | [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map | Generated |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
-| [Wikilink and link conventions](linking.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
+| [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |
 
@@ -36,7 +36,7 @@ manual mirrors.
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Profile capabilities](profiles.md) | Lane identifiers, capability table, invocation levels, folder permissions | Generated |
+| [Profile capabilities](profile-capabilities.md) | Lane identifiers, capability table, invocation levels, folder permissions | Generated |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and eval-task schema | Manual |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries | Guarded mirror |
@@ -44,10 +44,10 @@ manual mirrors.
 | [Policy MCP](policy-mcp.md) | Policy MCP decision values, request/response contract, tools, lane overrides, and enforcement | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
-| [Retrieval and analysis methods](computational-toolbox.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms | Manual |
+| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
-| [Pattern library](patterns.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
+| [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
 | [Clustering](clustering.md) | Cluster MCP graph build, claim-debate Canvas, BERTopic topics, parameters, outputs, and opt-in stack | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)
@@ -58,7 +58,7 @@ manual mirrors.
 | [Sweeps](sweeps.md) | Re-ingest and retraction maintenance passes | Manual |
 | [Search](search.md) | qmd retrieval surface: hybrid BM25 + vector + rerank, MCP, consumers, index, and limits | Manual |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
-| [Memory substrates](memory.md) | Memory substrate table, audit log schema, retention | Manual |
+| [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas and derived metric-note contracts | Manual |
 | [Board export](board-export.md) | Hermes Kanban projection command, generated board files, event logs, and cost-join failure modes | Manual |
@@ -76,6 +76,7 @@ manual mirrors.
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
 | [Failure modes](failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
 | [Sample vault](sample-vault.md) | Bundled tutorial corpus, catalog papers, source notes, and sample labels | Guarded mirror |
+| [Pattern provenance table](pattern-provenance.md) | Borrow/adapt/reference/ignore judgments for surveyed AI-research-system patterns | Manual |
 | [Bibliography](bibliography.md) | Works cited across the docs in ACM author-date style | Manual |
 
 ## [Obsidian and Zotero](obsidian-and-zotero.md)

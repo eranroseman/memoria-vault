@@ -12,7 +12,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-DOC = ROOT / "docs/reference/profiles.md"
+DOC = ROOT / "docs/reference/profile-capabilities.md"
 PROFILES = ROOT / "src/.memoria/profiles"
 LANES = ROOT / "src/.memoria/lane-overrides"
 TASKS_MCP = ROOT / "src/.memoria/mcp/tasks_mcp.py"
@@ -216,7 +216,7 @@ def main() -> int:
         return 0
     if args.check and current != expected:
         raise SystemExit(
-            "docs/reference/profiles.md is stale; run scripts/gen_profiles_ref.py --write"
+            "docs/reference/profile-capabilities.md is stale; run scripts/gen_profiles_ref.py --write"
         )
     print("gen-profiles-ref: ok")
     return 0

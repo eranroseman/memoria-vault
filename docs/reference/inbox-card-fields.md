@@ -141,4 +141,4 @@ Generated from Inbox schemas in `src/.memoria/schemas/types`.
 
 - The universal field grammar: [Frontmatter fields](frontmatter.md)
 - The board state machine: [Kanban board reference](kanban-board.md)
-- Why these shapes exist: [The honesty card](../explanation/kanban-board/card-schema.md)
+- Why these shapes exist: [The honesty card](../explanation/kanban-board/honesty-card.md)

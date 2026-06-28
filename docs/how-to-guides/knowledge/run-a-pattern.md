@@ -7,7 +7,7 @@ nav_order: 8
 
 # Run a pattern
 
-Run a shipped prompt-transformation — analyze the claims in a note, red-team an argument, summarize for recall — over the active note or a selection, and read the result. A pattern proposes; it never writes a canonical note. For the full library and the runner contract, see [Pattern library](../../reference/patterns.md).
+Run a shipped prompt-transformation — analyze the claims in a note, red-team an argument, summarize for recall — over the active note or a selection, and read the result. A pattern proposes; it never writes a canonical note. For the full library and the runner contract, see [Pattern library](../../reference/pattern-library.md).
 
 ## When to use a pattern
 
@@ -48,11 +48,11 @@ A pattern result is staging. Distil anything durable into your own note ([Write 
 
 ## If the result is a dry-run
 
-If the run reports `dry_run: true`, the pattern's `output_target` is empty or points into a review-gated zone — it produced a prompt but no sanctioned write target, and the Linter flags the pattern file. This is a pattern-authoring fix, not a run-time one: see the gated-target rule in [Pattern library](../../reference/patterns.md).
+If the run reports `dry_run: true`, the pattern's `output_target` is empty or points into a review-gated zone — it produced a prompt but no sanctioned write target, and the Linter flags the pattern file. This is a pattern-authoring fix, not a run-time one: see the gated-target rule in [Pattern library](../../reference/pattern-library.md).
 
 ## Related
 
-- The library, schema, and runner contract: [Pattern library](../../reference/patterns.md)
+- The library, schema, and runner contract: [Pattern library](../../reference/pattern-library.md)
 - When to delegate durable prose instead: [Draft with the Writer](../project/draft-with-writer.md)
 - Distilling a kept result: [Write a claim note](../knowledge/write-a-claim-note.md)
 - The palette command behind this guide: [Obsidian command palette](../../reference/obsidian-command-palette.md)

@@ -19,7 +19,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 ---
 
 For the system model, start at [Home](docs/README.md). For exact profile names,
-postures, and write-scope ceilings, see [Profile capabilities](docs/reference/profiles.md).
+postures, and write-scope ceilings, see [Profile capabilities](docs/reference/profile-capabilities.md).
 
 ## How it works
 
@@ -80,7 +80,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 ## Documentation
 
 Start in [`docs/`](docs). New here? Begin with
-[Tutorial 01: See what you're building](docs/tutorials/01-orient.md), or jump to the
+[Tutorial 01: See what you're building](docs/tutorials/01-see-what-you-are-building.md), or jump to the
 [Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) four-quadrant split:

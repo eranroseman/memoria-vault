@@ -68,5 +68,5 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 - **Tracking issue:** [#370](https://github.com/eranroseman/memoria-vault/issues/370) — implementation readiness lives on the issue.
 - **Pairs with:** [ADR-39 — note-acceptance checklists](39-note-acceptance-checklists.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
-- **Profiles:** [Linter](../explanation/operations/README.md), [Mapper](../explanation/profiles/librarian.md)
+- **Profiles:** [Linter](../explanation/operations.md), [Mapper](../explanation/profiles/librarian.md)
 - **Document types gated:** [claim-note, reference-note](../reference/document-types.md)

@@ -50,6 +50,6 @@ The constraints once proposed were: exclude every agent-managed folder via `fold
 ## Related
 
 - **Files affected:** the `recommended/`→`reference/` reframing of the prior plugin doc (recommended 11→10, reference 3→4) is recorded in [Obsidian plugins](../reference/obsidian-plugins.md); the held config it carried is folded into this ADR (above).
-- **Profiles affected:** the [Linter](../explanation/operations/README.md) — owns the formatting/validation concern obsidian-linter would otherwise touch.
+- **Profiles affected:** the [Linter](../explanation/operations.md) — owns the formatting/validation concern obsidian-linter would otherwise touch.
 - **Related decisions:** the frontmatter namespace discipline this protects ([Frontmatter fields](../reference/frontmatter.md)).
 - **Source discussion:** the control-plane-authority analysis — a deterministic tool still fails the architecture if it writes outside the Policy MCP / audit trail.
