@@ -4496,6 +4496,48 @@ entries:
     title: v0.1.0-alpha.10 validation log
   canonical_owner: false
   status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/0.1.0-alpha.11-design.md
+  title: "Memoria \u2014 0.1.0-alpha.11 design (single source of truth)"
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/assumption-verification-results.md
+  title: 0.1.0-alpha.11 design assumption verification results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/git-writer-smoke-results.md
+  title: Git-backed trusted-writer smoke results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/m0-spike-results.md
+  title: Alpha.11 M0 spike results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/partial-pass-completion-results.md
+  title: Partial-pass completion results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/start-blocker-verification-results.md
+  title: Alpha.11 start-blocker verification results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
 - path: docs/releasing/0.1.0-alpha.2/README.md
   title: 0.1.0-alpha.2
   book: Internal
