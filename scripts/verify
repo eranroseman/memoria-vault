@@ -34,11 +34,11 @@ MODES = {
 
 MANUAL_FOLLOW_UP = {
     "rc": [
-        "Complete Product Gate checks in docs/testing/plans/release-candidate-runbook.md.",
-        "Complete Release Gate checks in docs/releasing/README.md.",
+        "Complete Product Gate checks in docs/testing/plans/product-gate.md.",
+        "Complete Release Gate checks in docs/testing/plans/release-gate.md.",
     ],
     "live": [
-        "Complete Obsidian, Zotero, Bases, dashboard, and workflow checks in the runbook.",
+        "Complete Runtime/Product manual checks in docs/testing/.",
     ],
 }
 

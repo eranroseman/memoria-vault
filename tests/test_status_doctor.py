@@ -51,6 +51,17 @@ def test_check_file_flags_stale_release_and_test_paths(tmp_path):
     assert any("docs/releasing/vX.Y/" in e and "stale path" in e for e in errs)
 
 
+def test_check_file_flags_deleted_testing_plan_names(tmp_path):
+    rel = _release_root(tmp_path)
+    stale = rel / "stale-testing.md"
+    stale.write_text("Follow docs/testing/coverage-matrix.md and gui-test-plan.md.\n")
+
+    errs = check_file(stale, tmp_path)
+
+    assert any("coverage-matrix.md" in e and "verification-matrix.md" in e for e in errs)
+    assert any("gui-test-plan.md" in e and "manual-gui-checks.md" in e for e in errs)
+
+
 def test_check_file_flags_broken_links_but_ignores_external_placeholders_and_ellipsis(tmp_path):
     rel = _release_root(tmp_path)
     broken = rel / "broken.md"

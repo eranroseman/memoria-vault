@@ -15,23 +15,34 @@ superseded_by: []
 
 > **Amended by [ADR-44](44-tests-in-pytest-tree.md):** L1 component tests now live in a
 > repo-side `pytest` tree (`tests/`), not inline `--self-test` blocks. The pyramid,
-> coverage matrix, and disciplines below are unchanged; only L1's hosting moved.
+> verification matrix, and disciplines below are unchanged; only L1's hosting moved.
 >
 > **Amended 2026-06-23:** the release process is now described as five promotion
 > gates. The historical L0-L5 labels remain coverage aliases; humans and scripts
 > use Source, Package, Runtime, Product, and Release gates.
+>
+> **Amended 2026-06-28:** testing docs are gate-first. The former tool-specific
+> plans were collapsed into Source, Package, Runtime, Product, Release, Manual
+> GUI, and Failure Recovery plans, with the command catalogs left in Reference.
 
 ## Context
 
-Memoria has three good test plans — [headless](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/headless-test-plan.md) (static + schema), [hermes-cli](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/hermes-cli-test-plan.md) (agent wiring + the policy gate), and [GUI](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/gui-test-plan.md) (Obsidian/Zotero/dashboards) — but no framework binding them. Three problems follow: coverage is **implicit** (nobody can answer "is component X tested?"), gaps are **invisible** until hit, and the plans **drift** from the design (e.g. the CLI plan still cited the dissolved `00-meta/04-reference/`, the GUI plan still listed a deleted root `README`). An assessment also surfaced uncovered surface: the installer end-to-end, recovery/failure-modes, security/adversarial, performance/scale, deployment modes, a cross-layer golden path, and — by design — agent *output quality*.
+Memoria had tool-specific test plans, but the real release question is gate
+confidence: what must be true before the candidate can move from Source to
+Package to Runtime to Product to Release? Three problems followed from the old
+shape: coverage was **implicit**, gaps were **invisible** until hit, and plans
+duplicated command catalogs that belonged in Reference. An assessment also
+surfaced uncovered areas: installer end-to-end, recovery/failure modes,
+security/adversarial checks, performance/scale, deployment modes, cross-layer
+product workflows, and — by design — agent *output quality*.
 
 ## Decision
 
 Adopt a **promotion-gated test framework**: cheap checks run first and often,
 expensive checks run only when their evidence matters, and every release promotes
 from source to package to runtime to product acceptance to cut readiness. The
-coverage matrix still owns the component-to-plan index; the gate vocabulary is
-the process people and scripts use.
+verification matrix owns the assurance-to-gate index; Reference owns command
+catalogs.
 
 **Promotion gates**
 
@@ -40,31 +51,31 @@ the process people and scripts use.
 | **Source** | the repo is internally coherent: format, lint, schema, docs, generated-file drift, secrets/provenance, and changed-code tests | `scripts/verify pr` | every PR |
 | **Package** | the repo can assemble a valid disposable Memoria vault and replay the model-free lifecycle | `scripts/verify package` | vault/package-related PRs, nightly, release candidate |
 | **Runtime** | Hermes, MCP, policy gates, and local service boundaries work with a disposable runtime | `scripts/verify runtime` | nightly, runtime-related PRs when available, release candidate |
-| **Product** | Memoria's user workflows produce the expected artifacts and human-visible surfaces render | release-candidate runbook evidence | release candidate |
+| **Product** | Memoria's user workflows produce the expected artifacts and human-visible surfaces render | Product Gate evidence | release candidate |
 | **Release** | the candidate is ready to cut: fresh-clone evidence, docs, blockers, versioning, close-out, and notes are ready | release issue + release-please evidence | formal release / checkpoint close |
 
 **Coverage aliases**
 
 | Layer | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
-| **L0 Static & schema** | the 5 CI checks + dashboard/telemetry schema-drift | headless | every commit (CI) |
-| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | headless §A | every commit (CI) |
-| **L2 Wiring / contract** | policy gate + every agent command + board/profile/skills/cron + architecture invariants | hermes-cli | per release (cheap model, disposable vault) |
-| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero→bib, ACP | GUI | per release (Windows) |
-| **L4 Golden-path E2E** | one full-lifecycle trace across all layers | [e2e-golden-path](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/e2e-golden-path-plan.md) | per release |
+| **L0 Static & schema** | required source checks + dashboard/telemetry schema-drift | [Source Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/source-gate.md) | every commit (CI) |
+| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | [Source Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/source-gate.md) | every commit (CI) |
+| **L2 Wiring / contract** | policy gate, representative CLI behavior classes, board/profile/skills/cron, architecture invariants | [Runtime Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/runtime-gate.md) | per release (cheap model, disposable vault) |
+| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero to bib, Agent Client | [Manual GUI Checks](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/manual-gui-checks.md) | per release |
+| **L4 Golden-path E2E** | one full product trace across runtime, ingest, review, telemetry, and GUI | [Product Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/product-gate.md) | per release |
 | **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-maintenance.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [installer](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/installer-test-plan.md) (+ others as built) | on relevant change |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [Package Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/package-gate.md) + [Failure Recovery](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/failure-recovery-checks.md) | on relevant change |
 
 **Disciplines**
 
-1. **Coverage matrix is the keystone.** [`coverage-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/coverage-matrix.md) maps every design component → its layer/plan → automated? → release gate. Gaps are tracked, not discovered by accident.
+1. **Verification matrix is the keystone.** [`verification-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/verification-matrix.md) maps every required assurance -> gate -> evidence -> automation level. Gaps are tracked, not discovered by accident.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
 3. **Drift control.** A check (`scripts/check_test_refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
 4. **Explicit gate mapping.** Each gate names the layer/plan that satisfies it
    and writes evidence for the run, so "is the release tested?" is answerable
    from the matrix plus the release issue.
 
-All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing), built from `test-plan-template.md`.
+All reusable procedures live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing). New sub-plans use `templates/test-plan-template.md` only when an existing gate cannot hold the assurance.
 
 ## Why
 
@@ -74,7 +85,7 @@ All plans live in [Testing](https://github.com/eranroseman/memoria-vault/tree/ma
 
 ## Consequences
 
-- New artifacts: the coverage matrix, the installer and golden-path plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately under `system/eval/`.
+- New artifacts: the verification matrix, gate plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately under `system/eval/`.
 - The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
 - Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed plan.
 
@@ -98,7 +109,7 @@ stable until branch protection and `ruleset-doctor` are updated deliberately.
 
 L2 ("wiring / contract") splits at the **model boundary**, and the two halves belong at different costs:
 
-- **L2a — policy-gate contract (hermetic).** The gate is pure Python (stable entrypoint `policy_mcp.py`, split core `memoria.runtime.policy`), so every lane's allow / deny / dry_run contract is assertable with **no model, Hermes, or Obsidian**. It is already an L1 `--self-test`; folding the hermes-cli §5 write-walls for **all seven lanes** into it (Phase 1, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) pushes the policy-gate half of L2 down to per-commit CI — the cheapest layer that can assert it (Discipline 2 + the pyramid).
+- **L2a — policy-gate contract (hermetic).** The gate is pure Python (stable entrypoint `policy_mcp.py`, split core `memoria.runtime.policy`), so every lane's allow / deny / dry_run contract is assertable with **no model, Hermes, or Obsidian**. It is already an L1 `--self-test`; folding write-wall coverage for **all seven lanes** into it (Phase 1, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) pushes the policy-gate half of L2 down to per-commit CI — the cheapest layer that can assert it (Discipline 2 + the pyramid).
 - **L2b — agent wiring (runtime-bound).** Whether `hermes -p <profile> chat -q -s <cmd>` actually dispatches, routes through the *live* gate, and lands the right artifact needs the runtime + a cheap model + the Obsidian write path. Assert artifact **shape / placement / audit row**, never prose.
 
 **Driver (resolved).** Hermes ships a scripted one-shot: `hermes -z "<prompt>"` (final text only, clean stdout/stderr) and `hermes chat -q` (same, but tool calls in the transcript — what L2b wants, to observe the write + the gate call). ACP is interactive/editor-only — **not** the automation path.
@@ -108,9 +119,9 @@ L2 ("wiring / contract") splits at the **model boundary**, and the two halves be
 - **Option A (production-faithful variant).** Headless Obsidian (`xvfb-run`) on a self-hosted runner — exercises the real REST path, but heavy/flaky and overlaps L3 #15, so it doesn't gate L2b.
 - *(Rejected: re-enabling the `file` toolset — Memoria skills emit `obsidian_*`, so they'd break without an obsidian server.)*
 
-**Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). ADR-80's `workflow-replay` now covers the model-free cassette slice of the deterministic L2-L4 path, but it does **not** replace L2b's live Hermes dispatch signal. For L2b, `scripts/test-l2.sh` implements the unattended Option-B smoke core: a disposable vault, temporary `HERMES_HOME`, filesystem-backed `obsidian` MCP shim, the real policy-gate plugin, a `hermes chat -q` dispatch through a local OpenAI-compatible endpoint, and artifact/audit assertions. By default it starts a deterministic local smoke endpoint so the wiring proof is stable; set `MEMORIA_L2_USE_SMOKE_MODEL=0` to exercise a real cheap/local model endpoint. It remains opt-in/manual or nightly rather than required PR CI. **Keep the full §4 matrix + the GUI/Zotero/dashboard tail attended, per release** — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class).
+**Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). ADR-80's `workflow-replay` now covers the model-free cassette slice of the deterministic L2-L4 path, but it does **not** replace L2b's live Hermes dispatch signal. For L2b, `scripts/test-l2.sh` implements the unattended Option-B smoke core: a disposable vault, temporary `HERMES_HOME`, filesystem-backed `obsidian` MCP shim, the real policy-gate plugin, a `hermes chat -q` dispatch through a local OpenAI-compatible endpoint, and artifact/audit assertions. By default it starts a deterministic local smoke endpoint so the wiring proof is stable; set `MEMORIA_L2_USE_SMOKE_MODEL=0` to exercise a real cheap/local model endpoint. It remains opt-in/manual or nightly rather than required PR CI. Keep the Product Gate and Manual GUI checks attended per release — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class).
 
-**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) opt-in live smoke — **shipped as `scripts/test-l2.sh`** ([#688](https://github.com/eranroseman/memoria-vault/issues/688)), nightly/manual, not PR-blocking. `workflow-replay` remains the automated model-free evidence, while `scripts/test-l2.sh` supplies the live model/Hermes dispatch signal when runtime prerequisites are available. The full hermes-cli §4 matrix stays the attended plan of record.
+**Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) opt-in live smoke — **shipped as `scripts/test-l2.sh`** ([#688](https://github.com/eranroseman/memoria-vault/issues/688)), nightly/manual, not PR-blocking. `workflow-replay` remains the automated model-free evidence, while `scripts/test-l2.sh` supplies the live model/Hermes dispatch signal when runtime prerequisites are available. Runtime Gate owns the live wiring plan.
 
 ## Alternatives considered
 

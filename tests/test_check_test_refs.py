@@ -17,8 +17,8 @@ def test_md_link_regex_matches_markdown_links():
 
 def test_repo_path_regex_matches_backticked_repo_paths():
     assert REPO_PATH.findall("`docs/reference/policy-mcp.md`") == ["docs/reference/policy-mcp.md"]
-    assert REPO_PATH.findall("`project-files/tests/coverage-matrix.md`") == [
-        "project-files/tests/coverage-matrix.md"
+    assert REPO_PATH.findall("`project-files/tests/verification-matrix.md`") == [
+        "project-files/tests/verification-matrix.md"
     ]
     assert REPO_PATH.findall("`src/something.md`") == []
     assert REPO_PATH.findall("docs/reference/policy-mcp.md") == []

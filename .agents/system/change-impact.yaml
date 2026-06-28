@@ -131,6 +131,24 @@ areas:
       - bash scripts/test-l2.sh --help
       - python -m pytest tests/test_l2_smoke.py
       - bash scripts/test-l2.sh --preflight-only
+  - area: Testing gate mechanism
+    paths:
+      - scripts/verify
+      - scripts/test.sh
+      - scripts/e2e-smoke.sh
+      - scripts/test-l2.sh
+      - .github/workflows/**
+      - .github/ruleset-contract.yaml
+      - .agents/playbooks/release.md
+    inspect:
+      - Verification matrix assurance rows
+      - Matching Source/Package/Runtime/Product/Release gate docs
+      - Release evidence and manual follow-up wording
+      - Required-check roster and scripts/verify mode behavior
+    checks:
+      - python scripts/status_doctor.py
+      - python scripts/check_test_refs.py
+      - python scripts/agents_doctor.py
   - area: GitHub workflow or PR policy
     paths:
       - .github/workflows/**

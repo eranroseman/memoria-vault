@@ -43,13 +43,13 @@ Definitions — state lives in the sub-issues, never a column here:
 
 | Gate | Proves | Verified by |
 | --- | --- | --- |
-| G1 | Installer runs clean on Ubuntu/WSL2 from `src/`; all **five** profiles register; the golden copy is staged; idempotent re-run | S0–S3 · [Installer test plan](../../testing/plans/installer-test-plan.md) |
-| G2 | The agent spine runs live: dispatch → claim → run → gated write → audit → `done`, with no human-review step | [G9 spine plan](../../testing/plans/g9-spine-plan.md) |
-| G3 | The ingest value loop: capture → ingest → Tier-1 enrich → classify → gated write → a correct `proposed` paper entity | [G10 ingest plan](../../testing/plans/g10-ingest-plan.md) |
-| G4 | All **twelve** dashboards render on real data (every Dataview / Bases query resolves) | S5 · [GUI test plan](../../testing/plans/gui-test-plan.md) Part C |
-| G5 | Telemetry signals emit live (board-state, transitions, audit, lint-findings) | [Release-candidate runbook](../../testing/plans/release-candidate-runbook.md) |
-| G6 | The review loop closes: a card flows `ready → running → done (awaiting review) → approved → current`; the gate holds at the review boundary | [Golden-path plan](../../testing/plans/e2e-golden-path-plan.md) |
-| G7 | Workspaces load (Desk / Library / Studio) and the `home.md` control panel + command Buttons work ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) | S5 · [GUI test plan](../../testing/plans/gui-test-plan.md) |
+| G1 | Installer runs clean on Ubuntu/WSL2 from `src/`; all **five** profiles register; the golden copy is staged; idempotent re-run | S0–S3 · [Installer test plan](../../testing/plans/package-gate.md) |
+| G2 | The agent spine runs live: dispatch → claim → run → gated write → audit → `done`, with no human-review step | [G9 spine plan](../../testing/plans/product-gate.md) |
+| G3 | The ingest value loop: capture → ingest → Tier-1 enrich → classify → gated write → a correct `proposed` paper entity | [G10 ingest plan](../../testing/plans/product-gate.md) |
+| G4 | All **twelve** dashboards render on real data (every Dataview / Bases query resolves) | S5 · [GUI test plan](../../testing/plans/manual-gui-checks.md) Part C |
+| G5 | Telemetry signals emit live (board-state, transitions, audit, lint-findings) | [Release-candidate runbook](../../testing/plans/release-gate.md) |
+| G6 | The review loop closes: a card flows `ready → running → done (awaiting review) → approved → current`; the gate holds at the review boundary | [Golden-path plan](../../testing/plans/product-gate.md) |
+| G7 | Workspaces load (Desk / Library / Studio) and the `home.md` control panel + command Buttons work ([ADR-68](../../adr/68-workspaces-desk-library-studio.md)) | S5 · [GUI test plan](../../testing/plans/manual-gui-checks.md) |
 
 ## 3. Validation — stages
 
@@ -59,12 +59,12 @@ relevant gate/stage sub-issues).
 
 | Stage | Proves |
 | --- | --- |
-| S0 | Static: parse, schema-correctness, docs link/title integrity ([Headless test plan](../../testing/plans/headless-test-plan.md) Parts B/C/E) |
-| S1 | Pytest component suite — policy, hook, board-export, metrics, detectors ([Headless test plan](../../testing/plans/headless-test-plan.md) Part A) |
-| S2 | Agent wiring + per-lane policy-gate enforcement ([Hermes CLI test plan](../../testing/plans/hermes-cli-test-plan.md)) |
-| S3 | Real install into a throwaway vault; profiles register; idempotent re-run ([Installer test plan](../../testing/plans/installer-test-plan.md)) |
+| S0 | Static: parse, schema-correctness, docs link/title integrity ([Headless test plan](../../testing/plans/source-gate.md) Parts B/C/E) |
+| S1 | Pytest component suite — policy, hook, board-export, metrics, detectors ([Headless test plan](../../testing/plans/source-gate.md) Part A) |
+| S2 | Agent wiring + per-lane policy-gate enforcement ([Hermes CLI test plan](../../testing/plans/runtime-gate.md)) |
+| S3 | Real install into a throwaway vault; profiles register; idempotent re-run ([Installer test plan](../../testing/plans/package-gate.md)) |
 | S4 | Live connectivity + gate enforcement (Obsidian MCP round-trip; a denied write is blocked and audited) |
-| S5 | End-to-end + GUI: dashboards render, the golden path traverses, Zotero export ([GUI test plan](../../testing/plans/gui-test-plan.md) + [Golden-path plan](../../testing/plans/e2e-golden-path-plan.md)) |
+| S5 | End-to-end + GUI: dashboards render, the golden path traverses, Zotero export ([GUI test plan](../../testing/plans/manual-gui-checks.md) + [Golden-path plan](../../testing/plans/product-gate.md)) |
 
 ## 4. Blockers
 

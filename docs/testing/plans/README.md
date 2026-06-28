@@ -1,15 +1,16 @@
 ---
+topic: tests
 title: Test plans
 parent: Testing
-grand_parent: Documentation
-nav_order: 11
+nav_order: 20
 has_children: true
-topic: tests
 ---
 
-# Test plans
+# Test Plans
 
-The reusable, version-agnostic test **plans** (procedures) — see [Testing](../README.md)
-for the plan-vs-run distinction and where run results live. Browse the directory for the
-full set; each is built from [the test-plan template](../test-plan-template.md) and
-indexed in the [coverage matrix](../coverage-matrix.md).
+Gate procedures live here. They are intentionally small and point to reference
+docs for command catalogs and implementation details.
+
+Run order: [Source](source-gate.md) -> [Package](package-gate.md) ->
+[Runtime](runtime-gate.md) -> [Product](product-gate.md) ->
+[Release](release-gate.md).

@@ -17,6 +17,7 @@ prose.) Guards six drift modes:
      but deleted before the release is done.
   5. Scratch `tmp/` dirs may exist only under `docs/releasing/<version>/tmp/`.
   6. Release agent guidance lives in the portable `.agents` playbook.
+  7. Old testing-plan filenames must not reappear after the gate-first rewrite.
 
 Scope: docs/{releasing,testing}/**/*.md + CONTRIBUTING.md + .agents/playbooks/release.md.
 Exit 0 if clean, 1 if any issue. Usage: python scripts/status_doctor.py [--self-test]
@@ -43,6 +44,18 @@ STALE_PATHS = [
     (re.compile(r"\breleasing/vX\.Y/"), "docs/releasing/<version>/"),
     (re.compile(r"\bdocs/releasing/vX\.Y/"), "docs/releasing/<version>/"),
 ]
+STALE_TESTING_NAMES = {
+    "coverage-matrix.md": "docs/testing/verification-matrix.md",
+    "e2e-golden-path-plan.md": "docs/testing/plans/product-gate.md",
+    "g10-ingest-plan.md": "docs/testing/plans/product-gate.md",
+    "g9-spine-plan.md": "docs/testing/plans/product-gate.md",
+    "gui-test-plan.md": "docs/testing/plans/manual-gui-checks.md",
+    "headless-test-plan.md": "docs/testing/plans/source-gate.md",
+    "hermes-cli-test-plan.md": "docs/testing/plans/runtime-gate.md",
+    "installer-test-plan.md": "docs/testing/plans/package-gate.md",
+    "release-candidate-runbook.md": "docs/testing/plans/release-gate.md",
+    "test-env-harness-plan.md": "docs/testing/plans/package-gate.md",
+}
 
 PRIVATE_SCRATCH_LINK_RE = re.compile(r"(?:^|[/(])\.claude/projects/|/memory/")
 RELEASE_PLAYBOOK = Path(".agents/playbooks/release.md")
@@ -73,6 +86,9 @@ def check_file(p: Path, root: Path) -> list[str]:
     for rx, replacement in STALE_PATHS:
         for m in rx.finditer(text):
             errs.append(f"{rel}: stale path `{m.group(0)}` — use `{replacement}`")
+    for old, replacement in STALE_TESTING_NAMES.items():
+        if old in text:
+            errs.append(f"{rel}: stale testing plan `{old}` — use `{replacement}`")
 
     # 1b. scratch dirs are allowed only for in-work release design notes.
     if "tmp" in rel.parts and not _release_tmp(rel):

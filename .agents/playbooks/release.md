@@ -42,7 +42,7 @@ Do not create a second markdown state table for gate or stage progress.
    ```
 
 5. Assign scoped issues to the milestone and use the Memoria Issue Tracker table
-   filtered to that milestone, sorted by Priority, as the live release plan.
+   filtered to that milestone, using Status and Readiness as the live release state.
 6. Open the **"Release vX.Y"** parent issue with label `release` and milestone
    `vX.Y`.
 7. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
@@ -51,9 +51,9 @@ Do not create a second markdown state table for gate or stage progress.
 ## 3. Cut a release or checkpoint
 
 1. Confirm every gate/stage sub-issue is closed, required CI is green on `main`,
-   and no High-priority blocker remains open.
-2. Re-run the relevant release-candidate stages from a fresh clone or record why
-   a stage is not applicable.
+   and no release-milestone issue has `Readiness: Blocked`.
+2. Re-run the relevant Release Gate checks from a fresh clone or record why a
+   check is not applicable.
 3. Retire-sweep ADRs in a small separate PR: delete ADRs whose question this
    release dissolved or superseded, keep the decision memory in git history, and
    regenerate the ADR index.
