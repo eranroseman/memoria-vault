@@ -6,9 +6,9 @@ canonical_name: Ada River
 check_status: checked
 links:
   sources:
-  - catalog/sources/zotero-abcd1234/source.md
+  - catalog/sources/partial-source/source.md
 ---
 # Ada River
 
 Sources:
-- `catalog/sources/zotero-abcd1234/source.md`
+- `catalog/sources/partial-source/source.md`
