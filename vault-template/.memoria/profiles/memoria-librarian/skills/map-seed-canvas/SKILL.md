@@ -1,6 +1,6 @@
 ---
 name: map-seed-canvas
-description: "Seed a JSON Canvas (.canvas) from the corpus's typed graph: take communities, edges, and centrality from the cluster MCP's cluster_build_graph, lay out a starting canvas under notes/fleeting/, and raise one card. A seed is scaffolding for the PI's spatial thinking — propose-class output the PI rearranges or discards; the operation computes, the map lane emits, the PI thinks. Use when a canvas-seed request lands for a topic or project."
+description: "Seed a JSON Canvas (.canvas) from the corpus's typed graph: take communities, edges, and centrality from the cluster MCP's cluster_build_graph, lay out a starting canvas under knowledge/notes/, and raise one card. A seed is scaffolding for the PI's spatial thinking — propose-class output the PI rearranges or discards; the operation computes, the map lane emits, the PI thinks. Use when a canvas-seed request lands for a topic or project."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -26,7 +26,7 @@ metadata:
 
 # map-seed-canvas
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Give the PI a spatial starting point instead of a blank canvas. The cluster operation
 computes the graph — nodes, typed edges, communities, centrality, layout coordinates —
@@ -54,7 +54,7 @@ rearranges or deletes; it is never the map of record.
 3. **Write — gated.** The canvas to
    `knowledge/notes/maps/canvas-seed-<topic>-<YYYY-MM-DD>.canvas` plus a small
    companion note (same stem, `.md`) recording the provenance: scope, cap,
-   `params_echo`, what was pruned. Never write under `projects/` or `notes/hubs/`.
+   `params_echo`, what was pruned. Never write into PI-owned project files under `knowledge/projects/` or `knowledge/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the seed (ADR-54).
 
 ## Output contract

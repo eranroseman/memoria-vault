@@ -8,12 +8,11 @@
   "collapse-color-groups": false,
   "colorGroups": [
     { "query": "path:catalog/", "color": { "a": 1, "rgb": 5431378 } },
-    { "query": "path:notes/claims/", "color": { "a": 1, "rgb": 14701138 } },
-    { "query": "path:notes/hubs/", "color": { "a": 1, "rgb": 11621088 } },
-    { "query": "path:notes/sources/", "color": { "a": 1, "rgb": 5419488 } },
-    { "query": "path:notes/fleeting/", "color": { "a": 1, "rgb": 9079434 } },
-    { "query": "path:inbox/", "color": { "a": 1, "rgb": 16753920 } },
-    { "query": "path:projects/", "color": { "a": 1, "rgb": 5460819 } }
+    { "query": "path:knowledge/notes/", "color": { "a": 1, "rgb": 14701138 } },
+    { "query": "path:knowledge/hubs/", "color": { "a": 1, "rgb": 11621088 } },
+    { "query": "path:knowledge/digests/", "color": { "a": 1, "rgb": 5419488 } },
+    { "query": "path:knowledge/projects/", "color": { "a": 1, "rgb": 5460819 } },
+    { "query": "path:capabilities/", "color": { "a": 1, "rgb": 9079434 } }
   ],
   "collapse-display": true,
   "showArrow": false,

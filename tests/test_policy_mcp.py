@@ -124,7 +124,7 @@ def test_policy_mcp():
         write_fixture = LanePolicy(
             profile="memoria-write-fixture",
             allow_write=["projects/**"],
-            deny_write=["notes/claims/**", "catalog/**", "inbox/**", "system/**"],
+            deny_write=["knowledge/notes/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
             write_scope=["projects/"],
         )
@@ -181,7 +181,7 @@ def test_policy_mcp():
         )
         check(
             "Engineer write to notes -> deny (lane deny)",
-            d(engineer, "write", "notes/sources/d.md") == "deny",
+            d(engineer, "write", "catalog/sources/d/source.md") == "deny",
         )
         check(
             "Engineer write to unmapped path -> deny (default-deny)",
@@ -193,25 +193,25 @@ def test_policy_mcp():
         )
         check(
             "Writer write to review-gated reference -> deny (deferred)",
-            d(writer, "write", "notes/hubs/r.md") == "deny",
+            d(writer, "write", "knowledge/hubs/r.md") == "deny",
         )
         check(
             "Writer write to claims -> deny (lane deny beats degrade)",
-            d(writer, "write", "notes/claims/c.md") == "deny",
+            d(writer, "write", "knowledge/notes/c.md") == "deny",
         )
         check(
             "Co-PI write anywhere -> deny (hard write-denial)",
-            d(copi, "write", "notes/fleeting/f.md") == "deny",
+            d(copi, "write", "knowledge/notes/f.md") == "deny",
         )
 
         # ---- read decisions ---------------------------------------------------- #
         check(
             "Engineer read normal zone -> allow",
-            d(engineer, "read", "catalog/papers/p.md") == "allow",
+            d(engineer, "read", "catalog/sources/p/source.md") == "allow",
         )
         check(
             "Engineer read review-gated -> allow_with_log",
-            d(engineer, "read", "notes/claims/c.md") == "allow_with_log",
+            d(engineer, "read", "knowledge/notes/c.md") == "allow_with_log",
         )
 
         # ---- auto_fix class gating (Linter) ------------------------------------ #
@@ -276,7 +276,7 @@ def test_policy_mcp():
         )
         check(
             "X1 Librarian write to claims -> deny (write-wall)",
-            d(librarian, "write", "notes/claims/c.md") == "deny",
+            d(librarian, "write", "knowledge/notes/c.md") == "deny",
         )
         check(
             "Librarian write to projects/system -> deny",
@@ -294,7 +294,7 @@ def test_policy_mcp():
         )
         check(
             "Peer-reviewer write to claims -> deny (write-wall)",
-            d(peer_reviewer, "write", "notes/claims/c.md") == "deny",
+            d(peer_reviewer, "write", "knowledge/notes/c.md") == "deny",
         )
 
         # ---- invalid action + missing task_id ---------------------------------- #
@@ -430,10 +430,10 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
         "profile: memoria-writer\n"
         "policy:\n"
         "  allow:\n"
-        '    write: ["notes/hubs/**"]\n'
+        '    write: ["knowledge/hubs/**"]\n'
         '  require: ["audit_log"]\n'
         "routing:\n"
-        '  write_scope: ["notes/hubs/"]\n',
+        '  write_scope: ["knowledge/hubs/"]\n',
         encoding="utf-8",
     )
     (tmp_path / "inbox").mkdir()
@@ -444,7 +444,7 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     )
 
     engine = PolicyEngine(tmp_path)
-    blocked = engine.check("memoria-writer", "write", "notes/hubs/h.md", "T-BLOCK")
+    blocked = engine.check("memoria-writer", "write", "knowledge/hubs/h.md", "T-BLOCK")
     assert blocked["decision"] == "deny"
     assert blocked["policy_rule"] == "loudness.block.active"
     assert blocked["blockers"][0]["path"] == "inbox/block.md"
@@ -453,7 +453,7 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
         "---\ntitle: Stop\ntype: alert\nlifecycle: current\nloudness: block\nresolved: 2026-06-15\n---\n",
         encoding="utf-8",
     )
-    unblocked = engine.check("memoria-writer", "write", "notes/hubs/h.md", "T-OPEN")
+    unblocked = engine.check("memoria-writer", "write", "knowledge/hubs/h.md", "T-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
 

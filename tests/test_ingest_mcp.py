@@ -30,8 +30,8 @@ def test_ingest_mcp_pipeline_runs_tier0_fixture():
 
 
 def test_append_intake_anchor_is_idempotent(tmp_path):
-    first = append_intake_anchor(tmp_path, "x2024Test", "20-sources/01-papers/x2024Test.md")
-    second = append_intake_anchor(tmp_path, "x2024Test", "20-sources/01-papers/x2024Test.md")
+    first = append_intake_anchor(tmp_path, "x2024Test", "catalog/sources/x2024Test/source.md")
+    second = append_intake_anchor(tmp_path, "x2024Test", "catalog/sources/x2024Test/source.md")
 
     lines = (tmp_path / INTAKE_LOG).read_text().splitlines()
 

@@ -459,8 +459,11 @@ def test_capture_zotero_source_maps_local_api_item_snapshot(tmp_path: Path) -> N
             "publicationTitle": "Journal of Local APIs",
             "DOI": "10.1000/zotero.2026",
             "abstractNote": "A Zotero Local API fixture.",
+            "annotationText": "Should not be imported.",
             "extra": "bibtex: river2026zotero\n",
         },
+        "children": [{"data": {"itemType": "annotation", "annotationText": "Child note"}}],
+        "annotations": [{"text": "annotation payload"}],
     }
 
     result = capture_zotero_source(vault, item, machine="test-machine")
@@ -489,7 +492,11 @@ def test_capture_zotero_source_maps_local_api_item_snapshot(tmp_path: Path) -> N
         read_frontmatter(vault / "catalog/entities/person-ada-river.md")["canonical_name"]
         == "Ada River"
     )
-    assert raw.read_text(encoding="utf-8").startswith("{\n")
+    raw_text = raw.read_text(encoding="utf-8")
+    assert raw_text.startswith("{\n")
+    assert "annotationText" not in raw_text
+    assert "annotations" not in raw_text
+    assert "children" not in raw_text
     assert (vault / result["content_path"]).read_text(encoding="utf-8") == (
         "A Zotero Local API fixture.\n"
     )
@@ -497,6 +504,26 @@ def test_capture_zotero_source_maps_local_api_item_snapshot(tmp_path: Path) -> N
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_zotero_source"
     assert events[1]["operation"] == "capture_zotero_source"
+
+
+def test_capture_zotero_source_rejects_annotation_items(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    with pytest.raises(ValueError, match=r"annotation import is out of alpha\.11 scope"):
+        capture_zotero_source(
+            vault,
+            {
+                "key": "ANN01",
+                "data": {
+                    "key": "ANN01",
+                    "itemType": "annotation",
+                    "annotationText": "Highlighted text.",
+                },
+            },
+            machine="test-machine",
+        )
+
+    assert not (vault / "catalog/sources/zotero-ann01").exists()
 
 
 def test_capture_zotero_local_source_fetches_item_by_key(tmp_path: Path, monkeypatch) -> None:

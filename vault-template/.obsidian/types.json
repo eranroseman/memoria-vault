@@ -1,9 +1,11 @@
 {
   "types": {
     "type": "text",
+    "check_status": "text",
     "lifecycle": "text",
-    "maturity": "text",
     "certainty": "text",
+    "item_type": "text",
+    "metadata_status": "text",
     "agent_recommendation": "text",
     "loudness": "text",
     "origin": "text",
@@ -39,7 +41,7 @@
     "output_target": "text",
     "posture": "text",
     "raised_by": "text",
-    "source_type": "text",
+    "source_id": "text",
     "subtype": "text",
     "superseded_by": "text",
     "target": "text",

@@ -26,7 +26,7 @@ metadata:
 
 # map-report-coverage
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Tell the PI where the corpus is thin **relative to a brief** — not where it is thin in
 the abstract (every corpus is thin almost everywhere). Topics come from the
@@ -38,7 +38,7 @@ matter for this brief** — and that ranking is argued, not asserted.
 | Input | Required | Meaning |
 | --- | --- | --- |
 | project brief | yes | The lens that defines "matters". |
-| folders | no | Retrieval restriction (default: `notes/sources`, `notes/claims`). |
+| folders | no | Retrieval restriction (default: `catalog/sources`, `knowledge/notes`). |
 | threshold | no | Notes-per-topic floor below which a topic counts as thin (default from calibration). |
 
 ## Procedure

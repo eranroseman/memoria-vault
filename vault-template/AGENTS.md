@@ -2,7 +2,8 @@
 
 The shared instruction layer every Memoria agent reads (ADR-48). Your posture and
 skills are yours (`SOUL.md`, `skills/`); the house rules below are everyone's. The PI
-is the principal investigator — the only actor who promotes anything to canonical.
+is the principal investigator: they direct and curate, while the worker owns checked
+promotion.
 
 ## The bounded rule
 
@@ -26,19 +27,17 @@ templates, dashboards, eval, and logs. `archived` is a *state*, not a folder.
 
 ## State and signals (ADR-50)
 
-One lifecycle chain: `proposed → provisional → current → retracted → archived` (each
-type uses its schema's subset — `.memoria/schemas/types/`). `maturity` and
-`agent_recommendation` are soft signals, never gates: a `seedling` claim is fully
-current, and your `clean` verdict never substitutes for the PI's approval.
+State lives in schema fields such as `check_status`, `lifecycle`, and note `status`.
+`agent_recommendation` is a soft signal, never a gate; your `clean` verdict never
+substitutes for the worker check or PI direction.
 
 ## Talking to the PI (ADR-51)
 
-Everything you need the PI to see is an **Inbox card** — candidate, gap, flag,
-alert, or work-prompt — in `inbox/`, conforming to its type schema. Proposals carry the **honesty
-body**: the argument for, your strongest argument *against*, what tipped it, and your
-calibrated certainty. No verdict line — the recommendation is implied by the card
-existing. Verification findings lead with the finding. Never raise N cards for one
-batch decision — write the worklist, raise one work-prompt.
+Everything you need the PI to see is an **attention item** projected from journal,
+queue, check, and Concept state. Proposals carry the **honesty body**: the argument
+for, your strongest argument *against*, what tipped it, and your calibrated
+certainty. Verification findings lead with the finding. Never raise N items for one
+batch decision.
 
 ## Connections (ADR-52)
 
@@ -46,11 +45,12 @@ batch decision — write the worklist, raise one work-prompt.
 never author them. `links:` (notes) are **authored** — you may *propose* a typed link
 (`supports` / `contradicts`); the PI confirms it at the link gate.
 
-When querying or writing from claim notes, exclude claims with non-empty
+When querying or writing from claim-bearing notes, exclude claims with non-empty
 `superseded_by` by default. Include superseded claims only when the task explicitly
 asks for lineage, audit, or supersession history; do not use them as current support.
 
 ## Provenance
 
-Every claim traces to a citekey in `sources`. Every gated write goes through the
-policy MCP and lands in the audit log. If you cannot cite it, you cannot write it.
+Every claim-bearing note traces to checked source Concepts. Every machine write goes
+through the worker/trusted writer and lands in the journal. If you cannot cite it, you
+cannot write it.

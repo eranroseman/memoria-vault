@@ -180,11 +180,13 @@ def find_project(notes: dict[str, Note], project_arg: str) -> Note:
 
 
 def find_thesis(notes: dict[str, Note], project: Note, resolver: dict[str, str]) -> Note | None:
-    active = normalize_link(project.frontmatter.get("active_thesis"))
+    active = normalize_link(
+        project.frontmatter.get("thesis") or project.frontmatter.get("active_thesis")
+    )
     if active:
         key = resolver.get(active, active)
         note = notes.get(key)
-        if note and note.note_type == "thesis":
+        if note and note.note_type == "note":
             return note
     project_aliases = {
         project.key,
@@ -194,7 +196,9 @@ def find_thesis(notes: dict[str, Note], project: Note, resolver: dict[str, str])
     }
     candidates: list[Note] = []
     for note in notes.values():
-        if note.note_type != "thesis" or note.lifecycle in {"archived", "retracted"}:
+        if note.note_type != "note" or note.frontmatter.get("status") == "rejected":
+            continue
+        if note.frontmatter.get("role") != "thesis":
             continue
         linked_project = normalize_link(note.frontmatter.get("project"))
         if linked_project in project_aliases or resolver.get(linked_project) == project.key:

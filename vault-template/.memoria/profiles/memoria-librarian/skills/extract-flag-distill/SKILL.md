@@ -24,7 +24,7 @@ metadata:
 
 # extract-flag-distill
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 The PI's reading time is the scarcest resource in the loop. This skill nominates which
 kept-but-undistilled sources deserve it: it reads the evidence already in the vault and
@@ -35,7 +35,7 @@ distilling a source now. It proposes attention; it extracts nothing itself.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| scope | no | A folder/date window of kept sources (default: kept sources with an empty `Worth distilling` section). |
+| scope | no | A folder/date window of checked sources or digests without accepted note candidates. |
 | lens | no | An active question/project that defines "worth it" for this pass. |
 
 ## Signals (read-only, each reported)

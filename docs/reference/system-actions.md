@@ -157,10 +157,10 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | --- | --- |
 | catalog-find-source | Searches the literature via paper_search, screens against the workspace, and raises honesty-bodied attention projections. |
 | catalog-rank-candidate | Ranks candidate sources by relevance / novelty / venue into a batch worklist. |
-| catalog-classify-source | Proposes `research_area` / `methodology` from the vocabulary for human promotion at triage. |
-| catalog-enrich-record | Runs the ingest pipeline MCP, fills the classification and `[!brief]` holes, applies the gated writes. |
+| catalog-classify-source | Proposes `research_area` / `methodology` from the vocabulary for PI direction and worker promotion. |
+| catalog-enrich-record | Runs the ingest pipeline MCP and stages worker-owned source updates. |
 | extract-flag-distill | Flags kept sources worth reading and raises a distill work prompt. |
-| extract-stub-claim | Proposes one-sentence, citekey-bound claim stubs in a source's "Worth distilling" section. |
+| extract-stub-claim | Proposes one-sentence, citekey-bound note candidates from checked sources or digests. |
 | link-suggest-claim | Proposes typed links (supports / contradicts / extends) as attention with quoted evidence. |
 | link-surface-tension | Surfaces claim-pair contradictions with both sides quoted and reconciliation options. |
 | map-cluster-corpus | Clusters topics via the cluster MCP and emits a map note plus a report card. |
@@ -170,14 +170,9 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 | map-graph-claims | Emits a propose-class claim-debate JSON Canvas from authored `supports` / `contradicts` / `extends` links, with pruning disclosed in a companion note. |
 | map-canvas-hub | Assembles existing maps, claim graphs, project gates, and dashboards into a propose-class JSON Canvas hub for navigation. |
 
-### Writer (4)
+### Writer (0)
 
-| Skill | What it does |
-| --- | --- |
-| draft-outline-argument | Produces 2–3 outline options for an argument, each with a counter-outline. |
-| draft-score-outline | Scores an outline against coverage / maturity / contradictions / holes (advisory). |
-| draft-write-section | Drafts a prose section with every fact bound to a citekey, marking holes. |
-| draft-bind-citation | Binds every factual sentence to a citekey and normalizes citations against the bibliography. |
+Draft/export skills are deferred after alpha.11 and do not ship in the template.
 
 ### Peer-reviewer (4)
 

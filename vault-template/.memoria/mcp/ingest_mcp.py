@@ -6,14 +6,14 @@ file, so the worker agent cannot run `runner.py` as a CLI. The deterministic
 spine therefore reaches the agent the same way vault access and the policy gate
 do — over **MCP**. This thin server wraps `runner.run()` as a single tool:
 
-    ingest_pipeline(citekey, enrich=True) -> the draft bundle (with two holes)
+    ingest_pipeline(citekey, enrich=True) -> the source bundle (with two holes)
 
 The tool **reads + computes** (Tier-0 assembly + Tier-1 enrich/extract/link). It
 writes no vault notes — but it does persist the *un-gated derived artifacts* the
 agent can't: the full-text extract under `.memoria/data/extracts/` (outside the
 librarian write lane) and the capture-intake anchor (see `append_intake_anchor`).
 The agent fills the two holes (_proposed_classification and the [!brief]) and
-writes the notes through the gated obsidian MCP, exactly as before.
+writes through the worker staging/promotion boundary.
 
     python ingest_mcp.py --vault <path>      # run the server over stdio
 """
@@ -70,12 +70,12 @@ def build_server(vault: Path):
     from operations.processing.ingest import runner
 
     server = FastMCP("memoria-ingest")
-    bib_path = vault / ".memoria" / "memoria.bib"
+    bib_path = vault / "references.bib"
 
     @server.tool()
     def ingest_pipeline(citekey: str, enrich: bool = True, pdf_path: str = "") -> dict:
         """Run the deterministic ingest pipeline for a citekey and return the draft
-        bundle: the assembled paper/item note (lifecycle: current, ingest_status: tier0), merged
+        bundle: the assembled source Concept (lifecycle: current, ingest_status: tier0), merged
         metadata + _enrichment, the extract status, the link plan, and
         holes=[_proposed_classification, brief] for the agent to fill. Writes no
         vault notes; it does persist the un-gated derived artifacts (the full-text

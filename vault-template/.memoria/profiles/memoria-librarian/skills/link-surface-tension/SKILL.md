@@ -25,7 +25,7 @@ metadata:
 
 # link-surface-tension
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Make disagreements impossible to ignore. A tension is a pair of statements the vault
 holds that **cannot both be right as written** — two claims, or a claim and a newly
@@ -49,7 +49,7 @@ unfinished thinking (the `contradictions` dashboard), not defects to be cleaned 
    often dissolve an apparent contradiction. A dissolved tension is reported as
    dissolved, with the dissolving distinction named.
 3. **Steelman both sides**: each side gets its evidence summarized at full strength
-   (sources, maturity, sample sizes where stated). Never present a strawman so the
+   (sources, note status, sample sizes where stated). Never present a strawman so the
    "resolution" looks easy.
 4. **List reconciliation shapes** — as questions, not answers: moderation ("X holds
    under condition C?"), measurement difference, one side superseded. These are reading
@@ -70,7 +70,7 @@ conflict is real, not whether either side is right.
 ## Honesty rules
 
 - **No verdicts.** Even when one side is a `seedling` and the other `evergreen`, you
-  report maturity and stop — maturity is development, never trust (ADR-50).
+  report note status and stop — status is context, never trust.
 - Both quotes verbatim, with locators; a tension you cannot quote is not raised.
 - Dissolved tensions are still reported (quietly) — the PI learns from near-misses,
   and silent dismissal is disposal.

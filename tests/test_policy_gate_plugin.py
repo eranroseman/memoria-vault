@@ -32,7 +32,7 @@ def _vault_with_writer_policy(tmp_path):
         '      - "inbox/**"\n'
         "  deny:\n"
         "    write:\n"
-        '      - "notes/claims/**"\n'
+        '      - "knowledge/notes/**"\n'
         "  require:\n"
         "    - audit_log\n"
         "routing:\n"
@@ -50,7 +50,7 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
 
     result = gate._gate(
         "mcp_obsidian_vault_write",
-        {"filepath": "notes/claims/blocked.md", "content": "must not land"},
+        {"filepath": "knowledge/notes/blocked.md", "content": "must not land"},
         "TASK-DENY",
     )
     audit = [
@@ -64,7 +64,7 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
     assert "tool-registry allowlist" in result["message"]
     assert audit[-1]["decision"] == "deny"
     assert audit[-1]["policy_rule"] == "tool-registry.allowlist"
-    assert audit[-1]["path"] == "notes/claims/blocked.md"
+    assert audit[-1]["path"] == "knowledge/notes/blocked.md"
     assert audit[-1]["task_id"] == "TASK-DENY"
 
 

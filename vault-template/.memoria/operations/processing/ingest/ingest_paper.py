@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""ingest_paper.py — the deterministic ingest spine (ADR-30).
+"""ingest_paper.py — the deterministic source-ingest spine (ADR-30).
 
-Tier 0 (this file, so far): from the local Better BibTeX `.bib` alone — no
-network, no PDF, no ML — resolve a citekey to an identity-complete note and
-route it by type. Produces the assembled note *content*; it does NOT write to
-the vault (the Librarian worker performs the gated write — ADR-30 §"Where code
-runs"). Tiers 1-2 (merge/extract/tag/link, the two LLM judgments) land next.
+Tier 0 (this file, so far): from the local tracked `references.bib` projection
+alone — no network, no PDF, no ML — resolve a citekey to an identity-complete
+source Concept. Produces the assembled source *content*; it does NOT write to the
+vault (the Librarian worker stages/promotes the checked Concept). Tiers 1-2
+(merge/extract/tag/link, the two LLM judgments) land next.
 
 Usage:
     ingest_paper.py --citekey <key> [--bib PATH] [--json]
@@ -23,27 +23,26 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
-# entry-type → (note_type, folder, source_type). ADR-30: ~17% of the corpus is
-# non-paper; route it, don't force it into the paper-note shape.
+# BibTeX entry-type -> alpha.11 source.item_type. Non-paper works remain source
+# Concepts; item_type is the discriminator instead of separate catalog homes.
 TYPE_ROUTING = {
-    # bib entry type -> (vault type, catalog home, source_type hint)  [ADR-47/49]
-    "article": ("paper", "catalog/papers", "paper"),
-    "inproceedings": ("paper", "catalog/papers", "paper"),
-    "conference": ("paper", "catalog/papers", "paper"),
-    "proceedings": ("paper", "catalog/papers", "paper"),
-    "incollection": ("paper", "catalog/papers", "chapter"),
-    "inbook": ("paper", "catalog/papers", "chapter"),
-    "online": ("paper", "catalog/papers", "preprint"),
-    "misc": ("paper", "catalog/papers", "preprint"),
-    "techreport": ("paper", "catalog/papers", "report"),
-    "report": ("paper", "catalog/papers", "report"),
-    "phdthesis": ("paper", "catalog/papers", "thesis"),
-    "mastersthesis": ("paper", "catalog/papers", "thesis"),
-    "book": ("paper", "catalog/papers", "book"),
-    "software": ("repository", "catalog/repositories", "software"),
-    "dataset": ("dataset", "catalog/datasets", "dataset"),
+    "article": "article",
+    "inproceedings": "article",
+    "conference": "article",
+    "proceedings": "article",
+    "incollection": "book",
+    "inbook": "book",
+    "online": "article",
+    "misc": "article",
+    "techreport": "report",
+    "report": "report",
+    "phdthesis": "report",
+    "mastersthesis": "report",
+    "book": "book",
+    "software": "software",
+    "dataset": "dataset",
 }
-DEFAULT_ROUTE = ("paper", "catalog/papers", "paper")
+DEFAULT_ITEM_TYPE = "article"
 
 
 # --------------------------------------------------------------------------- #
@@ -153,7 +152,7 @@ def _authors(raw: str) -> list[str]:
 # Tier 0 — assemble the captured note
 # --------------------------------------------------------------------------- #
 def assemble(citekey: str, etype: str, f: dict) -> dict:
-    note_type, folder, source_type = TYPE_ROUTING.get(etype, DEFAULT_ROUTE)
+    item_type = TYPE_ROUTING.get(etype, DEFAULT_ITEM_TYPE)
     now = datetime.date.today().isoformat()
     year = ""
     for k in ("year", "date"):
@@ -170,14 +169,47 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
     )
     if not arxiv and doi.lower().startswith("10.48550/arxiv."):
         arxiv = doi.split("arxiv.", 1)[-1]
+    source_id = f.get("source_id") or citekey
+    identifiers = {
+        key: value
+        for key, value in {
+            "doi": doi,
+            "arxiv": arxiv,
+            "pmcid": f.get("pmcid", ""),
+            "isbn": f.get("isbn", ""),
+        }.items()
+        if value
+    }
+    csl_type = "article-journal"
+    if item_type == "book":
+        csl_type = "book"
+    elif item_type == "dataset":
+        csl_type = "dataset"
+    elif item_type == "software":
+        csl_type = "software"
+    elif item_type == "report":
+        csl_type = "report"
     fm = {
         "title": f.get("title", ""),
-        "name": f.get("title", ""),  # dataset/repository records key on name
-        "type": note_type,
+        "description": f.get("abstract", "") or f"BibTeX {etype} source.",
+        "type": "source",
+        "check_status": "unchecked",
+        "source_id": source_id,
         "lifecycle": "current",  # entities are current from creation (ADR-50)
         "ingest_status": "tier0",  # captured but not yet enriched (ADR-30)
         "citekey": citekey,
-        "source_type": source_type,
+        "item_type": item_type,
+        "resource": f.get("url", "") or (f"https://doi.org/{doi}" if doi else ""),
+        "identifiers": identifiers,
+        "csl_json": {
+            "id": citekey,
+            "type": csl_type,
+            "title": f.get("title", ""),
+            "issued": {"date-parts": [[year]]} if year else {},
+            "DOI": doi,
+            "URL": f.get("url", ""),
+        },
+        "metadata_status": "partial",
         "doi": doi,
         "url": f.get("url", ""),
         "authors": _authors(f.get("author", "") or f.get("editor", "")),
@@ -212,15 +244,15 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
         body_lines += ["## Abstract", "", f["abstract"], ""]
     body_lines += [
         "> [!note] Captured — not yet ingested",
-        "> Identity from the local `.bib`. Enrichment (full text, relationships, "
+        "> Identity from the local `references.bib`. Enrichment (full text, relationships, "
         "classification) runs in Tier 1; `ingest_status: tier0` marks the floor.",
         "",
     ]
     return {
         "citekey": citekey,
         "entry_type": etype,
-        "note_type": note_type,
-        "path": f"{folder}/{citekey}.md",
+        "note_type": "source",
+        "path": f"catalog/sources/{source_id}/source.md",
         "frontmatter": fm,
         "body": "\n".join(body_lines),
     }
@@ -288,18 +320,18 @@ _FIXTURE = r"""
 """
 
 _EXPECT = [
-    ("smith2024Example", "paper", "paper", {"authors": 2, "pmcid": "PMC1234567"}),
-    ("lee2025Preprint", "paper", "preprint", {"authors": 1, "arxiv_id": "2503.20201"}),
-    ("2025tool", "repository", "software", {"authors": 0}),
-    ("brown2009Book", "paper", "book", {"authors": 1, "isbn": "978-0-13-468599-1"}),
-    ("green2018Chapter", "paper", "chapter", {"authors": 2}),
+    ("smith2024Example", "source", "article", {"authors": 2, "pmcid": "PMC1234567"}),
+    ("lee2025Preprint", "source", "article", {"authors": 1, "arxiv_id": "2503.20201"}),
+    ("2025tool", "source", "software", {"authors": 0}),
+    ("brown2009Book", "source", "book", {"authors": 1, "isbn": "978-0-13-468599-1"}),
+    ("green2018Chapter", "source", "book", {"authors": 2}),
 ]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Deterministic ingest spine (ADR-30, Tier 0)")
     ap.add_argument("--citekey")
-    ap.add_argument("--bib", help="path to memoria.bib (Better BibTeX export)")
+    ap.add_argument("--bib", help="path to references.bib")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     if not a.citekey or not a.bib:

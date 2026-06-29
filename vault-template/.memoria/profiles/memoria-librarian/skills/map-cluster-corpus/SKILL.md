@@ -26,7 +26,7 @@ metadata:
 
 # map-cluster-corpus
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Map what already exists in the corpus. You retrieve notes, cluster them
 deterministically through the **cluster MCP** (ADR-33 — the operation, not you, owns the
@@ -41,7 +41,7 @@ never gates anything (reports inform — ADR-54).
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| topic / folder | yes | What to map — a topic phrase (qmd retrieval) or a vault folder (`notes/sources`, `notes/claims`). |
+| topic / folder | yes | What to map — a topic phrase (qmd retrieval) or a vault folder (`catalog/sources`, `knowledge/notes`). |
 | `min_cluster_size` | no | Passed through to `cluster_model_topics`; default from `calibration.yaml`. |
 | `seed` | no | Fixed seed for reproducibility; default from calibration. |
 

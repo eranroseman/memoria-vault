@@ -24,9 +24,8 @@ SCHEMAS_DIR = Path(__file__).resolve().parent.parent.parent / "schemas"
 
 UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
 VOCABULARY_FIELDS = {
-    "paper": {"research_area": "research_area", "methodology": "methodology"},
     "source": {"research_area": "research_area", "methodology": "methodology"},
-    "claim": {"topics": "topics"},
+    "note": {"topics": "topics"},
 }
 
 
@@ -88,10 +87,10 @@ def gated_prefixes(folders: dict) -> list[str]:
     return list(folders.get("gated_prefixes", []))
 
 
-# Legacy dependency-free fallback for the pre-alpha.11 profile policy runtime.
-# The alpha.11 schema no longer declares gated prefixes; machine writes route
-# through the worker staging/promote/quarantine boundary instead.
-FALLBACK_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
+# Dependency-free fallback for the alpha.11 profile policy runtime. The schema no
+# longer declares gated prefixes; machine writes route through worker staging,
+# promotion, and quarantine instead.
+FALLBACK_GATED_PREFIXES = ("knowledge/notes/", "knowledge/hubs/")
 
 
 def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:

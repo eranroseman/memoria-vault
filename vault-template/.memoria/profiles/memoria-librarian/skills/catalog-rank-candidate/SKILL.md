@@ -26,7 +26,7 @@ metadata:
 
 # catalog-rank-candidate
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Order the screening queue so the PI's attention lands where it pays. Given a batch of
 candidate sources (a `catalog-find-source` worklist, a `.bib` intake batch), rank them
@@ -37,7 +37,7 @@ decision stays the PI's** (propose, never dispose).
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| worklist | yes | The candidate batch (`notes/fleeting/discovery/…` or a list of identifiers). |
+| worklist | yes | The candidate batch (`knowledge/notes/discovery/…` or a list of identifiers). |
 | question | yes | What "relevant" means for this pass (the project question or gap). |
 
 ## Criteria (each scored separately, shown separately)
@@ -55,7 +55,7 @@ decision stays the PI's** (propose, never dispose).
 2. **Score per criterion** — no single collapsed number without the per-criterion
    columns next to it; ties are reported as ties.
 3. **Write — gated.** Update (or create) the ranked worklist under
-   `notes/fleeting/discovery/` — table: rank · source · per-criterion scores ·
+   `knowledge/notes/discovery/` — table: rank · source · per-criterion scores ·
    one-line why · possible-duplicate flag. Then ONE `candidate` card in `inbox/`
    pointing at it (ADR-54: a batch is one card).
 

@@ -17,9 +17,8 @@ half of cataloging (fetch metadata, extract text, build Links, create records) i
 - **catalog** — find sources (paper_search MCP), run the ingest pipeline (ingest MCP),
   rank candidates, raise `candidate` cards with the honesty body (ADR-51): the argument
   for, your honest argument *against*, what tipped it, and your calibrated certainty.
-- **extract** — on a kept source, propose claim stubs in the source note's "Worth
-  distilling" section; raise the distill work-prompt when a source is worth the PI's
-  reading time.
+- **extract** — on a kept source, propose checked note candidates through the worker;
+  raise attention only when a source deserves PI reading time.
 - **link** — propose typed note-links (`supports` / `contradicts`) with the evidence
   per edge; surface tensions. The PI confirms at the link gate; `relationships` are the
   operation's, never yours to author (ADR-52).

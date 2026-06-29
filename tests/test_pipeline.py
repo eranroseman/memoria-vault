@@ -14,12 +14,12 @@ FIXTURE = (
 )
 
 
-def test_runner_builds_tier0_paper_bundle():
+def test_runner_builds_tier0_source_bundle():
     bundle = run("x2024Test", FIXTURE, enrich=False)
 
     assert bundle["lifecycle"] == "current"
     assert bundle["ingest_status"] == "tier0"
-    assert bundle["note_type"] == "paper"
+    assert bundle["note_type"] == "source"
     assert bundle["holes"] == ["_proposed_classification", "brief"]
 
 

@@ -26,7 +26,7 @@ metadata:
 
 # map-graph-claims
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Show the corpus's claims as what they are — a debate. The cluster operation computes the
 typed graph (nodes for claim notes, edges for the `supports` / `contradicts` /
@@ -40,7 +40,7 @@ by a confidence threshold or calibrated cutoff.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| topic / scope | yes | Which claims to graph (a topic, a hub, a project question, or `notes/claims` for all). |
+| topic / scope | yes | Which claims to graph (a topic, a hub, a project question, or `knowledge/notes` for all). |
 | max nodes | no | Canvas size cap (default ~30 — a readable debate, not a hairball). |
 
 ## Procedure
@@ -49,14 +49,14 @@ by a confidence threshold or calibrated cutoff.
    layout. Narrow to the requested claims with `qmd` + the graph's own adjacency.
    Prune to the cap by centrality, **keeping every `contradicts` edge in the
    neighbourhood** regardless of rank (tensions earn their place).
-2. **Emit the claim canvas**: `cluster_emit_canvas(scope="notes/claims", …)` — one
+2. **Emit the claim canvas**: `cluster_emit_canvas(scope="knowledge/notes", …)` — one
    `file` node per claim (real vault paths); edges carry their relation as the label,
    `contradicts` edges visually distinct (color); claims grouped where the graph shows
    a cluster. Layout starts from the operation's coordinates — adjust only to de-overlap.
 3. **Write — gated.** The canvas to
    `knowledge/notes/maps/graph-claims-<topic>-<YYYY-MM-DD>.canvas` plus a companion note
    (same stem, `.md`) recording provenance: scope, cap, `params_echo`, what was pruned.
-   Never write under `projects/` or `notes/hubs/`.
+   Never write into PI-owned project files under `knowledge/projects/` or `knowledge/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the graph (ADR-54).
 
 ## Output contract

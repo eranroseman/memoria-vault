@@ -30,7 +30,7 @@ metadata:
 
 # catalog-find-source
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Find what the corpus is missing. Given a question, topic, or gap card, search the
 literature through the **`paper_search` MCP only** (the `web` toolset is disabled —
@@ -48,7 +48,7 @@ and report state — the PI's keep/skip gate filters, not you.
 ## Procedure
 
 1. **Check what exists.** `qmd` + `obsidian` search over `catalog/` and
-   `notes/sources/` — a "discovery" the vault already holds is a duplicate, not a find.
+   `catalog/sources/` — a "discovery" the vault already holds is a duplicate, not a find.
 2. **Search.** Use the `paper_search` **`search_*` tools only** — PDF retrieval and
    extraction belong to the ingest pipeline (`download_*` / `read_paper` are off-limits,
    as is any Sci-Hub fallback). Vary phrasing across 2–3 queries per database; record
@@ -57,7 +57,7 @@ and report state — the PI's keep/skip gate filters, not you.
    borderline relevance — *include generously*. Note per hit: venue, year, citation
    signal if returned, and which existing notes it neighbours (qmd similarity).
 4. **Capture — gated.** Write the screening worklist to
-   `notes/fleeting/discovery/<topic>-<YYYY-MM-DD>.md`: every query, every hit, every
+   `knowledge/notes/discovery/<topic>-<YYYY-MM-DD>.md`: every query, every hit, every
    drop with its reason (nothing captured is ever lost).
 5. **Propose — gated.** Raise ONE `candidate` card in `inbox/` pointing at the
    worklist (a screening list is one card, never N — ADR-54), with per-source keep/skip
@@ -65,7 +65,7 @@ and report state — the PI's keep/skip gate filters, not you.
 
 ## Output contract
 
-- The discovery worklist (`notes/fleeting/discovery/…`): queries, databases, hits,
+- The discovery worklist (`knowledge/notes/discovery/…`): queries, databases, hits,
   drops + reasons, vault-neighbour notes per hit.
 - One `candidate` card (schema `candidate`): `action` = "screen this worklist";
   `argument_for` / `argument_against` (e.g. "half the hits are adjacent-field — the

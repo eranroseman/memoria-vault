@@ -1,13 +1,11 @@
 # Vocabulary
 
-The single source of truth for the controlled values of the classification fields —
-`research_area` and `methodology` (on `paper` and `source` notes) and `topics` (on
-`claim` notes). These are the exact field names the schemas declare
-(`.memoria/schemas/types/paper.yaml`, `source.yaml`, `claim.yaml`); keep this note and
-the schemas in lockstep. The Librarian's ingest classifier reads this note and
-**applies only a term defined here**; when nothing fits, it leaves the field unset
-and raises an Inbox flag for consolidation. The Linter's `schema-check` validates
-note values against these lists.
+The single source of truth for the controlled values used by catalog sources and
+claim-bearing notes. `research_area` and `methodology` describe source Concepts;
+`topics` describes claim-bearing `note` Concepts. Keep this note and
+`.memoria/schemas/types/{source,note}.yaml` in lockstep. The Librarian's ingest
+classifier reads this note and applies only a term defined here; when nothing fits,
+it leaves the field unset and raises an attention flag for consolidation.
 
 How each field is populated:
 
@@ -17,8 +15,8 @@ How each field is populated:
 - **`methodology`** — *how the study was structured, and the techniques it used.* A
   coarse facet is derived from the S2 publication types at ingest; the rest is
   human-extended against the list below.
-- **`topics`** (claims only) — *what a claim is about.* Human-set; draw from the
-  `research_area` vocabulary so claims and sources stay queryable together.
+- **`topics`** (claim-bearing notes only) — *what a claim is about.* Human-set; draw
+  from the `research_area` vocabulary so claims and sources stay queryable together.
 
 Each term carries a one-line definition so classification is grounded rather than
 guessed. Keep `research_area` to ~30 terms; consolidate drift at roughly fifty papers
@@ -30,7 +28,7 @@ they live in each note's `_enrichment` namespace for browsing, not querying.
 
 ## research_area
 
-Many values per note. *What the work is about.* Claim `topics` draw from this same list.
+Many values per source. *What the work is about.* Claim-note `topics` draw from this same list.
 
 - personal-informatics — Self-tracking systems and how people collect, reflect on, and act on data about their own behavior and health.
 - mobile-health — Health interventions and tools delivered through smartphones and mobile devices (mHealth).
@@ -110,7 +108,7 @@ below are valid `methodology` values.
 
 ## topics
 
-Claim notes only. Many values per note. *What the claim is about.* Draw from the
+Claim-bearing notes only. Many values per note. *What the claim is about.* Draw from the
 `research_area` vocabulary above so a claim and the sources it rests on share the same
 controlled terms (and surface together in queries); propose a new provisional term only
 when no `research_area` value fits.

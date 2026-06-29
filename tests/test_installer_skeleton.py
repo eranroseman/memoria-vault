@@ -94,6 +94,7 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "journal",
     ):
         assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
+    assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()
 
 
 def test_alpha11_template_has_no_legacy_alpha10_root_files():
@@ -117,6 +118,36 @@ def test_alpha11_template_has_no_legacy_alpha10_root_files():
         if path.is_file()
     ]
     assert not leftovers
+
+
+def test_alpha11_template_has_no_legacy_alpha10_path_literals():
+    roots = [
+        ROOT / "vault-template/.memoria/lane-overrides",
+        ROOT / "vault-template/.memoria/profiles",
+        ROOT / "vault-template/system",
+        ROOT / "vault-template/AGENTS.md",
+    ]
+    retired = (
+        "notes/claims",
+        "notes/hubs",
+        "notes/sources",
+        "notes/fleeting",
+        "catalog/papers",
+        "catalog/repositories",
+        "catalog/datasets",
+        "memoria.bib",
+    )
+    offenders = []
+    for root in roots:
+        paths = (
+            [root] if root.is_file() else sorted(path for path in root.rglob("*") if path.is_file())
+        )
+        for path in paths:
+            text = path.read_text(encoding="utf-8")
+            for token in retired:
+                if token in text:
+                    offenders.append(f"{path.relative_to(ROOT)}: {token}")
+    assert not offenders
 
 
 def test_installer_deploys_exactly_the_shipped_profiles():

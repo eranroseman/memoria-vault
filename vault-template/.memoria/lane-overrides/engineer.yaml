@@ -12,12 +12,10 @@ policy:
     skills:
       - review_gated_publish
     write:
-      - "notes/**"
       - "knowledge/**"
       - "catalog/**"
       - "capabilities/**"
       - "inbox/**"
-      - "projects/**"
       - "system/**"
   require:
     - audit_log

@@ -42,26 +42,21 @@ def _bare(uri: str) -> str:
 def index_vault(vault: Path) -> dict:
     """Map DOI / arXiv-id (lowercased) -> citekey for existing source notes."""
     idx = {}
-    for folder in ("catalog/papers", "catalog/datasets", "catalog/repositories"):
-        d = vault / folder
-        if not d.is_dir():
-            continue
-        for md in d.glob("*.md"):
-            fm = read_frontmatter(md)
-            ck = fm.get("citekey") or md.stem
-            for key in ("doi", "arxiv_id"):
-                v = str(fm.get(key) or "").strip().lower()
-                if v:
-                    idx[v] = ck
+    d = vault / "catalog" / "sources"
+    if not d.is_dir():
+        return idx
+    for md in d.glob("*/source.md"):
+        fm = read_frontmatter(md)
+        ck = fm.get("citekey") or fm.get("source_id") or md.parent.name
+        identifiers = fm.get("identifiers") if isinstance(fm.get("identifiers"), dict) else {}
+        for key in ("doi", "arxiv_id", "arxiv"):
+            v = str(fm.get(key) or identifiers.get(key) or "").strip().lower()
+            if v:
+                idx[v] = ck
     return idx
 
 
-# entity type -> its Catalog home (ADR-47)
-ENTITY_FOLDER = {
-    "person": "catalog/people",
-    "organization": "catalog/organizations",
-    "venue": "catalog/venues",
-}
+ENTITY_FOLDER = "catalog/entities"
 
 
 def plan_entities(merged: dict) -> dict:
@@ -81,7 +76,7 @@ def plan_entities(merged: dict) -> dict:
                 "id_type": idtype,
                 "id": idval,
                 "name": name or "",
-                "path": f"{ENTITY_FOLDER[note_type]}/{idval}.md",
+                "path": f"{ENTITY_FOLDER}/{note_type}-{idval}.md",
             }
             by_key[key] = rec
             entities.append(rec)

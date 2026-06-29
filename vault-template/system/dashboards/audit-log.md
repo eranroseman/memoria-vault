@@ -40,8 +40,8 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const canonical = events
   .filter(e => e.path && (
-    e.path.startsWith("notes/claims/") ||
-    e.path.startsWith("notes/hubs/")
+    e.path.startsWith("knowledge/notes/") ||
+    e.path.startsWith("knowledge/hubs/")
   ))
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   .slice(0, 20);
@@ -113,7 +113,7 @@ Patterns the query flags — each is a configuration bug; see [policy MCP](https
 - Peer-reviewer (`memoria-peer-reviewer`) allowed write outside `inbox/`.
 - Writer (`memoria-writer`) allowed write outside `knowledge/projects/`.
 - Engineer (`memoria-engineer`) allowed write outside `knowledge/projects/*/code/`.
-- Librarian `allow`/`allow_with_log` to `notes/claims/**` or `notes/hubs/**`.
+- Librarian `allow`/`allow_with_log` to `knowledge/notes/**` or `knowledge/hubs/**`.
 - Any allowed write missing `before_hash` / `after_hash`.
 
 ```dataviewjs
@@ -135,7 +135,7 @@ const anomalies = events.filter(e =>
   (e.profile === "memoria-peer-reviewer" && writeAction(e.action) && isAllowed(e.decision) && !inInbox(e.path)) ||
   (e.profile === "memoria-writer" && writeAction(e.action) && isAllowed(e.decision) && !inProjects(e.path)) ||
   (e.profile === "memoria-engineer" && writeAction(e.action) && isAllowed(e.decision) && !inCode(e.path)) ||
-  (e.profile === "memoria-librarian" && ((e.path ?? "").startsWith("notes/claims/") || (e.path ?? "").startsWith("notes/hubs/")) && isAllowed(e.decision)) ||
+  (e.profile === "memoria-librarian" && ((e.path ?? "").startsWith("knowledge/notes/") || (e.path ?? "").startsWith("knowledge/hubs/")) && isAllowed(e.decision)) ||
   (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash))
 );
 dv.table(

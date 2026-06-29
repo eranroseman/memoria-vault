@@ -64,11 +64,12 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 
 **Two rules override lane configuration entirely:**
 
-1. **Legacy review-gated zones are never auto-written by this policy module.**
+1. **Review-gated Concept zones are never auto-written by this policy module.**
    Alpha.11 no longer declares `gated_prefixes` in `folders.yaml`; the
-   dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` keeps
-   the old `notes/claims/` and `notes/hubs/` behavior for legacy profile tests.
-   This fallback is not the alpha.11 Concept write boundary.
+   dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` covers
+   `knowledge/notes/` and `knowledge/hubs/` when the runtime cannot load the
+   folder manifest. The alpha.11 write boundary is still worker staging and
+   checked promotion, not this dry-run fallback.
 2. **Auto-fix is class-gated.** Only `flags.class ∈ {safe-and-unambiguous, authorized-targeted}` may proceed; `schema-content` is pinned to `dry_run` and `review-gated-edit` to `deny`, regardless of who asks.
 
 ---
@@ -119,13 +120,13 @@ Allow:
 Deny:
 
 ```json
-{ "decision": "deny", "policy_rule": "Librarian.deny.write", "message": "memoria-librarian is denied write to 'notes/claims/x.md'" }
+{ "decision": "deny", "policy_rule": "Librarian.deny.write", "message": "memoria-librarian is denied write to 'knowledge/notes/x.md'" }
 ```
 
 Dry-run:
 
 ```json
-{ "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "legacy review-gated zone write requires approval" }
+{ "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "review-gated Concept write requires worker promotion" }
 ```
 
 On an allowed mutating action the response also carries `before_hash`; the worker calls `complete_write` after the write so the paired `after_hash` lands in the audit trail as a separate `write_complete` record (see [Audit log format](#audit-log-format)).
@@ -158,16 +159,15 @@ profile: memoria-librarian
 policy:
   allow:
     skills: [obsidian, qmd]
-    write:
-      - "inbox/**"
-      - "catalog/**"
-      - "notes/fleeting/**"
-      - "notes/sources/**"
+    write: []
   deny:
     skills: [review_gated_publish, destructive_shell]
     write:
-      - "notes/claims/**"
-      - "notes/hubs/**"
+      - "catalog/**"
+      - "knowledge/**"
+      - "capabilities/**"
+      - "inbox/**"
+      - "system/**"
   require:
     - audit_log
     - timeout_required
@@ -177,10 +177,8 @@ routing:
   invocation: dispatched
   external_api_policy: explicit_only
   write_scope:
-    - "inbox/"
-    - "catalog/"
-    - "notes/fleeting/"
-    - "notes/sources/"
+    - ".memoria/staging/catalog/"
+    - ".memoria/staging/knowledge/"
 ```
 
 `policy.deny` wins over `policy.allow`; an unmatched path is default-denied. The Co-PI's override is the limiting case: `allow.write: []` plus `deny.write: "**"` — the structural guarantee behind "read directly, delegate writes". The full scope table is in [Profile capabilities](profile-capabilities.md).

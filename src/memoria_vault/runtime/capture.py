@@ -232,13 +232,18 @@ def capture_zotero_source(
     key = str(item.get("key") or data.get("key") or "").strip()
     if not key:
         raise ValueError("Zotero item key is required")
+    if str(data.get("itemType") or "").lower() == "annotation":
+        raise ValueError("Zotero annotation import is out of alpha.11 scope")
 
     title = str(data.get("title") or key).strip()
     item_type = _zotero_item_type(str(data.get("itemType") or ""))
     abstract = str(data.get("abstractNote") or "").strip()
     citekey = _zotero_citekey(data)
     stable_id = source_id or f"zotero-{key.lower()}"
-    raw_text = json.dumps(item, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    raw_text = (
+        json.dumps(_zotero_metadata_snapshot(item), ensure_ascii=False, sort_keys=True, indent=2)
+        + "\n"
+    )
     identifiers = _zotero_identifiers(data)
     csl_json = _zotero_csl_json(key, data)
     return capture_source(
@@ -260,6 +265,16 @@ def capture_zotero_source(
         workflow="capture_zotero_source",
         required_checks=required_checks,
     )
+
+
+def _zotero_metadata_snapshot(item: dict[str, Any]) -> dict[str, Any]:
+    snapshot = {key: value for key, value in item.items() if key not in {"annotations", "children"}}
+    data = snapshot.get("data")
+    if isinstance(data, dict):
+        snapshot["data"] = {
+            key: value for key, value in data.items() if not key.lower().startswith("annotation")
+        }
+    return snapshot
 
 
 def capture_zotero_local_source(
