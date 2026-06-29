@@ -27,7 +27,7 @@ lives outside the file — see below.
 | **Prose** (scope summary, limitations, cut steps, roadmap) | `docs/releasing/<version>/release-plan-<version>.md` |
 | **Build gaps** | GitHub issues |
 | **Scope cuts** | GitHub issues with Readiness `Later`; ADRs only when the cut records a decision or durable rationale |
-| **Version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
+| **Formal version + notes** | `release-please` (CHANGELOG + tag + GitHub Release) |
 | **Automated test evidence** | GitHub Actions runs and artifacts |
 | **Local gate evidence** | `scripts/verify` JSON bundles, normally under `/tmp/memoria-verify/` or attached to the release issue |
 | **In-work release design notes** | `docs/releasing/<version>/tmp/` while the release is being designed; delete this folder when the release is done |

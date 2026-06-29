@@ -27,7 +27,7 @@ own command catalogs and implementation detail.
 | 10 | Telemetry emits from live activity: board state, transitions, audit, lint findings, cost, attention, and triage. | [Product](plans/product-gate.md) | JSONL row checks after live workflow. | partial | partial |
 | 11 | Failure and recovery paths hold: denied writes leave no file, MCP-down fails closed, retry/reconcile works, dry-run is clean. | [Failure Recovery](plans/failure-recovery-checks.md) | Manual adversarial checks plus existing unit tests. | partial | partial |
 | 12 | Agent output quality is evaluated against gold tasks, not inferred from wiring success. | [Product](plans/product-gate.md) | Vault eval evidence. | no | gap |
-| 13 | Release candidate has no blocked release work, published docs links pass, and release-please owns version/tag/notes. | [Release](plans/release-gate.md) | Release issue, live docs link check, release-please PR. | partial | covered |
+| 13 | Release candidate has no blocked release work, published docs links pass when required, and the formal-release or internal-checkpoint path is recorded. | [Release](plans/release-gate.md) | Release issue, live docs link check when publishing, release-please PR for formal releases or validation-log/checkpoint close-out for internal checkpoints. | partial | covered |
 
 ## Open Gaps
 

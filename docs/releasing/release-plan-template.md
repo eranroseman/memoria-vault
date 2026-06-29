@@ -27,8 +27,8 @@ nav_order: 2
   (S#) STATE lives ONLY in the "Release <version>" parent issue and its sub-issues; §2/§3
   here list the readiness/stage DEFINITIONS, not their state. Scope = the milestone +
   Memoria Issue Tracker view; build gaps = GitHub issues; automated evidence =
-  Actions runs/artifacts; scope cuts = GitHub issues with Readiness: Later; version
-  + notes = release-please. Edit each fact in exactly one place.
+  Actions runs/artifacts; scope cuts = GitHub issues with Readiness: Later; formal
+  version + notes = release-please. Edit each fact in exactly one place.
 ============================================================================ -->
 
 <!-- PER-RELEASE STATUS LINE — one short paragraph. What is the state of this

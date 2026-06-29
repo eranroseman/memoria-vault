@@ -10,7 +10,7 @@ nav_order: 70
 # Release Gate
 
 The Release Gate sequences a fresh-clone candidate through Source, Package,
-Runtime, Product, and cut mechanics.
+Runtime, Product, and formal-release or internal-checkpoint mechanics.
 
 ## Automated Prefix
 
@@ -43,7 +43,7 @@ published-docs, and cut checks below.
 | Failure/recovery | [Failure Recovery Checks](failure-recovery-checks.md) pass for changed risk areas. |
 | Blockers | No open release-milestone issue has `Readiness: Blocked`; no release readiness/stage sub-issue is open. |
 | Published docs | `python scripts/check_live_docs_links.py --base-url https://eranroseman.github.io/memoria-vault/` passes after Pages deploys. |
-| Cut | release-please owns version, changelog, tag, and GitHub Release. |
+| Cut | Formal release: release-please owns version, changelog, tag, and GitHub Release. Internal checkpoint: no tag or GitHub Release; the plan closes as `status: complete`, `released: false` after issue close-out. |
 
 ## Evidence Home
 

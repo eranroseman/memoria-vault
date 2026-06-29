@@ -24,7 +24,7 @@ lives in the relevant release readiness/stage issue. A release folder gets a
 | Package | A disposable vault can be assembled and the offline workflow replay works. | `scripts/verify package` |
 | Runtime | Release-specific runtime cycles run, and Hermes, MCP, Obsidian, model, cron, and policy boundaries work live. | `scripts/verify runtime` |
 | Product | The research workflows produce reviewable value with telemetry and GUI evidence. | Manual release evidence |
-| Release | Fresh-clone candidate, blockers, docs, versioning, and release mechanics are ready. | Release issue + release-please |
+| Release | Fresh-clone candidate, blockers, docs, and release/checkpoint mechanics are ready. | Release issue + release-please or checkpoint close-out |
 
 Run gates in order:
 
