@@ -17,8 +17,8 @@ pinned rail on the left, and the Co-PI pane on the right
 
 ## What it shows
 
-The welcome note is a "start here" screen: load the tutorial sample vault, capture your
-first source, learn the three places (Library · Knowledge · Project), and ask the Co-PI.
+The welcome note is a "start here" screen: capture a note, learn the three places
+(Library · Knowledge · Project), open the Inbox, and ask the Co-PI.
 It is not a dashboard — it carries no health views and no counts. Navigation between
 surfaces is the left-pane rail, not this note. The welcome note is a plain Markdown note;
 it owns no custom renderer.

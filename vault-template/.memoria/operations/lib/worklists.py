@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""worklists — emit ADR-54 batch screening surfaces.
+"""Emit batch screening projection surfaces.
 
-A high-cardinality report becomes many `worklist-item` notes under
-`system/worklists/<worklist>/`, plus exactly one aggregate Inbox `work-prompt`.
+A high-cardinality report becomes many worklist projection notes under
+`system/worklists/<worklist>/`, plus exactly one aggregate Inbox attention prompt.
 The PI works the batch in Obsidian Bases by toggling each row's `decision` field.
 
 Usage:
@@ -96,8 +96,8 @@ def emit_worklist(
         lines = [
             "---",
             f"title: {_yaml_str(item_title)}",
-            "type: worklist-item",
-            "lifecycle: proposed",
+            "projection: worklist-item",
+            "attention_status: open",
             f"decision: {decision}",
             f"worklist: {_yaml_str(slug)}",
             f"item_ref: {_yaml_str(ref)}",

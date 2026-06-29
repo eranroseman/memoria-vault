@@ -34,8 +34,8 @@ computable — **no fake scores**; a task with no result block is reported
   rubric's "top 3" window).
 - ``support_rate`` — fraction of ``cited`` citekeys resolving to a real catalog
   record (note stem or ``citekey:`` frontmatter under ``catalog/``).
-- ``fama_clean``   — 1.0 if no note in ``claims`` is a superseded/archived
-  claim, else 0.0 (the FAMA check; same classification as the Linter's
+- ``fama_clean``   — 1.0 if no note in ``claims`` is superseded, else 0.0
+  (the FAMA check; same classification as the Linter's
   ``fama_exposure`` detector — a parity test guards it). Higher is better,
   like every other metric.
 - ``self_score``   — recorded verbatim per task, never aggregated: it is the
@@ -81,28 +81,29 @@ _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(\{.*?\})\s*```", re.S)
 # Vault state the metrics check against
 # --------------------------------------------------------------------------- #
 def catalog_citekeys(vault: Path) -> set[str]:
-    """Every citekey the catalog resolves: note stems plus `citekey:` frontmatter
-    of every record under catalog/ (ingest names notes <citekey>.md, but a
-    renamed record still resolves via its frontmatter)."""
+    """Every citekey/source id the alpha.11 catalog resolves."""
     keys: set[str] = set()
-    for p in (vault / "catalog").glob("*/*.md"):
-        keys.add(p.stem)
-        ck = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8")).get("citekey")
-        if ck:
-            keys.add(str(ck))
+    for p in (vault / "catalog").rglob("*.md"):
+        fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))
+        if p.name == "source.md":
+            keys.add(p.parent.name)
+        else:
+            keys.add(p.stem)
+        for field in ("citekey", "source_id"):
+            value = fm.get(field)
+            if value:
+                keys.add(str(value))
     return keys
 
 
 def superseded_claims(vault: Path) -> set[str]:
-    """Claim-note stems that are superseded — `lifecycle: archived` or carrying
-    `superseded_by` (ADR-10/17). Mirrors the classification in the Linter's
-    operations/integrity/linter/detectors.py::fama_exposure; tests assert the parity."""
+    """Claim-bearing note stems that are superseded, mirroring fama_exposure."""
     out: set[str] = set()
-    for p in (vault / "notes" / "claims").glob("*.md"):
+    for p in (vault / "knowledge" / "notes").glob("*.md"):
         fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))
         sup = fm.get("superseded_by")
-        archived = str(fm.get("lifecycle", "")).strip() == "archived"
-        if archived or sup not in (None, "", [], "[]"):
+        status = str(fm.get("status", "")).strip()
+        if status == "superseded" or sup not in (None, "", [], "[]"):
             out.add(p.stem)
     return out
 

@@ -11,15 +11,17 @@ from pathlib import Path
 from typing import Any
 
 MODEL = "memoria-l2-smoke"
-ARTIFACT = "projects/l2-smoke/live-dispatch.md"
+ARTIFACT = "knowledge/notes/l2-smoke-direct-write.md"
 ARTIFACT_BODY = """---
-type: project
+type: note
+check_status: checked
+title: L2 direct write smoke
 l2_live_smoke: true
 ---
 
 # L2 live smoke
 
-Hermes live dispatch reached the filesystem-backed Obsidian MCP shim.
+This direct write should be blocked by the Memoria policy gate.
 """
 
 

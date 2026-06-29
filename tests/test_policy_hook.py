@@ -156,11 +156,11 @@ def _ev(vault, tool, path, *, key="filepath"):
     )
 
 
-def test_evaluate_pre_allows_reads_and_allowed_writes_but_blocks_review_and_denied_zones(tmp_path):
+def test_evaluate_pre_allows_reads_but_blocks_direct_profile_writes(tmp_path):
     vault = _vault_with_policy(tmp_path)
 
     assert _ev(vault, "obsidian_get_file_contents", "x.md") == {}
-    assert _ev(vault, "obsidian_patch_content", "inbox/a.md") == {}
+    direct = _ev(vault, "obsidian_patch_content", "inbox/a.md")
     review = _ev(vault, "obsidian_patch_content", "notes/hubs/r.md")
     denied = _ev(vault, "obsidian_delete_file", "notes/claims/c.md")
     missing_task = evaluate_pre(
@@ -169,8 +169,10 @@ def test_evaluate_pre_allows_reads_and_allowed_writes_but_blocks_review_and_deni
         vault,
     )
 
+    assert direct.get("decision") == "block"
+    assert "tool-registry allowlist" in direct["reason"]
     assert review.get("decision") == "block"
-    assert "review-gated" in review["reason"]
+    assert "tool-registry allowlist" in review["reason"]
     assert denied.get("decision") == "block"
     assert missing_task.get("decision") == "block"
 
@@ -241,7 +243,7 @@ def test_evaluate_pre_fails_closed_when_registry_is_missing(tmp_path):
 def test_native_obsidian_mcp_writes_are_gated_and_dangerous_tools_hard_block(tmp_path):
     vault = _vault_with_policy(tmp_path)
 
-    assert _ev(vault, "mcp_obsidian_vault_write", "inbox/n.md") == {}
+    assert _ev(vault, "mcp_obsidian_vault_write", "inbox/n.md").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_vault_write", "notes/claims/c.md").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_command_execute", "").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_vault_delete", "inbox/a.md").get("decision") == "block"
@@ -266,15 +268,20 @@ def test_file_toolset_writes_are_blocked_even_for_allowed_vault_zones(tmp_path):
 def test_evaluate_post_pairs_write_hashes_and_cleans_pending_stash(tmp_path):
     vault = _vault_with_policy(tmp_path)
     (vault / "inbox").mkdir(parents=True, exist_ok=True)
+    from memoria_vault.runtime.policy import EMPTY_SHA256
+
     payload = {
         "tool_name": "obsidian_put_content",
         "tool_input": {"filepath": "inbox/round.md"},
         "extra": {"task_id": "T9", "tool_call_id": "call-xyz"},
     }
 
-    pre = evaluate_pre(payload, "memoria-writer", vault)
     stash = _pending_file(vault, _stash_key(payload))
-    stash_existed = stash.is_file()
+    stash.parent.mkdir(parents=True, exist_ok=True)
+    stash.write_text(
+        json.dumps({"before_hash": EMPTY_SHA256, "path": "inbox/round.md"}),
+        encoding="utf-8",
+    )
     (vault / "inbox" / "round.md").write_text("answer body", encoding="utf-8")
     post = evaluate_post(payload, "memoria-writer", vault)
     audit_lines = (
@@ -284,8 +291,6 @@ def test_evaluate_post_pairs_write_hashes_and_cleans_pending_stash(tmp_path):
         json.loads(ln) for ln in audit_lines if json.loads(ln).get("decision") == "write_complete"
     ]
 
-    assert pre == {}
-    assert stash_existed
     assert stash.exists() is False
     assert post == {}
     assert len(completes) == 1

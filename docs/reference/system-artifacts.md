@@ -6,19 +6,30 @@ grand_parent: Reference
 
 # System artifacts
 
-Visible system artifacts live under `system/` in the runtime vault. They are not hidden `.memoria/` internals; the PI can inspect them from Obsidian.
+Visible system artifacts are runtime-vault files the PI can inspect from
+Obsidian. They are not hidden `.memoria/` internals.
 
 | Runtime path | What it is | Reference |
 | --- | --- | --- |
+| `index.md`, `catalog/index.md`, `knowledge/index.md`, `capabilities/index.md` | Generated OKF-style workspace and bundle indexes. | [Operations](operations.md) |
+| `references.bib` | Generated BibTeX projection from checked catalog sources with citekeys. | [Ingest routing](ingest.md) |
 | `system/vocabulary.md` | Controlled vocabulary for `research_area`, `methodology`, and claim `topics`. | [Vocabulary](vocabulary.md) |
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
-| `system/dashboards/*.base` | Bases views for sources, claims, and fleeting notes. | [Dashboards](dashboards.md) |
-| `system/board/board.base` | Bases view over exported Hermes worker cards. | [Kanban board reference](kanban-board.md) |
-| `system/patterns/patterns.base` | Bases view over runnable patterns. | [System actions](system-actions.md) |
-| `system/worklists/worklists.base` | Bases view over batch screening rows; the Inbox points here with one aggregate work-prompt per batch. | [Dashboards](dashboards.md) |
-| `catalog/catalog.base` | Catalog-wide Bases view for papers, people, organizations, venues, datasets, and repositories. | [Document types](document-types.md) |
-| `inbox/inbox.base` | Inbox card Bases view, including the `Needs me` surface embedded on the Inbox queue. | [Kanban board reference](kanban-board.md) |
-| `notes/hubs/hubs.base` | Bases view over hub notes. | [Dashboards](dashboards.md) |
-| `projects/projects.base` | Bases view over project notes, including the refutation-stamp gate. | [Dashboards](dashboards.md) |
+| `catalog/catalog.base` | Bases view over `catalog/sources/`. | [Document types](document-types.md) |
+| `knowledge/views/knowledge.base` | Bases views over `digest`, `note`, `hub`, and `project` Concepts. | [Dashboards](dashboards.md) |
+| `capabilities/capabilities.base` | Bases views over `operation`, `skill`, `mcp`, and `workflow` Concepts. | [System actions](system-actions.md) |
+| `capabilities/ai-catalog.json` | Generated catalog of capability Concepts with local trust hashes. | [Operations](operations.md) |
 
-The source copies are tracked in [`vault-template/system/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/system), [`vault-template/catalog/catalog.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/catalog/catalog.base), and [`vault-template/inbox/inbox.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/inbox/inbox.base). The installer copies them into the runtime vault and stages a golden copy for drift detection.
+The source copies are tracked in
+[`vault-template/system/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/system),
+[`vault-template/catalog/catalog.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/catalog/catalog.base),
+[`vault-template/knowledge/views/knowledge.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/knowledge/views/knowledge.base),
+and
+[`vault-template/capabilities/capabilities.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/capabilities/capabilities.base).
+`capabilities/ai-catalog.json` is generated from capability Concepts,
+`references.bib` is generated from checked source Concepts, and the root and
+bundle `index.md` files are generated from checked Concept files. The tracked
+projection drift check regenerates that set into a temp tree and compares it to
+the workspace copies.
+The installer copies them into the runtime vault and stages a golden copy for
+drift detection.

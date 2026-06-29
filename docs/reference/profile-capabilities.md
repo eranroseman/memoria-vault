@@ -14,6 +14,10 @@ on this page is read from the shipped sources: profile packages under
 `vault-template/.memoria/profiles`, lane ceilings under `vault-template/.memoria/lane-overrides`, and
 the per-profile tool allowlist in `vault-template/.memoria/tool-registry.yaml`.
 
+Alpha.11 routes only catalog, extract, link, map, and verify lanes. Writer/draft
+and Engineer/code packages are present but deferred: their lane ceilings are
+empty and the task router does not dispatch to them.
+
 Regenerate with `python scripts/gen_profiles_ref.py --write`; edit the profile,
 lane, and tool-registry sources, not this page.
 
@@ -28,19 +32,17 @@ This block is generated from `vault-template/.memoria/profiles`, `vault-template
 
 | Profile | Version | Hermes requirement | Invocation | Write scope |
 | --- | --- | --- | --- | --- |
-| `memoria-copi` | 0.1.0-alpha.10 | >=0.17.0 | `interactive_only` | None |
-| `memoria-librarian` | 0.1.0-alpha.10 | >=0.17.0 | `dispatched` | `inbox/`, `catalog/`, `notes/fleeting/`, `notes/sources/` |
-| `memoria-writer` | 0.1.0-alpha.10 | >=0.17.0 | `dispatched` | `projects/` |
-| `memoria-peer-reviewer` | 0.1.0-alpha.10 | >=0.17.0 | `dispatched` | `inbox/` |
-| `memoria-engineer` | 0.1.0-alpha.10 | >=0.17.0 | `dispatched` | `projects/*/code/` |
+| `memoria-copi` | 0.1.0-alpha.11 | >=0.17.0 | `interactive_only` | None |
+| `memoria-librarian` | 0.1.0-alpha.11 | >=0.17.0 | `dispatched` | `.memoria/staging/catalog/`, `.memoria/staging/knowledge/` |
+| `memoria-writer` | 0.1.0-alpha.11 | >=0.17.0 | `dispatched` | None |
+| `memoria-peer-reviewer` | 0.1.0-alpha.11 | >=0.17.0 | `dispatched` | None |
+| `memoria-engineer` | 0.1.0-alpha.11 | >=0.17.0 | `dispatched` | None |
 
 ### Lane routing
 
 | Task lane | Profile |
 | --- | --- |
 | `catalog` | `memoria-librarian` |
-| `code` | `memoria-engineer` |
-| `draft` | `memoria-writer` |
 | `extract` | `memoria-librarian` |
 | `link` | `memoria-librarian` |
 | `map` | `memoria-librarian` |
@@ -61,10 +63,10 @@ This block is generated from `vault-template/.memoria/profiles`, `vault-template
 | Profile | Required controls | Explicitly denied write scopes |
 | --- | --- | --- |
 | `memoria-copi` | `audit_log` | `**` |
-| `memoria-librarian` | `audit_log`, `timeout_required`, `source_tracking` | `notes/claims/**`, `notes/hubs/**`, `projects/**`, `system/**` |
-| `memoria-writer` | `audit_log`, `timeout_required` | `notes/claims/**`, `notes/hubs/**`, `catalog/**`, `inbox/**`, `system/**` |
-| `memoria-peer-reviewer` | `audit_log`, `timeout_required`, `source_tracking` | `notes/**`, `catalog/**`, `projects/**`, `system/**` |
-| `memoria-engineer` | `audit_log`, `timeout_required` | `notes/**`, `catalog/**`, `inbox/**`, `system/**` |
+| `memoria-librarian` | `audit_log`, `timeout_required`, `source_tracking` | `catalog/**`, `knowledge/**`, `capabilities/**`, `inbox/**`, `notes/**`, `projects/**`, `system/**` |
+| `memoria-writer` | `audit_log`, `timeout_required` | `notes/claims/**`, `notes/hubs/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
+| `memoria-peer-reviewer` | `audit_log`, `timeout_required`, `source_tracking` | `notes/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
+| `memoria-engineer` | `audit_log`, `timeout_required` | `notes/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
 
 ### Bundled skills
 

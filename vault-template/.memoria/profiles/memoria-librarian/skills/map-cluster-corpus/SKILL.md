@@ -19,15 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
-      - obsidian.append_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, candidate]
 ---
 
 # map-cluster-corpus
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Map what already exists in the corpus. You retrieve notes, cluster them
 deterministically through the **cluster MCP** (ADR-33 — the operation, not you, owns the
@@ -64,13 +63,13 @@ never gates anything (reports inform — ADR-54).
    exemplar notes · outliers). Label clusters from the operation's topic words; keep
    narrative prose minimal and clearly downstream of the deterministic outputs.
 5. **Write — gated.** Persist the map note via the `obsidian` skill under
-   `notes/fleeting/maps/cluster-map-<topic>-<YYYY-MM-DD>.md`, then raise ONE `candidate`
+   `knowledge/notes/maps/cluster-map-<topic>-<YYYY-MM-DD>.md`, then raise ONE `candidate`
    card in `inbox/` pointing at it (batch-shaped findings are one card, never N —
-   ADR-54). Never write outside `notes/fleeting/` + `inbox/`.
+   ADR-54). Never write outside `knowledge/notes/maps/` + `inbox/`.
 
 ## Output contract
 
-- The map note (`notes/fleeting/maps/…`): frontmatter `sources:` names the folders,
+- The map note (`knowledge/notes/maps/…`): frontmatter `sources:` names the folders,
   date range, qmd index, and the `params_echo` from the cluster MCP, so any reader can
   reproduce the run.
 - One `candidate` card (schema `candidate`, ADR-51 honesty body): frontmatter includes

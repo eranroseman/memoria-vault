@@ -16,7 +16,7 @@ superseded_by: []
 ## Context
 
 Triage ordering is personalized: the same candidate can be valuable or noise
-depending on the human's prior keep/discard decisions and current research focus.
+depending on the human's prior keep/discard decisions and current steering.
 LLM tournament ranking is useful as a cold start, but it is expensive and less
 auditable than a trained ranker once enough human decisions exist.
 
@@ -35,7 +35,7 @@ LLM tournament remains the cold-start path until enough training data exists.
 ## When this matters
 
 The human has made at least 300 triage decisions and notices that triage ordering
-feels generic or unconditional on research priorities.
+feels generic or unconditional on steering priorities.
 
 ## Alternatives considered
 

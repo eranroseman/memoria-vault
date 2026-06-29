@@ -588,11 +588,12 @@ def check_document_type_reference_mirror(repo: Path, errors: list[str]) -> None:
     missing = sorted(set(types) - mentioned)
     if missing:
         errors.append(f"{doc}: document-type mirror omits schema type(s): {', '.join(missing)}")
-    lifecycle_mentions = _markdown_code_values(frontmatter_text)
-    missing_lifecycle = sorted(set(types) - lifecycle_mentions)
-    if missing_lifecycle:
+    check_status_mentions = _markdown_code_values(frontmatter_text)
+    missing_check_status = sorted(set(types) - check_status_mentions)
+    if missing_check_status:
         errors.append(
-            f"{frontmatter}: lifecycle subset mirror omits schema type(s): {', '.join(missing_lifecycle)}"
+            f"{frontmatter}: check-status subset mirror omits schema type(s): "
+            f"{', '.join(missing_check_status)}"
         )
 
 

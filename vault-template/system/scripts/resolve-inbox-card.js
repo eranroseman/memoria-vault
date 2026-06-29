@@ -1,15 +1,15 @@
 /*
  * QuickAdd user script — "Memoria: resolve inbox card".
  *
- * Resolves the ACTIVE inbox card in place: prompts for dismissal, flips the
- * frontmatter `lifecycle:` to a schema-valid inbox value and stamps `resolved:`
- * with today's date. It also appends Obsidian-side attention and triage rows.
+ * Resolves the active attention projection in place: prompts for dismissal,
+ * flips `attention_status:` to `resolved`, and appends Obsidian-side attention
+ * and triage rows.
  * Pure Obsidian app API — no shelling, so it works identically on every platform.
  */
 
-// Outcome label → lifecycle value written to the card.
+// Outcome label -> attention status written to the projection.
 const VERDICTS = {
-  "Dismiss": "archived",
+  "Dismiss": "resolved",
 };
 
 const ATTENTION_LOG = "system/logs/attention.jsonl";
@@ -74,7 +74,7 @@ async function entry(params, settings = {}) {
     return;
   }
   if (!file.path.startsWith("inbox/")) {
-    new Notice("Not an inbox card (" + file.path + ") — only notes under inbox/ resolve here.", 8000);
+    new Notice("Not an attention projection (" + file.path + ") - only inbox/ projections resolve here.", 8000);
     return;
   }
 
@@ -88,44 +88,46 @@ async function entry(params, settings = {}) {
     return;
   }
 
-  const lifecycle = VERDICTS[verdict];
-  const today = todayIsoDate();
+  const attentionStatus = VERDICTS[verdict];
   const resolvedAt = nowIso();
   let attentionRow = null;
   let triageRow = null;
   try {
     await app.fileManager.processFrontMatter(file, (fm) => {
+      if (fm.projection !== "attention") {
+        throw new Error("Active note is not an alpha.11 attention projection.");
+      }
       const openedAt = frontmatterDate(fm, "attention_opened_at")
         || frontmatterDate(fm, "opened_at")
         || frontmatterDate(fm, "created");
       attentionRow = {
         timestamp: resolvedAt,
-        event: "inbox_card_resolved",
+        event: "attention_resolved",
         path: file.path,
-        card_type: fm.type || "",
+        attention_kind: fm.attention_kind || "",
         lane: fm.lane || fm.assignee || "unknown",
         task_id: fm.task_id || "",
         outcome: verdict,
-        lifecycle_from: fm.lifecycle || "",
-        lifecycle_to: lifecycle,
+        status_from: fm.attention_status || "",
+        status_to: attentionStatus,
         opened_at: openedAt,
         resolved_at: resolvedAt,
         duration_minutes: durationMinutes(openedAt, resolvedAt),
       };
       triageRow = {
         timestamp: resolvedAt,
-        event: "inbox_card_resolved",
+        event: "attention_resolved",
         path: file.path,
-        card_type: fm.type || "",
+        attention_kind: fm.attention_kind || "",
         lane: fm.lane || fm.assignee || "unknown",
         task_id: fm.task_id || "",
         outcome: verdict,
-        lifecycle_from: fm.lifecycle || "",
-        lifecycle_to: lifecycle,
+        status_from: fm.attention_status || "",
+        status_to: attentionStatus,
         source: "quickadd.resolve-inbox-card",
       };
-      fm.lifecycle = lifecycle;
-      fm.resolved = today;
+      fm.attention_status = attentionStatus;
+      fm.resolved_at = resolvedAt;
     });
     if (attentionRow) {
       await appendJsonl(app, ATTENTION_LOG, attentionRow);
@@ -140,7 +142,7 @@ async function entry(params, settings = {}) {
         // Dismissal is complete even if Obsidian refuses to switch panes.
       }
     }
-    new Notice("✓ Resolved " + file.basename + " → lifecycle: " + lifecycle + ", resolved: " + today + ".", 6000);
+    new Notice("Resolved " + file.basename + " -> attention_status: " + attentionStatus + ".", 6000);
   } catch (e) {
     new Notice(("Resolve failed: " + e.message).slice(0, 250), 10000);
   }

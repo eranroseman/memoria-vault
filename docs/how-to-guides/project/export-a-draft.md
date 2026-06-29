@@ -13,7 +13,7 @@ Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, 
 
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
 - The draft verified — the latest verify pass clean or its gaps consciously accepted ([Verify and revise a draft](verify-and-revise.md))
-- `.memoria/memoria.bib` current (your Better BibTeX auto-export target)
+- `references.bib` current (generated from checked source Concepts)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
 ## Steps
@@ -31,7 +31,7 @@ pandoc projects/<slug>/<draft>.md \
   --from markdown+smart \
   --to docx \
   --citeproc \
-  --bibliography .memoria/memoria.bib \
+  --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
   --output projects/<slug>/exports/<output>.docx
 ```
@@ -46,7 +46,7 @@ pandoc projects/<slug>/<draft>.md \
   --to pdf \
   --pdf-operation=lualatex \
   --citeproc \
-  --bibliography .memoria/memoria.bib \
+  --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
   --output projects/<slug>/exports/<output>.pdf
 ```
@@ -56,7 +56,7 @@ pandoc projects/<slug>/<draft>.md \
 ```bash
 pandoc projects/<slug>/<draft>.md \
   --from markdown+smart --to gfm --citeproc \
-  --bibliography .memoria/memoria.bib \
+  --bibliography references.bib \
   --output projects/<slug>/exports/<output>.md
 ```
 
@@ -99,5 +99,5 @@ Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live f
 
 - Previous step: [Verify and revise a draft](verify-and-revise.md)
 - Routes, states, and failure modes: [Export routes and formats](../../reference/export.md)
-- The `.bib` behind the bibliography: [Set up Zotero](../zotero/set-up-zotero.md)
+- The generated `.bib` behind the bibliography: [Set up Zotero](../zotero/set-up-zotero.md)
 - The works-cited backbone: [Bibliography](../../reference/bibliography.md)

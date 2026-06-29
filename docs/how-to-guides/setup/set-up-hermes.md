@@ -84,9 +84,12 @@ hermes -p memoria-copi chat
 
 Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the pane runs one agent, the Co-PI ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
-**5. Test the ingest path end-to-end.**
+**5. Test worker enqueue from Obsidian.**
 
-In Obsidian, `Cmd/Ctrl-P` → **Memoria: capture source from URL** with a DOI-resolvable URL. If you are still shaping the request, use the Co-PI for conversation, then run the matching capture command. Within a couple of minutes the Catalog entity should exist at `catalog/papers/<citekey>.md` and a candidate card should sit in `inbox/`.
+Open the Memoria Inspector pane and enqueue a source-processing or integrity job
+against a disposable note. The plugin writes only a pending worker job under
+`.memoria/queue/pending/`; the worker/check loop owns the later Concept write or
+attention projection.
 
 The installer owns the upstream MCP dependency inventory and the Retraction Watch refresh wrapper; see [Installer](../../reference/installer.md) and [Run a retraction sweep](../operate/run-a-retraction-sweep.md) when you need those operator details.
 

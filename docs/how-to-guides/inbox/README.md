@@ -8,12 +8,13 @@ permalink: /how-to-guides/inbox/
 
 # Inbox
 
-Act on what needs you — the queue of agent proposals and work prompts that await a decision. The job of this space is to reach a clear queue. Performed inside Obsidian.
+Act on what needs you. In alpha.11, Inbox files are attention projections; the
+old card-specific triage flows below are retained only as retired references.
 
 | Guide | What it covers |
 | --- | --- |
-| [Triage fleeting notes](triage-fleeting-notes.md) | Clear `notes/fleeting/`: promote, attach, or discard |
-| [Review link suggestions](review-link-suggestions.md) | Triage the link lane's Inbox proposals — approve or reject |
+| [Triage fleeting notes](triage-fleeting-notes.md) | Retired alpha.10 fleeting-note triage |
+| [Review link suggestions](review-link-suggestions.md) | Retired alpha.10 claim-link suggestion flow |
 | [Work the action queue](work-the-action-queue.md) | Sweep the Inbox: proposals, work prompts, and held gated writes |
 | [Run the weekly review](run-the-weekly-review.md) | Friday ritual: classify debt, synthesis agenda, structural health |
 | [Return to work](return-to-work.md) | Three pre-session checks after any break — takes under two minutes |

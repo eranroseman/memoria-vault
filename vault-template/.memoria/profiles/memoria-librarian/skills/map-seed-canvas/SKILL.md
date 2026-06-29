@@ -19,14 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, candidate]
 ---
 
 # map-seed-canvas
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Give the PI a spatial starting point instead of a blank canvas. The cluster operation
 computes the graph — nodes, typed edges, communities, centrality, layout coordinates —
@@ -52,7 +52,7 @@ rearranges or deletes; it is never the map of record.
    terms; edges carry their type as the label, contradiction edges visually distinct
    (color). Layout starts from the operation's coordinates — adjust only to de-overlap.
 3. **Write — gated.** The canvas to
-   `notes/fleeting/maps/canvas-seed-<topic>-<YYYY-MM-DD>.canvas` plus a small
+   `knowledge/notes/maps/canvas-seed-<topic>-<YYYY-MM-DD>.canvas` plus a small
    companion note (same stem, `.md`) recording the provenance: scope, cap,
    `params_echo`, what was pruned. Never write under `projects/` or `notes/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the seed (ADR-54).

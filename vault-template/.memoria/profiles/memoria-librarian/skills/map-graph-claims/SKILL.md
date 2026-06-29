@@ -19,14 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, candidate]
 ---
 
 # map-graph-claims
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Show the corpus's claims as what they are — a debate. The cluster operation computes the
 typed graph (nodes for claim notes, edges for the `supports` / `contradicts` /
@@ -54,7 +54,7 @@ by a confidence threshold or calibrated cutoff.
    `contradicts` edges visually distinct (color); claims grouped where the graph shows
    a cluster. Layout starts from the operation's coordinates — adjust only to de-overlap.
 3. **Write — gated.** The canvas to
-   `notes/fleeting/maps/graph-claims-<topic>-<YYYY-MM-DD>.canvas` plus a companion note
+   `knowledge/notes/maps/graph-claims-<topic>-<YYYY-MM-DD>.canvas` plus a companion note
    (same stem, `.md`) recording provenance: scope, cap, `params_echo`, what was pruned.
    Never write under `projects/` or `notes/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the graph (ADR-54).

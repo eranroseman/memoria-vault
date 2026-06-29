@@ -15,7 +15,7 @@ superseded_by: []
 
 > **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it. (The count is authoritative at **seven**; the file was renamed from `six-memory-substrates` to `scoped-memory-substrates` so the name no longer states a stale count.)
 >
-> **Clarified 2026-06-16.** `research-focus.md` is program memory: standing,
+> **Clarified 2026-06-16.** `steering.md` is program memory: standing,
 > cross-project steering. A Project gate question, thesis, map, and gaps are
 > project memory: bounded to one inquiry and archived with it.
 
@@ -51,7 +51,7 @@ Memoria's memory is **seven distinct substrates**, each with its own scope, life
 3. **Session history** (Hermes) — one agent across all past sessions; searchable recall that carries **no authority** and never gates promotion.
 4. **Handoff memory** (Memoria — Kanban) — one card, travels across profiles; the structured unit of cross-profile communication.
 5. **Project memory** (Memoria — vault files) — one sub-project across lanes; open questions, decisions, framing; archives with the project.
-6. **Program memory** (Memoria — vault files) — the whole research program; the human's standing steering (`research-focus`, `screening-protocol`); persistent.
+6. **Program memory** (Memoria — vault files) — the whole research program; the human's standing steering (`steering`, `screening-protocol`); persistent.
 7. **Audit memory** (Memoria — vault files) — whole vault, append-only; audit trail, snapshots, metrics.
 
 A **substrate** is one of these seven categories; its **backing** is the store behind it (Hermes / Kanban / vault files). The governing test: **memory is read back as recall; configuration is read as rules** — config (e.g. `project-hints.yaml`) is not an eighth substrate. `SOUL.md` is identity, not memory.
@@ -59,7 +59,7 @@ A **substrate** is one of these seven categories; its **backing** is the store b
 ## Why
 
 - Substrate boundaries exist to keep each profile's read/write/retention rules clean; lumping facts of different scope or lifespan into one store is what produces the "forgot / shouldn't-have-remembered" failures.
-- Program steering (persistent, program-wide — `research-focus`) and project working state (bounded, per-project) differ on scope, lifespan, and cardinality, so they are separate substrates, not one "project memory."
+- Program steering (persistent, program-wide — `steering`) and project working state (bounded, per-project) differ on scope, lifespan, and cardinality, so they are separate substrates, not one "project memory."
 - Each name states its scope/role, so "where does X live?" is answerable from the name alone.
 
 ## Consequences
@@ -74,7 +74,7 @@ A **substrate** is one of these seven categories; its **backing** is the store b
 
 **One unified memory store.** Rejected: it collapses every cross-session question into "store it and hope," and forces profiles to share too much (one lane's reasoning leaks into another) or too little (re-deriving the project goal every session). The scoped split is thin-control-over-thick-state applied to memory.
 
-**Keep program and project as one "vault project memory" substrate.** Rejected (2026-06-02): a program-wide, persistent steering file and per-project, bounded scratch are different memory on every axis but "human-owned vault file" — merging them mislabels the substrate and buries `research-focus` as one example among others.
+**Keep program and project as one "vault project memory" substrate.** Rejected (2026-06-02): a program-wide, persistent steering file and per-project, bounded scratch are different memory on every axis but "human-owned vault file" — merging them mislabels the substrate and buries `steering` as one example among others.
 
 **Store durable facts in agent memory.** Rejected as a general approach: agent memory is per-profile, size-capped, and frozen at session start, so it cannot hold cross-lane or in-flight state without truncation or staleness — those belong in program/project memory and handoff memory respectively.
 

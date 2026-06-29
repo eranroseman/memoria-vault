@@ -35,7 +35,11 @@ Type `exit` or Ctrl-C to end a session cleanly.
 
 ## Chatting safely
 
-No special flag is needed — the policy gate enforces it ([Policy MCP](../../reference/policy-mcp.md)): the Co-PI's lane denies every path, and any lane write to a review-gated prefix degrades to `dry_run` and lands in the action queue ([Work the action queue](../inbox/work-the-action-queue.md)). To test a single permission decision without any agent, use the policy MCP's `--decide` one-shot mode ([Configure a profile § Verify a configuration change](configure-a-profile.md#verify-a-configuration-change)).
+No special flag is needed. The Co-PI profile still has a deny-all lane ceiling
+for legacy profile tools ([Policy MCP](../../reference/policy-mcp.md)), and
+alpha.11 Concept writes route through the worker. To test a single legacy policy
+decision without any agent, use the Policy MCP's `--decide` one-shot mode
+([Configure a profile § Verify a configuration change](configure-a-profile.md#verify-a-configuration-change)).
 
 ## Watching what a session did
 

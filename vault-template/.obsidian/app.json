@@ -4,7 +4,7 @@
   "newLinkFormat": "absolute",
   "alwaysUpdateLinks": true,
   "newFileLocation": "folder",
-  "newFileFolderPath": "notes/fleeting",
+  "newFileFolderPath": "knowledge/notes",
   "attachmentFolderPath": "attachments",
   "trashOption": "local",
   "propertiesInDocument": "hidden"

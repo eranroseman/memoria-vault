@@ -10,7 +10,7 @@ find the owning file, then fix the stale consumer rather than the source.
 |---|---|---|
 | Repository agent policy | `AGENTS.md` | `.agents/`, contributor docs |
 | Vault document types and fields | `vault-template/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
-| Type homes, gated zones, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Policy MCP, installer, linter, templates, dashboards |
+| Type homes, staging/quarantine roots, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Installer, linter, templates, dashboards, worker promotion tests |
 | Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
 | Profile tool capabilities | `vault-template/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
 | Profile path permissions | `vault-template/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
@@ -64,8 +64,9 @@ owned source. Treat a mirror as a cache, never as a second authority:
 ## Mirrored constants
 
 The packaged policy layer and schema loader carry a dependency-free fallback for
-review-gated prefixes. It is a mirror, not an independent source; tests must
-prove it remains equal to canonical `folders.yaml`.
+legacy review-gated prefixes. Alpha.11 does not declare these in `folders.yaml`;
+tests prove the legacy fallback constants agree with each other and stay
+separate from the worker-owned staging/promote/quarantine boundary.
 
 ## Decision rule
 

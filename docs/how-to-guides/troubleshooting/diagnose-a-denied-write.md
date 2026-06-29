@@ -32,8 +32,8 @@ From `home.md` → the audit-log dashboard. Its primary view is recent **denies 
 
 Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema: [Policy audit log](../../reference/policy-audit-log.md); lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md)):
 
-- **`deny`** — the lane forbids that action on that path (e.g., Librarian writing to `notes/claims/`). The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
-- **`dry_run`** — the path is a review-gated zone; the write is *held*, not refused. Approve it through the queue: [Work the action queue](../inbox/work-the-action-queue.md).
+- **`deny`** — the lane forbids that action on that path. The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
+- **`dry_run`** — the legacy policy fallback held the write instead of performing it. Alpha.11 Concept writes should go through the worker.
 
 **3. No matching entry at all? The write never reached the gate.**
 
@@ -43,10 +43,12 @@ Hermes fails open on hook errors, so a broken hook or unregistered MCP can let a
 - Smoke-test the gate live:
 
   ```bash
-  python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'
+  python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"knowledge/notes/x.md","task_id":"T1"}'
   ```
 
-  Expected result: `"decision": "deny"` because `notes/claims/` is review-gated. If the command errors or allows the write, the gate logic is broken. The full component test suite is `scripts/test.sh l1` from the repo clone.
+  Expected result depends on the lane override. If the command errors or gives
+  a surprising decision, the component test suite is `scripts/test.sh l1` from
+  the repo clone.
 - Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's HTTPS server is on, its port matches `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` points at the exported PEM certificate/CA bundle ([Set up Obsidian](../setup/set-up-obsidian.md)).
 
 A missing log entry for a write that *should* have been attempted points at wiring, not policy.

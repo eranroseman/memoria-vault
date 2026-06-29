@@ -1,40 +1,25 @@
 ---
 title: Project
-type: space
-lifecycle: current
+projection: space
 dashboard: space
-space: project
+surface: project
 cssclasses: memoria-space
 ---
 
 # Project
 
-> [!brief] No projects yet? Create one with the project form. A project carries its
-> inquiry, FINER scope, output mode, and thesis state.
+> [!brief] No projects yet? The alpha.11 worker creates checked project Concepts.
+> This page shows them and lets you keep local exploration traces.
 
 > [!suggestions] First actions
-> - Use **Memoria: start project** to create the first project note.
-> - Use **Memoria: refresh project gate** after editing a project.
-> - Use **Memoria: draft section** when a project has enough sources and claims.
+> - Use **Memoria: record exploration trace** when a map or gap report reaches a dead end.
 
-## Active projects
+## Projects
 
-![[projects.base#Active projects]]
+![[knowledge.base#Projects]]
 
-## Needs refutation stamp
-
-![[projects.base#Needs refutation stamp]]
-
-## Saturation
-
-![[projects.base#Saturation]]
-
-## Project gaps
-
-![[projects.base#Project gaps]]
-
-Open a project note to see its thesis, sources, and local notes. Refresh the
-project gate after edits; the projected argument canvas remains deferred.
+Open a project Concept to see its question, sources, and local notes. The
+projected argument canvas remains deferred.
 
 ## Guides
 

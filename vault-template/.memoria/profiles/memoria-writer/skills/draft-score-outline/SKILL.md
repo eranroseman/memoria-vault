@@ -17,15 +17,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.append_content
-      - obsidian.patch_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["projects/"]
+    write_scope: []
     outputs: [source]
 ---
 
 # draft-score-outline
+
+> Deferred in alpha.11: the writing/draft/export lane is not routable and has no direct Obsidian write tools.
 
 Tell the PI how draft-ready an outline is, per node, with the arithmetic shown. The
 score is **advisory** — it informs the pick between outline options or the go/no-go on

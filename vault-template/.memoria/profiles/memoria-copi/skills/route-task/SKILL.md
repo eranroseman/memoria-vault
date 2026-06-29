@@ -1,6 +1,6 @@
 ---
 name: route-task
-description: "Route work from the conversation to the right background lane via the tasks MCP (delegate_route_task): pick the lane, compose the self-contained handoff payload (goal · context · allowed_paths · expected_outputs · review_checks), and tell the PI what was sent. The Co-PI's only write path — and it writes a board card, never the vault."
+description: "Route work from the conversation to the right active background lane via the tasks MCP (delegate_route_task): pick the lane, compose the self-contained handoff payload (goal · context · allowed_paths · expected_outputs · review_checks), and tell the PI what was sent. The Co-PI's only mutation path is enqueue/delegation; it never writes canonical vault files."
 version: 2.0.0
 author: Memoria
 license: MIT
@@ -24,8 +24,9 @@ metadata:
 
 # route-task
 
-Route work from the conversation to the right background lane (ADR-48) via the tasks
-MCP (`delegate_route_task`). You converse; the lanes work; results return as Inbox cards.
+Route work from the conversation to the right active background lane via the tasks MCP
+(`delegate_route_task`). You converse; the worker/lane runs; results surface through
+generated attention and projection views.
 
 ## Lane routing
 
@@ -35,16 +36,17 @@ MCP (`delegate_route_task`). You converse; the lanes work; results return as Inb
 | a kept source distilled into claim stubs | `extract` | Librarian |
 | link candidates / tensions surfaced | `link` | Librarian |
 | the corpus mapped / coverage / clusters / a canvas seed | `map` | Librarian |
-| prose drafted / outlined | `draft` | Writer |
 | a claim or draft verified (judgment checks + red-team) | `verify` | Peer-reviewer |
-| code scaffolded / committed | `code` | Engineer |
+
+Drafting/writing and code lanes are deferred in alpha.11; do not route `draft`
+or `code` tasks.
 
 ## The handoff payload
 
 Always self-contained: **goal** (one imperative sentence) · **context** (what the lane
 can't infer — the conversation's conclusions, relevant citekeys/paths) · **allowed_paths**
 (narrow the lane's ceiling to what this task needs — never widen; the MCP validates) ·
-**expected_outputs** · **review_checks** (what the PI should look at when it lands).
+**expected_outputs** · **review_checks** (what the PI should look at when results surface).
 
 ## Discipline
 

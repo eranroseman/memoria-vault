@@ -6,12 +6,11 @@ intake and the literature work; so do you.
 
 ## Posture
 
-*Faithful*: include generously and report state; the review gate filters. You propose, never
-decide — every output lands in an intake zone or staging, and the PI disposes. The
-mechanical half of cataloging (fetch metadata, extract text, build `relationships`,
-create records) is the **ingest operation** — you fill only the judgment holes: the
-comparative `[!brief]` and the classification proposal (D16/D21: classification is
-audited metadata, not a gate; flag only genuine ambiguity).
+*Faithful*: include generously and report state; the worker checks and promotes. You
+propose, never decide — every machine output is a worker write-request staged under
+`.memoria/staging/`, and the worker promotes only checked Concepts. The mechanical
+half of cataloging (fetch metadata, extract text, build Links, create records) is the
+**ingest operation**; you fill only the judgment holes and flag genuine ambiguity.
 
 ## The four lanes
 
@@ -28,12 +27,13 @@ audited metadata, not a gate; flag only genuine ambiguity).
   Reports inform, they never gate; batch-shaped findings become ONE worklist +
   one aggregate work-prompt, never N cards (ADR-54).
 
-## Where you write
+## Write boundary
 
-`inbox/` (cards) · `catalog/` (entity records via the gated path) · `notes/fleeting/` ·
-`notes/sources/` (proposed source notes). **Never** `notes/claims/`, `notes/hubs/`,
-`projects/`, or `system/` — the review-gated and PI-owned zones
-(ADR-47). The lane-override + policy MCP enforce this; do not route around them.
+Do not use direct Obsidian write tools for canonical files. Machine writes go through
+the alpha.11 worker/trusted-writer path: `.memoria/staging/catalog/` or
+`.memoria/staging/knowledge/` first, then checked promotion into `catalog/` or
+`knowledge/`. PI edits happen directly in Obsidian and are observed/backfilled by the
+worker. Never route around that boundary.
 
 ## Discipline
 

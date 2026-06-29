@@ -132,32 +132,6 @@ The PI's Inbox decision stream. The same resolver path behind `Memoria: resolve 
 {"timestamp": "2026-06-01T11:30:00Z", "event": "inbox_card_resolved", "path": "inbox/work-prompt-review-x.md", "card_type": "work-prompt", "lane": "memoria-writer", "task_id": "TASK-2026-05-31-003", "outcome": "Dismiss", "lifecycle_from": "proposed", "lifecycle_to": "archived", "source": "quickadd.resolve-inbox-card"}
 ```
 
-## pre-file-similarity.jsonl
-
-The ADR-38 shadow ratchet stream. When QuickAdd creates a linked claim note or a
-structured source note, it runs a report-only `qmd search --format json --full-path`
-check before writing the note, appends a `[!similarity]` callout to the note, and
-writes one content-light telemetry row here. It never blocks filing, merges notes,
-or claims a calibrated threshold.
-
-```json
-{"timestamp": "2026-06-01T11:30:00Z", "event": "pre_file_similarity_shadow", "source": "quickadd.create-linked-claim", "note_type": "claim", "path": "notes/claims/example.md", "source_path": "notes/sources/smith2026.md", "query_sha256": "64hex...", "query_chars": 118, "status": "ok", "warning": "", "neighbours": [{"path": "notes/claims/nearby.md", "score": 0.42}]}
-```
-
-| Field | Meaning |
-| --- | --- |
-| `source` | QuickAdd surface that filed the note: `quickadd.create-linked-claim` or `quickadd.structured-source-capture` |
-| `note_type` | `claim` or `source` |
-| `path` / `source_path` | vault-relative new note path and, for linked claims, the source note it was distilled from |
-| `query_sha256` / `query_chars` | content-light fingerprint and length of the proposed claim/source text; the raw query is not logged |
-| `status` | `ok` when qmd ran, `unavailable` when the vault path was unavailable or the qmd command failed |
-| `warning` | empty, `no-scoped-neighbours`, `vault-base-path-unavailable`, or `qmd-search-failed` |
-| `neighbours` | up to three scoped neighbours under `notes/claims/` or `notes/sources/`, with qmd scores when reported |
-
-`warning` rows are expected in fresh or unindexed vaults and are shadow telemetry
-for the later #562 enforcement/tuning work, not release blockers. The human-facing
-callout points to the qmd rebuild guide when the check looks stale.
-
 ## blind-review-samples.jsonl
 
 The deterministic blind re-review sampler. When `board_export.py` observes a card's `review_status` reach a terminal outcome, it hashes the card id and samples a stable small fraction for a second pass. `metadata.blind_rereview: true` on a card forces a sample for an intentional spot-check or a test fixture.
@@ -250,10 +224,12 @@ The result is clamped to `[0, 100]` and rounded. Bands: **≥ 90 healthy · 70�
 
 A field with no data for the period renders as `null` (never omitted) so downstream parsers see a stable key set.
 
-The read-only Memoria Inspector pane ([ADR-84](../adr/84-read-only-obsidian-inspector.md))
-reads the latest board-state snapshot, recent audit rows, latest `lint-verdict` note,
-and latest lane-metric notes to show the same operational health signals inside
-Obsidian. It does not emit telemetry or mutate any source log.
+The Memoria Inspector pane reads the latest board-state snapshot, recent audit
+rows, failed `check-fired` rows from `journal/*.jsonl`, latest `lint-verdict`
+note, and latest lane-metric notes to show the same operational health signals
+inside Obsidian. Its only mutation path is
+enqueueing worker jobs under `.memoria/queue/pending/` ([ADR-121](../adr/121-enqueue-only-obsidian-control-panel.md));
+it does not emit telemetry or mutate any source log.
 
 ## What is *not* captured
 

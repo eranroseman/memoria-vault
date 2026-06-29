@@ -26,16 +26,16 @@ The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-base
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
-| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · notes · projects · inbox · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.obsidian/`, `.git/`, `.memoria/`, `node_modules/`) and work-in-flight zones (`inbox/`, `system/logs/`, `system/board/`). |
+| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · capabilities · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.obsidian`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-67](../adr/67-drift-procedures-keep-or-retire.md)). Checked only in installed vaults (golden manifest present); the repo's `vault-template/` ships no empty dirs. |
-| `hub-threshold` | LOW | A topic with ≥ 15 notes (papers' `research_area` + claims' `topics`, case-insensitive) and no covering `hub` note — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). Tier 2 is the separate `hub_handoff.py` operation, which delegates a staged proposal to the `map` lane without widening into `notes/hubs/`. |
+| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
-| `extract-path-broken` | HIGH | A paper note whose `extract_path` does not resolve. |
+| `extract-path-broken` | HIGH | A source Concept whose extract/content path does not resolve. |
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
 | `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |
@@ -47,7 +47,7 @@ python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--jso
 python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--threshold 15] [--json]
 ```
 
-`--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. `hub_handoff.py` is opt-in: it reads current `hub-threshold` findings and creates idempotent Librarian `map` cards whose allowed paths are only `notes/fleeting/maps/` and `inbox/`. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
+`--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
 
 ---
 
@@ -94,7 +94,13 @@ python3 .memoria/operations/integrity/linter/session_summary.py --vault <vault> 
 
 ## The daily cron
 
-The installer wires `memoria-lint` (`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`), whose wrapper runs the detectors, `golden_restore.py check`, and the per-session digests over the vault. Findings surface in Maintenance's Drift watch and Loose ends views — see [Dashboards](dashboards.md).
+The installer wires `memoria-worker` every minute for PI-edit observation and
+pending queue drain, plus `memoria-lint`
+(`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`) for the
+daily detector sweep. The lint wrapper runs the detectors, `golden_restore.py
+check`, the per-session digests, and the worker `integrity-sweep` over the
+vault. Findings surface in Maintenance's Drift watch and Loose ends views — see
+[Dashboards](dashboards.md).
 
 ---
 

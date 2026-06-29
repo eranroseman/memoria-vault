@@ -61,8 +61,9 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
     ]
 
     assert result["action"] == "block"
-    assert "deny" in result["message"]
+    assert "tool-registry allowlist" in result["message"]
     assert audit[-1]["decision"] == "deny"
+    assert audit[-1]["policy_rule"] == "tool-registry.allowlist"
     assert audit[-1]["path"] == "notes/claims/blocked.md"
     assert audit[-1]["task_id"] == "TASK-DENY"
 

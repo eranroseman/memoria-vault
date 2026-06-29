@@ -38,6 +38,87 @@ def test_skeleton_covers_every_type_home():
         assert home in installed, f"type {t} home {home} not in SKELETON_DIRS"
 
 
+def test_alpha11_fresh_package_contract_is_shipped():
+    required_dirs = {
+        ".memoria/index/qmd",
+        ".memoria/quarantine",
+        ".memoria/queue/pending",
+        ".memoria/queue/running",
+        ".memoria/queue/done",
+        ".memoria/queue/failed",
+        ".memoria/staging/catalog",
+        ".memoria/staging/knowledge",
+        ".memoria/staging/capabilities",
+        "journal",
+        "catalog",
+        "catalog/sources",
+        "catalog/entities",
+        "knowledge",
+        "knowledge/digests",
+        "knowledge/notes",
+        "knowledge/hubs",
+        "knowledge/projects",
+        "capabilities",
+        "capabilities/operations",
+        "capabilities/skills",
+        "capabilities/mcp",
+        "capabilities/workflows",
+    }
+    skeleton = set(schema.load_folders()["skeleton"])
+    installed = _skeleton_dirs()
+
+    assert required_dirs <= skeleton
+    assert required_dirs <= installed
+    for rel in required_dirs:
+        assert (ROOT / "vault-template" / rel).is_dir(), rel
+    for rel in (
+        "index.md",
+        "catalog/index.md",
+        "knowledge/index.md",
+        "capabilities/index.md",
+        "capabilities/ai-catalog.json",
+        "references.bib",
+        "steering.md",
+    ):
+        assert (ROOT / "vault-template" / rel).is_file(), rel
+    for rel in (
+        ".memoria/index/qmd",
+        ".memoria/quarantine",
+        ".memoria/queue/pending",
+        ".memoria/queue/running",
+        ".memoria/queue/done",
+        ".memoria/queue/failed",
+        ".memoria/staging/catalog",
+        ".memoria/staging/knowledge",
+        ".memoria/staging/capabilities",
+        "journal",
+    ):
+        assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
+
+
+def test_alpha11_template_has_no_legacy_alpha10_root_files():
+    legacy_roots = (
+        "vault-template/inbox",
+        "vault-template/notes",
+        "vault-template/projects",
+        "vault-template/catalog/papers",
+        "vault-template/catalog/people",
+        "vault-template/catalog/organizations",
+        "vault-template/catalog/venues",
+        "vault-template/catalog/datasets",
+        "vault-template/catalog/repositories",
+        "vault-template/system/board",
+        "vault-template/system/worklists",
+    )
+    leftovers = [
+        path.relative_to(ROOT).as_posix()
+        for rel in legacy_roots
+        for path in (ROOT / rel).rglob("*")
+        if path.is_file()
+    ]
+    assert not leftovers
+
+
 def test_installer_deploys_exactly_the_shipped_profiles():
     text = INSTALL.read_text(encoding="utf-8")
     m = re.search(r'ALL_PROFILES="([^"]+)"', text)
@@ -61,6 +142,7 @@ def test_installer_cron_helper_keeps_all_job_schedules():
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
         ("sweeps-cron.sh", "memoria-sweeps.sh", "*/15 * * * *", "memoria-sweeps"),
+        ("worker-cron.sh", "memoria-worker.sh", "* * * * *", "memoria-worker"),
         ("lint-cron.sh", "memoria-lint.sh", "0 6 * * *", "memoria-lint"),
         ("metrics-cron.sh", "memoria-metrics.sh", "30 6 * * 1", "memoria-metrics"),
         ("eval-cron.sh", "memoria-eval.sh", "0 7 1 */3 *", "memoria-eval"),
@@ -75,6 +157,14 @@ def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
+    assert '-m memoria_vault.runtime.worker --vault "$vault" integrity-sweep' in text
+
+
+def test_worker_cron_runs_pi_observer_and_pending_queue():
+    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
+    assert '-m memoria_vault.runtime.worker --vault "$vault" observe-pi-edits' in text
+    assert '-m memoria_vault.runtime.worker --vault "$vault" run-pending --limit 10' in text
+    assert 'heartbeat="memoria-worker"' in text
 
 
 def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):

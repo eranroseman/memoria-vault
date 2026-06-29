@@ -1,15 +1,14 @@
 profile: memoria-writer
 
-# The Writer's lane ceiling (ADR-48): generative, draft-only, review-gated. Drafts
-# live in project scratch; nothing lands in the review-gated knowledge zones.
+# Deferred in alpha.11: the writing/draft/export module is not routable and has
+# no write ceiling until a later checkpoint re-enables it.
 
 policy:
   allow:
     skills:
       - obsidian
       - qmd
-    write:
-      - "projects/**"          # drafts + outlines (project scratch)
+    write: []
   deny:
     skills:
       - review_gated_publish
@@ -17,8 +16,11 @@ policy:
     write:
       - "notes/claims/**"      # review-gated (ADR-03/47)
       - "notes/hubs/**"
+      - "knowledge/**"
       - "catalog/**"
+      - "capabilities/**"
       - "inbox/**"             # the Writer raises no cards (its Inbox column is —)
+      - "projects/**"
       - "system/**"
   require:
     - audit_log
@@ -27,5 +29,4 @@ policy:
 routing:
   invocation: dispatched
   external_api_policy: blocked
-  write_scope:
-    - "projects/"
+  write_scope: []

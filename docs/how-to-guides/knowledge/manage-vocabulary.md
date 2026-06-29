@@ -52,7 +52,9 @@ Note the consumers: the ingest operation's automated classify stage rolls OpenAl
 
 ## Step 3 — Rename a term safely
 
-Renaming a vocabulary value across the corpus is the same git-disciplined manual pass as any field migration (commit → enumerate → edit → lint → commit): [Run a schema migration](../operate/run-a-schema-migration.md) is the full procedure. The two vocabulary-specific points:
+Renaming a vocabulary value across a fresh alpha.11 sandbox is a
+git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
+vocabulary-specific points:
 
 - **Also update `system/vocabulary.md`** in the same pass — the controlled list and the notes must move together.
 - **Your selector is a frontmatter value**, so enumerate with Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/`) before editing.

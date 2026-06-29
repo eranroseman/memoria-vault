@@ -48,8 +48,8 @@ Tools the profiles call (and you can exercise directly when debugging — each s
 | tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The Co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
 | cluster | `cluster_build_graph(seed)` | NetworkX over authored `links:` + given `relationships` → nodes, typed edges, communities, centrality, layout. Read-only; params echoed. |
 | cluster | `cluster_model_topics(folder, min_cluster_size)` | BERTopic over note text → topics, doc-topic map, outliers (needs the opt-in cluster stack). |
-| cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the claim-debate JSON Canvas artifact (staging-only) — the Librarian's map lane (`map-seed-canvas`). |
-| patterns | `patterns_list(mode)` | Runnable (`lifecycle: current`) patterns, optionally filtered by `library` / `project`. |
+| cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the note-debate JSON Canvas artifact under `knowledge/notes/maps/` — the Librarian's map lane (`map-seed-canvas`). |
+| patterns | `patterns_list(mode)` | Checked prompt operations, optionally filtered by `library` / `project` / `knowledge`. |
 | patterns | `patterns_run(pattern_id, input_text, input_ref)` | Compose preamble + pattern + input → the prompt + staging target; gated targets degrade to dry-run; every run provenance-logged to `system/logs/patterns.jsonl`. |
 | ingest | `ingest_pipeline(citekey, enrich, pdf_path)` | The deterministic draft bundle with the two LLM holes. See [Ingest routing](ingest.md). |
 | policy | `check_permission` / `complete_write` | The write gate. See [Policy MCP](policy-mcp.md). |

@@ -1,20 +1,22 @@
 ---
-title: Link related claims
+title: Link checked notes
 parent: Knowledge
 grand_parent: How-to guides
 nav_order: 2
 ---
 
-# Link related claims
+# Link checked notes
 
-Add a typed `supports` / `contradicts` link between two claims that **already exist**; to set one while writing a claim, see [Write a claim note](write-a-claim-note.md).
+Add a typed `supports` / `contradicts` / `extends` link between checked
+`note` Concepts. The PI chooses whether a relationship is real; the worker only
+records and traces the accepted edit.
 
 > **`links:` vs `relationships`.** `links:` are authored edges on notes (your thinking); `relationships` are given edges on Catalog entities (facts from the record, written by the ingest operation) ([ADR-52](../../adr/52-links-vs-relationships.md)).
 
 ## Prerequisites
 
-- At least two claim notes in `notes/claims/`
-- These links are yours to set — `notes/claims/` is review-gated; agents only *propose*, never write
+- At least two checked notes under `knowledge/notes/`
+- The target relationship is your judgment, not an automatic promotion
 
 ## Steps
 
@@ -26,49 +28,53 @@ Link for usefulness, not completeness. Add a typed link only when "*what contrad
 
 | Link | Meaning | Direction |
 | --- | --- | --- |
-| `supports` | This claim supports the linked claim | Directional — set it on the supporting claim |
-| `contradicts` | The two claims disagree | Symmetric — set it on either; the dashboard reads both ways |
+| `supports` | This note supports the linked note | Directional — set it on the supporting note |
+| `contradicts` | The two notes disagree | Symmetric — set it on either; the graph reads both ways |
+| `extends` | This note elaborates the linked note | Directional — set it on the elaborating note |
 
-If the relationship is *temporal replacement* — this claim makes an older one obsolete — that is **not** a `links:` entry; it's supersession (`superseded_by` on the old claim), covered in [Advance a claim to evergreen](promote-a-claim.md).
+**3. Queue the link through the Inspector or edit directly.**
 
-**3. Add the entry to the claim's `links:` map.**
+In the Inspector control panel, set the source note path, target path, and link
+type, then enqueue the matching link action. The worker records the journal row
+and commits the checked note update.
 
-Open the claim note and extend the frontmatter block the claim template ships:
+For a direct PI edit, extend the note's `links:` map:
 
 ```yaml
 links:
   supports: []
   contradicts:
-    - "[[receptivity-decreases-under-high-cognitive-load]]"
+    - knowledge/notes/receptivity-decreases-under-high-cognitive-load.md
 ```
 
 Both keys can carry lists — a claim may support one claim and contradict another.
 
 **4. Point with the exact note name.**
 
-The target is a wikilink to the other claim note (lowercase kebab-case, the claim as a sentence). Copy it from the target's filename rather than retyping — the Linter's `frontmatter-link` detector flags any frontmatter wikilink that resolves to no note, but only on its next pass.
+The target is the vault-relative path to the other checked note. Copy it from
+the target file rather than retyping.
 
 **5. Let agents propose; confirm yourself.**
 
-The Librarian's `link` lane surfaces candidate connections and tensions as Inbox proposals ([Review link suggestions](../inbox/review-link-suggestions.md)). Never copy a proposed link into `links:` unread — the agent proposes, you dispose.
+The worker and plugin can surface candidate connections, but never copy a
+proposed link unread. The agent proposes; you dispose.
 
 **6. Confirm it surfaced.**
 
-For a `contradicts` link, open the Knowledge space's **Contradictions** view. The pair should appear — that visibility is the payoff of typing the link.
+Run the project argument analysis or render the project argument Canvas. The
+typed edge should appear with its label.
 
 ## Verify
 
-- The `links:` keys stay within `supports` / `contradicts` (the Linter's `schema-check` flags anything else)
-- A `contradicts` pair appears in Knowledge's **Contradictions** view
-- Every link target resolves to a real claim note
+- The `links:` keys stay within `supports` / `contradicts` / `extends`
+- Project argument analysis sees the edge
+- Every link target resolves to a checked note
 
 ## Related
 
 **How-to**
 
-- Set a link while authoring: [Write a claim note](write-a-claim-note.md)
 - Triage agent-proposed links: [Review link suggestions](../inbox/review-link-suggestions.md)
-- The temporal complement (replacement, not disagreement): [Advance a claim to evergreen](promote-a-claim.md)
 
 **Reference**
 
@@ -76,5 +82,5 @@ For a `contradicts` link, open the Knowledge space's **Contradictions** view. Th
 
 **Explanation**
 
-- The consumer: [Contradictions](../../explanation/dashboards/synthesis-agenda.md#contradictions)
+- The consumer: [Canvas for argument mapping](../project/use-canvas-for-argument-mapping.md)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

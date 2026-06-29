@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""inbox — the shared Inbox card writer (ADR-51).
+"""Write alpha.11 Inbox attention projections.
 
-Engines and lanes never invent card formats: every `candidate`/`gap`/`flag`/`alert`/
-`work-prompt` goes through this one writer, so cards are always schema-shaped.
-Proposals carry the honesty body (argument for · against · what tipped it · certainty —
-never a verdict); verification cards lead with the finding; work prompts carry the
-action + what happened + where to look — also never a verdict.
+Attention is generated visibility, not a durable Concept type. These helpers keep
+the old filenames and bodies useful while writing projection frontmatter instead
+of deleted `candidate`/`gap`/`flag`/`work-prompt` schemas.
 """
 
 from __future__ import annotations
@@ -57,8 +55,9 @@ def write_proposal(
     lines = [
         "---",
         f"title: {_yaml_str(title)}",
-        f"type: {card_type}",
-        "lifecycle: proposed",
+        "projection: attention",
+        f"attention_kind: {card_type}",
+        "attention_status: open",
         f"action: {_yaml_str(action)}",
         f"argument_for: {_yaml_str(argument_for)}",
         f"argument_against: {_yaml_str(argument_against)}",
@@ -102,8 +101,9 @@ def write_finding(
     lines = [
         "---",
         f"title: {_yaml_str(title)}",
-        f"type: {card_type}",
-        "lifecycle: proposed",
+        "projection: attention",
+        f"attention_kind: {card_type}",
+        "attention_status: open",
         f"finding: {_yaml_str(finding)}",
         f"agent_recommendation: {agent_recommendation}",
     ]
@@ -144,8 +144,9 @@ def write_work_prompt(
     lines = [
         "---",
         f"title: {_yaml_str(title)}",
-        "type: work-prompt",
-        "lifecycle: proposed",
+        "projection: attention",
+        "attention_kind: work-prompt",
+        "attention_status: open",
         f"action: {_yaml_str(action)}",
         f"what_happened: {_yaml_str(what_happened)}",
     ]

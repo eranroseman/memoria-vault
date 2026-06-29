@@ -7,7 +7,7 @@ nav_order: 4
 
 # Run the weekly review
 
-Walk the Friday ritual: refresh your research focus, sweep the Inbox, use Maintenance's weekly sections, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
+Walk the Friday ritual: refresh your steering, sweep the Inbox, use Maintenance's weekly sections, and check structural health. Allow up to ~60 minutes; closer to 20–30 once the vault is established and the queues run near-empty — **empty is success**.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Walk the Friday ritual: refresh your research focus, sweep the Inbox, use Mainte
 
 **Step 1 — Refresh research priorities (2 min).**
 
-Open `research-focus.md`. Confirm or update the active questions and reading focus — the Librarian reads this to aim discovery, and it sets the lens for every decision below.
+Open `steering.md`. Confirm or update the active questions and reading focus — the Librarian reads this to aim discovery, and it sets the lens for every decision below.
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
@@ -53,7 +53,7 @@ Use the fleet-health dashboard from the rail health band — per-lane trust scor
 - The Inbox's **Needs me** view is empty
 - The fleeting queue is empty in the Inbox
 - No HIGH or CRITICAL finding is outstanding in Maintenance's Drift watch
-- `research-focus.md` reflects what you actually intend to read next week
+- `steering.md` reflects what you actually intend to read next week
 
 ## Related
 

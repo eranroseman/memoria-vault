@@ -6,48 +6,25 @@ grand_parent: Reference
 
 # Sample vault
 
-Reference for the bundled Mediterranean-diet tutorial corpus. To load or remove
-it, see [Load and remove the sample vault](../how-to-guides/setup/load-sample-vault.md).
-The tutorial rationale is [ADR-112](../adr/112-tutorial-destination-first-arc.md).
+The bundled Mediterranean-diet sample vault was alpha.10 tutorial scaffolding.
+It is retired in alpha.11: the starter vault ships no sample corpus and no
+`Memoria: load sample vault` or `Memoria: remove sample vault` commands.
 
-## Bundle location
+## Current state
 
-| Surface | Path |
+| Surface | Alpha.11 state |
 | --- | --- |
-| Hidden shipped bundle | `.memoria/samples/mediterranean-diet/` |
-| Catalog destination | `catalog/papers/` |
-| Source-note destination | `notes/sources/` |
-| Claim destination | `notes/claims/` |
-| Hub destination | `notes/hubs/` |
+| Hidden shipped bundle | Not shipped |
+| Runtime sample notes | Not created by install |
+| Sample commands | Not registered |
+| Tutorial dependency | Retired with the alpha.10 tutorial arc |
 
-## Current bundle counts
+Alpha.11 starts from an empty working vault. Capture source work through the
+Memoria Inspector control panel or write PI-owned notes directly, then let the
+worker/check loop backfill checked Concepts.
 
-| Type | Count |
-| --- | ---: |
-| Catalog paper entities | 10 |
-| Source notes | 10 |
-| Claim notes | 13 |
-| Hub notes | 1 |
-| Total Markdown notes | 34 |
+## Historical context
 
-Every bundled note carries `sample: true`. Removal archives live notes with that
-label; it does not delete the hidden bundle.
-
-## Commands
-
-| Command | Effect |
-| --- | --- |
-| `Memoria: load sample vault` | Copies bundled `catalog/` and `notes/` files into the live vault, skipping existing files. |
-| `Memoria: remove sample vault` | Archives live `sample: true` notes. |
-
-## Map floor
-
-The bundle includes 10 non-empty source notes, matching the calibrated full-map
-floor used by corpus mapping. That lets Tutorial 01 exercise Map corpus without
-immediately blocking on corpus size.
-
-## Source of truth
-
-The source files live under
-[`vault-template/.memoria/samples/mediterranean-diet/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/.memoria/samples/mediterranean-diet).
-If this page disagrees with the bundle, the bundle wins.
+The retired tutorial rationale lives in
+[ADR-112](../adr/112-tutorial-destination-first-arc.md). It is historical
+context only, not current product behavior.

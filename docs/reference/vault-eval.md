@@ -12,11 +12,16 @@ grand_parent: Reference
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as typed documents — `type: eval-task`, schema `vault-template/.memoria/schemas/types/eval-task.yaml`. Each is self-contained: an `## Input`, an `## Expected behavior`, and a `## Scoring rubric` section, so a lane can run and score it with nothing but the card.
+Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They retain
+`type: eval-task` frontmatter for dispatcher compatibility, but `eval-task` is
+not an alpha.11 Concept type and has no schema under
+`vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
+`## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
+lane can run and score it with nothing but the file.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
-| `type` | `literal:eval-task` | — |
+| `type` | `literal:eval-task` | Diagnostic fixture marker; not a Concept schema. |
 | `title` | str | The card title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
@@ -33,7 +38,10 @@ The shipped set (nine tasks) references well-known papers — the Transformer, B
 | `link` | `link` (Librarian) | propose BERT builds-on Transformer; *decline* a strong dropout↔ResNet edge (negative control) |
 | `verify` | `verify` (Peer-reviewer) | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
 
-Like patterns, eval tasks are authored directly — the files *are* the instances, no template. They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)), schema-checked by the Linter and the pre-commit hook, and a gold task whose wikilinked target no longer resolves surfaces as a broken-reference finding — gold-set rot is caught by machinery already running.
+Eval tasks are authored directly — the files *are* the instances, no template.
+They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+A gold task whose wikilinked target no longer resolves surfaces as a
+broken-reference finding; gold-set rot is caught by machinery already running.
 
 ---
 

@@ -20,37 +20,41 @@ Where every file lives.
 
 ```text
 <vault>/
+├── index.md                 generated workspace index
 ├── home.md                  launch/reset welcome note
 ├── _nav.md                  the navigation rail — pinned in the left pane, owns space-switching
-├── research-focus.md        program memory — the PI's standing steering
+├── steering.md        program memory — the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
-├── catalog/                 entity records (given relationships)
-│   ├── catalog.base           the Catalog Bases view
-│   ├── papers/  people/  organizations/  venues/  datasets/  repositories/
-├── notes/                   the PI's knowledge (authored links:)
-│   ├── fleeting/  sources/
-│   ├── claims/                review-gated
-│   └── hubs/                  review-gated
-├── projects/                project records, theses, drafts, code, exports
-│   └── _template/             starter project scaffold copied by the Project on-ramp
-├── inbox/                   PI-facing cards — daily action cards plus Maintenance findings
-│   └── inbox.base             the Inbox board view
-├── spaces/                  space dashboards + Inbox queue + Maintenance collection
-└── system/                  infrastructure plus typed system homes
+├── catalog/                 source and entity Concepts
+│   ├── index.md              generated catalog index
+│   ├── catalog.base           Sources Bases view
+│   ├── sources/
+│   └── entities/
+├── knowledge/               digest, note, hub, and project Concepts
+│   ├── index.md              generated knowledge index
+│   ├── digests/  notes/  hubs/  projects/
+│   └── views/knowledge.base
+├── capabilities/            operation, skill, MCP, and workflow Concepts
+│   ├── index.md              generated capabilities index
+│   ├── capabilities.base
+│   ├── ai-catalog.json        generated capability projection
+│   ├── operations/  skills/  mcp/  workflows/
+└── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
-    ├── dashboards/            5 read-only system dashboards + claims/sources/fleeting .base files
-    ├── patterns/              the pattern library (+ patterns.base, _preamble.md)
+    ├── dashboards/            read-only system dashboards
+    ├── patterns/              shared prompt preamble
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
-    ├── board/                 board-export card projections
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
-    ├── worklists/             Bases-backed batch screening rows (worklist-item notes)
     ├── metrics/               derived metric notes (lane-*, lint-verdict-*) + eval/runs.jsonl
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
-The six vault-root categories (`catalog`, `notes`, `projects`, `inbox`, `spaces`, `system`) are the legal top-level set — the Linter flags any stray root folder. The gated and transient prefixes those subfolders carry are declared in `folders.yaml`, not hardcoded; what they mean is in [Document types](document-types.md).
+The three bundle roots (`catalog`, `knowledge`, `capabilities`) are declared in
+`folders.yaml`, along with machine staging roots under `.memoria/staging/` and
+the quarantine root `.memoria/quarantine`. The Linter flags stray root folders.
+What the Concept homes mean is in [Document types](document-types.md).
 
 ---
 
@@ -61,15 +65,15 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 ```text
 .memoria/
 ├── schemas/                 THE single schema source (ADR-49/50)
-│   ├── types/<type>.yaml      25 per-type schemas; capture forms read creation.form
-│   ├── folders.yaml           type→folder homes, gated/transient prefixes, skeleton
+│   ├── types/<type>.yaml      per-type Concept schemas
+│   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
 ├── operations/              the deterministic operation cores
 │   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer) + loudness.py (alert/block routing)
 │   ├── processing/ingest/     runner.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
 │   ├── integrity/linter/      detectors.py, hub_handoff.py, precommit_check.py, pre-commit, golden_restore.py
 │   ├── integrity/retraction/  retraction.py
-│   ├── cleanup/               reconcile.py, archive_inbox.py
+│   ├── cleanup/               reconcile.py
 │   └── telemetry/eval/        eval_dispatch.py, eval_score.py
 ├── mcp/                     the MCP servers (Layer 5)
 │   ├── policy_mcp.py + policy_server.py + policy_hook.py     the write gate
@@ -80,12 +84,10 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 │   └── memoria-{copi,librarian,writer,peer-reviewer,engineer}/
 │       ├── SOUL.md · config.yaml · distribution.yaml · skills/
 ├── lane-overrides/          the five lane ceilings: copi/librarian/writer/peer-reviewer/engineer.yaml
-├── samples/                 optional bundled tutorial corpora, loaded by QuickAdd commands
-│   └── mediterranean-diet/    hidden source for Memoria: load sample vault
 ├── plugins/memoria-policy-gate/   the fail-closed write-gate Hermes plugin
-├── scripts/                 cron wrappers (sweeps, lint, board-export, retraction refresh)
+├── scripts/                 cron wrappers (worker, sweeps, lint, board-export, retraction refresh)
 ├── tool-registry.yaml       authoritative per-profile tool allowlist
-├── memoria.bib              the bibliographic backbone export
+├── index/ · queue/ · staging/ · quarantine/   disposable alpha.11 worker state
 ├── design-system.md · project-hints.yaml.example
 ```
 
@@ -122,7 +124,10 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ### The Bases views
 
-The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox.base`, `notes/hubs/hubs.base`, `projects/projects.base`, `system/board/board.base`, the `claims`/`sources`/`fleeting` bases in `system/dashboards/`, `system/patterns/patterns.base`, and `system/worklists/worklists.base` ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows is in [Dashboards](dashboards.md#the-bases-views).
+The `.base` files sit alongside their data: `catalog/catalog.base`,
+`knowledge/views/knowledge.base`, and `capabilities/capabilities.base`
+([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows
+is in [Dashboards](dashboards.md#the-bases-views).
 
 ---
 
@@ -132,7 +137,7 @@ The `.base` files sit alongside their data: `catalog/catalog.base`, `inbox/inbox
 | --- | --- |
 | `<repo>/scripts/` | `install.sh` / `install.ps1`, `docs_doctor.py`, test drivers — install tooling never deploys into the vault. |
 | `%LOCALAPPDATA%\hermes\profiles\memoria-*` (Windows) / `~/.hermes/profiles/memoria-*` (Linux/WSL2) | The deployed profile copies (config substituted, `.env` seeded). |
-| `%LOCALAPPDATA%\hermes\scripts\` (Windows) / `~/.hermes/scripts/` (Linux/WSL2) | The substituted cron wrappers (`memoria-sweeps.sh`, `memoria-lint.sh`, `memoria-board-export.sh`, …), copied and renamed from the repo's `.memoria/scripts/<job>-cron.sh`. |
+| `%LOCALAPPDATA%\hermes\scripts\` (Windows) / `~/.hermes/scripts/` (Linux/WSL2) | The substituted cron wrappers (`memoria-worker.sh`, `memoria-sweeps.sh`, `memoria-lint.sh`, `memoria-board-export.sh`, …), copied and renamed from the repo's `.memoria/scripts/<job>-cron.sh`. |
 | `%LOCALAPPDATA%\hermes\.env` (Windows) / `~/.hermes/.env` (Linux/WSL2) | The shared secrets file the installer propagates per profile. |
 
 ---

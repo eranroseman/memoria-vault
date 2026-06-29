@@ -1,22 +1,24 @@
 profile: memoria-peer-reviewer
 
-# The Peer-reviewer's lane ceiling (ADR-48/D38): the independent verify gate.
-# Flag, don't fix — it writes ONLY Inbox cards; everything under review is read-only.
+# The Peer-reviewer's alpha.11 lane ceiling: independent verification. It reports
+# through worker-owned flags/attention projections, not direct Inbox card writes.
 
 policy:
   allow:
     skills:
       - obsidian
       - qmd
-    write:
-      - "inbox/**"             # flag / gap cards (finding-first, ADR-51)
+    write: []
   deny:
     skills:
       - review_gated_publish
       - destructive_shell
     write:
-      - "notes/**"             # never edits the thing under review
+      - "notes/**"             # legacy path family; never edits reviewed content
+      - "knowledge/**"
       - "catalog/**"
+      - "capabilities/**"
+      - "inbox/**"
       - "projects/**"
       - "system/**"
   require:
@@ -27,5 +29,4 @@ policy:
 routing:
   invocation: dispatched
   external_api_policy: explicit_only
-  write_scope:
-    - "inbox/"
+  write_scope: []

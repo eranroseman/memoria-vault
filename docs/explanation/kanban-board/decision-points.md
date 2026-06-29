@@ -52,7 +52,7 @@ whether to revise.
 
 ## Related
 
-- Promotion boundary: [Promotion and gated zones](../knowledge/promotion-and-gated-zones.md)
+- Promotion boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
 - Card shape: [The honesty card](honesty-card.md)
 - Batch-worklist decision: [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)
 - How to read the verification result: [Verify and revise a draft](../../how-to-guides/project/verify-and-revise.md)

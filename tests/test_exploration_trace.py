@@ -12,10 +12,9 @@ def test_scope_and_gap_reports_define_companion_trace_artifact():
         text = (SKILLS / skill / "SKILL.md").read_text(encoding="utf-8")
         for marker in (
             "exploration-trace",
-            "notes/fleeting/maps/",
-            "type: fleeting",
-            "lifecycle: proposed",
-            "origin: agent",
+            "knowledge/notes/maps/",
+            "type: note",
+            "check_status: unchecked",
             "direction",
             "why_rejected",
             "evidence_checked",
@@ -32,10 +31,10 @@ def test_map_methods_keep_exploration_trace_project_local():
     for marker in (
         "Exploration trace companion",
         "*-exploration-trace.md",
-        "notes/fleeting/maps/",
+        "knowledge/notes/maps/",
         "project-local map context",
         "not canonical knowledge",
-        "never auto-promoted into claims, sources, hubs, or project state",
+        "never auto-promoted into sources, digests, hubs, or project state",
     ):
         assert marker in text
 

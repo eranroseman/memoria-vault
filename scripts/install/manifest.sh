@@ -5,46 +5,36 @@
 # Canonical empty-folder skeleton. Keep this list aligned with
 # vault-template/.memoria/schemas/folders.yaml; tests/test_installer_skeleton.py enforces it.
 SKELETON_DIRS=(
-  .memoria/csl
-  .memoria/lane-overrides
-  .memoria/profiles/memoria-librarian/cron
-  .memoria/profiles/memoria-librarian/skills
-  .memoria/samples
-  .memoria/samples/mediterranean-diet
-  .memoria/samples/mediterranean-diet/catalog
-  .memoria/samples/mediterranean-diet/catalog/papers
-  .memoria/samples/mediterranean-diet/notes
-  .memoria/samples/mediterranean-diet/notes/claims
-  .memoria/samples/mediterranean-diet/notes/hubs
-  .memoria/samples/mediterranean-diet/notes/sources
-  catalog/papers
-  catalog/people
-  catalog/organizations
-  catalog/venues
-  catalog/datasets
-  catalog/repositories
-  notes/fleeting
-  notes/fleeting/chats
-  notes/fleeting/maps
-  notes/sources
-  notes/claims
-  notes/hubs
-  projects
-  projects/_template
-  projects/_template/code
-  projects/_template/drafts
-  projects/_template/exports
-  inbox
-  spaces
-  system/board
+  .memoria/index
+  .memoria/index/qmd
+  .memoria/quarantine
+  .memoria/queue
+  .memoria/queue/pending
+  .memoria/queue/running
+  .memoria/queue/done
+  .memoria/queue/failed
+  .memoria/staging/catalog
+  .memoria/staging/knowledge
+  .memoria/staging/capabilities
+  journal
+  catalog
+  catalog/sources
+  catalog/entities
+  knowledge
+  knowledge/digests
+  knowledge/notes
+  knowledge/hubs
+  knowledge/projects
+  knowledge/views
+  capabilities
+  capabilities/operations
+  capabilities/skills
+  capabilities/mcp
+  capabilities/workflows
   system/exports
   system/exports/assets
   system/logs
   system/logs/sessions
   system/metrics
-  system/templates
-  system/patterns
-  system/eval
-  system/worklists
   system/dashboards
 )

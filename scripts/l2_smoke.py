@@ -48,7 +48,6 @@ def prepare_vault(root: Path, vault: Path) -> None:
     if vault.exists():
         shutil.rmtree(vault)
     shutil.copytree(root / "vault-template", vault, dirs_exist_ok=True)
-    (vault / "projects/l2-smoke").mkdir(parents=True, exist_ok=True)
     (vault / "system/logs").mkdir(parents=True, exist_ok=True)
     audit = vault / "system/logs/audit.jsonl"
     audit.parent.mkdir(parents=True, exist_ok=True)
@@ -135,40 +134,27 @@ def deploy_policy_plugin(root: Path, profile_dir: Path, profile: str, vault: Pat
 
 def assert_smoke(vault: Path, artifact_rel: str, audit_before: int) -> None:
     artifact = vault / artifact_rel
-    if not artifact.is_file():
-        raise AssertionError(f"live dispatch did not create {artifact_rel}")
-    body = artifact.read_text(encoding="utf-8")
-    if "l2_live_smoke: true" not in body:
-        raise AssertionError(f"{artifact_rel} is missing the l2_live_smoke marker")
+    if artifact.exists():
+        raise AssertionError(f"direct Obsidian write unexpectedly created {artifact_rel}")
 
     audit_path = vault / "system/logs/audit.jsonl"
     rows = list(iter_jsonl(audit_path))
     new_rows = rows[audit_before:]
-    allow_rows = [
+    deny_rows = [
         row
         for row in new_rows
-        if row.get("path") == artifact_rel and row.get("decision") == "allow_with_log"
+        if row.get("path") == artifact_rel
+        and row.get("decision") == "deny"
+        and row.get("policy_rule") == "tool-registry.allowlist"
     ]
-    if not allow_rows:
-        raise AssertionError(f"no allow_with_log audit row for {artifact_rel}")
-    row = allow_rows[-1]
-    for field in ("before_hash", "task_id"):
+    if not deny_rows:
+        raise AssertionError(f"no tool-registry deny audit row for {artifact_rel}")
+    row = deny_rows[-1]
+    for field in ("message", "task_id"):
         if not row.get(field):
             raise AssertionError(f"audit row missing {field}: {row}")
-    complete_rows = [
-        candidate
-        for candidate in new_rows
-        if candidate.get("path") == artifact_rel
-        and candidate.get("decision") == "write_complete"
-        and candidate.get("task_id") == row.get("task_id")
-    ]
-    if not complete_rows:
-        raise AssertionError(f"no write_complete audit row for {artifact_rel}")
-    complete = complete_rows[-1]
-    if not complete.get("after_hash"):
-        raise AssertionError(f"write_complete row missing after_hash: {complete}")
-    print(f"live dispatch artifact asserted: {artifact_rel}")
-    print(f"policy-gate audit row asserted: task_id={row['task_id']}")
+    print(f"direct Obsidian write denied: {artifact_rel}")
+    print(f"policy-gate deny audit row asserted: task_id={row['task_id']}")
 
 
 def count_audit_rows(vault: Path) -> int:

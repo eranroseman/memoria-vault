@@ -21,7 +21,7 @@ manual mirrors.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter fields: type, allowed values, owner, namespace | Generated |
-| [Inbox card fields](inbox-card-fields.md) | Schema-owned field contract for candidate, gap, flag, alert, and work-prompt cards | Generated |
+| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.11 has no durable Inbox-card Concept schemas | Generated |
 | [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map | Generated |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
@@ -38,13 +38,13 @@ manual mirrors.
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
 | [Profile capabilities](profile-capabilities.md) | Lane identifiers, capability table, invocation levels, folder permissions | Generated |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
-| [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and eval-task schema | Manual |
+| [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries | Guarded mirror |
 | [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands for research, board management, profile, skills, and cron admin | Guarded mirror |
 | [Policy MCP](policy-mcp.md) | Policy MCP decision values, request/response contract, tools, lane overrides, and enforcement | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
-| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic and hybrid methods: embeddings, classifiers, clustering, NLI, graph algorithms | Manual |
+| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, classifiers, clustering, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
@@ -56,7 +56,7 @@ manual mirrors.
 | --- | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest | Manual |
 | [Sweeps](sweeps.md) | Re-ingest and retraction maintenance passes | Manual |
-| [Search](search.md) | qmd retrieval surface: hybrid BM25 + vector + rerank, MCP, consumers, index, and limits | Manual |
+| [Search](search.md) | qmd retrieval surface: checked-only BM25 baseline, MCP wrapper, consumers, index, and limits | Manual |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
@@ -75,7 +75,7 @@ manual mirrors.
 | [System artifacts](system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views | Manual |
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
 | [Failure modes](failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
-| [Sample vault](sample-vault.md) | Bundled tutorial corpus, catalog papers, source notes, and sample labels | Guarded mirror |
+| [Sample vault](sample-vault.md) | Retired alpha.10 tutorial corpus; not shipped in alpha.11 | Manual |
 | [Pattern provenance table](pattern-provenance.md) | Borrow/adapt/reference/ignore judgments for surveyed AI-research-system patterns | Manual |
 | [Bibliography](bibliography.md) | Works cited across the docs in ACM author-date style | Manual |
 

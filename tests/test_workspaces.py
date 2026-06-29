@@ -22,45 +22,27 @@ SPACES = {
 }
 MAINTENANCE = "spaces/maintenance.md"
 INBOX_FIRST_ACTIONS = [
-    "Memoria: capture source from URL",
-    "Memoria: capture fleeting",
+    "Memoria: capture note",
     "Agent Client pane",
 ]
 FIRST_ACTION_COMMANDS = {
     "library": [
-        "Memoria: capture source from URL",
-        "Memoria: capture from Zotero selection",
-        "Memoria: structured source capture",
+        "Memoria: open Inbox",
     ],
     "knowledge": [
-        "Memoria: write claim note",
-        "Memoria: create linked claim note",
-        "Memoria: link claim",
+        "Memoria: capture note",
     ],
     "project": [
-        "Memoria: start project",
-        "Memoria: refresh project gate",
-        "Memoria: draft section",
+        "Memoria: record exploration trace",
     ],
 }
 NAV_ACTION_COMMANDS = {
     "Inbox actions": [
-        "Memoria: capture source from URL",
-        "Memoria: capture fleeting",
-        "Memoria: load sample vault",
+        "Memoria: capture note",
+        "Memoria: open Inbox",
+        "Memoria: resolve inbox card",
     ],
-    "Library actions": [
-        "Memoria: structured source capture",
-        "Memoria: capture from Zotero selection",
-    ],
-    "Knowledge actions": [
-        "Memoria: write claim note",
-        "Memoria: link claim",
-    ],
-    "Project actions": [
-        "Memoria: start project",
-        "Memoria: refresh project gate",
-    ],
+    "Project actions": ["Memoria: record exploration trace"],
 }
 COPI_VIEW = "agent-client-chat-view"
 
@@ -132,14 +114,16 @@ def test_homepage_plugin_is_retired():
 
 def test_navigation_rail_warns_only_when_badges_are_nonzero():
     text = NAV.read_text(encoding="utf-8")
-    assert '["candidate", "gap", "work-prompt"].includes(p.type)' in text
-    assert 'p.type != "flag" && p.type != "alert"' not in text
+    assert 'p.projection == "attention"' in text
+    assert '["candidate", "gap", "work-prompt"].includes(p.attention_kind)' in text
+    assert '["flag", "alert"].includes(p.attention_kind)' in text
+    assert "p.lifecycle" not in text
     assert "[[spaces/maintenance|◆ Drift]]" not in text
     assert "[[system/dashboards/fleet-health|◆ Fleet]]" not in text
     assert "[[spaces/maintenance|Drift]]" in text
     assert "[[system/dashboards/fleet-health|Fleet]]" in text
     assert text.count('return n > 0 ? "◆ " + n : n') == 2
-    assert 'return n > 0 ? n + " ⚠" : n' in text
+    assert 'dv.pages(\'"knowledge/notes"\').where(p => p.check_status == "checked").length' in text
 
 
 def test_navigation_rail_has_collapsed_space_action_callouts():
@@ -158,8 +142,9 @@ def test_navigation_rail_has_collapsed_space_action_callouts():
     for command in (
         "Memoria: remove sample vault",
         "Memoria: archive claim note",
-        "Memoria: archive fleeting note",
         "Memoria: supersede thesis",
+        "Memoria: capture source from URL",
+        "Memoria: capture from Zotero selection",
     ):
         assert f"action QuickAdd: {command}" not in text
 
@@ -171,7 +156,9 @@ def test_space_dashboards_exist_and_embed_views():
         path = SRC / relpath
         assert path.is_file(), f"{relpath} missing"
         text = path.read_text(encoding="utf-8")
-        assert f"space: {space}" in text
+        assert "projection: space" in text
+        assert f"surface: {space}" in text
+        assert "type: space" not in text
         assert "cssclasses: memoria-space" in text
         assert "![[" in text, f"{relpath} does not embed any Bases views"
         assert "[[spaces/" not in text, f"{relpath} still carries a nav row"
@@ -189,11 +176,12 @@ def test_inbox_is_the_queue_not_a_space():
     # ADR-115: Inbox is reclassified as the queue (a state that converges to
     # empty), not one of the durable Places.
     text = (SRC / "spaces" / "inbox.md").read_text(encoding="utf-8")
-    assert "type: queue" in text
+    assert "projection: queue" in text
+    assert "type: queue" not in text
     assert "space: inbox" not in text
-    assert "## Fleeting notes" in text
-    assert "![[fleeting.base#To process]]" in text
-    assert "distill, attach, or archive" in text
+    assert "## Notes to check" in text
+    assert "![[knowledge.base#Notes]]" in text
+    assert "worker/check loop" in text
     for heading in ("## Drift watch", "## Loose ends", "## Board"):
         assert heading not in text
     assert "[!suggestions] First actions" in text
@@ -203,18 +191,15 @@ def test_inbox_is_the_queue_not_a_space():
 
 def test_maintenance_collection_embeds_debt_views():
     text = (SRC / MAINTENANCE).read_text(encoding="utf-8")
-    assert "type: maintenance" in text
-    for embed in (
-        "![[inbox.base#Drift watch]]",
-        "![[inbox.base#Loose ends]]",
-        "![[board.base#By lane]]",
-    ):
-        assert embed in text
+    assert "projection: maintenance" in text
+    assert "type: maintenance" not in text
+    assert "`journal/`" in text
+    assert "`.memoria/quarantine/`" in text
+    assert "`.memoria/queue/`" in text
     assert "## New this week — catalog" in text
     assert "## New this week — notes" in text
     assert 'FROM "catalog"' in text
-    assert 'FROM "notes"' in text
-    assert 'AND type != "fleeting"' in text
+    assert 'FROM "knowledge"' in text
 
 
 def test_space_guide_links_use_canonical_pages_routes():
@@ -270,18 +255,13 @@ def test_commander_ribbon_keeps_global_actions_only():
     quickadd_ids = _quickadd_command_ids_by_name()
 
     expected_left_ribbon = [
-        "Memoria: capture fleeting",
-        "Memoria: capture from Zotero selection",
-        "Memoria: capture source from URL",
-        "Memoria: delegate task",
+        "Memoria: capture note",
+        "Memoria: open Inbox",
         "Memoria: resolve inbox card",
     ]
     expected_page_header = [
-        "Memoria: capture fleeting",
-        "Memoria: create linked claim note",
-        "Memoria: write claim note",
-        "Memoria: extract claims",
-        "Memoria: link claim",
+        "Memoria: capture note",
+        "Memoria: record exploration trace",
     ]
 
     assert data["showAddCommand"] is False
@@ -303,7 +283,7 @@ def test_app_json_ships_memoria_editor_settings():
         "newLinkFormat": "absolute",
         "alwaysUpdateLinks": True,
         "newFileLocation": "folder",
-        "newFileFolderPath": "notes/fleeting",
+        "newFileFolderPath": "knowledge/notes",
         "attachmentFolderPath": "attachments",
         "trashOption": "local",
         "propertiesInDocument": "hidden",
@@ -324,11 +304,13 @@ def test_portals_ships_curated_folder_navigation_with_core_fallback():
     spaces = portals["spaces"]
     assert [space["folderPath"] for space in spaces] == [
         "inbox",
-        "catalog",
-        "notes/sources",
-        "notes/claims",
-        "notes/hubs",
-        "projects",
+        "catalog/sources",
+        "catalog/entities",
+        "knowledge/digests",
+        "knowledge/notes",
+        "knowledge/hubs",
+        "knowledge/projects",
+        "capabilities",
     ]
     assert {space["portalType"] for space in spaces} == {"folder"}
     assert portals["replaceFileExplorer"] is True
@@ -357,7 +339,8 @@ def test_buttons_plugin_is_still_bundled_but_home_has_no_buttons():
     assert "buttons" in roster
     home = (SRC / "home.md").read_text(encoding="utf-8")
     assert "```button" not in home
-    assert "Memoria: load sample vault" in home
+    assert "Memoria: load sample vault" not in home
+    assert "Memoria: capture source from URL" not in home
     assert (
         "https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html"
         in home

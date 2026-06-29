@@ -44,7 +44,7 @@ output**:
   on** the findings (cards/alerts). (`verify`/lint detectors, `retraction`, `golden`.)
   Cron/CI-only.
 - **Cleanup** — routine, silent tidying/normalizing/archiving; the PI **never sees**
-  it. (`reconcile`, `archive_inbox`, retry/stamp.) Cron-only.
+  it. (`reconcile`, retry/stamp.) Cron-only.
 - **Telemetry** — records activity and emits metrics; the PI **consults** it on demand.
   (board/telemetry export, `metrics`, session digests, `eval`.) Cron-only.
 

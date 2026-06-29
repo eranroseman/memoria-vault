@@ -1,4 +1,4 @@
-"""The D50 pre-commit hook: staged typed documents must pass their schema."""
+"""The pre-commit hook validates staged alpha.11 Concepts against their schema."""
 
 from pathlib import Path
 
@@ -6,47 +6,47 @@ from operations.integrity.linter import precommit_check
 
 
 def _vault(tmp_path: Path) -> Path:
-    (tmp_path / "notes/claims").mkdir(parents=True)
-    (tmp_path / "projects/p").mkdir(parents=True)
-    (tmp_path / "system").mkdir()
+    for rel in ("catalog/sources/s1", "knowledge/notes", "system"):
+        (tmp_path / rel).mkdir(parents=True)
     return tmp_path
 
 
 def test_clean_note_passes(tmp_path):
-    v = _vault(tmp_path)
-    (v / "notes/claims/c.md").write_text(
-        "---\ntype: claim\nlifecycle: current\ntitle: T\nmaturity: seedling\n"
-        "sources: ['@x2020']\n---\nBody.\n",
+    vault = _vault(tmp_path)
+    (vault / "knowledge/notes/n.md").write_text(
+        "---\ntype: note\ncheck_status: unchecked\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
-    assert precommit_check.check_paths(v, ["notes/claims/c.md"]) == []
+    assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
 
 
 def test_schema_violation_blocks(tmp_path):
-    v = _vault(tmp_path)
-    # claims never start in `proposed` (ADR-50 subset), and required fields missing
-    (v / "notes/claims/bad.md").write_text(
-        "---\ntype: claim\nlifecycle: proposed\ntitle: T\n---\nBody.\n", encoding="utf-8"
+    vault = _vault(tmp_path)
+    (vault / "catalog/sources/s1/source.md").write_text(
+        "---\ntype: source\ncheck_status: pending\ntitle: T\n---\nBody.\n",
+        encoding="utf-8",
     )
-    errors = precommit_check.check_paths(v, ["notes/claims/bad.md"])
-    assert any("lifecycle" in e for e in errors)
-    assert any("maturity" in e for e in errors)
+    errors = precommit_check.check_paths(vault, ["catalog/sources/s1/source.md"])
+    assert any("check_status" in error for error in errors)
+    assert any("description" in error for error in errors)
+    assert any("source_id" in error for error in errors)
 
 
 def test_unknown_type_blocks(tmp_path):
-    v = _vault(tmp_path)
-    (v / "notes/claims/odd.md").write_text(
-        "---\ntype: reference-note\nlifecycle: current\n---\n", encoding="utf-8"
+    vault = _vault(tmp_path)
+    (vault / "knowledge/notes/odd.md").write_text(
+        "---\ntype: reference-note\ncheck_status: checked\n---\n",
+        encoding="utf-8",
     )
-    errors = precommit_check.check_paths(v, ["notes/claims/odd.md"])
+    errors = precommit_check.check_paths(vault, ["knowledge/notes/odd.md"])
     assert any("unknown type" in e for e in errors)
 
 
 def test_untyped_infra_and_outside_paths_exempt(tmp_path):
-    v = _vault(tmp_path)
-    (v / "system/vocab.md").write_text("---\nfoo: bar\n---\n", encoding="utf-8")
-    assert precommit_check.check_paths(v, ["system/vocab.md"]) == []
-    assert precommit_check.check_paths(v, ["/etc/hostname"]) == []
+    vault = _vault(tmp_path)
+    (vault / "system/vocab.md").write_text("---\nfoo: bar\n---\n", encoding="utf-8")
+    assert precommit_check.check_paths(vault, ["system/vocab.md"]) == []
+    assert precommit_check.check_paths(vault, ["/etc/hostname"]) == []
 
 
 def test_hook_script_ships_executable():
@@ -58,29 +58,9 @@ def test_hook_script_ships_executable():
     assert hook.stat().st_mode & 0o111, "pre-commit hook must be executable"
 
 
-def test_current_thesis_requires_promotion_stamp(tmp_path):
-    v = _vault(tmp_path)
-    thesis = v / "projects/p/thesis.md"
-    thesis.write_text(
-        "---\ntype: thesis\nlifecycle: current\ntitle: T\n"
-        "project: '[[p]]'\nsources: []\n---\nBody.\n",
-        encoding="utf-8",
-    )
-    errors = precommit_check.check_paths(v, ["projects/p/thesis.md"])
-    assert any("promoted_at" in e for e in errors)
-
-    thesis.write_text(
-        "---\ntype: thesis\nlifecycle: current\ntitle: T\n"
-        "project: '[[p]]'\nsources: []\npromoted_at: 2026-06-16\n---\nBody.\n",
-        encoding="utf-8",
-    )
-    assert precommit_check.check_paths(v, ["projects/p/thesis.md"]) == []
-
-
 def test_hidden_runtime_exempt(tmp_path):
-    """Golden copies and profile files under .memoria/ are never gated."""
-    v = _vault(tmp_path)
-    (v / ".memoria/golden/system/templates").mkdir(parents=True)
-    tpl = v / ".memoria/golden/system/templates/claim.md"
-    tpl.write_text("---\ntype: claim\ncreated: {{DATE}}\n---\n", encoding="utf-8")
-    assert precommit_check.check_paths(v, [".memoria/golden/system/templates/claim.md"]) == []
+    vault = _vault(tmp_path)
+    (vault / ".memoria/golden/system/templates").mkdir(parents=True)
+    tpl = vault / ".memoria/golden/system/templates/note.md"
+    tpl.write_text("---\ntype: note\ncreated: {{DATE}}\n---\n", encoding="utf-8")
+    assert precommit_check.check_paths(vault, [".memoria/golden/system/templates/note.md"]) == []

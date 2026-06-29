@@ -41,7 +41,7 @@ Explicitly attached notes and selected text are sent as bounded context, capped 
 
 Two kinds of turn come back:
 
-- **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The Co-PI will not produce a finished note: when you've arrived at a durable claim, write the claim note yourself (`Memoria: write claim note`).
+- **Conversation** — questions, observations, gentle pushback on the attached note. You are expected to reply. The Co-PI will not produce a finished note: when something should become durable, capture or edit the PI-owned note yourself.
 - **Delegation receipts** — when a conversation becomes lane work, the Co-PI raises a card on the right lane and tells you so. Known tasks should start from the matching `Memoria:` command; this route is for shaping unclear requests. Track delegated work on the board (`hermes kanban list`, or the Board State dashboard); the result lands in your Inbox, not in the pane.
 
 ## Ending a session
@@ -52,7 +52,7 @@ Leave the pane open during a reading session — sustained questioning across th
 
 Sessions are captured automatically: with the shipped config, opening and closing a chat exports the conversation as a markdown file to `system/exports/` (filenames start with `chat_`). You can also export mid-session via `Cmd/Ctrl+P` → **Agent Client: Export chat**.
 
-Exports are visible raw material for PI review. They are not canonical notes and they do not enter Inbox or fleeting triage automatically. When a conversation contains something durable, promote the insight yourself from the appropriate space: create a fleeting note, claim note, source note annotation, or project scratch entry with the matching command or visible Base view.
+Exports are visible raw material for PI review. They are not canonical notes and they do not enter Inbox automatically. When a conversation contains something durable, promote the insight yourself from the appropriate space: edit a checked Concept directly or use `Memoria: capture note` for a new unchecked PI note.
 
 Three folders to **never** point `exportSettings.defaultFolder` at:
 

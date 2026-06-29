@@ -3,15 +3,20 @@ topic: decisions
 id: 84
 title: Read-only Obsidian Inspector
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
 assumes: [32]
 supersedes: [58]
-superseded_by: []
+superseded_by: [121]
 ---
 
 # ADR-84: Read-only Obsidian Inspector
+
+> Superseded by [ADR-121](121-enqueue-only-obsidian-control-panel.md). The
+> read-only-only rule became too narrow for alpha.11; the current boundary allows
+> the plugin to enqueue worker jobs under `.memoria/queue/pending/` while still
+> forbidding direct Concept, journal, projection, and `check_status` writes.
 
 ## Context
 

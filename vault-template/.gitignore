@@ -21,11 +21,6 @@
 # Ships as project-hints.yaml.example.
 .memoria/project-hints.yaml
 
-# Bibliography (ADR-05): the starter ships an EMPTY memoria.bib stub (tracked, so
-# the citation plugin loads); a real setup's Zotero auto-export overwrites it with
-# large, user-specific data that is never committed.
-.memoria/memoria.bib
-
 # Per-machine secret material (human copies .env.EXAMPLE to .env, fills in keys)
 .env
 
@@ -36,6 +31,27 @@ __pycache__/
 # MCP server dependencies live in a vault-local venv the installer creates
 # (.memoria/.venv). Per-machine, regenerable, never committed.
 .memoria/.venv/
+
+# Alpha.11 worker holding areas: runtime content is disposable, the skeleton
+# .gitkeep files are tracked so fresh installs create the directories.
+.memoria/index/**
+!.memoria/index/
+!.memoria/index/qmd/
+!.memoria/index/qmd/.gitkeep
+.memoria/staging/**
+!.memoria/staging/
+!.memoria/staging/*/
+!.memoria/staging/*/.gitkeep
+.memoria/quarantine/**
+!.memoria/quarantine/
+!.memoria/quarantine/.gitkeep
+.memoria/queue/**
+!.memoria/queue/
+!.memoria/queue/*/
+!.memoria/queue/*/.gitkeep
+
+# Captured source blobs are referenced from source Concepts and synced out of band.
+catalog/sources/*/raw/
 
 # Downloaded reference datasets refreshed on a cron (e.g. the Retraction Watch
 # CSV pulled by operations/integrity/retraction/retraction.py --refresh). Large, regenerable,

@@ -1,8 +1,8 @@
 # Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
 # Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-copi
-version: 0.1.0-alpha.10
-description: "Memoria Co-PI — the one conversational agent (ADR-48): reflective thinking-partner, system explainer, and delegation front. Read-only across the vault; every write goes out as a kanban card; carries the memory/goals/skills loop."
+version: 0.1.0-alpha.11
+description: "Memoria Co-PI — the one conversational agent: reflective thinking-partner, system explainer, and worker-delegation front. Read-only across the vault; every mutation is delegated/enqueued; carries the memory/goals/skills loop."
 author: "Memoria"
 license: "MIT"
 hermes_requires: ">=0.17.0"

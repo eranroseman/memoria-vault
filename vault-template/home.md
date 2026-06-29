@@ -12,18 +12,17 @@ rail** — *Now* shows what's waiting on you, *Places* are the three rooms you w
 
 ## Start here
 
-- **Load the sample vault** — run `Cmd/Ctrl-P` → **Memoria: load sample vault**,
-  then follow [Tutorial 01: See what you're building](https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html).
-- **Capture your first source** — run `Cmd/Ctrl-P` → **Memoria: capture source from
-  URL** (a DOI, PMID, arXiv, or article URL). New sources land in [[spaces/library|Library]].
-- **Jot a loose thought** — **Memoria: capture fleeting**. It waits in the queue until
-  you decide what to do with it.
+- **Jot a loose thought** — **Memoria: capture note**. It lands in
+  `knowledge/notes/` as an unchecked note Concept.
 - **Ask the Co-PI** — the chat pane on the right can suggest what to do next.
+- **Capture a source** — use the Memoria Inspector control panel to enqueue the
+  capture worker; checked sources land in [[spaces/library|Library]].
+- **Follow the reset tutorial** — [Tutorial 01: See what you're building](https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html).
 
 ## The three places
 
 - [[spaces/library|Library]] — collect and read sources.
-- [[spaces/knowledge|Knowledge]] — build and connect claims.
+- [[spaces/knowledge|Knowledge]] — build and connect notes, digests, and hubs.
 - [[spaces/project|Project]] — steer a project to an output.
 
 Anything waiting on a decision collects in the [[spaces/inbox|queue]] — clearing it

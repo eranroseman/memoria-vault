@@ -1,9 +1,9 @@
 {
   "id": "memoria-inspector",
   "name": "Memoria Inspector",
-  "version": "0.1.0-alpha.8",
+  "version": "0.1.0-alpha.11",
   "minAppVersion": "1.8.0",
-  "description": "Read-only operational inspector for Memoria board, audit, and Linter state.",
+  "description": "Operational inspector and enqueue-only control panel for Memoria.",
   "author": "Memoria",
   "isDesktopOnly": false
 }

@@ -7,48 +7,7 @@ nav_order: 3
 
 # Frame a project
 
-Generate competing argument structures and commit to one framing before drafting. This prevents the first outline from winning by default. Framing work runs on the Writer's **`draft`** lane (`draft-outline-argument`, `draft-score-outline` — [Hermes CLI](../../reference/hermes-cli.md#skill-names)); the choice is yours.
+This alpha.10 guide is retired in alpha.11. It depended on the removed
+`Memoria: draft section` command and the old project scratch contract.
 
-> This is the primary path to `projects/<slug>/chosen-framing.md` — framing from scored outlines. [Use canvas for argument mapping](use-canvas-for-argument-mapping.md) is an optional refinement that refines or replaces that file after you map the claims spatially.
-
-> Start the project first ([Start a writing project](start-a-writing-project.md)), then frame against its active thesis and `project-gate-index.md`. Outline scoring remains advisory; the deterministic gate is the structural-impact cache.
-
-## Prerequisites
-
-- A corpus dense enough to write from ([Assess your corpus](assess-your-corpus.md))
-- A stated research question and deliverable
-
-## Steps
-
-**1. Delegate competing outlines.**
-
-Use `Cmd/Ctrl-P` → **Memoria: draft section** when you already know the outline request, or use the Agent Client pane if you want to shape the alternatives conversationally:
-
-> "Outline the argument for `<research question>` two or three different ways — chronological, mechanism-of-action, and theory-first. Work from my claims on `<topic>`."
-
-Both routes create a **`draft`** task for the Writer, whose write scope is `projects/` — the outline options land there, and the result resurfaces through the Inbox. The Writer composes from the vault only (its external-API policy is `blocked`); it can't pad an outline with sources you don't hold.
-
-**2. Read each option — then let them sit.**
-
-Don't commit immediately; the framing that still feels right after a break is usually the one. The options are competing *structures*, not drafts — judge which order of argument your claims actually support.
-
-**3. Stress-test the leading framing with the Co-PI.**
-
-In the Agent Client pane: "read this outline through an equity lens", "what's the strongest objection to this structure?" ([Read a paper through a lens](../library/read-through-a-lens.md) — the same move pointed at your own outline). The Co-PI is read-only; copy anything useful into your notes yourself.
-
-**4. Choose and record the framing.**
-
-Write `projects/<slug>/chosen-framing.md` yourself: the selected outline (edited freely) plus 2–3 sentences on why this framing beat the alternatives. An empty or one-line choice is not a framing decision.
-
-## Verify
-
-- 2–3 genuinely different outline options exist — not one outline with cosmetic variations
-- `chosen-framing.md` carries both the outline and the rationale
-- Every section of the chosen outline names claims you actually hold; anything else is a gap to fill first
-
-## Related
-
-- Previous step: [Assess your corpus](assess-your-corpus.md)
-- Sketching the chosen framing spatially: [Use canvas for argument mapping](use-canvas-for-argument-mapping.md)
-- Next step: [Draft with the Writer](draft-with-writer.md)
-- The lane behind the outlines: [The Writer](../../explanation/profiles/writer.md)
+Project Concepts now live under `knowledge/projects/`.

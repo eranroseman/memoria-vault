@@ -1,44 +1,37 @@
 ---
 title: Knowledge
-type: space
-lifecycle: current
+projection: space
 dashboard: space
-space: knowledge
+surface: knowledge
 cssclasses: memoria-space
 ---
 
 # Knowledge
 
-> [!brief] No claims yet? Start with a claim note. A claim cites its sources and
-> keeps typed connections in `links:` frontmatter.
+> [!brief] No notes yet? Capture a note or let the source conversation propose
+> anchored notes after capture.
 
 > [!suggestions] First actions
-> - Use **Memoria: write claim note** for a claim you already stand behind.
-> - Open a source note and use **Memoria: create linked claim note** to distill it.
-> - Use **Memoria: link claim** when two existing claims should be related.
+> - Use **Memoria: capture note** for PI-authored direction or synthesis.
 
-## Claims by maturity
+## Digests
 
-![[claims.base#By maturity]]
+![[knowledge.base#Digests]]
 
-## Open questions
+## Notes
 
-![[claims.base#Open questions]]
-
-## Contradictions
-
-![[claims.base#Contradictions]]
+![[knowledge.base#Notes]]
 
 ## Hubs
 
-![[hubs.base#Hubs index]]
+![[knowledge.base#Hubs]]
 
-## Patterns
+## Projects
 
-![[patterns.base#Library mode]]
+![[knowledge.base#Projects]]
 
-> [!verification] `links:` frontmatter is the system of record. Use **Memoria: link claim**
-> for suggestions, then add accepted `supports` or `contradicts` entries by hand.
+> [!verification] `check_status: checked` is the read barrier. Unchecked notes,
+> digests, and hubs stay out of retrieval until the worker/check loop promotes them.
 
 ## Guides
 

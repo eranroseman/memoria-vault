@@ -13,6 +13,11 @@ superseded_by: []
 
 # ADR-118: Dashboard consolidation and the read-only system window
 
+> Status note, 2026-06-29: [ADR-121](121-enqueue-only-obsidian-control-panel.md)
+> supersedes the read-only-only Inspector boundary for alpha.11. The Inspector
+> remains the system health index described here, and its only mutation path is
+> enqueueing worker jobs under `.memoria/queue/pending/`.
+
 ## Context
 
 After [ADR-116](116-obsidian-surface-architecture.md) Phase 1 (collapse duplicate Dataview

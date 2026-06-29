@@ -6,7 +6,14 @@ grand_parent: Reference
 
 # Policy MCP
 
-The runtime write-gate (`vault-template/.memoria/mcp/policy_mcp.py`): it intercepts every vault action, checks the lane-override rules, and returns a decision before any content reaches disk. The stable deployed entrypoint is `policy_mcp.py`; the behavior-preserving core is split under `memoria_vault.runtime.policy` (`model`, `paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped by `vault-template/.memoria/mcp/policy_server.py`. Every rule lives in a versioned lane-override file — the gate is not a substitute for the review gate, not a content checker, and not a hidden controller.
+The legacy profile policy gate (`vault-template/.memoria/mcp/policy_mcp.py`)
+checks lane-override rules and returns a decision before profile tools write.
+In alpha.11 it is not the canonical write boundary; machine Concept writes,
+promotion, projections, journal rows, and `check_status` transitions route
+through the worker. The stable deployed entrypoint is `policy_mcp.py`; the
+behavior-preserving core is split under `memoria_vault.runtime.policy` (`model`,
+`paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped
+by `vault-template/.memoria/mcp/policy_server.py`.
 
 ---
 
@@ -28,14 +35,16 @@ Every request carries complete identity and task metadata. `task_id` is required
 
 ## Action vocabulary
 
-Eight guarded actions; `read` and `report` are non-mutating, the rest are subject to the review-gated `dry_run` rule.
+Eight guarded actions; `read` and `report` are non-mutating. The old
+review-gated `dry_run` rule remains as a legacy fallback for pre-alpha.11
+profile tools.
 
 | Action | Default disposition |
 | --- | --- |
-| `read` | Default-allow; `allow_with_log` in review-gated zones; an explicit `deny.read` wins. |
-| `write` / `append` | `deny.write` wins; else `allow.write` → allow; else **default-deny**. `dry_run` in review-gated zones. |
+| `read` | Default-allow; `allow_with_log` in legacy review-gated zones; an explicit `deny.read` wins. |
+| `write` / `append` | `deny.write` wins; else `allow.write` -> allow; else **default-deny**. `dry_run` in legacy review-gated zones. |
 | `move` | As write, and always `allow_with_log` when allowed. |
-| `delete` | `deny` unless `flags.explicit_authorization` (then `allow_with_log`, within the lane's write globs); review-gated → `dry_run`. |
+| `delete` | `deny` unless `flags.explicit_authorization` (then `allow_with_log`, within the lane's write globs); legacy review-gated -> `dry_run`. |
 | `mkdir` | `allow` within `routing.write_scope`, else `deny`. |
 | `auto_fix` | Class-gated via `flags.class` (see [Auto-fix policy](#auto-fix-policy)). |
 | `report` | Always `allow` within the worker's lane. |
@@ -55,7 +64,11 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 
 **Two rules override lane configuration entirely:**
 
-1. **Review-gated zones are never auto-written.** The gated prefixes are loaded from `vault-template/.memoria/schemas/folders.yaml` (`gated_prefixes`) — currently `notes/claims/` and `notes/hubs/`. The dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` mirrors them (test-enforced to stay in sync). An otherwise-allowed mutating action there degrades to `dry_run` regardless of the lane's `policy.allow`. No profile can bypass this.
+1. **Legacy review-gated zones are never auto-written by this policy module.**
+   Alpha.11 no longer declares `gated_prefixes` in `folders.yaml`; the
+   dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` keeps
+   the old `notes/claims/` and `notes/hubs/` behavior for legacy profile tests.
+   This fallback is not the alpha.11 Concept write boundary.
 2. **Auto-fix is class-gated.** Only `flags.class ∈ {safe-and-unambiguous, authorized-targeted}` may proceed; `schema-content` is pinned to `dry_run` and `review-gated-edit` to `deny`, regardless of who asks.
 
 ---
@@ -90,7 +103,7 @@ Debugging an unexpected deny is a one-shot CLI away (the lane-override says what
 
 ```bash
 python3 .memoria/mcp/policy_mcp.py --vault <vault> \
-  --decide '{"profile":"memoria-librarian","action":"write","path":"catalog/papers/x.md","task_id":"T1"}'
+  --decide '{"profile":"memoria-librarian","action":"write","path":"catalog/sources/x/source.md","task_id":"T1"}'
 ```
 
 ---
@@ -112,7 +125,7 @@ Deny:
 Dry-run:
 
 ```json
-{ "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "review-gated zone write requires approval — surface as board comment" }
+{ "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "legacy review-gated zone write requires approval" }
 ```
 
 On an allowed mutating action the response also carries `before_hash`; the worker calls `complete_write` after the write so the paired `after_hash` lands in the audit trail as a separate `write_complete` record (see [Audit log format](#audit-log-format)).

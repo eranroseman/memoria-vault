@@ -66,7 +66,7 @@ Add each included paper to Zotero, then capture it one per paper through the sta
 ## Verify
 
 - The protocol note has all PRISMA counts filled in and `lifecycle: current`
-- Every included source has a Catalog entity in `catalog/papers/`
+- Every included source has a Catalog entity in `catalog/sources/`
 - Every excluded source has a decision and reason recorded in the protocol
 
 ## Related

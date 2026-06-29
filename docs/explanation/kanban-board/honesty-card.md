@@ -33,7 +33,7 @@ The generated field lists are in [Inbox card fields](../../reference/inbox-card-
 | --- | --- |
 | `quiet`, `notice` | Pull-only. |
 | `alert` | Push-worthy. |
-| `block` | Push-worthy and pauses delegation / review-gated promotion until resolved. |
+| `block` | Push-worthy and pauses delegation or worker promotion until resolved. |
 
 The 30-minute test is owned by [Interaction channels](../architecture/interaction-channels.md): does this change what the PI should do in the next 30 minutes?
 

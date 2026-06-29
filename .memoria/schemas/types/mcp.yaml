@@ -1,0 +1,17 @@
+type: mcp
+category: capabilities
+gated: false
+initial_check_status: unchecked
+enums:
+  check_status: [unchecked, checked, quarantined]
+required:
+  type: literal:mcp
+  check_status: enum:check_status
+  title: str
+  description: str
+optional:
+  resource: str
+  trust: map
+  endpoint: str
+  allowed_tools: list
+  tags: list

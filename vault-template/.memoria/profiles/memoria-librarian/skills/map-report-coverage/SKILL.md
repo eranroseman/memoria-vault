@@ -19,14 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, gap]
 ---
 
 # map-report-coverage
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Tell the PI where the corpus is thin **relative to a brief** — not where it is thin in
 the abstract (every corpus is thin almost everywhere). Topics come from the
@@ -55,10 +55,10 @@ matter for this brief** — and that ranking is argued, not asserted.
    (adjacent but out of scope). Out-of-scope thin topics go in a parking section, not
    the ranking.
 5. **Write — gated.** The report to
-   `notes/fleeting/maps/gap-report-<project>-<YYYY-MM-DD>.md`. If you considered any
+   `knowledge/notes/maps/gap-report-<project>-<YYYY-MM-DD>.md`. If you considered any
    rejected directions, dead ends, or parked lenses that should prevent repeated work,
    write the companion trace note
-   `notes/fleeting/maps/gap-report-<project>-<YYYY-MM-DD>-exploration-trace.md` before
+   `knowledge/notes/maps/gap-report-<project>-<YYYY-MM-DD>-exploration-trace.md` before
    the card. Then raise ONE `gap` card in `inbox/` pointing at the report (a report's
    findings are one card, never N — ADR-54).
 
@@ -67,10 +67,10 @@ matter for this brief** — and that ranking is argued, not asserted.
 - The gap-report note: frontmatter `sources:` (query trail · folders · `params_echo` ·
   threshold used); the ranked thin-topic list (topic · size · claim presence · why it
   matters · what evidence would thicken it); the parked out-of-scope list.
-- The optional exploration-trace note: `type: fleeting`, `lifecycle: proposed`,
-  `origin: agent`, stored beside the report, with structured sections for each rejected
+- The optional exploration-trace note: `type: note`, `check_status: unchecked`,
+  stored beside the report, with structured sections for each rejected
   direction: `direction`, `why_rejected`, `evidence_checked`, `retry_only_if`, and a
-  link back to the report. It is project-local context, not a claim/source/hub, and is
+  link back to the report. It is project-local context, not a source/digest/hub, and is
   never auto-promoted into canonical knowledge.
 - One `gap` card (schema `gap`, ADR-51 honesty body): `action` = "review the gap
   report; delegate `catalog-find-source` for the topics you accept";

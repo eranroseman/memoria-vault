@@ -8,7 +8,6 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -23,9 +22,9 @@ STAGE_LABELS = {
     "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
     "vault-assembly-2": "2. vault-assembly: golden copy + git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
-    "commit-gate": "4. commit-gate: malformed claim blocks, valid claim passes",
-    "offline-ingest-1": "5. offline-ingest: entity + honesty card",
-    "offline-ingest-2": "6. offline-ingest: typed graph (optional: networkx)",
+    "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
+    "offline-ingest-1": "5. offline-ingest: checked source + references projection",
+    "offline-ingest-2": "6. offline-ingest: alpha.11 argument graph projection",
     "workflow-replay": "7. workflow-replay: package-gate test-env harness",
     "final-integrity": "8. final-integrity: lint over the worked vault",
 }
@@ -79,8 +78,8 @@ def add_repo_paths(root: Path) -> None:
 def assert_offline_ingest(root: Path, vault: Path) -> None:
     add_repo_paths(root)
 
-    from operations.lib import inbox, schema
-    from operations.processing.ingest import ingest_paper
+    from memoria_vault.runtime.capture import capture_bibtex_source, write_references_bib
+    from memoria_vault.runtime.vaultio import read_frontmatter
 
     bib = (
         "@article{x2024demo,\n"
@@ -90,54 +89,68 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
         "  journal = {Demo Journal},\n"
         "}\n"
     )
-    note = ingest_paper.ingest_text("x2024demo", bib)
-    types = schema.load_types()
-    errs = schema.validate_frontmatter(note["frontmatter"], types[note["note_type"]])
-    assert not errs, f"ingested entity invalid: {errs}"
-    (vault / note["path"]).write_text(ingest_paper.render(note), encoding="utf-8")
-    card = inbox.write_proposal(
+    result = capture_bibtex_source(
         vault,
-        "candidate",
-        "Demo Work",
-        "Accept into catalog",
-        "fills a demo gap",
-        "single-source demo",
-        "the gap wins",
-        "likely",
-        "librarian",
-        citekey="@x2024demo",
+        bib,
+        source_id="demo-work",
+        content_text="Demo Work package-gate source.",
+        machine="e2e",
     )
-    frontmatter = yaml.safe_load(re.match(r"^---\n(.*?)\n---", card.read_text(), re.S).group(1))
-    assert schema.validate_frontmatter(frontmatter, types["candidate"]) == []
-    assert "agent_recommendation" not in frontmatter
-    print("   entity + honesty card schema-valid")
+    source = vault / result["source_path"]
+    frontmatter = read_frontmatter(source)
+    assert frontmatter["type"] == "source"
+    assert frontmatter["check_status"] == "checked"
+    assert frontmatter["source_id"] == "demo-work"
+    assert (vault / result["content_path"]).is_file()
+    assert (vault / result["raw_path"]).is_file()
+    write_references_bib(vault)
+    assert "@article{x2024demo" in (vault / "references.bib").read_text(encoding="utf-8")
+    print("   checked source + references projection asserted")
 
 
 def assert_typed_graph(root: Path, vault: Path) -> None:
-    try:
-        import networkx  # noqa: F401
-    except ImportError:
-        print("   (networkx not installed - graph step skipped)")
-        return
-    if str(root) not in sys.path:
-        sys.path.insert(0, str(root))
-    sys.path.insert(0, str(root / "vault-template/.memoria/mcp"))
-    import cluster_mcp
+    add_repo_paths(root)
 
-    graph: dict[str, list[dict[str, Any]]] = cluster_mcp.build_graph(vault, seed=7)
-    assert graph["nodes"], "graph collected no nodes"
-    print(f"   graph: {len(graph['nodes'])} nodes / {len(graph['edges'])} edges")
+    from memoria_vault.runtime.knowledge import write_project_argument_canvas
+
+    _write_note(
+        vault / "knowledge/projects/package-gate.md",
+        "type: project\ncheck_status: checked\ntitle: Package gate\n"
+        "description: Package gate project.\nthesis: knowledge/notes/package-thesis.md\n",
+        "Package gate project.",
+    )
+    _write_note(
+        vault / "knowledge/notes/package-thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Package thesis\nstatus: accepted\n",
+        "Package thesis.",
+    )
+    _write_note(
+        vault / "knowledge/notes/package-support.md",
+        "type: note\ncheck_status: checked\ntitle: Package support\nstatus: accepted\n"
+        "links:\n  supports:\n    - knowledge/notes/package-thesis.md\n",
+        "Package support.",
+    )
+    result = write_project_argument_canvas(vault, "package-gate")
+    assert result["node_count"] == 2
+    assert result["edge_count"] == 1
+    assert (vault / result["canvas_path"]).is_file()
+    print(f"   argument canvas: {result['node_count']} nodes / {result['edge_count']} edge")
+
+
+def _write_note(path: Path, frontmatter: str, body: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\n{frontmatter}---\n{body}\n", encoding="utf-8")
 
 
 def assert_workflow_replay_artifacts(vault: Path) -> None:
     for rel in [
-        "catalog/papers/harness2026.md",
-        "projects/harness/project-gate-index.md",
-        "projects/harness/exports/harness-section.md",
+        "catalog/sources/harness2026/source.md",
+        "knowledge/notes/harness-support.md",
+        "knowledge/projects/harness/argument.canvas",
     ]:
         assert (vault / rel).is_file(), f"workflow replay artifact missing: {rel}"
-    forbidden = vault / "notes/claims/blocked-by-harness.md"
-    assert not forbidden.exists(), "workflow replay left forbidden claim behind"
+    forbidden = vault / "knowledge/notes/blocked-by-harness.md"
+    assert not forbidden.exists(), "workflow replay left forbidden note behind"
     audit = list(iter_jsonl(vault / "system/logs/audit.jsonl"))
     assert audit[-1]["decision"] == "deny", f"last audit decision was not deny: {audit[-1]}"
     assert audit[-1]["task_id"] == "HARNESS-DENY", (

@@ -32,7 +32,7 @@ Add `--json` for machine-readable output. The detectors cover schema validity, b
 
 | Severity | Meaning | Action |
 | --- | --- | --- |
-| CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL and blocks new delegation plus review-gated promotion |
+| CRITICAL | Vault integrity at risk | Fix immediately — the verdict rolls to FAIL and blocks new delegation or worker promotion |
 | HIGH | Silent or active breakage | Fix this session |
 | MEDIUM | Real drift, will compound | Address in the weekly review |
 | LOW | Cosmetic or easily recovered | Defer or accept |

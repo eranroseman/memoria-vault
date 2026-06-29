@@ -1,43 +1,39 @@
-"""Filtered qmd wrapper hides superseded claims by default (ADR-10)."""
+"""Filtered qmd wrapper applies the alpha.11 checked-only read barrier."""
 
 from pathlib import Path
 
 import qmd_filter_mcp as qmd
 
 
-def _claim(vault: Path, name: str, superseded_by: str = "") -> str:
-    path = vault / "notes" / "claims" / f"{name}.md"
+def _note(vault: Path, name: str, status: str = "checked") -> str:
+    path = vault / "knowledge" / "notes" / f"{name}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        "---\n"
-        "type: claim\n"
-        "lifecycle: current\n"
-        "maturity: seedling\n"
-        f"superseded_by: {superseded_by}\n"
-        "---\n"
-        f"# {name}\n",
+        f"---\ntype: note\ncheck_status: {status}\ntitle: {name}\n---\n# {name}\n",
         encoding="utf-8",
     )
-    return f"qmd://vault/notes/claims/{name}.md"
+    return f"qmd://vault/knowledge/notes/{name}.md"
 
 
-def test_superseded_claims_are_filtered_by_default(tmp_path):
-    live = _claim(tmp_path, "live")
-    old = _claim(tmp_path, "old", "[[live]]")
+def test_unchecked_results_are_filtered_by_default(tmp_path):
+    live = _note(tmp_path, "live")
+    unchecked = _note(tmp_path, "unchecked", "unchecked")
+    quarantined = _note(tmp_path, "quarantined", "quarantined")
     rows = [
-        {"file": old, "title": "Old"},
+        {"file": unchecked, "title": "Unchecked"},
         {"file": live, "title": "Live"},
-        {"file": "qmd://vault/catalog/papers/source.md", "title": "Source"},
+        {"file": quarantined, "title": "Quarantined"},
     ]
 
     filtered = qmd.filter_results(tmp_path, rows)
 
-    assert [row["title"] for row in filtered] == ["Live", "Source"]
-    assert qmd.filter_results(tmp_path, rows, include_superseded=True) == rows
+    assert [row["title"] for row in filtered] == ["Live"]
 
 
-def test_get_blocks_superseded_claim_without_explicit_history(tmp_path):
-    old = _claim(tmp_path, "old", "[[new]]")
+def test_checked_concept_detection_handles_missing_and_unchecked(tmp_path):
+    checked = _note(tmp_path, "checked")
+    unchecked = _note(tmp_path, "unchecked", "unchecked")
 
-    assert qmd.is_superseded_claim(tmp_path, old)
-    assert not qmd.is_superseded_claim(tmp_path, "qmd://vault/notes/claims/missing.md")
+    assert qmd.is_checked_concept(tmp_path, qmd.qmd_result_path(checked, tmp_path))
+    assert not qmd.is_checked_concept(tmp_path, qmd.qmd_result_path(unchecked, tmp_path))
+    assert not qmd.is_checked_concept(tmp_path, "knowledge/notes/missing.md")

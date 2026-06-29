@@ -17,6 +17,9 @@ set -eu
 unset CDPATH
 cd "$(dirname -- "$0")/.." || exit 1
 ROOT="$PWD"
+export XDG_CONFIG_HOME="$ROOT/.qmd/config"
+export XDG_CACHE_HOME="$ROOT/.qmd/cache"
+mkdir -p "$XDG_CONFIG_HOME" "$XDG_CACHE_HOME"
 
 note() { printf '  %s\n' "$1"; }
 hdr()  { printf '\n==> %s\n' "$1"; }
@@ -43,9 +46,8 @@ repo-github	.github	**/*.{md,yml,yaml}"
 
 hdr "qmd repo code-search index (project-local ./.qmd/)"
 
-# Project-local index: create ./.qmd/ if absent (keeps the repo index out of the global
-# ~/.cache/qmd store the runtime uses).
-if [ ! -d "$ROOT/.qmd" ]; then
+# Project-local index: keep both qmd config and cache out of the global runtime stores.
+if [ ! -f "$ROOT/.qmd/index.sqlite" ]; then
   $QMD init >/dev/null && note "initialized project-local index (./.qmd/)"
 fi
 
@@ -82,7 +84,7 @@ else
 fi
 
 hdr "Ready"
-note "keyword:  npx qmd search \"<terms>\""
-note "semantic: npx qmd query \"<intent>\"   (needs --embed once)"
-note "open:     npx qmd get <file>"
+note "keyword:  XDG_CONFIG_HOME=.qmd/config XDG_CACHE_HOME=.qmd/cache qmd search \"<terms>\""
+note "semantic: XDG_CONFIG_HOME=.qmd/config XDG_CACHE_HOME=.qmd/cache qmd query \"<intent>\"   (needs --embed once)"
+note "open:     XDG_CONFIG_HOME=.qmd/config XDG_CACHE_HOME=.qmd/cache qmd get <file>"
 note "rebuild:  bash scripts/qmd-codebase-index.sh --embed"

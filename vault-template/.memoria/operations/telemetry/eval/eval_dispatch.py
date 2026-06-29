@@ -38,9 +38,7 @@ LANE_PROFILE = {
     "extract": "memoria-librarian",
     "link": "memoria-librarian",
     "map": "memoria-librarian",
-    "draft": "memoria-writer",
     "verify": "memoria-peer-reviewer",
-    "code": "memoria-engineer",
 }
 
 EVAL_DIR = "system/eval"

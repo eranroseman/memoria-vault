@@ -1,0 +1,22 @@
+type: digest
+category: knowledge
+gated: false
+initial_check_status: unchecked
+enums:
+  check_status: [unchecked, checked, quarantined]
+  confidence: [high, medium, low]
+required:
+  type: literal:digest
+  check_status: enum:check_status
+  title: str
+  description: str
+  source_id: str
+optional:
+  resource: str
+  links: list
+  confidence: enum:confidence
+  contested: bool
+  contradictions: list
+  massw: map
+  evidence_set: list
+  tags: list

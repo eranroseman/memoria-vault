@@ -6,7 +6,9 @@ grand_parent: Reference
 
 # Sweeps
 
-Deterministic maintenance passes under `vault-template/.memoria/operations`. Re-ingest and retraction sweeps surface review work through the board or Inbox; the inbox archival sweep is a deterministic direct write that only flips eligible resolved cards to `lifecycle: archived`.
+Deterministic maintenance passes under `vault-template/.memoria/operations`.
+Re-ingest and retraction sweeps surface review work through worker-owned
+projections; they do not directly promote Concept files.
 
 ## Re-ingest backstops
 
@@ -18,21 +20,6 @@ Deterministic maintenance passes under `vault-template/.memoria/operations`. Re-
 | `--retry` | A captured note stuck at `ingest_status: tier0`. |
 
 `--dry-run` reports without touching the board. The installer wires these re-ingest passes into the `memoria-sweeps` cron every 15 minutes.
-
-## Inbox archival sweep
-
-`archive_inbox.py` is the direct-write cleanup pass in the same cron wrapper. It archives handled Inbox cards after the freshness window expires:
-
-```bash
-python vault-template/.memoria/operations/cleanup/archive_inbox.py --vault <vault>
-python vault-template/.memoria/operations/cleanup/archive_inbox.py --vault <vault> --dry-run
-```
-
-The retention window comes from `.memoria/schemas/calibration.yaml` at `inbox.archive_after_days`; when the value cannot be read, the operation warns once and uses the default of `30` days. `--days <n>` overrides calibration for a single run.
-
-The sweep scans `inbox/**/*.md` and rewrites only the top-level `lifecycle:` line when all conditions are true: the card is in a resolved-but-visible lifecycle (`current`), it has a parseable `resolved:` date, and that date is older than the cutoff. It never touches `proposed` cards, cards without `resolved:`, already archived cards, or malformed frontmatter. The file stays in place; no body text or other frontmatter fields are rewritten.
-
-Because the operation is idempotent and single-line, it is exempt from board serialization. `--dry-run` returns the same JSON report shape without writing.
 
 ## Retraction sweep
 
@@ -50,4 +37,4 @@ Because the operation is idempotent and single-line, it is exempt from board ser
 
 - The ingest stage that creates the source records these sweeps monitor: [Ingest routing](ingest.md)
 - The cron wiring for installed vaults: [Installer (bootstrap)](installer.md)
-- The alert-card fields: [Inbox card fields](inbox-card-fields.md)
+- The retired Inbox card contract: [Inbox card fields](inbox-card-fields.md)

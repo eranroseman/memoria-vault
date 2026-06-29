@@ -115,7 +115,7 @@ status.
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [82](82-four-gates-canonical-vocabulary.md) | The four gates are the single user-facing vocabulary; retire the Compile/Compose cycle naming | superseded → ADR-101 |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
-| [84](84-read-only-obsidian-inspector.md) | Read-only Obsidian Inspector | accepted |
+| [84](84-read-only-obsidian-inspector.md) | Read-only Obsidian Inspector | superseded → ADR-121 |
 | [85](85-todoist-gap-card-mirroring.md) | Todoist gap-card mirroring | proposed |
 | [86](86-open-design-deliverable-rendering-agent.md) | Open-design deliverable-rendering agent | proposed |
 | [87](87-static-html-admin-reports.md) | Static-HTML admin reports | proposed |
@@ -152,6 +152,7 @@ status.
 | [118](118-dashboard-consolidation.md) | Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index | accepted |
 | [119](119-schema-driven-document-creation.md) | Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is the single source | accepted |
 | [120](120-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
+| [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | accepted |
 
 <!-- ADR-INDEX:END -->
 

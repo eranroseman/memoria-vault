@@ -39,7 +39,7 @@ Installing profiles, configuring environments, rebuilding indexes, and recoverin
 | [Library]({{ site.baseurl }}/how-to-guides/library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
 | [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, exporting, and code-artifact handoff |
-| [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, migrations, profile redeploy, search, eval, and logs |
+| [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, profile redeploy, search, eval, and logs |
 | [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) | Detect-fix-verify recipes for operational failures |
 | [Zotero]({{ site.baseurl }}/how-to-guides/zotero/) | Zotero setup and bibliography recovery |
 

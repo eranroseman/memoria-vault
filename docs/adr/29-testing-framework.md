@@ -24,6 +24,11 @@ superseded_by: []
 > **Amended 2026-06-28:** testing docs are gate-first. The former tool-specific
 > plans were collapsed into Source, Package, Runtime, Product, Release, Manual
 > GUI, and Failure Recovery plans, with the command catalogs left in Reference.
+>
+> **Amended 2026-06-29:** Runtime Gate may include release-specific deterministic
+> runtime-cycle checks before the live Hermes smoke. For alpha.11,
+> `scripts/verify runtime` runs `tests/test_alpha11_cycle.py` before
+> `scripts/test-l2.sh`.
 
 ## Context
 
@@ -50,7 +55,7 @@ catalogs.
 | --- | --- | --- | --- |
 | **Source** | the repo is internally coherent: format, lint, schema, docs, generated-file drift, secrets/provenance, and changed-code tests | `scripts/verify pr` | every PR |
 | **Package** | the repo can assemble a valid disposable Memoria vault and replay the model-free lifecycle | `scripts/verify package` | vault/package-related PRs, nightly, release candidate |
-| **Runtime** | Hermes, MCP, policy gates, and local service boundaries work with a disposable runtime | `scripts/verify runtime` | nightly, runtime-related PRs when available, release candidate |
+| **Runtime** | release-specific runtime cycles plus Hermes, MCP, policy gates, and local service boundaries work with a disposable runtime | `scripts/verify runtime` | nightly, runtime-related PRs when available, release candidate |
 | **Product** | Memoria's user workflows produce the expected artifacts and human-visible surfaces render | Product Gate evidence | release candidate |
 | **Release** | the candidate is ready to cut: fresh-clone evidence, docs, blockers, versioning, close-out, and notes are ready | release issue + release-please evidence | formal release / checkpoint close |
 
@@ -98,7 +103,7 @@ model now names the behavior each gate proves:
 | --- | --- |
 | Source | `static-contract` L0 + `component` L1 |
 | Package | `vault-assembly` + `workflow-replay` |
-| Runtime | `runtime-integration` L2b/L3 live Hermes, MCP, local services |
+| Runtime | release-specific deterministic runtime cycles + `runtime-integration` L2b/L3 live Hermes, MCP, local services |
 | Product | golden path, quality evals, GUI/Bases/dashboard acceptance, G9-G11 |
 | Release | S0-S5 + G-gate release evidence, blocker/doc/version close-out |
 
@@ -110,16 +115,16 @@ stable until branch protection and `ruleset-doctor` are updated deliberately.
 L2 ("wiring / contract") splits at the **model boundary**, and the two halves belong at different costs:
 
 - **L2a — policy-gate contract (hermetic).** The gate is pure Python (stable entrypoint `policy_mcp.py`, split core `memoria_vault.runtime.policy`), so every lane's allow / deny / dry_run contract is assertable with **no model, Hermes, or Obsidian**. It is already an L1 `--self-test`; folding write-wall coverage for **all seven lanes** into it (Phase 1, [#73](https://github.com/eranroseman/memoria-vault/pull/73)) pushes the policy-gate half of L2 down to per-commit CI — the cheapest layer that can assert it (Discipline 2 + the pyramid).
-- **L2b — agent wiring (runtime-bound).** Whether `hermes -p <profile> chat -q -s <cmd>` actually dispatches, routes through the *live* gate, and lands the right artifact needs the runtime + a cheap model + the Obsidian write path. Assert artifact **shape / placement / audit row**, never prose.
+- **L2b — agent wiring (runtime-bound).** Whether `hermes -p <profile> chat -q -s <cmd>` actually dispatches, routes through the *live* gate, and produces the expected write-boundary outcome needs the runtime + a cheap model + the Obsidian write path. Assert file presence/absence and the audit row, never prose.
 
 **Driver (resolved).** Hermes ships a scripted one-shot: `hermes -z "<prompt>"` (final text only, clean stdout/stderr) and `hermes chat -q` (same, but tool calls in the transcript — what L2b wants, to observe the write + the gate call). ACP is interactive/editor-only — **not** the automation path.
 
 **Backend (resolved).** L2b does **not** need Obsidian. In production the 5 non-code lanes write only through the `obsidian` MCP → Local REST API (`file` is absent from their positive `platform_toolsets`), but the gate is **transport-agnostic**: `policy_hook.classify` keys on the base tool-name + path at the `pre_tool_call` plugin layer ([ADR-28](28-write-gate-as-plugin.md)), gating `obsidian_*` and `file` `write_file`/`patch` identically — the REST transport itself is L3's contract (matrix #15), not L2's. So:
-- **Option B (chosen for unattended).** A filesystem-backed `obsidian` MCP shim with the same tool names (`obsidian_append_content`/`patch_content`/`put_content`). Skills call the same tools, the gate fires unchanged, writes land on disk — no GUI, runs anywhere. The ADR-28 task_id objection to a wrapper MCP doesn't apply: the gate plugin still supplies task_id; the shim only executes the write.
+- **Option B (chosen for unattended).** A filesystem-backed `obsidian` MCP shim with the same tool names (`obsidian_append_content`/`patch_content`/`put_content`). Skills call the same tools, the gate fires unchanged, and allowed writes land on disk — no GUI, runs anywhere. The ADR-28 task_id objection to a wrapper MCP doesn't apply: the gate plugin still supplies task_id; the shim only executes the write.
 - **Option A (production-faithful variant).** Headless Obsidian (`xvfb-run`) on a self-hosted runner — exercises the real REST path, but heavy/flaky and overlaps L3 #15, so it doesn't gate L2b.
 - *(Rejected: re-enabling the `file` toolset — Memoria skills emit `obsidian_*`, so they'd break without an obsidian server.)*
 
-**Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). ADR-80's `workflow-replay` now covers the model-free cassette slice of the deterministic L2-L4 path, but it does **not** replace L2b's live Hermes dispatch signal. For L2b, `scripts/test-l2.sh` implements the unattended Option-B smoke core: a disposable vault, temporary `HERMES_HOME`, filesystem-backed `obsidian` MCP shim, the real policy-gate plugin, a `hermes chat -q` dispatch through a local OpenAI-compatible endpoint, and artifact/audit assertions. By default it starts a deterministic local smoke endpoint so the wiring proof is stable; set `MEMORIA_L2_USE_SMOKE_MODEL=0` to exercise a real cheap/local model endpoint. It remains opt-in/manual or nightly rather than required PR CI. Keep the Product Gate and Manual GUI checks attended per release — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class).
+**Attended vs unattended — split by slice, not all-or-nothing.** L2a is unattended already (#73). ADR-80's `workflow-replay` now covers the model-free cassette slice of the deterministic L2-L4 path, but it does **not** replace L2b's live Hermes dispatch signal. For L2b, `scripts/test-l2.sh` implements the unattended Option-B smoke core: a disposable vault, temporary `HERMES_HOME`, filesystem-backed `obsidian` MCP shim, the real policy-gate plugin, a `hermes chat -q` dispatch through a local OpenAI-compatible endpoint, and policy-deny/audit assertions for a direct Obsidian MCP write. By default it starts a deterministic local smoke endpoint so the wiring proof is stable; set `MEMORIA_L2_USE_SMOKE_MODEL=0` to exercise a real cheap/local model endpoint. It remains opt-in/manual or nightly rather than required PR CI. Keep the Product Gate and Manual GUI checks attended per release — automating the marginal cases (Zotero state, dashboard rendering, prose-adjacent judgment) costs the most and benefits the least, and a watching human catches the un-asserted (loops, near-miss shapes, the silent-pass class).
 
 **Phasing.** (1) gate-contract into `--self-test` — **done** (#73); (2) backend + driver — **resolved** (Option B; `hermes -z`/`chat -q`); (3) opt-in live smoke — **shipped as `scripts/test-l2.sh`** ([#688](https://github.com/eranroseman/memoria-vault/issues/688)), nightly/manual, not PR-blocking. `workflow-replay` remains the automated model-free evidence, while `scripts/test-l2.sh` supplies the live model/Hermes dispatch signal when runtime prerequisites are available. Runtime Gate owns the live wiring plan.
 

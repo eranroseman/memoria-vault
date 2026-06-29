@@ -6,101 +6,87 @@ grand_parent: Reference
 
 # Ingest routing
 
-The ingest operation (`vault-template/.memoria/operations/processing/ingest`): the deterministic spine that turns a citekey into a draft `paper` catalog bundle, the Catalog outputs it plans, the uncertainty floor, and the recovery sweeps. The Librarian reaches it over the ingest MCP (`vault-template/.memoria/mcp/ingest_mcp.py`) — its lane has no terminal — fills the two LLM holes, and performs the gated writes; the operation itself writes no vault notes.
+Alpha.11 capture starts the catalog record. The core helper is
+`memoria_vault.runtime.capture.capture_source()`: it records a capture run,
+writes the raw blob and extracted markdown, creates a `source` Concept plus
+deterministic metadata-derived `person`/`venue` Concepts through the trusted
+writer, promotes them checked, and commits the Concepts, `content.md`, and
+journal together. The local BibTeX adapter
+`capture_bibtex_source()` maps one BibTeX entry into that same path. The Zotero
+adapters map either one Zotero Local API item JSON snapshot
+(`capture_zotero_source()`) or fetch one item key from the local desktop API
+first (`capture_zotero_local_source()`). Zotero imports are source/item imports
+only in alpha.11; Zotero annotations are not imported. The PDF
+adapter `capture_pdf_source()` uses the optional PyMuPDF parser from the vault
+MCP requirements to extract page text and derive page/text/bbox annotation refs
+for requested quotes. URL snapshots use `capture_url_source()` with stdlib HTML
+text extraction.
 
----
+The older paper-ingest operation under
+`vault-template/.memoria/operations/processing/ingest/` is pre-reset code. It is
+not the alpha.11 source of truth for catalog writes.
 
-## The pipeline
+## Current Pipeline
 
-`vault-template/.memoria/operations/processing/ingest/runner.py` chains four deterministic stages into a single **draft bundle**:
-
-| Stage | Module | Does |
+| Step | Owner | Output |
 | --- | --- | --- |
-| Tier-0 capture | `ingest_paper.py` | Identity + route + captured frontmatter from the local `.bib` alone — the offline, nothing-lost floor. |
-| Tier-1 resolve/merge | `resolve_merge.py` | Semantic Scholar + OpenAlex (co-primary) + Crossref + PubMed/NCBI, merged per-field best-source-wins **with provenance**; PubMed contributes PMID/PMCID, publication types, and MeSH terms when available; references = the union across sources, deduped by DOI. |
-| Tier-1 classify | `classify.py` | `research_area` (and a `methodology` facet when derivable) from the OpenAlex topics already in the merged payload — automated, audited, flag-on-ambiguity ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)). Also proposes project membership from the optional `.memoria/project-hints.yaml` ([ADR-15](../adr/15-project-membership-from-topic-hint.md)). No extra network call; without enrichment it is a no-op. |
-| Tier-1 extract | `extract.py` | Full text, open-access-first: Unpaywall OA PDF → PMC JATS → local Zotero PDF via pymupdf4llm. OA and local PDFs pass through the same deterministic coherence check (chars/page, replacement-char ratio, word ratio) so only good text reaches the model; non-English text is flagged, never auto-failed. |
-| Tier-1 link | `link.py` | The knowledge-graph plan: entity find-or-create keyed on stable IDs (ISSN / ORCID / ROR — never name-merged) + cites edges by local DOI/arXiv match. |
+| Capture event | `capture_source()` | First journal `run` event with `workflow: capture_source`, before files are written. |
+| Raw copy | `capture_source()` | `catalog/sources/<source_id>/raw/<filename>` plus `raw_text_sha256`. Raw blobs are gitignored and synced out of band. |
+| Extracted content | `capture_source()` | `catalog/sources/<source_id>/content.md` plus `normalized_text_sha256`. |
+| BibTeX import | `capture_bibtex_source()` | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.bib`, and the same checked source Concept. |
+| Zotero item import | `capture_zotero_source()` / `capture_zotero_local_source()` / worker `capture-zotero-source` | Maps one Zotero Local API item JSON snapshot or fetches one local API item key, then writes stable `source_id`, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.zotero.json`, and the same checked source Concept. |
+| URL snapshot | `capture_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes the same checked source Concept path. |
+| PDF import | `capture_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed markdown behind a basic text-coherence guard and derives annotation refs with `source_id`, `raw_copy_path`, page, quote text, and bbox for requested quotes. |
+| Metadata merge | `capture_source()` | Recapturing the same stable source path with identical raw/content merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
+| Metadata-derived entities | `capture_source()` | Creates checked `catalog/entities/person-*.md` Concepts from CSL authors and `catalog/entities/venue-*.md` from `container-title`, links the source to them, and merges exact deterministic entity paths by appending `links.sources`. |
+| Metadata check | `check_source_metadata()` / worker `check-source-metadata` | Flags checked sources that lack citekey, CSL-JSON basics, issued year, an external resource/identifier, or carry conflicting DOI metadata. |
+| Source Concept | trusted writer | `catalog/sources/<source_id>/source.md`, born `unchecked` in staging and promoted to `checked` only after schema/folder validation. |
+| Bibliography projection | `write_references_bib()` / worker projection refresh | Regenerates `references.bib` from checked source Concepts with citekeys; `check_references_bib()` checks this file, and `check_tracked_projections()` covers it with the rest of the tracked projection set. |
+| Commit | trusted writer | One git commit for `source.md`, `content.md`, and `journal/<machine>.jsonl`; raw stays out of git. |
 
-The bundle arrives **with two holes** the Librarian fills: `_proposed_classification` (LLM #1 — its `projects` sub-key is pre-filled deterministically from the optional project hints, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) and the `[!brief]` comparative read (LLM #2). `ingest_pipeline(citekey, enrich=True, pdf_path="")` is the MCP tool; without `enrich` only Tier-0 runs.
+The current extraction input is already-normalized markdown text, one local
+BibTeX entry plus caller-supplied content, one Zotero Local API item JSON
+snapshot or item key, one URL snapshot, or PDF bytes when the optional PyMuPDF
+parser is installed. Live Zotero availability smoke, live URL smoke beyond
+mocked fetch tests, live identifier lookup, ambiguous entity disambiguation,
+ambiguous identity flags, parser selection, and richer coherence gates remain
+WP4 follow-on work.
 
-### Catalog outputs
+For annotated PDFs, capture preserves the raw `.pdf` blob path and hash; the PDF
+adapter can derive `annotation_ref` page/span/bbox metadata for caller-supplied
+quote text.
 
-The link plan is what populates the Catalog ([ADR-52](../adr/52-links-vs-relationships.md)):
+## Source Concept
 
-- **Entities** — find-or-create records in `catalog/` (`paper`, `person`, `organization`, `venue`, `dataset`, `repository`), keyed on the stable ID so same-named entities never merge. Entities without a stable ID are recorded by name only, never node-created.
-- **Relationships** — the operation writes only the **given** `relationships` edges on those entities (`cited_by`, `authored_by`, `published_in`, …), applied bidirectionally by the worker; it never writes the PI's authored `links:`. The field contract behind the given-vs-authored split is in [Frontmatter fields](frontmatter.md).
+`source.md` uses the schema-owned `source` type:
 
----
-
-## The uncertainty floor
-
-The operation never merges identities silently ([ADR-56](../adr/56-extraction-uncertainty-flag.md)). `resolve_merge.py` scores **cross-source identity agreement** (title + year across Semantic Scholar, OpenAlex, Crossref, and PubMed when they resolve) in `[0,1]`; the floor comes from `vault-template/.memoria/schemas/calibration.yaml` (`entity_resolution.confidence_floor: 0.85`, drift-bound — recalibrate on model/source-version change).
-
-Below the floor, the bundle carries a `flag_needed` block instead of a silent best-source-wins merge: the Librarian raises a **near-tie `flag` card** in the Inbox ("Identity disagreement on `<citekey>`", with the agreement score and the disagreements), and the PI decides. One source found = trusted (1.0) — the floor measures _disagreement_, not coverage.
-
----
-
-## Automated classification
-
-`classify.py` reads the scored OpenAlex topics already in the enrichment payload (no new network call), rolls them up to their subfield, checks the controlled vocabulary, and decides:
-
-| Outcome | Condition | Action |
-| --- | --- | --- |
-| Clear winner | Top score clears the floor, beats the runner-up by the near-tie margin, and matches `system/vocabulary.md`. | Apply `research_area` silently. |
-| Methodology facet | S2 publication types imply Review, MetaAnalysis, ClinicalTrial, CaseReport, or Dataset. | Apply `methodology` deterministically, independent of topic ambiguity. |
-| Genuine ambiguity | Score below floor, near tie, or outside controlled vocabulary. | Leave the field unset and raise one Inbox `flag` card with candidates and scores, never a verdict ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). |
-| No data | Enrichment off or no topics resolved. | No-op. |
-
-The thresholds live beside the entity-resolution floor in `vault-template/.memoria/schemas/calibration.yaml`, under the same drift-bound discipline:
-
-| Knob | Default | Means |
-| --- | --- | --- |
-| `classify.confidence_floor` | `0.6` | Below this top-candidate score, nothing is applied. |
-| `classify.near_tie_margin` | `0.15` | The top candidate must beat the runner-up by at least this much. |
-
-Every applied or flagged decision appends one JSONL audit line to `system/logs/classify.jsonl` with timestamp, run id, citekey, decision, candidates, reason, and thresholds.
-
-### Project membership proposal ([ADR-15](../adr/15-project-membership-from-topic-hint.md))
-
-When `.memoria/project-hints.yaml` exists ([Configure project hints](../how-to-guides/setup/configure-project-hints.md)), the classify stage also proposes project membership by topic overlap. Matches write to `_proposed_classification.projects`, never directly to `projects`. Each proposed or no-match decision appends one `stage: project_hints` line to `system/logs/classify.jsonl` with candidates, matched topics, and overlap counts.
-
----
-
-## Derived artifacts
-
-The ingest MCP persists the un-gated derived artifacts the agent can't:
-
-| Artifact | Path | Notes |
-| --- | --- | --- |
-| Full-text extract | `.memoria/data/extracts/<citekey>.md` | Outside the Librarian's write lane; the paper note's `extract_path` points here (the `extract-path-broken` detector checks it). |
-| Capture-intake anchor | `system/logs/capture-intake.jsonl` | One append-only line per capture, written **before** enrichment — the durability anchor. Zotero QuickAdd capture also writes a schema-valid Tier-0 `catalog/papers/<citekey>.md` stub immediately, so the Catalog reflects the capture even before the Librarian enriches it. |
-| Classify audit | `system/logs/classify.jsonl` | One append-only line per classify decision (applied or flagged) and per project-membership proposal (`stage: project_hints`, [ADR-15](../adr/15-project-membership-from-topic-hint.md)) — see Automated classification above. |
-
----
-
-## Recovery sweeps
-
-Re-ingest and retraction maintenance are deterministic sweep operations rather than ingest stages. Their command-level contract lives in [Sweeps](sweeps.md).
-
----
-
-## Frontmatter written at ingest
-
-| Field | Value |
+| Field | Source |
 | --- | --- |
-| `type` / `lifecycle` | `paper` / `current` from creation — Catalog facts don't queue; the pending classification lives in `_proposed_classification` + an Inbox card, not in the lifecycle. |
-| `citekey`, `title`, `doi`, `authors`, `year`, `venue`, `url` | From the merged record, with per-field provenance. |
-| `relationships` | The given edges from the link plan. |
-| `research_area`, `methodology` | Applied by the automated classify stage when the decision is clear; left unset (plus one Inbox flag) on genuine ambiguity. |
-| `extract_path`, `pdf_uri` | The extract store path and the Zotero PDF URI. |
-| `_proposed_classification` | The Librarian's proposal (LLM hole #1), promoted by the PI at classify; its `projects` sub-key is the deterministic [ADR-15](../adr/15-project-membership-from-topic-hint.md) hint-overlap proposal. |
+| `type`, `check_status`, `title`, `description`, `source_id` | Required source schema fields. |
+| `resource`, `citekey`, `item_type`, `identifiers`, `csl_json`, `metadata_status` | Optional metadata supplied by the capture caller. |
+| `raw_copy_path`, `content_path` | Relative paths to the raw blob and extracted markdown. |
+| `raw_text_sha256`, `normalized_text_sha256` | Content hashes used by trace and later integrity checks. |
 
----
+The `source_id` is the stable path identifier. Citekeys are aliases and may be
+corrected without renaming the Concept.
+
+## Read Barrier
+
+The captured `source` enters qmd/retrieval only after promotion sets
+`check_status: checked`. Unchecked staging files, quarantined files, and raw
+blobs are not indexed by the checked-only search input rebuild.
+
+## Deferred Work
+
+- Live capture adapters: identifier lookup.
+- Live URL smoke beyond mocked single-page fetch tests.
+- Live Zotero availability smoke beyond mocked item-key fetch tests.
+- Parser selection and richer coherence gates for PDFs and other source formats.
+- Ambiguous entity disambiguation beyond exact deterministic CSL author and venue paths.
 
 ## Related
 
-- The schemas and field kinds these notes must satisfy: [Frontmatter fields](frontmatter.md)
-- The lane that runs the pipeline: [Profile capabilities](profile-capabilities.md)
-- The crons that wire the sweeps: [Installer (bootstrap)](installer.md)
-- The cards the sweeps and flags land in: [Kanban board reference](kanban-board.md)
+- Source schema fields: [Frontmatter fields](frontmatter.md)
+- Folder homes and skeleton: [Memoria configuration](configuration.md)
+- Checked-only retrieval: [Search](search.md)
+- Trusted writer and journal behavior: [System actions](system-actions.md)

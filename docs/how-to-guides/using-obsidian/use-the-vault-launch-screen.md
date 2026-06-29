@@ -31,7 +31,7 @@ Use the ribbon or command palette for capture/delegation actions: **Capture flee
 
 The three spaces group the day-to-day views by job: Library, Knowledge, and Project, with the Inbox queue as the triage surface. For the full dashboard roster see [Surfaces, Bases, and dashboards](../../reference/dashboards.md); to pick the right one for a situation, see [Navigate Memoria surfaces](navigate-memoria-surfaces.md).
 
-Keep `research-focus.md` current — the Librarian reads it at the start of every session to set discovery targets. Update it at least weekly during the Friday ritual.
+Keep `steering.md` current — the Librarian reads it at the start of every session to set discovery targets. Update it at least weekly during the Friday ritual.
 
 ## Verify
 
@@ -45,4 +45,4 @@ Keep `research-focus.md` current — the Librarian reads it at the start of ever
 - The persistent dashboard decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards)
 - The reset workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Updating research focus on schedule: [Run the weekly review](../inbox/run-the-weekly-review.md)
+- Updating steering on schedule: [Run the weekly review](../inbox/run-the-weekly-review.md)

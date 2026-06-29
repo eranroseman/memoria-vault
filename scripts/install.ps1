@@ -582,6 +582,7 @@ function Install-Crons {
     Write-Header 'Hermes cron wrappers'
     Install-Cron -SourceName 'board-export-cron.sh' -DestName 'memoria-board-export.sh' -Schedule '* * * * *' -JobName 'memoria-board-export'
     Install-Cron -SourceName 'sweeps-cron.sh' -DestName 'memoria-sweeps.sh' -Schedule '*/15 * * * *' -JobName 'memoria-sweeps'
+    Install-Cron -SourceName 'worker-cron.sh' -DestName 'memoria-worker.sh' -Schedule '* * * * *' -JobName 'memoria-worker'
     Install-Cron -SourceName 'lint-cron.sh' -DestName 'memoria-lint.sh' -Schedule '0 6 * * *' -JobName 'memoria-lint'
     Install-Cron -SourceName 'metrics-cron.sh' -DestName 'memoria-metrics.sh' -Schedule '30 6 * * 1' -JobName 'memoria-metrics'
     Install-Cron -SourceName 'eval-cron.sh' -DestName 'memoria-eval.sh' -Schedule '0 7 1 */3 *' -JobName 'memoria-eval'

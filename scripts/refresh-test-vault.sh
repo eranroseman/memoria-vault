@@ -135,7 +135,6 @@ for rel in \
   .memoria/operations \
   .memoria/plugins \
   .memoria/profiles \
-  .memoria/samples \
   .memoria/schemas \
   .memoria/scripts \
   spaces \
@@ -144,7 +143,7 @@ for rel in \
   system/patterns \
   system/scripts \
   system/templates \
-  system/worklists
+  capabilities
 do
   sync_dir "$rel"
 done
@@ -157,13 +156,14 @@ for rel in \
   AGENTS.md \
   home.md \
   _nav.md \
-  research-focus.md \
+  index.md \
+  steering.md \
   troubleshooting.md \
   catalog/catalog.base \
-  inbox/inbox.base \
-  notes/hubs/hubs.base \
-  projects/projects.base \
-  system/board/board.base \
+  catalog/index.md \
+  knowledge/index.md \
+  capabilities/index.md \
+  references.bib \
   system/vocabulary.md
 do
   sync_file "$rel"

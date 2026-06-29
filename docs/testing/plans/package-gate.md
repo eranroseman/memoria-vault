@@ -30,7 +30,9 @@ bash scripts/e2e-smoke.sh
 - Disposable vault assembly completes.
 - Git hooks and executable scripts are wired.
 - Bundled plugins, CSS snippets, profiles, and skeleton files are present.
-- The model-free workflow replay writes the expected artifacts.
+- The model-free workflow replay writes the expected alpha.11 artifacts: a
+  checked source, checked project notes, an argument canvas projection, and an
+  attention prompt.
 - The known forbidden write is denied and audited.
 - The evidence bundle records the disposable vault path and checked artifacts.
 

@@ -425,15 +425,15 @@ def _map_corpus_requirement(vault: Path) -> int:
         return 10
 
 
-def _non_empty_markdown_count(folder: Path) -> int:
+def _checked_source_count(vault: Path) -> int:
+    folder = vault / "catalog/sources"
     if not folder.is_dir():
         return 0
     count = 0
-    for path in folder.glob("*.md"):
-        body = re.sub(
-            r"^---\n(.*?)\n---", "", path.read_text(encoding="utf-8"), count=1, flags=re.S
-        )
-        if body.strip():
+    for path in folder.glob("*/source.md"):
+        text = path.read_text(encoding="utf-8")
+        head, sep, _tail = text.partition("\n---\n")
+        if sep and re.search(r"^check_status:\s+checked$", head, re.M):
             count += 1
     return count
 
@@ -460,31 +460,11 @@ def _map_corpus_gap_body(card: dict, source_count: int, required_count: int) -> 
             "",
             "# Next actions",
             "",
-            "```button",
-            "name Find sources",
-            "type command",
-            "action QuickAdd: Memoria: assist find",
-            "```",
+            "Use the Inspector control panel or Co-PI to enqueue source discovery/capture.",
             "",
             "If you already have a source in hand:",
             "",
-            "```button",
-            "name Capture source",
-            "type command",
-            "action QuickAdd: Memoria: capture source from URL",
-            "```",
-            "",
-            "```button",
-            "name Capture from Zotero",
-            "type command",
-            "action QuickAdd: Memoria: capture from Zotero selection",
-            "```",
-            "",
-            "```button",
-            "name Retry map corpus",
-            "type command",
-            "action QuickAdd: Memoria: retry map corpus and dismiss",
-            "```",
+            "Capture it through the worker so it lands as a checked `source` Concept under `catalog/sources/`.",
             "",
             "```button",
             "name Dismiss",
@@ -503,7 +483,7 @@ def _map_corpus_gap_body(card: dict, source_count: int, required_count: int) -> 
 
 
 def _write_map_corpus_gap(vault: Path, card: dict) -> bool:
-    source_count = _non_empty_markdown_count(vault / "notes/sources")
+    source_count = _checked_source_count(vault)
     required_count = _map_corpus_requirement(vault)
     if source_count >= required_count:
         return _archive_map_corpus_gap(vault)
@@ -516,8 +496,9 @@ def _write_map_corpus_gap(vault: Path, card: dict) -> bool:
         [
             "---",
             f"title: {_yaml_scalar(title)}",
-            "type: gap",
-            "lifecycle: proposed",
+            "projection: attention",
+            "attention_kind: gap",
+            "attention_status: open",
             f"action: {_yaml_scalar(action)}",
             'argument_for: "A full corpus map needs enough source notes to form stable clusters."',
             'argument_against: "Waiting is better than showing a partial map as if it were complete."',
@@ -545,10 +526,13 @@ def _archive_map_corpus_gap(vault: Path) -> bool:
         return False
     text = path.read_text(encoding="utf-8")
     head, sep, tail = text.partition("\n---\n")
-    if not sep or "\nlifecycle: archived\n" in head:
+    if not sep or "\nattention_status: resolved\n" in head:
         return False
     today = datetime.now(UTC).date().isoformat()
-    head = re.sub(r"^lifecycle: .*$", "lifecycle: archived", head, count=1, flags=re.M)
+    if re.search(r"^attention_status:", head, re.M):
+        head = re.sub(
+            r"^attention_status: .*$", "attention_status: resolved", head, count=1, flags=re.M
+        )
     if not re.search(r"^resolved:", head, re.M):
         head += f"\nresolved: {today}"
     path.write_text(head + sep + tail, encoding="utf-8")
@@ -564,17 +548,20 @@ def _archive_proposed_card(path: Path) -> bool:
         return False
     text = path.read_text(encoding="utf-8")
     head, sep, tail = text.partition("\n---\n")
-    if not sep or not re.search(r"^lifecycle:\s+proposed$", head, re.M):
+    is_open_attention = re.search(r"^attention_status:\s+open$", head, re.M)
+    if not sep or not is_open_attention:
         return False
     today = datetime.now(UTC).date().isoformat()
-    head = re.sub(r"^lifecycle: .*$", "lifecycle: archived", head, count=1, flags=re.M)
+    head = re.sub(
+        r"^attention_status: .*$", "attention_status: resolved", head, count=1, flags=re.M
+    )
     if not re.search(r"^resolved:", head, re.M):
         head += f"\nresolved: {today}"
     path.write_text(head + sep + tail, encoding="utf-8")
     return True
 
 
-def _archive_legacy_map_blocked_prompt(vault: Path, task_id: str) -> bool:
+def _archive_map_blocked_prompt(vault: Path, task_id: str) -> bool:
     inbox_dir = vault / "inbox"
     slug = _stable_prompt_slug(f"blocked-{task_id}")
     candidates = {
@@ -601,9 +588,9 @@ def _map_corpus_blocked_body(card: dict, source_count: int, required_count: int)
                 "",
             ]
         corpus_status = (
-            "The corpus now meets the source-count floor. Retry Map corpus; the retry button "
-            "also dismisses this ticket and returns to the Inbox. If it blocks again, leave the "
-            "new ticket open and inspect the board/log details."
+            "The corpus now meets the source-count floor. Enqueue Map corpus again from the "
+            "Inspector or Co-PI. If it blocks again, leave the new ticket open and inspect "
+            "the board/log details."
         )
     else:
         reason_lines = [f"Recorded block reason: {reason or 'No block reason was recorded.'}", ""]
@@ -627,11 +614,7 @@ def _map_corpus_blocked_body(card: dict, source_count: int, required_count: int)
             "",
             "# Next actions",
             "",
-            "```button",
-            "name Retry map corpus",
-            "type command",
-            "action QuickAdd: Memoria: retry map corpus and dismiss",
-            "```",
+            "Use the Inspector control panel to enqueue Map corpus again after resolving the blocker.",
             "",
             "```button",
             "name Dismiss",
@@ -662,8 +645,9 @@ def _write_map_corpus_blocked_prompt(
         [
             "---",
             f"title: {_yaml_scalar(title)}",
-            "type: work-prompt",
-            "lifecycle: proposed",
+            "projection: attention",
+            "attention_kind: work-prompt",
+            "attention_status: open",
             f"action: {_yaml_scalar(action)}",
             f"what_happened: {_yaml_scalar(what_happened)}",
             f"task_id: {_yaml_scalar(card['task_id'])}",
@@ -705,7 +689,7 @@ def _write_blocked_prompt(vault: Path, card: dict) -> bool:
 
 
 def export_actionable_blockers(vault: Path, cards: list[dict], show_card=None) -> int:
-    source_count = _non_empty_markdown_count(vault / "notes/sources")
+    source_count = _checked_source_count(vault)
     required_count = _map_corpus_requirement(vault)
     written = int(_archive_map_corpus_gap(vault)) if source_count >= required_count else 0
     map_candidates = []
@@ -714,10 +698,10 @@ def export_actionable_blockers(vault: Path, cards: list[dict], show_card=None) -
         if card["status"] != "blocked":
             continue
         if _is_map_corpus(card) and source_count < required_count:
-            written += int(_archive_legacy_map_blocked_prompt(vault, card["task_id"]))
+            written += int(_archive_map_blocked_prompt(vault, card["task_id"]))
             map_candidates.append(card)
         elif _is_map_corpus(card):
-            written += int(_archive_legacy_map_blocked_prompt(vault, card["task_id"]))
+            written += int(_archive_map_blocked_prompt(vault, card["task_id"]))
             written += int(
                 _write_map_corpus_blocked_prompt(vault, card, source_count, required_count)
             )

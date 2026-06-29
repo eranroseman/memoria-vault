@@ -44,7 +44,6 @@ Generated from `vault-template/.memoria/schemas/calibration.yaml`.
 | `classify.confidence_floor` | `0.6` |
 | `classify.near_tie_margin` | `0.15` |
 | `classify.model_version` | `null` |
-| `inbox.archive_after_days` | `30` |
 | `clustering.embedding_model` | `null` |
 | `clustering.umap_n_neighbors` | `15` |
 | `clustering.hdbscan_min_cluster_size` | `5` |

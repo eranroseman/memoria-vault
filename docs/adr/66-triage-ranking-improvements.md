@@ -25,13 +25,13 @@ Memoria will, when scheduled, add:
 
 2. **Agent-consensus pre-filter.** Before a candidate reaches the review queue, a second independent profile pass reviews the output; agreement sets `consensus: true`, disagreement `consensus: false`, and the operator processes disagreement cards first. It does not bypass the gate — the gate stays structural; the pre-filter only routes. To avoid correlated errors (the Bisht et al. 2026 hivemind finding), the two profiles use models from different providers or fine-tuning regimes.
 
-3. **Tournament pairwise ranking.** When the discovery inbox is large (> 50 candidates), candidates are ranked by pairwise LLM comparison against `research-focus.md` to surface the top-N first; lower-ranked candidates can be deferred. This is an explicit cold-start fallback for the learning-to-rank model — once that model has enough training data, Memoria switches to it (cheaper, faster, personalized).
+3. **Tournament pairwise ranking.** When the discovery inbox is large (> 50 candidates), candidates are ranked by pairwise LLM comparison against `steering.md` to surface the top-N first; lower-ranked candidates can be deferred. This is an explicit cold-start fallback for the learning-to-rank model — once that model has enough training data, Memoria switches to it (cheaper, faster, personalized).
 
 ## Consequences
 
 - A too-permissive confidence threshold promotes wrong classifications silently; calibration against the actual error rate is load-bearing.
 - The consensus pre-filter adds latency and per-card cost, and two profiles with correlated errors can agree and be confidently wrong together — it has diminishing value on shared-model failure modes.
-- Pairwise comparison cost scales quadratically with queue size, and ranking is personalized only while `research-focus.md` is current.
+- Pairwise comparison cost scales quadratically with queue size, and ranking is personalized only while `steering.md` is current.
 
 ## Current implementation mapping
 

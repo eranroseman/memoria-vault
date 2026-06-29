@@ -32,43 +32,27 @@ if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
-TRANSIENT_PREFIXES = ("inbox/", "system/logs/", "system/board/")
+TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/")
 # A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
-# Canonical type -> expected folder prefix (docs/explanation/architecture/vault.md,
-# ADR-11/ADR-30). The entity rows mirror ENTITY_FOLDER in the Librarian's link.py.
 TYPE_HOME = {
-    "paper": "catalog/papers/",
-    "person": "catalog/people/",
-    "organization": "catalog/organizations/",
-    "venue": "catalog/venues/",
-    "dataset": "catalog/datasets/",
-    "repository": "catalog/repositories/",
-    "fleeting": "notes/fleeting/",
-    "source": "notes/sources/",
-    "claim": "notes/claims/",
-    "hub": "notes/hubs/",
-    "candidate": "inbox/",
-    "gap": "inbox/",
-    "flag": "inbox/",
-    "alert": "inbox/",
-    "space": "spaces/",
-    "queue": "spaces/",
-    "maintenance": "spaces/",
-    "pattern": "system/patterns/",
-    "eval-task": "system/eval/",
+    "source": "catalog/sources/",
+    "person": "catalog/entities/",
+    "organization": "catalog/entities/",
+    "venue": "catalog/entities/",
+    "digest": "knowledge/digests/",
+    "note": "knowledge/notes/",
+    "hub": "knowledge/hubs/",
+    "project": "knowledge/projects/",
+    "operation": "capabilities/operations/",
+    "skill": "capabilities/skills/",
+    "mcp": "capabilities/mcp/",
+    "workflow": "capabilities/workflows/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {
-    "catalog",
-    "notes",
-    "projects",
-    "inbox",
-    "spaces",
-    "system",
-}
+KNOWN_TOP_DIRS = {"catalog", "knowledge", "capabilities", "spaces", "system"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
@@ -78,10 +62,8 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 
 def is_untyped_infra(rp: str) -> bool:
-    """system/ holds infrastructure documents, not typed knowledge — only
-    system/patterns/ (ADR-53) and system/eval/ (ADR-11 gold tasks) files
-    carry a type schema."""
-    return rp.startswith("system/") and not rp.startswith(("system/patterns/", "system/eval/"))
+    """Infrastructure and navigation surfaces are not alpha.11 Concepts."""
+    return rp.startswith(("spaces/", "system/"))
 
 
 LEFTOVER_PATTERNS = [
@@ -97,10 +79,9 @@ LEFTOVER_PATTERNS = [
         r".*\.rej$",
     )
 ]
-# Per-type required frontmatter fields (minimal; extend as the schema firms up).
 REQUIRED_FIELDS = {
-    "claim": ["lifecycle", "maturity"],
-    "paper": ["citekey"],
+    "source": ["check_status", "title", "description", "source_id"],
+    "note": ["check_status", "title"],
 }
 DATAVIEW_BUILTINS = {
     "file",
@@ -136,7 +117,7 @@ DATAVIEW_KEYWORDS = {
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
-NOTE_FOLDERS = ("catalog", "notes", "inbox", "projects", "spaces")
+NOTE_FOLDERS = ("catalog", "knowledge", "capabilities")
 
 # --------------------------------------------------------------------------- #
 # Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
@@ -152,7 +133,9 @@ try:
     TYPE_SCHEMAS = _schema.load_types()
     _FOLDERS = _schema.load_folders()
     TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
-    KNOWN_TOP_DIRS = set(_FOLDERS["categories"])
+    KNOWN_TOP_DIRS = set(_FOLDERS["bundle_roots"])
+    KNOWN_TOP_DIRS |= {str(path).split("/", 1)[0] for path in _FOLDERS.get("skeleton") or []}
+    KNOWN_TOP_DIRS.add("spaces")
 except Exception:  # noqa: BLE001
     _schema = None
 
@@ -348,12 +331,12 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
 
 def extract_path_broken(vault: Path) -> list[Finding]:
     out = []
-    papers = vault / "catalog" / "papers"
-    if not papers.is_dir():
+    sources = vault / "catalog" / "sources"
+    if not sources.is_dir():
         return out
-    for p in papers.rglob("*.md"):
+    for p in sources.rglob("source.md"):
         fm = parse_frontmatter(read(p))
-        ep = fm.get("extract_path", "")
+        ep = fm.get("content_path", "")
         if not ep or not isinstance(ep, str):
             continue
         norm = ep.strip().lstrip("/").replace("\\", "/")
@@ -364,7 +347,7 @@ def extract_path_broken(vault: Path) -> list[Finding]:
                     "extract-path-broken",
                     "HIGH",
                     relpath(vault, p),
-                    f"extract_path '{ep}' does not resolve",
+                    f"content_path '{ep}' does not resolve",
                 )
             )
     return out
@@ -381,8 +364,8 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
         rp = relpath(vault, p)
         if is_untyped_infra(rp):  # system infra isn't typed knowledge
             continue
-        if "/" not in rp:  # vault-root pages (home, troubleshooting,
-            continue  # research-focus) are navigation, not typed documents
+        if "/" not in rp:  # vault-root pages are navigation, not typed documents
+            continue
         fm = parse_frontmatter(read(p))
         if not fm:
             continue
@@ -550,7 +533,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
 
     Pure-stdlib graph metrics over the wikilink graph -- in-degree is simple dict
     arithmetic, so no networkx is needed (keeping detectors.py dependency-free).
-    Reports claim / hub notes with no incoming wikilinks: they are
+    Reports knowledge records with no incoming wikilinks: they are
     unreachable in the graph until something links to them. A self-link
     counts as an inlink -- a minor false-negative accepted for v0.1.
 
@@ -566,7 +549,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("notes/claims/", "notes/hubs/")
+    synth = ("knowledge/digests/", "knowledge/notes/", "knowledge/hubs/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):
@@ -584,19 +567,16 @@ def graph_analyze(vault: Path) -> list[Finding]:
 
 
 def fama_exposure(vault: Path) -> list[Finding]:
-    """FAMA exposure -- a downstream note that wikilinks a *superseded* claim
-    (lifecycle: archived, or carrying superseded_by). Reusing obsolete memory is
-    the FAMA failure mode the supersession mechanism (ADR-10 / ADR-17) makes
-    measurable -- the report's headline novelty turned into a deterministic check."""
+    """FAMA exposure: a downstream note wikilinks a superseded alpha.11 note."""
     notes = list(iter_notes(vault))
-    superseded: dict[str, str] = {}  # claim stem -> its relpath
+    superseded: dict[str, str] = {}
     for p in notes:
-        if not relpath(vault, p).startswith("notes/claims/"):
+        if not relpath(vault, p).startswith("knowledge/notes/"):
             continue
         fm = parse_frontmatter(read(p))
         sup = fm.get("superseded_by")
-        archived = str(fm.get("lifecycle", "")).strip() == "archived"
-        if archived or sup not in (None, "", [], "[]"):
+        status = str(fm.get("status", "")).strip()
+        if status == "superseded" or sup not in (None, "", [], "[]"):
             superseded[p.stem] = relpath(vault, p)
     if not superseded:
         return []
@@ -604,9 +584,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
     out = []
     for p in notes:
         rp = relpath(vault, p)
-        # Exposure matters in downstream synthesis; skip scaffolding and the claim
-        # graph itself (claim->claim links are the supersession / relations graph).
-        if rp.startswith(("system/", "notes/claims/")):
+        if rp.startswith(("system/", "knowledge/notes/")):
             continue
         for m in link_re.finditer(read(p)):
             stem = Path(m.group(1).strip()).stem
@@ -616,7 +594,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
                         "fama-exposure",
                         "HIGH",
                         rp,
-                        f"cites superseded claim [[{stem}]] ({superseded[stem]}) -- reuse of obsolete memory",
+                        f"cites superseded note [[{stem}]] ({superseded[stem]})",
                     )
                 )
     return out
@@ -657,13 +635,9 @@ def misplaced_note(vault: Path) -> list[Finding]:
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     """A topic crossed the hub-creation threshold with no hub (ADR-19 Tier 1).
 
-    Report-only: counts papers + claims per topic term -- a claim's `topics`
-    list and a paper's `research_area` list (the paper-side topic facet the
-    classify stage fills; papers carry no `topics` field) -- and flags any term
-    with >= `threshold` notes (the lower edge of linking.md's >=15-20 band) that
-    no existing hub already covers. A topic is covered when a `hub` (or legacy
-    `moc`) note's `topic` or `title` matches it, case-insensitively. Never
-    auto-creates -- the finding suggests the PI consider a hub."""
+    Report-only: counts alpha.11 sources and notes per topic/tag term and flags
+    any term with >= `threshold` records that no existing hub already covers.
+    Never auto-creates -- the finding suggests the PI consider a hub."""
     counts: dict[str, int] = {}
     label: dict[str, str] = {}  # lowercased term -> display form
     hubbed: set[str] = set()
@@ -672,15 +646,15 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
         if rp.startswith(SCAFFOLD_PREFIXES):
             continue
         fm = parse_frontmatter(read(p))
-        if fm.get("type") in ("hub", "moc"):
-            for v in (fm.get("topic"), fm.get("title")):
+        if fm.get("type") == "hub":
+            for v in (fm.get("title"), *(fm.get("tags") or [])):
                 if isinstance(v, str) and v.strip():
                     hubbed.add(v.strip().lower())
             continue
-        if not rp.startswith(("catalog/papers/", "notes/claims/")):
+        if not rp.startswith(("catalog/sources/", "knowledge/notes/")):
             continue
         terms: list[str] = []
-        for field in ("topics", "research_area"):
+        for field in ("topics", "tags", "research_area"):
             v = fm.get(field)
             if isinstance(v, list):
                 terms += [t for t in v if isinstance(t, str)]
@@ -697,10 +671,9 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
                 Finding(
                     "hub-threshold",
                     "LOW",
-                    "notes/hubs/",
+                    "knowledge/hubs/",
                     f"topic '{label[key]}' has {counts[key]} notes "
-                    f"(papers + claims, threshold {threshold}) and no hub "
-                    f"-- consider creating one (ADR-19 Tier 1)",
+                    f"(threshold {threshold}) and no hub -- consider creating one",
                 )
             )
     return out

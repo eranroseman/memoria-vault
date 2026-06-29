@@ -1,10 +1,10 @@
-"""Every engine/lane writes Inbox cards through one schema-shaped writer (ADR-51)."""
+"""Inbox helpers write alpha.11 attention projections, not Concept cards."""
 
 import re
 
 import pytest
 import yaml
-from operations.lib import inbox, schema
+from operations.lib import inbox
 
 
 def _frontmatter(path) -> dict:
@@ -13,7 +13,7 @@ def _frontmatter(path) -> dict:
     return yaml.safe_load(m.group(1))
 
 
-def test_proposal_card_is_schema_valid(tmp_path):
+def test_proposal_card_is_attention_projection(tmp_path):
     p = inbox.write_proposal(
         tmp_path,
         "candidate",
@@ -27,9 +27,10 @@ def test_proposal_card_is_schema_valid(tmp_path):
         citekey="@smith2024",
     )
     fm = _frontmatter(p)
-    types = schema.load_types()
-    assert schema.validate_frontmatter(fm, types["candidate"]) == []
-    assert fm["lifecycle"] == "proposed"
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "candidate"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
 
 
 def test_proposal_carries_no_verdict(tmp_path):
@@ -49,7 +50,7 @@ def test_proposal_carries_no_verdict(tmp_path):
     assert "finding" not in fm
 
 
-def test_finding_card_is_schema_valid(tmp_path):
+def test_finding_card_is_attention_projection(tmp_path):
     p = inbox.write_finding(
         tmp_path,
         "flag",
@@ -60,8 +61,10 @@ def test_finding_card_is_schema_valid(tmp_path):
         evidence="grep output",
     )
     fm = _frontmatter(p)
-    types = schema.load_types()
-    assert schema.validate_frontmatter(fm, types["flag"]) == []
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "flag"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
     body = p.read_text(encoding="utf-8")
     assert "# Finding" in body and "# Evidence" in body
 
@@ -81,7 +84,7 @@ def test_collision_appends_not_overwrites(tmp_path):
     assert a != b and a.exists() and b.exists()
 
 
-def test_work_prompt_card_is_schema_valid(tmp_path):
+def test_work_prompt_card_is_attention_projection(tmp_path):
     p = inbox.write_work_prompt(
         tmp_path,
         "Review: Draft answer",
@@ -93,9 +96,10 @@ def test_work_prompt_card_is_schema_valid(tmp_path):
         lane="memoria-writer",
     )
     fm = _frontmatter(p)
-    types = schema.load_types()
-    assert schema.validate_frontmatter(fm, types["work-prompt"]) == []
-    assert fm["lifecycle"] == "proposed"
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "work-prompt"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
     body = p.read_text(encoding="utf-8")
     assert "# Action" in body and "# What happened" in body and "# Where to look" in body
 

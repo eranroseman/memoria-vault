@@ -18,7 +18,8 @@ Obsidian, policy gate, model endpoint, and cron.
 scripts/verify runtime
 ```
 
-This runs Source, Package, then the opt-in live Hermes smoke.
+This runs Source, Package, the deterministic alpha.11 worker-cycle smoke, then
+the opt-in live Hermes smoke.
 
 ## Preconditions
 

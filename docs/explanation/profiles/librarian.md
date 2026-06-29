@@ -30,7 +30,9 @@ The lanes are individually triggered, not a pipeline — a human gate (often a l
 
 ## What the Librarian is not
 
-**Not a synthesizer.** It curates and maps evidence; the Writer composes arguments and the PI writes claims. It never writes `notes/claims/` or `notes/hubs/`.
+**Not the owner of synthesis judgment.** It maps evidence and suggests links,
+notes, and hub updates. Digests are machine-owned checked records; note
+acceptance and hub curation stay with the PI.
 
 **Not its own reviewer.** The agent that gathers and proposes must not also grade the result — that is the [Peer-reviewer](peer-reviewer.md)'s independence, the anti-rubber-stamp principle.
 

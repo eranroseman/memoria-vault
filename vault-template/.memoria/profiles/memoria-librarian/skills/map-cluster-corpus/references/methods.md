@@ -63,8 +63,8 @@ judgment, and even there it ranks topics the deterministic model already identif
 
 When `map-scope-project` or `map-report-coverage` rejects a direction, dead end, or
 parked lens that a future human might otherwise repeat, it writes a companion
-`*-exploration-trace.md` note beside the report under `notes/fleeting/maps/`. The trace
-uses `type: fleeting`, `lifecycle: proposed`, and `origin: agent`; its body records the
+`*-exploration-trace.md` note beside the report under `knowledge/notes/maps/`. The trace
+uses `type: note` and `check_status: unchecked`; its body records the
 report link plus structured `direction`, `why_rejected`, `evidence_checked`, and
 `retry_only_if` entries. This is project-local map context, not canonical knowledge, and
-it is never auto-promoted into claims, sources, hubs, or project state.
+it is never auto-promoted into sources, digests, hubs, or project state.

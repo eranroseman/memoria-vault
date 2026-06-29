@@ -1,41 +1,51 @@
 ---
-title: Promotion and gated zones
+title: Promotion and the write boundary
 parent: Knowledge
 grand_parent: Explanation
 nav_order: 4
 ---
 
-# Promotion and gated zones
+# Promotion and the write boundary
 
-Promotion is the act of making content canonical — confirming a claim into `notes/claims/`, curating a hub, accepting a proposed link. In Memoria it is always a human act. Agents and operations stage proposals; the PI decides what becomes part of the record.
+Promotion is the act of making content readable as checked knowledge. In
+alpha.11, that means a worker-owned transition into `check_status: checked`
+with a journal row. The PI still decides what claims, links, and hub curation
+mean; the worker owns the mechanical write boundary.
 
 ---
 
 ## What "canonical" means now
 
-The gated zones are `notes/claims/` 🔒 and `notes/hubs/` 🔒. Project notes add a gated thesis promotion path, and a composition's `deliverable` state remains later work. Content there is trusted: when the Peer-reviewer (the background agent that checks drafts and citations — see [Glossary](../../reference/glossary.md)) traces a draft's citations, it assumes the claims represent positions the PI actually holds; when the PI builds on a claim, they assume they once made it theirs. If those zones could be written without review, every downstream use of canonical content would become suspect.
+Canonical readers consume checked Concepts under `catalog/`, `knowledge/`, and
+`capabilities/`. Unchecked or quarantined Concepts can exist on disk, but they
+do not enter the checked qmd index or Ask path.
 
-Promotion is not a file move ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)). A note is born in its type-home and stays there; what the gate controls is the **state transition** (a fleeting thought becoming a `current` claim, a proposed link becoming part of the graph) and the **write into a gated zone**. The policy gate enforces the boundary mechanically: agents write staging and ungated zones; gated-zone writes, promotions, the `retracted` decision, and the archive move are PI-only.
+Promotion is not a file move. A Concept is born in its type home and stays
+there; the boundary is the **state transition** and its trace. Machine writes
+stage first, promote through the trusted writer, and record `derived` plus
+`check-fired` events. PI edits are direct and then observed/backfilled. Foreign
+writes are quarantined by scan.
 
-What is deliberately *not* gated: the Catalog. Entity records are clean mechanical extractions of given facts — gating them would be a rubber stamp. Where the ingest operation's confidence drops (entity resolution, dedup, license calls), it raises a `flag` instead of merging silently.
-
----
-
-## What the gate hands you
-
-The review gate hands the PI a proposal, not a verdict. Proposal cards carry an
-honest argument; verification cards lead with the finding. The card shapes are
-explained in [The honesty card](../kanban-board/honesty-card.md). The broader
-decision taxonomy — approval gates, work prompts, batch worklists, and automated
-steps — lives in [Decision points](../kanban-board/decision-points.md).
+What is deliberately not reintroduced: a per-write approval loop. The PI enters
+for direction, curation, direct edits, and high-risk `ask` flags, not as a
+rubber stamp on every machine write.
 
 ---
 
-## Maturity is a signal, not a gate
+## What the flag router hands you
 
-Claims carry `maturity` (`seedling → budding → evergreen`) — a soft, PI-set signal of how developed the claim is. It gates nothing and nothing auto-promotes at `evergreen`. Likewise `agent_recommendation` is a soft, agent-set verdict on a check; a `clean` recommendation never substitutes for human approval. The two axes — "how trusted?" (lifecycle) and "how developed?" (maturity) — are visibly different, with distinct value sets, so neither can impersonate the other.
+Checks route findings as `act`, `ask`, or `drop`. `act` is a deterministic
+reversible worker fix, `ask` surfaces a PI decision, and `drop` records a
+low-value finding without interrupting work.
 
-A common pitfall is deferring promotion until a claim "feels evergreen." That misreads the model: make a claim `current` when you have decided it represents your position; maturity tracks how developed it is afterward.
+---
+
+## Notes Replace Claim Maturity
+
+The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.11 uses one
+`note` type with optional `claim_text`, `evidence_set`, and typed links. A note
+is safe to read when it is checked; whether the claim is important is represented
+by evidence, links, and hub/project context.
 
 ---
 
@@ -43,12 +53,11 @@ A common pitfall is deferring promotion until a claim "feels evergreen." That mi
 
 **Explanation**
 
-- The types and zones involved: [Document types and epistemic roles](document-types.md)
+- The types involved: [Document types and epistemic roles](document-types.md)
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - The card fields in detail: [The honesty card](../kanban-board/honesty-card.md)
 - Approval gates vs work prompts: [Decision points](../kanban-board/decision-points.md)
-- The board mechanics behind the review gate: [Board states and the review gate](../kanban-board/states.md)
-- Why promotion is gated: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
+- The operations behind the boundary: [Operations](../operations.md)
 
 **Decisions**
 

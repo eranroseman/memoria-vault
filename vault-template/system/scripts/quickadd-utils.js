@@ -1,22 +1,4 @@
-/*
- * Shared helpers for Memoria QuickAdd user scripts.
- *
- * Keep this dependency-free: these scripts run inside Obsidian's QuickAdd
- * CommonJS environment.
- */
-
-function run(cp, sh) {
-  return new Promise((resolve, reject) => {
-    cp.execFile("bash", ["-lc", sh], { timeout: 30000, maxBuffer: 1 << 20 }, (err, stdout, stderr) => {
-      if (err) return reject(new Error(String(stderr || err.message || "").trim()));
-      resolve(stdout);
-    });
-  });
-}
-
-function shq(s) {
-  return "'" + String(s).replace(/'/g, "'\\''") + "'";
-}
+/* Shared dependency-free helpers for Memoria QuickAdd user scripts. */
 
 function fnv1a(s) {
   let h = 0x811c9dc5;
@@ -25,126 +7,6 @@ function fnv1a(s) {
     h = (h * 0x01000193) >>> 0;
   }
   return h.toString(16).padStart(8, "0");
-}
-
-function queueHermesCard(cp, card) {
-  const hermes = card.hermesCommand || "hermes";
-  let command =
-    hermes + " kanban create " + shq(card.title) +
-    " --assignee " + card.assignee +
-    (card.skill ? " --skill " + card.skill : "") +
-    " --created-by quickadd" +
-    " --idempotency-key " + shq(card.idemKey) +
-    " --body " + shq(card.body) +
-    " --json";
-  return run(cp, command).then(async (stdout) => {
-    const task = parseTask(stdout);
-    await writeTaskActivitySnapshot(card, task);
-    return task;
-  });
-}
-
-function parseTask(stdout) {
-  const data = JSON.parse(String(stdout || "{}"));
-  return data.task || data;
-}
-
-async function writeTaskActivitySnapshot(card, task) {
-  const app = card.app || globalThis.app;
-  const adapter = app?.vault?.adapter;
-  const taskId = task?.id;
-  if (!adapter || !taskId) return;
-
-  const path = "system/board/" + safePathSegment(taskId) + ".md";
-  if (await exists(adapter, path)) return;
-  await ensureFolder(app, "system/board");
-
-  const status = normalizeTaskStatus(task?.status);
-  const asOf = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
-  const queueState = ["triage", "todo", "ready"].includes(status) ? "queued" : status;
-  const body = [
-    "---",
-    "title: " + yamlString(card.title),
-    "type: worker-card",
-    "lifecycle: current",
-    "task_id: " + yamlString(taskId),
-    "lane: " + yamlString(card.assignee),
-    "status: " + status,
-    "review_status: " + yamlString("unreviewed"),
-    "retry_count: 0",
-    "reason: " + yamlString(""),
-    "as_of: " + yamlString(asOf),
-    "created: " + todayIsoDate(),
-    "---",
-    "",
-    "# " + card.title,
-    "",
-    "Status: " + queueState + ". No action needed; wait for the result.",
-    "",
-    "## Original request",
-    "",
-    quoteMarkdown(card.body),
-    "",
-  ].filter(Boolean).join("\n");
-  await adapter.write(path, body);
-}
-
-function normalizeTaskStatus(status) {
-  const allowed = new Set(["triage", "todo", "ready", "running", "blocked", "retrying", "done"]);
-  return allowed.has(status) ? status : "ready";
-}
-
-function safePathSegment(s) {
-  return String(s).replace(/[^A-Za-z0-9._-]/g, "_");
-}
-
-async function ensureFolder(app, folder) {
-  const parts = folder.split("/");
-  let cur = "";
-  for (const part of parts) {
-    cur = cur ? cur + "/" + part : part;
-    if (!(await app.vault.adapter.exists(cur))) {
-      await app.vault.createFolder(cur);
-    }
-  }
-}
-
-function quoteMarkdown(s) {
-  return String(s || "").split("\n").map((line) => "> " + line).join("\n");
-}
-
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-async function archiveActiveNote(params, spec) {
-  const { Notice } = params.obsidian;
-  const app = params.app || globalThis.app;
-  const file = app.workspace.getActiveFile();
-  if (!file) {
-    new Notice("No active note — open the " + spec.label + " note first.", 6000);
-    return;
-  }
-  if (!file.path.startsWith(spec.folder) || !file.path.endsWith(".md")) {
-    new Notice(
-      "Not a " + spec.label + " note (" + file.path + ") — only notes under " +
-        spec.folder + " archive here.",
-      8000
-    );
-    return;
-  }
-  try {
-    await app.fileManager.processFrontMatter(file, (fm) => {
-      if ((fm.type || "") !== spec.type) {
-        throw new Error("Active note is not type: " + spec.type + ".");
-      }
-      fm.lifecycle = "archived";
-      fm.archived = todayIsoDate();
-    });
-    new Notice("Archived " + spec.label + " note: " + file.basename, 6000);
-  } catch (e) {
-    new Notice(("Archive " + spec.label + " note failed: " + (e?.message || e)).slice(0, 250), 10000);
-  }
 }
 
 async function uniquePath(adapter, firstPath) {
@@ -176,33 +38,10 @@ function yamlString(s) {
   return "\"" + String(s).replace(/\\/g, "\\\\").replace(/"/g, "\\\"") + "\"";
 }
 
-function normalizeList(value) {
-  if (Array.isArray(value)) return value.map(String).map((s) => s.trim()).filter(Boolean);
-  if (typeof value === "string") {
-    return value.split(/[,;\n]/).map((s) => s.trim()).filter(Boolean);
-  }
-  return [];
-}
-
-async function appendCallout(app, file, callout) {
-  const content = await app.vault.read(file);
-  const updated = content.endsWith("\n")
-    ? content + "\n" + callout
-    : content + "\n\n" + callout;
-  await app.vault.modify(file, updated);
-}
-
 module.exports = {
-  appendCallout,
-  archiveActiveNote,
   exists,
   fnv1a,
-  normalizeList,
-  queueHermesCard,
-  run,
-  shq,
   slug,
-  todayIsoDate,
   uniquePath,
   yamlString,
 };

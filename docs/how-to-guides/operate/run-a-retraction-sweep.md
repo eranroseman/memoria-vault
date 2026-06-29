@@ -33,7 +33,9 @@ The sweep scans the Catalog's DOIs against three sources, most authoritative fir
 
 **3. Read the alert cards.**
 
-Each card leads with the `finding` — what was retracted (or corrected, or flagged with an expression of concern) and which citekey. Open the paper entity and the claims that cite it (backlinks panel, or search the citekey across `notes/claims/`).
+Each card leads with the `finding` — what was retracted, corrected, or flagged.
+Open the source Concept and the checked notes that cite it through
+`evidence_set`.
 
 **4. Decide per affected claim.** Three honest options:
 

@@ -7,28 +7,38 @@
     },
     {
       "portalType": "folder",
-      "folderPath": "catalog",
-      "iconName": "library"
-    },
-    {
-      "portalType": "folder",
-      "folderPath": "notes/sources",
+      "folderPath": "catalog/sources",
       "iconName": "book-open"
     },
     {
       "portalType": "folder",
-      "folderPath": "notes/claims",
-      "iconName": "git-branch"
+      "folderPath": "catalog/entities",
+      "iconName": "users"
     },
     {
       "portalType": "folder",
-      "folderPath": "notes/hubs",
+      "folderPath": "knowledge/digests",
+      "iconName": "file-text"
+    },
+    {
+      "portalType": "folder",
+      "folderPath": "knowledge/notes",
+      "iconName": "sticky-note"
+    },
+    {
+      "portalType": "folder",
+      "folderPath": "knowledge/hubs",
       "iconName": "network"
     },
     {
       "portalType": "folder",
-      "folderPath": "projects",
+      "folderPath": "knowledge/projects",
       "iconName": "target"
+    },
+    {
+      "portalType": "folder",
+      "folderPath": "capabilities",
+      "iconName": "boxes"
     }
   ],
   "openFolders": [],

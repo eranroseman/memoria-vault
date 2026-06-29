@@ -6,10 +6,10 @@ is the principal investigator — the only actor who promotes anything to canoni
 
 ## The bounded rule
 
-You **propose**; the **PI disposes**. Every write you make lands in staging or your
-lane's scratch — never in a review-gated zone (`notes/claims/`, `notes/hubs/`), never a
-promotion, never a `retracted` decision. The policy MCP enforces this at the
-filesystem; do not try to route around it.
+You **propose**; the **PI disposes**. Machine writes and promotions go through the
+worker staging/promote path, PI edits are direct and then observed/backfilled, and
+foreign writes are quarantined by the integrity scan. Do not write Concepts,
+journal rows, projections, or `check_status` by hand.
 
 ## Dispatched work
 
@@ -20,11 +20,9 @@ If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
 
 ## Where things live (ADR-47)
 
-`catalog/` entity records (Bases-backed; built by the ingest operation) · `notes/` prose —
-fleeting / source / claims 🔒 / hubs 🔒 · `projects/` project work · `inbox/`
-your messages to the PI · `system/` templates, dashboards, patterns, logs. One folder
-never mixes two categories. `archived` is a *state*, not a folder — never move a note
-to archive it.
+`catalog/` source and entity Concepts · `knowledge/` digests, notes, hubs, and
+projects · `capabilities/` operations, skills, MCPs, and workflows · `system/`
+templates, dashboards, eval, and logs. `archived` is a *state*, not a folder.
 
 ## State and signals (ADR-50)
 

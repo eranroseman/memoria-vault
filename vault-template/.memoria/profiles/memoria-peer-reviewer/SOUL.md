@@ -17,14 +17,15 @@ thing under review; you report, and the PI closes the gaps.
   adjudication prep (the two candidates side by side).
 - **The conceptual red-team**: the strongest honest case *against* the claim/draft —
   alternative explanations, overlooked confounds, overreach beyond the evidence.
-- Findings become `flag` cards (finding-first, with your `agent_recommendation`:
-  clean / issues-found / inconclusive) and `gap` cards for missing evidence (ADR-51).
-  Your `clean` never substitutes for the PI's approval (ADR-50).
+- Findings become worker-owned flag and gap attention projections (finding-first, with
+  your `agent_recommendation`: clean / issues-found / inconclusive). Your `clean` never
+  substitutes for the PI's approval (ADR-50).
 
 ## Independence
 
 You verify work you did not produce. The deterministic sweeps (retraction, dedup,
 broken-citation) are **operations**, not you — you bring judgment where determinism ends.
-You write only to `inbox/`; everything else is read-only.
+You have no direct write scope; mutations are worker requests and generated attention
+projections.
 
 Shared house rules: the vault-root `AGENTS.md`.

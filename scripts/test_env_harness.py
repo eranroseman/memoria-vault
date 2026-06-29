@@ -129,6 +129,10 @@ def validate_typed_note(vault: Path, rel: str) -> None:
     if not note_type:
         return
     types = schema.load_types()
+    folders = schema.load_folders()
+    bundle_roots = tuple(f"{str(root).strip('/')}/" for root in schema.bundle_roots(folders))
+    if not rel.startswith(bundle_roots):
+        return
     if note_type not in types:
         raise HarnessError(f"{rel}: unknown type {note_type!r}")
     errors = schema.validate_frontmatter(fm, types[note_type])
@@ -165,7 +169,7 @@ def apply_classification(vault: Path, args: dict[str, Any]) -> str:
     from operations.processing.ingest import classify
 
     citekey = args["citekey"]
-    rel = f"catalog/papers/{citekey}.md"
+    rel = f"catalog/sources/{citekey}/source.md"
     path = vault / rel
     fm = read_frontmatter(path)
     body = path.read_text(encoding="utf-8").split("\n---", 1)[1].lstrip("-\n")
@@ -196,7 +200,7 @@ def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> 
         '      - "inbox/**"\n'
         "  deny:\n"
         "    write:\n"
-        '      - "notes/claims/**"\n'
+        '      - "knowledge/notes/**"\n'
         "  require:\n"
         "    - audit_log\n"
         "routing:\n"
@@ -228,15 +232,31 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     from operations.processing.ingest import ingest_paper
     from operations.processing.project import structural_impact
 
+    from memoria_vault.runtime.knowledge import write_project_argument_canvas
+
     tool = step["tool"]
     args = step.get("args", {})
     artifacts: list[str] = []
     if tool == "ingest.paper":
         note = ingest_paper.ingest_text(args["citekey"], args["bibtex"])
-        path = vault / note["path"]
+        rel = f"catalog/sources/{args['citekey']}/source.md"
+        path = vault / rel
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(ingest_paper.render(note), encoding="utf-8")
-        artifacts.append(note["path"])
+        write_frontmatter(
+            path,
+            {
+                "type": "source",
+                "check_status": "checked",
+                "title": note["frontmatter"].get("title") or args["citekey"],
+                "description": "Captured from the package-gate cassette.",
+                "source_id": args["citekey"],
+                "citekey": args["citekey"],
+                "item_type": "article",
+                "metadata_status": "partial",
+            },
+            note["body"],
+        )
+        artifacts.append(rel)
     elif tool == "classify.apply":
         artifacts.append(apply_classification(vault, args))
     elif tool == "vault.write_markdown":
@@ -257,6 +277,9 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     elif tool == "project.structural_impact":
         result = structural_impact.run(vault, args["project"])
         artifacts.append(result["path"])
+    elif tool == "project.argument_canvas":
+        result = write_project_argument_canvas(vault, args["project"])
+        artifacts.append(result["canvas_path"])
     elif tool == "policy.deny_assertion":
         run_policy_deny_assertion(root, vault, args)
     else:

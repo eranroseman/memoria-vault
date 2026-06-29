@@ -42,7 +42,7 @@ jq -c 'select(.profile == "memoria-writer" and (.timestamp >= "2026-06-18"))' sy
 jq -c 'select(.task_id == "TASK-2026-06-18-003") | {timestamp, action, path, decision}' system/logs/audit.jsonl
 ```
 
-**Pending schema migrations** — `dry_run` decisions are writes the gate refused to apply automatically (a field rename or enum change awaiting `lint:migrate-schema`):
+**Dry-run write decisions** — writes the gate refused to apply automatically:
 
 ```bash
 jq -c 'select(.decision == "dry_run") | {path, policy_rule}' system/logs/audit.jsonl
@@ -57,7 +57,7 @@ jq -r 'select(.profile == "memoria-librarian") | .decision' system/logs/audit.js
 **Trace a write's reversibility pair** — the decision entry carries `before_hash`; the separate `write_complete` record carries the paired `after_hash`, matched by `task_id` + `path`:
 
 ```bash
-jq -c 'select(.path == "catalog/papers/smith-2024.md")' system/logs/audit.jsonl
+jq -c 'select(.path == "catalog/sources/smith-2024/source.md")' system/logs/audit.jsonl
 ```
 
 **Read the latest session summary** — what a session accomplished, digested:

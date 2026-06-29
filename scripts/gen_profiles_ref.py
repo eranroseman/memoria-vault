@@ -189,6 +189,10 @@ on this page is read from the shipped sources: profile packages under
 `vault-template/.memoria/profiles`, lane ceilings under `vault-template/.memoria/lane-overrides`, and
 the per-profile tool allowlist in `vault-template/.memoria/tool-registry.yaml`.
 
+Alpha.11 routes only catalog, extract, link, map, and verify lanes. Writer/draft
+and Engineer/code packages are present but deferred: their lane ceilings are
+empty and the task router does not dispatch to them.
+
 Regenerate with `python scripts/gen_profiles_ref.py --write`; edit the profile,
 lane, and tool-registry sources, not this page.
 

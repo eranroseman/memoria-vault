@@ -6,9 +6,14 @@ grand_parent: Reference
 
 # Clustering
 
-The cluster MCP (`vault-template/.memoria/mcp/cluster_mcp.py`) exposes three read/display tools over the vault's typed graph and source-note text. Results echo parameters; defaults come from `.memoria/schemas/calibration.yaml`; identical input plus seed produces identical output.
+The cluster MCP (`vault-template/.memoria/mcp/cluster_mcp.py`) exposes three
+read/display tools over the vault's typed Concept graph and note text. Results
+echo parameters; defaults come from `.memoria/schemas/calibration.yaml`;
+identical input plus seed produces identical output.
 
-Inputs: authored `links:` edges on notes and given `relationships` on Catalog entities. Field contracts: [Frontmatter fields](frontmatter.md). Text retrieval counterpart: [Search](search.md).
+Inputs: authored `links:` or `relationships:` edges on checked Concepts under
+`knowledge/` and `catalog/`. Field contracts: [Frontmatter fields](frontmatter.md).
+Text retrieval counterpart: [Search](search.md).
 
 ---
 
@@ -18,7 +23,7 @@ The typed link/relationship graph as JSON — read-only, no write. `seed < 0` us
 
 | Output | Shape |
 | --- | --- |
-| `nodes` | `{id, type, folder}` per note/entity. |
+| `nodes` | `{id, path, type, folder}` per Concept, where `id` is the path without `.md`. |
 | `edges` | `{source, target, type, kind}` — `type` is the link/relationship label (`supports`, `contradicts`, `cited_by`, …); `kind` is `links` or `relationships`. |
 | `communities` | `{node_id: community_index}` from greedy modularity. |
 | `centrality` | `{node_id: degree_centrality}`, rounded. |
@@ -29,31 +34,47 @@ The map lane turns this JSON into Canvas proposals; nothing is written by this t
 
 ---
 
-## `cluster_emit_canvas(scope="notes/claims", out="", seed=-1)`
+## `cluster_emit_canvas(scope="knowledge/notes", out="", seed=-1)`
 
-The claim-debate map, written as a JSON Canvas artifact. **Propose-class, staging-only**: it writes only under `notes/fleeting/maps/` and refuses every other target — the human edits and promotes the artifact.
+The note-debate map, written as a JSON Canvas artifact. It writes only under
+`knowledge/notes/maps/` and refuses every other target; curated hubs remain
+human-approved `knowledge/hubs/` Concepts.
 
 | Parameter | Meaning |
 | --- | --- |
-| `scope` | A hub/topic note path (`…/x.md` → that note plus everything one hop away) or a folder prefix (notes under it). Default `notes/claims`. |
-| `out` | Optional output path; must resolve inside `notes/fleeting/maps/` and end in `.canvas`. |
+| `scope` | A hub/topic note path (`…/x.md` → that note plus everything one hop away) or a folder prefix. Default `knowledge/notes`. |
+| `out` | Optional output path; must resolve inside `knowledge/notes/maps/` and end in `.canvas`. |
 | `seed` | Layout seed; `< 0` uses the calibration default. |
 
-Rendering: file nodes for in-scope notes; **node color = maturity** (`seedling` → `budding` → `evergreen`), **node size = in-degree**, **edge color = relation** (`supports` green, `contradicts` red, `extends`/other neutral), and communities of two-plus members drawn as group nodes. The return value is `{canvas_path, nodes, edges, groups, scope, params_echo}`; an out-of-`maps/` or non-`.canvas` target returns `{"error": "invalid-target"}`, and an empty scope returns `{"error": "empty-scope"}`.
+Rendering: file nodes for in-scope Concepts; **node color = note status**,
+**node size = in-degree**, **edge color = relation** (`supports` green,
+`contradicts` red, `extends`/other neutral), and communities of two-plus members
+drawn as group nodes. The return value is
+`{canvas_path, nodes, edges, groups, scope, params_echo}`; an out-of-`maps/` or
+non-`.canvas` target returns `{"error": "invalid-target"}`, and an empty scope
+returns `{"error": "empty-scope"}`.
 
 ---
 
-## `cluster_model_topics(folder="notes/sources", min_cluster_size=0, seed=-1)`
+## `cluster_model_topics(folder="knowledge/notes", min_cluster_size=0, seed=-1)`
 
 BERTopic over note bodies — the **opt-in heavy path**. Its dependencies (`bertopic` → `torch`) live in `.memoria/mcp/requirements-cluster.txt`, never the policy-core requirements, so a default install does not carry them ([ADR-33](../adr/33-cluster-mcp-bertopic.md)).
 
 | Parameter | Meaning |
 | --- | --- |
-| `folder` | Corpus folder to model; default `notes/sources`. |
+| `folder` | Corpus folder to model; default `knowledge/notes`. |
 | `min_cluster_size` | Minimum topic size; `0` uses the calibration default. |
 | `seed` | UMAP `random_state`; `< 0` uses the calibration default. |
 
-Returns `{topics, doc_topic_map, outliers, params_echo}` — `topics` is `{topic, size, label}` per cluster, `doc_topic_map` maps each note stem to its topic, and `outliers` are notes assigned topic `-1`. It errors cleanly rather than crashing: `{"error": "bertopic-not-installed", "note": "pip install -r .memoria/mcp/requirements-cluster.txt"}` when the deps are absent, and `{"error": "too-few-documents", "documents": N, "required_documents": M}` when the folder has too few non-empty notes for a full topic map. The required count is `max(min_cluster_size × 2, full_cluster_min_documents)`, so small corpora raise a gap instead of producing a weak map that looks complete.
+Returns `{topics, doc_topic_map, outliers, params_echo}` — `topics` is
+`{topic, size, label}` per cluster, `doc_topic_map` maps each note path without
+`.md` to its topic, and `outliers` are notes assigned topic `-1`. It errors
+cleanly rather than crashing: `{"error": "bertopic-not-installed", "note": "pip
+install -r .memoria/mcp/requirements-cluster.txt"}` when the deps are absent,
+and `{"error": "too-few-documents", "documents": N, "required_documents": M}`
+when the folder has too few non-empty notes for a full topic map. The required
+count is `max(min_cluster_size × 2, full_cluster_min_documents)`, so small
+corpora raise a gap instead of producing a weak map that looks complete.
 
 ---
 
@@ -78,7 +99,12 @@ see [Calibration](calibration.md).
 
 ## Determinism
 
-The discipline across all three tools: a **fixed seed** (so identical input yields an identical layout), **parameters echoed** in every result (`params_echo`), and **no canonical writes** — `build_graph` and `model_topics` return JSON only, and `emit_canvas` writes a single Canvas under the staging allowlist. The operation never sets a note's lifecycle, maturity, or links; it only renders what the notes already declare.
+The discipline across all three tools: a **fixed seed** (so identical input
+yields an identical layout), **parameters echoed** in every result
+(`params_echo`), and **no canonical writes** — `build_graph` and `model_topics`
+return JSON only, and `emit_canvas` writes a single Canvas under the map
+staging allowlist. The operation never sets a note's status or links; it only
+renders what the Concepts already declare.
 
 ---
 

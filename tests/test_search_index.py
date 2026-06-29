@@ -1,0 +1,142 @@
+from __future__ import annotations
+
+import shutil
+from pathlib import Path
+
+from memoria_vault.runtime.search_index import (
+    answer_query,
+    evaluate_bm25,
+    filter_checked_results,
+    rebuild_checked_qmd_source,
+)
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def workspace(tmp_path: Path) -> Path:
+    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    return tmp_path
+
+
+def note(vault: Path, name: str, status: str, body: str, extra: str = "") -> Path:
+    path = vault / "knowledge" / "notes" / f"{name}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        f"---\ntype: note\ncheck_status: {status}\ntitle: {name}\n{extra}---\n{body}\n",
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+    note(vault, "unchecked", "unchecked", "poison alpha")
+    note(vault, "quarantined", "quarantined", "poison beta")
+    note(vault, "candidate", "checked", "candidate alpha", "status: candidate\n")
+    note(vault, "superseded", "checked", "stale alpha", "status: superseded\n")
+    capability = vault / "capabilities/operations/checked-operation.md"
+    capability.parent.mkdir(parents=True)
+    capability.write_text(
+        "---\n"
+        "type: operation\n"
+        "check_status: checked\n"
+        "title: Checked operation\n"
+        "description: Not Ask content.\n"
+        "---\n"
+        "alpha operation\n",
+        encoding="utf-8",
+    )
+
+    manifest = rebuild_checked_qmd_source(vault)
+
+    assert [row["path"] for row in manifest["documents"]] == ["knowledge/notes/checked.md"]
+    assert (vault / ".memoria/index/qmd/checked/knowledge/notes/checked.md").is_file()
+    assert not (vault / ".memoria/index/qmd/checked/capabilities").exists()
+    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/candidate.md").exists()
+    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/unchecked.md").exists()
+    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
+    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
+    assert manifest["qmd_commands"][-1] == "qmd update"
+
+
+def test_filter_checked_results_applies_read_barrier_to_qmd_rows(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    checked = note(vault, "checked", "checked", "alpha beta")
+    note(vault, "unchecked", "unchecked", "poison alpha")
+    rows = [
+        {"file": "qmd://vault/knowledge/notes/unchecked.md", "title": "Unchecked"},
+        {"file": checked.as_posix(), "title": "Checked absolute"},
+        {"file": "qmd://vault/missing.md", "title": "Missing"},
+    ]
+
+    assert filter_checked_results(vault, rows) == [rows[1]]
+
+
+def test_bm25_eval_harness_uses_only_checked_concepts(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+    note(vault, "unchecked", "unchecked", "poison alpha")
+
+    result = evaluate_bm25(
+        vault,
+        [
+            {"query": "alpha", "relevant": ["knowledge/notes/checked.md"]},
+            {"query": "poison", "relevant": ["knowledge/notes/unchecked.md"]},
+        ],
+    )
+
+    assert result["documents"] == 1
+    assert result["queries"] == 2
+    assert result["hits"] == 1
+    assert result["recall_at_k"] == 0.5
+    assert result["results"][0]["hits"] == ["knowledge/notes/checked.md"]
+    assert result["results"][1]["hits"] == []
+
+
+def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(
+        vault,
+        "checked",
+        "checked",
+        "alpha beta",
+        "contradictions:\n  - knowledge/notes/tension.md\n",
+    )
+    note(vault, "superseded", "checked", "alpha stale", "status: superseded\n")
+    note(vault, "candidate", "checked", "alpha candidate", "status: candidate\n")
+
+    answer = answer_query(vault, "alpha")
+
+    assert answer["engine"] == "bm25"
+    assert answer["unknowns"] == []
+    assert [source["path"] for source in answer["sources"]] == ["knowledge/notes/checked.md"]
+    assert answer["staleness"] == []
+    assert answer["contradictions"] == [
+        {
+            "path": "knowledge/notes/checked.md",
+            "contradiction": "knowledge/notes/tension.md",
+        }
+    ]
+
+    stale_answer = answer_query(vault, "candidate stale", include_stale=True, k=3)
+    assert [source["path"] for source in stale_answer["sources"]] == [
+        "knowledge/notes/candidate.md",
+        "knowledge/notes/superseded.md",
+    ]
+    assert stale_answer["staleness"] == [
+        {
+            "path": "knowledge/notes/candidate.md",
+            "field": "status",
+            "value": "candidate",
+        },
+        {
+            "path": "knowledge/notes/superseded.md",
+            "field": "status",
+            "value": "superseded",
+        },
+    ]
+
+    missing = answer_query(vault, "absent")
+    assert missing["sources"] == []
+    assert missing["unknowns"] == ["No checked current sources matched: absent"]

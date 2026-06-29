@@ -10,7 +10,6 @@ import board_export as _m
 import board_export_cost as _cost
 import yaml
 from _util import CheckHarness
-from operations.lib import schema as _schema
 
 from memoria_vault.runtime.time import now_iso
 
@@ -463,6 +462,23 @@ def _frontmatter(path):
     return yaml.safe_load(m.group(1))
 
 
+def _checked_sources(vault, count):
+    for i in range(count):
+        path = vault / f"catalog/sources/source-{i}/source.md"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            (
+                "---\n"
+                "title: Source\n"
+                "type: source\n"
+                "check_status: checked\n"
+                "description: Source fixture\n"
+                "---\n"
+            ),
+            encoding="utf-8",
+        )
+
+
 def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
     meta = {"expected_outputs": "projects/p1/draft.md", "review_status": "requested"}
     run1 = [_card("t_1", "running", metadata=meta)]
@@ -474,10 +490,12 @@ def test_done_transition_emits_one_schema_valid_prompt(tmp_path):
     files = _prompt_files(tmp_path)
     assert len(files) == 1
     fm = _frontmatter(files[0])
-    assert _schema.validate_frontmatter(fm, _schema.load_types()["work-prompt"]) == []
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "work-prompt"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
     assert fm["task_id"] == "t_1" and fm["lane"] == "memoria-writer"
     assert fm["target"] == "projects/p1/draft.md"
-    assert fm["lifecycle"] == "proposed"
     assert fm["prompt_kind"] == "review"
     assert fm["title"] == "Completed work: Draft answer"
     assert fm["action"] == "Open the result, then dismiss this prompt when no action remains."
@@ -514,10 +532,7 @@ def test_non_done_or_unrequested_done_transitions_emit_nothing(tmp_path):
 
 
 def test_blocked_map_task_creates_one_source_gap(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(8):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 8)
     card = _card("t_1", "blocked", title="Map the corpus", assignee="memoria-librarian")
     assert _m.export_actionable_blockers(tmp_path, [card]) == 1
     assert _m.export_actionable_blockers(tmp_path, [card]) == 0
@@ -526,39 +541,37 @@ def test_blocked_map_task_creates_one_source_gap(tmp_path):
     assert len(files) == 1
     assert files[0].name == "gap-map-corpus.md"
     fm = _frontmatter(files[0])
-    assert _schema.validate_frontmatter(fm, _schema.load_types()["gap"]) == []
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "gap"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
     assert fm["title"] == "Map corpus needs more sources"
     assert fm["action"] == "Add 2 source note(s), then retry Map corpus"
-    assert fm["lifecycle"] == "proposed"
     body = files[0].read_text(encoding="utf-8")
     assert "Map corpus needs `10` non-empty source notes" in body
     assert "The current source corpus has `8`." in body
     assert "partial corpus map" in body
-    assert "QuickAdd: Memoria: assist find" in body
+    assert "Inspector control panel or Co-PI" in body
     assert "If you already have a source in hand:" in body
-    assert "QuickAdd: Memoria: capture source from URL" in body
-    assert "QuickAdd: Memoria: capture from Zotero selection" in body
-    assert "QuickAdd: Memoria: retry map corpus and dismiss" in body
+    assert "checked `source` Concept under `catalog/sources/`" in body
     assert "name Dismiss" in body
     assert "QuickAdd: Memoria: dismiss inbox card" in body
     assert "name Back to Inbox" in body
     assert "QuickAdd: Memoria: open Inbox" in body
 
 
-def test_blocked_map_task_archives_legacy_generic_prompt(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(8):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+def test_blocked_map_task_resolves_existing_generic_prompt(tmp_path):
+    _checked_sources(tmp_path, 8)
     inbox = tmp_path / "inbox"
     inbox.mkdir()
-    legacy = inbox / "work-prompt-blocked-t-1.md"
-    legacy.write_text(
+    prompt = inbox / "work-prompt-blocked-t-1.md"
+    prompt.write_text(
         (
             "---\n"
             'title: "Blocked work: Map corpus"\n'
-            "type: work-prompt\n"
-            "lifecycle: proposed\n"
+            "projection: attention\n"
+            "attention_kind: work-prompt\n"
+            "attention_status: open\n"
             'action: "Resolve the blocker."\n'
             "---\n"
         ),
@@ -568,15 +581,12 @@ def test_blocked_map_task_archives_legacy_generic_prompt(tmp_path):
     card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
     assert _m.export_actionable_blockers(tmp_path, [card]) == 2
 
-    assert _frontmatter(legacy)["lifecycle"] == "archived"
-    assert _frontmatter(inbox / "gap-map-corpus.md")["lifecycle"] == "proposed"
+    assert _frontmatter(prompt)["attention_status"] == "resolved"
+    assert _frontmatter(inbox / "gap-map-corpus.md")["attention_status"] == "open"
 
 
 def test_miscompleted_too_small_map_task_creates_source_gap(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(8):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 8)
     card = _card("t_1", "done", title="Map corpus", assignee="memoria-librarian")
     card["summary"] = "Corpus is too small to generate a cluster map"
 
@@ -588,10 +598,7 @@ def test_miscompleted_too_small_map_task_creates_source_gap(tmp_path):
 
 
 def test_miscompleted_map_task_uses_show_summary_when_list_is_thin(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(8):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 8)
     card = _card("t_1", "done", title="Map corpus", assignee="memoria-librarian")
 
     def show_card(task_id):
@@ -607,10 +614,7 @@ def test_miscompleted_map_task_uses_show_summary_when_list_is_thin(tmp_path):
 
 
 def test_duplicate_map_blockers_share_one_stable_gap(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(8):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 8)
     old = _card(
         "t_old",
         "blocked",
@@ -646,7 +650,10 @@ def test_blocked_non_map_task_creates_one_blocked_prompt(tmp_path):
     files = _prompt_files(tmp_path)
     assert len(files) == 1
     fm = _frontmatter(files[0])
-    assert _schema.validate_frontmatter(fm, _schema.load_types()["work-prompt"]) == []
+    assert fm["projection"] == "attention"
+    assert fm["attention_kind"] == "work-prompt"
+    assert fm["attention_status"] == "open"
+    assert "type" not in fm
     assert fm["title"] == "Blocked work: Draft section"
     assert fm["action"] == "Resolve the blocker, then retry or dismiss this item."
     assert fm["prompt_kind"] == "blocked"
@@ -655,10 +662,7 @@ def test_blocked_non_map_task_creates_one_blocked_prompt(tmp_path):
 
 
 def test_blocked_map_task_with_enough_sources_creates_blocked_prompt(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(10):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 10)
     card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
 
     def show_card(task_id):
@@ -677,8 +681,8 @@ def test_blocked_map_task_with_enough_sources_creates_blocked_prompt(tmp_path):
     assert "Corpus is too small to generate a cluster map" not in body
     assert "Current source corpus: `10` non-empty source notes" in body
     assert "The corpus now meets the source-count floor" in body
-    assert "retry button also dismisses this ticket and returns to the Inbox" in body
-    assert "QuickAdd: Memoria: retry map corpus and dismiss" in body
+    assert "Enqueue Map corpus again from the Inspector or Co-PI" in body
+    assert "Inspector control panel to enqueue Map corpus again" in body
     assert "name Dismiss" in body
     assert "QuickAdd: Memoria: dismiss inbox card" in body
     assert "name Back to Inbox" in body
@@ -686,10 +690,7 @@ def test_blocked_map_task_with_enough_sources_creates_blocked_prompt(tmp_path):
 
 
 def test_blocked_map_task_uses_hermes_run_error(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(10):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 10)
     card = _card("t_1", "blocked", title="Map corpus", assignee="memoria-librarian")
 
     def show_card(task_id):
@@ -704,21 +705,21 @@ def test_blocked_map_task_uses_hermes_run_error(tmp_path):
 
 
 def test_map_gap_archives_when_source_floor_is_met(tmp_path):
-    sources = tmp_path / "notes/sources"
-    sources.mkdir(parents=True)
-    for i in range(10):
-        (sources / f"source-{i}.md").write_text(f"source body {i}", encoding="utf-8")
+    _checked_sources(tmp_path, 10)
     inbox = tmp_path / "inbox"
     inbox.mkdir()
     gap = inbox / "gap-map-corpus.md"
     gap.write_text(
-        "---\ntitle: Map corpus needs more sources\ntype: gap\nlifecycle: proposed\n---\n",
+        (
+            "---\ntitle: Map corpus needs more sources\nprojection: attention\n"
+            "attention_kind: gap\nattention_status: open\n---\n"
+        ),
         encoding="utf-8",
     )
 
     assert _m.export_actionable_blockers(tmp_path, []) == 1
     fm = _frontmatter(gap)
-    assert fm["lifecycle"] == "archived"
+    assert fm["attention_status"] == "resolved"
     assert "resolved" in fm
 
 

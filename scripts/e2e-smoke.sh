@@ -54,17 +54,17 @@ commit_gate() {
   assert_executable "$V/.git/hooks/post-commit" "post-commit hook"
   git -C "$V" add -A
   git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm init || fail "baseline commit blocked"
-  printf -- '---\ntype: claim\nlifecycle: proposed\ntitle: "Bad"\n---\nx\n' > "$V/notes/claims/bad.md"
-  git -C "$V" add notes/claims/bad.md
+  printf -- '---\ntype: note\ntitle: "Bad"\n---\nx\n' > "$V/knowledge/notes/bad.md"
+  git -C "$V" add knowledge/notes/bad.md
   if git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm bad 2>/dev/null; then
-    fail "the gate let a malformed claim through"
+    fail "the gate let a malformed note through"
   fi
-  echo "   malformed claim blocked at commit"
-  git -C "$V" reset -q HEAD notes/claims/bad.md && rm "$V/notes/claims/bad.md"
-  printf -- '---\ntype: claim\nlifecycle: current\ntitle: "Good"\nmaturity: seedling\nsources: ["@x2024"]\n---\nBody.\n' > "$V/notes/claims/good.md"
-  git -C "$V" add notes/claims/good.md
-  git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm good || fail "valid claim blocked"
-  echo "   valid claim passes"
+  echo "   malformed note blocked at commit"
+  git -C "$V" reset -q HEAD knowledge/notes/bad.md && rm "$V/knowledge/notes/bad.md"
+  printf -- '---\ntype: note\ncheck_status: checked\ntitle: "Good"\n---\nBody.\n' > "$V/knowledge/notes/good.md"
+  git -C "$V" add knowledge/notes/good.md
+  git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm good || fail "valid note blocked"
+  echo "   valid note passes"
 }
 
 offline_ingest() {
