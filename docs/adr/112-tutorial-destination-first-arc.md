@@ -127,13 +127,13 @@ conflating them mis-sequences the arc.
 **Keep setup inside the tutorial.** Rejected: setup is how-to; embedding it
 duplicates the Quickstart, and the duplicates drift in practice.
 
-**Co-PI-guided onboarding instead of doc pages.** Deferred, not rejected — see
-[ADR-113](113-copi-guided-onboarding.md). The doc arc is the script the agent layer would
-later dramatize, so it must exist and stabilize first.
+**Co-PI-guided onboarding instead of doc pages.** Deferred, not rejected. The doc arc is
+the script any future agent layer would dramatize, so it must exist and stabilize first.
+If a guided flow is built later, docs and agent must read from one beat definition so
+there is no second onboarding script to drift.
 
 ## Related
 
-- **Deferred alternative:** [ADR-113: Co-PI-guided onboarding](113-copi-guided-onboarding.md).
 - **Builds on:** [What Memoria is](../design/what-memoria-is.md),
   [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md), and the
   [Quickstart](../how-to-guides/setup/quickstart.md) (which now owns setup).

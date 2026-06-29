@@ -101,7 +101,7 @@ not. It remains a design reference for a future typed-relationship graph over
 **Adopt external bridges such as Todoist, Vikunja, or GitHub Projects.** Rejected as
 Project-state backends. They make the external service the source of truth and the
 vault a projection. One-way mirrors may still be considered separately for
-notification convenience, as in [ADR-85](85-todoist-gap-card-mirroring.md).
+notification convenience, but the vault card remains authoritative.
 
 **Adopt Day Planner, Tracker, Thino, Task Genius, or Checklist.** Rejected for the
 baseline Project workspace. They either solve adjacent time-tracking/charting

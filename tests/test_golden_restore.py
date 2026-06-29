@@ -91,7 +91,7 @@ def _seed_obsidian(v: Path) -> None:
 
 
 def test_manifest_covers_shipped_plugin_config_only(tmp_path):
-    """Plugin-config drift (ADR-67): shipped Obsidian config is golden-covered;
+    """Plugin-config drift: shipped Obsidian config is golden-covered;
     per-machine / runtime-generated state never enters the manifest."""
     _seed(tmp_path)
     _seed_obsidian(tmp_path)

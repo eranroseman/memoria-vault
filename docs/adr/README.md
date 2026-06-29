@@ -43,7 +43,6 @@ status.
 | [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | accepted |
 | [15](15-project-membership-from-topic-hint.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | accepted |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | accepted |
-| [18](18-rename-agent-verdict.md) | Rename `agent_verdict` → `agent_recommendation` | accepted |
 | [19](19-moc-threshold-alert.md) | Agent-proposed hubs (threshold alert and Mapper handoff) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired) | accepted |
@@ -76,12 +75,9 @@ status.
 | [55](55-src-scaffold-populate-golden-copy.md) | The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable | accepted |
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
-| [60](60-cross-vault-knowledge-sharing.md) | Cross-vault and cross-project knowledge sharing | accepted |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
-| [63](63-multi-machine-deployment.md) | Multi-machine deployment topologies and secondary-device patterns | accepted |
 | [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | accepted |
-| [67](67-drift-procedures-keep-or-retire.md) | Drift procedures under the golden-copy model — keep or retire | accepted |
 | [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | accepted |
 | [70](70-navigation-gates-dashboards.md) | Navigation — intent-named gates, ambient maintenance, JTBD dashboards | accepted |
 | [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | accepted |
@@ -89,16 +85,12 @@ status.
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
-| [76](76-versioned-vault-release-reconciling-installer.md) | Distribute Memoria as a versioned vault release; deploy via a source-agnostic reconciling installer | accepted |
 | [77](77-project-gate.md) | Project gate | accepted |
 | [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
 | [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
-| [85](85-todoist-gap-card-mirroring.md) | Todoist gap-card mirroring | proposed |
-| [86](86-open-design-deliverable-rendering-agent.md) | Open-design deliverable-rendering agent | proposed |
-| [87](87-static-html-admin-reports.md) | Static-HTML admin reports | proposed |
 | [88](88-literate-code-note.md) | Literate code-note | proposed |
 | [89](89-learning-to-rank-triage.md) | Learning-to-rank triage | proposed |
 | [90](90-claim-sentence-classification.md) | Claim-sentence classification | proposed |
@@ -123,7 +115,6 @@ status.
 | [109](109-project-management-native-views.md) | Project management uses native views over project notes | accepted |
 | [110](110-ruff-format-python-layout.md) | Ruff: formatter owns layout (line-length 100), curated lint ruleset | accepted |
 | [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | accepted |
-| [113](113-copi-guided-onboarding.md) | Co-PI-guided onboarding (deferred) | proposed |
 | [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
 | [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed | accepted |
 | [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | accepted |

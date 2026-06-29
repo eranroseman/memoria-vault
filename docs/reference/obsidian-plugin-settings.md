@@ -56,15 +56,15 @@ now fails clearly instead of silently skipping those paths.
 
 > **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by manual pulls plus `pullBeforePush`; enable `autoPullOnBoot` only after the vault branch has an upstream. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
 
-**Push behavior by deployment** (the two keys that actually exist):
+**Push behavior by supported deployment** (the two keys that actually exist):
 
 | Deployment | `disablePush` | `autoPushInterval` | Notes |
 | --- | --- | --- | --- |
 | `local-only` | `false` | `0` | Push manually for offsite-backup checkpoints. |
-| `local-mesh` | `false` | `0` | Syncthing handles sync; Git is history only. |
-| `obsidian-sync` | `false` | `0` | Obsidian Sync handles sync; Git is history only. |
-| `always-on` (desktop) | `false` | `> 0` (e.g. `10`) | Desktop auto-pushes as backup; Syncthing handles sync. |
-| `always-on` (VPS) | `true` | `0` | VPS must only pull, never push. |
+
+Second-device or always-on sync topologies are deferred design notes, not supported
+install targets. Do not enable automated push/pull behavior for them without a new
+deployment decision.
 
 ### dataview
 

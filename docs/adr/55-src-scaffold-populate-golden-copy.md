@@ -43,8 +43,19 @@ replace the prototype, never migrate user content in place. Refreshing the test 
 development vault is limited to overwriting shipped system files from `vault-template/` and then
 restaging `.memoria/golden/manifest.json` so later drift checks compare against the
 installed source snapshot. There is no shipped in-place release-upgrade reconcile:
-that broader layer-aware upgrade path belongs to the later versioned-release spine in
-[ADR-76]({{ site.baseurl }}/adr/76-versioned-vault-release-reconciling-installer.html).
+no backwards-compatibility promise exists while no production installation exists beyond
+disposable sandboxes.
+
+The golden manifest also covers Memoria-shipped Obsidian configuration: each bundled
+plugin's release-owned `data.json`, `.obsidian/community-plugins.json`,
+`.obsidian/core-plugins.json`, and the shipped CSS snippets. Per-machine or
+runtime-generated plugin state never enters the manifest.
+
+The installer skeleton is part of the same contract: every directory in the
+`skeleton` list of `.memoria/schemas/folders.yaml` must exist in an installed vault,
+and the Linter's `skeleton-drift` detector reports missing directories. Deployed
+profile drift is not a vault-side detector because it needs `~/.hermes`; rerunning
+the idempotent profile deploy is the repair.
 
 This amends [ADR-26](26-repo-as-install-unit.md): the repo remains the install unit
 and profiles remain hand-authored and idempotently deployed; what changes is the
@@ -58,7 +69,7 @@ shipped shape (`vault-template/`, not a live vault) and the new restore capabili
 - The Linter becomes a repairer, not just a detector — drift is fixable from a
   known-good baseline without re-running the installer.
 - Cross-release, layer-aware upgrade reconciliation is not part of this ADR's shipped
-  mechanism. ADR-76 owns that future versioned-release installer path.
+  mechanism and is not planned until a real installed base creates that requirement.
 - The installer gets simpler to reason about: scaffold and populate are idempotent,
   separately testable steps.
 - Together with the lane ceilings this closes the template-protection question
@@ -73,8 +84,9 @@ shipped shape (`vault-template/`, not a live vault) and the new restore capabili
 ## Alternatives considered
 
 **Keep shipping a live `vault/` template.** The drift and blurred-source-of-truth
-problems this exists to fix. **In-place migration between releases.** Rejected by D52 —
-half-migrated states are the failure mode; fresh-install sidesteps it.
+problems this exists to fix. **In-place migration between releases.** Rejected:
+half-migrated states are the failure mode, and no installed base needs backwards
+compatibility yet; fresh-install sidesteps it.
 **Populate the vault from `.memoria/golden/` instead of `vault-template/`.** Equivalent at
 install; `vault-template/` populate + golden staging keeps authoring (repo) and restoring
 (runtime) cleanly separate.
@@ -83,8 +95,3 @@ install; `vault-template/` populate + golden staging keeps authoring (repo) and 
 
 - **Related decisions / Depends on:** amends [ADR-26](26-repo-as-install-unit.md);
   [ADR-49](49-catalog-in-bases-linter-monitor.md), [ADR-47](47-type-first-category-folders.md)
-- **Extended by (proposed):** [ADR-76: Distribute Memoria as a versioned vault release;
-  deploy via a source-agnostic reconciling
-  installer]({{ site.baseurl }}/adr/76-versioned-vault-release-reconciling-installer.html) proposes extending this
-  ADR's golden manifest to cover the code and authored-content layers; if accepted, its
-  manifest supersedes this one.

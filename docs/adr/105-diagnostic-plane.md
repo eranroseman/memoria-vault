@@ -37,7 +37,7 @@ Memoria's diagnostic plane is **content-light, local, and disposable**, governed
 
 ## When this matters
 
-The plane earns its place the first time an unattended `always-on` run ([ADR-63](63-multi-machine-deployment.md)) or a cron fails and the cause is unrecoverable from stderr. The ephemeral content-capture path matters only when a typed error code plus payload hash is genuinely insufficient to reproduce a parse/enrichment failure — build the content-light core first and add the capture path on first real need.
+The plane earns its place the first time an unattended worker run or cron fails and the cause is unrecoverable from stderr. The ephemeral content-capture path matters only when a typed error code plus payload hash is genuinely insufficient to reproduce a parse/enrichment failure — build the content-light core first and add the capture path on first real need.
 
 ## Alternatives considered
 

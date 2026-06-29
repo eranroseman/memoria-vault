@@ -144,7 +144,7 @@ def test_board_export():
             == "clean",
         )
         check(
-            "normalize ignores the legacy agent_verdict (ADR-18: the rename is one-way)",
+            "normalize ignores the legacy agent_verdict (rename is one-way)",
             normalize({"metadata": {"agent_verdict": "issues-found"}})["agent_recommendation"]
             == "",
         )
