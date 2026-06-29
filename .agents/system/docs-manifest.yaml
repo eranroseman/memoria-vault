@@ -4611,6 +4611,17 @@ entries:
   frontmatter: {}
   canonical_owner: false
   status: manual
+- path: docs/releasing/0.1.0-alpha.11/validation-log.md
+  title: 0.1.0-alpha.11 validation log
+  book: Internal
+  topic: null
+  frontmatter:
+    grand_parent: Releasing
+    nav_order: 3
+    parent: 0.1.0-alpha.11
+    title: 0.1.0-alpha.11 validation log
+  canonical_owner: false
+  status: manual
 - path: docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md
   title: "Release plan \u2014 0.1.0-alpha.2"
   book: Internal
