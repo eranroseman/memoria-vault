@@ -1,0 +1,1 @@
+Extracted alpha text.
