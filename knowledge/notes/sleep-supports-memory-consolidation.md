@@ -20,6 +20,9 @@ annotation_ref:
   page: 1
   quote: Sleep memory consolidation improves recall
   source_path: catalog/sources/doi-10.1000_cycle.2026/source.md
+links:
+  supports:
+  - knowledge/notes/thesis.md
 ---
 # Sleep supports memory consolidation
 
