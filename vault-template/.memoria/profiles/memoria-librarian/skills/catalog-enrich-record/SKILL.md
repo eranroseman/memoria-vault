@@ -53,7 +53,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| `citekey` | yes | Better BibTeX citekey; resolves in `.memoria/memoria.bib`. |
+| `citekey` | yes | Better BibTeX citekey; preserved on the source Concept and exported through generated `references.bib`. |
 | `--skip-enrichment` | no | Tier-0 floor only (offline capture); defer Tier-1. |
 | `--dry-run` | no | Report the bundle + planned writes; write nothing. |
 

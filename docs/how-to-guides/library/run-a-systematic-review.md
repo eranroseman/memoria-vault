@@ -16,7 +16,7 @@ Set up a PRISMA-compliant screening protocol and process the results into Memori
 - Memoria installed and the Librarian lane running
 - A defined, written research question
 - Access to at least two literature databases (PubMed, ACM DL, Scopus, arXiv, …)
-- Zotero + Better BibTeX — batch ingest without a `.bib` backbone is not worth the friction
+- Zotero + Better BibTeX — stable citekeys and source metadata keep batch capture reproducible
 - [ASReview](https://asreview.nl/) installed if the title/abstract pool exceeds ~200 records
 
 ## Steps

@@ -13,5 +13,5 @@ Everything Zotero in one place — the optional reference-manager backbone
 
 | Guide | When |
 | --- | --- |
-| [Set up Zotero](set-up-zotero.md) | Install Zotero + Better BibTeX and wire the auto-export. |
+| [Set up Zotero](set-up-zotero.md) | Install Zotero + Better BibTeX, pin citekeys, and leave bibliography generation to Memoria. |
 | [Fix a stale .bib](fix-stale-bib.md) | Retired alpha.10 capture-card troubleshooting. |

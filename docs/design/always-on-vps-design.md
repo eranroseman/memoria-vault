@@ -25,7 +25,7 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 | Desktop owns Obsidian and Zotero | The human review surface and bibliographic manager stay local to the PI's machine. |
 | VPS owns crons and dispatch | Scheduled work needs an always-awake host. |
 | Vault files sync between machines | The PI must see the results locally, while the VPS can process background work. |
-| `.memoria/memoria.bib` distribution avoids mid-transfer reads | The ingest path depends on stable citekey metadata; partial sync is a real failure mode. |
+| Worker-generated projections avoid mid-transfer reads | The ingest path depends on stable source/citekey metadata; partial sync is a real failure mode. |
 | Audit rows remain content-free and append-only | Multi-machine topology must not weaken the audit-memory contract. |
 
 ## Boundary
@@ -52,7 +52,7 @@ Support requires one live proof: a desktop capture syncs to the VPS, processes t
 | User services die on logout | The VPS runtime must keep user timers alive across SSH logout. |
 | Secrets drift between profiles | Profile redeploy remains the supported way to propagate `.env` changes. |
 | Two dispatchers run at once | The topology requires a single active dispatcher per vault. |
-| Bibliography sync is partial | `.memoria/memoria.bib` needs a stable distribution path, not a half-written sync read. |
+| Bibliography projection sync is partial | `references.bib` needs a worker-owned regeneration path, not a half-written sync read. |
 
 ## Related
 
