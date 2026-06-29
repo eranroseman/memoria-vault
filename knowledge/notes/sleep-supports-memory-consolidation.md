@@ -2,7 +2,7 @@
 type: note
 check_status: checked
 title: Sleep supports memory consolidation
-status: candidate
+status: accepted
 source_id: catalog/sources/doi-10.1000_cycle.2026
 evidence_set:
 - catalog/sources/doi-10.1000_cycle.2026/source.md
