@@ -18,7 +18,7 @@ massw:
 
 ## Synthesis
 
-Model-written Alpha framing outcomes.
+Hermes-written Alpha framing outcomes.
 
 ## Hub suggestions
 
