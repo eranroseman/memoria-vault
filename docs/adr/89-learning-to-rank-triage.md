@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [30, 54]
-supersedes: [59]
+supersedes: []
 superseded_by: []
 ---
 
@@ -47,6 +47,5 @@ learn the human's actual research preferences.
 
 ## Related
 
-- **Supersedes:** [ADR-59](59-classical-method-displacements.md).
 - **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-54](54-two-decision-kinds-batch-worklists.md).
 - **Tracking issue:** [#702](https://github.com/eranroseman/memoria-vault/issues/702).

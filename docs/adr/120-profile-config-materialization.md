@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [27, 48]
+assumes: [28, 48]
 supersedes: []
 superseded_by: []
 ---
@@ -16,8 +16,13 @@ superseded_by: []
 ## Context
 
 ADR-48 made the old SOUL/profile compiler unnecessary: the five profile postures are
-short and genuinely distinct. The drift that remains is narrower. ADR-27 makes
-`vault-template/.memoria/tool-registry.yaml` the source for each profile's positive
+short and genuinely distinct. The drift that remains is narrower. Hermes reads one
+plain per-profile `config.yaml`; that file owns `mcp_servers`, runtime platform
+toolsets, plugins, and the other profile settings Hermes loads. There is no runtime
+`mcp.json`, and each profile gets its own `.env` for secrets such as the Obsidian API
+key.
+
+`vault-template/.memoria/tool-registry.yaml` is the source for each profile's positive
 `platform_toolsets` and MCP tool filters, but the checked-in `config.yaml` files
 still repeated those derived blocks by hand.
 
@@ -37,6 +42,11 @@ The render script owns only the mechanical parts:
 
 Profile posture, MCP server endpoints/commands/timeouts, model placeholders, memory
 settings, plugin enablement, and package metadata stay ordinary profile source.
+
+The materialized configs keep Obsidian MCP as the normal vault-write path. Direct-world
+tool families such as `file`, `terminal`, and `code_execution` are not a Memoria lane
+write boundary; the `memoria-policy-gate` plugin hard-denies them fail-closed, and
+ADR-28 owns that enforcement mechanism.
 
 ## Consequences
 
@@ -58,7 +68,10 @@ and package manifests remain small and profile-specific.
 
 **Hermes-native inheritance.** Not available on the installed v0.17 configuration model.
 
+**Runtime `mcp.json`.** Rejected because Hermes does not load it for profile runtime
+configuration. MCP servers belong in profile `config.yaml`.
+
 ## Related
 
-- **Assumes:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-48](48-copi-and-agent-consolidation.md)
+- **Assumes:** [ADR-28](28-write-gate-as-plugin.md), [ADR-48](48-copi-and-agent-consolidation.md)
 - **Implementation:** `scripts/render_profile_configs.py`

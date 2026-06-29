@@ -64,7 +64,7 @@ matters*), not piecemeal.
   synonyms collapse and "bookkeeping" becomes the distinct **Telemetry**.
 - The four categories line up with two things already true: the **MCP-facade boundary**
   (Processing is agent-reachable; the other three are cron/CI-only) and the
-  **navigation model** ([ADR-68](68-workspaces-desk-library-studio.md) / report §3) —
+  **navigation model** ([ADR-81](81-persistent-gate-dashboards.md) / report §3) —
   Integrity → status bar + Action cards, Telemetry → pull dashboards, Cleanup →
   invisible, Processing → the knowledge itself.
 - The restructure fixes the structural inconsistencies: it gives **Cluster** a real
@@ -118,6 +118,6 @@ in alpha.3 ahead of the rename.
   `tests/test_precommit_schema.py`, `docs/explanation/engines/` (→ renamed),
   `docs/reference/system-actions.md`
 - **Related decisions / Depends on:** [ADR-46](46-seven-layer-architecture.md) (defines
-  the layer; its "engine" term is amended here), [ADR-68](68-workspaces-desk-library-studio.md)
+  the layer; its "engine" term is amended here), [ADR-81](81-persistent-gate-dashboards.md)
   (the navigation model the categories map onto)
 - **Source discussion:** the alpha.3 research notes (`open-issues-research` Issue 2, `naming-and-diataxis-audit`)

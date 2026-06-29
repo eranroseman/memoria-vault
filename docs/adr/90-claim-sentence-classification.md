@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [30, 51]
-supersedes: [59]
+supersedes: []
 superseded_by: []
 ---
 
@@ -46,6 +46,5 @@ review and context; the classifier only narrows the candidate set.
 
 ## Related
 
-- **Supersedes:** [ADR-59](59-classical-method-displacements.md).
 - **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-51](51-inbox-category-and-honesty-card.md).
 - **Tracking issue:** [#703](https://github.com/eranroseman/memoria-vault/issues/703).

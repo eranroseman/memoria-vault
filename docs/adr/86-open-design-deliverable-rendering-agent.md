@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [32]
-supersedes: [58]
+supersedes: []
 superseded_by: []
 ---
 
@@ -49,6 +49,5 @@ is not core research OS behavior and carries a large maintenance surface.
 
 ## Related
 
-- **Supersedes:** [ADR-58](58-adjacent-tool-integrations.md).
 - **Related decisions / Depends on:** [ADR-32](32-external-access-over-mcp.md).
 - **Tracking issue:** [#699](https://github.com/eranroseman/memoria-vault/issues/699).

@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [30]
-supersedes: [65]
+supersedes: []
 superseded_by: []
 ---
 
@@ -47,6 +47,5 @@ abstract-only slice can be useful independently.
 
 ## Related
 
-- **Supersedes:** [ADR-65](65-retrieval-and-schema-extensions.md).
 - **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md).
 - **Tracking issue:** [#712](https://github.com/eranroseman/memoria-vault/issues/712).

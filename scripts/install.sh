@@ -695,7 +695,7 @@ install_profiles() {
     dst="$staging/$p"
     run cp -R "$src" "$dst"
     # Substitute placeholders in config.yaml — the single file Hermes reads for
-    # model / mcp_servers / plugins / agent / terminal (ADR-27; a
+    # model / mcp_servers / plugins / agent / terminal (ADR-120; a
     # standalone mcp.json is never loaded, so it is not shipped). POSIX paths are
     # already forward-slash, so no conversion is needed.
     #   - {{PYTHON}}     -> the venv interpreter, so the policy MCP server + the
@@ -751,7 +751,7 @@ install_profiles() {
       # absent distribution paths on force-install, so reconcile it explicitly to
       # remove stale bundled skills from profiles that opt out.
       sync_profile_skills "$dst" "$HERMES_PROFILES_DIR/$p"
-      # Capability layer (ADR-27): each profile's config.yaml already carries
+      # Capability layer (ADR-120): each profile's config.yaml already carries
       # positive platform_toolsets plus a small disabled_toolsets backstop, so
       # the only vault-write path is the gated obsidian MCP. It ships in the
       # source config — nothing to inject here.

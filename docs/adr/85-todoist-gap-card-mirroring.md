@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [32, 51]
-supersedes: [58]
+supersedes: []
 superseded_by: []
 ---
 
@@ -47,6 +47,5 @@ state live in the vault.
 
 ## Related
 
-- **Supersedes:** [ADR-58](58-adjacent-tool-integrations.md).
 - **Related decisions / Depends on:** [ADR-32](32-external-access-over-mcp.md), [ADR-51](51-inbox-category-and-honesty-card.md).
 - **Tracking issue:** [#698](https://github.com/eranroseman/memoria-vault/issues/698).

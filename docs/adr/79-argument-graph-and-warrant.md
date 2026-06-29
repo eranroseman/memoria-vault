@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16
-assumes: [8, 52, 77, 78]
+assumes: [52, 77, 78]
 supersedes: []
 superseded_by: []
 ---
@@ -68,7 +68,7 @@ coverage.
 
 - **Files affected:** relation schema/contracts, Project structural-impact
   Operation, Project dashboards.
-- **Related decisions / Depends on:** [ADR-08](08-typed-relations-frontmatter.md),
+- **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
   [ADR-52](52-links-vs-relationships.md),
   [ADR-77](77-project-gate.md),
   [ADR-78](78-thesis-note-type.md).

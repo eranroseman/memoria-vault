@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [47, 57]
-supersedes: [58]
+supersedes: []
 superseded_by: []
 ---
 
@@ -47,6 +47,5 @@ method rationale outside the vault's schema and review discipline.
 
 ## Related
 
-- **Supersedes:** [ADR-58](58-adjacent-tool-integrations.md).
 - **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md), [ADR-57](57-engines-write-agents-judge.md).
 - **Tracking issue:** [#701](https://github.com/eranroseman/memoria-vault/issues/701).

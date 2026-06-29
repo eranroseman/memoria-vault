@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [32, 62]
-supersedes: [58]
+supersedes: []
 superseded_by: []
 ---
 
@@ -48,6 +48,5 @@ exposes too much and solves a broader problem than the snapshot need.
 
 ## Related
 
-- **Supersedes:** [ADR-58](58-adjacent-tool-integrations.md).
 - **Related decisions / Depends on:** [ADR-32](32-external-access-over-mcp.md), [ADR-62](62-measurement-and-verification-harnesses.md).
 - **Tracking issue:** [#700](https://github.com/eranroseman/memoria-vault/issues/700).

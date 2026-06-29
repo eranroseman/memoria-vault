@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-> *Note (0.1.0-alpha.2): the "seven specialist `SOUL.md`s" below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** profiles; likewise the ADR-01 three-layer framing in Related was superseded by the seven-layer model ([ADR-46](46-seven-layer-architecture.md)). The build-on-Hermes decision itself is unchanged.*
+> *Note (0.1.0-alpha.2): the "seven specialist `SOUL.md`s" below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** profiles; likewise the early three-layer framing was superseded by the seven-layer model ([ADR-46](46-seven-layer-architecture.md)). The build-on-Hermes decision itself is unchanged.*
 
 Memoria's entire execution layer — the Kanban board, the worker profiles, the dispatcher, the programmatic API — is supplied by an external runtime, [Hermes Agent](https://hermes-agent.nousresearch.com/) (Nous Research). This is a foundational, hard-to-reverse dependency: it determines what the board *is*, how profiles claim work, and where integrations connect. The choice was explained at length in [Why Hermes](../design/why-hermes.md) but never recorded as a decision, so the alternatives that were weighed — and the precise Memoria/Hermes boundary — had no fixed anchor. An ADR matters here specifically to preserve *what was rejected and why*, which is the part most likely to be re-litigated when a shinier runtime appears.
 
@@ -44,5 +44,5 @@ Memoria builds **on** Hermes rather than implementing its own runtime. Hermes ow
 ## Related
 
 - **Supporting rationale:** [Why Hermes](../design/why-hermes.md) (what Hermes provides, the boundary table, the API surface), [Why the architecture is layered](../design/why-layered-architecture.md) (thin-control-over-thick-state), [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md) (this as a deliberate "borrow").
-- **Related decisions:** [ADR-01 three-layer architecture](01-three-layer-architecture.md) (the layers Hermes coordinates); [ADR-02 seven specialist profiles](02-seven-specialist-profiles.md) (the profiles *are* Hermes profiles, and there is no Orchestrator); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (same thin-front rationale).
+- **Related decisions:** [ADR-46 seven-layer architecture](46-seven-layer-architecture.md) (the layers Hermes coordinates); [ADR-48 profile consolidation](48-copi-and-agent-consolidation.md) (the profiles *are* Hermes profiles, and there is no Orchestrator); [ADR-07 external coding agent boundary](07-delegate-coding-to-external-agents.md) (same thin-front rationale).
 - **Source discussion:** retroactively records the runtime choice already embedded in `why-hermes.md`. The evolving detail of the boundary lives in that doc; the decision to build on Hermes rather than reimplement it is what this ADR fixes.

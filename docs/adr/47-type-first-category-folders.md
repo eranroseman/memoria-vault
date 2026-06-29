@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [46]
-supersedes: [4]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-ADR-04 encoded lifecycle stage in numbered folders (`10-inbox/ … 50-deliverables/`),
+The original folder model encoded lifecycle stage in numbered folders (`10-inbox/ … 50-deliverables/`),
 which implied a pipeline. The design update (D2/D24) found the knowledge is a
 **network**, not a pipeline: direction belongs in a *state property*, and the real
 structural distinction is the entity/note/artifact/signal split.
@@ -55,11 +55,10 @@ folder — notes stay in their type-home and drop from active views.
 ## Alternatives considered
 
 **Keep lifecycle-numbered folders.** Implies a pipeline and makes every promotion a
-file move that breaks links. **Topic folders.** Rejected since ADR-04 for the same
+file move that breaks links. **Topic folders.** Rejected for the same
 reasons it was rejected there — topics are facets, not locations.
 
 ## Related
 
-- **Resolves / supersedes:** [ADR-04](04-lifecycle-over-topic-folders.md)
 - **Related decisions / Depends on:** [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-49](49-catalog-in-bases-linter-monitor.md)

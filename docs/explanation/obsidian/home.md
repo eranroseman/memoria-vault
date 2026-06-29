@@ -48,4 +48,4 @@ This is the same discipline applied to the dashboards themselves: the human-faci
 - The visual restraint Home participates in: [Visual discipline](../../design/visual-discipline.md)
 - The plugin inventory behind these surfaces: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - Current welcome-note decision: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)
-- Retired homepage history: [ADR-13](../../adr/13-homepage-front-door.md)
+- Current launch model: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)

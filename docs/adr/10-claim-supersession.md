@@ -23,7 +23,7 @@ superseded_by: []
 
 ## Context
 
-The claim-note schema records how *developed* a claim is (`maturity`: seedling → budding → evergreen) and how *durable* a note is (`lifecycle`: proposed → current → dormant → archived), but nothing records that a claim has been **overturned by a newer one**. An `evergreen` claim that a later finding invalidated is structurally indistinguishable from one that still holds, so `query`/`write` can resurface a stale belief as current. This is precisely the failure the long-term-memory literature isolates: **Memora**'s FAMA metric exists to penalize reuse of obsolete/invalidated memory, and **ClawArena**'s finding is "revise, don't accumulate." That same literature shows supersession is the *least reliably automatable* memory capability — which argues it must be carried by **structure** (human-set, agent-maintained), the "bookkeeping, not intelligence" principle Memoria is founded on. Existing pieces don't cover it: `contradicts` ([ADR-8](08-typed-relations-frontmatter.md)) is symmetric disagreement between coexisting claims, not directional replacement over time; the contradictions dashboard ([ADR-9](09-contradictions-dashboard.md)) surfaces coexisting contradictions, not directional replacement over time; and `drift-watch` tracks structural/config drift, not claim staleness.
+The claim-note schema records how *developed* a claim is (`maturity`: seedling → budding → evergreen) and how *durable* a note is (`lifecycle`: proposed → current → dormant → archived), but nothing records that a claim has been **overturned by a newer one**. An `evergreen` claim that a later finding invalidated is structurally indistinguishable from one that still holds, so `query`/`write` can resurface a stale belief as current. This is precisely the failure the long-term-memory literature isolates: **Memora**'s FAMA metric exists to penalize reuse of obsolete/invalidated memory, and **ClawArena**'s finding is "revise, don't accumulate." That same literature shows supersession is the *least reliably automatable* memory capability — which argues it must be carried by **structure** (human-set, agent-maintained), the "bookkeeping, not intelligence" principle Memoria is founded on. Existing pieces don't cover it: `contradicts` ([ADR-52](52-links-vs-relationships.md)) is symmetric disagreement between coexisting claims, not directional replacement over time; the contradictions dashboard ([ADR-9](09-contradictions-dashboard.md)) surfaces coexisting contradictions, not directional replacement over time; and `drift-watch` tracks structural/config drift, not claim staleness.
 
 ## Decision
 
@@ -37,8 +37,8 @@ updates an existing claim) into the proposal namespace for review, but never wri
 the link itself. Downstream, `query` and `write` exclude superseded claims by
 default, and a later Linter slice should add a FAMA-style detector that flags any
 draft or answer citing a superseded claim. This one relation is adopted as a
-**correctness-critical slice** of the [ADR-8](08-typed-relations-frontmatter.md)
-typed-relations namespace, which shipped on the same date.
+**correctness-critical slice** of the authored typed-link namespace later consolidated in
+[ADR-52](52-links-vs-relationships.md).
 
 ## Consequences
 
@@ -46,13 +46,13 @@ typed-relations namespace, which shipped on the same date.
 - Enables filtering superseded claims out of `query`/`write` and leaves a clear
   hook for a later FAMA-style Linter check — closing the current query-currency
   gap without pretending the draft-citation detector has shipped.
-- Advances the supersession slice without committing to full typed relations (ADR-8) or the contradictions dashboard (ADR-9); it is a deliberate partial adoption of ADR-8's namespace.
+- Advances the supersession slice without committing to a larger link-vocabulary build or the contradictions dashboard (ADR-9).
 - Adds a small schema obligation to the claim-note template (a `schema_version` bump) and one maintenance step when a claim is replaced.
 - v1 treats supersession as whole-claim and binary; *partial* supersession (a claim overturned only in part) is not modeled and is left to a future refinement.
 
 ## Alternatives considered
 
-**Defer alongside ADR-8** (treat supersession as just another typed relation, gated on corpus density): rejected. Generic relations had been deferred (ADR-8 was ratified together with this ADR on 2026-05-29) because their *omission only blocks queries*; supersession's omission causes a *correctness failure* (surfacing a stale claim as current — the FAMA failure mode). Its cost/benefit is inverted from generic relations — low marginal cost (one human-set link at a natural moment), high cost-of-omission — so it warrants carving out.
+**Defer alongside generic typed links** (treat supersession as just another typed relation, gated on corpus density): rejected. Generic relations can wait because their *omission only blocks queries*; supersession's omission causes a *correctness failure* (surfacing a stale claim as current — the FAMA failure mode). Its cost/benefit is inverted from generic relations — low marginal cost (one human-set link at a natural moment), high cost-of-omission — so it warrants carving out.
 
 **Reuse `lifecycle: dormant`/`archived`** to mark superseded claims: rejected. Lifecycle is about durability/activity, not validity, and carries no pointer to the replacement, so you can neither reliably filter "current belief" nor trace what replaced what. A lifecycle transition may *accompany* supersession but is not sufficient.
 
@@ -64,5 +64,5 @@ typed-relations namespace, which shipped on the same date.
 
 - **Workflows affected:** [Link checked notes](../how-to-guides/knowledge/link-related-claims.md) (where the link is set), [Query](../how-to-guides/knowledge/query-the-vault.md) (filter superseded claims), and project analysis once the FAMA-style draft detector ships.
 - **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Document types](../reference/document-types.md), the claim template, and `vault-template/.memoria/mcp/qmd_filter_mcp.py`.
-- **Related decisions / Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (adopts one relation from its namespace ahead of the rest); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
+- **Related decisions / Depends on:** [ADR-52 typed links](52-links-vs-relationships.md) (the authored link namespace); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
 - **Source discussion:** benchmark review — [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Change 1, and the benchmark detail); evidence from Memora/FAMA and ClawArena.

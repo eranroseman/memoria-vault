@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14
-assumes: [68, 69, 77]
+assumes: [69, 77, 81]
 supersedes: []
 superseded_by: []
 ---
@@ -15,8 +15,8 @@ superseded_by: []
 
 ## Context
 
-[ADR-68](68-workspaces-desk-library-studio.md) shipped the Desk/Library/Studio
-workspace *shells* under one layout contract, but the navigation *model* is
+The earlier Desk/Library/Studio workspace shells shipped under one layout contract,
+but the navigation *model* is
 unsettled: what each workspace is for, where "the system needs you" surfaces, and
 how the dashboards inside each are organized. alpha.3 is the UI build, so this needs
 deciding now.
@@ -49,7 +49,7 @@ object-first for browsing.
   **Processing** → the knowledge itself.
 - Base Board (kanban over Bases) is adopted only as a **version-pinned sandbox pilot**,
   not a committed dependency — native Bases has no board view yet.
-- Extends ADR-68 rather than replacing it; Studio remains the drafting shell, and
+- Extends the existing workspace-shell implementation rather than replacing it; Studio remains the drafting shell, and
   [ADR-77](77-project-gate.md) owns the Project gate's bounded-inquiry surface.
 
 ## When this matters
@@ -71,8 +71,8 @@ intent earns a concrete job.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md)
-  (the shells), [ADR-69]({{ site.baseurl }}/adr/69-operations-layer-naming.html) (the categories the dashboards
+- **Related decisions / Depends on:** [ADR-81](81-persistent-gate-dashboards.md)
+  (persistent dashboard notes), [ADR-69]({{ site.baseurl }}/adr/69-operations-layer-naming.html) (the categories the dashboards
   map onto), [ADR-77](77-project-gate.md) (the fourth gate)
 - **Implementing issues:** #467 (JTBD dashboards + intent-named gates), #375 (status-bar
   ambient indicator), #380 (assist surface), #145 (property display)

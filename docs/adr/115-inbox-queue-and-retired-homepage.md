@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
 assumes: [70, 81, 101, 114]
-supersedes: [13]
+supersedes: []
 superseded_by: []
 ---
 
@@ -22,7 +22,7 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 1. **Inbox was the fourth co-equal space** ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) — `type: space`, `space: inbox`), despite being a triage queue that converges to empty rather than a room you dwell in.
 2. **Every space note carried a nav row** — the switcher the rail replaced.
-3. **The homepage plugin opened the Inbox on launch** ([ADR-13](13-homepage-front-door.md), [ADR-81](81-persistent-gate-dashboards.md)). With the rail now carrying the "what needs me?" signal, forcing the full queue as the launch workspace is redundant, casts a knowledge/writing tool as inbox-management, and — since empty is the goal — often lands the human on nothing.
+3. **The homepage plugin opened the Inbox on launch** ([ADR-81](81-persistent-gate-dashboards.md)). With the rail now carrying the "what needs me?" signal, forcing the full queue as the launch workspace is redundant, casts a knowledge/writing tool as inbox-management, and — since empty is the goal — often lands the human on nothing.
 
 ## Decision
 
@@ -39,7 +39,7 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 - Data model: new `queue` type; `space` enum loses `inbox`; `folders.yaml` and the Linter `detectors.py` folder map gain `queue → spaces/`. Type count 24 → 25; templates exclude `queue` and the operation/system-only types that are not template-created, so the template count stays 19.
 - App config: `community-plugins.json` drops `homepage`; `vault-template/.obsidian/plugins/homepage/` is deleted and removed from `plugin-provenance-lock.json`; the **Memoria** workspace's main leaf points at `home.md` and pins `_nav.md`.
 - `home.md` is rewritten from a homepage-fallback into the welcome note. The launch repair path depends on the already-bundled QuickAdd startup hook plus Obsidian's core Workspaces plugin — no new community plugin or provenance lock.
-- Live docs are updated to current-state: the Inbox is "the queue" (not a space), the spaces are three, and the launch surface is the saved **Memoria** shell restored on startup. ADR and `releasing/` prose are left in their own vocabulary; only [ADR-13](13-homepage-front-door.md) is marked superseded.
+- Live docs are updated to current-state: the Inbox is "the queue" (not a space), the spaces are three, and the launch surface is the saved **Memoria** shell restored on startup.
 - The "what needs me?" ambient signal is fully carried by the rail's *Now*; the daily glance still lives on the Inbox queue note.
 
 ## Alternatives considered
@@ -51,7 +51,6 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 ## Related
 
-- **Supersedes:** [ADR-13](13-homepage-front-door.md) (the homepage front-door note auto-opened by obsidian-homepage).
 - **Refines:** [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces become three + the Inbox queue), [ADR-81](81-persistent-gate-dashboards.md) (dashboards stay persistent notes; only the launch target changes), [ADR-114](114-left-pane-navigator.md) (completes "Inbox is a state, not a place").
 - **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (system health is ambient).
 - **Onboarding seed:** [ADR-113](113-copi-guided-onboarding.md).

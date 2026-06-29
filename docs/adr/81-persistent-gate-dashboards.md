@@ -6,8 +6,8 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-18
 date_resolved: 2026-06-18
-assumes: [13, 55, 70, 72, 74]
-supersedes: [68]
+assumes: [55, 70, 72, 74]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-ADR-68 implemented navigation as three saved Obsidian workspaces: Desk, Library, and
+The earlier workspace model implemented navigation as three saved Obsidian workspaces: Desk, Library, and
 Studio. That made the implementation heavier than the requirement: a gate is a mode
 of work, while an Obsidian workspace is a saved pane layout. The alpha.7 UI review
 also split the old Studio responsibilities into Knowledge and Project, deferred the
@@ -43,7 +43,7 @@ Homepage plugin open the Inbox dashboard on startup. The core Workspaces plugin 
 enabled only for one "Memoria" reset layout; the QuickAdd workspace loader and
 per-gate workspace choices are retired.
 
-Desk is renamed to **Inbox** because the gate is the inbox queue; the previous ADR-68
+Desk is renamed to **Inbox** because the gate is the inbox queue; the previous
 rejection of that name no longer holds once the room metaphor is dropped. Library
 keeps its name. Knowledge carries claim and hub synthesis. Project carries bounded
 inquiry and thesis/project steering. Studio returns only with the deferred spatial
@@ -76,7 +76,7 @@ accepted decision ([ADR-83](83-direct-pi-relate-control.md)).
 
 ## Alternatives considered
 
-**Keep ADR-68 workspaces and add a fourth Project workspace.** Rejected because it
+**Keep saved workspaces and add a fourth Project workspace.** Rejected because it
 continues to treat a mode as a layout, adds more serialized UI state, and leaves the
 Studio/Project split ambiguous.
 
@@ -96,11 +96,9 @@ metaphor.
   `vault-template/.obsidian/plugins/homepage/data.json`, `vault-template/.obsidian/plugins/quickadd/data.json`,
   `vault-template/.obsidian/plugins/cmdr/data.json`, `vault-template/.obsidian/app.json`,
   `vault-template/.obsidian/core-plugins.json`.
-- **Related decisions / Depends on:** [ADR-13](13-homepage-front-door.md),
-  [ADR-55](55-src-scaffold-populate-golden-copy.md),
+- **Related decisions / Depends on:** [ADR-55](55-src-scaffold-populate-golden-copy.md),
   [ADR-70](70-navigation-gates-dashboards.md),
   [ADR-72](72-command-surfacing.md),
   [ADR-74](74-pinned-obsidian-plugin-supply-chain.md).
 - **Related future proposals:** [ADR-102](102-disposable-projection-engine.md),
   [ADR-103](103-projected-canvas-spatial-axis.md).
-- **Resolves / supersedes:** [ADR-68](68-workspaces-desk-library-studio.md).

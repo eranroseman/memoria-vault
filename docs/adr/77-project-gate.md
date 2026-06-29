@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16
-assumes: [68, 70, 48, 49, 51, 69]
+assumes: [70, 48, 49, 51, 69]
 supersedes: []
 superseded_by: []
 ---
@@ -16,8 +16,8 @@ superseded_by: []
 ## Context
 
 [ADR-70](70-navigation-gates-dashboards.md) reserved the fourth top-level gate for
-Project work, and [ADR-68](68-workspaces-desk-library-studio.md) left `projects/`
-empty while Studio carried drafting. alpha.5 is the first checkpoint where that
+Project work, and the existing workspace shell left `projects/` empty while Studio
+carried drafting. alpha.5 is the first checkpoint where that
 slot has a concrete job: bounded inquiry that turns catalog/source work into a
 defended or falsified thesis. The gate must preserve Memoria's deepest boundary:
 agents propose, deterministic Operations derive views, and the PI promotes.
@@ -83,8 +83,7 @@ default; per-note stamps need a specific rendering constraint to justify them.
 - **Files affected:** `vault-template/projects/`, `vault-template/system/templates/`,
   `vault-template/.memoria/schemas/types/`, `vault-template/.memoria/operations/`, workspace/dashboard
   files.
-- **Related decisions / Depends on:** [ADR-68](68-workspaces-desk-library-studio.md),
-  [ADR-70](70-navigation-gates-dashboards.md),
+- **Related decisions / Depends on:** [ADR-70](70-navigation-gates-dashboards.md),
   [ADR-78](78-thesis-note-type.md),
   [ADR-79](79-argument-graph-and-warrant.md).
 - **Source discussion:** alpha.5 workstream
