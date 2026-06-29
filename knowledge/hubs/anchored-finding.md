@@ -1,7 +1,7 @@
 ---
 type: hub
 check_status: checked
-title: Impact
+title: Anchored finding
 description: Machine suggestion from PDF Source.
 members:
 - knowledge/digests/pdf-source.md
@@ -10,6 +10,6 @@ confidence: low
 tags:
 - suggestion
 ---
-# Impact
+# Anchored finding
 
 Suggested update from `knowledge/digests/pdf-source.md`. Curated hubs are not overwritten.
