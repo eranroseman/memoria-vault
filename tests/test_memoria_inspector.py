@@ -1,6 +1,7 @@
 """Memoria Inspector plugin contract."""
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -282,7 +283,7 @@ async function click(text) {{
         check=False,
         text=True,
         capture_output=True,
-        env={"NODE_PATH": str(harness / "node_modules")},
+        env={**os.environ, "NODE_PATH": str(harness / "node_modules")},
     )
 
     assert proc.returncode == 0, proc.stderr or proc.stdout
