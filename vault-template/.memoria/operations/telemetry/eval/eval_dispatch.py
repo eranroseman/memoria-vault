@@ -25,10 +25,15 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import re
 import subprocess
 import sys
 from pathlib import Path
+
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.lib.markdown import parse_frontmatter, strip_frontmatter
 
 # task lane -> the background agent that owns it (ADR-48 §4.1).
 # Mirrors mcp/tasks_mcp.py LANE_PROFILE (the sweeps operations don't import from
@@ -76,21 +81,6 @@ fill the fields your workflow produces and omit the rest:
 citekey you offered as evidence; `claims` = every claim note you used or
 produced (`[]` if none); `self_score` = your honest rubric verdict above."""
 
-_FM = re.compile(r"^---\n(.*?)\n---\n?", re.S)
-
-
-def parse_frontmatter(text: str) -> dict:
-    """YAML frontmatter -> dict ({} if absent/invalid). PyYAML is a vault dep."""
-    m = _FM.match(text)
-    if not m:
-        return {}
-    try:
-        import yaml
-
-        return yaml.safe_load(m.group(1)) or {}
-    except Exception:  # noqa: BLE001
-        return {}
-
 
 def quarter_of(today: datetime.date | None = None) -> str:
     """The idempotency window: '2026-Q2'."""
@@ -128,7 +118,7 @@ def load_gold_tasks(vault: Path) -> list[dict]:
                 "workflow": str(fm.get("workflow") or ""),
                 "lane": lane,
                 "references": [str(c) for c in (fm.get("references") or [])],
-                "body": _FM.sub("", text, count=1).strip(),
+                "body": strip_frontmatter(text).strip(),
                 "path": p,
             }
         )

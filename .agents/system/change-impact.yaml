@@ -119,8 +119,6 @@ areas:
     paths:
       - scripts/test-l2.sh
       - scripts/l2_smoke.py
-      - scripts/l2_openai_smoke_server.py
-      - scripts/l2_obsidian_mcp_shim.py
     inspect:
       - Hermes profile/config assumptions from upstream docs
       - Disposable vault isolation and temporary HERMES_HOME behavior
@@ -172,7 +170,7 @@ areas:
       - Generated agent references
     checks:
       - python scripts/docs_doctor.py docs
-      - bash scripts/check-vault-links.sh
+      - python scripts/docs_doctor.py --vault-links
       - python scripts/status_doctor.py
       - python scripts/agents_doctor.py
       - npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files --gitignore "**/*.md"

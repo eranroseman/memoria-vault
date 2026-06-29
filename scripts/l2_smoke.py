@@ -4,9 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -42,6 +46,240 @@ DISABLED_TOOLSETS = [
     "yuanbao",
 ]
 SMOKE_PLATFORM_TOOLSETS = ["skills", "obsidian"]
+MODEL = "memoria-l2-smoke"
+ARTIFACT = "knowledge/notes/l2-smoke-direct-write.md"
+ARTIFACT_BODY = """---
+type: note
+check_status: checked
+title: L2 direct write smoke
+l2_live_smoke: true
+---
+
+# L2 live smoke
+
+This direct write should be blocked by the Memoria policy gate.
+"""
+
+
+class SmokeHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
+    def log_message(self, fmt: str, *args: object) -> None:
+        return
+
+    def do_GET(self) -> None:
+        if self.path.rstrip("/") == "/v1/models":
+            self._json(200, {"object": "list", "data": [{"id": MODEL, "object": "model"}]})
+            return
+        self._json(404, {"error": {"message": "not found"}})
+
+    def do_POST(self) -> None:
+        if self.path.rstrip("/") != "/v1/chat/completions":
+            self._json(404, {"error": {"message": "not found"}})
+            return
+        request = self._read_json()
+        if _has_tool_result(request):
+            self._respond_final(bool(request.get("stream")))
+            return
+        self._respond_tool_call(request, bool(request.get("stream")))
+
+    def _read_json(self) -> dict[str, Any]:
+        length = int(self.headers.get("Content-Length", "0"))
+        raw = self.rfile.read(length)
+        return json.loads(raw.decode("utf-8")) if raw else {}
+
+    def _respond_tool_call(self, request: dict[str, Any], stream: bool) -> None:
+        tool_name = _select_put_tool(request)
+        if not tool_name:
+            self._json(400, {"error": {"message": "no put_content tool supplied"}})
+            return
+        args = json.dumps({"path": ARTIFACT, "content": ARTIFACT_BODY})
+        if not stream:
+            self._json(
+                200,
+                {
+                    "id": "chatcmpl-l2-smoke",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": MODEL,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": None,
+                                "tool_calls": [
+                                    {
+                                        "id": "call_l2_smoke",
+                                        "type": "function",
+                                        "function": {"name": tool_name, "arguments": args},
+                                    }
+                                ],
+                            },
+                            "finish_reason": "tool_calls",
+                        }
+                    ],
+                },
+            )
+            return
+        self._sse(
+            [
+                _chunk(
+                    {
+                        "role": "assistant",
+                        "tool_calls": [
+                            {
+                                "index": 0,
+                                "id": "call_l2_smoke",
+                                "type": "function",
+                                "function": {"name": tool_name, "arguments": ""},
+                            }
+                        ],
+                    }
+                ),
+                _chunk({"tool_calls": [{"index": 0, "function": {"arguments": args}}]}),
+                _chunk({}, finish_reason="tool_calls"),
+            ]
+        )
+
+    def _respond_final(self, stream: bool) -> None:
+        if not stream:
+            self._json(
+                200,
+                {
+                    "id": "chatcmpl-l2-smoke-final",
+                    "object": "chat.completion",
+                    "created": int(time.time()),
+                    "model": MODEL,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": "L2_SMOKE_DONE"},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                },
+            )
+            return
+        self._sse(
+            [
+                _chunk({"role": "assistant", "content": ""}),
+                _chunk({"content": "L2_SMOKE_DONE"}),
+                _chunk({}, finish_reason="stop"),
+            ]
+        )
+
+    def _json(self, status: int, payload: dict[str, Any]) -> None:
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _sse(self, chunks: list[dict[str, Any]]) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+        for chunk in chunks:
+            self.wfile.write(f"data: {json.dumps(chunk)}\n\n".encode())
+            self.wfile.flush()
+        self.wfile.write(b"data: [DONE]\n\n")
+        self.wfile.flush()
+
+
+def _select_put_tool(request: dict[str, Any]) -> str:
+    for tool in request.get("tools") or []:
+        function = tool.get("function") or {}
+        name = function.get("name") or ""
+        if "obsidian" in name and "put_content" in name:
+            return name
+    return ""
+
+
+def _has_tool_result(request: dict[str, Any]) -> bool:
+    return any(message.get("role") == "tool" for message in request.get("messages") or [])
+
+
+def _chunk(delta: dict[str, Any], finish_reason: str | None = None) -> dict[str, Any]:
+    return {
+        "id": "chatcmpl-l2-smoke",
+        "object": "chat.completion.chunk",
+        "created": int(time.time()),
+        "model": MODEL,
+        "choices": [{"index": 0, "delta": delta, "finish_reason": finish_reason}],
+    }
+
+
+def serve_model(host: str, port: int, port_file: Path | None = None) -> None:
+    server = ThreadingHTTPServer((host, port), SmokeHandler)
+    bound_host, bound_port = server.server_address
+    if port_file:
+        port_file.write_text(f"http://{bound_host}:{bound_port}/v1\n", encoding="utf-8")
+    print(f"http://{bound_host}:{bound_port}/v1", flush=True)
+    server.serve_forever()
+
+
+def safe_vault_path(vault: Path, relpath: str) -> Path:
+    candidate = Path(relpath)
+    if candidate.is_absolute() or ".." in candidate.parts:
+        raise ValueError(f"path must stay inside the vault: {relpath}")
+    resolved = (vault / candidate).resolve()
+    try:
+        resolved.relative_to(vault.resolve())
+    except ValueError as exc:
+        raise ValueError(f"path escapes the vault: {relpath}") from exc
+    return resolved
+
+
+def put_content(vault: Path, path: str, content: str) -> dict[str, str]:
+    target = safe_vault_path(vault, path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+    return {"path": path, "status": "written"}
+
+
+def append_content(vault: Path, path: str, content: str) -> dict[str, str]:
+    target = safe_vault_path(vault, path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(content)
+    return {"path": path, "status": "appended"}
+
+
+def get_content(vault: Path, path: str) -> str:
+    return safe_vault_path(vault, path).read_text(encoding="utf-8")
+
+
+def serve_obsidian_shim(vault: Path) -> None:
+    try:
+        from mcp.server.fastmcp import FastMCP  # type: ignore
+    except ImportError as exc:
+        raise SystemExit(
+            "Missing MCP SDK. Install runtime deps first: "
+            "python -m pip install -r vault-template/.memoria/mcp/requirements.txt"
+        ) from exc
+
+    mcp = FastMCP("l2-obsidian-shim")
+
+    @mcp.tool(name="obsidian_put_content")
+    def _put(path: str, content: str) -> dict[str, str]:
+        """Write a complete vault-relative file."""
+        return put_content(vault, path, content)
+
+    @mcp.tool(name="obsidian_append_content")
+    def _append(path: str, content: str) -> dict[str, str]:
+        """Append text to a vault-relative file."""
+        return append_content(vault, path, content)
+
+    @mcp.tool(name="obsidian_get_content")
+    def _get(path: str) -> str:
+        """Read a vault-relative file."""
+        return get_content(vault, path)
+
+    mcp.run()
 
 
 def prepare_vault(root: Path, vault: Path) -> None:
@@ -93,7 +331,8 @@ def write_profile(
             "obsidian": {
                 "command": python,
                 "args": [
-                    str(repo_root / "scripts/l2_obsidian_mcp_shim.py"),
+                    str(repo_root / "scripts/l2_smoke.py"),
+                    "obsidian-shim",
                     "--vault",
                     str(vault),
                 ],
@@ -197,6 +436,14 @@ def main(argv: list[str] | None = None) -> int:
     check.add_argument("--artifact", required=True)
     check.add_argument("--audit-before", required=True, type=int)
 
+    model = sub.add_parser("serve-model")
+    model.add_argument("--host", default="127.0.0.1")
+    model.add_argument("--port", type=int, default=0)
+    model.add_argument("--port-file", type=Path)
+
+    shim = sub.add_parser("obsidian-shim")
+    shim.add_argument("--vault", required=True, type=Path)
+
     ns = parser.parse_args(argv)
     if ns.command == "prepare-vault":
         prepare_vault(ns.root, ns.vault)
@@ -218,6 +465,10 @@ def main(argv: list[str] | None = None) -> int:
         print(count_audit_rows(ns.vault))
     elif ns.command == "assert-smoke":
         assert_smoke(ns.vault, ns.artifact, ns.audit_before)
+    elif ns.command == "serve-model":
+        serve_model(ns.host, ns.port, ns.port_file)
+    elif ns.command == "obsidian-shim":
+        serve_obsidian_shim(ns.vault.resolve())
     return 0
 
 

@@ -34,7 +34,7 @@ Run:
 
 ```bash
 python scripts/docs_doctor.py docs
-bash scripts/check-vault-links.sh
+python scripts/docs_doctor.py --vault-links
 ```
 
 Distinguish blocking failures from known advisory warnings.
@@ -55,7 +55,8 @@ Distinguish blocking failures from known advisory warnings.
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
   matching generator check (`gen_reference_refs.py --check`,
-  `gen_profiles_ref.py --check`) or route the change to the source/generator.
+  `render_profile_configs.py reference --check`) or route the change to the
+  source/generator.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.

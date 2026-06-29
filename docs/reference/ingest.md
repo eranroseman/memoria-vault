@@ -18,9 +18,8 @@ adapters map either one Zotero Local API item JSON snapshot
 first (`capture_zotero_local_source()`). Zotero imports are source/item imports
 only in alpha.11; Zotero annotations are not imported. The PDF
 adapter `capture_pdf_source()` uses the optional PyMuPDF parser from the vault
-MCP requirements to extract page text and derive page/text/bbox annotation refs
-for requested quotes. URL snapshots use `capture_url_source()` with stdlib HTML
-text extraction.
+MCP requirements to extract page text. URL snapshots use `capture_url_source()`
+with stdlib HTML text extraction.
 
 The older paper-ingest operation under
 `vault-template/.memoria/operations/processing/ingest/` is pre-reset code. It is
@@ -36,7 +35,7 @@ not the alpha.11 source of truth for catalog writes.
 | BibTeX import | `capture_bibtex_source()` | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.bib`, and the same checked source Concept. |
 | Zotero item import | `capture_zotero_source()` / `capture_zotero_local_source()` / worker `capture-zotero-source` | Maps one Zotero Local API item JSON snapshot or fetches one local API item key, then writes stable `source_id`, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.zotero.json`, and the same checked source Concept. |
 | URL snapshot | `capture_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes the same checked source Concept path. |
-| PDF import | `capture_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed markdown behind a basic text-coherence guard and derives annotation refs with `source_id`, `raw_copy_path`, page, quote text, and bbox for requested quotes. |
+| PDF import | `capture_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed markdown behind a basic text-coherence guard and writes the same checked source Concept path. |
 | Metadata merge | `capture_source()` | Recapturing the same stable source path with identical raw/content merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
 | Metadata-derived entities | `capture_source()` | Creates checked `catalog/entities/person-*.md` Concepts from CSL authors and `catalog/entities/venue-*.md` from `container-title`, links the source to them, and merges exact deterministic entity paths by appending `links.sources`. |
 | Metadata check | `check_source_metadata()` / worker `check-source-metadata` | Flags checked sources that lack citekey, CSL-JSON basics, issued year, an external resource/identifier, or carry conflicting DOI metadata. |
@@ -51,10 +50,6 @@ parser is installed. Live Zotero availability smoke, live URL smoke beyond
 mocked fetch tests, live identifier lookup, ambiguous entity disambiguation,
 ambiguous identity flags, parser selection, and richer coherence gates remain
 WP4 follow-on work.
-
-For annotated PDFs, capture preserves the raw `.pdf` blob path and hash; the PDF
-adapter can derive `annotation_ref` page/span/bbox metadata for caller-supplied
-quote text.
 
 ## Source Concept
 
@@ -82,6 +77,7 @@ blobs are not indexed by the checked-only search input rebuild.
 - Live URL smoke beyond mocked single-page fetch tests.
 - Live Zotero availability smoke beyond mocked item-key fetch tests.
 - Parser selection and richer coherence gates for PDFs and other source formats.
+- Zotero annotation import and PDF quote/bbox annotation references.
 - Ambiguous entity disambiguation beyond exact deterministic CSL author and venue paths.
 
 ## Related

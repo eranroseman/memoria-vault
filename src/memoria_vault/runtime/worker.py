@@ -790,7 +790,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         title = str(payload.get("title") or "").strip()
         description = str(payload.get("description") or "").strip()
         raw_pdf_base64 = str(payload.get("raw_pdf_base64") or "").strip()
-        annotation_quotes = payload.get("annotation_quotes") or []
         if not source_id:
             raise ValueError("capture-pdf-source requires source_id")
         if not title:
@@ -799,10 +798,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("capture-pdf-source requires description")
         if not raw_pdf_base64:
             raise ValueError("capture-pdf-source requires raw_pdf_base64")
-        if not isinstance(annotation_quotes, list) or not all(
-            isinstance(quote, str) for quote in annotation_quotes
-        ):
-            raise ValueError("capture-pdf-source annotation_quotes must be strings")
         identifiers = payload.get("identifiers")
         csl_json = payload.get("csl_json")
         if identifiers is not None and not isinstance(identifiers, dict):
@@ -815,7 +810,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             title,
             description,
             base64.b64decode(raw_pdf_base64),
-            annotation_quotes=annotation_quotes,
             raw_filename=str(payload.get("raw_filename") or "source.pdf"),
             resource=str(payload.get("resource") or ""),
             item_type=str(payload.get("item_type") or "article"),
@@ -833,7 +827,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
             "entity_paths": result["entity_paths"],
-            "annotation_refs": result["annotation_refs"],
         }
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib

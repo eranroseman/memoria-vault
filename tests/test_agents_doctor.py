@@ -7,18 +7,15 @@ def test_agent_guidance_is_valid_and_generated_files_are_current():
     assert agents_doctor.check() == []
 
 
-def test_docs_manifest_routes_model_and_runtime_surfaces():
-    manifest = agents_doctor.yaml.safe_load(agents_doctor._render_docs_manifest())
-    entries = {entry["path"]: entry for entry in manifest["entries"]}
+def test_generated_agent_references_are_limited_to_guidance_mirrors():
+    generated = {
+        path.relative_to(agents_doctor.ROOT).as_posix() for path in agents_doctor.generated_files()
+    }
 
-    assert entries["AGENTS.md"]["book"] == "Reference"
-    assert entries["docs/developers.md"]["book"] == "Developers"
-    assert entries["docs/adr/README.md"]["book"] == "Developers"
-    assert entries["docs/design/README.md"]["book"] == "Developers"
-    assert entries["docs/explanation/README.md"]["book"] == "Explanation"
-    assert entries["docs/reference/README.md"]["book"] == "Reference"
-    assert entries["docs/README.md"]["book"] == "Model spine"
-    assert entries["docs/README.md"]["canonical_owner"] is True
+    assert generated == {
+        ".agents/system/change-impact-map.md",
+        ".agents/system/profile-policy-matrix.md",
+    }
 
 
 def test_change_impact_registry_has_paths_and_checks():

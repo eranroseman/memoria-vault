@@ -1,9 +1,7 @@
 name: python-selftest
 
 # Runs the L1 pytest suite (tests/) for the vault's Python tooling + repo scripts
-# against the real runtime deps (ADR-44), then gates dashboard schema-drift over the
-# real vault-template tree (a dashboard querying a field no template emits shows an empty
-# table forever — silent, so CI must catch it).
+# against the real runtime deps (ADR-44), then runs the offline e2e smoke.
 #
 # policy_mcp degrades without PyYAML, but policy_hook's test writes a lane YAML and
 # needs it to load — so we install runtime requirements (mcp + PyYAML) plus the
@@ -46,17 +44,8 @@ jobs:
         run: |
           python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -r vault-template/.memoria/mcp/requirements.txt
-      - name: Run L1 component tests (pytest)
-        # ADR-44: the former per-module --self-test suites now live in tests/.
-        run: python -m pytest tests/ -q
-      - name: Check ADR index is current
-        run: python scripts/gen_adr_index.py --check
-      - name: Gate dashboard schema-drift (real vault)
-        # Only dashboard-field-drift blocks; vault content findings (broken
-        # wikilinks, schema-check) stay advisory — they're not this gate's job.
-        run: |
-          python vault-template/.memoria/operations/integrity/linter/detectors.py \
-            --vault vault-template --gate dashboard-field-drift
+      - name: Run L1 component tests
+        run: bash scripts/test.sh l1
 
       - name: E2E smoke (offline vault build + the Library loop)
         # Builds a vault from vault-template/ exactly as the installer would, then walks

@@ -209,7 +209,7 @@
       ],
       "title": "Capture PDF source",
       "trust": {
-        "sha256": "sha256:cc802a6aca7971d8a7dadf1d1f01300d52d593a11d3d72de6c1d4329b915fc6f",
+        "sha256": "sha256:a5a39ea5e68a9e5c76fab431ef24a0a55801d63b7804501e2da5bb4826c467d0",
         "source": "local"
       },
       "type": "operation"

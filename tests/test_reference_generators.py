@@ -11,4 +11,8 @@ def test_schema_reference_docs_are_current():
 
 
 def test_profile_reference_doc_is_current():
-    subprocess.run(["python", "scripts/gen_profiles_ref.py", "--check"], cwd=ROOT, check=True)
+    subprocess.run(
+        ["python", "scripts/render_profile_configs.py", "reference", "--check"],
+        cwd=ROOT,
+        check=True,
+    )

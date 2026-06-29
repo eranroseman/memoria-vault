@@ -1,14 +1,8 @@
 name: lint
 
-# One job for the fast Python checks — ruff, docs-doctor, docs-links (vault link
-# resolution), and repo doctors — sharing a single runner + checkout + Python
-# setup instead of separate workflows. Replaces ruff.yml, docs-doctor.yml, and
-# docs-links.yml.
-#
-# RULESET COORDINATION (required before merge): the branch ruleset still requires
-# `docs-doctor` and `docs-links` by name. Update Settings → Rules → Rulesets →
-# "main" → Require status checks: remove `docs-doctor` and `docs-links`, add
-# `lint`. No `paths:` filter — reports on every PR (AGENTS.md §4).
+# Runs the L0 source gate from scripts/test.sh: ruff, docs/reference checks,
+# repo doctors, syntax checks, and schema/design drift. No `paths:` filter —
+# reports on every PR (AGENTS.md §4).
 
 on:
   push:
@@ -33,29 +27,5 @@ jobs:
           python-version: "3.12"
       - name: Install lint dependencies
         run: python -m pip install --quiet -r requirements-dev.txt
-      - name: ruff
-        # Keep this aligned with scripts/test.sh and .pre-commit-config.yaml.
-        run: ruff check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
-      - name: ruff-format
-        # Layout is enforced by `ruff format`; this fails if anything is unformatted.
-        run: ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
-      - name: docs-doctor
-        run: python scripts/docs_doctor.py docs
-      - name: profile-reference
-        run: python scripts/gen_profiles_ref.py --check
-      - name: docs-links
-        run: bash scripts/check-vault-links.sh
-      - name: status-doctor
-        run: python scripts/status_doctor.py
-      - name: adr-code-doctor
-        run: python scripts/adr_code_doctor.py
-      - name: agents-doctor
-        run: python scripts/agents_doctor.py
-      - name: github-doctor
-        run: python scripts/github_doctor.py
-      - name: ruleset contract
-        run: python scripts/ruleset_doctor.py
-      - name: plugin-provenance-doctor
-        run: python scripts/plugin_provenance_doctor.py
-      - name: test-runner paths
-        run: bash scripts/test.sh check   # L1 module paths in test.sh resolve (drift guard)
+      - name: Run L0 source gate
+        run: bash scripts/test.sh l0

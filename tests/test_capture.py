@@ -146,9 +146,7 @@ def test_capture_source_refuses_to_replace_existing_raw(tmp_path: Path) -> None:
     ).read_bytes() == b"raw alpha bytes"
 
 
-def test_capture_pdf_source_derives_content_and_annotation_refs(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
 
     monkeypatch.setattr(
@@ -157,12 +155,6 @@ def test_capture_pdf_source_derives_content_and_annotation_refs(
             {
                 "page": 3,
                 "text": "The PDF reports an anchored finding on page 3.",
-                "blocks": [
-                    {
-                        "text": "The PDF reports an anchored finding on page 3.",
-                        "bbox": [72.0, 144.0, 300.0, 180.0],
-                    }
-                ],
             }
         ],
     )
@@ -174,23 +166,11 @@ def test_capture_pdf_source_derives_content_and_annotation_refs(
         "A fixture PDF source.",
         b"%PDF-1.4 fixture bytes\n",
         raw_filename="paper.pdf",
-        annotation_quotes=["anchored finding"],
         machine="test-machine",
     )
 
     assert result["content_path"] == "catalog/sources/pdf-source/content.md"
     assert "## Page 3" in (vault / result["content_path"]).read_text(encoding="utf-8")
-    assert result["annotation_refs"] == [
-        {
-            "source_id": "catalog/sources/pdf-source/source.md",
-            "raw_copy_path": "catalog/sources/pdf-source/raw/paper.pdf",
-            "page": 3,
-            "text_quote": "anchored finding",
-            "bbox": [72.0, 144.0, 300.0, 180.0],
-            "text_start": 19,
-            "text_end": 35,
-        }
-    ]
     fm = read_frontmatter(vault / result["source_path"])
     assert fm["raw_copy_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
@@ -222,105 +202,6 @@ def test_capture_pdf_source_rejects_incoherent_parser_text(tmp_path: Path, monke
 
     assert not (vault / "journal").exists()
     assert not (vault / "catalog/sources/bad-pdf").exists()
-
-
-def test_capture_pdf_source_resolves_annotation_quotes_before_writing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    vault = workspace(tmp_path)
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.capture._extract_pdf_pages",
-        lambda _raw: [
-            {
-                "page": 1,
-                "text": "The parsed PDF text does not contain the requested selector.",
-                "blocks": [
-                    {
-                        "text": "The parsed PDF text does not contain the requested selector.",
-                        "bbox": [72.0, 144.0, 300.0, 180.0],
-                    }
-                ],
-            }
-        ],
-    )
-
-    with pytest.raises(ValueError, match="annotation quote not found"):
-        capture_pdf_source(
-            vault,
-            "missing-selector",
-            "Missing Selector PDF",
-            "A fixture PDF source.",
-            b"%PDF-1.4 fixture bytes\n",
-            annotation_quotes=["absent quote"],
-            machine="test-machine",
-        )
-
-    assert not (vault / "journal").exists()
-    assert not (vault / "catalog/sources/missing-selector").exists()
-
-
-def test_capture_pdf_source_rejects_ambiguous_annotation_quotes_before_writing(
-    tmp_path: Path, monkeypatch
-) -> None:
-    vault = workspace(tmp_path)
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.capture._extract_pdf_pages",
-        lambda _raw: [
-            {
-                "page": 1,
-                "text": "shared quote\nshared quote",
-                "blocks": [
-                    {"text": "shared quote", "bbox": [72.0, 144.0, 150.0, 160.0]},
-                    {"text": "shared quote", "bbox": [72.0, 200.0, 150.0, 216.0]},
-                ],
-            }
-        ],
-    )
-
-    with pytest.raises(ValueError, match="annotation quote is ambiguous"):
-        capture_pdf_source(
-            vault,
-            "ambiguous-selector",
-            "Ambiguous Selector PDF",
-            "A fixture PDF source.",
-            b"%PDF-1.4 fixture bytes\n",
-            annotation_quotes=["shared quote"],
-            machine="test-machine",
-        )
-
-    assert not (vault / "journal").exists()
-    assert not (vault / "catalog/sources/ambiguous-selector").exists()
-
-
-def test_capture_pdf_source_requires_bbox_for_annotation_refs(tmp_path: Path, monkeypatch) -> None:
-    vault = workspace(tmp_path)
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.capture._extract_pdf_pages",
-        lambda _raw: [
-            {
-                "page": 1,
-                "text": "bbox-less quote",
-                "blocks": [{"text": "bbox-less quote", "bbox": None}],
-            }
-        ],
-    )
-
-    with pytest.raises(ValueError, match="without usable bbox"):
-        capture_pdf_source(
-            vault,
-            "bboxless-selector",
-            "BBoxless Selector PDF",
-            "A fixture PDF source.",
-            b"%PDF-1.4 fixture bytes\n",
-            annotation_quotes=["bbox-less quote"],
-            machine="test-machine",
-        )
-
-    assert not (vault / "journal").exists()
-    assert not (vault / "catalog/sources/bboxless-selector").exists()
 
 
 def test_capture_source_validates_before_journaling(tmp_path: Path) -> None:

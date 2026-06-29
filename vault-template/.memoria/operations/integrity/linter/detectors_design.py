@@ -5,8 +5,15 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.lib.markdown import parse_frontmatter
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 _HEX_COLOR = re.compile(r"#[0-9A-Fa-f]{3,8}\b")
@@ -58,21 +65,6 @@ def iter_files(vault: Path):
         dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
         for name in sorted(filenames):
             yield Path(dirpath) / name
-
-
-def parse_frontmatter(text: str) -> dict:
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}
-    try:
-        import yaml
-
-        data = yaml.safe_load(text[3:end])
-        return data if isinstance(data, dict) else {}
-    except Exception:  # noqa: BLE001
-        return {}
 
 
 def _design_spec(vault: Path) -> str:

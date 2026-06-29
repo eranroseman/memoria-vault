@@ -343,7 +343,6 @@ def capture_pdf_source(
     description: str,
     raw_bytes: bytes,
     *,
-    annotation_quotes: list[str] | None = None,
     raw_filename: str = "source.pdf",
     resource: str = "",
     item_type: str = "article",
@@ -355,18 +354,13 @@ def capture_pdf_source(
     run_id: str | None = None,
     required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    """Capture a PDF raw blob, extracting text and optional quote selectors."""
+    """Capture a PDF raw blob and extracted page text."""
     stable_source_id = _source_id(source_id)
     pdf_raw_filename = raw_filename or "source.pdf"
     pages = _extract_pdf_pages(raw_bytes)
     _validate_pdf_text_coherence(pages)
     content_text = _pdf_content_text(pages)
-    source_rel = f"catalog/sources/{stable_source_id}/source.md"
-    raw_rel = f"catalog/sources/{stable_source_id}/raw/{safe_filename(pdf_raw_filename)}"
-    annotation_refs = [
-        _annotation_ref(source_rel, raw_rel, quote, pages) for quote in annotation_quotes or []
-    ]
-    result = capture_source(
+    return capture_source(
         vault,
         stable_source_id,
         title,
@@ -385,8 +379,6 @@ def capture_pdf_source(
         workflow="capture_pdf_source",
         required_checks=required_checks,
     )
-    result["annotation_refs"] = annotation_refs
-    return result
 
 
 def parse_bibtex_entry(text: str) -> dict[str, Any]:
@@ -752,23 +744,15 @@ def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
     pages = []
     with fitz.open(stream=raw_bytes, filetype="pdf") as doc:
         for page_number, page in enumerate(doc, start=1):
-            blocks = []
-            for block in page.get_text("blocks"):
-                x0, y0, x1, y1, text, *_rest = block
-                text = " ".join(str(text).split())
-                if not text:
-                    continue
-                blocks.append(
-                    {
-                        "text": text,
-                        "bbox": [round(float(value), 2) for value in (x0, y0, x1, y1)],
-                    }
-                )
+            text = "\n".join(
+                line
+                for line in (" ".join(row.split()) for row in page.get_text("text").splitlines())
+                if line
+            )
             pages.append(
                 {
                     "page": page_number,
-                    "blocks": blocks,
-                    "text": "\n".join(row["text"] for row in blocks),
+                    "text": text,
                 }
             )
     if not any(page["text"].strip() for page in pages):
@@ -798,57 +782,6 @@ def _validate_pdf_text_coherence(pages: list[dict[str, Any]]) -> None:
         raise ValueError("PDF parser output failed coherence check: replacement characters")
     if alnum_ratio < 0.3:
         raise ValueError("PDF parser output failed coherence check: low word content")
-
-
-def _annotation_ref(
-    source_rel: str,
-    raw_rel: str,
-    quote: str,
-    pages: list[dict[str, Any]],
-) -> dict[str, Any]:
-    wanted = _normalized_span(quote)
-    if not wanted:
-        raise ValueError("annotation quote is required")
-    matches: list[tuple[dict[str, Any], dict[str, Any]]] = []
-    for page in pages:
-        for block in page.get("blocks") or []:
-            text = str(block.get("text") or "")
-            if wanted not in _normalized_span(text):
-                continue
-            matches.append((page, block))
-    if len(matches) > 1:
-        raise ValueError(f"annotation quote is ambiguous in parsed PDF text: {quote!r}")
-    if matches:
-        page, block = matches[0]
-        bbox = block.get("bbox")
-        if not _valid_bbox(bbox):
-            raise ValueError(f"annotation quote matched PDF block without usable bbox: {quote!r}")
-        text = str(block.get("text") or "")
-        ref = {
-            "source_id": source_rel,
-            "raw_copy_path": raw_rel,
-            "page": page["page"],
-            "text_quote": quote,
-            "bbox": bbox,
-        }
-        start = text.find(quote)
-        if start >= 0:
-            ref["text_start"] = start
-            ref["text_end"] = start + len(quote)
-        return ref
-    raise ValueError(f"annotation quote not found in parsed PDF text: {quote!r}")
-
-
-def _valid_bbox(value: Any) -> bool:
-    return (
-        isinstance(value, list)
-        and len(value) == 4
-        and all(isinstance(item, int | float) for item in value)
-    )
-
-
-def _normalized_span(text: str) -> str:
-    return " ".join(text.casefold().split())
 
 
 def _first_container(text: str) -> int:

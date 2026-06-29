@@ -291,7 +291,11 @@ def test_profile_configs_are_materialized_from_registry():
 
 
 def test_profile_reference_is_materialized_from_registry():
-    subprocess.run(["python", "scripts/gen_profiles_ref.py", "--check"], cwd=ROOT, check=True)
+    subprocess.run(
+        ["python", "scripts/render_profile_configs.py", "reference", "--check"],
+        cwd=ROOT,
+        check=True,
+    )
 
 
 def test_worker_skills_and_curator_are_locked_down():

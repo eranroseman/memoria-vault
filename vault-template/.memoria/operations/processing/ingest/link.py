@@ -25,38 +25,18 @@ import json
 import sys
 from pathlib import Path
 
+_RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+if str(_RUNTIME_ROOT) not in sys.path:
+    sys.path.insert(0, str(_RUNTIME_ROOT))
+
+from operations.lib.markdown import read_frontmatter
+
 LINKAGE_RELPATH = "system/logs/linkage.jsonl"
 
 
 def _bare(uri: str) -> str:
     """ORCID/ROR may arrive as full URIs; keep the bare id."""
     return (uri or "").rstrip("/").rsplit("/", 1)[-1].strip()
-
-
-_yaml_warned = False
-
-
-def read_frontmatter(md: Path) -> dict:
-    global _yaml_warned
-    try:
-        import yaml
-    except ImportError:
-        if not _yaml_warned:
-            print("[link] PyYAML not installed; frontmatter parsing disabled", file=sys.stderr)
-            _yaml_warned = True
-        return {}
-    text = md.read_text(encoding="utf-8", errors="ignore")
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}
-    try:
-        d = yaml.safe_load(text[3:end])
-        return d if isinstance(d, dict) else {}
-    except yaml.YAMLError as exc:
-        print(f"[link] YAML parse error in {md}: {exc}", file=sys.stderr)
-        return {}
 
 
 def index_vault(vault: Path) -> dict:
