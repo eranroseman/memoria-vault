@@ -6,9 +6,9 @@ canonical_name: River Ada
 check_status: checked
 links:
   sources:
-  - catalog/sources/doi-10.1000_harness.2026/source.md
+  - catalog/sources/source-stable-identity/source.md
 ---
 # River Ada
 
 Sources:
-- `catalog/sources/doi-10.1000_harness.2026/source.md`
+- `catalog/sources/source-stable-identity/source.md`
