@@ -6,9 +6,9 @@ canonical_name: Journal of Testable Systems
 check_status: checked
 links:
   sources:
-  - catalog/sources/source-stable-identity/source.md
+  - catalog/sources/doi-10.1000_harness.2026/source.md
 ---
 # Journal of Testable Systems
 
 Sources:
-- `catalog/sources/source-stable-identity/source.md`
+- `catalog/sources/doi-10.1000_harness.2026/source.md`

@@ -2,13 +2,13 @@
 type: source
 check_status: checked
 title: Harnessed Workflows for Durable Research
-description: A fixture paper for the Memoria test environment harness.
+description: A fixture paper.
 source_id: doi-10.1000_harness.2026
 item_type: article
 raw_copy_path: catalog/sources/doi-10.1000_harness.2026/raw/harness2026.bib
 content_path: catalog/sources/doi-10.1000_harness.2026/content.md
-raw_text_sha256: sha256:607f05801d28a59dea3a061ddebfba0333f5040a149702a346a5dd4f3411e51e
-normalized_text_sha256: sha256:a1e4f437ecb45b64c88b190f15225a25d57966da3da61d71f48a59899962ee52
+raw_text_sha256: sha256:2a27b9c576d36ec7cb81be9357265e81901c74fd5049c21428ad64eb1f3a0f17
+normalized_text_sha256: sha256:ae591887271d8e3399474dcaa2d7f7300f42fd9bb0a8a76a472af928fd140074
 metadata_status: partial
 resource: https://doi.org/10.1000/harness.2026
 citekey: harness2026
@@ -28,7 +28,7 @@ csl_json:
     - - 2026
   container-title: Journal of Testable Systems
   DOI: 10.1000/harness.2026
-  abstract: A fixture paper for the Memoria test environment harness.
+  abstract: A fixture paper.
 links:
   authors:
   - catalog/entities/person-river-ada.md
