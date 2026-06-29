@@ -52,6 +52,8 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
     assert not is_sensitive("docs/explanation/deployment.md")
     assert not is_sensitive("docs/reference/policy-mcp.md")
     assert not is_sensitive("docs/design/what-memoria-is.md")
+    assert not is_sensitive(".agents/tmp/releases/0.1.0-alpha.12/design.md")
+    assert not is_sensitive(".agents/tmp/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_sensitive("README.md")
 
 
@@ -86,11 +88,30 @@ def test_decide_blocks_untrusted_sensitive_changes_but_reviews_safe_changes():
     blocked, _ = decide(["scripts/install.sh"], "random-user", False)
     safe_review, reason = decide(["docs/reference/glossary.md"], "random-user", False)
     agents_block, _ = decide(["AGENTS.md"], "random-user", False)
+    agent_tmp_review, agent_tmp_reason = decide(
+        [".agents/tmp/releases/0.1.0-alpha.12/design.md"], "random-user", False
+    )
 
     assert blocked == "block"
     assert safe_review == "needs_human"
     assert "not on the trusted" in reason
     assert agents_block == "block"
+    assert agent_tmp_review == "needs_human"
+    assert "sensitive" not in agent_tmp_reason.lower()
+
+
+def test_decide_does_not_route_agent_tmp_changes_as_sensitive_for_trusted_authors():
+    decision, reason = decide(
+        [
+            ".agents/tmp/releases/0.1.0-alpha.12/design.md",
+            ".agents/tmp/releases/0.1.0-alpha.12/preimpl_spikes/run.py",
+        ],
+        "eranroseman",
+        False,
+    )
+
+    assert decision == "needs_human"
+    assert "sensitive" not in reason.lower()
 
 
 def test_decide_drafts_and_empty_changesets_need_human_review():

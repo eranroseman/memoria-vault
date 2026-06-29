@@ -202,7 +202,7 @@ behavior.
 | `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
+Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/` except `.agents/tmp/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
