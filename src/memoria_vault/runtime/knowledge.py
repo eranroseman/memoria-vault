@@ -9,7 +9,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime.operations import load_operation_policy
+from memoria_vault.runtime.operations import load_operation_policy, required_promotion_checks
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -35,6 +35,7 @@ def emit_note_candidates(
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     _require_tool(policy, "trusted_writer")
+    promotion_checks = required_promotion_checks(policy)
 
     digest_rel = _digest_rel(digest_path)
     _require_path(policy, digest_rel)
@@ -105,7 +106,7 @@ def emit_note_candidates(
             run_id=run_id,
             machine=machine,
         )
-        check = promote_checked(vault, note_rel, machine=machine)
+        check = promote_checked(vault, note_rel, checks=promotion_checks, machine=machine)
         staged.append(stage)
         checked.append(check)
         note_paths.append(note_rel)

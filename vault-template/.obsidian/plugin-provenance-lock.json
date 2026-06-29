@@ -62,7 +62,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/obsidian-git/data.json": "e501f0a2d6dda684d99923b8a6adef7d66cef0b40984944161e347c959a42de2",
+        "plugins/obsidian-git/data.json": "19888fe335673a88d382ab16f1a9fd59d96cdc5985c3593d54e11a48f6850e11",
         "plugins/obsidian-git/main.js": "bb46181b36715b3f776a1c2467fcdbbe2e23c4efe7bb1d9bf302700d42b6019f",
         "plugins/obsidian-git/manifest.json": "aaa7ccb10f637cf361a0b6592f93379396f9baa943000afca42ad42eb5526516",
         "plugins/obsidian-git/styles.css": "f5ab93f4d5b4dd1bd1e577864c5c79087f7adfd448ac346e0489e5847ce6922d"
@@ -130,22 +130,6 @@
         "plugins/modalforms/main.js": "47dca433e545e15de1364a8a20d910310b7c0b3a83ecfd25129b9403f91ba7d9",
         "plugins/modalforms/manifest.json": "2fbd23a868c71060dc27eebfb65c531b1babf39bb45c4cc16129aced99f66e13",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"
-      }
-    },
-    {
-      "id": "templater-obsidian",
-      "name": "Templater",
-      "version": "2.20.6",
-      "upstream": "https://github.com/SilentVoid13/Templater",
-      "pinned_ref": "2.20.6",
-      "pinned_commit": "NOASSERTION",
-      "license": "NOASSERTION",
-      "local_patch_status": "unmodified-vendored-build",
-      "sha256": {
-        "plugins/templater-obsidian/data.json": "9ad8d0c478e31165e86ee4a6dd4f422aacb5b1af11bbb876fdf97b15dceff2f4",
-        "plugins/templater-obsidian/main.js": "e034847c91530bb52d13671feabf105551c8b51ce74747745d9c6c91063cb872",
-        "plugins/templater-obsidian/manifest.json": "30ebc235c9b1c99a60df2f1be7d57341d4f158798b6c197cc52598902e558962",
-        "plugins/templater-obsidian/styles.css": "7d85bcd129e9f38a8932455bdf05c9629ce466ab1236dc933b7b7aea55350c04"
       }
     },
     {

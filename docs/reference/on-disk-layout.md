@@ -118,7 +118,7 @@ Runtime-only (created in the deployed vault, never shipped):
 | --- | --- | --- |
 | App/core settings | `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` | Starter appearance, enabled plugins, and graph color groups. |
 | CSS snippets | `snippets/memoria-link-colors.css`, `snippets/memoria-property-badges.css` | Vault-local visual conventions. |
-| Plugin config | `plugins/` | QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Templater, Citation, Callout Manager, Obsidian Git, and Portals. |
+| Plugin config | `plugins/` | QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Citation, Callout Manager, Obsidian Git, Memoria Inspector, and Portals. |
 | Reset workspace | `workspaces.json` | The **Memoria** layout: `home.md` in the main pane and pinned `_nav.md` rail on the left. |
 | Space switching | `_nav.md` plus `spaces/*.md` | Rail links to Library, Knowledge, Project, Inbox, and Maintenance; see [Obsidian workspaces](obsidian-workspaces.md). |
 

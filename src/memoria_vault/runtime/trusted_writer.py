@@ -20,6 +20,31 @@ from memoria_vault.runtime.vaultio import parse_frontmatter
 EVENT_DERIVED = "derived"
 EVENT_CHECK_FIRED = "check-fired"
 EVENT_RESOLVED = "resolved"
+SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-profile"})
+
+
+def normalize_promotion_checks(
+    checks: Iterable[str] | None = None,
+    *,
+    default: str = "memoria-profile",
+) -> list[str]:
+    """Return the checks the worker can enforce before marking a Concept checked."""
+    raw_checks = [default] if checks is None else list(checks)
+    normalized: list[str] = []
+    for value in raw_checks:
+        if not isinstance(value, str):
+            raise ValueError("promotion checks must be strings")
+        check = value.strip()
+        if not check:
+            raise ValueError("promotion checks must be non-empty")
+        if check not in normalized:
+            normalized.append(check)
+    if not normalized:
+        raise ValueError("promotion requires at least one check")
+    unsupported = sorted(set(normalized) - SUPPORTED_PROMOTION_CHECKS)
+    if unsupported:
+        raise ValueError(f"unsupported promotion checks: {', '.join(unsupported)}")
+    return normalized
 
 
 def append_journal_event(
@@ -153,17 +178,28 @@ def mark_checked(
     target_path: str,
     *,
     check: str = "memoria-profile",
+    checks: Iterable[str] | None = None,
     machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Mark an existing live Concept checked after the worker's checks pass."""
     vault = Path(vault)
     target = _target_path(target_path)
+    promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
     output_path = vault / target
     frontmatter, body = _split_frontmatter(output_path.read_text(encoding="utf-8"))
-    return _write_checked(vault, target, output_path, frontmatter, body, check, machine, contract)
+    return _write_checked(
+        vault,
+        target,
+        output_path,
+        frontmatter,
+        body,
+        promotion_checks,
+        machine,
+        contract,
+    )
 
 
 def stage_concept(
@@ -211,12 +247,14 @@ def promote_checked(
     target_path: str,
     *,
     check: str = "memoria-profile",
+    checks: Iterable[str] | None = None,
     machine: str | None = None,
     schemas_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Promote a staged Concept into its bundle only after it validates as checked."""
     vault = Path(vault)
     target = _target_path(target_path)
+    promotion_checks = normalize_promotion_checks([check] if checks is None else checks)
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
 
@@ -225,7 +263,16 @@ def promote_checked(
         raise FileNotFoundError(staged_path)
     frontmatter, body = _split_frontmatter(staged_path.read_text(encoding="utf-8"))
     output_path = vault / target
-    event = _write_checked(vault, target, output_path, frontmatter, body, check, machine, contract)
+    event = _write_checked(
+        vault,
+        target,
+        output_path,
+        frontmatter,
+        body,
+        promotion_checks,
+        machine,
+        contract,
+    )
     staged_path.unlink()
     return event
 
@@ -456,23 +503,27 @@ def _write_checked(
     output_path: Path,
     frontmatter: dict[str, Any],
     body: str,
-    check: str,
+    checks: Iterable[str],
     machine: str | None,
     contract: dict[str, Any],
 ) -> dict[str, Any]:
+    promotion_checks = normalize_promotion_checks(checks)
     frontmatter["check_status"] = "checked"
     _validate_concept(contract, target, frontmatter)
     _write_concept(output_path, frontmatter, body)
-    event = {
-        "event": EVENT_CHECK_FIRED,
-        "timestamp": now_iso(),
-        "check": check,
-        "status": "passed",
-        "target_id": target,
-        "output_sha256": sha256_file(output_path),
-    }
-    _append_event(vault, machine, event)
-    return event
+    events = []
+    for check in promotion_checks:
+        event = {
+            "event": EVENT_CHECK_FIRED,
+            "timestamp": now_iso(),
+            "check": check,
+            "status": "passed",
+            "target_id": target,
+            "output_sha256": sha256_file(output_path),
+        }
+        _append_event(vault, machine, event)
+        events.append(event)
+    return events[0]
 
 
 def _matches(value: Any, spec: str, enums: dict[str, list[Any]]) -> bool:

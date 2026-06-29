@@ -23,8 +23,10 @@ do not enter the checked qmd index or Ask path.
 Promotion is not a file move. A Concept is born in its type home and stays
 there; the boundary is the **state transition** and its trace. Machine writes
 stage first, promote through the trusted writer, and record `derived` plus
-`check-fired` events. PI edits are direct and then observed/backfilled. Foreign
-writes are quarantined by scan.
+`check-fired` events. Operation-owned promotions use that operation's
+`required_checks`; alpha.11 enforces `memoria-profile` before promotion and
+fails closed on an empty or unsupported promotion-check list. PI edits are direct
+and then observed/backfilled. Foreign writes are quarantined by scan.
 
 What is deliberately not reintroduced: a per-write approval loop. The PI enters
 for direction, curation, direct edits, and high-risk `ask` flags, not as a

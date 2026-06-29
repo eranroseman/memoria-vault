@@ -41,9 +41,9 @@ container. `docker compose` brings it up clean per run; a fresh vault volume is
 seeded from checksummed, idempotent fixtures; nothing persists across runs except
 the cached model weights. The image MUST include a real `git` binary and
 initialize the throwaway vault as a repository before any git-backed assertions
-run; a sandbox without Git is unsupported, because obsidian-git, the pre-commit
-schema gate, post-commit verification, rollback, and history are part of the
-system under test. A **pytest orchestrator** drives the Obsidian CLI over the
+run; a sandbox without Git is unsupported, because manual Obsidian Git checkpoints,
+the pre-commit schema gate, post-commit verification, rollback, and history are part
+of the system under test. A **pytest orchestrator** drives the Obsidian CLI over the
 command-palette surface (one trigger per palette command), asserting artifact
 shape / frontmatter, gate decision + audit row, board transition, dashboard
 re-render (injected JS), and a screenshot golden-image diff.

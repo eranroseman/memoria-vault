@@ -213,6 +213,6 @@ The deterministic cron jobs (board export, sweeps, lint, metrics, retraction ref
 
 | Action | What it does |
 | --- | --- |
-| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set `check_status: checked`; PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
+| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set `check_status: checked`; operation-owned promotions enforce their `required_checks` (`memoria-profile` in alpha.11) before the state transition. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
 | Golden restore `--apply` | The PI (not the cron) decides to write golden bytes back over drifted system files. |

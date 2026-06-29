@@ -19,6 +19,7 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
+    normalize_promotion_checks,
     promote_checked,
     stage_concept,
 )
@@ -106,6 +107,18 @@ def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     return policy
 
 
+def required_promotion_checks(policy: dict[str, Any]) -> list[str]:
+    """Return operation checks that are enforced before checked Concept promotion."""
+    operation_id = str(policy.get("operation_id") or "<unknown>")
+    checks = policy.get("required_checks")
+    if not isinstance(checks, list):
+        raise ValueError(f"{operation_id} required_checks must be a list")
+    try:
+        return normalize_promotion_checks(checks)
+    except ValueError as exc:
+        raise ValueError(f"{operation_id} cannot promote checked Concepts: {exc}") from exc
+
+
 def compile_source_digest(
     vault: Path,
     source_id: str,
@@ -119,6 +132,7 @@ def compile_source_digest(
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
     _require_tool(policy, "trusted_writer")
+    promotion_checks = required_promotion_checks(policy)
 
     source_id = _source_id(source_id)
     topics = [_topic_title(topic) for topic in hub_topics]
@@ -208,7 +222,7 @@ def compile_source_digest(
         run_id=run_id,
         machine=machine,
     )
-    digest_check = promote_checked(vault, digest_rel, machine=machine)
+    digest_check = promote_checked(vault, digest_rel, checks=promotion_checks, machine=machine)
 
     hub_suggestions = []
     hub_stage_events = []
@@ -245,7 +259,7 @@ def compile_source_digest(
         if hub_exists:
             hub_suggestions.append(stage["staging_id"])
             continue
-        hub_checks.append(promote_checked(vault, hub_rel, machine=machine))
+        hub_checks.append(promote_checked(vault, hub_rel, checks=promotion_checks, machine=machine))
         hub_paths.append(hub_rel)
 
     finished = append_journal_event(

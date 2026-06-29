@@ -21,14 +21,6 @@ Settings with a fixed required value. All others are personal preference. See [e
 | HTTP (insecure) server | off unless debugging | Plain HTTP is no longer the shipped Hermes path. Do not use it for normal profile runs. |
 | `data.json` | **gitignored** | Contains API key secrets. Ships as `.example`; never commit the real file. |
 
-### templater-obsidian
-
-| Setting | Required value | Constraint |
-| --- | --- | --- |
-| `templates_folder` | `system/templates` | Must match vault schema convention. |
-| `trigger_on_file_creation` | `false` | Auto-trigger races with agent writes. |
-| `enable_system_commands` | `false` | Not required by Memoria; increases attack surface. |
-
 ### obsidian-citation-plugin
 
 | Setting | Required value | Constraint |
@@ -50,17 +42,17 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `commitMessage` / `autoCommitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large auto-commits visible. Set both keys so timed and manual commits match. |
-| `autoBackupAfterFileChange` | `false` | Produces hundreds of commits per session when Hermes is writing; use scheduled commits instead. |
-| `autoSaveInterval` | `30` | Scheduled commit every 30 min (the replacement for per-change backup). `0` disables it. |
+| `commitMessage` / `autoCommitMessage` | `"vault: {{date}} {{numFiles}} files"` | `{{numFiles}}` makes abnormally large commits visible. Set both keys so manual commits are stable and timed commits stay recognizable if a user later opts into them. |
+| `autoBackupAfterFileChange` | `false` | Produces commits outside the worker-owned write path. |
+| `autoSaveInterval` | `0` | Automatic Obsidian Git commits are disabled. Commit manually when the PI wants a vault-history checkpoint. |
 | `pullBeforePush` | `true` | Required; prevents conflicts once a remote is configured. |
 | `autoPullOnBoot` | `false` | Required default; fresh sandboxes and local-only vaults have no upstream branch, so startup must not emit a git pull error. Users with a remote can enable boot pulls after setting an upstream. |
 | `post-commit` hook | enabled | Load-bearing for legacy policy-runtime draft checks. Source lives in `.githooks/`, installer copies it into `.git/hooks/`; it is not a `data.json` setting. Do not disable while that runtime remains shipped. |
 
 The host running Obsidian or the sandboxed test runtime must have a real `git`
-binary on `PATH`. Without it, obsidian-git, pre-commit schema validation,
-verify-on-commit, rollback, and history are degraded; the installer now fails
-clearly instead of silently skipping those paths.
+binary on `PATH`. Without it, manual Obsidian Git checkpoints, pre-commit schema
+validation, verify-on-commit, rollback, and history are degraded; the installer
+now fails clearly instead of silently skipping those paths.
 
 > **Note:** obsidian-git has no `pullBeforeCommit` setting (earlier docs listed one in error). Divergence is caught by manual pulls plus `pullBeforePush`; enable `autoPullOnBoot` only after the vault branch has an upstream. Push is governed by `disablePush` and `autoPushInterval` (`0` = no auto-push), not an `autoPush` boolean — the table below maps each deployment onto those two real keys.
 

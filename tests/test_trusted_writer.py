@@ -4,6 +4,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -85,6 +87,22 @@ def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) ->
     assert event["output_sha256"] == sha256_file(target)
     assert rebuild_trace_state(vault)["knowledge/notes/alpha.md"] == event
     assert quarantine_untraced(vault, ["knowledge/notes/alpha.md"], machine="test-machine") == []
+
+
+def test_promote_checked_rejects_unsupported_promotion_check(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    stage_concept(vault, "knowledge/notes/alpha.md", note_text(), machine="test-machine")
+
+    with pytest.raises(ValueError, match="unsupported promotion checks: later-integrity"):
+        promote_checked(
+            vault,
+            "knowledge/notes/alpha.md",
+            checks=["later-integrity"],
+            machine="test-machine",
+        )
+
+    assert not (vault / "knowledge/notes/alpha.md").exists()
+    assert (vault / ".memoria/staging/knowledge/notes/alpha.md").is_file()
 
 
 def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) -> None:

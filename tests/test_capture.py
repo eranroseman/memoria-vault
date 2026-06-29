@@ -94,6 +94,26 @@ def test_capture_source_writes_catalog_files_and_trace(tmp_path: Path) -> None:
     }
 
 
+def test_capture_source_rejects_unsupported_required_check_before_writes(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+
+    with pytest.raises(ValueError, match="unsupported promotion checks: later-integrity"):
+        capture_source(
+            vault,
+            "source-alpha",
+            "Alpha Source",
+            "A fixture source.",
+            "Extracted alpha text.",
+            required_checks=["later-integrity"],
+            machine="test-machine",
+        )
+
+    assert not (vault / "catalog/sources/source-alpha").exists()
+    assert not (vault / "journal/test-machine.jsonl").exists()
+
+
 def test_capture_source_refuses_to_replace_existing_raw(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_source(

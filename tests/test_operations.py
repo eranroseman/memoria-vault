@@ -141,6 +141,42 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     }
 
 
+def test_compile_source_digest_rejects_unsupported_required_promotion_check(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    policy = vault / "capabilities/operations/compile-source-digest.md"
+    policy.write_text(
+        policy.read_text(encoding="utf-8").replace(
+            "  - memoria-profile",
+            "  - later-integrity",
+        ),
+        encoding="utf-8",
+    )
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content about framing, methods, outcomes, gaps, and impact.",
+        machine="capture-machine",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="compile-source-digest cannot promote checked Concepts: "
+        "unsupported promotion checks: later-integrity",
+    ):
+        compile_source_digest(
+            vault,
+            "source-alpha",
+            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            machine="op-machine",
+        )
+
+    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+
+
 def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_source(
