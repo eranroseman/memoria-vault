@@ -1,1 +1,1 @@
-Stable extracted text.
+Alpha content about framing, methods, outcomes, gaps, and impact.
