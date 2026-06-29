@@ -57,7 +57,7 @@ git remote add origin git@github.com:<your-handle>/<your-vault-repo>.git   # opt
 git push -u origin main                                                    # if you added a remote
 ```
 
-obsidian-git needs a repo to commit into; the remote (your own, not the starter repo) enables backup, multi-machine sync, and the version history the Librarian and Linter depend on. A sandbox without a real `git` binary is an unsupported degraded runtime, because the commit hooks and rollback/history assumptions cannot run.
+obsidian-git needs a repo for manual checkpoints; the remote (your own, not the starter repo) enables backup, multi-machine sync, and the version history the Librarian and Linter depend on. A sandbox without a real `git` binary is an unsupported degraded runtime, because the commit hooks and rollback/history assumptions cannot run.
 
 ## Verify
 

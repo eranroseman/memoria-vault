@@ -183,7 +183,11 @@ def _run_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str,
 def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     operation_id = str(job.get("operation_id") or "")
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
-    from memoria_vault.runtime.operations import load_operation_policy, require_allowed_network
+    from memoria_vault.runtime.operations import (
+        load_operation_policy,
+        require_allowed_network,
+        required_promotion_checks,
+    )
 
     policy = load_operation_policy(vault, operation_id)
     if operation_id == "integrity-evidence-check":
@@ -598,8 +602,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         target_path = str(payload.get("target_path") or "").strip()
         if not target_path:
             raise ValueError("mark-checked requires target_path")
-        check = str(payload.get("check") or "memoria-profile").strip() or "memoria-profile"
-        event = mark_checked(vault, target_path, check=check, machine=machine)
+        payload_check = str(payload.get("check") or "").strip()
+        checks = required_promotion_checks(policy)
+        if payload_check and payload_check not in checks:
+            raise ValueError(f"mark-checked check must be declared by policy: {payload_check}")
+        event = mark_checked(vault, target_path, checks=checks, machine=machine)
         commit = commit_writer_changes(
             vault,
             f"mark checked {Path(target_path).stem}",
@@ -646,6 +653,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             citekey=str(payload.get("citekey") or ""),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
+            required_checks=required_promotion_checks(policy),
         )
         return {
             "commit": result["commit"],
@@ -683,6 +691,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             description=description or None,
             machine=machine,
             run_id=run_id or None,
+            required_checks=required_promotion_checks(policy),
         )
         return {
             "commit": result["commit"],
@@ -722,6 +731,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "raw_filename": raw_filename or None,
             "machine": machine,
             "run_id": run_id or None,
+            "required_checks": required_promotion_checks(policy),
         }
         if item is None:
             timeout = payload.get("timeout", 5.0)
@@ -765,6 +775,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             timeout=float(timeout),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
+            required_checks=required_promotion_checks(policy),
         )
         return {
             "commit": result["commit"],
@@ -814,6 +825,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             citekey=str(payload.get("citekey") or ""),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
+            required_checks=required_promotion_checks(policy),
         )
         return {
             "commit": result["commit"],

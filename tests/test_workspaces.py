@@ -327,6 +327,7 @@ def test_portals_ships_curated_folder_navigation_with_core_fallback():
 def test_obsidian_git_does_not_pull_on_boot_without_upstream():
     data = json.loads(OBSIDIAN_GIT.read_text(encoding="utf-8"))
     assert data["autoPullOnBoot"] is False
+    assert data["autoSaveInterval"] == 0
     assert data["pullBeforePush"] is True
     assert data["autoPushInterval"] == 0
 

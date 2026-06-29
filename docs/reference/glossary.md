@@ -32,9 +32,10 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
-**Workspace** — the alpha.11 root containing `catalog/`, `knowledge/`,
-`capabilities/`, `journal/`, and `.memoria/`. Obsidian opens the `knowledge/`
-bundle; the plugin reads sibling bundles for catalog and capability views.
+**Workspace** — the alpha.11 runtime vault root containing `catalog/`,
+`knowledge/`, `capabilities/`, `journal/`, and `.memoria/`. Obsidian opens this
+root. `knowledge/` is the checked knowledge bundle inside the vault, not the
+Obsidian vault root.
 
 ---
 

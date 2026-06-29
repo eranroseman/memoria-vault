@@ -81,7 +81,7 @@ A further wrapper ships for the monthly Retraction Watch refresh (`vault-templat
 | --- | --- |
 | `KILOCODE_API_KEY` (production model access; not used by the `MEMORIA_ENV=test` local model block), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
 | Obsidian first launch | Open the vault folder and allow the bundled community plugins to load |
-| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; obsidian-git, hooks, rollback, and history need the runtime vault to be a repo. |
+| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; manual Obsidian Git checkpoints, hooks, rollback, and history need the runtime vault to be a repo. |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
 ---

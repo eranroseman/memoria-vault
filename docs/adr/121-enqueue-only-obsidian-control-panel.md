@@ -31,6 +31,10 @@ The Memoria Obsidian control panel may mutate only by enqueueing worker jobs und
 The worker owns execution and journal/audit coupling. The plugin owns only a small enqueue
 request shape: `kind: operation`, `operation_id`, `payload`, `status: pending`, and metadata.
 
+For checked Concept promotion, the worker/trusted-writer path also owns the operation
+`required_checks` gate. alpha.11 supports the `memoria-profile` pre-promotion check and fails
+closed on empty or unsupported promotion-check lists before marking a Concept `checked`.
+
 ## Consequences
 
 - The PI gets an in-Obsidian action surface without bypassing the alpha.11 writer boundary.
@@ -52,6 +56,7 @@ worker/trusted-writer trace boundary and recreates the policy complexity ADR-84 
 - **Supersedes:** [ADR-84](84-read-only-obsidian-inspector.md)
 - **Depends on:** [ADR-28](28-write-gate-as-plugin.md), [ADR-74](74-pinned-obsidian-plugin-supply-chain.md)
 - **Implementation:** `vault-template/.obsidian/plugins/memoria-inspector/`,
-  `src/memoria_vault/runtime/worker.py`
+  `src/memoria_vault/runtime/worker.py`,
+  `src/memoria_vault/runtime/trusted_writer.py`
 - **Checks:** `tests/test_memoria_inspector.py`, `tests/test_worker_queue.py`,
-  `scripts/plugin_provenance_doctor.py`
+  `tests/test_trusted_writer.py`, `tests/test_operations.py`, `scripts/plugin_provenance_doctor.py`

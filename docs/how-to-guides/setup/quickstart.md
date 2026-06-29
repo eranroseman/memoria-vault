@@ -46,7 +46,7 @@ Propagate them into every profile (profile runs read only their own `.env`):
 bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; obsidian-git, rollback/history, the pre-commit schema check, and verify-on-commit need a repo:
+**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; manual Obsidian Git checkpoints, rollback/history, the pre-commit schema check, and verify-on-commit need a repo:
 
 ```bash
 cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"

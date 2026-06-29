@@ -36,11 +36,10 @@ The required plugins:
 | `obsidian-citation-plugin` | Reads generated `references.bib`; inserts citations |
 | `callout-manager` | Renders `[!brief]`, `[!suggestions]`, `[!verification]` callout types |
 | `dataview` | Powers the dashboards and queue views |
-| `templater-obsidian` | Provides the template folder integration for manual template insertion |
 | `quickadd` | Registers the `Memoria:` command-palette entries |
 | `cmdr` | Places frequent `Memoria:` commands in the ribbon and page header |
 | `modalforms` | Provides structured capture forms with controlled vocabulary fields |
-| `obsidian-git` | Scheduled, version-controlled vault commits |
+| `obsidian-git` | Manual vault-history checkpoints from inside Obsidian |
 | `buttons` | Renders command buttons in note templates |
 | `portals` | Provides curated shortcuts to the space/Bases surfaces |
 | `memoria-inspector` | Shows the Memoria Inspector sidebar, checked Concept graph browsing, and enqueue-only worker controls |

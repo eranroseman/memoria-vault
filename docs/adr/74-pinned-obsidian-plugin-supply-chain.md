@@ -86,6 +86,12 @@ vendored plugin changes, but it is not yet updater automation. Only after that
 doctor is stable should Memoria add an updater that downloads and stages new
 upstream artifacts for review.
 
+Current plugin-boundary status (2026-06-29): Templater is not a required or bundled
+plugin. QuickAdd and Modal Forms own Memoria capture flows instead. Obsidian Git remains
+bundled for manual vault-history checkpoints, but automatic commits and pushes are disabled
+by shipped configuration (`autoSaveInterval: 0`, `autoPushInterval: 0`) so it is not a
+foreign machine writer competing with the worker path.
+
 ## When this matters
 
 Revisit the remaining increments at each release cadence, with higher priority when

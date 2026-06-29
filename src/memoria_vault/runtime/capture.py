@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterable
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
+    normalize_promotion_checks,
     promote_checked,
     stage_concept,
 )
@@ -39,9 +41,11 @@ def capture_source(
     machine: str | None = None,
     run_id: str | None = None,
     workflow: str = "capture_source",
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one source into catalog files through the trusted writer."""
     vault = Path(vault)
+    promotion_checks = normalize_promotion_checks(required_checks)
     source_id = _source_id(source_id)
     if not title.strip() or not description.strip():
         raise ValueError("title and description are required")
@@ -123,8 +127,11 @@ def capture_source(
         run_id=run_id,
         machine=machine,
     )
-    entity_checks = [promote_checked(vault, spec["path"], machine=machine) for spec in entity_specs]
-    check = promote_checked(vault, source_rel, machine=machine)
+    entity_checks = [
+        promote_checked(vault, spec["path"], checks=promotion_checks, machine=machine)
+        for spec in entity_specs
+    ]
+    check = promote_checked(vault, source_rel, checks=promotion_checks, machine=machine)
     finished = append_journal_event(
         vault,
         {
@@ -170,6 +177,7 @@ def capture_bibtex_source(
     description: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one source from a local BibTeX entry."""
     entry = parse_bibtex_entry(bibtex)
@@ -201,6 +209,7 @@ def capture_bibtex_source(
         machine=machine,
         run_id=run_id or f"capture-bibtex:{citekey}",
         workflow="capture_bibtex_source",
+        required_checks=required_checks,
     )
 
 
@@ -214,6 +223,7 @@ def capture_zotero_source(
     raw_filename: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one Zotero Local API item snapshot."""
     data = item.get("data")
@@ -248,6 +258,7 @@ def capture_zotero_source(
         machine=machine,
         run_id=run_id or f"capture-zotero:{key}",
         workflow="capture_zotero_source",
+        required_checks=required_checks,
     )
 
 
@@ -263,6 +274,7 @@ def capture_zotero_local_source(
     raw_filename: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Fetch one Zotero Local API item by key, then capture its JSON snapshot."""
     key = item_key.strip()
@@ -278,6 +290,7 @@ def capture_zotero_local_source(
         raw_filename=raw_filename,
         machine=machine,
         run_id=run_id,
+        required_checks=required_checks,
     )
 
 
@@ -290,6 +303,7 @@ def capture_url_source(
     timeout: float = 10.0,
     machine: str | None = None,
     run_id: str | None = None,
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one URL snapshot with stdlib HTML text extraction."""
     resource = url.strip()
@@ -318,6 +332,7 @@ def capture_url_source(
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
+        required_checks=required_checks,
     )
 
 
@@ -338,6 +353,7 @@ def capture_pdf_source(
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
+    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture a PDF raw blob, extracting text and optional quote selectors."""
     stable_source_id = _source_id(source_id)
@@ -367,6 +383,7 @@ def capture_pdf_source(
         machine=machine,
         run_id=run_id or f"capture-pdf:{_source_id(source_id)}",
         workflow="capture_pdf_source",
+        required_checks=required_checks,
     )
     result["annotation_refs"] = annotation_refs
     return result

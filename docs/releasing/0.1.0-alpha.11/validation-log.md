@@ -12,8 +12,10 @@ Date: 2026-06-29
 Runtime candidate commit: `39d22f6e` (`agent/alpha11-next` from then-current
 `main`), clean worktree at verification time. Later docs/test closeout commits
 preserve this runtime evidence without changing alpha.11 runtime code.
-Post-candidate evidence on current `main` adds tests/docs only; the latest
-headless Inspector render coverage is recorded below.
+Post-candidate evidence first added tests/docs only; the 2026-06-29 drift
+reconciliation follow-up updates current runtime promotion enforcement and
+shipped plugin config without changing the checkpoint's no-tag/no-migration
+scope. The latest headless Inspector render coverage is recorded below.
 
 This is internal checkpoint evidence only. No release-please PR, tag, GitHub
 Release, migration, upgrade path, or backwards-compatibility work is part of the
@@ -75,6 +77,13 @@ Post-candidate CI evidence:
   shipped spaces and five shipped dashboards opened with `No errors captured`;
   and representative views from all seven shipped `.base` files returned through
   `base:query` without YAML or missing-view errors.
+- Drift reconciliation evidence on 2026-06-29: current implementation now
+  enforces operation `required_checks` for checked Concept promotion, treats the
+  runtime vault root as the Obsidian vault in current docs, removes Templater
+  from the shipped plugin set, and disables Obsidian Git automatic commits while
+  preserving manual checkpoints. `scripts/test.sh all` passed with `610 passed`,
+  `1 skipped`, plus clean docs, agent, status, plugin-provenance, schema, shell,
+  and lint checks.
 
 ## Test-vault runtime
 

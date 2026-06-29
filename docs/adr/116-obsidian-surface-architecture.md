@@ -87,6 +87,8 @@ The left pane has two tabs — the **rail** (`_nav.md`) and **Portals** (the fil
 
 Intent navigation (the rail's Places) and object browsing (Portals) are **complementary axes**,
 not competitors — kept as sibling tabs.
+The Obsidian vault is the runtime vault root; `knowledge/` is one checked-content bundle
+inside that vault, not the Obsidian vault root.
 
 > **Amendment (2026-06-23):** the original decision folded Portals into the rail as a single
 > stacked *Now / Places / Find* spine. That is **retired** — see Alternatives. The rail is Now +

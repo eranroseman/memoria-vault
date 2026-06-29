@@ -430,9 +430,9 @@ copy_vault() {
 
   # The runtime vault is the user's own repo — they set up git themselves, with
   # their own identity and remote. We don't `git init`/commit under a synthetic
-  # author. obsidian-git needs a repo to commit into, so point the way:
+  # author. Obsidian Git needs a repo for manual checkpoints, so point the way:
   if [ ! -d "$VAULT_PATH/.git" ]; then
-    say "  This folder is your vault — set up your own git here (obsidian-git needs a repo):"
+    say "  This folder is your vault — set up your own git here (Obsidian Git needs a repo):"
     say "      cd \"$VAULT_PATH\""
     say "      git init && git add -A && git commit -m \"Initial Memoria vault\""
     say "      (then re-run with --profiles-only to wire the git hooks)"
@@ -889,11 +889,11 @@ print_next_steps() {
   say "  4. Open the Agent Client pane in Obsidian, or test it with: hermes -p memoria-copi acp"
   say "  5. Open the Library gate from the Obsidian gate nav row"
   say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
-  # obsidian-git needs a repo to commit into; we deliberately don't auto-init (the
+  # Obsidian Git needs a repo for manual checkpoints; we deliberately don't auto-init (the
   # vault is the user's own repo). Surface the one-liner only if it's not a repo yet.
   if [ -n "$VAULT_PATH" ] && [ ! -d "$VAULT_PATH/.git" ]; then
     say ""
-    say "  Tip: obsidian-git needs the vault to be a git repo (we don't auto-init — it's yours):"
+    say "  Tip: Obsidian Git needs the vault to be a git repo (we don't auto-init — it's yours):"
     say "         cd \"$VAULT_PATH\" && git init && git add -A && git commit -m \"Initial Memoria vault\""
     say "         (then: bash scripts/install.sh --profiles-only --vault \"$VAULT_PATH\" — wires the pre-commit schema gate)"
   fi
