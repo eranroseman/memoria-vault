@@ -24,7 +24,8 @@ superseded_by: []
 > six scripts (`ingest_paper` / `resolve_merge` / `extract` / `link` / `pipeline` /
 > `sweeps`) plus the seeded `00-meta/vocabulary.md`, the `captured` + `ingest_status`
 > schema, and the two re-ingest sweeps on cron. One correction to the design below:
-> the Librarian's capability allowlist (ADR-27) disables `code_execution`, so the
+> the Librarian's capability allowlist ([ADR-120](120-profile-config-materialization.md))
+> disables `code_execution`, so the
 > pipeline is reached as an **MCP tool** (`ingest_pipeline`, `mcp/ingest_mcp.py`), not
 > a script the worker runs — the agent still makes only the two judgments and writes
 > through the gated obsidian MCP. A real paper ingested end-to-end on installer-deployed
@@ -146,7 +147,7 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 
 - **Workflows affected:** [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md), [Obsidian command palette](../reference/obsidian-command-palette.md).
 - **Files affected:** `obsidian-paper-note/SKILL.md` (slims to *call the ingest tool* + judgments + gated write), a new `ingest_paper.py` (source of truth for API field lists, chain order, and merge rules — kept out of the ADR so it can change without re-deciding), [Ingest routing](../reference/ingest.md) (type routing, fallback chains, extraction tiers, S2-not-GROBID), [Frontmatter fields](../reference/frontmatter.md) / [Document types](../reference/document-types.md) (`captured` + `ingest_status`), `capture-from-zotero.js` (`curl` not `requestUrl`; the capture-intake log), the seed-tag vocabulary format (tags carry definitions).
-- **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist (ADR-27) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
-- **Related decisions / Depends on:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).
+- **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist ([ADR-120](120-profile-config-materialization.md)) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
+- **Related decisions / Depends on:** [ADR-120](120-profile-config-materialization.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).
 - **Supersession note:** deliberate-capture dead-letters stay `captured` rather than materialising a `capture-timeout` candidate.
 - **Source discussion:** design conversation + two red-team rounds + an 867-paper API merge spike, 2026-06-03.

@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [14, 62]
-supersedes: [59]
+supersedes: []
 superseded_by: []
 ---
 
@@ -48,6 +48,5 @@ not final quality judgments.
 
 ## Related
 
-- **Supersedes:** [ADR-59](59-classical-method-displacements.md).
 - **Related decisions / Depends on:** [ADR-14](14-advisor-review-vs-frozen-deliverable.md), [ADR-62](62-measurement-and-verification-harnesses.md).
 - **Tracking issue:** [#704](https://github.com/eranroseman/memoria-vault/issues/704).

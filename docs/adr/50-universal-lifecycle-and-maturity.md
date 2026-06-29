@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [47]
-supersedes: [17]
+supersedes: []
 superseded_by: []
 ---
 

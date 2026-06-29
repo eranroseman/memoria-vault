@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [21, 48]
-supersedes: [61]
+supersedes: []
 superseded_by: []
 ---
 
@@ -47,6 +47,5 @@ inbox flooding.
 
 ## Related
 
-- **Supersedes:** [ADR-61](61-nightly-discovery-loop.md).
 - **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-48](48-copi-and-agent-consolidation.md).
 - **Tracking issue:** [#708](https://github.com/eranroseman/memoria-vault/issues/708).

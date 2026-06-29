@@ -6,8 +6,8 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-29
 date_resolved: 2026-06-29
-assumes: [28, 74, 84]
-supersedes: [84]
+assumes: [28, 74]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,10 +15,10 @@ superseded_by: []
 
 ## Context
 
-ADR-84 made the Memoria Inspector read-only to avoid creating a second write surface.
-alpha.11 changes the storage model: machine writes and promotions must route through the
-worker/trusted-writer boundary, while the Obsidian plugin becomes the PI's control panel for
-inspection, integrity actions, and later trace operations.
+The first Inspector design made the Memoria Inspector read-only to avoid creating a
+second write surface. alpha.11 changes the storage model: machine writes and promotions
+must route through the worker/trusted-writer boundary, while the Obsidian plugin becomes
+the PI's control panel for inspection, integrity actions, and later trace operations.
 
 The read-only-only rule is now too narrow, but the safety reason behind it still holds.
 
@@ -49,11 +49,16 @@ closed on empty or unsupported promotion-check lists before marking a Concept `c
 alpha.11 integrity workflow across an observation pane and unrelated palette actions.
 
 **Let the plugin call Local REST or edit Concepts directly.** Rejected: it bypasses the
-worker/trusted-writer trace boundary and recreates the policy complexity ADR-84 avoided.
+worker/trusted-writer trace boundary and recreates the policy complexity the read-only
+Inspector design avoided.
+
+**Adopt an external admin GUI.** Rejected because a broad GUI over files, terminal,
+memory, and sessions would add another write-capable surface outside the vault's
+policy-gated flows. The durable need is in-Obsidian forensic visibility plus explicit
+queued operations.
 
 ## Related
 
-- **Supersedes:** [ADR-84](84-read-only-obsidian-inspector.md)
 - **Depends on:** [ADR-28](28-write-gate-as-plugin.md), [ADR-74](74-pinned-obsidian-plugin-supply-chain.md)
 - **Implementation:** `vault-template/.obsidian/plugins/memoria-inspector/`,
   `src/memoria_vault/runtime/worker.py`,

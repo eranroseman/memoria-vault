@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14
-assumes: [45]
+assumes: [29]
 supersedes: []
 superseded_by: []
 ---
@@ -15,24 +15,35 @@ superseded_by: []
 
 ## Context
 
-[ADR-45](45-release-management-model.md) moved release readiness out of
-hand-maintained markdown tables and into GitHub. The first shape used a single
-"Release <version>" tracking issue as a gate checklist. That removed file drift, but it
-made each gate a checkbox rather than a work item with its own owner, comments,
-evidence, blocking discussion, and Project metadata. In parallel, labels had started
-to carry too many meanings: type, area, priority, triage state, and bot automation.
-That made issue search noisy and made release planning depend on conventions that
-GitHub Projects models more directly.
+Releases used to rely on one prose plan file per version with hand-maintained
+gate/stage tables, scope notes, cut procedure, and readiness state. Those tables
+drifted, duplicated milestone/issues, and gave no live status surface. The first
+GitHub-native replacement used one "Release <version>" tracking issue with a checklist.
+That removed file drift, but it made each gate a checkbox rather than a work item
+with its own owner, comments, evidence, blocking discussion, and Project metadata.
+
+In parallel, labels had started to carry too many meanings: type, area, priority,
+triage state, and bot automation. That made issue search noisy and made release
+planning depend on conventions that GitHub Projects models more directly.
 
 ## Decision
 
 Memoria uses GitHub issues as the atomic unit of work, the **Memoria Issue Tracker**
-Project as the live planning surface, milestones as release scope, and ADRs as the
-decision record. Project fields carry `Status`, `Area`, `Type`, and `Priority`;
-labels stay minimal and are reserved for repo-wide search chips or bot automation.
-Release readiness lives in a **"Release <version>" parent issue** with one sub-issue per
-gate or validation stage, instead of a single checklist embedded in the release
-plan or parent issue body.
+Project as the live planning surface, milestones as release scope, release-please
+as the version/changelog/release automation, and ADRs as the decision record.
+Project fields carry live planning state; labels stay minimal and are reserved for
+repo-wide search chips or bot automation.
+
+Release readiness lives in a **"Release <version>" parent issue** with one sub-issue
+per gate or validation stage, instead of markdown tables, a release-plan checklist, or
+a checklist embedded in the parent issue body. Release scope lives in the milestone.
+Release prose lives in the parent issue, drafted from `.agents/templates/release-plan.md`;
+the live process lives in `.agents/playbooks/release.md`.
+
+release-please owns version, `CHANGELOG.md`, the GitHub Release, and the release tag
+once unpaused for formal releases. Do not hand-edit the changelog or tag releases by
+hand. Until then, internal checkpoints still use milestone/issues for scope/readiness
+and keep version automation paused.
 
 > **Current field set (see
 > [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md)):**
@@ -52,6 +63,8 @@ plan or parent issue body.
   durable rationale still belongs in ADRs and durable process prose remains in the repo.
 - GitHub Project field configuration is not versioned in this repository, so
   `CONTRIBUTING.md` documents the expected field vocabulary for human repair.
+- The release cut includes an ADR retire-sweep; release state and prose live in GitHub,
+  not tracked release-plan folders.
 
 ## Alternatives considered
 
@@ -64,12 +77,15 @@ repo search metadata and bot hooks, not a planning schema. Project fields model 
 more directly and avoid a large label taxonomy.
 
 **Track planning state in markdown.** Rejected for live state because it reintroduces
-the drift class ADR-45 removed. Markdown remains the home for durable process and
-decision prose, not the live board.
+the drift class that prompted this decision. Markdown remains the home for durable
+process and decision prose, not the live board.
+
+**Use release-please for readiness.** Rejected because release-please automates
+versioning and notes, not release gate evidence.
 
 ## Related
 
 - **Workflows affected:**
   [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md),
   [Release playbook](https://github.com/eranroseman/memoria-vault/blob/main/.agents/playbooks/release.md)
-- **Related decisions / Depends on:** [ADR-45](45-release-management-model.md)
+- **Related decisions / Depends on:** [ADR-29](29-testing-framework.md)

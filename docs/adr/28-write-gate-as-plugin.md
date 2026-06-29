@@ -7,19 +7,18 @@ status: accepted
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02
 assumes: []
-supersedes: [27]
+supersedes: []
 superseded_by: []
 ---
 
 # ADR-28: The vault write gate is a Hermes Python plugin, not a shell hook
 
-> **Partial (mechanism-only) supersession.** The `supersedes: [27]` frontmatter is
-> scoped: this ADR supersedes **only [ADR-27](27-hermes-native-config-and-gate-enforcement.md)'s
-> shell-hook enforcement mechanism**, replacing it with the `memoria-policy-gate`
-> Python plugin. **ADR-27's config-model decisions are retained** — `mcp_servers` in
-> `config.yaml`, the profile-scoped toolset allowlist, and obsidian as each lane's
-> only write path all still stand (they are what make a single gated path
-> sufficient). ADR-27 is **not** fully superseded.
+> **Mechanism correction.** Earlier shell-hook gate validation used synthetic tool
+> names and did not prove live enforcement. This ADR replaces that shell-hook
+> mechanism with the `memoria-policy-gate` Python plugin. The profile config model
+> now lives in [ADR-120](120-profile-config-materialization.md): `mcp_servers` in
+> `config.yaml`, profile-scoped positive `platform_toolsets`, and Obsidian MCP as
+> the normal lane write path.
 
 > **Verified on-box 2026-06-21 (mechanism correction).** The sentence above
 > over-credits the capability layer: on the installed Hermes (v0.14.0),
@@ -44,13 +43,12 @@ superseded_by: []
 
 ## Context
 
-[ADR-27](27-hermes-native-config-and-gate-enforcement.md) concluded that the
-structural review gate ([ADR-03](03-structural-review-gate.md)) enforces via a
-`pre_tool_call` **shell hook** (`matcher: "obsidian.*"`, running `policy_hook.py`)
-once `mcp_servers` live in `config.yaml` and a toolset allowlist makes obsidian the
-only write path. Its validation rows, however, carried hand-set `task_id`s
-(`adr27-write-01`) — they came from synthetic hook-test payloads, not a live agent
-run.
+The earlier Hermes config investigation concluded that the structural review gate
+([ADR-03](03-structural-review-gate.md)) could enforce via a `pre_tool_call` **shell
+hook** (`matcher: "obsidian.*"`, running `policy_hook.py`) once `mcp_servers` live
+in `config.yaml` and a toolset allowlist makes Obsidian MCP the only write path.
+Its validation rows, however, carried hand-set `task_id`s (`adr27-write-01`) — they
+came from synthetic hook-test payloads, not a live agent run.
 
 A real live re-run (Hermes v0.14.0, `hermes -z`, against `Memoria-test`) found the
 gate **never fires**: a write to a review-gated zone succeeded, ungated and
@@ -94,11 +92,10 @@ The `hooks:` block is removed from every profile `config.yaml`; the plugin is
 turned on per lane via `plugins.enabled` and deployed (with `{{PROFILE}}` /
 `{{VAULT_PATH}}` substituted) by the installer's `deploy_policy_plugin`.
 
-The capability layer from ADR-27 (`platform_toolsets`, obsidian = the only write
-path for the five current lanes, with `agent.disabled_toolsets` as a backstop)
-**stands** — it is what makes a single gated path sufficient. ADR-28 replaces only
-ADR-27's *enforcement mechanism* (shell hook → plugin); the config-model decisions
-in ADR-27 are unchanged.
+The capability layer (`platform_toolsets`, Obsidian MCP as the normal write path for
+the five current lanes, with `agent.disabled_toolsets` as a backstop) stands and is
+owned by [ADR-120](120-profile-config-materialization.md). This ADR owns the hard
+enforcement mechanism: shell hook → plugin.
 
 ## Why a plugin (over the alternatives)
 

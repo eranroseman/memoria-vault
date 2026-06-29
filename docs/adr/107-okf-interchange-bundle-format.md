@@ -39,8 +39,7 @@ permissive consumption — "Consumers MUST NOT reject a bundle because of missin
 optional fields, unknown `type` values, or broken cross-links" — and holds that "the
 specific kind of relationship is conveyed by the surrounding prose, not by the link
 itself." Memoria deliberately rejected prose-typed relationships in favor of typed
-edges ([ADR-08](08-typed-relations-frontmatter.md) →
-[ADR-52](52-links-vs-relationships.md)) because graph queries need the type *on*
+edges ([ADR-52](52-links-vs-relationships.md)) because graph queries need the type *on*
 the edge, and it enforces strict schemas, controlled vocabularies, and category-error
 rejection in the Linter. OKF is therefore a fit for the **boundary**, not the core.
 

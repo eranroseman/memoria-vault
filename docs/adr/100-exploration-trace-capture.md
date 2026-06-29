@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
 assumes: [30, 52]
-supersedes: [65]
+supersedes: []
 superseded_by: []
 ---
 
@@ -45,6 +45,5 @@ project-local and may be productive elsewhere.
 
 ## Related
 
-- **Supersedes:** [ADR-65](65-retrieval-and-schema-extensions.md).
 - **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-52](52-links-vs-relationships.md).
 - **Tracking issue:** [#713](https://github.com/eranroseman/memoria-vault/issues/713).

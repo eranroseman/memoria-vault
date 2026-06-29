@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [21, 51]
-supersedes: [61]
+supersedes: []
 superseded_by: []
 ---
 
@@ -48,6 +48,5 @@ manual even when provenance is clear.
 
 ## Related
 
-- **Supersedes:** [ADR-61](61-nightly-discovery-loop.md).
 - **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-51](51-inbox-category-and-honesty-card.md).
 - **Tracking issue:** [#710](https://github.com/eranroseman/memoria-vault/issues/710).

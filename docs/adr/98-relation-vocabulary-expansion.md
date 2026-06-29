@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [52, 79]
-supersedes: [65]
+supersedes: []
 superseded_by: []
 ---
 
@@ -48,6 +48,5 @@ once the claim graph becomes dense.
 
 ## Related
 
-- **Supersedes:** [ADR-65](65-retrieval-and-schema-extensions.md).
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md), [ADR-79](79-argument-graph-and-warrant.md).
 - **Tracking issue:** [#711](https://github.com/eranroseman/memoria-vault/issues/711).

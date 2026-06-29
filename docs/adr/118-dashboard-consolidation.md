@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [49, 70, 84, 116]
+assumes: [49, 70, 116, 121]
 supersedes: []
 superseded_by: []
 ---
@@ -27,10 +27,11 @@ groups: thin aliases of views the spaces already embed; one duplicate base; a pr
 leftover; and the read-only operational dashboards.
 
 ADR-116's **View** primitive says a view has *one definition, surfaced by embedding* — so a
-standalone page whose view already lives in a space is redundant. And [ADR-84](84-read-only-obsidian-inspector.md)'s
-read-only **Inspector** is the natural always-on system window, but it predates the
-operational dashboards it should summarize and the rail health-band ([ADR-116](116-obsidian-surface-architecture.md)
-Phase 2) it now overlaps.
+standalone page whose view already lives in a space is redundant. And the
+Inspector/control-panel boundary from [ADR-121](121-enqueue-only-obsidian-control-panel.md)
+is the natural always-on system window, but the Inspector predates the operational
+dashboards it should summarize and the rail health-band
+([ADR-116](116-obsidian-surface-architecture.md) Phase 2) it now overlaps.
 
 ## Decision
 
@@ -77,8 +78,9 @@ pull-on-trigger dashboards, reached by deep-link and the Inspector.
 
 ### 5. Make the Inspector the read-only system index — and update it
 
-The [ADR-84](84-read-only-obsidian-inspector.md) Inspector pane (verdict band · board counts ·
-recent audit) is the always-available read-only window behind the pull dashboards. Update it:
+The [ADR-121](121-enqueue-only-obsidian-control-panel.md) Inspector pane (verdict band ·
+board counts · recent audit) is the always-available system window behind the pull
+dashboards. Update it:
 
 - **Add a fleet/trust band** — per-lane trust from the `system/metrics/` lane-metric notes. It
   is the one *continuous* system-health signal the Inspector currently lacks (it already reads
@@ -130,8 +132,8 @@ exists in the target `.base`.
 ## Related
 
 - **Refines:** [ADR-116](116-obsidian-surface-architecture.md) (the View primitive; spaces are
-  view collections; operational dashboards are pull-only), [ADR-84](84-read-only-obsidian-inspector.md)
-  (the read-only Inspector — extended into the system index), [ADR-70](70-navigation-gates-dashboards.md)
+  view collections; operational dashboards are pull-only), [ADR-121](121-enqueue-only-obsidian-control-panel.md)
+  (the Inspector/control-panel boundary), [ADR-70](70-navigation-gates-dashboards.md)
   (ambient health; one decision per dashboard).
 - **Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md) (Bases are the view layer;
   notes are the source of truth).

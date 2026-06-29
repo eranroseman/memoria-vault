@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [47, 49]
-supersedes: [8]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,11 +15,12 @@ superseded_by: []
 
 ## Context
 
-ADR-08's single `relations:` field conflated two different things: *objective facts
-about sources* (paper cited-by paper, authored-by person, published-in venue) and
-*connections the PI draws* (claim supports/contradicts claim). They differ in nature,
-owner, and gating — and `relations`/`relationships` were a near-synonym clash waiting
-to happen (D17).
+The early typed-relations design correctly required human-confirmed typed edges such
+as `supports` and `contradicts`, but its single `relations:` field conflated two
+different things: *objective facts about sources* (paper cited-by paper, authored-by
+person, published-in venue) and *connections the PI draws* (claim supports/contradicts
+claim). They differ in nature, owner, and gating — and `relations`/`relationships`
+were a near-synonym clash waiting to happen (D17).
 
 ## Decision
 
@@ -33,9 +34,10 @@ Two distinct connection kinds, two distinct fields:
 | gated? | no — facts (low-confidence extraction → `flag`, [ADR-56](56-extraction-uncertainty-flag.md)) | yes — the *link* gate |
 
 "Relationships are given; links are authored." `links:` replaces the old `relations:`
-field; typed edges (`supports`, `contradicts`) keep ADR-08's typed-relations intent and
+field; typed edges (`supports`, `contradicts`) keep the typed-relations intent and
 keep feeding the contradictions dashboard ([ADR-09](09-contradictions-dashboard.md))
-and claim supersession ([ADR-10](10-claim-supersession.md)).
+and claim supersession ([ADR-10](10-claim-supersession.md)). Agents may propose these
+links, but the PI confirms them before they become authored graph edges.
 
 ## Consequences
 
@@ -56,6 +58,5 @@ words the PI would say.
 
 ## Related
 
-- **Resolves / supersedes:** [ADR-08](08-typed-relations-frontmatter.md)
 - **Related decisions / Depends on:** [ADR-09](09-contradictions-dashboard.md),
   [ADR-10](10-claim-supersession.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)

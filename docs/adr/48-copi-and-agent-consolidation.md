@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [22, 46]
-supersedes: [2, 37, 42]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-ADR-02's seven specialist profiles created a real UX failure — "who do I talk to?" —
+The original seven specialist profiles created a real UX failure — "who do I talk to?" —
 and fragmented the learning loop across agents that never conversed. Under
 "profile = posture, skills attach per lane" several profiles shared one stance. The
 design update (D26/D27/D34/D38/D46) consolidated by posture and concentrated
@@ -66,6 +66,5 @@ separation of duties — the agent that synthesizes must not grade its own work.
 
 ## Related
 
-- **Resolves / supersedes:** [ADR-02](02-seven-specialist-profiles.md)
 - **Related decisions / Depends on:** [ADR-46](46-seven-layer-architecture.md),
   [ADR-21](21-l3-autonomy-ceiling.md), [ADR-23](23-scoped-memory-substrates.md)

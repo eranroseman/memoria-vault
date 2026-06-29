@@ -7,7 +7,7 @@ status: proposed
 date_proposed: 2026-06-19
 date_resolved:
 assumes: [30]
-supersedes: [59]
+supersedes: []
 superseded_by: []
 ---
 
@@ -46,6 +46,5 @@ vocabulary discipline.
 
 ## Related
 
-- **Supersedes:** [ADR-59](59-classical-method-displacements.md).
 - **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md).
 - **Tracking issue:** [#706](https://github.com/eranroseman/memoria-vault/issues/706).

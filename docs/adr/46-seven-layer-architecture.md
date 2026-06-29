@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [22]
-supersedes: [1]
+supersedes: []
 superseded_by: []
 ---
 
@@ -28,7 +28,7 @@ superseded_by: []
 
 ## Context
 
-ADR-01's three layers (board, workers, vault) described the 0.1.0-alpha.1 infrastructure but
+The original three-layer model (board, workers, vault) described the 0.1.0-alpha.1 infrastructure but
 conflated two distinctions the design update pulled apart: *where* things live
 (structure) and *who* acts (actor-kind). The design work
 converged on a single model that serves as both the cognitive and the build view, with
@@ -77,6 +77,5 @@ False in practice — the PI edits the Vault directly; claiming otherwise mislea
 
 ## Related
 
-- **Resolves / supersedes:** [ADR-01](01-three-layer-architecture.md)
 - **Related decisions / Depends on:** [ADR-22](22-build-on-hermes-runtime.md),
   [ADR-48](48-copi-and-agent-consolidation.md)

@@ -45,8 +45,8 @@ The contract is strict:
 
 The projector's operator model is part of this proposal, not an implementation
 detail. The engine must name what process runs it, what writes it can perform, how
-it coordinates concurrent passes, and how it fits ADR-27/28's single audited write
-path.
+it coordinates concurrent passes, and how it fits ADR-120/ADR-28's single audited
+write path.
 
 ## Consequences
 

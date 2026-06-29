@@ -15,17 +15,17 @@ superseded_by: []
 
 ## Context
 
-At low claim-note density the human holds conflicts in their head; as claims accumulate across projects and MOCs, contradictions hide in the long tail — two papers years apart, in different MOCs, never read side by side. A dashboard that surfaces "claims I've filed that disagree with each other" is a high-value synthesis starting point. With [ADR-8](08-typed-relations-frontmatter.md) now adopting the `relations:` namespace (including `contradicts`), the data the dashboard needs exists.
+At low claim-note density the human holds conflicts in their head; as claims accumulate across projects and MOCs, contradictions hide in the long tail — two papers years apart, in different MOCs, never read side by side. A dashboard that surfaces "claims I've filed that disagree with each other" is a high-value synthesis starting point. With [ADR-52](52-links-vs-relationships.md) adopting authored `links.contradicts`, the data the dashboard needs exists.
 
 ## Decision
 
-Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `links.contradicts` links (ADR-52 renamed the old `relations:` namespace to `links:`) and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work ([Classical method displacements](59-classical-method-displacements.md)), to be added when claim density makes manual noticing insufficient.
+Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictions.md`, Dataview over the vault). v1 reads **human-set** `links.contradicts` links and lists the conflicting claim pairs for review — **no LLM judgment in the rollup**, consistent with the deterministic discipline of the other dashboards. The dashboard frames pairs as "worth resolving," never as defects (a paper refuting an earlier one is a wanted finding, not an error). An **NLI-based candidate proposer** — which would *suggest* contradictions for the human to confirm — is explicitly **out of v1 scope**; it remains future work in [ADR-90](90-claim-sentence-classification.md), to be added when claim density makes manual noticing insufficient.
 
 ## Consequences
 
 - Contradictions become queryable instead of held in memory — the synthesis value the dashboard exists for.
 - v1 is only as complete as the human's `contradicts` links; until those are filed the dashboard is sparse. That day-one emptiness is the signal that tells you whether the NLI proposer is worth building — expansion-threshold discipline.
-- Adds one dashboard design summary plus a runtime Dataview page; consumes the `links.contradicts` edges (ADR-8's `relations.contradicts`, renamed by [ADR-52](52-links-vs-relationships.md)). No new judgment surface and no LLM in the rollup.
+- Adds one dashboard design summary plus a runtime Dataview page; consumes the `links.contradicts` edges from [ADR-52](52-links-vs-relationships.md). No new judgment surface and no LLM in the rollup.
 
 ## Alternatives considered
 
@@ -35,7 +35,7 @@ Adopt a **`contradictions` dashboard** (ships at `system/dashboards/contradictio
 
 ## Related
 
-- **Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (supplies the contradicts edges — now `links.contradicts` after [ADR-52](52-links-vs-relationships.md)).
+- **Depends on:** [ADR-52 typed links](52-links-vs-relationships.md) (supplies the `links.contradicts` edges).
 - **Files affected:** [contradictions dashboard](../explanation/dashboards/synthesis-agenda.md#contradictions) (new), [Dashboards](../explanation/dashboards/README.md) (index).
-- **Future proposer:** [Classical method displacements](59-classical-method-displacements.md) — the deterministic NLI candidate-generation engine that populates v2.
+- **Future proposer:** [ADR-90](90-claim-sentence-classification.md) — the deterministic NLI candidate-generation engine that populates v2.
 - **Related decisions:** [ADR-10 claim supersession](10-claim-supersession.md) (supersession is the temporal complement to contradiction).

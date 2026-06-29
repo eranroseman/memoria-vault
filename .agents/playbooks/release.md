@@ -26,7 +26,7 @@ Do not create a second markdown state table for gate or stage progress.
 > trigger the required checks, so a release PR can never go green). Scopes, rationale, and
 > the rotate-before-expiry rule live in the workflow comments
 > ([`.github/workflows/release-please.yml`](../../.github/workflows/release-please.yml)) and
-> [ADR-45](../../docs/adr/45-release-management-model.md) — releases break *silently* if the
+> [ADR-75](../../docs/adr/75-github-project-fields-and-release-sub-issues.md) — releases break *silently* if the
 > PAT lapses.
 
 ## 2. Start a release

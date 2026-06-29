@@ -7,7 +7,7 @@ nav_order: 10
 
 # Why the architecture is layered
 
-Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. The argument was first made for three layers ([ADR-01](../adr/01-three-layer-architecture.md): board, workers, vault) and survives intact in the seven-layer stack that superseded it ([ADR-46](../adr/46-seven-layer-architecture.md)) — the refinement added layers; it never weakened the separation.
+Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. [ADR-46](../adr/46-seven-layer-architecture.md) records the current seven-layer stack; the refinement added layers without weakening the separation between board, workers, and vault.
 
 For the current shared vocabulary, start with [Home](../README.md).
 
@@ -51,7 +51,7 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 ## From three layers to seven
 
-ADR-01's three layers framed the original infrastructure, but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). [ADR-46](../adr/46-seven-layer-architecture.md) pulled them apart and superseded ADR-01 with the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
+The original three-layer framing separated board, workers, and vault, but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). [ADR-46](../adr/46-seven-layer-architecture.md) pulled them apart into the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
 
 Each refinement carries the same argument further:
 
@@ -60,7 +60,7 @@ Each refinement carries the same argument further:
 - Deterministic work was pulled out of the worker set into **operations** — reproducible mechanism that needs no posture and no lane.
 - The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (Co-PI → Tasks → MCP → Operations/Vault); the PI and cron/CI are direct edges.
 
-The file-as-bus, durable-state core — thick files, thin everything else — is unchanged from ADR-01 to ADR-46.
+The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in ADR-46.
 
 ---
 

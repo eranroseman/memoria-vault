@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
 assumes: [48, 70, 77]
-supersedes: [82]
+supersedes: []
 superseded_by: []
 ---
 
@@ -15,20 +15,26 @@ superseded_by: []
 
 ## Context
 
-[ADR-82](82-four-gates-canonical-vocabulary.md) made the four intent-named navigation surfaces — Inbox · Library · Knowledge · Project — the single canonical user-facing vocabulary, and called them **gates**. But "gate" was *already* the system's word for a different, deeper concept: the **structural human approval checkpoint** ([ADR-03](03-structural-review-gate.md)) — the review / human / policy / write gate the policy MCP enforces. That sense is also the industry-standard one: a quality gate, a stage-gate, a human-in-the-loop *approval gate* all name a pass/fail checkpoint, not a place.
+The earlier four-surface navigation vocabulary — Inbox · Library · Knowledge · Project —
+called those surfaces **gates**. But "gate" was *already* the system's word for a
+different, deeper concept: the **structural human approval checkpoint**
+([ADR-03](03-structural-review-gate.md)) — the review / human / policy / write gate the
+policy MCP enforces. That sense is also the industry-standard one: a quality gate, a
+stage-gate, a human-in-the-loop *approval gate* all name a pass/fail checkpoint, not a
+place.
 
-So "gate" carried two heavily-used senses at once — a navigation surface (a place you stand) and an approval checkpoint (a wall a write must pass) — and they collide. A bare "the gate" became genuinely ambiguous, and a lexical audit found the approval sense outnumbering the navigation sense roughly 480:190. Two further minor senses muddied it: the git **pre-commit** check ("the commit gate") and the Hermes **gateway** process. When one word names several load-bearing concepts, the cognitive model degrades — the same design smell ADR-82 itself invoked.
+So "gate" carried two heavily-used senses at once — a navigation surface (a place you stand) and an approval checkpoint (a wall a write must pass) — and they collide. A bare "the gate" became genuinely ambiguous, and a lexical audit found the approval sense outnumbering the navigation sense roughly 480:190. Two further minor senses muddied it: the git **pre-commit** check ("the commit gate") and the Hermes **gateway** process. When one word names several load-bearing concepts, the cognitive model degrades.
 
 ## Decision
 
 **"Gate" is reserved for the gating sense — the approval/policy/review checkpoint. The navigation surfaces are renamed "spaces."**
 
 1. **Navigation surfaces → spaces.** The four surfaces are the **Inbox · Library · Knowledge · Project spaces**. The note type is `space` (`type: space`, `space:` enum field), they live in `vault-template/spaces/`, and the `gate: gates` type→folder map becomes `space: spaces`. "Spaces" is chosen over the other candidate, "views," because Obsidian already uses **view** natively (Reading view, graph view, `ItemView`) — reusing it would relocate the overload, not remove it. "Space" is clean in Obsidian's vocabulary and keeps the destination feel the surfaces need.
-2. **"Gate" = the approval checkpoint, always stated fully.** The structural human gate is written **review gate / human gate / policy gate / write gate** — never a bare "gate" where the surrounding text does not already establish it ([ADR-03](03-structural-review-gate.md), [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md) are unchanged).
+2. **"Gate" = the approval checkpoint, always stated fully.** The structural human gate is written **review gate / human gate / policy gate / write gate** — never a bare "gate" where the surrounding text does not already establish it ([ADR-03](03-structural-review-gate.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md) are unchanged).
 3. **Pre-commit is a hook, not a gate.** The git schema-validation check is the **pre-commit hook**; CI enforcement is **required status checks** — not "the commit gate."
 4. **The runtime entry point is the gateway.** Always "gateway"; never abbreviated to "gate."
 5. **The project readiness gate keeps "gate."** The deterministic structural-impact check (`project-gate.md`, `project-gate.base`, `project-gate-index.md`, `refresh project gate`) is a *quality/readiness gate* and correctly keeps the word — the navigation rename disambiguates it from the Project space.
-6. **Compile/Compose stays retired** (carried forward from ADR-82): the how-to guides remain grouped `how-to-guides/{inbox,library,knowledge,project}/` and the cycle vocabulary is not revived.
+6. **Compile/Compose stays retired**: the how-to guides remain grouped `how-to-guides/{inbox,library,knowledge,project}/` and the cycle vocabulary is not revived.
 
 ## Consequences
 
@@ -46,7 +52,6 @@ So "gate" carried two heavily-used senses at once — a navigation surface (a pl
 
 ## Related
 
-- **Supersedes:** [ADR-82](82-four-gates-canonical-vocabulary.md) (carries its Compile/Compose retirement forward; changes only the surface name gate → space).
 - **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (the surfaces as JTBD dashboards), [ADR-77](77-project-gate.md) (the Project surface + its readiness gate), [ADR-48](48-copi-and-agent-consolidation.md) (the lanes are the agents' work breakdown).
-- **Reserves "gate" for:** [ADR-03](03-structural-review-gate.md), [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md).
+- **Reserves "gate" for:** [ADR-03](03-structural-review-gate.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md).
 - **Source discussion:** the alpha.8 overloaded-terminology audit (gate's four senses).
