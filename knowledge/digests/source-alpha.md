@@ -22,6 +22,10 @@ Source: Alpha Source
 
 Alpha content about framing, methods, outcomes, gaps, and impact.
 
+
+## PI interview
+
+- The PI cares about the methods caveat.
 ## Hub suggestions
 
 - Framing
