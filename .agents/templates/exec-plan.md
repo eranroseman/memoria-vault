@@ -5,7 +5,7 @@
   guidance comments. See ../playbooks/exec-plan.md for when and how to use it.
 
   ── Where this instance lives ───────────────────────────────────────────────
-  .agents/tmp/releases/<version>/  — under the current release/checkpoint;
+  scratch/releases/<version>/  — under the current release/checkpoint;
   tracked for linking and handoff, deleted before that release closes.
   (_notes/ is gitignored, so a plan meant to be resumed or handed off never
   lives there.)

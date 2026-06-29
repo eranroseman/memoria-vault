@@ -102,7 +102,7 @@ repos:
         exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
 
-      # Block 9b: cspell spell-check (all tracked markdown)
+      # Block 9b: cspell spell-check (tracked prose markdown)
       # Triggers on any changed .md; scope/exclusions are owned by cspell.json
       # (files + ignorePaths + enableGlobDot), so there is no file list to mirror
       # against .github/workflows/cspell.yml.

@@ -31,7 +31,7 @@ retired standalone proposal and design-doc folders — decisions are ADRs and
 state lives in issues — so an ExecPlan must never become a fourth permanent
 record.
 
-Put the instance in **`.agents/tmp/releases/<version>/`** under the current
+Put the instance in **`scratch/releases/<version>/`** under the current
 release or checkpoint: tracked so it can be linked and handed off, and deleted
 before that release/checkpoint closes (see `AGENTS.md` → "Release process").
 This is the repository's only home for tracked in-work release design scratch —
