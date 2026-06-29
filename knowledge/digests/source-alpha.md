@@ -16,20 +16,10 @@ massw:
 ---
 # Digest: Alpha Source
 
-Source: Alpha Source
-
 ## Synthesis
 
-Alpha content about framing, methods, outcomes, gaps, and impact.
+Model-written Alpha framing outcomes.
 
-
-## PI interview
-
-- The PI cares about the methods caveat.
 ## Hub suggestions
 
 - Framing
-- Methods
-- Outcomes
-- Gaps
-- Impact
