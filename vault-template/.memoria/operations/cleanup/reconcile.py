@@ -21,7 +21,7 @@ capture-intake.jsonl record (one JSON object per line, append-only; written by t
 capture entry point *before* the gated note write — the durability anchor):
 
     {"ts": "<ISO-8601 UTC>", "citekey": "<key>", "source": "zotero",
-     "note_path": "catalog/papers/<citekey>.md"}
+     "note_path": "catalog/sources/<source_id>/source.md"}
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ from pathlib import Path
 
 from operations.processing.ingest.link import read_frontmatter
 
-SOURCE_FOLDERS = ("catalog/papers", "catalog/datasets", "catalog/repositories")
+SOURCE_ROOT = "catalog/sources"
 LIBRARIAN = "memoria-librarian"
 SKILL = "catalog-enrich-record"  # the catalog lane's ingest skill
 
@@ -59,10 +59,15 @@ def read_log(log_path: Path) -> dict:
 
 def note_for(citekey: str, vault: Path) -> Path | None:
     """Return the existing note for a citekey (by filename) if any."""
-    for folder in SOURCE_FOLDERS:
-        p = vault / folder / f"{citekey}.md"
-        if p.is_file():
-            return p
+    root = vault / SOURCE_ROOT
+    for source in (root / citekey / "source.md",):
+        if source.is_file():
+            return source
+    if root.is_dir():
+        for source in root.glob("*/source.md"):
+            fm = read_frontmatter(source)
+            if fm.get("citekey") == citekey or fm.get("source_id") == citekey:
+                return source
     return None
 
 
@@ -73,11 +78,9 @@ def scan_captured(vault: Path) -> list:
     is the tier discriminator, so the retry sweep keys on it alone.
     """
     out = []
-    for folder in SOURCE_FOLDERS:
-        d = vault / folder
-        if not d.is_dir():
-            continue
-        for md in sorted(d.glob("*.md")):
+    d = vault / SOURCE_ROOT
+    if d.is_dir():
+        for md in sorted(d.glob("*/source.md")):
             fm = read_frontmatter(md)
             if fm.get("ingest_status") == "tier0":
                 out.append({"citekey": fm.get("citekey") or md.stem, "path": str(md)})

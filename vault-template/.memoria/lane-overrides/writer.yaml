@@ -14,13 +14,10 @@ policy:
       - review_gated_publish
       - destructive_shell
     write:
-      - "notes/claims/**"      # review-gated (ADR-03/47)
-      - "notes/hubs/**"
       - "knowledge/**"
       - "catalog/**"
       - "capabilities/**"
       - "inbox/**"             # the Writer raises no cards (its Inbox column is —)
-      - "projects/**"
       - "system/**"
   require:
     - audit_log

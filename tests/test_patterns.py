@@ -89,7 +89,7 @@ def test_runner_degrades_gated_targets_to_dry_run(tmp_path):
     (pd / "bad.md").write_text(
         "---\ntitle: B\ntype: operation\ncheck_status: checked\n"
         "description: Test operation.\nposture: librarian\n"
-        "mode: library\naction: a\ninput: note\noutput_target: 'notes/claims/'\n---\n"
+        "mode: library\naction: a\ninput: note\noutput_target: 'knowledge/notes/'\n---\n"
         "Z {{input}}\n",
         encoding="utf-8",
     )

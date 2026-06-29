@@ -25,9 +25,9 @@ metadata:
 
 # catalog-enrich-record
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
-Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
+Turn a citekey into a populated source Concept. The mechanical ~80% of ingest is
 **deterministic and lives behind the `ingest_pipeline` MCP tool** (the
 `memoria-ingest` server wrapping the ingest operation (`.memoria/operations/processing/ingest/runner.py`)) — you do not reimplement
 it, and you cannot run it as a script (`code_execution` is disabled for this
@@ -41,7 +41,7 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 
 ## When to Use
 
-- **A new citekey to ingest** — a paper (or software/dataset) is in Zotero/BibTeX
+- **A new citekey to ingest** — a source item is in Zotero/BibTeX
   and needs a populated vault note.
 - **A recovery / re-ingest** — a prior capture stalled at `captured` /
   `ingest_status: tier0` / `needs-human`, or a note must be rebuilt from its
@@ -104,25 +104,17 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
    `cites` edge **bidirectionally** (`this.cites += X`, `X.cited_by += this`).
    Link the note to relevant synthesis notes / hubs where applicable.
 
-5. **Write the Catalog entity — gated.** Through the `obsidian` skill, write
-   `catalog/papers/<citekey>.md` (or `catalog/repositories/` for software and
-   `catalog/datasets/` for datasets, per the bundle's `note_type`), body led by the `[!brief]`. Set `lifecycle: proposed`
-   and `ingest_status: complete` now that the classification landed.
-   **Never overwrite an existing note** — if one exists, append a `## New import`
-   section; if a human edited an existing `[!brief]`, append a
-   `[!brief] (updated YYYY-MM-DD)` block rather than rewriting. **Never overwrite
-   human-set frontmatter.**
+5. **Request the source Concept write.** Do not call Obsidian write tools. Send the
+   completed bundle back through the worker-owned capture/enrich operation so it stages
+   and promotes `catalog/sources/<source_id>/source.md` plus any entity Concepts. The
+   source Concept carries `type: source`, `check_status`, `source_id`, `citekey`,
+   `csl_json`, `content_path`, and hashes; software and datasets are `source` Concepts
+   with the right `item_type`, not separate catalog folders.
 
-6. **Write the proposed source note — gated.** For paper-like sources, create
-   `notes/sources/<citekey>.md` if it does not already exist. It is the PI's reading
-   record, not an agent summary: set `type: source`, `lifecycle: proposed`,
-   `source_type: paper`, and `entity: "[[catalog/papers/<citekey>]]"`; copy the
-   final title into `title`, and carry over the controlled `research_area` /
-   `methodology` values only when the Catalog entity has confident values. Use
-   the starter sections from `system/templates/source.md` for **In my words**,
-   **Worth distilling**, and **Tensions**; do not generate reading prose. If the
-   note exists, do not overwrite it; leave a short Inbox note or completion note
-   telling the PI where the existing reading record is.
+6. **Leave reading synthesis to the digest/notes operations.** Do not create a separate
+   source-reading note. The conversation and digest compile step create
+   `knowledge/digests/<source_id>.md`; note proposals later become checked `note`
+   candidates under `knowledge/notes/`.
 
 7. **Verify the durability anchor.** The ingest MCP appends the capture record
    (citekey, path, timestamp) to `system/logs/capture-intake.jsonl` itself
@@ -141,20 +133,17 @@ gated and audited; nothing captured is ever lost; robust by redundancy.**
 - Use the `obsidian` skill for all vault reads/writes — not shell heredocs.
 - Stable identifiers go in main frontmatter; derived metrics and taxonomy stay
   in `_enrichment` (the agent refreshes it; never overwrite a human main field).
-- All writes route through the policy gate (lane-override allows `inbox/**`
-  + `catalog/**`).
+- All writes route through the worker/trusted-writer path; this skill supplies only
+  the judgment holes.
 - On a hard pipeline failure after bounded retries, leave the note at
   `captured` + `ingest_status: needs-human` so the retry-sweep stops and the
   human is surfaced — do not silently drop a capture.
 
 ## Verification
 
-- The note exists at `catalog/papers/<citekey>.md` (or `catalog/repositories/<citekey>.md`
-  for software / `catalog/datasets/<citekey>.md` for datasets) with `lifecycle: proposed` and `ingest_status: complete` —
-  confirming the classification proposal landed and the gated writes applied.
-- For paper-like sources, a proposed source note exists at `notes/sources/<citekey>.md`
-  and links back to the Catalog entity; it contains empty reading sections for the
-  PI to fill, not generated reading prose.
+- The checked source Concept exists at `catalog/sources/<source_id>/source.md`, with
+  raw/content paths and source metadata preserved.
+- No separate source-reading note was created.
 - A capture record (citekey, path, timestamp) exists in
   `system/logs/capture-intake.jsonl` — appended operation-side by the ingest MCP
   (`append_intake_anchor`), never by you — the durability anchor the

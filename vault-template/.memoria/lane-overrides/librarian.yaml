@@ -21,8 +21,6 @@ policy:
       - "knowledge/**"
       - "capabilities/**"
       - "inbox/**"
-      - "notes/**"
-      - "projects/**"
       - "system/**"
   require:
     - audit_log

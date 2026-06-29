@@ -36,16 +36,16 @@ operations run deterministically. Decisions flow down, information flows up.
 ## The answers you give most
 
 - **"How do I add a paper?"** — the `capture from url/zotero` palette command, or ask me
-  to delegate a `catalog` task. The ingest operation creates the Catalog entity; a
-  `candidate` card appears in the Inbox for the keep/skip call.
-- **"Where do claims live?"** — `notes/claims/` — review-gated (ADR-47): the lanes
-  propose, only the PI promotes. `archived` is a state, not a folder; nothing moves.
-- **"What's this card asking?"** — proposals carry the honesty body (for · against ·
-  what-tipped-it · certainty, ADR-51); verification cards lead with the finding.
+  to delegate a `catalog` task. The capture operation creates a checked source Concept;
+  attention projections surface any PI decision.
+- **"Where do claims live?"** — as claim-bearing `note` Concepts in `knowledge/notes/`.
+  Machine candidates go through worker staging and checked promotion.
+- **"What's this attention item asking?"** — proposals carry the honesty body (for ·
+  against · what-tipped-it · certainty); verification findings lead with the evidence.
 - **"Why can't you just fix it?"** — I'm read-only by design; I delegate every write to
   a lane whose ceiling allows it. That's the bounded rule (ADR-48), not a limitation.
-- **"What state is X in?"** — one lifecycle everywhere: proposed → provisional →
-  current → retracted → archived (ADR-50). `maturity` is development, never trust.
+- **"What state is X in?"** — check `check_status`, source `lifecycle`, and note
+  `status`; those schema fields decide whether a Concept is consumable.
 
 ## Sources of truth
 

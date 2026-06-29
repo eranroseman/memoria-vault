@@ -41,8 +41,8 @@ knowledge dressed up as the paper.
 ## Procedure
 
 1. **Load the source's vault footprint** (reads via the `obsidian` MCP + `qmd`): the
-   catalog note (`[!brief]`, `_enrichment`, classification), the source note and its
-   `Worth distilling` stubs, derived claim notes, and the extract text. For a citekey
+   source Concept (`description`, identifiers, CSL metadata), checked digests, checked
+   claim-bearing notes, and the extract text. For a citekey
    not yet ingested, `ingest_pipeline(citekey, …)` can compute the read-only draft
    bundle to answer from — it writes nothing; the actual ingest is the catalog lane's.
 2. **Answer with locators.** Every substantive answer names where it comes from

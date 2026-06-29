@@ -15,24 +15,26 @@ def test_reconcile_intake():
 
         with tempfile.TemporaryDirectory() as td:
             v = Path(td)
-            papers = v / "catalog/papers"
-            papers.mkdir(parents=True)
+            sources = v / "catalog/sources"
             # one tier0 note (a retry target) + one already-enriched + one complete;
             # paper entities are lifecycle: current from creation (ADR-50) — the
             # retry sweep keys on ingest_status, not lifecycle.
-            (papers / "stuck2024A.md").write_text(
+            (sources / "stuck2024A").mkdir(parents=True)
+            (sources / "done2024B").mkdir(parents=True)
+            (sources / "live2024C").mkdir(parents=True)
+            (sources / "stuck2024A" / "source.md").write_text(
                 "---\ncitekey: stuck2024A\nlifecycle: current\ningest_status: tier0\n---\n"
             )
-            (papers / "done2024B.md").write_text(
+            (sources / "done2024B" / "source.md").write_text(
                 "---\ncitekey: done2024B\nlifecycle: current\ningest_status: enriched\n---\n"
             )
-            (papers / "live2024C.md").write_text(
+            (sources / "live2024C" / "source.md").write_text(
                 "---\ncitekey: live2024C\nlifecycle: current\ningest_status: complete\n---\n"
             )
             # capture log: A + B present on disk, ghost2024Z never landed
             log = v / "capture-intake.jsonl"
             log.write_text(
-                '{"citekey": "stuck2024A", "note_path": "catalog/papers/stuck2024A.md"}\n'
+                '{"citekey": "stuck2024A", "note_path": "catalog/sources/stuck2024A/source.md"}\n'
                 '{"citekey": "done2024B"}\n'
                 '{"citekey": "ghost2024Z"}\n'
                 "not-json-skip-me\n"

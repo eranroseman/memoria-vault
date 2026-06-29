@@ -14,12 +14,10 @@ policy:
       - review_gated_publish
       - destructive_shell
     write:
-      - "notes/**"             # legacy path family; never edits reviewed content
       - "knowledge/**"
       - "catalog/**"
       - "capabilities/**"
       - "inbox/**"
-      - "projects/**"
       - "system/**"
   require:
     - audit_log

@@ -37,7 +37,7 @@ The generated note is written next to the Project note as `project-gate-index.md
 | `active_thesis` | Thesis at the root of the argument graph. |
 | `computed_at` | UTC timestamp for the last material payload change. |
 | `stale` | Whether the generated analysis is stale relative to available project evidence. |
-| `argument_stage` | Derived project argument maturity stage. |
+| `argument_stage` | Derived project argument readiness stage. |
 | `evidence_saturation` | Derived saturation value for the scoped argument graph. |
 | `displayed_confidence` | Confidence value shown to the PI. |
 | `relation_count` | Count of graph relations considered. |

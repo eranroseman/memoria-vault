@@ -52,8 +52,8 @@ settings:
 */
 
 .metadata-property[data-property-key="type"],
+.metadata-property[data-property-key="check_status"],
 .metadata-property[data-property-key="lifecycle"],
-.metadata-property[data-property-key="maturity"],
 .metadata-property[data-property-key="certainty"],
 .metadata-property[data-property-key="agent_recommendation"],
 .metadata-property[data-property-key="loudness"],

@@ -25,12 +25,12 @@ metadata:
 
 # catalog-classify-source
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Propose how a source is filed — `research_area`, `methodology` — without ever
 deciding it. Classification is **audited metadata, not a gate** (D16/D21): your values
 land in the note's `_proposed_classification` block; the human-owned main fields stay
-empty until the PI promotes at triage. Normally `catalog-enrich-record` fills this hole
+empty until PI direction accepts or edits them. Normally `catalog-enrich-record` fills this hole
 during ingest; this skill is the standalone path for notes that missed it or need a
 re-read.
 
@@ -38,7 +38,7 @@ re-read.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| citekey / path | yes | The catalog note to classify (`catalog/papers/<citekey>.md` or another `catalog/<type>/…` entity). |
+| citekey / path | yes | The source Concept to classify (`catalog/sources/<source_id>/source.md`). |
 | reason | no | Why re-classifying (vocabulary changed, prior proposal stale). |
 
 ## Procedure

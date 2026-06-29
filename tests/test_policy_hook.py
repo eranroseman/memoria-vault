@@ -119,8 +119,10 @@ def test_direct_capability_tools_are_hard_denied():
 
 
 def test_extract_path_accepts_both_filepath_spellings():
-    assert extract_path({"filepath": "notes/sources/x.md"}) == "notes/sources/x.md"
-    assert extract_path({"file_path": "notes/sources/y.md"}) == "notes/sources/y.md"
+    assert (
+        extract_path({"filepath": "catalog/sources/x/source.md"}) == "catalog/sources/x/source.md"
+    )
+    assert extract_path({"file_path": "knowledge/notes/y.md"}) == "knowledge/notes/y.md"
 
 
 def _vault_with_policy(tmp_path):
@@ -140,8 +142,8 @@ def _vault_with_policy(tmp_path):
     shutil.copy(mcp_src / "_shared.py", vault / ".memoria" / "mcp" / "_shared.py")
     (lanes / "writer.yaml").write_text(
         "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
-        '      - "inbox/**"\n      - "notes/hubs/**"\n'
-        '  deny:\n    write:\n      - "notes/claims/**"\n'
+        '      - "inbox/**"\n      - "knowledge/hubs/**"\n'
+        '  deny:\n    write:\n      - "knowledge/notes/**"\n'
         '  require:\n    - audit_log\nrouting:\n  write_scope:\n    - "inbox/"\n',
         encoding="utf-8",
     )
@@ -161,8 +163,8 @@ def test_evaluate_pre_allows_reads_but_blocks_direct_profile_writes(tmp_path):
 
     assert _ev(vault, "obsidian_get_file_contents", "x.md") == {}
     direct = _ev(vault, "obsidian_patch_content", "inbox/a.md")
-    review = _ev(vault, "obsidian_patch_content", "notes/hubs/r.md")
-    denied = _ev(vault, "obsidian_delete_file", "notes/claims/c.md")
+    review = _ev(vault, "obsidian_patch_content", "knowledge/hubs/r.md")
+    denied = _ev(vault, "obsidian_delete_file", "knowledge/notes/c.md")
     missing_task = evaluate_pre(
         {"tool_name": "obsidian_patch_content", "tool_input": {"filepath": "inbox/a.md"}},
         "memoria-writer",
@@ -244,7 +246,7 @@ def test_native_obsidian_mcp_writes_are_gated_and_dangerous_tools_hard_block(tmp
     vault = _vault_with_policy(tmp_path)
 
     assert _ev(vault, "mcp_obsidian_vault_write", "inbox/n.md").get("decision") == "block"
-    assert _ev(vault, "mcp_obsidian_vault_write", "notes/claims/c.md").get("decision") == "block"
+    assert _ev(vault, "mcp_obsidian_vault_write", "knowledge/notes/c.md").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_command_execute", "").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_vault_delete", "inbox/a.md").get("decision") == "block"
     assert _ev(vault, "mcp_obsidian_vault_move", "inbox/a.md").get("decision") == "block"
@@ -252,11 +254,13 @@ def test_native_obsidian_mcp_writes_are_gated_and_dangerous_tools_hard_block(tmp
 
 def test_file_toolset_writes_are_blocked_even_for_allowed_vault_zones(tmp_path):
     vault = _vault_with_policy(tmp_path)
-    abs_claim = str(vault / "notes" / "claims" / "c.md")
+    abs_claim = str(vault / "knowledge" / "notes" / "c.md")
 
     assert _ev(vault, "write_file", "inbox/f.md", key="file_path").get("decision") == "block"
-    assert _ev(vault, "write_file", "notes/claims/c.md", key="file_path").get("decision") == "block"
-    assert to_vault_relative(abs_claim, vault) == "notes/claims/c.md"
+    assert (
+        _ev(vault, "write_file", "knowledge/notes/c.md", key="file_path").get("decision") == "block"
+    )
+    assert to_vault_relative(abs_claim, vault) == "knowledge/notes/c.md"
     assert _ev(vault, "write_file", abs_claim, key="file_path").get("decision") == "block"
     assert to_vault_relative("/etc/passwd", vault) is None
     assert (

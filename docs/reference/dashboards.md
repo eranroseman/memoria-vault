@@ -17,7 +17,7 @@ Dashboard and Bases inventory for the shipped Obsidian surface. Dashboards are c
 | Queue | Inbox | `spaces/inbox.md` | Daily attention queue (`projection: queue`), reached from the rail's *Now*: compact in-process Activity first, then `Needs me`. |
 | Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`projection: maintenance`): drift watch, loose ends, queue state, and new-this-week digest. |
 | Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
-| Space | Knowledge | `spaces/knowledge.md` | Synthesis space: claims by maturity, open questions, contradictions, hubs, and patterns. |
+| Space | Knowledge | `spaces/knowledge.md` | Synthesis space: checked note status, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
 | Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |

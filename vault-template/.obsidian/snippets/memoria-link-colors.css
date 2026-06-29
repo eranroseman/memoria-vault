@@ -7,10 +7,8 @@
  * be human-tunable) and the supercharged-links plugin (to apply the
  * data-link-* attributes to internal links).
  *
- * The colors signal where a link points by category folder. A draft citing a
- * claim note looks visually different from a draft citing a source note —
- * useful in citation-heavy prose where the reader otherwise can't tell what
- * kind of artifact each wikilink resolves to.
+ * The colors signal where a link points by alpha.11 bundle folder. A project
+ * page citing a source looks visually different from a note or hub.
  */
 
 /* @settings
@@ -19,29 +17,29 @@ id: memoria-link-colors
 settings:
   -
     id: memoria-source-color
-    title: Source layer (catalog/, notes/sources/)
+    title: Catalog sources and entities
     description: Color for links into the source layer (literature, items, entities).
     type: variable-color
     format: hex
     default: '#8a8a8a'
   -
     id: memoria-claim-color
-    title: Claim notes (notes/claims/)
-    description: Color for links to claim notes — the primary synthesis layer.
+    title: Knowledge notes
+    description: Color for links to note Concepts — the primary synthesis layer.
     type: variable-color
     format: hex
     default: '#4a90e2'
   -
     id: memoria-hub-color
-    title: Hubs (notes/hubs/)
+    title: Hubs (knowledge/hubs/)
     description: Color for hub links — the topic-hub navigation layer.
     type: variable-color
     format: hex
     default: '#e2a44a'
   -
     id: memoria-draft-color
-    title: Project scratch (projects/)
-    description: Color for in-progress draft links — muted to signal "not canonical."
+    title: Knowledge projects
+    description: Color for project links — muted to signal work in progress.
     type: variable-color
     format: hex
     default: '#a0a0a0'
@@ -84,29 +82,27 @@ settings:
 
 /* Source layer — neutral accent (signals "describes the world", not your thinking) */
 a[data-href^="catalog/"],
-a.internal-link[data-href^="catalog/"],
-a[data-href^="notes/sources/"],
-a.internal-link[data-href^="notes/sources/"] {
+a.internal-link[data-href^="catalog/"] {
   color: var(--memoria-source-color);
 }
 
-/* Claim notes — primary accent (your thinking, single-claim atomic) */
-a[data-href^="notes/claims/"],
-a.internal-link[data-href^="notes/claims/"] {
+/* Knowledge notes — primary synthesis accent */
+a[data-href^="knowledge/notes/"],
+a.internal-link[data-href^="knowledge/notes/"] {
   color: var(--memoria-claim-color);
   font-weight: 500;
 }
 
 /* Hubs — italic + accent (visual hierarchy: hubs, not leaves) */
-a[data-href^="notes/hubs/"],
-a.internal-link[data-href^="notes/hubs/"] {
+a[data-href^="knowledge/hubs/"],
+a.internal-link[data-href^="knowledge/hubs/"] {
   color: var(--memoria-hub-color);
   font-style: italic;
 }
 
-/* Project scratch — muted (signal "in progress, not canonical") */
-a[data-href^="projects/"],
-a.internal-link[data-href^="projects/"] {
+/* Projects — muted (signal "in progress") */
+a[data-href^="knowledge/projects/"],
+a.internal-link[data-href^="knowledge/projects/"] {
   color: var(--memoria-draft-color);
 }
 

@@ -46,7 +46,7 @@ def test_plan_entities_creates_id_keyed_venue_note():
 
     assert len(venues) == 1
     assert venues[0]["id"] == "2398-6352"
-    assert venues[0]["path"] == "catalog/venues/2398-6352.md"
+    assert venues[0]["path"] == "catalog/entities/venue-2398-6352.md"
 
 
 def test_plan_entities_creates_id_keyed_person_notes_only_for_orcid_authors():
@@ -54,7 +54,7 @@ def test_plan_entities_creates_id_keyed_person_notes_only_for_orcid_authors():
 
     assert len(people) == 2
     assert all("/" not in e["id"] for e in people)
-    assert all(e["path"] == f"catalog/people/{e['id']}.md" for e in people)
+    assert all(e["path"] == f"catalog/entities/person-{e['id']}.md" for e in people)
 
 
 def test_plan_entities_dedupes_orgs_by_ror_and_records_names_without_ids():
@@ -62,7 +62,7 @@ def test_plan_entities_dedupes_orgs_by_ror_and_records_names_without_ids():
     orgs = [e for e in plan["entities"] if e["note_type"] == "organization"]
 
     assert len(orgs) == 1
-    assert orgs[0]["path"] == "catalog/organizations/042nb2s44.md"
+    assert orgs[0]["path"] == "catalog/entities/organization-042nb2s44.md"
     assert plan["recorded_by_name"]["authors"] == ["Bob B"]
     assert "Acme Lab" in plan["recorded_by_name"]["orgs"]
 

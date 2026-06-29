@@ -26,7 +26,7 @@ metadata:
 
 # map-scope-project
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Answer "what does the vault already hold on this?" for a project brief or question.
 The output is a **corpus map**: the relevant notes, clustered deterministically,
@@ -39,7 +39,7 @@ not the map's.
 | Input | Required | Meaning |
 | --- | --- | --- |
 | project brief / question | yes | What to scope (a project note, or a question verbatim). |
-| folders | no | Restrict retrieval (default: `notes/claims`, `notes/sources`, `catalog/papers`). |
+| folders | no | Restrict retrieval (default: `knowledge/notes`, `catalog/sources`, `catalog/sources`). |
 
 ## Procedure
 
@@ -52,7 +52,7 @@ not the map's.
    adjusted. If the optional cluster stack is missing, report it and fall back to a
    link-graph-only map, labeled as such.
 3. **Aggregate** per cluster: note count, claim-vs-source mix, recency, source
-   diversity, maturity distribution — pure frontmatter arithmetic.
+   diversity, status distribution — pure frontmatter arithmetic.
 4. **Compose the narrative** over the fixed outputs: what each cluster is, which
    clusters carry promoted claims vs raw sources, where the brief's key terms retrieve
    almost nothing (named, not judged — gap *reporting* in depth is
@@ -62,7 +62,7 @@ not the map's.
    rejected directions or dead ends worth remembering, write the companion trace note
    `knowledge/notes/maps/corpus-map-<project>-<YYYY-MM-DD>-exploration-trace.md` before
    the card. Then raise ONE `candidate` card in `inbox/` pointing at the map (ADR-54).
-   Never write under `projects/` — that zone is the PI's and the Writer's, not yours.
+   Never write into PI-owned project files under `knowledge/projects/` — that zone is the PI's and the Writer's, not yours.
 
 ## Output contract
 

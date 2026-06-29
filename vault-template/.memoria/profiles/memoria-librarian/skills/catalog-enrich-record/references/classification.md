@@ -4,7 +4,7 @@ The classification step runs on every new source, so it is built to be cheap and
 correctable rather than clever: it reuses the OpenAlex **topics already in the enrichment
 payload** (no extra network call) and audits every decision. Classification is **not a gate**
 (D16 / D21 / ADR-54) — the values land in the note's `_proposed_classification` block; the
-human-owned main fields stay empty until the PI promotes them at triage.
+human-owned main fields stay empty until PI direction accepts or edits them.
 
 ## How a value is chosen
 

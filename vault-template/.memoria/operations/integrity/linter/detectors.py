@@ -201,8 +201,8 @@ def all_frontmatter_keys(text: str) -> set[str]:
     """Every field name declared in the frontmatter at *any* nesting depth.
 
     Unlike parse_frontmatter (top-level only), this captures keys nested under
-    blocks like `_proposed_classification:` -- which is where claim/paper notes
-    keep `maturity`, `topics`, `research_area`, `methodology`, etc."""
+    blocks like `_proposed_classification:` -- which is where source and note
+    Concepts keep `topics`, `research_area`, `methodology`, etc."""
     if not text.startswith("---"):
         return set()
     end = text.find("\n---", 3)

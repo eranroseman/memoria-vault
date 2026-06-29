@@ -45,7 +45,7 @@ def main() -> None:
         "--decide",
         metavar="JSON",
         help='one-shot decision request, e.g. \'{"profile":"memoria-librarian",'
-        '"action":"write","path":"notes/claims/x.md","task_id":"T1"}\'',
+        '"action":"write","path":"knowledge/notes/x.md","task_id":"T1"}\'',
     )
     args = parser.parse_args()
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """runner.py — the deterministic ingest orchestrator (ADR-30).
 
-Chains the four deterministic stages into a single **draft bundle** that the
-Librarian worker completes (the two LLM judgments) and writes (gated):
+Chains the deterministic stages into a single **source bundle** that the
+Librarian worker completes (the two LLM judgments) and stages/promotes:
 
     Tier-0  ingest_paper  -> identity + route + captured frontmatter
     Tier-1  resolve_merge -> S2+OpenAlex+Crossref+PubMed merged metadata + ref union
@@ -11,7 +11,7 @@ Librarian worker completes (the two LLM judgments) and writes (gated):
             extract       -> full text (Unpaywall / PMC / local PDF), gatekept by coherence
             link          -> entity find-or-create plan + cites edges
 
-Output (`--json`): the assembled paper-note **with two holes** —
+Output (`--json`): the assembled source Concept **with two holes** —
 `_proposed_classification` (classify, LLM #1) and the `[!brief]` body (LLM #2) —
 plus the link plan and the extract. The worker fills the two holes and performs
 the gated writes; this script writes nothing.
@@ -257,7 +257,7 @@ def main() -> int:
 
     ap = argparse.ArgumentParser(description="Deterministic ingest orchestrator (ADR-30)")
     ap.add_argument("--citekey")
-    ap.add_argument("--bib", help="default <vault>/.memoria/memoria.bib")
+    ap.add_argument("--bib", help="default <vault>/references.bib")
     ap.add_argument(
         "--vault", help="default $MEMORIA_VAULT_PATH (or $OBSIDIAN_VAULT_PATH from ~/.hermes/.env)"
     )
@@ -270,7 +270,7 @@ def main() -> int:
     if not a.citekey or not vault_str:
         ap.error("provide --citekey and --vault (or set MEMORIA_VAULT_PATH)")
     vault = Path(vault_str)
-    bib = Path(a.bib) if a.bib else vault / ".memoria" / "memoria.bib"
+    bib = Path(a.bib) if a.bib else vault / "references.bib"
     if not bib.is_file():
         print(f"bib not found: {bib}", file=sys.stderr)
         return 3

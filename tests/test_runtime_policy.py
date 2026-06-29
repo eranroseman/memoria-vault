@@ -25,6 +25,7 @@ def test_lane_globs_and_scopes_share_one_semantics():
 
 
 def test_review_gated_exact_root_counts_as_gated():
-    assert is_review_gated("notes/claims")
-    assert is_review_gated("notes/claims/c.md")
-    assert not is_review_gated("notes/claims-adjacent/c.md")
+    assert is_review_gated("knowledge/notes")
+    assert is_review_gated("knowledge/notes/c.md")
+    assert is_review_gated("knowledge/hubs/h.md")
+    assert not is_review_gated("knowledge/notes-adjacent/c.md")

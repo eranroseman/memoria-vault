@@ -317,7 +317,7 @@ def check_doi(doi: str, offline: bool = False) -> dict:
 
 
 def sweep(vault: Path, offline: bool = True) -> dict:
-    """Scan catalog paper/dataset DOIs against the local RW CSV; raise an Inbox
+    """Scan catalog source DOIs against the local RW CSV; raise an Inbox
     `alert` for each retracted work (the writing half of the sweep operation)."""
     from operations.lib import inbox as inbox_writer
 
@@ -325,19 +325,22 @@ def sweep(vault: Path, offline: bool = True) -> dict:
     doi_re = re.compile(r"^doi:\s*[\"']?([^\"'\n]+)", re.M)
     ck_re = re.compile(r"^citekey:\s*[\"']?([^\"'\n]+)", re.M)
     checked = hits = 0
-    for folder in ("catalog/papers", "catalog/datasets"):
-        d = vault / folder
-        if not d.is_dir():
-            continue
-        for note in sorted(d.glob("*.md")):
+    d = vault / "catalog" / "sources"
+    if d.is_dir():
+        for note in sorted(d.glob("*/source.md")):
             m = fm_re.match(note.read_text(encoding="utf-8"))
             if not m:
                 continue
-            doi_m = doi_re.search(m.group(1))
-            if not doi_m or not doi_m.group(1).strip():
+            frontmatter = m.group(1)
+            doi_m = doi_re.search(frontmatter)
+            doi = doi_m.group(1).strip() if doi_m else ""
+            if not doi:
+                id_m = re.search(r"^\s+doi:\s*[\"']?([^\"'\n]+)", frontmatter, re.M)
+                doi = id_m.group(1).strip() if id_m else ""
+            if not doi:
                 continue
             checked += 1
-            result = check_doi(doi_m.group(1).strip(), offline=offline)
+            result = check_doi(doi, offline=offline)
             if result.get("retracted"):
                 hits += 1
                 ck = (ck_re.search(m.group(1)) or [None, ""])[1]
@@ -345,12 +348,12 @@ def sweep(vault: Path, offline: bool = True) -> dict:
                     vault,
                     "alert",
                     f"Retraction: {note.stem}",
-                    f"DOI {doi_m.group(1).strip()} is retracted "
+                    f"DOI {doi} is retracted "
                     f"({result.get('nature') or 'see retraction record'}); claims citing it "
                     "need re-adjudication.",
                     raised_by="sweep",
                     agent_recommendation="issues-found",
-                    target=f"{folder}/{note.name}",
+                    target=note.relative_to(vault).as_posix(),
                     citekey=ck,
                     loudness="alert",
                 )

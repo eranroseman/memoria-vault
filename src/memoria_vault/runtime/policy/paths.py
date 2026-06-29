@@ -6,7 +6,7 @@ import re
 
 ACTIONS = frozenset({"read", "write", "append", "move", "delete", "mkdir", "auto_fix", "report"})
 MUTATING_ACTIONS = frozenset({"write", "append", "move", "delete", "mkdir", "auto_fix"})
-REVIEW_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
+REVIEW_GATED_PREFIXES = ("knowledge/notes/", "knowledge/hubs/")
 
 
 def normalize_path(path: str) -> str:

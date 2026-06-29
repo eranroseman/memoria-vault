@@ -63,10 +63,10 @@ This block is generated from `vault-template/.memoria/profiles`, `vault-template
 | Profile | Required controls | Explicitly denied write scopes |
 | --- | --- | --- |
 | `memoria-copi` | `audit_log` | `**` |
-| `memoria-librarian` | `audit_log`, `timeout_required`, `source_tracking` | `catalog/**`, `knowledge/**`, `capabilities/**`, `inbox/**`, `notes/**`, `projects/**`, `system/**` |
-| `memoria-writer` | `audit_log`, `timeout_required` | `notes/claims/**`, `notes/hubs/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
-| `memoria-peer-reviewer` | `audit_log`, `timeout_required`, `source_tracking` | `notes/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
-| `memoria-engineer` | `audit_log`, `timeout_required` | `notes/**`, `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `projects/**`, `system/**` |
+| `memoria-librarian` | `audit_log`, `timeout_required`, `source_tracking` | `catalog/**`, `knowledge/**`, `capabilities/**`, `inbox/**`, `system/**` |
+| `memoria-writer` | `audit_log`, `timeout_required` | `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `system/**` |
+| `memoria-peer-reviewer` | `audit_log`, `timeout_required`, `source_tracking` | `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `system/**` |
+| `memoria-engineer` | `audit_log`, `timeout_required` | `knowledge/**`, `catalog/**`, `capabilities/**`, `inbox/**`, `system/**` |
 
 ### Bundled skills
 
@@ -74,7 +74,7 @@ This block is generated from `vault-template/.memoria/profiles`, `vault-template
 | --- | ---: | --- |
 | `memoria-copi` | 5 | `ask-question-source`, `ask-read-lens`, `explain-system`, `explore-framings`, `route-task` |
 | `memoria-librarian` | 14 | `catalog-classify-source`, `catalog-enrich-record`, `catalog-find-source`, `catalog-rank-candidate`, `extract-flag-distill`, `extract-stub-claim`, `link-suggest-claim`, `link-surface-tension`, `map-canvas-hub`, `map-cluster-corpus`, `map-graph-claims`, `map-report-coverage`, `map-scope-project`, `map-seed-canvas` |
-| `memoria-writer` | 4 | `draft-bind-citation`, `draft-outline-argument`, `draft-score-outline`, `draft-write-section` |
+| `memoria-writer` | 0 | None |
 | `memoria-peer-reviewer` | 4 | `verify-card-gap`, `verify-check-citation`, `verify-propose-fix`, `verify-trace-claim` |
 | `memoria-engineer` | 0 | None |
 

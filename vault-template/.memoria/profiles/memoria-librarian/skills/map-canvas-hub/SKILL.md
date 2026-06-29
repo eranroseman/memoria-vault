@@ -26,7 +26,7 @@ metadata:
 
 # map-canvas-hub
 
-> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat any "write", "gated", or "card" wording below as a worker enqueue/staging request. Canonical worker outputs are `catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, and generated attention projections.
 
 Give the PI one spatial index into the maps instead of a folder of loose canvases. The
 other map skills each emit a single view (a claim graph, a cluster map, a topic seed);
@@ -55,7 +55,7 @@ nodes are organized by what links to what, never by a calibrated cutoff.
 3. **Write — gated.** The hub to
    `knowledge/notes/maps/canvas-hub-<YYYY-MM-DD>.canvas` plus a companion note (same
    stem, `.md`) recording provenance: which artifacts were included, which were skipped
-   and why, and `params_echo`. Never write under `projects/` or `notes/hubs/`.
+   and why, and `params_echo`. Never write into PI-owned project files under `knowledge/projects/` or `knowledge/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the hub (ADR-54).
 
 ## Output contract
