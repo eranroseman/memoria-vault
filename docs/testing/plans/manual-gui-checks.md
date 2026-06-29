@@ -28,8 +28,8 @@ Bases, dashboards, and the Agent Client pane.
 | Dashboards | `board-state.md`, `fleet-health.md`, `audit-log.md`, `eval-trend.md`, and `skill-state.md` render without Dataview errors. |
 | Spaces | `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, `spaces/project.md`, and `spaces/maintenance.md` render their embedded views. |
 | Bases | Every shipped `.base` opens without YAML or missing-view errors. |
-| Zotero Local API | A test item can be read and captured through the alpha.11 source path. Annotation import is out of scope. |
-| Zotero/BBT | `.memoria/memoria.bib` updates and citation lookup resolves a test item. |
+| Zotero Local API | A test item can be read and captured through the alpha.11 source path. Zotero annotations are out of scope. |
+| Zotero/BBT | A pinned Better BibTeX citekey is preserved on the captured source, `references.bib` regenerates from checked sources, and citation lookup resolves the test item. |
 | Agent Client | A session with a Memoria profile returns a model response. |
 | Deny visibility | A forced denied write creates no file and appears in the audit dashboard. |
 | Board visibility | A card plus board-export cron appears in the board dashboard. |
