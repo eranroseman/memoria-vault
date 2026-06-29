@@ -7,8 +7,10 @@ check_status: checked
 links:
   sources:
   - catalog/sources/seed-source/source.md
+  - catalog/sources/poisoned-span/source.md
 ---
 # Ada River
 
 Sources:
 - `catalog/sources/seed-source/source.md`
+- `catalog/sources/poisoned-span/source.md`
