@@ -85,14 +85,6 @@ repos:
         files: \.(md|py|ya?ml)$
         pass_filenames: true
 
-      # Block 5: test-plan reference resolution
-      - id: check-test-refs
-        name: check-test-refs
-        language: system
-        entry: python scripts/check_test_refs.py
-        files: ^docs/testing/.*\.md$|^scripts/check_test_refs\.py$
-        pass_filenames: false
-
       # Block 6: dashboard schema-drift
       - id: dashboard-schema-drift
         name: dashboard-schema-drift

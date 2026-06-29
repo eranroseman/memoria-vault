@@ -19,8 +19,6 @@ Read the full documentation surface:
 - `docs/explanation/`
 - `docs/design/`
 - `docs/adr/`
-- `docs/releasing/`
-- `docs/testing/`
 - root `CONTRIBUTING.md`
 
 Scan the rest of the repository only where needed to verify implementation
@@ -44,7 +42,7 @@ the audit.
 
 Treat `docs/explanation/` and `docs/design/` as one conceptual surface split by
 "how it works" vs. "why this design." Ordinary docs describe the current system;
-history belongs only in `docs/adr/` and `docs/releasing/`.
+decision history belongs in `docs/adr/`; release state lives in GitHub.
 
 Use subagents only for independent audit slices. Verify their claimed coverage
 before relying on it.

@@ -37,11 +37,11 @@ MODES = {
 
 MANUAL_FOLLOW_UP = {
     "rc": [
-        "Complete Product Gate checks in docs/testing/plans/product-gate.md.",
-        "Complete Release Gate checks in docs/testing/plans/release-gate.md.",
+        "Complete product/manual release evidence in the release parent issue.",
+        "Follow .agents/playbooks/release.md for release cut checks.",
     ],
     "live": [
-        "Complete Runtime/Product manual checks in docs/testing/.",
+        "Complete runtime/product manual checks from .agents/playbooks/verify-change.md.",
     ],
 }
 

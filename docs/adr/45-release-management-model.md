@@ -42,13 +42,13 @@ Adopt a **tiered, additive** model — stop anywhere, escalate later without rew
 - **Version + CHANGELOG + GitHub Release** are owned by **release-please** (manifest mode)
   from Conventional Commits, replacing the tag-only `release.yml`. Don't hand-edit
   `CHANGELOG.md` or tag by hand.
-- **Prose** (scope summary, cut procedure, known-limitations) stays in
-  `docs/releasing/<version>/`, guarded by `status-doctor` against link/path/flag drift.
+- **Release prose** (scope summary, cut procedure, known limitations) lives in
+  the release parent issue, drafted with `.agents/templates/release-plan.md`.
 - The in-flight **alpha.1** plan keeps its §2/§3 tables as the at-cut record (with a pointer
   to its tracking issue); **alpha.2+** uses the checklist model from the start.
 
-The live process this produced is documented in [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md) and
-scaffolded by the release playbook at `.agents/playbooks/release.md`.
+The live process this produced is scaffolded by the release playbook at
+`.agents/playbooks/release.md`.
 
 > **Status note (2026-06-21).** release-please is configured in manifest mode but
 > intentionally paused for pre-alpha: `.github/workflows/release-please.yml` is
@@ -59,12 +59,12 @@ scaffolded by the release playbook at `.agents/playbooks/release.md`.
 ## Consequences
 
 - Live status for free (progress bar + milestone %); the hand-table drift source is gone.
-- The record **splits**: prose in git, gate/stage state in GitHub — offline gate-state
-  visibility is lost (an accepted trade at solo cadence).
+- The record **splits**: durable decision rationale in ADRs, release state/prose in
+  GitHub — offline release visibility is lost (an accepted trade at solo cadence).
 - release-please is opinionated and now owns versioning/notes; merging its release
   PR cuts the tag. (Operational caveat: its PR needs Actions PR-review permission / a
   scoped `RELEASE_PLEASE_TOKEN` — tracked separately.)
-- The release **cut** now includes an ADR retire-sweep (see [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)).
+- The release **cut** now includes an ADR retire-sweep (see `.agents/playbooks/release.md`).
 
 ## Alternatives considered
 
@@ -89,7 +89,7 @@ this decision is only about *where release state and versioning live*.
 
 ## Related
 
-- **Live process:** [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md); `.agents/playbooks/release.md` scaffolds it.
+- **Live process:** `.agents/playbooks/release.md` scaffolds it.
 - **Gate/stage model:** [ADR-29](29-testing-framework.md) (the layers/matrix the gates map to).
 - **Amended by:** [ADR-75: Use GitHub Project fields and release sub-issues for live
   work state]({{ site.baseurl }}/adr/75-github-project-fields-and-release-sub-issues.html) — replaces the

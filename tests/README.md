@@ -11,8 +11,8 @@ They live here as standalone files so the shipped vault carries no test code.
 
 Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the
 `python-selftest` job. The normal local PR command is `scripts/verify pr`, which
-adds the static Source Gate checks around pytest. Higher gates are described in
-[docs/testing/](../docs/testing/).
+adds the static Source Gate checks around pytest. Higher-gate procedure lives in
+[verify-change](../.agents/playbooks/verify-change.md).
 
 ## Coverage guidance
 

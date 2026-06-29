@@ -1,8 +1,7 @@
 # Release
 
 Use this playbook when starting, managing, or cutting a Memoria release.
-[`docs/releasing/README.md`](../../docs/releasing/README.md) owns the durable
-process prose; this playbook is the portable agent procedure for applying it.
+Release state lives in GitHub; this playbook is the portable agent procedure.
 
 ## 1. Use the single sources of state
 
@@ -10,12 +9,13 @@ process prose; this playbook is the portable agent procedure for applying it.
   filtered to that milestone.
 - **Readiness** lives in the **"Release <version>"** parent issue and its gate/stage
   sub-issues.
-- **Prose** lives in `docs/releasing/<version>/release-plan-<version>.md`.
+- **Release prose** lives in the release parent issue. Use
+  [the release plan template](../templates/release-plan.md) as a drafting aid.
 - **Build gaps** live as GitHub issues.
 - **Scope cuts** live as GitHub issues with Readiness `Later`; ADRs record the
   decision or rationale only when there is one.
 - **Version and notes** are owned by release-please.
-- **In-work release design notes** live under `docs/releasing/<version>/tmp/`
+- **In-work release design notes** live under `.agents/tmp/releases/<version>/`
   while the release is being shaped and are deleted before the release/checkpoint
   is done.
 
@@ -31,22 +31,22 @@ Do not create a second markdown state table for gate or stage progress.
 
 ## 2. Start a release
 
-1. Create `docs/releasing/<version>/`.
-2. Copy `docs/releasing/release-plan-template.md` to
-   `docs/releasing/<version>/release-plan-<version>.md`.
-3. Fill the plan prose and set frontmatter to `status: draft` and `released: false`.
-4. Create the GitHub milestone:
+1. Draft the release parent issue body from
+   [`.agents/templates/release-plan.md`](../templates/release-plan.md).
+2. Create the GitHub milestone:
 
    ```bash
    gh api repos/eranroseman/memoria-vault/milestones -f title=0.1.0
    ```
 
-5. Assign scoped issues to the milestone and use the Memoria Issue Tracker table
+3. Assign scoped issues to the milestone and use the Memoria Issue Tracker table
    filtered to that milestone, using Status and Readiness as the live release state.
-6. Open the **"Release <version>"** parent issue with label `release` and milestone
+4. Open the **"Release <version>"** parent issue with label `release` and milestone
    `<version>`.
-7. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
+5. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
    own evidence, owner, comments, and close condition.
+6. Put temporary tracked design scratch in `.agents/tmp/releases/<version>/` only
+   when it must survive handoff.
 
 ## 3. Cut a release or checkpoint
 
@@ -59,12 +59,9 @@ Do not create a second markdown state table for gate or stage progress.
    regenerate the ADR index.
 4. Merge the release-please PR for formal releases. It owns version bump,
    changelog, tag, and GitHub Release notes.
-5. Set release-plan frontmatter:
-   - Formal release: `status: released`, `released: true`
-   - Internal checkpoint: `status: complete`, `released: false`
-6. Close the milestone and release parent issue, rolling unfinished issues forward.
-7. Delete the release folder's `tmp/` design notes before calling the
-   release/checkpoint done.
+5. Close the milestone and release parent issue, rolling unfinished issues forward.
+6. Delete `.agents/tmp/releases/<version>/` design notes before calling the
+   release/checkpoint done, after routing durable content to ADRs, docs, or issues.
 
 ## 4. Verify
 
@@ -82,4 +79,4 @@ python scripts/agents_doctor.py
 ```
 
 Report which GitHub state changes were made, which could not be made locally, and
-which release docs changed.
+which agent guidance or templates changed.

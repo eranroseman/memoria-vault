@@ -166,7 +166,7 @@ Rules:
 - **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
 - **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, rejected, or superseded. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
-- **Sequencing is not decided here.** *When* a decision ships lives in the current milestone, the current "Release <version>" parent issue plus sub-issues, and the release plan under [`docs/releasing/`](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md), which change independently of these decisions. Link to that release surface rather than restating phase order, so a re-plan does not strand stale dates here.
+- **Sequencing is not decided here.** *When* a decision ships lives in the current milestone and the current "Release <version>" parent issue plus sub-issues, which change independently of these decisions. Link to that release surface rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR
 
@@ -190,4 +190,4 @@ still-relevant rejection.
 renumber), remove or repoint inbound `supersedes` / `superseded_by` / `assumes` references
 and any doc links (the `lint` job's link checks catch a dangling reference), then
 regenerate the index (`scripts/gen_adr_index.py`). The retire sweep runs **per release
-cut** — see [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md).
+cut** — see `.agents/playbooks/release.md`.

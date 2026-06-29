@@ -348,27 +348,27 @@ def test_site_excluded_dirs_are_read_from_jekyll_config(tmp_path):
     root = tmp_path / "docs"
     root.mkdir()
     (root / "_config.yml").write_text(
-        'exclude:\n  - contributing/\n  - releasing/\n  - "**/tmp/"\n',
+        'exclude:\n  - internal/\n  - "**/tmp/"\n',
         encoding="utf-8",
     )
     _m._SITE_EXCLUDE_CACHE.clear()
 
-    assert site_excluded_dirs(root) == {"contributing", "releasing"}
+    assert site_excluded_dirs(root) == {"internal"}
 
 
 def test_check_site_excluded_targets_blocks_published_links_to_excluded_docs(tmp_path):
     root = tmp_path / "docs"
     ref = root / "reference"
-    releasing = root / "releasing"
+    internal = root / "internal"
     adr = root / "adr"
     ref.mkdir(parents=True)
-    releasing.mkdir()
+    internal.mkdir()
     adr.mkdir()
-    (root / "_config.yml").write_text("exclude:\n  - releasing/\n", encoding="utf-8")
-    (releasing / "README.md").write_text("# Releasing\n", encoding="utf-8")
+    (root / "_config.yml").write_text("exclude:\n  - internal/\n", encoding="utf-8")
+    (internal / "README.md").write_text("# Internal\n", encoding="utf-8")
     (adr / "README.md").write_text("# Decisions\n", encoding="utf-8")
     page = ref / "page.md"
-    page.write_text("[bad](../releasing/README.md)\n[good](../adr/README.md)\n")
+    page.write_text("[bad](../internal/README.md)\n[good](../adr/README.md)\n")
     _m._SITE_EXCLUDE_CACHE.clear()
 
     errs: list[str] = []
