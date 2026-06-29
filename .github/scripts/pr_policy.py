@@ -13,7 +13,8 @@ docs/ subtree that is NOT auto-approved (it holds the decision record — see be
 Block: any PR touching sensitive paths (.github/, vault-template/.memoria/, scripts/, or
 ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
 human review. Agent instruction surfaces are also sensitive: they can change
-what future automation is allowed or encouraged to do.
+what future automation is allowed or encouraged to do. `.agents/tmp/` is release
+scratch, not agent instruction surface, so it is not classified as sensitive.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -52,6 +53,7 @@ SENSITIVE_PREFIXES = (
 SENSITIVE_PATHS = {
     "AGENTS.md",
 }
+NON_SENSITIVE_PREFIXES = (".agents/tmp/",)
 
 
 def is_safe(path: str) -> bool:
@@ -61,6 +63,8 @@ def is_safe(path: str) -> bool:
 
 
 def is_sensitive(path: str) -> bool:
+    if any(path.startswith(p) for p in NON_SENSITIVE_PREFIXES):
+        return False
     return path in SENSITIVE_PATHS or any(path.startswith(p) for p in SENSITIVE_PREFIXES)
 
 
