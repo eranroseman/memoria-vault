@@ -1,1 +1,1 @@
-{"event": "run", "run_id": "projection:index.md", "workflow": "generate_workspace_indexes", "status": "done", "outputs": ["index.md", "catalog/index.md", "knowledge/index.md", "capabilities/index.md"], "timestamp": "2026-06-29T14:25:33Z"}
+{"event": "run", "run_id": "projection:tracked", "workflow": "generate_tracked_projections", "status": "done", "outputs": ["index.md", "catalog/index.md", "knowledge/index.md", "capabilities/index.md", "references.bib", "capabilities/ai-catalog.json"], "timestamp": "2026-06-29T14:25:33Z"}
