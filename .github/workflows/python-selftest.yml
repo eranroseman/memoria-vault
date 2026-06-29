@@ -38,6 +38,9 @@ jobs:
           cache-dependency-path: |
             requirements-dev.txt
             vault-template/.memoria/mcp/requirements.txt
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
+        with:
+          node-version: "22"
       - name: Install runtime + dev test deps
         # runtime deps so the modules import; dev deps provide pytest and shared tooling.
         run: |
