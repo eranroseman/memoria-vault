@@ -23,7 +23,7 @@ Bases, dashboards, and the Agent Client pane.
 
 | Area | Pass criteria |
 | --- | --- |
-| Plugins | All 13 bundled plugins are installed and enabled without load errors. |
+| Plugins | All bundled plugins are installed and enabled without load errors. |
 | Local REST API | Authenticated HTTPS request succeeds; Hermes writes through the Obsidian bridge. |
 | Dashboards | `board-state.md`, `fleet-health.md`, `audit-log.md`, `eval-trend.md`, and `skill-state.md` render without Dataview errors. |
 | Spaces | `spaces/inbox.md`, `spaces/library.md`, `spaces/knowledge.md`, `spaces/project.md`, and `spaces/maintenance.md` render their embedded views. |

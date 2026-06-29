@@ -43,7 +43,7 @@ Source -> Package -> Runtime -> Product -> Release
 | [Product Gate](plans/product-gate.md) | Ingest, review, telemetry, quality, and product workflow evidence. |
 | [Manual GUI Checks](plans/manual-gui-checks.md) | Obsidian, Zotero, Bases, dashboards, and Agent Client checks. |
 | [Failure Recovery Checks](plans/failure-recovery-checks.md) | Deny paths, MCP-down, retry, dry-run, and recovery behavior. |
-| [Release Gate](plans/release-gate.md) | Fresh-clone release sequencing and sign-off. |
+| [Release Gate](plans/release-gate.md) | Fresh-clone release sequencing and cut checks. |
 | [Test plan template](templates/test-plan-template.md) | Use only when a new gate needs a reusable sub-plan. |
 
 ## Evidence Rules
