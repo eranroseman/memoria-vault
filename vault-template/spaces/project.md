@@ -18,18 +18,12 @@ cssclasses: memoria-space
 
 ![[knowledge.base#Projects]]
 
-Open a project Concept to see its question, sources, and local notes. The
-projected argument canvas remains deferred.
+Open a project Concept to see its question, sources, and local notes. Queue
+project analysis or Canvas rendering from Memoria Inspector.
 
 ## Guides
 
 Step-by-step for working this space:
 
-- [Start a writing project](https://eranroseman.github.io/memoria-vault/how-to-guides/project/start-a-writing-project.html)
-- [Assess your corpus](https://eranroseman.github.io/memoria-vault/how-to-guides/project/assess-your-corpus.html)
-- [Frame a project](https://eranroseman.github.io/memoria-vault/how-to-guides/project/frame-a-project.html)
-- [Use canvas for argument mapping](https://eranroseman.github.io/memoria-vault/how-to-guides/project/use-canvas-for-argument-mapping.html)
-- [Draft with the Writer](https://eranroseman.github.io/memoria-vault/how-to-guides/project/draft-with-writer.html)
-- [Verify and revise a draft](https://eranroseman.github.io/memoria-vault/how-to-guides/project/verify-and-revise.html)
+- [Analyze a project argument](https://eranroseman.github.io/memoria-vault/how-to-guides/project/analyze-a-project-argument.html)
 - [Export a draft](https://eranroseman.github.io/memoria-vault/how-to-guides/project/export-a-draft.html)
-- [Create a code artifact](https://eranroseman.github.io/memoria-vault/how-to-guides/project/create-a-code-artifact.html)

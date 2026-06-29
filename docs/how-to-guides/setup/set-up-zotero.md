@@ -1,6 +1,6 @@
 ---
 title: Set up Zotero
-parent: Zotero
+parent: Setup
 grand_parent: How-to guides
 nav_order: 4
 ---
@@ -16,7 +16,7 @@ write a live bibliography file into the vault.
 
 - Zotero 9 installed ([zotero.org](https://www.zotero.org/download/))
 - Better BibTeX plugin installed in Zotero ([retorque.re/zotero-better-bibtex/](https://retorque.re/zotero-better-bibtex/))
-- The vault cloned ([Set up the vault](../setup/set-up-the-vault.md))
+- The vault cloned ([Set up the vault](set-up-the-vault.md))
 
 ## Steps
 
@@ -76,13 +76,13 @@ files, while Memoria source Concepts live under
 
 ## API keys for enrichment (optional but recommended)
 
-Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited. Register a free key for each service now; you'll add them to the Librarian's `.env` in [Set up Hermes](../setup/set-up-hermes.md).
+Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited. Register a free key for each service now; you'll add them to the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
 
 For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 
 ## Related
 
-- Next step: [Set up Hermes](../setup/set-up-hermes.md)
+- Next step: [Set up Hermes](set-up-hermes.md)
 - What capture does with Zotero metadata: [Capture and ingest a source](../library/capture-and-ingest.md)
-- Regenerating the generated `.bib`: [Fix a stale .bib](fix-stale-bib.md)
+- Generated bibliography behavior: [System actions](../../reference/system-actions.md)
 - Citekey naming convention: [ADR-6](../../adr/06-citekey-naming-convention.md)

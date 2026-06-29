@@ -51,27 +51,38 @@ Don't treat the questions as a checklist. When a question feels too abstract, as
 
 **6. Decide the outcome.**
 
-- **The paper yields one or more claims** → proceed to [write a claim note](../knowledge/write-a-claim-note.md), then advance the source note to `lifecycle: current`.
-- **No standalone claim right now** → add one line to the source note's **Worth distilling** section saying why ("confirms existing claims, adds no new argument"), and advance the lifecycle anyway — the discuss queue reads `provisional`, and the decision is the work.
+- **The session yields a durable takeaway** → record it through Inspector with
+  the source id and interview takeaway. The worker writes the journal row for
+  later digest compilation.
+- **The source is ready for synthesis** → queue **Compile digest** in Inspector
+  with the source id and hub topics. The worker owns the checked digest record.
+- **The session yields your own note** → use `Memoria: capture note` or edit the
+  checked Concept directly. PI edits are direct, then observed and backfilled.
+- **No standalone claim right now** → add one line to the source note saying why
+  ("confirms existing claims, adds no new argument") and leave the trace in the
+  journal; the decision is the work.
 
-Closing the pane exports the transcript for later review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)). If the dialogue surfaced a durable insight, promote that insight yourself as a fleeting note, claim note, or source-note update.
+Closing the pane exports the transcript for later review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)). If the dialogue surfaced a durable insight, promote that insight yourself as a PI note or checked Concept update.
 
 ## Verify
 
-- The source note has moved off `lifecycle: provisional` and out of the discuss queue
-- Nothing in the vault was edited by the agent — the Co-PI's write scope is empty; if you see an unexpected edit, treat it as a configuration error and check `system/logs/audit.jsonl`
+- Any durable takeaway is captured as a PI note, direct PI edit, or worker-owned
+  journal/digest event
+- Nothing in the vault was edited by the agent — the Co-PI's write scope is
+  empty; if you see an unexpected edit, treat it as a configuration error and
+  check `system/logs/audit.jsonl`
 
 ## Related
 
 **How-to**
 
 - Previous step: [Classify a source](classify-a-source.md)
-- Next step: [Write a claim note](../knowledge/write-a-claim-note.md)
-- A named theoretical frame for the session: [Read a paper through a lens](read-through-a-lens.md)
+- Keep a durable synthesis: [Query the vault](../knowledge/query-the-vault.md)
 
 **Reference**
 
 - The full permission matrix: [Profile capabilities](../../reference/profile-capabilities.md)
+- Worker-owned digest and interview actions: [System actions](../../reference/system-actions.md)
 
 **Explanation**
 

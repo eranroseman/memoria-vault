@@ -62,7 +62,7 @@ typed-relations namespace, which shipped on the same date.
 
 ## Related
 
-- **Workflows affected:** [Distill](../how-to-guides/knowledge/write-a-claim-note.md), [Promote](../how-to-guides/knowledge/promote-a-claim.md) (where the link is set), [Query](../how-to-guides/knowledge/query-the-vault.md) / [Write](../how-to-guides/project/draft-with-writer.md) (filter superseded claims), and later [Verify](../how-to-guides/project/verify-and-revise.md) once the FAMA-style draft detector ships.
+- **Workflows affected:** [Link checked notes](../how-to-guides/knowledge/link-related-claims.md) (where the link is set), [Query](../how-to-guides/knowledge/query-the-vault.md) (filter superseded claims), and project analysis once the FAMA-style draft detector ships.
 - **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Document types](../reference/document-types.md), the claim template, and `vault-template/.memoria/mcp/qmd_filter_mcp.py`.
 - **Related decisions / Depends on:** [ADR-8 typed relations](08-typed-relations-frontmatter.md) (adopts one relation from its namespace ahead of the rest); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
 - **Source discussion:** benchmark review — [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Change 1, and the benchmark detail); evidence from Memora/FAMA and ClawArena.

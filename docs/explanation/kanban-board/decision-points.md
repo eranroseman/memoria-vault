@@ -41,18 +41,15 @@ behavior.
 ## Workflow triggers
 
 Some workflow triggers create cards automatically because the trigger itself is
-the useful invariant. Committing a draft to `projects/<project>/` creates a
-verification card in the Peer-reviewer's verify lane. The hook fires on
-`post-commit`, creates the board card, and returns; the Peer-reviewer claims the
-card through the normal dispatcher.
+the useful invariant. Where a workflow trigger is wired, it creates the board
+card and returns; the owning lane claims the card through the normal dispatcher.
 
-That does not make verification completion automatic. The result is an
-`agent_recommendation`, never approval. The PI still reads the report and decides
-whether to revise.
+That does not make completion automatic. The result is an `agent_recommendation`,
+never approval. The PI still reads the report and decides whether to revise.
 
 ## Related
 
 - Promotion boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
 - Card shape: [The honesty card](honesty-card.md)
 - Batch-worklist decision: [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)
-- How to read the verification result: [Verify and revise a draft](../../how-to-guides/project/verify-and-revise.md)
+- How project analysis is queued: [Analyze a project argument](../../how-to-guides/project/analyze-a-project-argument.md)

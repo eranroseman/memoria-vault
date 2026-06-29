@@ -72,15 +72,6 @@ typed edge should appear with its label.
 
 ## Related
 
-**How-to**
-
-- Triage agent-proposed links: [Review link suggestions](../inbox/review-link-suggestions.md)
-
-**Reference**
-
+- Analyze the resulting graph: [Analyze a project argument](../project/analyze-a-project-argument.md)
 - The two edge kinds: [Frontmatter fields](../../reference/frontmatter.md)
-
-**Explanation**
-
-- The consumer: [Canvas for argument mapping](../project/use-canvas-for-argument-mapping.md)
 - Why connections are load-bearing: [Note body structure](../../explanation/knowledge/note-body-structure.md)

@@ -7,14 +7,27 @@ permalink: /tutorials/
 
 # Tutorials
 
-The alpha.10 tutorial arc is retired in alpha.11. It depended on the bundled
+The tutorial arc is **deferred** for alpha.11. The alpha.10 walkthrough pages
+remain as deferred placeholders because they depended on the bundled
 Mediterranean-diet sample vault and QuickAdd commands that no longer ship.
 
-For alpha.11, use the how-to and reference docs against a fresh vault:
+For alpha.11, use the current setup and task guides against a fresh vault:
 
 | Need | Start here |
 | --- | --- |
 | Install the system | [Quickstart](../how-to-guides/setup/quickstart.md) |
 | Use Obsidian commands | [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md) |
 | Understand current types | [Document types](../reference/document-types.md) |
-| Check sample-vault status | [Sample vault](../reference/sample-vault.md) |
+| Understand the retired sample-vault status | [Sample vault](../reference/sample-vault.md) |
+
+## Deferred tutorial arc
+
+| Tutorial | Status |
+| --- | --- |
+| [Tutorial 01: See what you're building](01-see-what-you-are-building.md) | Deferred |
+| [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) | Deferred |
+| [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) | Deferred |
+| [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) | Deferred |
+| [Tutorial 05: Verify it holds](05-verify-it-holds.md) | Deferred |
+| [Tutorial 06: Close the loop](06-close-the-loop.md) | Deferred |
+| [Tutorial 07: Make it your own](07-make-it-your-own.md) | Deferred |

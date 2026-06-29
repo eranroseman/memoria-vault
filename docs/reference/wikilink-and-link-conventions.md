@@ -105,7 +105,7 @@ hub
   ↔ hub (other)          (parent/child hub hierarchy)
 
 project
-  ← project artifacts    (projects/<project>/* all reference the project note)
+  ← project artifacts    (knowledge/projects/<project>/* all reference the project note)
 ```
 
 ---

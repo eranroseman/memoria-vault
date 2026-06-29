@@ -70,7 +70,7 @@ venue Concepts.
 | **Obsidian Local REST API** (native MCP, verified loopback HTTPS port 27124 by default) | Lets profiles read the Obsidian-opened workspace through verified loopback HTTPS. Canonical writes route through the worker/trusted-writer path, not profile-owned direct file writes. |
 | **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the Co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
 | **qmd** | Checked-only local search over the Concept corpus. Used by the Co-PI, Librarian map lane, Writer, and Peer-reviewer for read-only retrieval; BM25 is the alpha.11 baseline, and vector/hybrid modes are later eval work. No QuickAdd pre-file similarity telemetry or standalone duplicate-sweep command ships today. |
-| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
+| **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
 | **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). |
 
 ---
@@ -92,7 +92,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Kilo Code gateway** | Production model provider for the five shipped Hermes profiles. Profile defaults route Co-PI and Peer-reviewer to Opus, Writer to Sonnet, and Librarian/Engineer to Haiku. |
-| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)); it writes scaffolds through the gated obsidian MCP into `projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
+| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)); it writes scaffolds through the gated obsidian MCP into `knowledge/projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
 
 ---
 

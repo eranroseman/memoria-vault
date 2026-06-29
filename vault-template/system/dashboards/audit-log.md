@@ -111,8 +111,8 @@ Patterns the query flags — each is a configuration bug; see [policy MCP](https
 
 - Co-PI (`memoria-copi`) with any allowed write (its lane is `write: []`).
 - Peer-reviewer (`memoria-peer-reviewer`) allowed write outside `inbox/`.
-- Writer (`memoria-writer`) allowed write outside `projects/`.
-- Engineer (`memoria-engineer`) allowed write outside `projects/*/code/`.
+- Writer (`memoria-writer`) allowed write outside `knowledge/projects/`.
+- Engineer (`memoria-engineer`) allowed write outside `knowledge/projects/*/code/`.
 - Librarian `allow`/`allow_with_log` to `notes/claims/**` or `notes/hubs/**`.
 - Any allowed write missing `before_hash` / `after_hash`.
 

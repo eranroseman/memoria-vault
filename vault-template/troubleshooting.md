@@ -36,7 +36,7 @@ A quick lookup; the complete catalog (symptom · severity · cause · fix) is [f
 | Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |
 
-Step-by-step recipes for the common ones: [stuck card](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-stuck-card) · [broken frontmatter](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-broken-frontmatter) · [profile drift](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-profile-drift) · [stale `.bib`](https://eranroseman.github.io/memoria-vault/how-to-guides/zotero/fix-stale-bib) · [denied write](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/diagnose-a-denied-write).
+Step-by-step recipes for the common ones: [stuck card](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-stuck-card) · [broken frontmatter](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-broken-frontmatter) · [profile drift](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-profile-drift) · [denied write](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/diagnose-a-denied-write).
 
 ## Working in safe mode
 

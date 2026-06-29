@@ -17,10 +17,11 @@ Several surfaces overlap; pick by what you want *out*:
 | --- | --- | --- |
 | A synthesized answer grounded in your notes | **Ask the Co-PI** (this guide) | conversation in the pane |
 | To sharpen your *own* thinking by being questioned | The Co-PI's questioning posture — say "push back on this" | conversation in the pane |
-| A written, citable synthesis to keep | Delegate a **`draft`** task | a draft in `projects/`, via the Inbox |
+| A durable synthesis to keep | Capture a PI note or edit a checked Concept yourself | a PI-authored note/update, later observed by the worker |
 | A fast lookup of a known term or field | Obsidian search, or a Dataview/Bases view | results in the UI |
 
-Rule of thumb: converse when *you* should do the synthesizing; use a command or delegated lane task when you want a card, report, draft, or other durable output you'll verify and keep.
+Rule of thumb: converse when *you* should do the synthesizing; use Inspector or
+worker actions when you want a checked report or generated projection.
 
 ## Prerequisites
 
@@ -41,18 +42,21 @@ The active note is passed as a readable reference; attach others when the questi
 
 **2. Interrogate the answer.**
 
-The Co-PI reads the vault directly and never writes (hybrid keyword + vector
-search over Memoria's filtered `qmd` MCP, plus the typed graph — [The
-Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Current retrieval
-returns only Concepts with `check_status: checked`; unchecked or quarantined
-machine output stays invisible until the worker promotes it. Push on it: "which
-note says that?", "what disagrees with this?". An assertion it can't ground in a
-note of yours is its synthesis, not your knowledge — treat it accordingly.
+The Co-PI reads the vault directly and never writes. Alpha.11 retrieval uses the
+filtered `qmd` MCP over checked current Concepts; BM25 is the baseline, while
+vector/hybrid evaluation is later work ([The
+Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Unchecked or
+quarantined machine output stays invisible until the worker promotes it. Push on
+it: "which note says that?", "what disagrees with this?". An assertion it can't
+ground in a note of yours is its synthesis, not your knowledge — treat it
+accordingly.
 
 **3. Keep what's worth keeping — yourself.**
 
-- A genuine new synthesis → distill it properly: [Write a claim note](../knowledge/write-a-claim-note.md).
-- Context for a writing project → copy into your `projects/<slug>/` scratch.
+- A genuine new synthesis → capture a PI note with `Memoria: capture note`, or
+  edit the checked Concept directly.
+- Context for a writing project → copy into the project Concept or a project
+  file under `knowledge/projects/<project>/`.
 - A one-off answer → close the pane. The transcript auto-exports for review ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)); promote anything durable yourself instead of letting the raw transcript become a canonical note.
 
 ## Verify
@@ -62,7 +66,6 @@ note of yours is its synthesis, not your knowledge — treat it accordingly.
 
 ## Related
 
-- Distilling a kept answer: [Write a claim note](../knowledge/write-a-claim-note.md)
-- The transcript's afterlife: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
+- The transcript's afterlife: [Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)
 - The search engine underneath: [Rebuild the search index](../operate/rebuild-the-search-index.md)
 - The agent in the Agent Client pane: [The Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)

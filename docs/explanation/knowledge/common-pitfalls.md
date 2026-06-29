@@ -64,6 +64,6 @@ For the explicit mapping of tasks to their appropriate owner, see [Profile capab
 ## Related
 
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
-- The fix for compound notes: [Refactor claim notes](../../how-to-guides/knowledge/refactor-claim-notes.md)
+- The repair surface for overloaded note graphs: [Link checked notes](../../how-to-guides/knowledge/link-related-claims.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
 - Lane (a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) permissions referenced here: [Profile capabilities](../../reference/profile-capabilities.md)

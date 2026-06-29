@@ -7,12 +7,15 @@ nav_order: 7
 
 # Export a draft
 
-Run Pandoc to convert a verified draft Markdown file into a Word document, PDF, or clean Markdown for submission. Export is a terminal operation you run yourself — there is no export lane or palette command.
+Run Pandoc to convert a project-local Markdown draft into a Word document, PDF,
+or clean Markdown for submission. Export is a terminal operation you run
+yourself — there is no export lane or palette command.
 
 ## Prerequisites
 
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
-- The draft verified — the latest verify pass clean or its gaps consciously accepted ([Verify and revise a draft](verify-and-revise.md))
+- The draft reviewed by you; automated Writer/Verifier draft flows are not part
+  of the alpha.11 shipped path
 - `references.bib` current (generated from checked source Concepts)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
@@ -24,16 +27,16 @@ Citations convert mostly one-way (see [Export routes and formats](../../referenc
 
 **2. Export to Word (`.docx`) — the default static route.**
 
-Run from the vault root; the draft lives in your `projects/<slug>/` scratch:
+Run from the vault root; keep project drafts under the project folder:
 
 ```bash
-pandoc projects/<slug>/<draft>.md \
+pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --from markdown+smart \
   --to docx \
   --citeproc \
   --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
-  --output projects/<slug>/exports/<output>.docx
+  --output knowledge/projects/<project>/exports/<output>.docx
 ```
 
 **3. Export to PDF.**
@@ -41,23 +44,23 @@ pandoc projects/<slug>/<draft>.md \
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
 ```bash
-pandoc projects/<slug>/<draft>.md \
+pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --from markdown+smart \
   --to pdf \
   --pdf-operation=lualatex \
   --citeproc \
   --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
-  --output projects/<slug>/exports/<output>.pdf
+  --output knowledge/projects/<project>/exports/<output>.pdf
 ```
 
 **4. Export to clean Markdown** (conference systems, CMS upload):
 
 ```bash
-pandoc projects/<slug>/<draft>.md \
+pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --from markdown+smart --to gfm --citeproc \
   --bibliography references.bib \
-  --output projects/<slug>/exports/<output>.md
+  --output knowledge/projects/<project>/exports/<output>.md
 ```
 
 **5. Convert wikilinks first.**
@@ -73,10 +76,10 @@ The routes above produce static citations. For live, restylable Zotero fields in
 **Do not add `--citeproc`** — `zotero.lua` handles citation conversion:
 
 ```bash
-pandoc projects/<slug>/<draft>.md \
+pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --from markdown+smart --to docx \
   --lua-filter=/path/to/zotero.lua \
-  --output projects/<slug>/exports/<output>.docx
+  --output knowledge/projects/<project>/exports/<output>.docx
 ```
 
 Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live fields and a bibliography is inserted.
@@ -93,11 +96,11 @@ Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live f
 
 - The output file opens cleanly and the bibliography renders at the end
 - All `[@citekey]` citations resolved — none appear as bare `[@...]` in the output
-- The export landed where you pointed it; the draft `.md` in `projects/` remains the source of truth
+- The export landed where you pointed it; the draft `.md` under
+  `knowledge/projects/<project>/` remains the source of truth
 
 ## Related
 
-- Previous step: [Verify and revise a draft](verify-and-revise.md)
 - Routes, states, and failure modes: [Export routes and formats](../../reference/export.md)
-- The generated `.bib` behind the bibliography: [Set up Zotero](../zotero/set-up-zotero.md)
+- The generated `.bib` behind the bibliography: [Set up Zotero](../setup/set-up-zotero.md)
 - The works-cited backbone: [Bibliography](../../reference/bibliography.md)

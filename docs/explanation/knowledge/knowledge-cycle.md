@@ -53,7 +53,7 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 **Explanation**
 
 - The ritual that keeps the cycle from stalling: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
-- The cycle's tempo over your first weeks of real use: [Your first month](../../how-to-guides/knowledge/your-first-month.md)
+- The daily practice surface: [Knowledge how-to guides](../../how-to-guides/knowledge/README.md)
 - The epistemic roles of document types: [Document types and epistemic roles](document-types.md)
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
 - The folder structure the cycle flows through: [The vault](../architecture/vault.md)
@@ -61,4 +61,4 @@ Archiving preserves the chain, and since `archived` became a **state rather than
 **How-to**
 
 - The weekly maintenance pass: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
-- The cycle's key transition: [Write a claim note](../../how-to-guides/knowledge/write-a-claim-note.md)
+- The cycle's key linking step: [Link checked notes](../../how-to-guides/knowledge/link-related-claims.md)

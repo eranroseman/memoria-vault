@@ -57,6 +57,6 @@ The payload separates confident gap kinds from advisory gap kinds. Confident gap
 
 ## Related
 
-- Project workflow guide: [Start a writing project](../how-to-guides/project/start-a-writing-project.md)
+- Project workflow guide: [Analyze a project argument](../how-to-guides/project/analyze-a-project-argument.md)
 - Project fields: [Frontmatter fields](frontmatter.md)
 - Operation inventory: [Operations](operations.md)

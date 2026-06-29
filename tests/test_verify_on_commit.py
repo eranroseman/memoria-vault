@@ -80,7 +80,7 @@ def test_hook_script_ships_executable():
 
 def test_project_draft_commit_creates_verify_card(tmp_path):
     repo, log, env = _repo_with_hook(tmp_path)
-    draft = repo / "projects/paper/section.md"
+    draft = repo / "knowledge/projects/paper/drafts/section.md"
     draft.parent.mkdir(parents=True)
     draft.write_text("# Section\n\nA cited claim.\n", encoding="utf-8")
 
@@ -92,8 +92,8 @@ def test_project_draft_commit_creates_verify_card(tmp_path):
     assert "--lane verify" in output
     assert "--assignee memoria-peer-reviewer" in output
     assert "--skill verify-check-citation" in output
-    assert "Verify draft: projects/paper/section.md" in output
-    assert f"verify-on-commit-{commit}-projects-paper-section.md" in output
+    assert "Verify draft: knowledge/projects/paper/drafts/section.md" in output
+    assert f"verify-on-commit-{commit}-knowledge-projects-paper-drafts-section.md" in output
 
 
 def test_non_project_commit_does_not_create_verify_card(tmp_path):
