@@ -84,7 +84,7 @@ if [ "$USE_SMOKE_MODEL" -eq 1 ]; then
   MODEL_PROVIDER="custom"
   MODEL_NAME="memoria-l2-smoke"
   PORT_FILE="$TMPDIR_ROOT/model-url"
-  "$PYTHON_BIN" "$ROOT/scripts/l2_openai_smoke_server.py" --port-file "$PORT_FILE" >"$TMPDIR_ROOT/model.log" 2>&1 &
+  "$PYTHON_BIN" "$ROOT/scripts/l2_smoke.py" serve-model --port-file "$PORT_FILE" >"$TMPDIR_ROOT/model.log" 2>&1 &
   MODEL_PID="$!"
   for _ in 1 2 3 4 5; do
     [ -s "$PORT_FILE" ] && break

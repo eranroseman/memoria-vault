@@ -9,8 +9,6 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import l2_obsidian_mcp_shim as shim
-import l2_openai_smoke_server as smoke_server
 import l2_smoke
 
 
@@ -35,19 +33,19 @@ def test_obsidian_shim_rejects_paths_outside_vault(tmp_path):
     vault.mkdir()
 
     with pytest.raises(ValueError, match="inside the vault"):
-        shim.put_content(vault, "../outside.md", "bad")
+        l2_smoke.put_content(vault, "../outside.md", "bad")
     with pytest.raises(ValueError, match="inside the vault"):
-        shim.put_content(vault, str(tmp_path / "outside.md"), "bad")
+        l2_smoke.put_content(vault, str(tmp_path / "outside.md"), "bad")
 
 
 def test_obsidian_shim_writes_and_reads_vault_relative_file(tmp_path):
     vault = tmp_path / "vault"
     vault.mkdir()
 
-    result = shim.put_content(vault, "knowledge/notes/live.md", "hello")
+    result = l2_smoke.put_content(vault, "knowledge/notes/live.md", "hello")
 
     assert result == {"path": "knowledge/notes/live.md", "status": "written"}
-    assert shim.get_content(vault, "knowledge/notes/live.md") == "hello"
+    assert l2_smoke.get_content(vault, "knowledge/notes/live.md") == "hello"
 
 
 def test_l2_smoke_profile_uses_filesystem_obsidian_shim(tmp_path):
@@ -70,7 +68,8 @@ def test_l2_smoke_profile_uses_filesystem_obsidian_shim(tmp_path):
     config = yaml.safe_load((profile_stage / "config.yaml").read_text(encoding="utf-8"))
     assert config["mcp_servers"]["obsidian"]["command"] == sys.executable
     assert config["mcp_servers"]["obsidian"]["args"] == [
-        str(ROOT / "scripts/l2_obsidian_mcp_shim.py"),
+        str(ROOT / "scripts/l2_smoke.py"),
+        "obsidian-shim",
         "--vault",
         str(vault),
     ]
@@ -128,4 +127,4 @@ def test_openai_smoke_server_selects_obsidian_put_tool():
         ]
     }
 
-    assert smoke_server._select_put_tool(request) == "mcp_obsidian_obsidian_put_content"
+    assert l2_smoke._select_put_tool(request) == "mcp_obsidian_obsidian_put_content"

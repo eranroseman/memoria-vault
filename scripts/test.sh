@@ -9,9 +9,8 @@
 #
 # This is the direct Source Gate runner. Prefer `scripts/verify pr` before
 # pushing; it calls this script and writes a JSON evidence bundle. CI runs the
-# same checks as separate required jobs (lint [docs-doctor / docs-links /
-# ruff / status-doctor] + python-selftest); this mirrors them so a red push is
-# caught locally. Higher gates need a runtime or a human.
+# same L0/L1 source gates through required jobs; this mirrors them so a red push
+# is caught locally. Higher gates need a runtime or a human.
 #
 # Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = collect-only, no run
 set -uo pipefail
@@ -47,16 +46,18 @@ l0() {
   run ruff check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
   run ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
-  run python3 scripts/gen_profiles_ref.py --check
+  run python3 scripts/render_profile_configs.py reference --check
   run python3 scripts/gen_reference_refs.py --check
-  run bash scripts/check-vault-links.sh
+  run python3 scripts/docs_doctor.py --vault-links
+  run python3 scripts/status_doctor.py
   run python3 scripts/adr_code_doctor.py
   run python3 scripts/agents_doctor.py
   run python3 scripts/github_doctor.py
   run python3 scripts/ruleset_doctor.py
   run python3 scripts/plugin_provenance_doctor.py
+  run python3 scripts/gen_adr_index.py --check
   run python3 -m py_compile scripts/verify scripts/test_env_harness.py src/memoria_vault/*.py src/memoria_vault/runtime/*.py src/memoria_vault/runtime/policy/*.py
-  run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
+  run python3 -m py_compile scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py
   run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/test-l2.sh
   if command -v shellcheck >/dev/null 2>&1; then

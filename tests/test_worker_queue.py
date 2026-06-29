@@ -411,12 +411,6 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
             {
                 "page": 2,
                 "text": "A PDF block with anchored evidence.",
-                "blocks": [
-                    {
-                        "text": "A PDF block with anchored evidence.",
-                        "bbox": [10.0, 20.0, 100.0, 40.0],
-                    }
-                ],
             }
         ],
     )
@@ -430,7 +424,6 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
             "description": "A fixture PDF source.",
             "raw_pdf_base64": base64.b64encode(b"%PDF fixture\n").decode(),
             "raw_filename": "paper.pdf",
-            "annotation_quotes": ["anchored evidence"],
             "run_id": "capture-pdf",
         },
         idempotency_key="capture-pdf",
@@ -443,8 +436,6 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
     assert done["source_path"] == "catalog/sources/pdf-source/source.md"
     assert done["content_path"] == "catalog/sources/pdf-source/content.md"
     assert done["raw_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
-    assert done["annotation_refs"][0]["page"] == 2
-    assert done["annotation_refs"][0]["bbox"] == [10.0, 20.0, 100.0, 40.0]
     assert "anchored evidence" in (vault / done["content_path"]).read_text(encoding="utf-8")
 
 
@@ -452,18 +443,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
     vault = workspace(tmp_path)
     monkeypatch.setattr(
         "memoria_vault.runtime.capture._extract_pdf_pages",
-        lambda _raw: [
-            {
-                "page": 2,
-                "text": "A PDF block with anchored evidence.",
-                "blocks": [
-                    {
-                        "text": "A PDF block with anchored evidence.",
-                        "bbox": [10.0, 20.0, 100.0, 40.0],
-                    }
-                ],
-            }
-        ],
+        lambda _raw: [{"page": 2, "text": "\ufffd\ufffd !!! ???", "blocks": []}],
     )
 
     enqueue_operation(
@@ -475,7 +455,6 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
             "description": "A fixture PDF source.",
             "raw_pdf_base64": base64.b64encode(b"%PDF fixture\n").decode(),
             "raw_filename": "paper.pdf",
-            "annotation_quotes": ["absent evidence"],
             "run_id": "capture-pdf-missing-selector",
         },
         idempotency_key="capture-pdf-missing-selector",
@@ -484,7 +463,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
 
     assert done is not None
     assert done["status"] == "failed"
-    assert "annotation quote not found" in done["error"]
+    assert "coherence check" in done["error"]
     assert not (vault / "catalog/sources/pdf-missing-selector").exists()
     assert not (vault / "journal").exists()
     assert (vault / ".memoria/queue/failed/capture-pdf-missing-selector.json").is_file()

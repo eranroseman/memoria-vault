@@ -80,9 +80,9 @@ Run the focused docs checks:
 ```bash
 python scripts/docs_doctor.py docs
 python scripts/agents_doctor.py
-python scripts/gen_profiles_ref.py --check
+python scripts/render_profile_configs.py reference --check
 python scripts/gen_reference_refs.py --check
-bash scripts/check-vault-links.sh
+python scripts/docs_doctor.py --vault-links
 ```
 
 Then run the standard source gate:

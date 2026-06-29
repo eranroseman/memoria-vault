@@ -145,6 +145,7 @@ from operations.integrity.linter.detectors_audit import (
     vault_hash_drift,
 )
 from operations.integrity.linter.detectors_design import design_system_drift
+from operations.lib.markdown import parse_frontmatter
 
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
 
@@ -184,39 +185,6 @@ def iter_notes(vault: Path):
 
 def relpath(vault: Path, p: Path) -> str:
     return p.relative_to(vault).as_posix()
-
-
-def parse_frontmatter(text: str) -> dict:
-    """YAML frontmatter parser: PyYAML when available (full fidelity — nested
-    maps and ints matter for schema validation), else the minimal hand parser
-    (top-level scalars + inline lists) so the operation stays runnable without it."""
-    if not text.startswith("---"):
-        return {}
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}
-    if _schema is not None:  # PyYAML proven importable
-        try:
-            import yaml
-
-            data = yaml.safe_load(text[3:end])
-            return data if isinstance(data, dict) else {}
-        except Exception:  # noqa: BLE001
-            return {}
-    fm: dict = {}
-    for line in text[3:end].splitlines():
-        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
-            continue
-        if line[0] in " \t":  # nested key -- minimal parser skips it
-            continue
-        key, _, val = line.partition(":")
-        key, val = key.strip(), val.strip()
-        if val.startswith("[") and val.endswith("]"):
-            inner = val[1:-1].strip()
-            fm[key] = [v.strip().strip("\"'") for v in inner.split(",") if v.strip()]
-        else:
-            fm[key] = val.strip("\"'")
-    return fm
 
 
 def read(p: Path) -> str:

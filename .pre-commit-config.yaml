@@ -81,7 +81,7 @@ repos:
       - id: check-doc-refs
         name: check-doc-refs
         language: system
-        entry: bash scripts/check-doc-refs.sh
+        entry: python scripts/docs_doctor.py --doc-refs
         files: \.(md|py|ya?ml)$
         pass_filenames: true
 
@@ -133,7 +133,7 @@ repos:
         name: agents-doctor
         language: system
         entry: python scripts/agents_doctor.py
-        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$|src/\.memoria/(profiles|lane-overrides)/)
+        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$|vault-template/\.memoria/(profiles|lane-overrides)/)
         pass_filenames: false
 
       - id: github-doctor
@@ -147,15 +147,5 @@ repos:
         name: plugin-provenance-doctor
         language: system
         entry: python scripts/plugin_provenance_doctor.py
-        files: ^src/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
+        files: ^vault-template/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
         pass_filenames: false
-
-      # Block 12: harper grammar (advisory — always exits 0)
-      - id: harper-grammar
-        name: harper-grammar
-        language: system
-        entry: bash scripts/harper-advisory.sh
-        files: \.(md|txt|rst)$
-        exclude: src/\.obsidian/
-        pass_filenames: true
-        verbose: true

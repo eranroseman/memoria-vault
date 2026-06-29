@@ -43,7 +43,6 @@ find the owning file, then fix the stale consumer rather than the source.
 | Release scope/readiness | GitHub milestone, Memoria Issue Tracker, and "Release <version>" parent issue/sub-issues | Release playbook and release template |
 | Product decisions | `docs/adr/` | Current docs and implementation |
 | Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design Book |
-| Docs routing manifest | `.agents/system/docs-manifest.yaml` | Co-PI and agent doc-routing prompts |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 
 ## Mirrors and Cached Views

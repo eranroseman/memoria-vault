@@ -173,7 +173,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault-template/` resolve), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | Runs `scripts/test.sh l0`: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |

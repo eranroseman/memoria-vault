@@ -34,6 +34,7 @@ One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -838,12 +839,124 @@ def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
     check_reference_readme_index(repo, errors)
 
 
+def _docs_target_exists(repo: Path, rel: str) -> bool:
+    rel = rel.strip("/")
+    return any(
+        (repo / target).exists()
+        for target in (
+            f"docs/{rel}.md",
+            f"docs/{rel}/index.md",
+            f"docs/{rel}/README.md",
+        )
+    )
+
+
+def _pages_targets(text: str) -> list[str]:
+    return sorted(
+        set(
+            re.findall(
+                rf"{re.escape(PAGES_URL)}/[A-Za-z0-9/_-]+(?:#[A-Za-z0-9_.-]+)?",
+                text,
+            )
+        )
+    )
+
+
+def check_vault_docs_refs(repo: Path, errors: list[str]) -> None:
+    vault = repo / "vault-template"
+    for path in sorted(
+        p
+        for p in vault.rglob("*")
+        if p.is_file()
+        and p.suffix in {".md", ".py", ".yaml", ".yml"}
+        and ".obsidian" not in p.parts
+    ):
+        text = read(path)
+        for ref in sorted(set(re.findall(r"docs/[A-Za-z0-9/_.-]+\.md", text))):
+            if not (repo / ref).is_file():
+                errors.append(f"{path}: missing doc reference: {ref}")
+        for url in _pages_targets(text):
+            rel = url.removeprefix(f"{PAGES_URL}/").split("#", 1)[0].rstrip("/")
+            if not _docs_target_exists(repo, rel):
+                errors.append(f"{path}: Pages URL with no docs target: {url}")
+        if "github.com/eranroseman/memoria-vault/blob/main/docs/" in text:
+            errors.append(f"{path}: uses a github blob URL for docs/ — use the Pages URL instead")
+
+
+def check_doc_refs(repo: Path, files: list[str], errors: list[str]) -> None:
+    excluded = re.compile(r"^docs/(?:contributing|releasing|testing)(?:/|$)")
+    github_docs_re = re.compile(
+        r"github\.com/eranroseman/memoria-vault/(?:blob|tree)/main/docs/[A-Za-z0-9/_.-]*"
+    )
+    for raw in files:
+        raw_path = Path(raw)
+        path = raw_path if raw_path.is_absolute() else repo / raw_path
+        try:
+            rel = path.relative_to(repo)
+        except ValueError:
+            rel = raw_path
+        if (
+            not path.is_file()
+            or rel.parts[:1] == ("tests",)
+            or path.resolve() == Path(__file__).resolve()
+        ):
+            continue
+        text = read(path)
+        for ref in sorted(set(re.findall(r"docs/[A-Za-z0-9/_.-]+\.md", text))):
+            if not (repo / ref).is_file():
+                errors.append(f"check-doc-refs: {raw} -> missing {ref}")
+        for url in _pages_targets(text):
+            rel = url.removeprefix(f"{PAGES_URL}/").split("#", 1)[0].rstrip("/")
+            if not _docs_target_exists(repo, rel):
+                errors.append(f"check-doc-refs: {raw} -> Pages URL with no docs target: {url}")
+        for match in github_docs_re.findall(text):
+            rel = match.split("/main/", 1)[1]
+            if not excluded.match(rel):
+                errors.append(
+                    f"check-doc-refs: {raw} uses a github URL for a published docs/ path "
+                    "— use the Pages URL instead"
+                )
+                break
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("docs_root", nargs="?", default="docs")
+    parser.add_argument(
+        "--vault-links",
+        action="store_true",
+        help="validate vault-template references to published docs.",
+    )
+    parser.add_argument(
+        "--doc-refs",
+        nargs="*",
+        metavar="PATH",
+        help="validate docs references in the given files, for pre-commit.",
+    )
+    return parser.parse_args(argv)
+
+
 def main() -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except OSError:
         pass
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else "docs")
+    args = parse_args()
+    repo = Path.cwd()
+    if args.vault_links or args.doc_refs is not None:
+        errors: list[str] = []
+        if args.vault_links:
+            check_vault_docs_refs(repo, errors)
+        if args.doc_refs is not None:
+            check_doc_refs(repo, args.doc_refs, errors)
+        if errors:
+            for error in errors:
+                print(error, file=sys.stderr)
+            return 1
+        print("docs-doctor: reference checks clean ✓")
+        return 0
+
+    root = Path(args.docs_root)
     if not root.is_dir():
         print(f"docs-doctor: root '{root}' not found", file=sys.stderr)
         return 1
@@ -867,14 +980,14 @@ def main() -> int:
 
     # Guard the vault note templates too: their frontmatter lives in a ```yaml fence,
     # and a banned key there propagates to every note created from the template.
-    tmpl_dir = root.parent / "src" / "system" / "templates"
+    tmpl_dir = root.parent / "vault-template" / "system" / "templates"
     if tmpl_dir.is_dir():
         for md in sorted(tmpl_dir.glob("*.md")):
             check_template_frontmatter(md, errors)
 
     # Link-text discipline extends to the vault notes: cross-links must use the page
     # title — markdown link text and wikilink aliases — never the bare filename.
-    vault = root.parent / "src"
+    vault = root.parent / "vault-template"
     if vault.is_dir():
         vault_stems = {
             p.stem.lower()
