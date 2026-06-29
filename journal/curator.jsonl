@@ -1,1 +1,0 @@
-{"event": "resolved", "actor": "pi", "operation": "curate-note-link", "target_id": "knowledge/notes/source.md", "linked_id": "knowledge/notes/target.md", "link_type": "supports", "target_sha256": "sha256:02f772961937b1604dd12c14038efd8cfe57a6367211ef379fe28e0842def01f", "changed": true, "reason": "PI linked claims", "timestamp": "2026-06-29T14:25:24Z"}

@@ -107,7 +107,7 @@ python -m ruff check src/memoria_vault/runtime/projections.py src/memoria_vault/
 python -m ruff format --check src/memoria_vault/runtime/projections.py src/memoria_vault/runtime/worker.py tests/test_projections.py tests/test_worker_queue.py
 python scripts/gen_reference_refs.py --write
 python -m pytest tests/test_worker_queue.py tests/test_trusted_writer.py tests/test_runtime_helpers.py tests/test_package_spine.py tests/test_schemas.py tests/test_installer_skeleton.py tests/test_patterns.py tests/test_detectors.py
-python -m pytest tests/test_worker_queue.py::test_worker_runs_capture_url_source_operation_jobs tests/test_worker_queue.py::test_worker_rejects_capture_url_source_outside_allowed_network tests/test_worker_queue.py::test_worker_runs_capture_zotero_source_from_local_api_key tests/test_worker_queue.py::test_worker_fetches_local_zotero_annotations_before_import tests/test_operations.py -q
+python -m pytest tests/test_worker_queue.py::test_worker_runs_capture_url_source_operation_jobs tests/test_worker_queue.py::test_worker_rejects_capture_url_source_outside_allowed_network tests/test_worker_queue.py::test_worker_runs_capture_zotero_source_operation_jobs tests/test_worker_queue.py::test_worker_runs_capture_zotero_source_from_local_api_key tests/test_operations.py -q
 python scripts/docs_doctor.py docs
 python scripts/agents_doctor.py
 python scripts/status_doctor.py
