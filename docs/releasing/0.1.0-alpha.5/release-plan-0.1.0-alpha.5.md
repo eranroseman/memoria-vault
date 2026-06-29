@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.5
+release: 0.1.0-alpha.5
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan — v0.1.0-alpha.5
+title: Release plan — 0.1.0-alpha.5
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.5
+# Release plan — 0.1.0-alpha.5
 
 **Current status: alpha.5 is complete as an internal checkpoint.** This is not a tagged GitHub
 Release. The headline deliverable is the **Project gate** — the
@@ -19,7 +19,7 @@ blockers. `released:` flips to `true` only for a tagged release; this checkpoint
 complete`, `released: false`.
 
 As of 2026-06-16, every alpha.5 gate/stage issue under
-[Release v0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is closed:
+[Release 0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is closed:
 G1-G6 and S0-S5. The remaining open issues that were once considered for alpha.5 are explicitly
 rolled forward as deferred/superseded follow-ups, including
 [#154](https://github.com/eranroseman/memoria-vault/issues/154),
@@ -47,8 +47,8 @@ calibration or always-on infrastructure (§5).
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.5 ships when **every gate sub-issue under
-[Release v0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is met.**
+0.1.0-alpha.5 ships when **every gate sub-issue under
+[Release 0.1.0-alpha.5 (#584)](https://github.com/eranroseman/memoria-vault/issues/584) is met.**
 Definitions:
 
 | Gate | Proves | Verified by | Issues |
@@ -132,7 +132,7 @@ Deliberately later, each for a named reason (per-artifact deferred set lives in 
 1. **Every gate + stage sub-issue closed** under [#584](https://github.com/eranroseman/memoria-vault/issues/584); required CI green on `main`; no open High-priority blocker.
 2. **Re-run all stages from a fresh clone** on a disposable vault (`~/Memoria-test`) → all green; record evidence in the sub-issues / Actions artifacts.
 3. **Retire-sweep the ADRs** — already completed in WS-A; no follow-up ADR-retirement PR remains for alpha.5.
-4. **Merge the release-please "Release v0.1.0" PR** (folding §6 known-limitations into the notes) — or, for this internal checkpoint, skip the tag.
+4. **Merge the release-please "Release 0.1.0" PR** (folding §6 known-limitations into the notes) — or, for this internal checkpoint, skip the tag.
 5. **Set frontmatter** — internal checkpoint: `status: complete`, `released: false`.
 6. **Delete `tmp/`** design notes (`project-starter.md`, `install-a-real-package.md`, `adr-update.md`, `test-env.md`, `exec-plan-0.1.0-alpha.5.md`) — promote anything durable into ADRs first.
 7. **Close the milestone and [#584](https://github.com/eranroseman/memoria-vault/issues/584)**, rolling unfinished issues to the next checkpoint.
@@ -145,11 +145,11 @@ Deliberately later, each for a named reason (per-artifact deferred set lives in 
 | Gate expansion | after one real project under PI-touch budget | Unlock authored gap kinds, tier-3 impact, PICO/FINER + CRAAP lenses |
 | Packaging | trigger-gated | ADR-76 versioned-release + reconciling installer (deferred) |
 
-Full phase steps and investigation detail belong in `release-plan-v0.1.0-alpha.5-appendix.md` if needed.
+Full phase steps and investigation detail belong in `release-plan-0.1.0-alpha.5-appendix.md` if needed.
 
 ## 9. Appendix — what does NOT belong in this file
 
 Detailed build steps and scratch design notes were pruned after closeout. Durable decisions live in
 the ADRs; issue/PR evidence remains on GitHub. Unfinished packaging/test-env design detail was
 carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`, and long-tail phase/migration detail would
-go in `release-plan-v0.1.0-alpha.5-appendix.md` if it becomes worth preserving.
+go in `release-plan-0.1.0-alpha.5-appendix.md` if it becomes worth preserving.

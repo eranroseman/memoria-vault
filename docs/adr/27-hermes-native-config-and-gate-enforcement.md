@@ -162,7 +162,7 @@ non-terminal lane has.** Concretely:
    Their file writes are gated by the hook (`write_file|patch` matcher) and
    scoped by lane `write_scope`; their shell writes are bounded by `write_scope`
    plus, optionally, a Docker terminal backend (see Consequences).
-   *(v0.1.0-alpha.2 update — this exception is retired by D40/[ADR-46](46-seven-layer-architecture.md):
+   *(0.1.0-alpha.2 update — this exception is retired by D40/[ADR-46](46-seven-layer-architecture.md):
    the Linter became a cron/CI engine (no agent), and the Engineer — the Coder's
    successor — is MCP-only like every lane. No Memoria profile ships `terminal`,
    `file`, or `code_execution`; the policy-gate plugin additionally hard-denies
@@ -228,7 +228,7 @@ Installer (`scripts/install.sh`) and profile sources (`vault/.memoria/profiles/*
    non-terminal lanes have no `code_execution`/`file`/`terminal`.
 6. Then correct `#39`/`#58`, `policy-mcp.md`, and the ledger.
 
-Sequencing lives in [Release plan — v0.1.0-alpha.1](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md); this ADR records the
+Sequencing lives in [Release plan — 0.1.0-alpha.1](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md); this ADR records the
 choices, not the schedule.
 
 ## Alternatives considered

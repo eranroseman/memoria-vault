@@ -2,13 +2,13 @@
 release: 0.1.0-alpha.2
 status: draft
 released: false
-title: Release plan — v0.1.0-alpha.2
+title: Release plan — 0.1.0-alpha.2
 parent: 0.1.0-alpha.2
 grand_parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.2
+# Release plan — 0.1.0-alpha.2
 
 **Internal checkpoint (draft).** alpha.2 is the **consolidation checkpoint** — an internal
 milestone, **not a formal, published release**: there is no tag, no GitHub Release, and
@@ -37,8 +37,8 @@ Peer-reviewer / Engineer project workflows arrive in alpha.4 (alpha.3 is a UI-bu
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.2 is complete when **every gate sub-issue under the Release
-v0.1.0-alpha.2 parent issue is closed** (issue: open per [Releasing](../README.md)).
+0.1.0-alpha.2 is complete when **every gate sub-issue under the Release
+0.1.0-alpha.2 parent issue is closed** (issue: open per [Releasing](../README.md)).
 Definitions — state lives in the sub-issues, never a column here:
 
 | Gate | Proves | Verified by |
@@ -97,7 +97,7 @@ extensions ([ADR-65](../../adr/65-retrieval-and-schema-extensions.md)).
 alpha.2 is an **internal checkpoint, not a formal release** — there is no release-please cut,
 version tag, or GitHub Release. The checkpoint is reached when:
 
-1. Every gate + stage sub-issue under "Release v0.1.0-alpha.2" is closed; required CI is green on `main`; no open High-priority blocker.
+1. Every gate + stage sub-issue under "Release 0.1.0-alpha.2" is closed; required CI is green on `main`; no open High-priority blocker.
 2. All stages re-run green from a fresh clone on a clean target box.
 3. The ADRs are retire-swept ([retirement criteria](../../adr/README.md)) as their own small PR.
 
@@ -110,9 +110,9 @@ GitHub Release — is the beta (§8).
 
 | Phase | When | Goal |
 | --- | --- | --- |
-| v0.1.0-alpha.3 | next | **UI build** — resolve the Obsidian UX issues surfaced reviewing alpha.2 (command / ribbon access, capture forms, workspace panes, dashboard discoverability) before layering on project functionality |
-| v0.1.0-alpha.4 | after | The **Project workspace** — Writer / Peer-reviewer / Engineer compose, draft, verify, and code workflows over `projects/` |
-| v0.1.0 (beta) | later | First **formally released** version — release-please tag + GitHub Release; release automation un-paused |
+| 0.1.0-alpha.3 | next | **UI build** — resolve the Obsidian UX issues surfaced reviewing alpha.2 (command / ribbon access, capture forms, workspace panes, dashboard discoverability) before layering on project functionality |
+| 0.1.0-alpha.4 | after | The **Project workspace** — Writer / Peer-reviewer / Engineer compose, draft, verify, and code workflows over `projects/` |
+| 0.1.0 (beta) | later | First **formally released** version — release-please tag + GitHub Release; release automation un-paused |
 
 ## 9. Appendix
 

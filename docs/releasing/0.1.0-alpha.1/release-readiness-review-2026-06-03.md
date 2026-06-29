@@ -1,12 +1,12 @@
 ---
-title: Memoria v0.1 — release readiness review
+title: Memoria 0.1.0 — release readiness review
 parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 8
 ---
-# Memoria v0.1 — release readiness review
+# Memoria 0.1.0 — release readiness review
 
-> **Point-in-time record (2026-06-03).** A readiness snapshot taken before the v0.1.0-alpha.2 consolidation; terminology and paths here (seven profiles, numbered folders such as `10-inbox/02-answers/`) reflect that point and are **not current**. The current model is five profiles and type-first folders — see current docs for present-day naming.
+> **Point-in-time record (2026-06-03).** A readiness snapshot taken before the 0.1.0-alpha.2 consolidation; terminology and paths here (seven profiles, numbered folders such as `10-inbox/02-answers/`) reflect that point and are **not current**. The current model is five profiles and type-first folders — see current docs for present-day naming.
 
 **Date:** 2026-06-03
 **Question it answers:** "Can we ship?" — as a checklist with a critical path, not a gut call.
@@ -16,7 +16,7 @@ nav_order: 8
 
 ## The bar (state it before judging against it)
 
-"Shippable v0.1" here = **a technical early-adopter can install Memoria and run ONE agent workflow end-to-end — through a real trigger, gated and audited, queued for human review — and watch it work.** Not seven polished agents; one *operable, verified loop* + the hand-usable vault scaffold underneath it. Adjust the audience (internal alpha vs. public) and the bar moves, but the critical path below doesn't.
+"Shippable 0.1.0" here = **a technical early-adopter can install Memoria and run ONE agent workflow end-to-end — through a real trigger, gated and audited, queued for human review — and watch it work.** Not seven polished agents; one *operable, verified loop* + the hand-usable vault scaffold underneath it. Adjust the audience (internal alpha vs. public) and the bar moves, but the critical path below doesn't.
 
 By that bar, **today: not yet.** Gate 0 ~green, Gate 1 partial, Gates 2–4 red (below). The gap is *invocation wiring + one end-to-end run*, not a rebuild.
 
@@ -39,7 +39,7 @@ The **mandatory group and the plumbing are real and partly proven.** What's miss
 
 ## Critical path — dependency-ordered gates
 
-Each gate must be green before the next is meaningful. The chosen v0.1 *workflow* threads all five.
+Each gate must be green before the next is meaningful. The chosen 0.1.0 *workflow* threads all five.
 
 ### Gate 0 — Install & register (foundation) — **~GREEN**
 - [x] Installer runs clean; 7 profiles register at 0.1.0; MCP servers wired; secrets seeded per profile.
@@ -70,14 +70,14 @@ The actual product loop. Most likely **capture → ingest → gated write → re
 
 ## Explicitly OUT of the first slice (to keep it shippable)
 
-Cutting these is what makes "ship one loop" tractable — none blocks a defensible v0.1:
+Cutting these is what makes "ship one loop" tractable — none blocks a defensible 0.1.0:
 
-- **The ACP-pane interactive surface** for Mapper/Writer/Verifier — and therefore the **session-skill / pane-readonly hardening** (the ephemeral-engine + unwired-`set_session_skill` fix from this session). The pane simply isn't advertised in v0.1; a dispatched-only slice doesn't need it. *(Re-open once a workflow ships — it's a safety nicety, not a ship-blocker.)*
+- **The ACP-pane interactive surface** for Mapper/Writer/Verifier — and therefore the **session-skill / pane-readonly hardening** (the ephemeral-engine + unwired-`set_session_skill` fix from this session). The pane simply isn't advertised in 0.1.0; a dispatched-only slice doesn't need it. *(Re-open once a workflow ships — it's a safety nicety, not a ship-blocker.)*
 - **The other six agents' full command sets** — ship one workflow, not seven.
 - **ADR-30 Tier 2** (NLI contradiction, KeyBERT, the comparative `[!brief]`) and heavy NLP.
 - **Multi-source merge sophistication** (ADR-30 R2-1) — start single-source-with-fallback; validate the merge later.
 - **API-POST capture transport** — script/CLI/QuickAdd front-end ships first (ADR-30 §future).
-- **L5 eval, recovery/security/perf/deployment suites** — post-v0.1.
+- **L5 eval, recovery/security/perf/deployment suites** — post-0.1.0.
 
 ---
 

@@ -25,7 +25,7 @@ superseded_by: []
 
 ## Context
 
-The v0.1 scope is one researcher working one vault on one machine ([ADR-24](24-single-researcher-scope.md)). But a researcher accumulates more than one vault (a collaborator's, a separate domain vault) and more than one project inside a vault, and recall does not currently cross either boundary: a claim settled in vault A is invisible from vault B, and work approved on one project never primes another. Each gap is a felt friction only once the second vault or third project is real — so the shapes are settled here while the scheduling waits on the trigger.
+The 0.1.0 scope is one researcher working one vault on one machine ([ADR-24](24-single-researcher-scope.md)). But a researcher accumulates more than one vault (a collaborator's, a separate domain vault) and more than one project inside a vault, and recall does not currently cross either boundary: a claim settled in vault A is invisible from vault B, and work approved on one project never primes another. Each gap is a felt friction only once the second vault or third project is real — so the shapes are settled here while the scheduling waits on the trigger.
 
 ## Decision
 

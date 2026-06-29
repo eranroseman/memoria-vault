@@ -1,14 +1,14 @@
 ---
-title: v0.1.0-alpha.8 validation log
-parent: v0.1.0-alpha.8
+title: 0.1.0-alpha.8 validation log
+parent: 0.1.0-alpha.8
 grand_parent: Releasing
 ---
 
-# v0.1.0-alpha.8 validation log
+# 0.1.0-alpha.8 validation log
 
 alpha.8 closed as an internal untagged checkpoint on June 20, 2026. Evidence lives
 primarily in the gate/stage sub-issues under
-[Release v0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740);
+[Release 0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740);
 this file preserves the curated closeout summary.
 
 ## Automated and Headless Stages

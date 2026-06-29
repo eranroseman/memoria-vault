@@ -17,7 +17,7 @@ superseded_by: []
 
 [ADR-45](45-release-management-model.md) moved release readiness out of
 hand-maintained markdown tables and into GitHub. The first shape used a single
-"Release vX.Y" tracking issue as a gate checklist. That removed file drift, but it
+"Release <version>" tracking issue as a gate checklist. That removed file drift, but it
 made each gate a checkbox rather than a work item with its own owner, comments,
 evidence, blocking discussion, and Project metadata. In parallel, labels had started
 to carry too many meanings: type, area, priority, triage state, and bot automation.
@@ -30,7 +30,7 @@ Memoria uses GitHub issues as the atomic unit of work, the **Memoria Issue Track
 Project as the live planning surface, milestones as release scope, and ADRs as the
 decision record. Project fields carry `Status`, `Area`, `Type`, and `Priority`;
 labels stay minimal and are reserved for repo-wide search chips or bot automation.
-Release readiness lives in a **"Release vX.Y" parent issue** with one sub-issue per
+Release readiness lives in a **"Release <version>" parent issue** with one sub-issue per
 gate or validation stage, instead of a single checklist embedded in the release
 plan or parent issue body.
 

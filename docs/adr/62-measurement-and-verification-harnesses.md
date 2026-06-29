@@ -42,7 +42,7 @@ Per-item conditions that raise priority at the cadence review:
 
 - **CiteME regression harness** — the Peer-reviewer is live against real drafts *and* at least one project has produced ≥ 20 approved drafts citing ≥ 20 approved claim notes. (Building before the Peer-reviewer's behavior settles pins the fixture to a transient prompt.)
 - **Chain-of-Evidence taxonomy** — the CiteME harness is live with a measured untyped baseline *and* false-clean Peer-reviewer verdicts are a recurring issue; adopt only if the harness shows typing measurably reduces them.
-- **Fleet observability aggregator** — built in v0.1.0-alpha.4 as `metrics_aggregate.py` plus the `memoria-metrics` cron wrapper.
+- **Fleet observability aggregator** — built in 0.1.0-alpha.4 as `metrics_aggregate.py` plus the `memoria-metrics` cron wrapper.
 - **Propagation debts queue** — the corpus passes ~500 claim notes *and* the human notices, while reading a draft, that a cited claim has shifted.
 - **LLM-judge `prose-check` gate** — a deliverable has been re-exported more than twice for issues a model could have caught on the first read.
 - **Reflection-on-retry** — sustained retry rate > 0.10 across a lane visible in fleet observability, *or* a specific skill's retry rate crosses 0.20.

@@ -199,7 +199,7 @@ tracks that Phase 2 closure path.
 
 ## When this matters
 
-**Phase 1 shipped in v0.1.0-alpha.6** (model-free L0–L4 record/replay harness, #586;
+**Phase 1 shipped in 0.1.0-alpha.6** (model-free L0–L4 record/replay harness, #586;
 the G3 tool-call smoke runs against a local OpenAI-compatible endpoint, #662) — this
 ADR is `accepted` for Phase 1. **Phase 2 stays deferred**: raise it when any holds —
 the manual L3 surface or an uncovered cross-cutting suite (recovery / security /

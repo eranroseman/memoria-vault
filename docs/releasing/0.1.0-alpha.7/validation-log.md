@@ -1,11 +1,11 @@
 ---
-title: v0.1.0-alpha.7 validation log
-parent: v0.1.0-alpha.7
+title: 0.1.0-alpha.7 validation log
+parent: 0.1.0-alpha.7
 grand_parent: Releasing
 nav_order: 3
 ---
 
-# v0.1.0-alpha.7 validation log
+# 0.1.0-alpha.7 validation log
 
 Alpha.7 closed as an internal checkpoint on 2026-06-18. It did not cut a tag or
 GitHub Release; `released` remains `false`.

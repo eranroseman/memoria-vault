@@ -26,7 +26,7 @@ The alpha.4 decision is to stop treating WSL2 as the production Windows runtime.
 Production installs run natively on Windows; Linux/WSL remains the test harness
 and developer validation path.
 
-> **Cadence review (2026-06-16, v0.1.0-alpha.4): accepted.** The live Hermes
+> **Cadence review (2026-06-16, 0.1.0-alpha.4): accepted.** The live Hermes
 > Windows Native guide documents native Windows support for the runtime surfaces
 > Memoria uses. This supersedes the WSL2-only rule and folds the broader
 > migration tracked in [#296](https://github.com/eranroseman/memoria-vault/issues/296)

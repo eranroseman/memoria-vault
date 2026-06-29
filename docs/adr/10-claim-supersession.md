@@ -13,7 +13,7 @@ superseded_by: []
 
 # ADR-10: Claim supersession relation
 
-> *Terminology note (v0.1.0-alpha.2): the lifecycle chain is now `proposed → provisional → current → retracted → archived` ([ADR-50](50-universal-lifecycle-and-maturity.md)); the `dormant` value referenced below is retired. The supersession decision (a `superseded_by` pointer, distinct from lifecycle) is unchanged — and `retracted` now carries the invalidated-claim case this ADR motivates.*
+> *Terminology note (0.1.0-alpha.2): the lifecycle chain is now `proposed → provisional → current → retracted → archived` ([ADR-50](50-universal-lifecycle-and-maturity.md)); the `dormant` value referenced below is retired. The supersession decision (a `superseded_by` pointer, distinct from lifecycle) is unchanged — and `retracted` now carries the invalidated-claim case this ADR motivates.*
 
 > **Verified on-box 2026-06-21.** The default query path now runs through
 > `vault-template/.memoria/mcp/qmd_filter_mcp.py`, which preserves qmd's tool surface while

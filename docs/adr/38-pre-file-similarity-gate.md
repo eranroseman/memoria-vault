@@ -13,7 +13,7 @@ superseded_by: []
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
 
-> *Terminology note (v0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). The decision is unchanged.*
+> *Terminology note (0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). The decision is unchanged.*
 
 ## What
 

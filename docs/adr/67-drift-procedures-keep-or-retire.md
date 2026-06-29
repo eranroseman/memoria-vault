@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-The original structural-linter design (v0.1.0) specified five **weekly agent-run drift
+The original structural-linter design (0.1.0) specified five **weekly agent-run drift
 procedures**: golden-copy, skeleton-drift, profile-install-drift, command-vocab-drift,
 and plugin-config-drift. The as-built rewrite (PR #390) shipped only the golden-copy
 baseline and marked the rest deferred; the design pages themselves were later retired

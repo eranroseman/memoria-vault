@@ -4343,19 +4343,8 @@ entries:
     title: Zotero plugins
   canonical_owner: false
   status: manual
-- path: docs/releasing/0.1.0-alpha.1/README.md
-  title: 0.1.0-alpha.1
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 3
-    parent: Releasing
-    title: 0.1.0-alpha.1
-  canonical_owner: false
-  status: manual
 - path: docs/releasing/0.1.0-alpha.1/gui-test-run_0.1.0-alpha.1.md
-  title: "GUI test plan \u2014 v0.1 (S5 + G4)"
+  title: "GUI test plan \u2014 0.1.0 (S5 + G4)"
   book: Internal
   topic: plans
   frontmatter:
@@ -4363,23 +4352,23 @@ entries:
     nav_order: 4
     parent: 0.1.0-alpha.1
     status: draft
-    title: "GUI test plan \u2014 v0.1 (S5 + G4)"
+    title: "GUI test plan \u2014 0.1.0 (S5 + G4)"
     topic: plans
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.1/manual-testing.md
-  title: Memoria v0.1 manual testing
+  title: Memoria 0.1.0 manual testing
   book: Internal
   topic: null
   frontmatter:
     grand_parent: Releasing
     nav_order: 5
     parent: 0.1.0-alpha.1
-    title: Memoria v0.1 manual testing
+    title: Memoria 0.1.0 manual testing
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1-appendix.md
-  title: "Release plan \u2014 v0.1.0-alpha.1 \u2014 appendix"
+  title: "Release plan \u2014 0.1.0-alpha.1 \u2014 appendix"
   book: Internal
   topic: null
   frontmatter:
@@ -4388,11 +4377,11 @@ entries:
     parent: 0.1.0-alpha.1
     release: 0.1.0-alpha.1
     status: draft
-    title: "Release plan \u2014 v0.1.0-alpha.1 \u2014 appendix"
+    title: "Release plan \u2014 0.1.0-alpha.1 \u2014 appendix"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.1/release-plan-0.1.0-alpha.1.md
-  title: "Release plan \u2014 v0.1.0-alpha.1"
+  title: "Release plan \u2014 0.1.0-alpha.1"
   book: Internal
   topic: null
   frontmatter:
@@ -4402,68 +4391,78 @@ entries:
     release: 0.1.0-alpha.1
     released: true
     status: released
-    title: "Release plan \u2014 v0.1.0-alpha.1"
+    title: "Release plan \u2014 0.1.0-alpha.1"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.1/release-readiness-review-2026-06-03.md
-  title: "Memoria v0.1 \u2014 release readiness review"
+  title: "Memoria 0.1.0 \u2014 release readiness review"
   book: Internal
   topic: null
   frontmatter:
     grand_parent: Releasing
     nav_order: 8
     parent: 0.1.0-alpha.1
-    title: "Memoria v0.1 \u2014 release readiness review"
+    title: "Memoria 0.1.0 \u2014 release readiness review"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.1/validation-log.md
-  title: v0.1 validation log
+  title: 0.1.0 validation log
   book: Internal
   topic: releases
   frontmatter:
     grand_parent: Releasing
     nav_order: 9
     parent: 0.1.0-alpha.1
-    title: v0.1 validation log
+    title: 0.1.0 validation log
     topic: releases
   canonical_owner: false
   status: manual
-- path: docs/releasing/0.1.0-alpha.10/README.md
-  title: v0.1.0-alpha.10
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.10
-  canonical_owner: false
-  status: manual
 - path: docs/releasing/0.1.0-alpha.10/release-plan-0.1.0-alpha.10.md
-  title: Release plan -- v0.1.0-alpha.10
+  title: Release plan -- 0.1.0-alpha.10
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.10
+    release: 0.1.0-alpha.10
     released: false
     status: complete
-    title: Release plan -- v0.1.0-alpha.10
+    title: Release plan -- 0.1.0-alpha.10
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.10/validation-log.md
-  title: v0.1.0-alpha.10 validation log
+  title: 0.1.0-alpha.10 validation log
   book: Internal
   topic: null
   frontmatter:
     grand_parent: Releasing
     nav_order: 3
-    parent: v0.1.0-alpha.10
-    title: v0.1.0-alpha.10 validation log
+    parent: 0.1.0-alpha.10
+    title: 0.1.0-alpha.10 validation log
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/release-plan-0.1.0-alpha.11.md
+  title: Release plan -- 0.1.0-alpha.11
+  book: Internal
+  topic: null
+  frontmatter:
+    nav_order: 2
+    parent: Releasing
+    release: 0.1.0-alpha.11
+    released: false
+    status: draft
+    title: Release plan -- 0.1.0-alpha.11
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.11/tmp/0.1.0-alpha.11-design.md
   title: "Memoria \u2014 0.1.0-alpha.11 design (single source of truth)"
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/0.1.0-alpha.11-exec-plan.md
+  title: "Memoria 0.1.0-alpha.11 \u2014 execution plan"
   book: Internal
   topic: null
   frontmatter: {}
@@ -4511,19 +4510,8 @@ entries:
   frontmatter: {}
   canonical_owner: false
   status: manual
-- path: docs/releasing/0.1.0-alpha.2/README.md
-  title: 0.1.0-alpha.2
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 4
-    parent: Releasing
-    title: 0.1.0-alpha.2
-  canonical_owner: false
-  status: manual
 - path: docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md
-  title: "Release plan \u2014 v0.1.0-alpha.2"
+  title: "Release plan \u2014 0.1.0-alpha.2"
   book: Internal
   topic: null
   frontmatter:
@@ -4533,22 +4521,11 @@ entries:
     release: 0.1.0-alpha.2
     released: false
     status: draft
-    title: "Release plan \u2014 v0.1.0-alpha.2"
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.3/README.md
-  title: 0.1.0-alpha.3
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 5
-    parent: Releasing
-    title: 0.1.0-alpha.3
+    title: "Release plan \u2014 0.1.0-alpha.2"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.3/release-plan-0.1.0-alpha.3.md
-  title: "Release plan \u2014 v0.1.0-alpha.3"
+  title: "Release plan \u2014 0.1.0-alpha.3"
   book: Internal
   topic: null
   frontmatter:
@@ -4558,143 +4535,93 @@ entries:
     release: 0.1.0-alpha.3
     released: false
     status: draft
-    title: "Release plan \u2014 v0.1.0-alpha.3"
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.5/README.md
-  title: v0.1.0-alpha.5
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.5
+    title: "Release plan \u2014 0.1.0-alpha.3"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.5/release-plan-0.1.0-alpha.5.md
-  title: "Release plan \u2014 v0.1.0-alpha.5"
+  title: "Release plan \u2014 0.1.0-alpha.5"
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.5
+    release: 0.1.0-alpha.5
     released: false
     status: complete
-    title: "Release plan \u2014 v0.1.0-alpha.5"
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.6/README.md
-  title: v0.1.0-alpha.6
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.6
+    title: "Release plan \u2014 0.1.0-alpha.5"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.6/release-plan-0.1.0-alpha.6.md
-  title: "Release plan \u2014 v0.1.0-alpha.6"
+  title: "Release plan \u2014 0.1.0-alpha.6"
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.6
+    release: 0.1.0-alpha.6
     released: false
     status: complete
-    title: "Release plan \u2014 v0.1.0-alpha.6"
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.7/README.md
-  title: v0.1.0-alpha.7
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.7
+    title: "Release plan \u2014 0.1.0-alpha.6"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.7/release-plan-0.1.0-alpha.7.md
-  title: "Release plan \u2014 v0.1.0-alpha.7"
+  title: "Release plan \u2014 0.1.0-alpha.7"
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.7
+    release: 0.1.0-alpha.7
     released: false
     status: complete
-    title: "Release plan \u2014 v0.1.0-alpha.7"
+    title: "Release plan \u2014 0.1.0-alpha.7"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.7/validation-log.md
-  title: v0.1.0-alpha.7 validation log
+  title: 0.1.0-alpha.7 validation log
   book: Internal
   topic: null
   frontmatter:
     grand_parent: Releasing
     nav_order: 3
-    parent: v0.1.0-alpha.7
-    title: v0.1.0-alpha.7 validation log
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.8/README.md
-  title: v0.1.0-alpha.8
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.8
+    parent: 0.1.0-alpha.7
+    title: 0.1.0-alpha.7 validation log
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.8/release-plan-0.1.0-alpha.8.md
-  title: "Release plan \u2014 v0.1.0-alpha.8"
+  title: "Release plan \u2014 0.1.0-alpha.8"
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.8
+    release: 0.1.0-alpha.8
     released: false
     status: complete
-    title: "Release plan \u2014 v0.1.0-alpha.8"
+    title: "Release plan \u2014 0.1.0-alpha.8"
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.8/validation-log.md
-  title: v0.1.0-alpha.8 validation log
+  title: 0.1.0-alpha.8 validation log
   book: Internal
   topic: null
   frontmatter:
     grand_parent: Releasing
-    parent: v0.1.0-alpha.8
-    title: v0.1.0-alpha.8 validation log
-  canonical_owner: false
-  status: manual
-- path: docs/releasing/0.1.0-alpha.9/README.md
-  title: v0.1.0-alpha.9
-  book: Internal
-  topic: null
-  frontmatter:
-    has_children: true
-    parent: Releasing
-    title: v0.1.0-alpha.9
+    parent: 0.1.0-alpha.8
+    title: 0.1.0-alpha.8 validation log
   canonical_owner: false
   status: manual
 - path: docs/releasing/0.1.0-alpha.9/release-plan-0.1.0-alpha.9.md
-  title: Release plan -- v0.1.0-alpha.9
+  title: Release plan -- 0.1.0-alpha.9
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: v0.1.0-alpha.9
+    release: 0.1.0-alpha.9
     released: false
     status: complete
-    title: Release plan -- v0.1.0-alpha.9
+    title: Release plan -- 0.1.0-alpha.9
   canonical_owner: false
   status: manual
 - path: docs/releasing/README.md
@@ -4710,16 +4637,16 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/releasing/release-plan-template.md
-  title: "Release plan \u2014 vX.Y.Z"
+  title: "Release plan \u2014 0.1.0"
   book: Internal
   topic: null
   frontmatter:
     nav_order: 2
     parent: Releasing
-    release: vX.Y.Z
+    release: 0.1.0
     released: false
     status: draft
-    title: "Release plan \u2014 vX.Y.Z"
+    title: "Release plan \u2014 0.1.0"
   canonical_owner: false
   status: manual
 - path: docs/testing/README.md

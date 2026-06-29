@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-Every lane's vault-write path is the `obsidian` MCP ([ADR-27](27-hermes-native-config-and-gate-enforcement.md)/[ADR-28](28-write-gate-as-plugin.md)). v0.1 used the **uvx `mcp-obsidian`** package (stdio), which **hardwires port 27124** and reads only `OBSIDIAN_API_KEY` — `OBSIDIAN_HOST`/`OBSIDIAN_PORT` are ignored. Because only one Obsidian vault can serve a given port, a sandbox and a production vault couldn't both expose the REST API at once, forcing a "keep production closed during runs" rule and manual port juggling.
+Every lane's vault-write path is the `obsidian` MCP ([ADR-27](27-hermes-native-config-and-gate-enforcement.md)/[ADR-28](28-write-gate-as-plugin.md)). 0.1.0 used the **uvx `mcp-obsidian`** package (stdio), which **hardwires port 27124** and reads only `OBSIDIAN_API_KEY` — `OBSIDIAN_HOST`/`OBSIDIAN_PORT` are ignored. Because only one Obsidian vault can serve a given port, a sandbox and a production vault couldn't both expose the REST API at once, forcing a "keep production closed during runs" rule and manual port juggling.
 
 The **Local REST API plugin (v4.1.3, "with MCP")** now ships its **own native MCP server** at `/<host>/mcp` (Streamable HTTP) — a viable replacement whose port lives in the URL.
 
@@ -45,7 +45,7 @@ The native server exposes 16 tools with **different names** (`vault_write`/`appe
 
 - **Sandbox + production coexist** on different ports; the uvx dependency is gone.
 - **Validated live:** read + a full ingest end-to-end through the native MCP (note written via `vault_write`/`append`, gated); pytest coverage now pins native tool names and the hard-denies.
-- **Setup cost:** enable the plugin's HTTPS endpoint on `OBSIDIAN_MCP_PORT` and set `OBSIDIAN_MCP_SSL_VERIFY` to the exported PEM certificate/CA bundle path. **All profiles** *(v0.1.0-alpha.2: the fleet is the five profiles of [ADR-48](48-copi-and-agent-consolidation.md); originally seven)* are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
+- **Setup cost:** enable the plugin's HTTPS endpoint on `OBSIDIAN_MCP_PORT` and set `OBSIDIAN_MCP_SSL_VERIFY` to the exported PEM certificate/CA bundle path. **All profiles** *(0.1.0-alpha.2: the fleet is the five profiles of [ADR-48](48-copi-and-agent-consolidation.md); originally seven)* are switched — leaving any lane on uvx (27124) would re-introduce the port collision the moment it ran, so the coexistence benefit only holds with every lane native. The shared `policy_hook` (with `DENY_OBSIDIAN`) gates them all identically.
 - **Residual:** the certificate file is per-machine plugin state, so it stays in `.env` / gitignored plugin state rather than repository source.
 
 - **Related:** [ADR-27](27-hermes-native-config-and-gate-enforcement.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate this preserves).

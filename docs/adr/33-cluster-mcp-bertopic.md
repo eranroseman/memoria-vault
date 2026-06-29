@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-> *Note (v0.1.0-alpha.2): "the Mapper" is now the **Librarian's `map` lane** ([ADR-48](48-copi-and-agent-consolidation.md)); the cluster-MCP decision below applies to that lane unchanged.*
+> *Note (0.1.0-alpha.2): "the Mapper" is now the **Librarian's `map` lane** ([ADR-48](48-copi-and-agent-consolidation.md)); the cluster-MCP decision below applies to that lane unchanged.*
 
 The Mapper's three commands — `scope-project`, `gap-report`, `cluster-map` — are corpus *clustering* over note embeddings (HDBSCAN density clusters, UMAP projection, BERTopic/TF-IDF topics). They are wired as the K-Dense `scikit-learn` and `umap-learn` **skills** granted in `mapper.yaml`. But a Hermes skill whose work is running Python executes in the `code_execution`/`terminal` sandbox and declares `requires_toolsets`; a skill is unavailable when its required toolset is off. The Mapper disables **both** `code_execution` and `terminal` (it is read-mostly, [ADR-32](32-external-access-over-mcp.md)), and has no compute MCP — so those skills **cannot actually run**. The clustering is granted and described but non-functional. (`qmd` is unaffected: it is an index-backed search skill, not a per-invocation Python run, which is why it works on the same execution-disabled lanes.)
 
@@ -23,7 +23,7 @@ No mature, typed, gated clustering/topic MCP exists to adopt — a survey of the
 
 ## Decision
 
-Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and ship it in v0.1. The MCP owns both the lightweight typed-graph clustering path and the optional heavy topic-modeling path: graph/community maps run with NetworkX over authored `links:` and `relationships`, while **BERTopic** remains the opt-in topic-modeling backend for the standard sentence-transformers → UMAP → HDBSCAN → c-TF-IDF pipeline. The Mapper invokes typed MCP tools such as `cluster_build_graph`, `cluster_emit_canvas`, and `cluster_model_topics` over MCP. The Mapper stays **fully sandboxed** (`code_execution` / `terminal` / `web` all disabled); the non-runnable `scikit-learn` and `umap-learn` skill grants are retired in favour of the MCP. This follows the [ADR-30](30-deterministic-ingest-pipeline.md) precedent (Memoria-authored deterministic compute reaches the agent over MCP) and the [ADR-32](32-external-access-over-mcp.md) rule (shared capability at the MCP layer, posture isolation at the agent layer).
+Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and ship it in 0.1.0. The MCP owns both the lightweight typed-graph clustering path and the optional heavy topic-modeling path: graph/community maps run with NetworkX over authored `links:` and `relationships`, while **BERTopic** remains the opt-in topic-modeling backend for the standard sentence-transformers → UMAP → HDBSCAN → c-TF-IDF pipeline. The Mapper invokes typed MCP tools such as `cluster_build_graph`, `cluster_emit_canvas`, and `cluster_model_topics` over MCP. The Mapper stays **fully sandboxed** (`code_execution` / `terminal` / `web` all disabled); the non-runnable `scikit-learn` and `umap-learn` skill grants are retired in favour of the MCP. This follows the [ADR-30](30-deterministic-ingest-pipeline.md) precedent (Memoria-authored deterministic compute reaches the agent over MCP) and the [ADR-32](32-external-access-over-mcp.md) rule (shared capability at the MCP layer, posture isolation at the agent layer).
 
 ## Consequences
 
@@ -51,7 +51,7 @@ either run with enough data and dependencies or degrade cleanly.
 - **Grant the Mapper `terminal`** (the Linter's pattern). Rejected: the Linter's `terminal` is justified because `detectors.py` is a CLI build tool (CI / pre-commit / cron) and the lane is trusted/local; the Mapper's clustering is agent-runtime-only, and a shell would re-open arbitrary execution + network on a read-mostly lane — a direct regression of ADR-32.
 - **Adopt an off-the-shelf clustering/topic MCP.** Rejected: none is mature, typed, and gated. The candidates are abandoned (`k_means`-only), 0-star and UMAP-only, wrong-substrate (graph DB), or arbitrary-code executors (a security regression).
 - **Wire `sentence-transformers` + `umap-learn` + `hdbscan` + c-TF-IDF by hand.** Rejected in favour of **BERTopic**, which bundles the identical pipeline in one dependency and one call — a smaller, better-tested surface.
-- **Defer clustering for v0.1** (a `qmd`-similarity-only Mapper). Rejected: corpus density/topic mapping *is* the Mapper's reason to exist ("map the corpus"); shipping it without clustering guts the profile.
+- **Defer clustering for 0.1.0** (a `qmd`-similarity-only Mapper). Rejected: corpus density/topic mapping *is* the Mapper's reason to exist ("map the corpus"); shipping it without clustering guts the profile.
 
 ## Related
 

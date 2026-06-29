@@ -31,7 +31,7 @@
 - **Task:** {{ one line }}
 - **Worktree / branch:** `~/mv/<name>` · `feat/<name>`
 - **Related ADRs:** {{ ADR-NN — link to `docs/adr/<NN>-*.md`, or — }}
-- **Related issues / milestone:** {{ #NN, vX.Y or — }}
+- **Related issues / milestone:** {{ #NN, 0.1.0 or — }}
 - **Started:** {{ YYYY-MM-DD }} · **Last updated:** {{ YYYY-MM-DD }}
 
 ## 1. Purpose / big picture

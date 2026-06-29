@@ -55,7 +55,7 @@ and delete `project-gate.md`.
 
 ### 3. Fold `weekly-review`'s unique part into Maintenance, retire the page
 
-`weekly-review.md` is a pre-Queue leftover (created in v0.1.1, before the Queue/Maintenance
+`weekly-review.md` is a pre-Queue leftover (created in 0.1.0.1, before the Queue/Maintenance
 split): its notice-findings ≈ Maintenance's **Loose ends**, and its fleeting backlog is the
 Queue's (the note self-admits the duplication). Its only unique content — the 7-day
 **"New this week"** catalog/notes digest — moves into the **Maintenance** space (the weekly

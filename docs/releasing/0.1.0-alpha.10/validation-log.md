@@ -1,11 +1,11 @@
 ---
-title: v0.1.0-alpha.10 validation log
-parent: v0.1.0-alpha.10
+title: 0.1.0-alpha.10 validation log
+parent: 0.1.0-alpha.10
 grand_parent: Releasing
 nav_order: 3
 ---
 
-# v0.1.0-alpha.10 validation log
+# 0.1.0-alpha.10 validation log
 
 Date: 2026-06-23
 

@@ -1,12 +1,12 @@
 ---
-title: Memoria v0.1 manual testing
+title: Memoria 0.1.0 manual testing
 parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 5
 ---
-# Memoria v0.1 manual testing
+# Memoria 0.1.0 manual testing
 
-> **Point-in-time record.** Black-box findings captured against the v0.1.0-alpha.1 build; terminology and paths here (numbered folders such as `00-meta/01-dashboards/` and `30-synthesis/`) reflect that point and are **not current** — the findings were triaged into the PRs/issues listed below. See current docs for present-day naming.
+> **Point-in-time record.** Black-box findings captured against the 0.1.0-alpha.1 build; terminology and paths here (numbered folders such as `00-meta/01-dashboards/` and `30-synthesis/`) reflect that point and are **not current** — the findings were triaged into the PRs/issues listed below. See current docs for present-day naming.
 
 - **Scope:** Black box functional and usability testing of user-facing featured based on documented functionality.
 - **Objectives:** Ensures core functionality and user experience.

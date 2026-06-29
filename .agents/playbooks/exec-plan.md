@@ -44,7 +44,7 @@ produces. Durable outputs route as usual:
 | Output | Goes to |
 |---|---|
 | An architectural or product decision | an ADR in `docs/adr/` — the plan links it |
-| Release readiness / gate / stage state | the "Release vX.Y" parent issue and its sub-issues |
+| Release readiness / gate / stage state | the "Release <version>" parent issue and its sub-issues |
 | A scope cut | a GitHub issue with Readiness `Later`; add or update an ADR only when the cut records a decision or durable rationale |
 | A bug, gap, or follow-up | a GitHub issue in the Memoria Issue Tracker |
 

@@ -97,7 +97,7 @@ policy denies rather than waves calls through.
 
 ### Delivery
 
-Git tag now (`git checkout vX && ./install.sh <vault>`): versioned, reproducible, transparent, zero build pipeline. When an audience that cannot run a checkout appears, the *same* installer consumes a hash-verified (eventually signed) release tarball — the spine does not change, only the source of `release_root`. Rollback is `git checkout <prev-tag> && ./install.sh`; no wheel retention or `--force-reinstall` dance. Vault resolution stays a parameter (`resolve_vault()` is already arg→env, never `__file__`).
+Git tag now (`git checkout <version> && ./install.sh <vault>`): versioned, reproducible, transparent, zero build pipeline. When an audience that cannot run a checkout appears, the *same* installer consumes a hash-verified (eventually signed) release tarball — the spine does not change, only the source of `release_root`. Rollback is `git checkout <prev-tag> && ./install.sh`; no wheel retention or `--force-reinstall` dance. Vault resolution stays a parameter (`resolve_vault()` is already arg→env, never `__file__`).
 
 **Migration is staged and ordered:**
 

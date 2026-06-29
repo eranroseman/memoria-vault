@@ -37,7 +37,7 @@ The reasoning is identical across all four:
 ## Relationship to the candidate-note baseline
 
 The candidate-note baseline is adjacent but **not** part of this deferred cluster — it was
-adopted into baseline v0.1 independent of any formal review, because the shared
+adopted into baseline 0.1.0 independent of any formal review, because the shared
 candidate schema pays off for everyday `find` on its own. The later
 [ADR-51](51-inbox-category-and-honesty-card.md) Inbox contract supersedes the old
 candidate-note routing shape. This cluster's pre-ingest screening pipeline consumes

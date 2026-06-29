@@ -1,27 +1,27 @@
 ---
 release: 0.1.0-alpha.1
 status: draft
-title: Release plan — v0.1.0-alpha.1 — appendix
+title: Release plan — 0.1.0-alpha.1 — appendix
 parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 6
 ---
 
-# Release plan — v0.1.0-alpha.1 — appendix
+# Release plan — 0.1.0-alpha.1 — appendix
 
-> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+> **Frozen record.** Captures 0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
 
-The detail behind [Release plan — v0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
+The detail behind [Release plan — 0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md): the full phase roadmap (steps + exit criteria) that the plan's §8 summarizes. Folded verbatim from the original `plans/timeline.md` (link depths adjusted for this folder).
 
 ## Phases — full roadmap
 
-The week-by-week ramp from [Memoria v0.1](release-plan-0.1.0-alpha.1.md) to production corpus use, plus the four implementation phases that structure the work. Memoria v0.1 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
+The week-by-week ramp from [Memoria 0.1.0](release-plan-0.1.0-alpha.1.md) to production corpus use, plus the four implementation phases that structure the work. Memoria 0.1.0 is the full system — all folders, templates, profiles, dashboards, and the Kanban board are stood up in weeks 1–2; subsequent weeks are about corpus density, not system assembly.
 
-Four phases from initial setup through production corpus use and beyond. Phase 1 installs every Memoria v0.1 component; Phase 2 seeds and validates the corpus; Phase 3 activates density-gated features and automates the edges; Phase 4 extends to a second device when one enters regular use. The direction throughout: **the system is complete from day 1; corpus density drives what you activate, not what you install.**
+Four phases from initial setup through production corpus use and beyond. Phase 1 installs every Memoria 0.1.0 component; Phase 2 seeds and validates the corpus; Phase 3 activates density-gated features and automates the edges; Phase 4 extends to a second device when one enters regular use. The direction throughout: **the system is complete from day 1; corpus density drives what you activate, not what you install.**
 
 ### Phase 1 — Full system setup · Weeks 1–2
 
-**Goal.** Install every Memoria v0.1 component on a single machine (`local-only` deployment): schema contract, complete vault structure, all profiles, all skills, and the Kanban board. Everything in v0.1 lands here on one device. Later phases use these components — they do not install new ones. Multi-device is a Phase 4 concern.
+**Goal.** Install every Memoria 0.1.0 component on a single machine (`local-only` deployment): schema contract, complete vault structure, all profiles, all skills, and the Kanban board. Everything in 0.1.0 lands here on one device. Later phases use these components — they do not install new ones. Multi-device is a Phase 4 concern.
 
 **Steps.**
 
@@ -60,8 +60,8 @@ Four phases from initial setup through production corpus use and beyond. Phase 1
 5. Configure retry behavior so recoverable failures reuse the same card (returned to `ready`) within `max_retries`.
 6. Configure Kanban dispatch rules to advance cards (no Orchestrator profile); configure Verifier and Linter to write `agent_recommendation` recommendations the human promotes to `review_status: approved`.
 7. **Wire the board exporter on a ~60s cadence.** `board_export.py` must run continuously to project the live Hermes board into `99-system/board/<task_id>.md` and `99-system/logs/board-state.jsonl` — this is what the board-state and fleet-health dashboards read. Without it, dashboards show no board data even though the board itself is running.
-8. **Enable the six-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact, so this capture ships in v0.1 (the analysis harnesses in [Measurement, quality, and verification](../../adr/62-measurement-and-verification-harnesses.md) stay deferred). The six signals — all emitting and self-tested — are: (1) suggestion disposition (accept : edit : reject) per lane → `disposition.jsonl`; (2) operator decision time per `awaiting-review` card → derived from `board-transitions.jsonl`; (3) per-card state-transition timestamps → `board-transitions.jsonl`; (4) API cost per card → `cost.jsonl`; (5) policy deny-reasons → `audit.jsonl`; (6) FAMA exposure (drafts citing a superseded claim) → the `fama-exposure` detector in `lint-findings.jsonl`. Exact schemas: [Telemetry & logs](../../reference/telemetry.md).
-9. *(Deferred — optional, not required for Phase 1.)* The configurable review-gate mode (`blocking` vs `advisory`) per [ADR-41](../../adr/41-configurable-review-gate-mode.md) is **deferred** out of v0.1; the gate runs `blocking`-only. If/when ADR-41 is adopted, stamping `review_mode` on every card from the start is what makes the later comparison arm available without retrofitting (a within-subject baseline needs both arms logging identically) — but that is a Phase 3 concern, not a Phase 1 step.
+8. **Enable the six-signal log from the first ingest.** Suggestion disposition and operator decision time cannot be reconstructed after the fact, so this capture ships in 0.1.0 (the analysis harnesses in [Measurement, quality, and verification](../../adr/62-measurement-and-verification-harnesses.md) stay deferred). The six signals — all emitting and self-tested — are: (1) suggestion disposition (accept : edit : reject) per lane → `disposition.jsonl`; (2) operator decision time per `awaiting-review` card → derived from `board-transitions.jsonl`; (3) per-card state-transition timestamps → `board-transitions.jsonl`; (4) API cost per card → `cost.jsonl`; (5) policy deny-reasons → `audit.jsonl`; (6) FAMA exposure (drafts citing a superseded claim) → the `fama-exposure` detector in `lint-findings.jsonl`. Exact schemas: [Telemetry & logs](../../reference/telemetry.md).
+9. *(Deferred — optional, not required for Phase 1.)* The configurable review-gate mode (`blocking` vs `advisory`) per [ADR-41](../../adr/41-configurable-review-gate-mode.md) is **deferred** out of 0.1.0; the gate runs `blocking`-only. If/when ADR-41 is adopted, stamping `review_mode` on every card from the start is what makes the later comparison arm available without retrofitting (a within-subject baseline needs both arms logging identically) — but that is a Phase 3 concern, not a Phase 1 step.
 10. Do not prune session `state.db`. It is small, and it preserves the reasoning-trace data needed for any retrospective analysis.
 
 **Exit criteria.** Schema is the single source of truth. A new note from any template lands in the right folder. The 8 bundled community plugins are enabled (Restricted mode off) and dashboard queries return real data; `obsidian-homepage` is optionally installed. Policy gate self-tests pass (all five `--self-test` suites green). `board_export.py` is running and `99-system/board/` is populating. All five profiles run end-to-end on a small task; permission violations fail loudly. A card flows `ready → running → done (awaiting review) → approved`; the review gate blocks dispatch. **The six-signal log is running and emitting all six signals. Every profile prompt is committed to git.**

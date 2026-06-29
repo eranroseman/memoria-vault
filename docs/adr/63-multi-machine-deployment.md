@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-The v0.1 default is `local-only` — one workstation, Git for history, Zotero on localhost ([Deployment](../explanation/deployment.md)). That default requires the workstation to be on and offers neither auto-sync nor unattended automation. Two felt needs push past it: working the vault from a second device (laptop, phone, tablet), and running discovery/ingest overnight without a human kickoff. Both require a sync topology *and* a safe answer to "what may a non-primary device do against a vault the primary is also dispatching against?" — without one, two machines race on card writes and corrupt the audit log. The topologies are additive and cost nothing to defer, so they are settled here and scheduled later. The deployment explanation defers the past-`local-only` substrate *to* this decision, which is its authoritative target.
+The 0.1.0 default is `local-only` — one workstation, Git for history, Zotero on localhost ([Deployment](../explanation/deployment.md)). That default requires the workstation to be on and offers neither auto-sync nor unattended automation. Two felt needs push past it: working the vault from a second device (laptop, phone, tablet), and running discovery/ingest overnight without a human kickoff. Both require a sync topology *and* a safe answer to "what may a non-primary device do against a vault the primary is also dispatching against?" — without one, two machines race on card writes and corrupt the audit log. The topologies are additive and cost nothing to defer, so they are settled here and scheduled later. The deployment explanation defers the past-`local-only` substrate *to* this decision, which is its authoritative target.
 
 ## Decision
 

@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.10
+release: 0.1.0-alpha.10
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan -- v0.1.0-alpha.10
+title: Release plan -- 0.1.0-alpha.10
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan -- v0.1.0-alpha.10
+# Release plan -- 0.1.0-alpha.10
 
 **Current status: complete internal checkpoint record.** This plan covers the full
 post-alpha.9 change set, from the alpha.9 close commit
@@ -15,7 +15,7 @@ post-alpha.9 change set, from the alpha.9 close commit
 through `main` at `e56aba40` /
 [#928](https://github.com/eranroseman/memoria-vault/pull/928), plus the release
 execution fixes and evidence recorded in
-[v0.1.0-alpha.10 validation log](validation-log.md). It replaces the earlier narrow
+[0.1.0-alpha.10 validation log](validation-log.md). It replaces the earlier narrow
 Hermes-only alpha.10 framing. alpha.10 remains an internal checkpoint: no
 release-please PR, tag, or GitHub Release was cut.
 
@@ -39,7 +39,7 @@ are coherent after the navigation, schema, tutorial, and Hermes changes.
 
 ## 2. Definition of done -- gates
 
-v0.1.0-alpha.10 is complete when every gate below is closed in the release parent
+0.1.0-alpha.10 is complete when every gate below is closed in the release parent
 [#875](https://github.com/eranroseman/memoria-vault/issues/875) or its successor
 release issue, with evidence attached there. This file defines the gates; issue
 state is the source of truth.
@@ -70,7 +70,7 @@ record the skip reason and run the Runtime Gate manually on the test host.
 | Package | `scripts/verify package` passes; the disposable vault builds, hooks work, plugin bundle is present, and the workflow replay reaches the expected artifacts. |
 | Runtime | Hermes profile redeploy, contract/cost doctors, direct-tool deny, and Obsidian MCP smoke are recorded against `~/Memoria-test`, not production. |
 | Product | Manual Obsidian checks cover the rail, Inbox queue, Maintenance collection, dashboard/Bases embeds, schema-owned forms, and the sample-vault tutorial path. |
-| Release | Gate evidence is linked from the release issue; no High-priority blocker remains; this plan and the release README are current. |
+| Release | Gate evidence is linked from the release issue; no High-priority blocker remains; this plan is current. |
 
 ## 4. Blockers
 
