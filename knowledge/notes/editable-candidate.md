@@ -2,7 +2,7 @@
 type: note
 check_status: checked
 title: Editable candidate
-status: candidate
+status: accepted
 source_id: catalog/sources/source-alpha
 evidence_set:
 - catalog/sources/source-alpha/source.md
@@ -11,4 +11,4 @@ tags: []
 ---
 # Editable candidate
 
-Machine draft.
+PI-edited claim.
