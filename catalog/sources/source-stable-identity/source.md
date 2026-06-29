@@ -5,17 +5,17 @@ title: Stable Source Identity
 description: BibTeX article source.
 source_id: source-stable-identity
 item_type: article
-raw_copy_path: catalog/sources/source-stable-identity/raw/temporary2026.bib
+raw_copy_path: catalog/sources/source-stable-identity/raw/draftkey2026.bib
 content_path: catalog/sources/source-stable-identity/content.md
-raw_text_sha256: sha256:3f491449370c95ab85c505ef3a9a5d1d7b334c2762f92fca406cf001a3bd6783
+raw_text_sha256: sha256:72b743e3184816911ee7e7cecb7b04c4c2c0b411d505906e8114e359b25eee7b
 normalized_text_sha256: sha256:652515d55947b03e8d07e38628d119f113e09726711a8e1448e8eef6eb0fd92e
 metadata_status: partial
 resource: https://doi.org/10.1000/stable.2026
-citekey: temporary2026
+citekey: draftkey2026
 identifiers:
   doi: 10.1000/stable.2026
 csl_json:
-  id: temporary2026
+  id: draftkey2026
   type: article-journal
   title: Stable Source Identity
   author:
