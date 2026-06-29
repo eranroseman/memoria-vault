@@ -49,6 +49,14 @@ Post-candidate CI evidence:
   fixture that feeds the Memoria Inspector queue, lint, integrity flag, graph,
   board, audit, and fleet inputs and asserts the populated panels render the
   expected product signals.
+- A follow-up live Obsidian launch attempt on 2026-06-29 found `obsidian` and
+  `obsidian-cli` installed, with `DISPLAY=:0`, `WAYLAND_DISPLAY=wayland-0`, and
+  `XDG_RUNTIME_DIR=/run/user/1000/`. `obsidian --no-sandbox --disable-gpu
+  "obsidian://open?path=/home/eranr/Memoria-test"` processed the URI and
+  `~/.config/obsidian/obsidian.log` recorded that the main app package loaded,
+  but no Obsidian process stayed running and `obsidian-cli --help` still returned
+  `The CLI is unable to find Obsidian. Please make sure Obsidian is running and
+  try again.` This did not produce live GUI evidence.
 
 ## Test-vault runtime
 
@@ -109,10 +117,9 @@ All tracked files in `docs/releasing/0.1.0-alpha.11/tmp/` were reviewed on
 Follow-up limitations preserved from the scratch review:
 
 - visual Obsidian rendering by screenshot or human inspection was not proven in
-  this session. No display variables (`DISPLAY`, `WAYLAND_DISPLAY`, or
-  `XDG_RUNTIME_DIR`) were available even outside the sandbox, screenshot tools
-  were absent, and `obsidian-cli` could not connect because Obsidian was not
-  running. The headless Inspector render fixture proves data-to-panel rendering
+  this session. A later retry had display variables and both Obsidian commands
+  installed, but the Obsidian process still exited before `obsidian-cli` could
+  attach. The headless Inspector render fixture proves data-to-panel rendering
   for the shipped plugin, but not live Obsidian pixels, theme interaction, or
   human-attended GUI use;
 - attended Co-PI/product use in `Memoria-test` remains weaker than the local
