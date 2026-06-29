@@ -1,6 +1,6 @@
 ---
 release: 0.1.0-alpha.11
-status: candidate    # draft | candidate | complete | released
+status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan -- 0.1.0-alpha.11
 parent: Releasing
@@ -9,13 +9,13 @@ nav_order: 2
 
 # Release plan -- 0.1.0-alpha.11
 
-**Current status: candidate internal checkpoint.** alpha.11 is the fresh-sandbox
+**Current status: complete internal checkpoint.** alpha.11 is the fresh-sandbox
 reset that implements the basic knowledge cycle and tests the integrity thesis.
 It is not a formal release: no release-please PR, tag, GitHub Release, migration,
-upgrade path, or backwards-compatibility work is expected. Candidate evidence is
+upgrade path, or backwards-compatibility work is expected. Close-out evidence is
 preserved in the
 [0.1.0-alpha.11 validation log](validation-log.md); remaining limits are
-sandbox/product-evidence limits, not migration or compatibility work.
+non-sandbox/product-quality limits, not migration or compatibility work.
 
 ## 1. Scope -- what this release is
 
@@ -93,19 +93,16 @@ Issue Tracker project.
   users should not look for a GitHub Release or release-please changelog entry.
   Workaround: use this plan, merged PRs, and the release issue trail as the
   checkpoint record.
-- Limitation: alpha.11 runs on a fresh test workspace until the seeded-error bar
-  passes. Impact: no non-sandbox workspace is supported during the checkpoint.
-  Workaround: use `Memoria-test` or disposable workspaces only.
-- Limitation: model-quality wiki synthesis and visual Obsidian panel activation
-  require live/tool-specific evidence. Impact: CI can prove structure, but these
-  gates need attended/runtime proof. A headless Inspector fixture now proves
-  populated panel rendering from queue, lint, graph, journal, board, audit, and
-  fleet inputs; it does not replace live Obsidian pixel or human-use evidence.
-  Workaround: record the live evidence in the gate issue or release evidence
-  file. Zotero is in scope only as an item/source import path for alpha.11;
-  Zotero annotation import is not a release gate. The local parser-backed PDF
-  page/span/bbox fixture has passed in the Memoria-test venv; broader real-corpus
-  parser quality remains a follow-up measurement.
+- Limitation: alpha.11 is scoped to a fresh test workspace. Impact: no
+  non-sandbox workspace is supported by this checkpoint. Workaround: use
+  `Memoria-test` or disposable workspaces only.
+- Limitation: model-quality wiki synthesis, attended PI checkpoint-cost
+  calibration, and broader real-corpus parser quality remain follow-up
+  measurements before any non-sandbox production claim. Impact: CI and live
+  Obsidian checks prove the alpha.11 wiring and Inspector/product surfaces, but
+  not broad semantic quality. Workaround: carry these measurements into the next
+  checkpoint. Zotero is in scope only as an item/source import path for
+  alpha.11; no Zotero annotation import or annotation handling is assumed.
 
 ## 7. Documentation integrity
 
@@ -178,7 +175,9 @@ This checkpoint follows the untagged internal path:
    runtime skip/manual replacement evidence.
 3. Complete documentation integrity, runtime readiness, and close-out sweeps.
 4. Do not cut a tag or GitHub Release. Set this plan to `status: complete`,
-   `released: false` after the release parent issue is closed.
+   `released: false` after release close-out evidence is current and no
+   alpha.11 release parent issue, milestone issue, or High-priority blocker
+   remains open.
 5. Close the milestone, rolling unfinished issues to the next checkpoint.
 
 ## 11. Roadmap after this release

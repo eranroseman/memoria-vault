@@ -57,6 +57,24 @@ Post-candidate CI evidence:
   but no Obsidian process stayed running and `obsidian-cli --help` still returned
   `The CLI is unable to find Obsidian. Please make sure Obsidian is running and
   try again.` This did not produce live GUI evidence.
+- Final live GUI evidence on 2026-06-29 succeeded after running `obsidian-cli`
+  with `XDG_RUNTIME_DIR=/run/user/1000`. Evidence: `obsidian-cli vault
+  info=name` returned `Memoria-test`, `vault info=path` returned
+  `/home/eranr/Memoria-test`, `plugin id=memoria-inspector` returned enabled
+  version `0.1.0-alpha.11`, `command
+  id=memoria-inspector:open-memoria-inspector` executed, `dev:dom
+  selector='.memoria-inspector' text` showed the Inspector control buttons,
+  worker queue, lint, integrity, knowledge graph, board, audit, and fleet
+  panels, `dev:screenshot path=/tmp/memoria-alpha11-inspector.png` wrote a
+  1625x1392 PNG (`sha256:
+  d2e3f52e00ed2163da936e9359f79025c7fbf680e6c37d2660b5194f6b8c466d`), and
+  `dev:errors` returned `No errors captured.`
+- Additional live GUI surface checks on 2026-06-29: `plugins:enabled` included
+  `agent-client`, `dataview`, `memoria-inspector`, `obsidian-citation-plugin`,
+  and `obsidian-local-rest-api`; `dev:dom` found the Agent Client pane; the five
+  shipped spaces and five shipped dashboards opened with `No errors captured`;
+  and representative views from all seven shipped `.base` files returned through
+  `base:query` without YAML or missing-view errors.
 
 ## Test-vault runtime
 
@@ -67,7 +85,7 @@ Covered evidence:
 
 - disposable qmd bundle index/search;
 - Zotero Local API item shape. Zotero is in scope only for item/source import;
-  Zotero annotations are not an alpha.11 capability or release gate;
+  no Zotero annotation import or annotation handling is assumed;
 - PDF parser quote/page/span/bbox preservation;
 - Inspector plugin file parity, REST manifest read, command registration,
   command execution, and workspace-view registration;
@@ -95,10 +113,9 @@ detection recall `1.0`, false-positive rate `0.0`, rollback completeness `1.0`,
 residual error rate `0.0`, and ask-routed checkpoint value `1.0` for the
 deterministic fixture.
 
-Broader semantic quality, real-corpus parser quality, visual Obsidian rendering,
-and attended PI checkpoint-cost calibration remain follow-up limitations. The
-evidence above supports the sandbox checkpoint; it is not a non-sandbox
-production claim.
+Broader semantic quality, real-corpus parser quality, and attended PI
+checkpoint-cost calibration remain follow-up limitations. The evidence above
+supports the sandbox checkpoint; it is not a non-sandbox production claim.
 
 ## Tmp disposition
 
@@ -111,17 +128,14 @@ All tracked files in `docs/releasing/0.1.0-alpha.11/tmp/` were reviewed on
 | `0.1.0-alpha.11-exec-plan.md` | Work-package scope and acceptance are summarized by the release plan gates, this validation log, and passing tests. |
 | M0 and pre-approval reports/scripts | Historical feasibility evidence; superseded by source tests, package/runtime verification, and this validation log. |
 | WP1-WP8 result files | Implementation evidence summarized here; executable coverage now lives in `tests/`, `scripts/verify`, doctors, and CI. |
-| Start-blocker verifier/results | Live qmd/Zotero/PDF/Inspector/worker/source-id evidence summarized here; Zotero annotation import remains out of scope. |
+| Start-blocker verifier/results | Live qmd/Zotero/PDF/Inspector/worker/source-id evidence summarized here; Zotero is import-only, with no annotation handling assumed. |
 | WP-Gate seeded-error results | Deterministic fixture metrics summarized here; the frozen bundle and tests remain in the source tree. |
 
 Follow-up limitations preserved from the scratch review:
 
-- visual Obsidian rendering by screenshot or human inspection was not proven in
-  this session. A later retry had display variables and both Obsidian commands
-  installed, but the Obsidian process still exited before `obsidian-cli` could
-  attach. The headless Inspector render fixture proves data-to-panel rendering
-  for the shipped plugin, but not live Obsidian pixels, theme interaction, or
-  human-attended GUI use;
+- live Obsidian rendering is now proven for the alpha.11 Inspector and main
+  shipped GUI surfaces in `Memoria-test`, but this remains a sandbox checkpoint,
+  not a full non-sandbox production walkthrough;
 - attended Co-PI/product use in `Memoria-test` remains weaker than the local
   deterministic worker-boundary cycle and REST/workspace evidence;
 - broader semantic detector quality, live model-quality synthesis, larger
@@ -132,5 +146,5 @@ Follow-up limitations preserved from the scratch review:
 
 GitHub queries on 2026-06-29 found no open `0.1.0-alpha.11` milestone, release,
 or gate issues, and no `0.1.0-alpha.11` milestone exists. The release plan uses
-`status: candidate`; this validation log preserves candidate evidence toward
-close-out, not a tagged release.
+`status: complete`, `released: false`; this validation log preserves close-out
+evidence for the internal checkpoint, not a tagged release.

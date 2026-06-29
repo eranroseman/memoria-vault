@@ -4460,7 +4460,7 @@ entries:
     parent: Releasing
     release: 0.1.0-alpha.11
     released: false
-    status: candidate
+    status: complete
     title: Release plan -- 0.1.0-alpha.11
   canonical_owner: false
   status: manual

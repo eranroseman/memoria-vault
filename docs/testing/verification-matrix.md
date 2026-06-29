@@ -23,7 +23,7 @@ own command catalogs and implementation detail.
 | 6 | The alpha.11 worker cycle runs, and Hermes runtime, gateway, cron, profile registry, model endpoint, and MCP servers are live. | [Runtime](plans/runtime-gate.md) | `scripts/verify runtime` runs Source, Package, the deterministic alpha.11 cycle, then the live Hermes smoke; manual S4 checks cover attended service state. | partial | partial |
 | 7 | Obsidian bridge writes through verified HTTPS and policy gate enforcement works in `-z`, gateway, and cron modes. | [Runtime](plans/runtime-gate.md) | Allowed/denied write evidence and `hermes_contract_doctor.py`. | partial | covered |
 | 8 | Product workflow produces value: dispatch spine, ingest, classification proposal, review handoff, and review close. | [Product](plans/product-gate.md) | Deterministic alpha.11 cycle plus release validation log; attended PI/product evidence remains weaker than worker-boundary evidence. | partial | partial |
-| 9 | Product surfaces render: Obsidian plugins, Bases, dashboards, spaces, Zotero, and Agent Client. | [Manual GUI](plans/manual-gui-checks.md) | Headless Inspector render fixture plus manual GUI checklist when a live Obsidian display is available. | partial | partial |
+| 9 | Product surfaces render: Obsidian plugins, Bases, dashboards, spaces, Zotero, and Agent Client. | [Manual GUI](plans/manual-gui-checks.md) | Headless Inspector render fixture; live `obsidian-cli` Inspector DOM/screenshot; spaces, dashboards, Bases, plugins, and Agent Client checks in the alpha.11 validation log. | partial | covered |
 | 10 | Telemetry emits from live activity: board state, transitions, audit, lint findings, cost, attention, and triage. | [Product](plans/product-gate.md) | JSONL row checks after live workflow. | partial | partial |
 | 11 | Failure and recovery paths hold: denied writes leave no file, MCP-down fails closed, retry/reconcile works, dry-run is clean. | [Failure Recovery](plans/failure-recovery-checks.md) | Manual adversarial checks plus existing unit tests. | partial | partial |
 | 12 | Agent output quality is evaluated against gold tasks, not inferred from wiring success. | [Product](plans/product-gate.md) | Vault eval evidence. | no | gap |
@@ -32,8 +32,9 @@ own command catalogs and implementation detail.
 ## Open Gaps
 
 1. Product quality eval remains the main gap; wiring success is not quality.
-2. Live Obsidian GUI evidence remains partial. The Inspector panel has headless
-   render coverage, but the full manual checklist still needs an attended display.
+2. Attended product-use calibration remains weaker than deterministic
+   worker-boundary evidence; GUI surfaces are covered, but broad PI workflow cost
+   is not.
 3. Full clean-install evidence is manual until a stable self-hosted runner exists.
 4. Failure/recovery checks need periodic attended runs, not just unit tests.
 5. Performance and deployment-mode checks should be added only when they become
