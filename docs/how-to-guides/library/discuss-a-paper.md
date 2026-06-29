@@ -13,22 +13,22 @@ If the PI/Co-PI split is new, see [Home](../../README.md).
 
 ## Prerequisites
 
-- A source you've read, with a source note in `notes/sources/` ([Capture and ingest a source](capture-and-ingest.md))
+- A checked source in `catalog/sources/`, plus any checked digest or notes already created from it ([Capture and ingest a source](capture-and-ingest.md))
 - The `agent-client` Obsidian plugin connected ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md))
 
 ## Steps
 
 **1. Pick a source from the discuss queue.**
 
-Open the Library space and use the **Discuss queue** view — source notes at
-`lifecycle: provisional`, the read-not-yet-distilled stage where the queue picks
-a note up ([Frontmatter fields](../../reference/frontmatter.md)). Or open a
-source note from the Library space if you already know which one you want to
-think through.
+Open the Library space and choose a checked source or digest you want to think
+through.
 
 **2. Orient yourself first.**
 
-Re-read your **In my words** and **Worth distilling** sections, and keep `catalog/papers/<citekey>.md` open for the source metadata while you consult the paper/PDF if you need the full text. Bring a position, not a blank page.
+Re-read the digest and any checked notes, and keep
+`catalog/sources/<source_id>/source.md` open for source metadata while you
+consult the paper/PDF if you need the full text. Bring a position, not a blank
+page.
 
 **3. Open the Agent Client pane.**
 

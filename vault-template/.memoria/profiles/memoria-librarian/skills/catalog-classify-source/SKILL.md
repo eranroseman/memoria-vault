@@ -17,16 +17,15 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.patch_content
-      - obsidian.append_content
       - ingest.ingest_pipeline
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["catalog/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [paper, flag]
 ---
 
 # catalog-classify-source
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Propose how a source is filed — `research_area`, `methodology` — without ever
 deciding it. Classification is **audited metadata, not a gate** (D16/D21): your values

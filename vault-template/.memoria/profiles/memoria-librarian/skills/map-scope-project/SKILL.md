@@ -19,14 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, candidate]
 ---
 
 # map-scope-project
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Answer "what does the vault already hold on this?" for a project brief or question.
 The output is a **corpus map**: the relevant notes, clustered deterministically,
@@ -58,9 +58,9 @@ not the map's.
    almost nothing (named, not judged — gap *reporting* in depth is
    `map-report-coverage`).
 5. **Write — gated.** The map note to
-   `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>.md`. If the run explored
+   `knowledge/notes/maps/corpus-map-<project>-<YYYY-MM-DD>.md`. If the run explored
    rejected directions or dead ends worth remembering, write the companion trace note
-   `notes/fleeting/maps/corpus-map-<project>-<YYYY-MM-DD>-exploration-trace.md` before
+   `knowledge/notes/maps/corpus-map-<project>-<YYYY-MM-DD>-exploration-trace.md` before
    the card. Then raise ONE `candidate` card in `inbox/` pointing at the map (ADR-54).
    Never write under `projects/` — that zone is the PI's and the Writer's, not yours.
 
@@ -69,11 +69,11 @@ not the map's.
 - The corpus-map note: frontmatter `sources:` (folders · date range · qmd index ·
   cluster `params_echo`) for reproducibility; per-cluster sections; an explicit "thin
   or absent" list; a links-to-claims coverage table.
-- The optional exploration-trace note: `type: fleeting`, `lifecycle: proposed`,
-  `origin: agent`, stored beside the map, with structured sections for each rejected
+- The optional exploration-trace note: `type: note`, `check_status: unchecked`,
+  stored beside the map, with structured sections for each rejected
   direction: `direction`, `why_rejected`, `evidence_checked`, `retry_only_if`, and a
-  link back to the map. It stays project-local and is never auto-promoted into claims,
-  sources, hubs, or project state.
+  link back to the map. It stays project-local and is never auto-promoted into sources,
+  digests, hubs, or project state.
 - One `candidate` card (schema `candidate`, ADR-51 honesty body): `action` = "read the
   corpus map before scoping", honest `argument_against` (e.g. "retrieval was
   keyword-led; adjacent literatures the brief didn't name are invisible to this map").

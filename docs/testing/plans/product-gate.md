@@ -14,28 +14,30 @@ The Product Gate proves Memoria produces research value, not just green wiring.
 ## Preconditions
 
 - Source, Package, and Runtime gates are green.
-- Throwaway vault has a real Zotero/BBT source with a DOI or other resolvable ID.
+- Throwaway workspace has a real source available through Zotero Local API,
+  BibTeX, URL capture, or another release-scoped capture adapter.
 - Manual GUI checks are ready if the gate includes Obsidian-rendered evidence.
 
 ## Checks
 
 | Check | Pass criteria |
 | --- | --- |
-| Dispatched-card spine | A shipped lane completes dispatch -> claim -> run -> gated write -> audit -> `done`. |
-| Ingest value loop | One real source reaches a `current` paper note with `ingest_status: complete`, `_proposed_classification`, `[!brief]`, stable IDs, extract/provenance where available, and audited writes. |
-| Review handoff | The card reaches `done` with review requested and surfaces for human action. |
-| Review close | Human review promotes `_proposed_classification` into canonical fields and removes the proposal block. |
+| Worker spine | A shipped operation completes enqueue -> run -> checked Concept write -> journal/audit evidence -> `done`. |
+| Capture value loop | One real source reaches a checked catalog `source` with stable `source_id`, raw/content paths, metadata provenance where available, and traced writes. |
+| Knowledge value loop | The source produces digest/hub synthesis, an accepted anchored `note`, Ask/gap evidence, and a changed project argument view. |
+| Review handoff | Attention rows surface the needed PI action and can be acknowledged or resolved through the worker-owned path. |
+| Review close | Human review leaves a traced PI edit, acceptance, rejection, or rollback disposition; machine consumers only see checked content. |
 | Telemetry | Board state, transitions, audit, lint findings, cost, attention, and triage logs gain expected rows from the live activity. |
 | GUI product surfaces | Manual GUI checks pass for dashboards, Bases, spaces, Zotero, and Agent Client. |
 | Quality evidence | Eval/gold-task evidence exists when the release claims output-quality readiness. |
 
 ## Tier-1 Correctness
 
-For ingest reliance, spot-check 5-10 real papers:
+For capture reliance, spot-check 5-10 real sources:
 
 - multi-source merge identity and author/reference alignment;
 - tag/classification relevance;
-- extract degradation behavior for missing or bad PDFs.
+- extract degradation behavior for missing or bad source files.
 
 If the check is not acceptable, scope the release to the reliable subset instead
 of treating the product gate as green.

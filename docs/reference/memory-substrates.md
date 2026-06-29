@@ -14,8 +14,8 @@ Where each type of state lives across the Memoria + Hermes stack: substrate, pro
 
 | Substrate | Provider | Scope | Lifespan | Backing store | What it holds |
 | --- | --- | --- | --- | --- | --- |
-| **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`research-focus.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
-| **Project memory** | Memoria — vault files | One project, across lanes | Project-bound; archives with the project | `projects/<project>/` | Open questions, decisions, framing for one project. |
+| **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`steering.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
+| **Project memory** | Memoria — vault files | One project, across lanes | Project-bound; archives with the project | `knowledge/projects/<project>.md` | Open questions, decisions, framing for one project. |
 | **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, capture-intake anchors, pattern provenance, board projections, fleet metrics. |
 | **Handoff memory** (payload) | Memoria — Kanban | One card; travels across lanes | Card-bound | Card `metadata` | The handoff payload — schema owned by the [Kanban board reference](kanban-board.md). |
 | **Agent memory** (`MEMORY.md` + `USER.md`) | Hermes native | **The Co-PI only** | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-copi/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): the PI's working style. Disabled on the four specialist lanes. |
@@ -30,7 +30,7 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 
 | Rule | Details |
 | --- | --- |
-| Program memory is the PI's steering | The PI authors `research-focus.md`; every profile reads it; it never archives. |
+| Program memory is the PI's steering | The PI authors `steering.md`; every profile reads it; it never archives. |
 | Project memory is the per-project cross-lane channel | Anything that must survive across lanes within one project. Archives with the project. |
 | Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own logs (`capture-intake.jsonl`, `patterns.jsonl`). |
 | Handoff memory is per-card, not per-profile | When work moves Librarian → Writer, the payload travels with the card; the Writer does not inherit the Librarian's working memory. |
@@ -44,14 +44,14 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 
 | State type | Correct substrate | Wrong substrate (common mistake) |
 | --- | --- | --- |
-| What you want the system to pursue | Program memory (`research-focus.md`) | `project-hints.yaml` (that's config, not recall) |
-| One project's open questions / decisions | Project memory (`projects/<project>/`) | Handoff memory (card-scoped, dies with the card) |
+| What you want the system to pursue | Program memory (`steering.md`) | `project-hints.yaml` (that's config, not recall) |
+| One project's open questions / decisions | Project memory (`knowledge/projects/<project>.md`) | Handoff memory (card-scoped, dies with the card) |
 | Current task goal and context | Handoff memory (payload) | Agent memory (capped, frozen at start — and disabled on lanes) |
 | Stable facts about the environment | Co-PI `MEMORY.md` | Working memory (not persistent) |
 | The PI's preferences and style | Co-PI `USER.md` | `MEMORY.md` (keep identity vs preference separate) |
 | Cross-session retrieval | Session history | Agent memory (too small for bulk recall) |
 | Audit trail of all decisions | Audit memory (`system/logs/audit.jsonl`) | Agent memory (wrong granularity) |
-| Durable synthesized knowledge | Vault notes (`notes/claims/`, `notes/hubs/`) | Any of the above |
+| Durable synthesized knowledge | Checked Concepts under `knowledge/` | Any of the above |
 
 `SOUL.md` is **not** memory — it is the profile's identity prompt, stable across sessions by design.
 

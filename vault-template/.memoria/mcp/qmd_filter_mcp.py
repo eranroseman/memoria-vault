@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""Filtered qmd MCP wrapper for Memoria claim currency (ADR-10).
+"""Filtered qmd MCP wrapper for the alpha.11 read barrier.
 
 qmd is the local hybrid search backend. Memoria owns one extra rule over it:
-claim notes with a non-empty ``superseded_by`` relation are hidden from normal
-query/write retrieval. Callers can set ``include_superseded=True`` for explicit
-historical lookup.
+normal retrieval returns only Concepts with ``check_status: checked``.
 """
 
 from __future__ import annotations
@@ -21,52 +19,15 @@ if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
 from memoria_vault.runtime.paths import resolve_vault
+from memoria_vault.runtime.search_index import (
+    filter_checked_results,
+    is_checked_concept,
+    qmd_result_path,
+)
 
 
-def _vault_relative(ref: str, vault: Path) -> str:
-    text = ref or ""
-    if text.startswith("qmd://"):
-        parts = text.split("/", 3)
-        return parts[3] if len(parts) > 3 else ""
-    text = text.split(":", 1)[0]
-    path = Path(text.removeprefix("./"))
-    if path.is_absolute():
-        try:
-            return str(path.resolve().relative_to(vault.resolve())).replace("\\", "/")
-        except (OSError, ValueError):
-            return ""
-    return str(path).replace("\\", "/")
-
-
-def _frontmatter(path: Path) -> dict[str, Any]:
-    try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-    except OSError:
-        return {}
-    if not text.startswith("---\n"):
-        return {}
-    end = text.find("\n---", 4)
-    if end == -1:
-        return {}
-    import yaml
-
-    return yaml.safe_load(text[4:end]) or {}
-
-
-def is_superseded_claim(vault: Path, ref: str) -> bool:
-    rel = _vault_relative(ref, vault)
-    if not rel.startswith("notes/claims/"):
-        return False
-    value = _frontmatter(vault / rel).get("superseded_by")
-    return bool(value)
-
-
-def filter_results(
-    vault: Path, rows: list[dict[str, Any]], include_superseded: bool = False
-) -> list[dict[str, Any]]:
-    if include_superseded:
-        return rows
-    return [row for row in rows if not is_superseded_claim(vault, str(row.get("file", "")))]
+def filter_results(vault: Path, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return filter_checked_results(vault, rows)
 
 
 def _run(qmd: str, *args: str) -> subprocess.CompletedProcess[str]:
@@ -79,7 +40,6 @@ def _json_search(
     command: str,
     query_text: str,
     n: int,
-    include_superseded: bool,
 ) -> list[dict[str, Any]] | dict[str, str]:
     result = _run(qmd, command, query_text, "--format", "json", "-n", str(n))
     if result.returncode != 0:
@@ -90,7 +50,7 @@ def _json_search(
         return {"error": "qmd-invalid-json", "detail": str(exc)}
     if not isinstance(rows, list):
         return {"error": "qmd-invalid-json", "detail": "expected a JSON list"}
-    return filter_results(vault, rows, include_superseded)
+    return filter_results(vault, rows)
 
 
 def build_server(vault: Path, qmd: str):
@@ -99,33 +59,34 @@ def build_server(vault: Path, qmd: str):
     server = FastMCP("qmd")
 
     @server.tool()
-    def search(query: str, n: int = 5, include_superseded: bool = False):
-        """BM25 keyword search. Superseded claims are excluded unless requested."""
-        return _json_search(vault, qmd, "search", query, n, include_superseded)
+    def search(query: str, n: int = 5):
+        """BM25 keyword search over checked Concepts."""
+        return _json_search(vault, qmd, "search", query, n)
 
     @server.tool()
-    def query(query: str, n: int = 5, include_superseded: bool = False):
-        """Hybrid qmd query. Superseded claims are excluded unless requested."""
-        return _json_search(vault, qmd, "query", query, n, include_superseded)
+    def query(query: str, n: int = 5):
+        """Hybrid qmd query over checked Concepts."""
+        return _json_search(vault, qmd, "query", query, n)
 
     @server.tool()
-    def vsearch(query: str, n: int = 5, include_superseded: bool = False):
-        """Vector search. Superseded claims are excluded unless requested."""
-        return _json_search(vault, qmd, "vsearch", query, n, include_superseded)
+    def vsearch(query: str, n: int = 5):
+        """Vector search over checked Concepts."""
+        return _json_search(vault, qmd, "vsearch", query, n)
 
     @server.tool()
-    def deep_search(query: str, n: int = 5, include_superseded: bool = False):
+    def deep_search(query: str, n: int = 5):
         """Compatibility alias for hybrid qmd query."""
-        return _json_search(vault, qmd, "query", query, n, include_superseded)
+        return _json_search(vault, qmd, "query", query, n)
 
     @server.tool()
-    def get(file: str, include_superseded: bool = False) -> str | dict[str, str]:
-        """Fetch a document. Superseded claims require explicit historical lookup."""
-        if is_superseded_claim(vault, file) and not include_superseded:
+    def get(file: str) -> str | dict[str, str]:
+        """Fetch a checked document."""
+        rel = qmd_result_path(file, vault)
+        if not is_checked_concept(vault, rel):
             return {
-                "error": "superseded-claim",
-                "file": file,
-                "message": "superseded claim hidden by default; retry with include_superseded=True",
+                "error": "unchecked-concept",
+                "file": rel or file,
+                "message": "Concept is not checked; retrieval is blocked by the read barrier.",
             }
         result = _run(qmd, "get", file)
         if result.returncode != 0:

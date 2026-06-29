@@ -101,24 +101,32 @@ def test_policy_mcp():
             )
 
         # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
-        # Mirror the five real .memoria/lane-overrides/*.yaml (ADR-48) so the gate
-        # contract for every shipped agent is unit-covered, plus a synthetic
-        # maintenance lane exercising the auto-fix class machinery.
+        # Mirror the five real .memoria/lane-overrides/*.yaml so the gate contract
+        # for every shipped agent is unit-covered, plus synthetic lanes exercising
+        # generic write/auto-fix machinery.
         engineer = LanePolicy(
             profile="memoria-engineer",
-            allow_write=["projects/*/code/**"],
-            deny_write=["notes/**", "catalog/**", "inbox/**", "system/**"],
+            allow_write=[],
+            deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
-            write_scope=["projects/*/code/"],
+            write_scope=[],
         )
         writer = LanePolicy(
             profile="memoria-writer",
-            allow_write=["projects/**", "notes/hubs/**"],
-            deny_write=["notes/claims/**", "catalog/**", "inbox/**", "system/**"],
+            allow_write=[],
+            deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
+            write_scope=[],
         )
         copi = LanePolicy(
             profile="memoria-copi", allow_write=[], deny_write=["**"], require=["audit_log"]
+        )
+        write_fixture = LanePolicy(
+            profile="memoria-write-fixture",
+            allow_write=["projects/**"],
+            deny_write=["notes/claims/**", "catalog/**", "inbox/**", "system/**"],
+            require=["audit_log"],
+            write_scope=["projects/"],
         )
         maintenance = LanePolicy(
             profile="memoria-linter-engine",
@@ -131,22 +139,33 @@ def test_policy_mcp():
         )
         librarian = LanePolicy(
             profile="memoria-librarian",
-            allow_write=["inbox/**", "catalog/**", "notes/fleeting/**", "notes/sources/**"],
+            allow_write=[],
             deny_write=[
-                "notes/claims/**",
-                "notes/hubs/**",
+                "catalog/**",
+                "knowledge/**",
+                "capabilities/**",
+                "inbox/**",
+                "notes/**",
                 "projects/**",
                 "system/**",
             ],
             require=["audit_log"],
-            write_scope=["inbox/", "catalog/", "notes/fleeting/", "notes/sources/"],
+            write_scope=[".memoria/staging/catalog/", ".memoria/staging/knowledge/"],
         )
         peer_reviewer = LanePolicy(
             profile="memoria-peer-reviewer",
-            allow_write=["inbox/**"],
-            deny_write=["notes/**", "catalog/**", "projects/**", "system/**"],
+            allow_write=[],
+            deny_write=[
+                "notes/**",
+                "knowledge/**",
+                "catalog/**",
+                "capabilities/**",
+                "inbox/**",
+                "projects/**",
+                "system/**",
+            ],
             require=["audit_log"],
-            write_scope=["inbox/"],
+            write_scope=[],
         )
 
         d = lambda p, a, pa, fl=None, sk=None: (
@@ -157,8 +176,8 @@ def test_policy_mcp():
         # B5c: every mutating allow is audited — a write/append/move that passes
         # the lane returns allow_with_log, never a bare (possibly unlogged) allow.
         check(
-            "Engineer write to own code scope -> allow_with_log",
-            d(engineer, "write", "projects/x/code/main.py") == "allow_with_log",
+            "Write fixture write to own scope -> allow_with_log",
+            d(write_fixture, "write", "projects/x/code/main.py") == "allow_with_log",
         )
         check(
             "Engineer write to notes -> deny (lane deny)",
@@ -169,12 +188,12 @@ def test_policy_mcp():
             d(engineer, "write", "99-nowhere/x.md") == "deny",
         )
         check(
-            "Writer write to project scratch -> allow_with_log",
-            d(writer, "write", "projects/x/draft.md") == "allow_with_log",
+            "Writer write to project scratch -> deny (deferred)",
+            d(writer, "write", "projects/x/draft.md") == "deny",
         )
         check(
-            "Writer write to review-gated reference -> dry_run (degrade)",
-            d(writer, "write", "notes/hubs/r.md") == "dry_run",
+            "Writer write to review-gated reference -> deny (deferred)",
+            d(writer, "write", "notes/hubs/r.md") == "deny",
         )
         check(
             "Writer write to claims -> deny (lane deny beats degrade)",
@@ -222,27 +241,27 @@ def test_policy_mcp():
             d(engineer, "delete", "projects/x/code/old.py") == "deny",
         )
         check(
-            "Engineer delete with explicit_authorization in scope -> allow_with_log",
-            d(engineer, "delete", "projects/x/code/old.py", {"explicit_authorization": True})
+            "Write fixture delete with explicit_authorization in scope -> allow_with_log",
+            d(write_fixture, "delete", "projects/x/code/old.py", {"explicit_authorization": True})
             == "allow_with_log",
         )
         check(
-            "Engineer mkdir in write_scope -> allow",
-            d(engineer, "mkdir", "projects/x/code/sub") == "allow",
+            "Write fixture mkdir in write_scope -> allow",
+            d(write_fixture, "mkdir", "projects/x/code/sub") == "allow",
         )
         check("Engineer report -> allow", d(engineer, "report", "projects/x/code/") == "allow")
 
         # ---- skill-conditional one-way narrowing ------------------------------- #
-        # counter-outline narrows Writer to framing-only; drafts then deny.
-        co_deny = compose_skill_deny(writer, {"deny": {"write": ["projects/*/drafts/**"]}})
+        # counter-outline narrows a write-enabled fixture to framing-only; drafts then deny.
+        co_deny = compose_skill_deny(write_fixture, {"deny": {"write": ["projects/*/drafts/**"]}})
         check("counter-outline composes a draft-deny", co_deny == ["projects/*/drafts/**"])
         check(
             "Writer+counter-outline: draft write now denied",
-            d(writer, "write", "projects/x/drafts/d.md", None, co_deny) == "deny",
+            d(write_fixture, "write", "projects/x/drafts/d.md", None, co_deny) == "deny",
         )
         check(
             "Writer+counter-outline: framing write still allowed (with log)",
-            d(writer, "write", "projects/x/framing/f.md", None, co_deny) == "allow_with_log",
+            d(write_fixture, "write", "projects/x/framing/f.md", None, co_deny) == "allow_with_log",
         )
 
         # ---- L2 gate-contract: per-profile write-walls (hermes-cli §4/§5) ------- #
@@ -251,9 +270,9 @@ def test_policy_mcp():
         # (Since B5c, every allowed mutating write IS the allow_with_log decision —
         # the audit chain has no unlogged-allow hole left.)
         check(
-            "L1/L2 Librarian write to candidates + sources -> allow_with_log",
-            d(librarian, "write", "catalog/papers/smithA.md") == "allow_with_log"
-            and d(librarian, "write", "inbox/candidate-x.md") == "allow_with_log",
+            "Librarian direct write to catalog/inbox -> deny",
+            d(librarian, "write", "catalog/sources/smith/source.md") == "deny"
+            and d(librarian, "write", "inbox/candidate-x.md") == "deny",
         )
         check(
             "X1 Librarian write to claims -> deny (write-wall)",
@@ -265,9 +284,9 @@ def test_policy_mcp():
             and d(librarian, "write", "system/templates/claim.md") == "deny",
         )
         check(
-            "V1/V2 Peer-reviewer write to inbox cards -> allow_with_log",
-            d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "allow_with_log"
-            and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "allow_with_log",
+            "Peer-reviewer direct write to inbox cards -> deny",
+            d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "deny"
+            and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "deny",
         )
         check(
             "V1 Peer-reviewer write to the draft under test -> deny (no self-edit)",

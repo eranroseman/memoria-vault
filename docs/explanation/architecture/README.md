@@ -38,13 +38,18 @@ The "is it an agent or an operation?" question is decided by posture and LLM jud
 
 The strict each-layer-depends-only-on-the-one-below contract holds along the **agent write-path** (Co-PI → Tasks → MCP → Operations/Vault). The PI and trusted automation are **direct edges, not rungs**: the PI edits the Vault directly in Obsidian, and cron, CI, and the PI invoke operations directly. Read the stack as a dependency *order*, not a claim that every actor traverses all seven layers.
 
-**MCP is a policy gate, not an execution sandbox.** The MCP layer validates every agent request — allow-listing tools, scoping writes, rate-limiting, logging — before it touches the Vault or an external API. It does not confine processes; the honest phrase is *policy-sandboxed via MCP*. Under the solo, local premise the threat is *wrong writes*, not tenant escape, and the policy gate plus propose-not-dispose, the gated zones, the audit log, and git history cover it. Execution isolation is deferred until untrusted third-party code is actually run.
+**MCP is a policy gate, not an execution sandbox.** The MCP layer validates agent
+requests before they touch the vault or an external API. It does not confine
+processes; the honest phrase is *policy-sandboxed via MCP*. Under the solo,
+local premise the threat is wrong writes, not tenant escape. Alpha.11's hard
+write boundary is the trusted worker plus staging, read barrier, quarantine,
+journal, and git history.
 
 ## Documents in this section
 
 | Page | What it covers |
 | --- | --- |
-| [The vault](vault.md) | The vault's category folders, type homes, gated zones, archived-as-state, and how Bases and the Linter keep it sound. |
+| [The vault](vault.md) | The vault's bundle roots, Concept homes, write boundary, and how Bases and the Linter keep it sound. |
 | [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the Co-PI is the sole memory carrier. |
 | [Interaction channels](interaction-channels.md) | The interaction surfaces — Obsidian, CLI, Telegram — and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |

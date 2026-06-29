@@ -43,11 +43,11 @@ The active note is passed as a readable reference; attach others when the questi
 
 The Co-PI reads the vault directly and never writes (hybrid keyword + vector
 search over Memoria's filtered `qmd` MCP, plus the typed graph — [The
-Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Current retrieval excludes claim
-notes that carry `superseded_by`; ask explicitly for historical/superseded claims
-when you are reconstructing what changed. Push on it: "which note says that?",
-"what disagrees with this?". An assertion it can't ground in a note of yours is
-its synthesis, not your knowledge — treat it accordingly.
+Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Current retrieval
+returns only Concepts with `check_status: checked`; unchecked or quarantined
+machine output stays invisible until the worker promotes it. Push on it: "which
+note says that?", "what disagrees with this?". An assertion it can't ground in a
+note of yours is its synthesis, not your knowledge — treat it accordingly.
 
 **3. Keep what's worth keeping — yourself.**
 

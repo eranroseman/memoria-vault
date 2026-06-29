@@ -23,11 +23,12 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 
 **If the Agent Client pane is unresponsive** — the terminal is always the fallback: the pane and the palette macros shell out to the same `hermes kanban create`. A direct lane chat (`hermes -p memoria-librarian chat`) also works as a debugging posture.
 
-**If enrichment APIs are unreachable** — ingest still creates the Catalog entity from the `.bib` metadata; the per-field provenance records what's missing. The enrichment fills in on a later re-ingest once connectivity is restored — a thin entity is better than a deferred ingest.
+**If enrichment APIs are unreachable** — capture still creates the source Concept from supplied Zotero/BibTeX metadata; the per-field provenance records what's missing. The enrichment fills in on a later metadata check once connectivity is restored — a thin source is better than a deferred capture.
 
-**If `.bib` is not synced** — push it manually first, then ingest: [Fix a stale .bib](../zotero/fix-stale-bib.md).
+**If `references.bib` is stale** — regenerate it from checked sources: [Fix a stale .bib](../zotero/fix-stale-bib.md).
 
-**Never run automatically:** a schema migration. Schema changes require human review of every proposed field change ([Run a schema migration](../operate/run-a-schema-migration.md)).
+**Never run automatically:** a schema reshape. Alpha.11 has no runtime migration
+path; schema changes are release work against the fresh template.
 
 ---
 
@@ -57,7 +58,7 @@ without any Hermes involvement.
 ```bash
 pandoc projects/<slug>/<draft>.md \
   --citeproc \
-  --bibliography .memoria/memoria.bib \
+  --bibliography references.bib \
   --csl .memoria/csl/<style>.csl \
   -o /tmp/<output>.docx
 ```

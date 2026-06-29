@@ -10,7 +10,7 @@ nav_order: 60
 # Failure Recovery Checks
 
 These checks prove Memoria fails closed and can recover from common interrupted
-states. Run them for releases that touch policy, ingest, MCP, installer, cron, or
+states. Run them for releases that touch policy, capture, MCP, installer, cron, or
 workflow replay.
 
 ## Checks
@@ -20,8 +20,8 @@ workflow replay.
 | Forbidden write | No target file is created; audit records `deny`. |
 | Gate error | The write fails closed, with no un-audited file mutation. |
 | Obsidian MCP down | Agent reports the bridge failure; no raw filesystem fallback write occurs. |
-| Duplicate ingest | Re-running the same citekey does not create a duplicate canonical note. |
-| Tier-0 interruption | A note stuck at `ingest_status: tier0` is found by retry/reconcile and re-driven. |
+| Duplicate capture | Re-running the same source ID or citekey reuses the stable source path instead of creating a duplicate source. |
+| Queue interruption | A job left in `running` or `failed` is visible, retryable, and does not expose unchecked output to machine consumers. |
 | Dry-run path | Peer-reviewer and deterministic dry-run checks leave target files byte-identical. |
 | Installer re-run | Re-running install against the throwaway vault is idempotent. |
 | Cron recovery | A safe cron can be run manually after missed schedule time and emits expected logs. |

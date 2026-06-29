@@ -1,16 +1,18 @@
 type: organization
 category: catalog
 gated: false
-initial_lifecycle: current
+initial_check_status: unchecked
 enums:
-  lifecycle: [current, archived]
+  check_status: [unchecked, checked, quarantined]
 required:
   type: literal:organization
-  lifecycle: enum:lifecycle
-  name: str
+  check_status: enum:check_status
+  title: str
+  description: str
+  canonical_name: str
 optional:
-  subtype: str # lab · university · company · funder …
-  location: str
-  relationships: map
-  sample: bool
-  created: date
+  resource: str
+  external_ids: map
+  metadata: map
+  links: map
+  tags: list

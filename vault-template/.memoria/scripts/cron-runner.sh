@@ -20,13 +20,18 @@ case "$job" in
     ;;
   sweeps)
     run_py "$vault/.memoria/operations/cleanup/reconcile.py" --vault "$vault"
-    run_py "$vault/.memoria/operations/cleanup/archive_inbox.py" --vault "$vault"
     heartbeat="memoria-sweeps"
+    ;;
+  worker)
+    run_py -m memoria_vault.runtime.worker --vault "$vault" observe-pi-edits
+    run_py -m memoria_vault.runtime.worker --vault "$vault" run-pending --limit 10
+    heartbeat="memoria-worker"
     ;;
   lint)
     run_py "$vault/.memoria/operations/integrity/linter/detectors.py" --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
     run_py "$vault/.memoria/operations/integrity/linter/golden_restore.py" --vault "$vault" check
     run_py "$vault/.memoria/operations/integrity/linter/session_summary.py" --vault "$vault"
+    run_py -m memoria_vault.runtime.worker --vault "$vault" integrity-sweep
     heartbeat="memoria-lint"
     ;;
   metrics)

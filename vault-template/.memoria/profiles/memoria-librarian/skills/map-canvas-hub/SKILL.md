@@ -19,14 +19,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["notes/fleeting/", "inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [fleeting, candidate]
 ---
 
 # map-canvas-hub
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Give the PI one spatial index into the maps instead of a folder of loose canvases. The
 other map skills each emit a single view (a claim graph, a cluster map, a topic seed);
@@ -39,12 +39,12 @@ nodes are organized by what links to what, never by a calibrated cutoff.
 
 | Input | Required | Meaning |
 | --- | --- | --- |
-| scope | no | Which maps to hub (default: all `notes/fleeting/maps/` artifacts + the standard dashboards). |
+| scope | no | Which maps to hub (default: all `knowledge/notes/maps/` artifacts + the standard dashboards). |
 | focus | no | A topic/project to foreground at the centre of the hub. |
 
 ## Procedure
 
-1. **Inventory the maps**: `obsidian.list_files` over `notes/fleeting/maps/` for
+1. **Inventory the maps**: `obsidian.list_files` over `knowledge/notes/maps/` for
    existing `.canvas` artifacts and their companion notes; include the standard
    dashboards (`system/dashboards/*.md`). Use `cluster_build_graph` only to order the
    hub by which maps share notes — structure, not score.
@@ -53,7 +53,7 @@ nodes are organized by what links to what, never by a calibrated cutoff.
    `focus`, if given, placed centrally. Prefer `cluster_emit_canvas` for a consistent
    layout when the hub is graph-derived; otherwise compose the canvas directly.
 3. **Write — gated.** The hub to
-   `notes/fleeting/maps/canvas-hub-<YYYY-MM-DD>.canvas` plus a companion note (same
+   `knowledge/notes/maps/canvas-hub-<YYYY-MM-DD>.canvas` plus a companion note (same
    stem, `.md`) recording provenance: which artifacts were included, which were skipped
    and why, and `params_echo`. Never write under `projects/` or `notes/hubs/`.
 4. **Propose**: ONE `candidate` card in `inbox/` pointing at the hub (ADR-54).

@@ -16,12 +16,13 @@ claim is true.
 
 ## 1. Citation check
 
-Every `[@citekey]` in the draft must resolve to a real paper note in `catalog/papers/`.
+Every `[@citekey]` in the draft must resolve to a real generated bibliography row and
+checked source Concept under `catalog/sources/`.
 
 The token side is purely deterministic: citation extraction is a regex pass over the draft,
-and each extracted citekey is looked up against `.memoria/memoria.bib` and the corresponding
-paper note. An unresolved citekey — one with no matching bib entry or no paper note — is a
-critical finding.
+and each extracted citekey is looked up against `references.bib` and the corresponding
+source Concept. An unresolved citekey — one with no matching bibliography row or checked
+source — is a critical finding.
 
 The claim-source side is the one hybrid step in the whole skill. Matching a claim's prose to
 the cited source uses embedding similarity as a pre-filter, then bands the score:
@@ -41,46 +42,41 @@ where the embedding score genuinely lands in the ambiguous gap.
 
 ## 2. Claim-trace check
 
-Every substantive factual claim in the draft must trace to a supporting claim note in
-`notes/claims/`. Trace order matters, and it is followed in this fixed sequence:
+Every substantive factual claim in the draft must trace to a supporting checked
+claim-bearing note in `knowledge/notes/`. Trace order matters, and it is followed in
+this fixed sequence:
 
-1. **Explicit `[[wikilink]]`** to a claim note — a deterministic graph walk. If the claim
-   carries a wikilink to a claim note, that is the trace; no similarity math is needed.
-2. **`[@citekey]` mention plus prose embedding similarity** to the cited source's claim notes
-   — deterministic. When the claim cites a source, the candidate claim notes are the ones
-   derived from that source, and the prose is matched against them by embedding similarity.
-3. **Similarity search across all claim notes** when there is no wikilink and no citekey
-   context — deterministic ranking of candidates. An LLM verdict is taken on the top
-   candidates only when the similarity score is ambiguous; a confident top match needs no
-   LLM.
+1. **Explicit `[[wikilink]]`** to a checked claim-bearing note — a deterministic graph
+   walk. If the claim carries a wikilink to such a note, that is the trace; no
+   similarity math is needed.
+2. **`[@citekey]` mention plus prose embedding similarity** to checked notes derived
+   from the cited source — deterministic. When the claim cites a source, candidate
+   notes are the ones derived from that source, and the prose is matched against them.
+3. **Similarity search across all checked claim-bearing notes** when there is no
+   wikilink and no citekey context — deterministic ranking of candidates. An LLM
+   verdict is taken on the top candidates only when the similarity score is ambiguous;
+   a confident top match needs no LLM.
 
 A claim that traces by any of the three routes is traced. A claim that fails all three is a
-failed trace, and each failed trace spawns a gap card at
-`inbox/gap-<slug>.md` (`type: candidate-note`, `source: gap`,
-`candidate_status: pending-screen`) with a backlink to the verification report. Librarian
-picks these up at the next discovery pass.
+failed trace, and each failed trace requests a worker-owned gap attention item with a
+backlink to the verification report. Librarian picks these up at the next discovery pass.
 
-Failure modes to watch for: a claim with a wikilink that points at a non-claim note (the
-graph walk lands outside `notes/claims/` — treat as untraced, not traced); and a
-citekey present but no claim notes derived from that source yet (fall through to route 3
-rather than auto-failing).
+Failure modes to watch for: a claim with a wikilink that points at a non-claim-bearing
+note (treat as untraced, not traced); and a citekey present but no checked notes derived
+from that source yet (fall through to route 3 rather than auto-failing).
 
-## 3. Duplicate check, filing-time
+## 3. Near-duplicate review
 
-A point-of-action shadow check run by QuickAdd when a new claim note is about to be filed.
-It computes cosine similarity between the new claim's embedding and the existing claim notes
-through the **shared `qmd` vector index** — the same similarity primitive the Librarian uses
-for the `[!brief]` neighbours and the map lane for `find related`, just with the
-Peer-reviewer's own threshold — returns the top 3 by score, and flags at roughly 0.8. It is
-**fully deterministic — no LLM call** — and it never blocks filing.
+Near-duplicate handling is review-only. The check compares a candidate or checked
+claim-bearing note against checked claim-bearing notes through qmd/BM25 retrieval and
+simple lexical overlap, then surfaces the top candidates for human review. It is
+deterministic and never auto-merges.
 
-A flag attaches a `near-duplicate-candidate` marker to the card and surfaces the top matches
-as a callout comment. The human decides whether to file, merge, or extend; the check never
-auto-merges and never auto-files.
+A flag carries the candidate, likely neighbours, and field-level provenance. The human
+decides whether to merge, supersede, or keep distinct; the check never edits Concepts.
 
-No standalone `similarity-check` command ships today. The shipped surface is the QuickAdd
-shadow report plus `system/logs/pre-file-similarity.jsonl`; retrospective duplicate sweeps
-remain planned operation work.
+No standalone `similarity-check` command and no QuickAdd pre-file similarity telemetry
+ship in alpha.11. Retrospective duplicate sweeps remain planned operation work.
 
 False-positive handling: a high similarity score between two claims that are genuinely
 distinct (e.g., same topic, opposite finding) is expected and is exactly why the check is
@@ -88,14 +84,11 @@ informational rather than blocking — surface it and let the human judge.
 
 ## 4. Duplicate sweep, retrospective (find-duplicates)
 
-A monthly retrospective sweep for near-duplicate claim notes across the whole index. It is the
-**same `qmd` similarity primitive as the filing-time `similarity-check`, swept over every
-claim note** instead of one: collect each note's high-similarity neighbours (those above the
-dup threshold) and group the resulting pairs by transitive linkage into candidate clusters,
-emitted as a ranked list for human review. (No HDBSCAN — true density clustering would need
-`scikit-learn`, which this lane doesn't grant, and pairwise near-duplicate detection is the
-right tool for dedup regardless.) Like the filing-time check it is **fully deterministic — no
-LLM call — and dry-run only**: it never merges, deletes, or edits a claim note.
+A monthly retrospective sweep for near-duplicate claim-bearing notes across the checked
+Concept corpus. It collects each note's high-similarity neighbours and groups the
+resulting pairs by transitive linkage into candidate clusters, emitted as a ranked list
+for human review. It is deterministic and dry-run only: it never merges, deletes, or
+edits a note.
 
 The output is written to the monthly report (e.g.
 `projects/maintenance/duplicates-<YYYY-MM>.md`); the human-side ritual is the monthly

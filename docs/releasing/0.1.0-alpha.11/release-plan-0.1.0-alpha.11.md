@@ -41,8 +41,8 @@ issue state is the source of truth.
 | G1 Source contract | The alpha.11 schema/folder model, operation policy, worker boundary, projection generators, release docs, and system docs agree with the design source of truth. | `scripts/verify pr`, `docs_doctor`, `status_doctor`, `agents_doctor`, focused schema/policy tests. |
 | G2 Fresh sandbox package | A fresh alpha.11 workspace initializes with `catalog/`, `knowledge/`, `capabilities/`, `steering.md`, journal, queue, projections, and disposable qmd index; no migration input is required. | Package/skeleton tests, projection drift check, checked-only qmd BM25 rebuild. |
 | G3 Basic knowledge cycle | One real source goes through capture, metadata, conversation, digest/hub compounding, anchored notes/claims, Ask/gap analysis, and re-run in Obsidian. | End-to-end run in `Memoria-test` plus evidence file. |
-| G4 Integrity spine | Trusted writes, PI-edit backfill, foreign quarantine, read barrier, structural checks, act/ask/drop routing, and cascade rollback all fire with traced events. | Writer/journal tests, boundary-deny tests, seeded structural fixture. |
-| G5 Seeded-error verdict | The frozen seeded-error bundle measures recall, false positives, rollback completeness, residual error versus baseline, and human-checkpoint value per error class. | Batch runner results; bar met or targeted gating added and retested. |
+| G4 Integrity spine | Trusted writes, PI-edit backfill, foreign quarantine, read barrier, structural checks, act/ask/drop routing, and cascade rollback all fire with traced events. | Writer/journal tests, `tests/test_integrity.py`, boundary-deny tests, seeded structural fixture. |
+| G5 Seeded-error verdict | The frozen seeded-error bundle measures recall, false positives, rollback completeness, residual error versus baseline, and human-checkpoint value per error class. | `system/eval/alpha11-seeded-errors.json`, `tests/test_seeded_errors.py`, batch runner results; bar met or targeted gating added and retested. |
 | G6 Documentation and release readiness | System documentation, ADRs, release plan, and tracked `tmp/` disposition agree with the built alpha.11 behavior. | Documentation sweep, release close-out sweep, checker summary. |
 
 ## 3. Validation -- stages
@@ -93,10 +93,13 @@ Issue Tracker project.
 - Limitation: alpha.11 runs on a fresh test workspace until the seeded-error bar
   passes. Impact: no non-sandbox workspace is supported during the checkpoint.
   Workaround: use `Memoria-test` or disposable workspaces only.
-- Limitation: PDF span preservation, model-quality wiki synthesis, and visual
-  Obsidian panel activation require live/tool-specific evidence. Impact: CI can
-  prove structure, but these gates need attended/runtime proof. Workaround:
-  record the live evidence in the gate issue or release evidence file.
+- Limitation: model-quality wiki synthesis and visual Obsidian panel activation
+  require live/tool-specific evidence. Impact: CI can prove structure, but these
+  gates need attended/runtime proof. Workaround: record the live evidence in the
+  gate issue or release evidence file. Zotero is in scope only as an item/source
+  import path for alpha.11; Zotero annotation import is not a release gate. The
+  local parser-backed PDF page/span/bbox fixture has passed in the Memoria-test
+  venv; broader real-corpus parser quality remains a follow-up measurement.
 
 ## 7. Documentation integrity
 
@@ -135,8 +138,7 @@ Record:
 2. Worker write, PI-edit backfill, foreign quarantine, projection regeneration,
    and checked-only qmd rebuild.
 3. Obsidian Local REST bridge and plugin panel activation in `Memoria-test`.
-4. Zotero Local API item/annotation import and the selected PDF parser's
-   page/span/bbox preservation.
+4. Zotero Local API item import and selected-PDF-parser page/span/bbox evidence.
 5. One full source-to-gap-analysis cycle, including trace-to-rollback.
 6. Seeded-error verdict bundle and per-class results.
 

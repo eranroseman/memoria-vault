@@ -23,14 +23,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/", "notes/fleeting/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [candidate, fleeting]
 ---
 
 # catalog-find-source
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Find what the corpus is missing. Given a question, topic, or gap card, search the
 literature through the **`paper_search` MCP only** (the `web` toolset is disabled —

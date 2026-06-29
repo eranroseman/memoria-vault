@@ -1,35 +1,24 @@
 ---
 title: Library
-type: space
-lifecycle: current
+projection: space
 dashboard: space
-space: library
+surface: library
 cssclasses: memoria-space
 ---
 
 # Library
 
-> [!brief] Nothing here yet? Capture a source from Zotero or URL. Manual entry uses
-> the same source form, so all source notes follow the same schema.
+> [!brief] Nothing here yet? Enqueue source capture from the Inspector control
+> panel. Checked sources appear here after the worker promotes them.
 
 > [!suggestions] First actions
-> - Use **Memoria: capture source from URL** for a DOI, PMID, arXiv URL, or paper URL.
-> - Use **Memoria: capture from Zotero selection** after selecting an item in Zotero.
-> - Use **Memoria: structured source capture** when you already know the source details.
+> - Use **Memoria: open Inbox** to see capture or check work needing attention.
 
-## Reading pipeline
+## Sources
 
-![[sources.base#Reading pipeline]]
+![[catalog.base#Sources]]
 
-## Discuss queue
-
-![[sources.base#Discuss queue]]
-
-## Catalog
-
-![[catalog.base#Papers]]
-
-Reading pipeline items distill into claims in the Knowledge space.
+Reading pipeline items compound into digests, notes, and hubs in the Knowledge space.
 
 ## Guides
 

@@ -29,7 +29,6 @@ Every signal Memoria records about its own operation, with log inventory and sha
 | `cost-misses.jsonl` | `board_export.py` | per export run | one completed card whose Hermes session join could not be completed |
 | `attention.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI-side card-open-to-resolve timing sample |
 | `triage.jsonl` | Obsidian QuickAdd | per Inbox resolve action | one PI triage decision over an Inbox card |
-| `pre-file-similarity.jsonl` | Obsidian QuickAdd | per claim/source note creation | qmd top-neighbour shadow check before filing |
 | `blind-review-samples.jsonl` | `board_export.py` | per export run | one terminal review selected for blind re-review |
 | `linkage.jsonl` | ingest `link.py` | per ingest with ID-missing names | by-name entity collision counters the linker refused to merge |
 | `cron-heartbeat.jsonl` | cron wrappers | per successful cron job | last-successful-run heartbeat for always-on trigger detection |

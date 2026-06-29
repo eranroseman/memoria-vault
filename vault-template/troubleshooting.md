@@ -16,7 +16,7 @@ Quick checks that the system itself is up (run from a terminal):
 | Hermes + profiles | `hermes profile list` | all 5 `memoria-*` profiles respond |
 | Gateway / API | `hermes gateway status` | running on `:8642` |
 | Policy + obsidian MCP | trigger a write, watch `system/logs/audit.jsonl` | new `allow_with_log` or `dry_run` rows appear |
-| Cron scheduler | [[board-state\|Board State]] § Live worker cards | the five standard tasks show recent runs |
+| Cron scheduler | [[board-state\|Board State]] § Live worker cards | the six standard tasks show recent runs |
 | Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
 
 Profiles: `memoria-{copi, librarian, writer, peer-reviewer, engineer}`.
@@ -42,14 +42,14 @@ Step-by-step recipes for the common ones: [stuck card](https://eranroseman.githu
 
 The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/safe-mode); the essentials:
 
-**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `catalog/papers/<citekey>.md` from the [[paper|paper template]] with `citekey`, `title`, `lifecycle: proposed`. Librarian enriches it when back up. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/library/capture-and-ingest).)
+**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `catalog/sources/<source_id>/source.md` with `type: source`, `source_id`, `title`, `description`, and `check_status: unchecked`. The worker observes and checks it when the runtime is healthy. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/library/capture-and-ingest).)
 
 **Review ([policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** fail-closed writes will block. Work manually in Obsidian, commit often, and redeploy profiles when the gate is healthy.
 
 **Export (Peer-reviewer/Writer down):** verify citekeys resolve manually, then run Pandoc directly — skip cite-check / similarity-check, rely on human review (Pandoc/CSL details: [export reference](https://eranroseman.github.io/memoria-vault/reference/export)):
 
 ```bash
-pandoc draft.md --bibliography .memoria/memoria.bib --csl .memoria/csl/apa.csl -o output.docx
+pandoc draft.md --bibliography references.bib --csl .memoria/csl/apa.csl -o output.docx
 ```
 
 ## Recover

@@ -11,18 +11,16 @@ def _vault(tmp_path: Path) -> Path:
     lo.mkdir(parents=True)
     (lo / "librarian.yaml").write_text(
         "profile: memoria-librarian\nrouting:\n  write_scope:\n"
-        '    - "inbox/"\n    - "catalog/"\n'
-        '    - "notes/fleeting/"\n    - "notes/sources/"\n',
+        '    - "catalog/"\n    - "knowledge/notes/maps/"\n',
         encoding="utf-8",
     )
     return tmp_path
 
 
 def _claim(vault: Path, name: str, topics: str = "[sleep]") -> None:
-    (vault / "notes/claims").mkdir(parents=True, exist_ok=True)
-    (vault / f"notes/claims/{name}.md").write_text(
-        "---\ntype: claim\nlifecycle: current\nmaturity: seedling\n"
-        f"title: {name}\nsources: ['@x2024']\ntopics: {topics}\n---\nBody.\n",
+    (vault / "knowledge/notes").mkdir(parents=True, exist_ok=True)
+    (vault / f"knowledge/notes/{name}.md").write_text(
+        f"---\ntype: note\ncheck_status: checked\ntitle: {name}\ntags: {topics}\n---\nBody.\n",
         encoding="utf-8",
     )
 
@@ -58,19 +56,18 @@ def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
     assert cmd[cmd.index("--idempotency-key") + 1] == "hub-threshold-sleep"
     body = cmd[cmd.index("--body") + 1]
     allowed = body.split("## Allowed paths", 1)[1].split("## Expected outputs", 1)[0]
-    assert "notes/fleeting/maps/" in allowed
-    assert "inbox/" in allowed
-    assert "notes/hubs/" not in allowed
-    assert "Do not write, move, or create files under notes/hubs/" in body
+    assert "knowledge/notes/maps/" in allowed
+    assert "knowledge/hubs/" not in allowed
+    assert "Do not write, move, or create files under knowledge/hubs/" in body
 
 
 def test_existing_hub_suppresses_handoff(tmp_path):
     v = _vault(tmp_path)
     for i in range(3):
         _claim(v, f"sleep-{i}")
-    (v / "notes/hubs").mkdir(parents=True)
-    (v / "notes/hubs/sleep.md").write_text(
-        "---\ntype: hub\nlifecycle: current\ntitle: Sleep\ntopic: sleep\n---\n",
+    (v / "knowledge/hubs").mkdir(parents=True)
+    (v / "knowledge/hubs/sleep.md").write_text(
+        "---\ntype: hub\ncheck_status: checked\ntitle: Sleep\ndescription: Sleep\n---\n",
         encoding="utf-8",
     )
 
@@ -81,6 +78,6 @@ def test_existing_hub_suppresses_handoff(tmp_path):
 
 def test_map_lane_ceiling_still_rejects_canonical_hub_home(tmp_path):
     v = _vault(tmp_path)
-    assert tasks_mcp.validate(v, "map", ["notes/fleeting/maps/", "inbox/"]) == []
-    errs = tasks_mcp.validate(v, "map", ["notes/hubs/"])
+    assert tasks_mcp.validate(v, "map", ["knowledge/notes/maps/"]) == []
+    errs = tasks_mcp.validate(v, "map", ["knowledge/hubs/"])
     assert errs and "exceeds" in errs[0]

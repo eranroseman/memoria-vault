@@ -31,15 +31,14 @@ from operations.lib import loudness
 from memoria_vault.runtime.paths import resolve_vault
 from memoria_vault.runtime.policy import within_scope
 
-# task lane -> the background agent that owns it (ADR-48 §4.1)
+# task lane -> the background agent that owns it.
+# Alpha.11 defers draft and code lanes; do not route them until those modules ship.
 LANE_PROFILE = {
     "catalog": "memoria-librarian",
     "extract": "memoria-librarian",
     "link": "memoria-librarian",
     "map": "memoria-librarian",
-    "draft": "memoria-writer",
     "verify": "memoria-peer-reviewer",
-    "code": "memoria-engineer",
 }
 
 
@@ -67,8 +66,6 @@ def _lane_override(vault: Path, profile: str) -> dict:
 def _within_scope(path: str, scopes: list[str]) -> bool:
     """True if `path` sits under any lane write_scope entry.
 
-    write_scope entries are PREFIX-GLOBS, not plain prefixes — the engineer's
-    lane carries `projects/*/code/`, which must admit `projects/x/code/main.py`.
     Reuse policy_mcp.within_scope (a trailing-slash scope matches `scope + **`)
     so the delegation ceiling and the write gate agree on semantics."""
     return within_scope(path.lstrip("/"), scopes)
@@ -84,8 +81,9 @@ def validate(vault: Path, lane: str, allowed_paths: list[str]) -> list[str]:
     override = _lane_override(vault, profile)
     scopes = (override.get("routing") or {}).get("write_scope") or []
     if scopes == [] and "write_scope" in (override.get("routing") or {}):
-        # an explicitly empty scope (the Co-PI pattern) can never receive writes
-        return [f"lane '{lane}' has an empty write scope — nothing may be delegated to it"]
+        if allowed_paths:
+            return [f"lane '{lane}' has an empty write scope — nothing may be delegated to it"]
+        return []
     for p in allowed_paths:
         if not _within_scope(p, scopes):
             errors.append(f"allowed_path '{p}' exceeds the {lane} lane ceiling {scopes}")
@@ -249,8 +247,9 @@ def build_server(vault: Path):
         review_checks: str = "",
         idempotency_key: str = "",
     ) -> dict:
-        """Delegate a task to a background lane (catalog · extract · link · map ·
-        draft · verify · code). The handoff is validated against the lane's
+        """Delegate a task to a background lane (catalog · extract · link · map · verify).
+
+        The handoff is validated against the lane's
         write-scope ceiling before a kanban card is created."""
         return delegate(
             vault,

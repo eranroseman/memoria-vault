@@ -61,7 +61,9 @@ Each vault's Obsidian instance runs its own Local REST API plugin, and two insta
 
 **6. Set up Zotero for the second vault.**
 
-Add a second auto-export in Better BibTeX pointing at `my-second-vault/.memoria/memoria.bib`. You can share the same Zotero library or create a separate collection.
+No per-vault Better BibTeX auto-export is needed. Keep citekeys stable in
+Zotero; each vault regenerates its own `references.bib` from checked source
+Concepts.
 
 ## Verify
 

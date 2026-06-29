@@ -29,11 +29,11 @@ If an open card references the citekey, archive it with a reason first:
 hermes kanban archive <card-id> --reason "source archived: superseded"
 ```
 
-**2. Open the source note in Obsidian.**
+**2. Open the source Concept in Obsidian.**
 
-Use the Library space's source views or Obsidian search to open the reading record
-for the source. The on-disk path is `notes/sources/<note>.md`, but navigation should
-start from the space/Bases surface.
+Use the Library space's source views or Obsidian search to open the source
+Concept. The on-disk path is `catalog/sources/<source_id>/source.md`, but
+navigation should start from the space/Bases surface.
 
 **3. Set `lifecycle: archived` in frontmatter.**
 
@@ -45,7 +45,10 @@ Add one line at the top of the body saying why ("superseded by newer work", "out
 
 **4. Decide whether the Catalog entity archives too.**
 
-The paper entity at `catalog/papers/<citekey>.md` is the bibliographic record, not your reading of it — it usually stays `current` so its `relationships` edges keep serving the graph. Set the entity to `lifecycle: archived` only when the record itself should leave the Catalog views (for a *retracted* paper, use `lifecycle: retracted` instead — usually prompted by a retraction `alert` card).
+The source Concept at `catalog/sources/<source_id>/source.md` is the bibliographic
+record, not your reading of it. Set `lifecycle: archived` only when the record
+itself should leave active Catalog views. For a retracted source, use
+`lifecycle: retracted`.
 
 **5. Confirm any claims that cite this source still stand.**
 
@@ -53,9 +56,9 @@ Open the backlinks panel before walking away. Claims citing the source remain va
 
 ## Verify
 
-- The source note carries `lifecycle: archived` and no longer appears in the active views of `system/dashboards/sources.base`
+- The source Concept carries `lifecycle: archived` and no longer appears in active Catalog views
 - No open board cards reference this citekey
-- Claims citing this source still resolve their `sources:` citekeys
+- Checked notes citing this source still resolve their `evidence_set`
 
 ## When not to archive
 

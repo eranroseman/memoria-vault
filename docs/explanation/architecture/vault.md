@@ -7,54 +7,65 @@ nav_order: 1
 
 # The vault
 
-The vault is where durable knowledge lives. Everything else in Memoria — the board, the agents, the operations, the dashboards — exists to serve it. This page explains its structure: the category folders, the type homes, the gated zones, and the conventions that keep it sound.
+The vault is where durable knowledge lives. Everything else in Memoria — the
+worker, operations, dashboards, plugin, and agents — exists to serve it. This
+page explains the alpha.11 workspace shape, Concept homes, and write boundary.
 
 ---
 
-## Category folders, not lifecycle numbers
+## Bundle roots
 
-The top level is organized by **category** — one content kind per folder, no lifecycle numbers ([ADR-47](../../adr/47-type-first-category-folders.md)). The knowledge is a *network*, not a pipeline: direction lives in the state property, not in folder ordering.
+The top level has three OKF-compatible bundle roots plus workspace-level state.
+The knowledge graph is a network, not a pipeline: direction lives in `steering.md`,
+project framing, typed links, and `check_status`, not in lifecycle folders.
 
 ```text
 <vault-root>/
-├── home.md         ← launch/reset welcome note
-├── catalog/        ← CATALOG: structured entity records (Obsidian Bases)
-│   papers · people · organizations · venues · datasets · repositories
-├── notes/          ← NOTES: prose (Zettelkasten)
-│   fleeting/ · sources/ · claims/ 🔒 · hubs/ 🔒 · indexes/
-├── projects/       ← PROJECTS: work artifacts, project-scoped
-├── inbox/          ← INBOX: agent→human messages — candidate · gap · flag · alert · work-prompt cards
-├── spaces/         ← SPACES: three durable spaces plus the Inbox queue and Maintenance
-├── system/         ← SYSTEM: visible infrastructure — logs · templates · patterns · dashboards · board
+├── steering.md     ← PI-authored program memory
+├── catalog/        ← sources and entities
+├── knowledge/      ← digests, notes, hubs, projects
+├── capabilities/   ← operations, skills, MCPs, workflows
+├── system/         ← visible infrastructure: templates, dashboards, eval, logs
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
-└── .memoria/       ← hidden runtime (MCP, profiles, schemas, golden copy)
+└── .memoria/       ← hidden runtime: schemas, worker queue, staging, quarantine
 ```
 
-**One folder never mixes two categories**, and folders are named for their *content*, not for a doer — both the ingest operation and the Librarian agent operate *on* `catalog/`. The type → folder-home map is machine-read (`.memoria/schemas/folders.yaml`) and is the single source for the Linter, the policy gate, the installer skeleton, and the tests.
+The type to folder-home map is machine-read
+(`.memoria/schemas/folders.yaml`) and is the single source for validators,
+projection generators, installer skeleton, and tests.
 
 ## Types and their homes
 
-Each category carries a different trust posture. The full roster and folder map live in [Document types](../../reference/document-types.md).
+Each bundle root carries a different role. The full roster and folder map live
+in [Document types](../../reference/document-types.md).
 
 | Area | Examples | Trust posture |
 | --- | --- | --- |
-| Catalog | papers, people, organizations | Given facts from ingest; ungated except low-confidence extraction `flag`s ([ADR-56](../../adr/56-extraction-uncertainty-flag.md)). |
-| Notes | fleeting, source, claim 🔒, hub 🔒 | Human-authored or human-approved knowledge; claim and hub are gated judgment. |
-| Projects, Inbox, Spaces, System | work artifacts, cards, dashboards, infrastructure | Operational surfaces with type-specific lifecycle rules. |
+| Catalog | source, person, organization, venue | Objective records from capture/import; checked before consumption. |
+| Knowledge | digest, note, hub, project | The working graph. Digests are machine-owned checked records; notes and hub curation are PI judgment. |
+| Capabilities | operation, skill, MCP, workflow | Executable capability records; imports are supply-chain input and are quarantined until vetted. |
 
-## Gated zones
+## Write Boundary
 
-The review-gated zones 🔒 are structurally protected: no agent writes there without the PI's approval, enforced by the policy MCP. Agents *propose* (cards, staging artifacts); the PI *disposes*. The Catalog is deliberately ungated: its content is given facts, not judgment. Which prefixes are gated is owned by [Document types](../../reference/document-types.md).
+Machine writes, promotions, generated projections, journal rows, and
+`check_status` transitions go through the worker. PI edits are direct file
+edits; the worker observes and backfills them into the journal. Foreign or
+untraced bundle writes are quarantined by the integrity scan before checked
+readers can consume them.
 
 ## Archived is a state, not a folder
 
-Everything the PI sees uses one lifecycle chain ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)); each type uses a subset. A state change is a frontmatter edit, never a file move: archived notes stay in their type-home, drop from active views, and keep their links. There is no archive folder.
+Archive/retraction state is frontmatter, not a folder move. Current readers use
+`check_status: checked`; unchecked and quarantined Concepts stay out of the
+checked index and Ask path.
 
 The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-52](../../adr/52-links-vs-relationships.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
 ## Bases is the view layer; the Linter keeps it sound
 
-Catalog entities (and the Inbox board, and the per-type note queues) surface through **Obsidian Bases** — saved database views over frontmatter. Every row is a file; the records are the source of truth; nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
+Catalog, knowledge, and capability Concepts surface through **Obsidian Bases**
+and generated indexes. Every row is a file; the records are the source of truth;
+nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
 
 Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through cron/CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. System-file drift can be restored from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
@@ -63,6 +74,5 @@ Bases has no schema or constraints. The **Linter operation** supplies that layer
 ## Related
 
 - The full stack the vault sits under: [Architecture](README.md)
-- The agent→human signal folder in depth: [ADR-51](../../adr/51-inbox-category-and-honesty-card.md)
 - The operations that maintain the vault: [Operations](../operations.md)
-- Why the review gate is structural: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
+- The write boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)

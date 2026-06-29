@@ -17,15 +17,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.patch_content
-      - obsidian.append_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["projects/"]
+    write_scope: []
     outputs: [source]
 ---
 
 # draft-bind-citation
+
+> Deferred in alpha.11: the writing/draft/export lane is not routable and has no direct Obsidian write tools.
 
 Make a draft's provenance explicit. Heavily edited or imported prose drifts away from
 its citations; this skill re-binds each factual sentence to the claim/source that

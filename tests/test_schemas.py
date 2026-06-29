@@ -1,46 +1,117 @@
-"""The canonical schema home (ADR-47/49/50): every consumer reads .memoria/schemas/."""
+"""The canonical alpha.11 schema home: every consumer reads .memoria/schemas/."""
 
+import shutil
+from pathlib import Path
+
+import yaml
 from operations.lib import schema
 
+ALPHA11_TYPES = {
+    "source",
+    "person",
+    "organization",
+    "venue",
+    "digest",
+    "note",
+    "hub",
+    "project",
+    "operation",
+    "skill",
+    "mcp",
+    "workflow",
+}
 
-def test_all_types_load():
+
+def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n" + body,
+        encoding="utf-8",
+    )
+
+
+def _empty_workspace(root: Path) -> Path:
+    for bundle in schema.bundle_roots(schema.load_folders()):
+        (root / bundle).mkdir(parents=True)
+        (root / bundle / "index.md").write_text("# Index\n", encoding="utf-8")
+    return root
+
+
+def _m0_schema_reset_fixture(root: Path) -> Path:
+    _empty_workspace(root)
+    _md(
+        root / "catalog/sources/source-alpha/source.md",
+        {
+            "type": "source",
+            "check_status": "checked",
+            "title": "Alpha source",
+            "description": "Fixture source.",
+            "source_id": "source-alpha",
+            "citekey": "alpha2026",
+        },
+    )
+    _md(
+        root / "knowledge/digests/source-alpha.md",
+        {
+            "type": "digest",
+            "check_status": "checked",
+            "title": "Alpha digest",
+            "description": "Per-source synthesis.",
+            "source_id": "catalog/sources/source-alpha",
+            "evidence_set": ["catalog/sources/source-alpha/source#s1"],
+        },
+    )
+    _md(
+        root / "knowledge/notes/alpha-method.md",
+        {
+            "type": "note",
+            "check_status": "checked",
+            "title": "Alpha method reduces drift",
+            "evidence_set": ["catalog/sources/source-alpha/source#s1"],
+        },
+    )
+    _md(
+        root / "knowledge/hubs/drift.md",
+        {
+            "type": "hub",
+            "check_status": "checked",
+            "title": "Drift",
+            "description": "Topic synthesis.",
+            "members": ["knowledge/digests/source-alpha", "knowledge/notes/alpha-method"],
+        },
+    )
+    _md(
+        root / "knowledge/projects/project-alpha/project.md",
+        {
+            "type": "project",
+            "check_status": "checked",
+            "title": "Alpha project",
+            "description": "Project direction.",
+        },
+    )
+    _md(
+        root / "capabilities/operations/capture.md",
+        {
+            "type": "operation",
+            "check_status": "checked",
+            "title": "Capture",
+            "description": "Capture a source into the catalog.",
+            "operation_id": "capture",
+        },
+    )
+    return root
+
+
+def test_alpha11_concept_types_load():
     types = schema.load_types()
-    assert len(types) == 25
-    expected = {
-        "paper",
-        "person",
-        "organization",
-        "venue",
-        "dataset",
-        "repository",
-        "project",
-        "thesis",
-        "code-note",
-        "fleeting",
-        "source",
-        "claim",
-        "hub",
-        "candidate",
-        "gap",
-        "flag",
-        "alert",
-        "work-prompt",
-        "space",
-        "queue",
-        "maintenance",
-        "pattern",
-        "eval-task",
-        "worker-card",
-        "worklist-item",
-    }
-    assert set(types) == expected
+    assert set(types) == ALPHA11_TYPES
 
 
-def test_initial_lifecycle_declared_for_every_type():
+def test_check_status_declared_for_every_type():
     types = schema.load_types()
     for name, sc in types.items():
-        lifecycle = schema.lifecycle_for(sc)
-        assert sc.get("initial_lifecycle") == lifecycle[0], name
+        assert sc.get("initial_check_status") == "unchecked", name
+        assert schema.check_status_for(sc) == ["unchecked", "checked", "quarantined"], name
 
 
 def test_type_field_matches_filename_literal():
@@ -49,265 +120,115 @@ def test_type_field_matches_filename_literal():
         assert sc["required"]["type"] == f"literal:{name}"
 
 
-def test_lifecycle_subsets_of_universal_chain():
+def test_alpha11_portable_fields_declared():
     types = schema.load_types()
     for name, sc in types.items():
-        sub = schema.lifecycle_for(sc)
-        assert sub, f"{name} has no lifecycle enum"
-        assert set(sub) <= set(schema.UNIVERSAL_LIFECYCLE), name
-        # subsets preserve the chain's order (ADR-50)
-        order = [schema.UNIVERSAL_LIFECYCLE.index(s) for s in sub]
-        assert order == sorted(order), f"{name} lifecycle out of chain order"
+        required = sc.get("required") or {}
+        optional = sc.get("optional") or {}
+        assert required["title"] == "str", name
+        assert required["check_status"] == "enum:check_status", name
+        assert optional.get("resource") == "str", name
+        if name == "note":
+            assert optional.get("description") == "str"
+        else:
+            assert required["description"] == "str", name
 
 
-def test_folder_map_covers_every_type():
+def test_folder_map_covers_every_alpha11_type():
     types = schema.load_types()
     folders = schema.load_folders()
     for name in types:
         home = schema.home_for(name, folders)
         assert home, f"{name} has no folder home"
-        category = types[name]["category"]
-        if category != "inbox":
-            assert home.startswith(category), f"{name}: home {home} outside {category}"
+        assert home.startswith(types[name]["category"]), f"{name}: home {home}"
 
 
-def test_gated_flags_match_gated_prefixes():
-    """A type is gated iff its home sits under a gated prefix (ADR-03/47)."""
-    types = schema.load_types()
-    folders = schema.load_folders()
-    prefixes = tuple(schema.gated_prefixes(folders))
-    for name, sc in types.items():
-        home = schema.home_for(name, folders) + "/"
-        assert sc.get("gated", False) == home.startswith(prefixes), name
-
-
-def test_skeleton_contains_every_home():
+def test_skeleton_contains_every_home_and_barrier_root():
     folders = schema.load_folders()
     skeleton = set(folders["skeleton"])
     for home in folders["homes"].values():
         assert home in skeleton, f"home {home} missing from installer skeleton"
+    for root in folders["bundle_roots"] + folders["machine_staging_roots"]:
+        assert root in skeleton, f"root {root} missing from installer skeleton"
+    assert folders["quarantine_root"] in skeleton
 
 
 def test_validate_frontmatter_round_trip():
-    types = schema.load_types()
-    claim = types["claim"]
-    good = {
-        "type": "claim",
-        "lifecycle": "current",
-        "title": "T",
-        "maturity": "evergreen",
-        "sources": ["@smith2024"],
-    }
-    assert schema.validate_frontmatter(good, claim) == []
-    # missing required
-    errs = schema.validate_frontmatter({"type": "claim"}, claim)
-    assert any("lifecycle" in e for e in errs)
-    # bad enum
-    errs = schema.validate_frontmatter(dict(good, lifecycle="proposed"), claim)
-    assert any("lifecycle" in e for e in errs)  # claims never start proposed
-    # bad literal
-    errs = schema.validate_frontmatter(dict(good, type="hub"), claim)
-    assert any("literal" in e for e in errs)
-
-
-def test_source_type_is_schema_enum():
     source = schema.load_types()["source"]
     good = {
         "type": "source",
-        "lifecycle": "proposed",
+        "check_status": "unchecked",
         "title": "T",
-        "entity": "[[paper]]",
-        "source_type": "paper",
+        "description": "D",
+        "source_id": "source-alpha",
     }
     assert schema.validate_frontmatter(good, source) == []
+    assert any("description" in e for e in schema.validate_frontmatter({"type": "source"}, source))
     assert any(
-        "source_type" in e
-        for e in schema.validate_frontmatter(dict(good, source_type="blog"), source)
+        "check_status" in e
+        for e in schema.validate_frontmatter(dict(good, check_status="unknown"), source)
     )
 
 
-def test_vocabulary_fields_are_validated_when_terms_are_loaded():
-    types = schema.load_types()
-    vocabulary = schema.load_vocabulary()
-    source = {
-        "type": "source",
-        "lifecycle": "proposed",
-        "title": "T",
-        "entity": "[[paper]]",
-        "research_area": ["mobile-health"],
-        "methodology": ["review"],
-    }
-    assert schema.validate_frontmatter(source, types["source"], vocabulary) == []
-    errs = schema.validate_frontmatter(
-        dict(source, research_area=["Health Informatics"], methodology=["not-a-method"]),
-        types["source"],
-        vocabulary,
-    )
-    assert any("research_area" in err and "off-vocabulary" in err for err in errs)
-    assert any("methodology" in err and "off-vocabulary" in err for err in errs)
-
-    claim = {
-        "type": "claim",
-        "lifecycle": "current",
-        "title": "T",
-        "maturity": "seedling",
-        "sources": [],
-        "topics": ["mobile-health"],
-    }
-    assert schema.validate_frontmatter(claim, types["claim"], vocabulary) == []
-    assert any(
-        "topics" in err
-        for err in schema.validate_frontmatter(
-            dict(claim, topics=["Sleep"]), types["claim"], vocabulary
-        )
-    )
-
-
-def test_project_and_thesis_schema_contracts():
-    types = schema.load_types()
-    project = types["project"]
-    thesis = types["thesis"]
-
-    assert project["initial_lifecycle"] == "current"
-    assert thesis["initial_lifecycle"] == "proposed"
-    assert thesis["promotion_gate"] == "current"
-
-    project_note = {
-        "type": "project",
-        "lifecycle": "current",
-        "title": "Does X improve Y?",
-        "slug": "x-improves-y",
-        "scope_topics": ["mobile-health"],
-        "inquiry": {"population": "patients", "outcome": "adherence"},
-        "finer": {
-            "feasible": "small corpus",
-            "interesting": "yes",
-            "novel": "yes",
-            "ethical": "yes",
-            "relevant": "program",
-        },
-        "output_mode": "thesis",
-        "question_version": 1,
-        "question_log": [],
-    }
-    assert schema.validate_frontmatter(project_note, project) == []
-
-    thesis_note = {
-        "type": "thesis",
-        "lifecycle": "proposed",
-        "title": "X improves Y.",
-        "project": "[[x-improves-y]]",
-        "sources": [],
-    }
-    assert schema.validate_frontmatter(thesis_note, thesis) == []
-    current_without_stamp = dict(thesis_note, lifecycle="current")
-    assert any(
-        "promoted_at" in e for e in schema.validate_frontmatter(current_without_stamp, thesis)
-    )
-    current_with_stamp = dict(current_without_stamp, promoted_at="2026-06-16")
-    assert schema.validate_frontmatter(current_with_stamp, thesis) == []
-    assert any(
-        "lifecycle" in e
-        for e in schema.validate_frontmatter(dict(thesis_note, lifecycle="banana"), thesis)
-    )
-
-
-def test_code_note_schema_contract():
-    types = schema.load_types()
-    code_note = types["code-note"]
-
-    assert code_note["initial_lifecycle"] == "proposed"
+def test_note_links_are_typed_maps():
+    note = schema.load_types()["note"]
     good = {
-        "type": "code-note",
-        "lifecycle": "proposed",
-        "title": "Figure 3 receptivity curve",
-        "project": "[[slug-bug]]",
-        "agent": "codex",
-        "task": "Implement the plotting script.",
-        "acceptance": ["Script runs from a fresh checkout."],
-    }
-    assert schema.validate_frontmatter(good, code_note) == []
-    assert any(
-        "agent" in e
-        for e in schema.validate_frontmatter(dict(good, agent="terminal-bot"), code_note)
-    )
-
-
-def test_required_any_on_flag_cards():
-    types = schema.load_types()
-    flag = types["flag"]
-    base = {
-        "type": "flag",
-        "lifecycle": "proposed",
+        "type": "note",
+        "check_status": "checked",
         "title": "T",
-        "finding": "broken citekey",
-        "agent_recommendation": "issues-found",
+        "links": {"supports": ["knowledge/notes/other.md"]},
     }
-    errs = schema.validate_frontmatter(base, flag)
-    assert any("at least one of" in e for e in errs)
-    assert schema.validate_frontmatter(dict(base, citekey="@x"), flag) == []
+    assert schema.validate_frontmatter(good, note) == []
+    assert any("links" in e for e in schema.validate_frontmatter(dict(good, links=["other"]), note))
 
 
-def test_honesty_card_fields_on_proposals():
-    """Proposal cards carry the honesty body; verification cards lead with the finding (ADR-51)."""
-    types = schema.load_types()
-    for proposal in ("candidate", "gap"):
-        req = types[proposal]["required"]
-        for field in ("action", "argument_for", "argument_against", "what_tipped_it", "certainty"):
-            assert field in req, f"{proposal} missing honesty field {field}"
-        assert "finding" not in req  # no verdict line on proposals (D49)
-    for verification in ("flag", "alert"):
-        assert "finding" in types[verification]["required"]
-    # work prompts: action + what happened + where to look, never a verdict
-    wp = types["work-prompt"]
-    assert "action" in wp["required"] and "what_happened" in wp["required"]
-    assert wp["optional"]["prompt_kind"] == "enum:prompt_kind"
-    assert "agent_recommendation" not in wp["required"]
-    assert "agent_recommendation" not in (wp.get("optional") or {})
-    assert set(wp["required_any"]) == {"target", "task_id"}
+def test_okf_core_empty_workspace_validates(tmp_path):
+    assert schema.validate_okf_core_workspace(_empty_workspace(tmp_path)) == []
 
 
-def test_calibration_loads_with_confidence_floor():
-    cal = schema.load_calibration()
-    floor = cal["entity_resolution"]["confidence_floor"]
-    assert 0.0 < floor < 1.0
+def test_memoria_profile_rejects_malformed_concept(tmp_path):
+    root = _empty_workspace(tmp_path)
+    _md(
+        root / "catalog/sources/bad/source.md",
+        {"type": "source", "check_status": "checked", "title": "Bad"},
+    )
+    errors = schema.validate_memoria_profile_workspace(root)
+    assert any("description" in err for err in errors)
+    assert any("source_id" in err for err in errors)
 
 
-def test_hybrid_score_calibration_is_shadow_first_until_thresholds_are_filled():
-    cal = schema.load_calibration()
-    scores = cal["hybrid_scores"]
-    for key, threshold_fields, sample_key in (
-        ("candidate_rank", ("promote_threshold", "defer_threshold"), "min_labeled_decisions"),
-        ("outline_score", ("accept_threshold", "revise_threshold"), "min_labeled_outlines"),
-    ):
-        spec = scores[key]
-        assert spec["production_enabled"] is False
-        assert spec["grounding_dataset"] is None
-        assert spec["model_version"] is None
-        assert spec[sample_key] > 0
-        for field in threshold_fields:
-            assert spec[field] is None
-
-    cluster_quality = cal["clustering"]["quality_thresholds"]
-    assert cluster_quality["production_enabled"] is False
-    assert cluster_quality["grounding_dataset"] is None
-    assert cluster_quality["model_version"] is None
-    assert cluster_quality["min_reviewed_maps"] > 0
-    assert cluster_quality["silhouette_floor"] is None
-    assert cluster_quality["topic_coherence_floor"] is None
+def test_m0_schema_reset_fixture_passes(tmp_path):
+    root = _m0_schema_reset_fixture(tmp_path)
+    assert schema.validate_okf_core_workspace(root) == []
+    assert schema.validate_memoria_profile_workspace(root) == []
 
 
-def test_gated_prefix_fallbacks_match_folders_yaml():
-    """Every dependency-free fallback for the review-gated zones must stay in sync
-    with the schema home (folders.yaml). The MCPs run standalone (no operations/lib
-    on their path, PyYAML optional), so they each carry the tuple hardcoded;
-    schema.load_gated_prefixes is the one loader for in-repo consumers."""
+def test_round_trip_holds(tmp_path):
+    root = _m0_schema_reset_fixture(tmp_path / "src")
+    exported = tmp_path / "exported"
+    imported = tmp_path / "imported"
+    shutil.copytree(root, exported)
+    shutil.copytree(exported, imported)
+    for workspace in (root, exported, imported):
+        assert schema.validate_okf_core_workspace(workspace) == []
+        assert schema.validate_memoria_profile_workspace(workspace) == []
+    original = {
+        p.relative_to(root).as_posix(): p.read_text(encoding="utf-8")
+        for p in sorted(root.rglob("*.md"))
+    }
+    round_trip = {
+        p.relative_to(imported).as_posix(): p.read_text(encoding="utf-8")
+        for p in sorted(imported.rglob("*.md"))
+    }
+    assert round_trip == original
+
+
+def test_alpha11_schema_has_no_gated_prefixes_while_legacy_policy_keeps_fallback():
     import patterns_mcp
 
     from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
-    canonical = tuple(schema.load_folders()["gated_prefixes"])
-    assert canonical == schema.load_gated_prefixes()
-    assert canonical == schema.FALLBACK_GATED_PREFIXES
-    assert canonical == REVIEW_GATED_PREFIXES
-    assert canonical == patterns_mcp.REVIEW_GATED_PREFIXES
+    assert schema.gated_prefixes(schema.load_folders()) == []
+    assert schema.load_gated_prefixes() == schema.FALLBACK_GATED_PREFIXES
+    assert schema.FALLBACK_GATED_PREFIXES == REVIEW_GATED_PREFIXES
+    assert schema.FALLBACK_GATED_PREFIXES == patterns_mcp.REVIEW_GATED_PREFIXES

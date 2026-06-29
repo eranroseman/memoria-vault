@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-"""patterns_mcp.py — the one pattern runner (ADR-53).
+"""patterns_mcp.py — compatibility runner for prompt operations.
 
-Patterns are *data* (markdown prompt-transformations in `system/patterns/`); this
-server is the single audited chokepoint that runs them. `patterns_run` loads a
-pattern by id, refuses any `output_target` inside a review-gated zone (the run
-degrades to dry-run and the Linter flags the pattern file), composes
-preamble + pattern + input, logs per-run provenance, and returns the composed
-prompt + target for the calling agent to execute and write through the gated path.
-The runner itself never writes content — propose-not-dispose holds.
+Prompt operations are markdown Concepts in `capabilities/operations/`. This server
+loads a checked operation by id, refuses review-gated output targets, composes
+preamble + operation body + input, logs provenance, and returns the composed prompt.
+The runner itself never writes content.
 
     python patterns_mcp.py --vault <path>            # run the MCP server (needs `mcp`)
     python patterns_mcp.py --vault <path> --list     # one-shot: list runnable patterns
@@ -30,7 +27,8 @@ if str(_RUNTIME_ROOT) not in sys.path:
 from memoria_vault.runtime.paths import resolve_vault
 from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
-PATTERNS_RELDIR = "system/patterns"
+PATTERNS_RELDIR = "capabilities/operations"
+PREAMBLE_RELPATH = "system/patterns/_preamble.md"
 PROVENANCE_RELPATH = "system/logs/patterns.jsonl"
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n?", re.S)
 
@@ -55,15 +53,21 @@ def _parse(path: Path) -> tuple[dict, str]:
     return (yaml.safe_load(m.group(1)) or {}), text[m.end() :]
 
 
+def _is_prompt_operation(body: str) -> bool:
+    return "{{input}}" in body
+
+
 def list_patterns(vault: Path, mode: str = "") -> list[dict]:
-    """Runnable (lifecycle: current) patterns, optionally filtered by mode."""
+    """Runnable checked prompt operations, optionally filtered by mode."""
     out = []
     d = vault / PATTERNS_RELDIR
     for p in sorted(d.glob("*.md")) if d.is_dir() else []:
         if p.name.startswith("_"):
             continue
-        fm, _ = _parse(p)
-        if fm.get("type") != "pattern" or fm.get("lifecycle") != "current":
+        fm, body = _parse(p)
+        if fm.get("type") != "operation" or fm.get("check_status") != "checked":
+            continue
+        if not _is_prompt_operation(body):
             continue
         if mode and fm.get("mode") not in (mode, "both"):
             continue
@@ -90,16 +94,22 @@ def run_pattern(vault: Path, pattern_id: str, input_text: str, input_ref: str = 
             "available": [p["id"] for p in list_patterns(vault)],
         }
     fm, body = _parse(path)
-    if fm.get("lifecycle") != "current":
+    if fm.get("check_status") != "checked":
         return {
-            "error": "pattern-not-current",
+            "error": "operation-not-checked",
             "pattern": pattern_id,
-            "lifecycle": fm.get("lifecycle"),
+            "check_status": fm.get("check_status"),
+        }
+    if not _is_prompt_operation(body):
+        return {
+            "error": "unknown-pattern",
+            "pattern": pattern_id,
+            "available": [p["id"] for p in list_patterns(vault)],
         }
     target = (fm.get("output_target") or "").lstrip("/")
     gated = _gated_prefixes(vault)
     dry_run = (not target) or target.startswith(gated)
-    preamble_file = vault / PATTERNS_RELDIR / "_preamble.md"
+    preamble_file = vault / PREAMBLE_RELPATH
     preamble = preamble_file.read_text(encoding="utf-8") if preamble_file.is_file() else ""
     prompt = body.replace("{{input}}", input_text or f"[see {input_ref}]")
     run_id = str(uuid.uuid4())[:8]
@@ -154,7 +164,7 @@ def build_server(vault: Path):
 
     @server.tool()
     def patterns_list(mode: str = "") -> list[dict]:
-        """Runnable patterns, optionally filtered by mode (library | project)."""
+        """Runnable patterns, optionally filtered by mode."""
         return list_patterns(vault, mode)
 
     @server.tool()

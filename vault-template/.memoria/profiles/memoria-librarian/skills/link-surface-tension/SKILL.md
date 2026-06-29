@@ -17,15 +17,15 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - cluster.cluster_build_graph
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [candidate]
 ---
 
 # link-surface-tension
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Make disagreements impossible to ignore. A tension is a pair of statements the vault
 holds that **cannot both be right as written** — two claims, or a claim and a newly

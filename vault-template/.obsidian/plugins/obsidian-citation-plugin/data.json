@@ -1,9 +1,9 @@
 {
   "citationExportFormat": "biblatex",
-  "citationExportPath": ".memoria/memoria.bib",
+  "citationExportPath": "references.bib",
   "literatureNoteTitleTemplate": "@{{citekey}}",
-  "literatureNoteFolder": "catalog/papers",
-  "literatureNoteContentTemplate": "---\ntitle: \"{{title}}\"\ntype: paper\nlifecycle: current\ncitekey: \"{{citekey}}\"\ndoi: \"{{DOI}}\"\nauthors: []\nyear: {{year}}\nvenue: \"{{containerTitle}}\"\nurl: \"{{URL}}\"\nresearch_area: []\nmethodology: []\nrelationships:\n  cited_by: []\n  authored_by: []\n  published_in: \"{{containerTitle}}\"\n---\n\n# What it is\n\n> **Source:** {{authorString}} ({{year}}). [DOI](https://doi.org/{{DOI}}) | [Open in Zotero]({{zoteroSelectURI}})\n\nOne-paragraph mechanical summary (abstract-derived; the ingest engine fills this).\n\n# Relationships\n\nGiven facts only \u2014 built by the ingest engine, never authored here (ADR-52).\nThe interpretive reading lives in the linked source note.\n",
+  "literatureNoteFolder": ".memoria/staging/catalog",
+  "literatureNoteContentTemplate": "This file is citation-plugin scratch, not a Memoria Concept.\n\nUse the Memoria worker capture operation to create a checked source Concept for {{citekey}}.\n",
   "markdownCitationTemplate": "[@{{citekey}}]",
   "alternativeMarkdownCitationTemplate": "@{{citekey}}"
 }

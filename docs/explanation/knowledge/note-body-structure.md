@@ -17,9 +17,15 @@ For the frontmatter fields, templates, and field-by-field reference, see [Docume
 
 A source's record has two authorship layers, and the split between them is intentional, not a convenience.
 
-The mechanical layer is the **paper entity** in `catalog/`: the ingest operation populates the bibliographic facts and the `relationships` (cites, cited-by, authored-by, published-in) at intake. These are derivable from the source's metadata and the existing corpus without reading comprehension — structural facts about the source's place in the graph, produced deterministically and cheaply. The Librarian adds the two LLM pieces — a comparative brief and a draft classification — as proposals.
+The mechanical layer is the **source Concept** in `catalog/sources/`: capture
+populates bibliographic facts, identifiers, hashes, and source text paths.
+These are derivable from the source metadata and existing corpus without PI
+judgment.
 
-The human layer is the **source note** in `notes/sources/`: the Summary, the Critique, and the Open questions. These require reading comprehension and judgment. The Summary in particular is load-bearing — it is what the PI reads six months later to cite the paper without re-reading it. A Summary that merely paraphrases the abstract has failed this purpose; it needs to capture the thesis, the key findings that will actually be cited, and the paper's relevance to the specific research direction.
+The knowledge layer is checked `digest`, `note`, and `hub` Concepts under
+`knowledge/`. Digests are machine-owned checked records; notes and hub curation
+carry PI judgment. A useful note captures the thesis, the key findings that will
+actually be cited, and the source's relevance to the research direction.
 
 The Critique section is where a source note earns its place in a knowledge system rather than a bibliography. A source note without critical engagement — what is missing, what is methodologically weak, what you would push back on — is storage, not synthesis. The Open questions section completes the loop by recording what the source raises but doesn't answer, feeding the synthesis agenda.
 

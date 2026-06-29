@@ -1,7 +1,6 @@
 ---
 title: Maintenance
-type: maintenance
-lifecycle: current
+projection: maintenance
 cssclasses: memoria-space
 ---
 
@@ -11,15 +10,15 @@ cssclasses: memoria-space
 
 ## Drift watch
 
-![[inbox.base#Drift watch]]
+Trace and quarantine findings are recorded in `journal/` and `.memoria/quarantine/`.
 
 ## Loose ends
 
-![[inbox.base#Loose ends]]
+Unchecked Concepts are visible in the bundle Bases until promoted.
 
 ## Board
 
-![[board.base#By lane]]
+Worker queue state lives under `.memoria/queue/`.
 
 ## New this week — catalog
 
@@ -33,8 +32,8 @@ SORT file.ctime DESC
 ## New this week — notes
 
 ```dataview
-TABLE file.link AS Note, type, lifecycle
-FROM "notes"
-WHERE sample != true AND file.ctime >= date(today) - dur(7 days) AND type != "fleeting"
+TABLE file.link AS Note, type, check_status
+FROM "knowledge"
+WHERE sample != true AND file.ctime >= date(today) - dur(7 days)
 SORT file.ctime DESC
 ```

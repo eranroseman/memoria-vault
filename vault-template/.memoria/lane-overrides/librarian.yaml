@@ -1,28 +1,27 @@
 profile: memoria-librarian
 
-# The Librarian's lane ceiling (ADR-48): four processing lanes — catalog · extract ·
-# link · map — one faithful posture. It proposes into intake/staging zones and never
-# touches the review-gated ones (notes/claims/, notes/hubs/ — ADR-47).
+# The Librarian's alpha.11 lane ceiling: catalog · extract · link · map. Machine
+# outputs are worker write-requests staged under .memoria/staging/; the worker
+# promotes checked Concepts into catalog/ or knowledge/.
 # External access is MCP-only (web disabled): discovery -> paper_search MCP, Zotero
 # reads -> pyzotero MCP, enrich/extract -> ingest MCP, clustering -> cluster MCP.
 
 policy:
   allow:
     skills:
-      - obsidian               # gated vault read/write
+      - obsidian               # vault read; direct write tools are not granted
       - qmd                    # hybrid BM25+vector vault search (the search engine)
-    write:
-      - "inbox/**"             # candidate / gap cards (the honesty body, ADR-51)
-      - "catalog/**"           # entity records (the ingest operation writes; agent fills the LLM holes)
-      - "notes/fleeting/**"    # discovery captures
-      - "notes/sources/**"      # proposed source notes (lifecycle: proposed)
+    write: []
   deny:
     skills:
       - review_gated_publish
       - destructive_shell
     write:
-      - "notes/claims/**"      # review-gated (ADR-03/47)
-      - "notes/hubs/**"        # review-gated
+      - "catalog/**"
+      - "knowledge/**"
+      - "capabilities/**"
+      - "inbox/**"
+      - "notes/**"
       - "projects/**"
       - "system/**"
   require:
@@ -34,7 +33,5 @@ routing:
   invocation: dispatched
   external_api_policy: explicit_only    # blocked | explicit_only | open
   write_scope:
-    - "inbox/"
-    - "catalog/"
-    - "notes/fleeting/"
-    - "notes/sources/"
+    - ".memoria/staging/catalog/"
+    - ".memoria/staging/knowledge/"

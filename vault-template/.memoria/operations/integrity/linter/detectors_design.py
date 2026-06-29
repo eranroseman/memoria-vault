@@ -18,7 +18,7 @@ _TERM_DRIFT = re.compile(
 )
 _DESIGN_SCAN_PREFIXES = (
     "home.md",
-    "research-focus.md",
+    "steering.md",
     "troubleshooting.md",
     "AGENTS.md",
     "system/",

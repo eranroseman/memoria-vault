@@ -1,17 +1,12 @@
 ---
-title: "{{VALUE:hub topic}}"
+title: "{{VALUE:hub title}}"
 type: hub
-lifecycle: current
-topic: "{{VALUE:hub topic}}"
+check_status: unchecked
+description: "{{VALUE:hub description}}"
 members: []
 links: {}
-created: {{DATE:YYYY-MM-DD}}
+tags: []
 ---
+# {{VALUE:hub title}}
 
-# Shape of the topic
-
-What this hub organizes and how the member claims relate — the structure note.
-
-# Members
-
-The claims this hub holds (also listed in `members` for the graph).
+{{VALUE:hub body}}

@@ -15,7 +15,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones you steer and read
 
-**Program memory** (your standing steering — `research-focus` discovery priorities + `screening-protocol` review mode), **project memory** (one sub-project's cross-lane working state — open questions, decisions, framing), and **audit memory** (the tamper-evident record of every gated write, append-only forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
+**Program memory** (your standing steering — `steering` discovery priorities + `screening-protocol` review mode), **project memory** (one sub-project's cross-lane working state — open questions, decisions, framing), and **audit memory** (the tamper-evident record of every gated write, append-only forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
 
 ## The ones the runtime manages
 

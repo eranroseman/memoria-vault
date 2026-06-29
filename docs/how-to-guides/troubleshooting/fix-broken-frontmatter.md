@@ -64,7 +64,7 @@ After saving the fix, Obsidian should show no error in the Properties panel. The
 In Obsidian, run this Dataview query in a new note to confirm the repaired note is visible:
 
 ```dataview
-FROM "catalog/papers"
+FROM "catalog/sources"
 WHERE file.name = "<citekey>"
 ```
 

@@ -44,7 +44,7 @@ def load_types(schemas_dir: Path | None = None) -> dict[str, dict]:
 
 
 def load_folders(schemas_dir: Path | None = None) -> dict:
-    """Return the parsed folders.yaml (homes, gated/transient prefixes, skeleton)."""
+    """Return the parsed folders.yaml (homes, transient prefixes, skeleton)."""
     f = _schemas_dir(schemas_dir) / "folders.yaml"
     return yaml.safe_load(f.read_text(encoding="utf-8"))
 
@@ -88,25 +88,36 @@ def gated_prefixes(folders: dict) -> list[str]:
     return list(folders.get("gated_prefixes", []))
 
 
-# The dependency-free fallback for the review-gated zones. policy_mcp and
-# patterns_mcp carry the same tuple hardcoded (they run standalone, without
-# this module or even PyYAML on the path); tests/test_schemas.py asserts all
-# three stay in sync with folders.yaml.
+# Legacy dependency-free fallback for the pre-alpha.11 profile policy runtime.
+# The alpha.11 schema no longer declares gated prefixes; machine writes route
+# through the worker staging/promote/quarantine boundary instead.
 FALLBACK_GATED_PREFIXES = ("notes/claims/", "notes/hubs/")
 
 
 def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
-    """The review-gated prefixes from folders.yaml, with the hardcoded fallback
-    when the schema home is unreadable — the one loader every in-repo consumer
-    of `gated_prefixes` should share."""
+    """Return the legacy profile-policy gated prefixes.
+
+    Alpha.11 does not declare these in folders.yaml; the worker owns the real
+    write boundary. This remains for the older profile-policy modules.
+    """
     try:
-        return tuple(load_folders(schemas_dir)["gated_prefixes"]) or FALLBACK_GATED_PREFIXES
+        return (
+            tuple(load_folders(schemas_dir).get("gated_prefixes") or ()) or FALLBACK_GATED_PREFIXES
+        )
     except (OSError, yaml.YAMLError, KeyError):
         return FALLBACK_GATED_PREFIXES
 
 
+def bundle_roots(folders: dict) -> tuple[str, ...]:
+    return tuple(folders.get("bundle_roots") or folders.get("categories") or ())
+
+
 def lifecycle_for(schema: dict) -> list[str]:
     return list(schema.get("enums", {}).get("lifecycle", []))
+
+
+def check_status_for(schema: dict) -> list[str]:
+    return list(schema.get("enums", {}).get("check_status", []))
 
 
 def _check_kind(value, kind: str, enums: dict) -> str | None:
@@ -178,6 +189,86 @@ def validate_frontmatter(
             bad = [str(value) for value in values if str(value) not in allowed]
             if bad:
                 errors.append(f"{field}: off-vocabulary value(s) {bad}; expected {vocabulary} term")
+    return errors
+
+
+def _markdown_frontmatter(path: Path) -> tuple[dict, str, list[str]]:
+    text = path.read_text(encoding="utf-8")
+    if not text.startswith("---\n"):
+        return {}, text, ["missing YAML frontmatter"]
+    try:
+        _, fm_text, body = text.split("---\n", 2)
+    except ValueError:
+        return {}, text, ["unterminated YAML frontmatter"]
+    try:
+        data = yaml.safe_load(fm_text) or {}
+    except yaml.YAMLError as exc:
+        return {}, body, [f"invalid YAML frontmatter: {exc}"]
+    if not isinstance(data, dict):
+        return {}, body, ["YAML frontmatter must be a map"]
+    return data, body, []
+
+
+def _concept_files(root: Path, folders: dict) -> list[Path]:
+    bundle_dirs = [root / bundle for bundle in bundle_roots(folders)]
+    ignored = {"index.md", "log.md", "SCHEMA.md"}
+    out: list[Path] = []
+    for bundle_dir in bundle_dirs:
+        if not bundle_dir.is_dir():
+            continue
+        out.extend(
+            path
+            for path in bundle_dir.rglob("*.md")
+            if path.name not in ignored and ".memoria" not in path.parts
+        )
+    return sorted(out)
+
+
+def _under_home(path: Path, root: Path, home: str) -> bool:
+    rel = path.relative_to(root).as_posix()
+    home = home.rstrip("/")
+    return rel == home or rel.startswith(f"{home}/")
+
+
+def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
+    """Permissive OKF-core shape check for the alpha.11 bundle roots."""
+    root = Path(root)
+    folders = load_folders(schemas_dir)
+    errors: list[str] = []
+    for bundle in bundle_roots(folders):
+        if not (root / bundle).is_dir():
+            errors.append(f"missing bundle root: {bundle}")
+    for path in _concept_files(root, folders):
+        fm, _body, fm_errors = _markdown_frontmatter(path)
+        rel = path.relative_to(root).as_posix()
+        errors.extend(f"{rel}: {err}" for err in fm_errors)
+        if fm_errors:
+            continue
+        if fm.get("type") in (None, ""):
+            errors.append(f"{rel}: missing required field: type")
+    return errors
+
+
+def validate_memoria_profile_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
+    """Strict Memoria-profile check before promotion into alpha.11 bundle roots."""
+    root = Path(root)
+    types = load_types(schemas_dir)
+    folders = load_folders(schemas_dir)
+    errors = validate_okf_core_workspace(root, schemas_dir)
+    for path in _concept_files(root, folders):
+        rel = path.relative_to(root).as_posix()
+        fm, _body, fm_errors = _markdown_frontmatter(path)
+        if fm_errors:
+            continue
+        type_name = str(fm.get("type") or "")
+        sc = types.get(type_name)
+        if sc is None:
+            errors.append(f"{rel}: unknown type: {type_name}")
+            continue
+        home = home_for(type_name, folders)
+        if home and not _under_home(path, root, home):
+            errors.append(f"{rel}: type {type_name!r} must live under {home}/")
+        errors.extend(f"{rel}: {err}" for err in validate_frontmatter(fm, sc))
     return errors
 
 

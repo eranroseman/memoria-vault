@@ -6,9 +6,9 @@ grand_parent: Reference
 
 # Retrieval and analysis methods
 
-Deterministic and hybrid methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in ADRs and explanation pages, not in the active reference contract.
+Deterministic methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in ADRs and explanation pages, not in the active reference contract.
 
-For the rationale — why deterministic over LLM, the hybrid pattern, cost and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md).
+For the rationale — why deterministic over LLM, cost, and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md).
 
 ---
 
@@ -24,23 +24,22 @@ For the rationale — why deterministic over LLM, the hybrid pattern, cost and a
 
 ---
 
-### Vector embeddings + cosine similarity
+### Checked qmd BM25 retrieval
 
-**For:** finding similar notes, ranking candidate links, detecting near-duplicates, narrowing comparative-read candidates.
+**For:** finding checked Concepts by exact terms, citekeys, rare tokens, and short query text.
 
-**Used by:** qmd-backed Co-PI and lane retrieval, Librarian comparative reads, QuickAdd pre-file similarity shadow reports, and Peer-reviewer duplicate/citation sub-checks. No standalone `similarity-check` or `find-duplicates` command ships today.
+**Used by:** qmd-backed Co-PI and lane retrieval, Librarian comparative reads, Ask/Query, and Peer-reviewer duplicate/citation sub-check candidate pulls. No QuickAdd pre-file similarity telemetry, standalone `similarity-check`, or `find-duplicates` command ships today.
 
-**Implementation:** a sentence-transformer model embeds note bodies into an HNSW index. The shipped backend is `qmd` (hybrid BM25 + vector retrieval) — the local tool and stdio MCP actually granted to the lanes that call these methods; FAISS and hnswlib are underlying index libraries `qmd` can sit on. Re-indexed incrementally as new notes arrive. Default models:
+**Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_qmd_source()`
+copies checked Concepts into `.memoria/index/qmd/checked/`; the qmd MCP wrapper filters
+results back through `check_status: checked`. `answer_query()` and
+`run_bm25_eval()` provide the deterministic Python baseline and eval harness. Vector,
+hybrid, query expansion, and rerank modes are later Ask/retrieval eval work; they count
+only after they beat the BM25 or long-context baseline.
 
-| Model | Params | Best for |
-| --- | --- | --- |
-| `bge-small-en` | 33M | General-purpose English research vaults |
-| `all-MiniLM-L6-v2` | 22M | Resource-constrained setups |
-| `SPECTER2` | — | Citation-similarity tasks specifically |
-
-Re-embedding the vault on a model change takes minutes (≈10ms per note). The vault stores embeddings keyed by `(model_id, model_version)` so multiple models can coexist during evaluation.
-
-**Cost:** one-time embedding compute per note (~10ms). Per-query: <100ms across thousands of notes. Determinism: total — same model + same text → same vector.
+**Cost:** local index rebuild plus qmd query time. Determinism: total for the Python BM25
+baseline; qmd CLI ranking is treated as an implementation detail behind the checked-only
+read barrier.
 
 ---
 
@@ -50,7 +49,7 @@ Re-embedding the vault on a model change takes minutes (≈10ms per note). The v
 
 **Used by:** the Librarian's map lane — `map-cluster-corpus`, `map-scope-project`, `map-report-coverage`.
 
-**Implementation:** HDBSCAN over note embeddings (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
+**Implementation:** HDBSCAN over note vectors when the optional stack is installed (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
 
 **Cost:** seconds to minutes for thousands of notes. Determinism: total for fixed parameters.
 
@@ -109,22 +108,6 @@ Training characteristics:
 
 ---
 
-
-## Skill frontmatter declarations
-
-Each Hermes skill declares its method class in `SKILL.md` frontmatter:
-
-```yaml
-method_class: deterministic | hybrid | generative
-deterministic_engine: regex | embedding | classifier | clustering | graph | api
-llm_fallback_threshold: 0.85     # hybrid skills only
-llm_backend: generic | open-notebook
-llm_backend_fallback: generic | none
-```
-
-`generic` routes to the host profile's default LLM. `open-notebook` routes to a self-hosted Open Notebook instance for source-grounded RAG (currently pilot-scoped to the `[!brief]` comparative-read step in the Librarian's `catalog-enrich-record`).
-
----
 
 ## Related
 

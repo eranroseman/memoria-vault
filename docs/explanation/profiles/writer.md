@@ -7,7 +7,10 @@ nav_order: 3
 
 # The Writer
 
-The Writer turns evidence into structured prose — section drafts with bound citations, and competing outlines. It runs the **draft** lane, and its posture is **generative, draft-only**: every output is a proposal in project scratch (`projects/<project>/`), and nothing it writes lands in `notes/claims/` or a deliverable without the PI's review. The PI owns canonical synthesis; the Writer is the composer whose work the PI reviews, edits, and either promotes or discards. In the Project space, Writer drafts can expose gaps, but promotion remains the PI's move.
+The Writer is deferred in alpha.11. Later it will turn checked evidence into
+structured prose — section drafts with bound citations and competing outlines.
+Its posture remains **generative, draft-only**: every output is a proposal, and
+nothing becomes canonical synthesis or a deliverable without the PI.
 
 ---
 
@@ -15,7 +18,9 @@ The Writer turns evidence into structured prose — section drafts with bound ci
 
 **Not the Co-PI.** The Co-PI sharpens thinking *before* writing, in conversation; the Writer composes prose after the thinking is delegated as a card. Blurring them produces writing that sounds like the PI's thinking but never was.
 
-**Not a promoter.** A draft becoming part of a claim or a deliverable is the PI's move, at the review gate. The Writer can mark a draft ready — an FYI, not an approval request.
+**Not a promoter.** A draft becoming part of a checked note, hub, or deliverable
+is the PI's move. The Writer can mark a draft ready — an FYI, not an approval
+request.
 
 ---
 

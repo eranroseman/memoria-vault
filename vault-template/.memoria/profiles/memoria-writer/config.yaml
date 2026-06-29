@@ -12,7 +12,7 @@ mcp_servers:
     args: ['{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py', --vault, '{{VAULT_PATH}}']
     timeout: 30
     tools:
-      include: [check_permission, complete_write]
+      include: [check_permission]
   obsidian:
     url: https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp
     ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}

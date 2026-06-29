@@ -12,7 +12,7 @@ Driving Memoria from inside Obsidian — the command palette, the Agent Client p
 
 | Guide | What it covers |
 | --- | --- |
-| [Vault launch screen](use-the-vault-launch-screen.md) | Land on the welcome note, switch spaces from the rail, update research focus |
+| [Vault launch screen](use-the-vault-launch-screen.md) | Land on the welcome note, switch spaces from the rail, update steering |
 | [Navigate Memoria surfaces](navigate-memoria-surfaces.md) | Which space, queue, or supporting dashboard to open for each situation |
 | [Reset workspace](reset-workspace.md) | Use the saved Memoria workspace as a reset layout |
 | [Agent Client pane](use-the-agent-client-pane.md) | Attach context, read responses, clear sessions |

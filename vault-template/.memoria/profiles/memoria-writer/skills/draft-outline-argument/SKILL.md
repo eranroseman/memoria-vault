@@ -17,15 +17,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
-      - obsidian.append_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["projects/"]
+    write_scope: []
     outputs: [source]
 ---
 
 # draft-outline-argument
+
+> Deferred in alpha.11: the writing/draft/export lane is not routable and has no direct Obsidian write tools.
 
 Structure before prose. Given a thesis (or a question) and a claim set, produce **two
 or three genuinely different outline options** — not one outline with cosmetic

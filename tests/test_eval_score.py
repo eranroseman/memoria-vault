@@ -16,7 +16,7 @@ from operations.telemetry.eval import eval_dispatch, eval_score
 # Fixtures
 # --------------------------------------------------------------------------- #
 def _vault(tmp_path: Path) -> Path:
-    """A minimal vault: two gold tasks, a small catalog, one superseded claim."""
+    """A minimal vault: two gold tasks, a small catalog, one superseded note."""
     ev = tmp_path / "system/eval"
     ev.mkdir(parents=True)
     (ev / "find-x.md").write_text(
@@ -31,30 +31,37 @@ def _vault(tmp_path: Path) -> Path:
         "## Input\nQ\n## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
-    papers = tmp_path / "catalog/papers"
-    papers.mkdir(parents=True)
-    (papers / "vaswani2017attention.md").write_text(
-        "---\ntype: paper\nlifecycle: current\ncitekey: vaswani2017attention\n"
-        "title: Attention\n---\n",
+    sources = tmp_path / "catalog/sources"
+    (sources / "vaswani2017attention").mkdir(parents=True)
+    (sources / "vaswani2017attention/source.md").write_text(
+        "---\ntype: source\ncheck_status: checked\ntitle: Attention\n"
+        "description: Fixture source.\nsource_id: vaswani2017attention\n"
+        "citekey: vaswani2017attention\n---\n",
         encoding="utf-8",
     )
     # a renamed record that still resolves via its `citekey:` frontmatter
-    (papers / "bert-paper.md").write_text(
-        "---\ntype: paper\nlifecycle: current\ncitekey: devlin2019bert\ntitle: BERT\n---\n",
+    (sources / "bert-paper").mkdir(parents=True)
+    (sources / "bert-paper/source.md").write_text(
+        "---\ntype: source\ncheck_status: checked\ntitle: BERT\n"
+        "description: Fixture source.\nsource_id: bert-paper\ncitekey: devlin2019bert\n---\n",
         encoding="utf-8",
     )
-    claims = tmp_path / "notes/claims"
-    claims.mkdir(parents=True)
-    (claims / "old-claim.md").write_text(
-        "---\ntype: claim\nlifecycle: archived\nsources: [x2020]\n---\nold\n", encoding="utf-8"
-    )
-    (claims / "replaced-claim.md").write_text(
-        "---\ntype: claim\nlifecycle: current\nsuperseded_by: new-claim\n"
-        "sources: [x2020]\n---\nreplaced\n",
+    notes = tmp_path / "knowledge/notes"
+    notes.mkdir(parents=True)
+    (notes / "old-claim.md").write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Old\nstatus: superseded\n"
+        "source_id: catalog/sources/x2020\n---\nold\n",
         encoding="utf-8",
     )
-    (claims / "good-claim.md").write_text(
-        "---\ntype: claim\nlifecycle: current\nsources: [x2020]\n---\ngood\n", encoding="utf-8"
+    (notes / "replaced-claim.md").write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Replaced\n"
+        "superseded_by: new-claim\nsource_id: catalog/sources/x2020\n---\nreplaced\n",
+        encoding="utf-8",
+    )
+    (notes / "good-claim.md").write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Good\n"
+        "source_id: catalog/sources/x2020\n---\ngood\n",
+        encoding="utf-8",
     )
     return tmp_path
 
@@ -88,11 +95,13 @@ def test_superseded_classification_matches_the_linter_detector(tmp_path):
     from operations.integrity.linter import detectors
 
     v = _vault(tmp_path)
-    # a downstream note citing every claim: the detector flags exactly the superseded set
-    src = v / "notes/sources"
+    # a downstream source citing every note: the detector flags exactly the superseded set
+    src = v / "catalog/sources/uses"
     src.mkdir(parents=True)
-    (src / "uses.md").write_text(
-        "---\ntype: source\n---\n[[old-claim]] [[replaced-claim]] [[good-claim]]\n",
+    (src / "source.md").write_text(
+        "---\ntype: source\ncheck_status: checked\ntitle: Uses\n"
+        "description: Fixture source.\nsource_id: uses\n---\n"
+        "[[old-claim]] [[replaced-claim]] [[good-claim]]\n",
         encoding="utf-8",
     )
     flagged = {f.message.split("[[")[1].split("]]")[0] for f in detectors.fama_exposure(v)}

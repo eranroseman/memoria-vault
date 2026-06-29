@@ -17,17 +17,16 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
-      - obsidian.append_content
       - pyzotero.find_related
       - pyzotero.get_citations
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/", "notes/fleeting/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [candidate, fleeting]
 ---
 
 # catalog-rank-candidate
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Order the screening queue so the PI's attention lands where it pays. Given a batch of
 candidate sources (a `catalog-find-source` worklist, a `.bib` intake batch), rank them

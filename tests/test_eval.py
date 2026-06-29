@@ -7,7 +7,6 @@ from pathlib import Path
 
 import tasks_mcp
 import yaml
-from operations.lib import schema
 from operations.telemetry.eval import eval_dispatch
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
@@ -33,13 +32,14 @@ def _frontmatter(path: Path) -> dict:
 # --------------------------------------------------------------------------- #
 # The shipped gold set                                                         #
 # --------------------------------------------------------------------------- #
-def test_shipped_gold_tasks_validate_against_the_schema():
-    types = schema.load_types()
+def test_shipped_gold_tasks_have_valid_dispatch_shape():
     files = _gold_files()
     assert len(files) >= 8, "the gold set ships ≥ 2 tasks per workflow"
     for p in files:
         fm = _frontmatter(p)
-        assert schema.validate_frontmatter(fm, types["eval-task"]) == [], p.name
+        assert fm["type"] == "eval-task", p.name
+        assert fm["lane"] in eval_dispatch.LANE_PROFILE, p.name
+        assert fm["lifecycle"] in {"current", "archived"}, p.name
 
 
 def test_gold_tasks_are_self_contained():
@@ -64,9 +64,9 @@ def test_lane_profile_mirrors_tasks_mcp():
     assert eval_dispatch.LANE_PROFILE == tasks_mcp.LANE_PROFILE
 
 
-def test_schema_lane_enum_matches_the_routed_lanes():
-    types = schema.load_types()
-    assert set(types["eval-task"]["enums"]["lane"]) == set(eval_dispatch.LANE_PROFILE)
+def test_gold_task_lanes_match_the_routed_lanes():
+    lanes = {_frontmatter(path)["lane"] for path in _gold_files()}
+    assert lanes <= set(eval_dispatch.LANE_PROFILE)
 
 
 # --------------------------------------------------------------------------- #

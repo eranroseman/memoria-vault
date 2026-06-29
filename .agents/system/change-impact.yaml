@@ -10,12 +10,12 @@ areas:
       - Note-type and frontmatter documentation
     checks:
       - python -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
-  - area: Folder home, gated prefix, or skeleton
+  - area: Folder home, staging/quarantine root, or skeleton
     paths:
       - vault-template/.memoria/schemas/folders.yaml
     inspect:
       - Type schemas and templates
-      - Policy and pattern fallback constants
+      - Legacy policy and pattern fallback constants
       - Installer scaffold and golden-copy behavior
       - Dashboards and links
     checks:
@@ -40,7 +40,7 @@ areas:
       - vault-template/.memoria/plugins/memoria-policy-gate/**
       - src/memoria_vault/runtime/policy/**
     inspect:
-      - Lane overrides and gated-prefix schema
+      - Lane overrides and legacy gated-prefix fallback
       - Audit contract
       - Mutating Obsidian tool mappings
       - Tasks delegation semantics

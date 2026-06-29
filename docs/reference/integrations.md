@@ -6,7 +6,10 @@ grand_parent: Reference
 
 # External integrations
 
-APIs and tools the Librarian profile reaches during ingest and enrichment. All external calls are gated by `external_api_policy: explicit_only` in the Librarian lane-override — a skill must declare its API usage explicitly before it can invoke it.
+APIs and tools Memoria reaches during capture, metadata checks, retrieval, and
+local UI work. External calls are allowed only through declared operation/profile
+tool policy; captured Concepts and worker-owned projections remain Memoria's
+source of truth.
 
 ---
 
@@ -14,14 +17,15 @@ APIs and tools the Librarian profile reaches during ingest and enrichment. All e
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Source of truth for citekeys, PDFs, and bibliographic metadata | Every citable source must have a Zotero entry with a pinned BBT citekey before ingest. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
-| **`.memoria/memoria.bib`** | Auto-exported BibTeX from Zotero | Librarian reads this; never writes to it. Excluded from git (user-specific). |
+| **Zotero + Better BibTeX** | Import source for citekeys, PDFs, and bibliographic metadata | Capture snapshots Zotero Local API item JSON or a local BibTeX entry into checked `source` Concepts. Zotero annotations are not imported in alpha.11. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
+| **`references.bib`** | Generated BibTeX projection | Rebuilt from checked `catalog/sources/**/source.md` Concepts by the worker; never hand-maintained. |
 
 ---
 
 ## Metadata enrichment APIs
 
-Used during `enrich` to populate or refresh `paper` catalog-entity fields.
+Used during capture and `check_source_metadata` to populate or verify `source`
+Concept metadata and catalog entities.
 
 | API | What it provides | Key fields populated |
 |---|---|---|
@@ -48,11 +52,12 @@ Enrichment and search calls are rate-limited (or fail outright) without a free A
 
 ## Entity resolution
 
-Used during enrichment to link paper notes to person, organization, and venue entities.
+Used during capture/enrichment to link source Concepts to person, organization, and
+venue Concepts.
 
 | API | Role |
 |---|---|
-| **ORCID** | Unique author identifiers; links `paper` → `person` |
+| **ORCID** | Unique author identifiers; links sources to `person` Concepts |
 | **ROR (Research Organization Registry)** | Institution identifiers; links to `organization` |
 | **GitHub API** | Repository metadata for `repository` (tools, packages, code) |
 
@@ -62,11 +67,11 @@ Used during enrichment to link paper notes to person, organization, and venue en
 
 | Integration | Role |
 |---|---|
-| **Obsidian Local REST API** (native MCP, verified loopback HTTPS port 27124 by default) | Lets Hermes profiles read and write vault files through the plugin's native MCP rather than direct filesystem calls. Required for the Librarian and other write-active profiles. |
+| **Obsidian Local REST API** (native MCP, verified loopback HTTPS port 27124 by default) | Lets profiles read the Obsidian-opened workspace through verified loopback HTTPS. Canonical writes route through the worker/trusted-writer path, not profile-owned direct file writes. |
 | **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the Co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
-| **qmd** | Hybrid BM25 + vector search over the vault. Used by the Co-PI, Librarian map lane, Writer, Peer-reviewer, and QuickAdd pre-file similarity shadow reports. It is read-only; no standalone duplicate-sweep command ships today. |
+| **qmd** | Checked-only local search over the Concept corpus. Used by the Co-PI, Librarian map lane, Writer, and Peer-reviewer for read-only retrieval; BM25 is the alpha.11 baseline, and vector/hybrid modes are later eval work. No QuickAdd pre-file similarity telemetry or standalone duplicate-sweep command ships today. |
 | **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
-| **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` Inbox cards. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). |
+| **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). |
 
 ---
 

@@ -24,13 +24,11 @@ ensure_qmd() {
   fi
   QMD_BIN="$q"
   if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
-    run "$q" collection add "$VAULT_PATH" --name vault \
-      || warn "qmd collection add failed — register manually: qmd collection add \"$VAULT_PATH\" --name vault"
-    if confirm "Build the qmd vector index now (first run downloads ~2GB of local models)?"; then
-      run "$q" embed || warn "qmd embed failed — re-run later: qmd embed"
-    else
-      say "  (skipped — BM25 search works now; run 'qmd embed' later for semantic search)"
-    fi
+    run mkdir -p "$VAULT_PATH/.memoria/index/qmd/checked"
+    run "$q" collection add "$VAULT_PATH/.memoria/index/qmd/checked" \
+      --name memoria-checked --mask "**/*.md" \
+      || warn "qmd collection add failed — register manually: qmd collection add \"$VAULT_PATH/.memoria/index/qmd/checked\" --name memoria-checked --mask '**/*.md'"
+    say "  (registered checked-only qmd input; the worker rebuilds it from checked Concepts)"
   fi
 }
 

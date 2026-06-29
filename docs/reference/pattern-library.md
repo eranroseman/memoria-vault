@@ -6,125 +6,146 @@ grand_parent: Reference
 
 # Pattern library
 
-The shipped runnable patterns, pattern-note schema, and `patterns_list` / `patterns_run` contract.
+The shipped prompt operations and the compatibility `patterns_list` /
+`patterns_run` contract.
 
-- Patterns are data: markdown prompt transformations in `system/patterns/`.
-- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) is the audited runner ([ADR-53](../adr/53-pattern-library.md)).
+- Prompt operations are checked `operation` Concepts in `capabilities/operations/`.
+- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) is the audited
+  runner ([ADR-53](../adr/53-pattern-library.md)).
 - The runner composes prompts; it never writes content.
 - To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
 ---
 
-## The shipped patterns
+## The shipped operations
 
-Seven patterns ship at `lifecycle: current` (runnable). Each is one file under `system/patterns/`; the file `stem` is its `pattern_id`.
+Nine prompt operations ship at `check_status: checked` and are runnable. Each
+is one file under `capabilities/operations/`; the file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |
-| `analyze-claims` | Analyze claims | peer-reviewer | analyze | both | selection-or-note | `projects/` |
-| `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `projects/` |
-| `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `projects/` |
-| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `notes/fleeting/` |
-| `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `projects/` |
-| `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `notes/fleeting/` |
-| `surface-tensions` | Surface tensions | librarian | link | library | note-set | `projects/` |
+| `analyze-claims` | Analyze claims | peer-reviewer | analyze | both | selection-or-note | `.memoria/staging/knowledge/` |
+| `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `.memoria/staging/knowledge/` |
+| `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/knowledge/` |
+| `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/knowledge/` |
+| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `.memoria/staging/knowledge/` |
+| `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/knowledge/` |
+| `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/knowledge/` |
+| `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/knowledge/` |
+| `surface-tensions` | Surface tensions | librarian | link | library | note-set | `.memoria/staging/knowledge/` |
 
-`mode` filters the picker: `library` patterns are for ongoing reading, `project` patterns for a writing project, `both` for either. The set is authored directly — the files *are* the instances, there is no template — and staged into the golden copy like the other system files ([Installer (bootstrap)](installer.md)).
+`mode` filters the picker: `library` operations are for ongoing reading,
+`project` operations for a writing project, `knowledge` operations for the
+digest-to-note loop, and `both` for library or project use.
 
 ---
 
-## The pattern-note schema
+## The prompt-operation shape
 
-Every pattern file is YAML frontmatter followed by a single `# Pattern` body. The body is the prompt; `{{input}}` is the one substitution token.
+Every prompt operation file is YAML frontmatter followed by a single `# Pattern` body.
+The body is the prompt; `{{input}}` is the one substitution token.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
 | `title` | str | Display name in the picker. |
-| `type` | `literal:pattern` | Identifies the note as a pattern; non-patterns are skipped. |
-| `lifecycle` | `proposed → current → archived` | Only `current` patterns are runnable; `run` on a non-current pattern errors `pattern-not-current`. |
-| `posture` | enum | The voice the run adopts (`librarian` / `peer-reviewer`) — echoed back to the caller as `posture`. |
-| `mode` | `library` \| `project` \| `both` | Which picker view the pattern appears in. |
-| `action` | str | The verb (`analyze` / `check` / `compare` / `extract` / `summarize` / `link`). |
-| `input` | str | The expected input shape (`selection-or-note`, `source-note`, `note-set`, …) — documentation for the caller, not enforced. |
-| `output_target` | path | Where the run's product is meant to land. An empty or review-gated target forces dry-run (below). |
-| `model_hint` | str (optional) | A suggested model tier, passed through as `model_hint`; empty means caller's default. |
+| `type` | `literal:operation` | Identifies the Concept as an operation. |
+| `check_status` | `unchecked` / `checked` / `quarantined` | Only `checked` operations are runnable. |
+| `description` | str | Human summary required by the operation schema. |
+| `operation_id` | str | Stable operation id; normally matches the file stem. |
+| `posture` | str | The voice the run adopts, echoed back as `posture`. |
+| `mode` | `library` \| `project` \| `knowledge` \| `both` | Which picker view the operation appears in. |
+| `action` | str | The operation verb. |
+| `input` | str | Expected input shape; documentation for the caller, not enforced. |
+| `output_target` | path | Where the run's product is meant to land. Missing or gated targets force dry-run. |
+| `model_hint` | str (optional) | Suggested model tier; empty means caller default. |
 | `version` | str | Logged with every run for provenance. |
-| `adapted_from` | str (optional) | Upstream provenance of the prompt (e.g. `fabric/analyze_claims`). |
-| `created` | date | — |
+| `adapted_from` | str (optional) | Upstream provenance of the prompt. |
 
-The schema is enforced by the Linter and the pre-commit hook, the same machinery that guards every other system note.
+The schema is enforced by the same Linter and pre-commit machinery that guards
+other Concept files.
 
 ---
 
 ## The runner
 
-The MCP exposes two tools. Both are read-only; neither writes a vault note.
+The MCP exposes two compatibility tools. Both are read-only; neither writes a
+vault note.
 
 ### `patterns_list(mode="")`
 
-Returns the runnable (`lifecycle: current`) patterns, optionally filtered by `mode` (`library` / `project`; `both`-mode patterns always match). Each row is `{id, title, mode, action, posture, output_target}`. Files whose name starts with `_` (the preamble) are skipped.
+Returns checked operations, optionally filtered by `mode` (`library` / `project`
+/ `knowledge`; `both`-mode operations always match). Each row is `{id, title,
+mode, action, posture, output_target}`.
 
 ### `patterns_run(pattern_id, input_text="", input_ref="")`
 
-Loads the pattern by id, composes the prompt, enforces the gated-zone rule, logs provenance, and returns the prompt for the calling agent to execute and write through its normal gated path.
+Loads the operation by id, composes the prompt, enforces the gated-zone rule,
+logs provenance, and returns the prompt for the calling agent to execute through
+its normal write path.
 
 | Return field | Meaning |
 | --- | --- |
 | `run_id` | 8-char id correlating the return value with its provenance line. |
 | `pattern` | The `pattern_id` that ran. |
-| `prompt` | The composed prompt: `preamble` + `---` + pattern body with `{{input}}` substituted. |
-| `output_target` | The pattern's staging target (empty when dry-run). |
-| `dry_run` | `true` when the target is missing or review-gated — the run produces a prompt but no sanctioned write target. |
-| `posture` | The pattern's posture, for the caller's voice. |
-| `model_hint` | The pattern's `model_hint`, or `null`. |
-| `note` | Present only on dry-run: explains the target was missing or gated. |
-| `provenance_logged` | Present (and `false`) only when the provenance append failed — the prompt still returns, but the run left no audit line (also warned on stderr). |
+| `prompt` | The composed prompt: `preamble` + `---` + operation body with `{{input}}` substituted. |
+| `output_target` | The operation's staging target, empty when dry-run. |
+| `dry_run` | `true` when the target is missing or review-gated. |
+| `posture` | The operation's posture, for the caller's voice. |
+| `model_hint` | The operation's `model_hint`, or `null`. |
+| `note` | Present only on dry-run. |
+| `provenance_logged` | Present and `false` only when the provenance append failed. |
 
-An unknown id returns `{"error": "unknown-pattern", "available": [...]}`; a non-current pattern returns `{"error": "pattern-not-current"}`.
+An unknown id returns `{"error": "unknown-pattern", "available": [...]}`. A
+non-checked operation returns `{"error": "operation-not-checked"}`.
 
 ---
 
-## Composition: preamble + pattern + input
+## Composition
 
-Every run is prefixed with the shared voice preamble at `system/patterns/_preamble.md` ([ADR-53](../adr/53-pattern-library.md)). It is non-negotiable regardless of the pattern, and encodes four rules: output is raw material for the PI to rewrite; propose, never assert; cite, don't fabricate (a missing source is a visible `[no source]`, never invented); and stay inside the provided input. `{{input}}` in the pattern body is replaced with `input_text`; when only an `input_ref` is supplied (e.g. the active note path), the token becomes `[see <input_ref>]` and the executing agent reads that reference itself.
+Every run is prefixed with the shared voice preamble at
+`system/patterns/_preamble.md` ([ADR-53](../adr/53-pattern-library.md)).
+`{{input}}` in the operation body is replaced with `input_text`; when only an
+`input_ref` is supplied, the token becomes `[see <input_ref>]`.
 
 ---
 
 ## Gated-target dry-run
 
-A pattern is a *proposal* tool: propose, never dispose.
+A prompt operation is a proposal tool: propose, never dispose.
 
 | `output_target` | Result |
 | --- | --- |
 | Empty | `dry_run: true`; no sanctioned write target. |
-| Review-gated prefix from `folders.yaml` | `dry_run: true`; the Linter flags the pattern file. |
-| Staging home such as `projects/` or `notes/fleeting/` | Live run; caller still writes through its normal gated path. |
-| Canonical target such as `notes/claims/` | Dry-run by design. |
+| Review-gated prefix from `folders.yaml` | `dry_run: true`; the Linter flags the operation file. |
+| Staging home such as `.memoria/staging/knowledge/` | Live run; caller still writes through its normal path. |
+| Canonical target such as `knowledge/notes/` | Dry-run by design. |
 
-The product reaches canonical notes only through the normal human gate.
+The product reaches canonical notes only through the normal promotion path.
 
 ---
 
 ## Provenance
 
-Every run appends one JSONL line to `system/logs/patterns.jsonl` before the prompt is returned — the audit trail that makes pattern output traceable.
+Every run appends one JSONL line to `system/logs/patterns.jsonl` before the
+prompt is returned.
 
 ```json
-{"timestamp": "2026-06-01T14:23:01Z", "run_id": "a1b2c3d4", "pattern": "analyze-claims", "version": "1.0", "input_ref": "notes/sources/vaswani2017.md", "input_chars": 0, "output_target": "projects/", "dry_run": false}
+{"timestamp": "2026-06-01T14:23:01Z", "run_id": "a1b2c3d4", "pattern": "analyze-claims", "version": "1.0", "input_ref": "knowledge/notes/example.md", "input_chars": 0, "output_target": ".memoria/staging/knowledge/", "dry_run": false}
 ```
 
 | Field | Meaning |
 | --- | --- |
-| `timestamp` | ISO-8601 UTC, `Z`-suffixed (the [Telemetry & logs](telemetry.md) convention). |
+| `timestamp` | ISO-8601 UTC, `Z`-suffixed. |
 | `run_id` | Correlates with the `run_id` in the tool return value. |
-| `pattern` / `version` | Which pattern and pattern version ran. |
-| `input_ref` | The reference passed in (a note path), or empty when raw text was supplied. |
-| `input_chars` | Length of the supplied `input_text` (0 when only a reference was passed). |
+| `pattern` / `version` | Which operation and version ran. |
+| `input_ref` | The reference passed in, or empty when raw text was supplied. |
+| `input_chars` | Length of the supplied `input_text`. |
 | `output_target` | The staging target the run resolved to. |
-| `dry_run` | Whether the run was a dry-run (missing/gated target). |
+| `dry_run` | Whether the run was a dry-run. |
 
-A failed provenance write does not abort the run — the prompt is the product — but the return value carries `provenance_logged: false` and a stderr warning so the operator knows the run left no line.
+A failed provenance write does not abort the run; the return value carries
+`provenance_logged: false` and the runner warns on stderr.
 
 ---
 

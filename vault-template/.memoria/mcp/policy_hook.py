@@ -295,6 +295,36 @@ def to_vault_relative(path: str, vault: Path):
         return None
 
 
+def _audit_registry_block(vault: Path, profile: str, tool_name: str, payload: dict, reason: str):
+    action = classify(tool_name)
+    if action is None:
+        return
+    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault)
+    extra = payload.get("extra") or {}
+    task_id = extra.get("task_id") or payload.get("session_id") or ""
+    if path is None or not path or not task_id:
+        return
+    try:
+        from memoria_vault.runtime.policy.audit import append_audit
+        from memoria_vault.runtime.time import now_iso
+
+        append_audit(
+            vault,
+            {
+                "timestamp": now_iso(),
+                "profile": profile,
+                "action": action,
+                "path": path,
+                "task_id": task_id,
+                "decision": "deny",
+                "policy_rule": "tool-registry.allowlist",
+                "message": reason,
+            },
+        )
+    except Exception:  # noqa: BLE001 -- registry block itself already fails closed
+        return
+
+
 def vault_root() -> Path:
     # <vault>/.memoria/mcp/policy_hook.py -> parents[2] == <vault>
     return Path(__file__).resolve().parents[2]
@@ -358,6 +388,7 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
         }
     registry_block = _registry_block(tool_name, profile, vault)
     if registry_block is not None:
+        _audit_registry_block(vault, profile, tool_name, payload, registry_block["reason"])
         return registry_block
     action = classify(tool_name)
     if action is None:

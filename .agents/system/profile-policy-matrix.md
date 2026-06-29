@@ -5,8 +5,8 @@ Derived from profile configs, distribution metadata, and lane overrides.
 
 | Profile | Purpose | MCP servers | Write scope |
 |---|---|---|---|
-| `memoria-copi` | Memoria Co-PI — the one conversational agent (ADR-48): reflective thinking-partner, system explainer, and delegation front. Read-only across the vault; every write goes out as a kanban card; carries the memory/goals/skills loop. | cluster, ingest, obsidian, patterns, policy, qmd, tasks | None |
-| `memoria-engineer` | Memoria Engineer — scaffolds code notes, coordinates the external coding agent, and commits in projects/*/code/. | obsidian, policy | projects/*/code/ |
-| `memoria-librarian` | Memoria Librarian — finds, ingests, enriches, and draft-classifies evidence into inbox/ and catalog/. | cluster, ingest, obsidian, paper_search, patterns, policy, pyzotero, qmd | inbox/, catalog/, notes/fleeting/, notes/sources/ |
-| `memoria-peer-reviewer` | Memoria Peer-reviewer — the independent verify gate: checks claims, citations, duplicates, and retractions and flags findings as Inbox cards (flag/gap); it never edits the work under review (ADR-48/D38). | obsidian, policy, pyzotero, qmd | inbox/ |
-| `memoria-writer` | Memoria Writer — drafts answers and synthesis into projects/ and projects/ drafts (review-gated). | obsidian, policy, qmd | projects/ |
+| `memoria-copi` | Memoria Co-PI — the one conversational agent: reflective thinking-partner, system explainer, and worker-delegation front. Read-only across the vault; every mutation is delegated/enqueued; carries the memory/goals/skills loop. | cluster, ingest, obsidian, patterns, policy, qmd, tasks | None |
+| `memoria-engineer` | Memoria Engineer — deferred in alpha.11; coding/autonomy work is post-checkpoint scope. | obsidian, policy | None |
+| `memoria-librarian` | Memoria Librarian — finds, ingests, enriches, and classifies evidence through alpha.11 worker-staged catalog and knowledge outputs. | cluster, ingest, obsidian, paper_search, patterns, policy, pyzotero, qmd | .memoria/staging/catalog/, .memoria/staging/knowledge/ |
+| `memoria-peer-reviewer` | Memoria Peer-reviewer — the independent verify lane; checks claims, citations, duplicates, and retractions and reports through worker-owned flags/attention projections. | obsidian, policy, pyzotero, qmd | None |
+| `memoria-writer` | Memoria Writer — deferred in alpha.11; writing/draft/export work is post-checkpoint scope. | obsidian, policy, qmd | None |

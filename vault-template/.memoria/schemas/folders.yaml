@@ -1,82 +1,64 @@
-# Canonical vault layout — THE single source for the type→folder map (ADR-47).
-# Read by: the Linter (lint:check-schema), the policy MCP (gated prefixes),
-# the pre-commit hook, the installer skeleton, and the template/Bases tests.
-categories: [catalog, notes, projects, inbox, spaces, system]
+# Canonical alpha.11 workspace layout.
+# Read by: schema validators, the installer skeleton, and later worker/promotion code.
+categories: [catalog, knowledge, capabilities]
+bundle_roots: [catalog, knowledge, capabilities]
 
 # type → folder-home (relative to the vault root)
 homes:
-  paper: catalog/papers
-  person: catalog/people
-  organization: catalog/organizations
-  venue: catalog/venues
-  dataset: catalog/datasets
-  repository: catalog/repositories
-  project: projects
-  thesis: projects
-  code-note: projects
-  fleeting: notes/fleeting
-  source: notes/sources
-  claim: notes/claims
-  hub: notes/hubs
-  candidate: inbox
-  gap: inbox
-  flag: inbox
-  alert: inbox
-  work-prompt: inbox
-  space: spaces
-  queue: spaces
-  maintenance: spaces
-  pattern: system/patterns
-  worker-card: system/board
-  eval-task: system/eval
-  worklist-item: system/worklists
+  source: catalog/sources
+  person: catalog/entities
+  organization: catalog/entities
+  venue: catalog/entities
+  digest: knowledge/digests
+  note: knowledge/notes
+  hub: knowledge/hubs
+  project: knowledge/projects
+  operation: capabilities/operations
+  skill: capabilities/skills
+  mcp: capabilities/mcp
+  workflow: capabilities/workflows
 
-# review-gated zones — agent writes here are denied by the policy MCP (ADR-03)
-gated_prefixes:
-  - notes/claims/
-  - notes/hubs/
+machine_staging_roots:
+  - .memoria/staging/catalog
+  - .memoria/staging/knowledge
+  - .memoria/staging/capabilities
+
+quarantine_root: .memoria/quarantine
 
 # transient — items here converge to archived and leave active views
-transient_prefixes:
-  - inbox/
+transient_prefixes: []
 
 # the full installer skeleton (content dirs get .gitkeep; ADR-55)
 skeleton:
-  - .memoria/samples
-  - .memoria/samples/mediterranean-diet
-  - .memoria/samples/mediterranean-diet/catalog
-  - .memoria/samples/mediterranean-diet/catalog/papers
-  - .memoria/samples/mediterranean-diet/notes
-  - .memoria/samples/mediterranean-diet/notes/claims
-  - .memoria/samples/mediterranean-diet/notes/hubs
-  - .memoria/samples/mediterranean-diet/notes/sources
-  - catalog/papers
-  - catalog/people
-  - catalog/organizations
-  - catalog/venues
-  - catalog/datasets
-  - catalog/repositories
-  - notes/fleeting
-  - notes/fleeting/chats
-  - notes/fleeting/maps
-  - notes/sources
-  - notes/claims
-  - notes/hubs
-  - projects
-  - projects/_template
-  - projects/_template/code
-  - projects/_template/drafts
-  - projects/_template/exports
-  - inbox
-  - spaces
-  - system/board
+  - .memoria/index
+  - .memoria/index/qmd
+  - .memoria/quarantine
+  - .memoria/queue
+  - .memoria/queue/pending
+  - .memoria/queue/running
+  - .memoria/queue/done
+  - .memoria/queue/failed
+  - .memoria/staging/catalog
+  - .memoria/staging/knowledge
+  - .memoria/staging/capabilities
+  - journal
+  - catalog
+  - catalog/sources
+  - catalog/entities
+  - knowledge
+  - knowledge/digests
+  - knowledge/notes
+  - knowledge/hubs
+  - knowledge/projects
+  - knowledge/views
+  - capabilities
+  - capabilities/operations
+  - capabilities/skills
+  - capabilities/mcp
+  - capabilities/workflows
   - system/exports
   - system/exports/assets
   - system/logs
   - system/logs/sessions
   - system/metrics
-  - system/templates
-  - system/patterns
-  - system/eval
-  - system/worklists
   - system/dashboards

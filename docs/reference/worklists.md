@@ -6,7 +6,10 @@ grand_parent: Reference
 
 # Worklists
 
-`vault-template/.memoria/operations/lib/worklists.py` turns a high-cardinality report into one file-backed batch review surface. The operation writes many `worklist-item` notes and raises exactly one aggregate Inbox `work-prompt` for the PI.
+`vault-template/.memoria/operations/lib/worklists.py` turns a high-cardinality
+report into one file-backed batch review surface. The operation writes many
+`projection: worklist-item` rows and raises exactly one aggregate Inbox
+`attention_kind: work-prompt` projection for the PI.
 
 ## Command
 
@@ -41,13 +44,13 @@ Row objects may include `title` or `name`, `item_ref` or `target` or `path` or `
 
 | Path | Shape |
 | --- | --- |
-| `system/worklists/<worklist>/<rank-title>.md` | One `type: worklist-item` note per row. |
-| `inbox/work-prompt-*.md` | One aggregate review prompt with `raised_by: worklists` and `lane: copi`. |
+| `system/worklists/<worklist>/<rank-title>.md` | One `projection: worklist-item` row per report row. |
+| `inbox/work-prompt-*.md` | One `projection: attention`, `attention_kind: work-prompt` review prompt with `raised_by: worklists` and `lane: copi`. |
 
 The aggregate prompt uses a `worklist-<slug>` dedupe key. Re-running the same report rewrites the item notes and does not create a second prompt when the deduped prompt already exists.
 
 ## Related
 
 - Worklist fields: [Frontmatter fields](frontmatter.md)
-- Worklist document type: [Document types](document-types.md)
+- Current Concept types: [Document types](document-types.md)
 - Operation inventory: [Operations](operations.md)

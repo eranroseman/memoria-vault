@@ -39,10 +39,10 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     summary = result.as_dict()
 
     assert summary["cassette"] == "package-gate-golden-path"
-    assert "catalog/papers/harness2026.md" in summary["artifacts"]
-    assert "projects/harness/project-gate-index.md" in summary["artifacts"]
-    assert "projects/harness/exports/harness-section.md" in summary["artifacts"]
-    assert not (tmp_path / "notes/claims/blocked-by-harness.md").exists()
+    assert "catalog/sources/harness2026/source.md" in summary["artifacts"]
+    assert "knowledge/notes/harness-support.md" in summary["artifacts"]
+    assert "knowledge/projects/harness/argument.canvas" in summary["artifacts"]
+    assert not (tmp_path / "knowledge/notes/blocked-by-harness.md").exists()
 
     audit = [
         json.loads(line)
@@ -51,6 +51,8 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     assert audit[-1]["decision"] == "deny"
     assert audit[-1]["task_id"] == "HARNESS-DENY"
 
-    project_gate = (tmp_path / "projects/harness/project-gate-index.md").read_text(encoding="utf-8")
-    assert "Harness support" in project_gate
-    assert 'evidence_saturation: "unsaturated"' in project_gate
+    canvas = json.loads(
+        (tmp_path / "knowledge/projects/harness/argument.canvas").read_text(encoding="utf-8")
+    )
+    assert len(canvas["nodes"]) == 3
+    assert {edge["label"] for edge in canvas["edges"]} == {"contradicts", "supports"}

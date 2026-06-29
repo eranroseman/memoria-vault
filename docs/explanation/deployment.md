@@ -21,7 +21,7 @@ and for maintained rationale see the Design Book links below.
 | --- | --- |
 | Vault | Local Obsidian folder populated from `src/` by the installer. |
 | Runtime | Hermes profiles on the same host as the production vault. |
-| Bibliography | Better BibTeX exports `memoria.bib` inside the vault. |
+| Bibliography | Memoria generates tracked `references.bib` from checked source Concepts. |
 | Dispatch | One Hermes dispatcher per vault. |
 | Secrets | Per-machine `.env` files, never committed or synced. |
 

@@ -5,19 +5,19 @@ cssclasses: memoria-nav
 
 **Now**
 
-[[spaces/inbox|⬤ Action queue]] &nbsp; `$= dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && ["candidate", "gap", "work-prompt"].includes(p.type)).length`
+[[spaces/inbox|⬤ Action queue]] &nbsp; `$= dv.pages('"inbox"').where(p => p.projection == "attention" && p.attention_status == "open" && ["candidate", "gap", "work-prompt"].includes(p.attention_kind)).length`
 
-[[spaces/maintenance|Drift]] &nbsp; `$= (() => { const n = dv.pages('"inbox"').where(p => p.lifecycle == "proposed" && (p.type == "flag" || p.type == "alert")).length; return n > 0 ? "◆ " + n : n })()` &nbsp; [[system/dashboards/fleet-health|Fleet]] &nbsp; `$= (() => { const n = dv.pages('"system/metrics"').where(p => p.type == "lane-metric" && (p.band == "act" || p.band == "watch")).length; return n > 0 ? "◆ " + n : n })()`
+[[spaces/maintenance|Drift]] &nbsp; `$= (() => { const n = dv.pages('"inbox"').where(p => p.projection == "attention" && p.attention_status == "open" && ["flag", "alert"].includes(p.attention_kind)).length; return n > 0 ? "◆ " + n : n })()` &nbsp; [[system/dashboards/fleet-health|Fleet]] &nbsp; `$= (() => { const n = dv.pages('"system/metrics"').where(p => p.type == "lane-metric" && (p.band == "act" || p.band == "watch")).length; return n > 0 ? "◆ " + n : n })()`
 
 ---
 
 **Places**
 
-[[spaces/library|Library]] &nbsp; `$= dv.pages('"notes/sources"').where(p => p.lifecycle == "proposed" && p.sample != true).length` to read
+[[spaces/library|Library]] &nbsp; `$= dv.pages('"catalog/sources"').where(p => p.check_status == "checked" && p.sample != true).length` sources
 
-[[spaces/knowledge|Knowledge]] &nbsp; `$= (() => { const n = dv.pages('"notes/claims"').where(p => p.lifecycle == "current" && (p.links?.contradicts ?? []).length > 0).length; return n > 0 ? n + " ⚠" : n })()`
+[[spaces/knowledge|Knowledge]] &nbsp; `$= (() => { const n = dv.pages('"knowledge/notes"').where(p => p.check_status == "checked").length; return n > 0 ? n : n })()`
 
-[[spaces/project|Project]] &nbsp; `$= dv.pages('"projects"').where(p => p.type == "project" && p.lifecycle == "current").length` active
+[[spaces/project|Project]] &nbsp; `$= dv.pages('"knowledge/projects"').where(p => p.type == "project" && p.check_status == "checked").length` active
 
 ---
 
@@ -25,60 +25,28 @@ cssclasses: memoria-nav
 
 > [!note]- Inbox actions
 > ```button
-> name Capture source
+> name Capture note
 > type command
-> action QuickAdd: Memoria: capture source from URL
+> action QuickAdd: Memoria: capture note
 > ```
 >
 > ```button
-> name Capture fleeting
+> name Open Inbox
 > type command
-> action QuickAdd: Memoria: capture fleeting
+> action QuickAdd: Memoria: open Inbox
 > ```
 >
 > ```button
-> name Load sample
+> name Resolve active
 > type command
-> action QuickAdd: Memoria: load sample vault
-> ```
-
-> [!note]- Library actions
-> ```button
-> name Capture source
-> type command
-> action QuickAdd: Memoria: structured source capture
-> ```
->
-> ```button
-> name Capture from Zotero
-> type command
-> action QuickAdd: Memoria: capture from Zotero selection
-> ```
-
-> [!note]- Knowledge actions
-> ```button
-> name Write claim
-> type command
-> action QuickAdd: Memoria: write claim note
-> ```
->
-> ```button
-> name Link claim
-> type command
-> action QuickAdd: Memoria: link claim
+> action QuickAdd: Memoria: resolve inbox card
 > ```
 
 > [!note]- Project actions
 > ```button
-> name Start project
+> name Record exploration trace
 > type command
-> action QuickAdd: Memoria: start project
-> ```
->
-> ```button
-> name Refresh gate
-> type command
-> action QuickAdd: Memoria: refresh project gate
+> action QuickAdd: Memoria: record exploration trace
 > ```
 
 <!-- ponytail: badges are Dataview inline-JS, not Bases formulas — Bases can't emit a standalone count. Needs Dataview "Enable inline JavaScript queries" on. Fleet reads runtime-only lane-metric notes; absent in a fresh vault renders 0. Period precision is best-effort, not week-scoped. -->

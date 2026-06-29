@@ -945,6 +945,15 @@ wire_sweeps_cron() {
     "Sweeps"
 }
 
+wire_worker_cron() {
+  install_hermes_cron \
+    "Worker queue cron" "worker" \
+    "worker-cron.sh" "memoria-worker.sh" '* * * * *' "memoria-worker" \
+    "worker" "worker" "worker" "" \
+    "observes PI edits and drains pending alpha.11 worker jobs every minute" \
+    "Worker"
+}
+
 wire_lint_cron() {
   install_hermes_cron \
     "Linter cron" "lint" \
@@ -989,6 +998,7 @@ main() {
     install_profiles
     wire_telemetry_cron
     wire_sweeps_cron
+    wire_worker_cron
     wire_lint_cron
     wire_metrics_cron
     wire_eval_cron
@@ -1011,6 +1021,7 @@ main() {
   install_skills
   wire_telemetry_cron
   wire_sweeps_cron
+  wire_worker_cron
   wire_lint_cron
   wire_metrics_cron
   wire_eval_cron

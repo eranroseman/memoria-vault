@@ -8,16 +8,17 @@ permalink: /how-to-guides/knowledge/
 
 # Knowledge
 
-Build durable synthesis — distill claims, connect them into the graph, and curate the structure. Performed inside Obsidian; claims and hubs are review-gated, so you author and the agents propose.
+Build durable synthesis. Alpha.11 uses checked Concepts under `knowledge/`;
+the alpha.10 claim-note graph guides below are retained only as retired references.
 
 | Guide | What it covers |
 | --- | --- |
-| [Write a claim note](write-a-claim-note.md) | Distill a source into a durable claim in `notes/claims/` |
-| [Link related claims](link-related-claims.md) | Add typed `supports` / `contradicts` relations between claims |
-| [Advance a claim to evergreen](promote-a-claim.md) | Mark a settled claim by advancing its `maturity` — no move, no folder |
-| [Build a hub](build-a-hub.md) | Create a navigational hub when a claim cluster crosses 15–20 notes |
-| [Refactor claim notes](refactor-claim-notes.md) | Merge near-duplicates or split compound claims |
+| [Write a claim note](write-a-claim-note.md) | Retired alpha.10 claim-note command flow |
+| [Link checked notes](link-related-claims.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
+| [Advance a claim to evergreen](promote-a-claim.md) | Retired alpha.10 maturity flow |
+| [Build a hub](build-a-hub.md) | Curate a checked hub under `knowledge/hubs/` |
+| [Refactor claim notes](refactor-claim-notes.md) | Retired alpha.10 claim-note refactor flow |
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |
-| [Run a pattern](run-a-pattern.md) | Run a shipped prompt-transformation over the active note or a selection |
-| [Your first month](your-first-month.md) | Set the capture, distill, produce, discover, and review cadence after the tutorials |
+| [Run a pattern](run-a-pattern.md) | Retired alpha.10 QuickAdd pattern runner |
+| [Your first month](your-first-month.md) | Retired alpha.10 sample-vault cadence |

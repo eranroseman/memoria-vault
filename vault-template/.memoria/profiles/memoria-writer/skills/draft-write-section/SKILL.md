@@ -17,16 +17,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
-      - obsidian.append_content
-      - obsidian.patch_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["projects/"]
+    write_scope: []
     outputs: [source]
 ---
 
 # draft-write-section
+
+> Deferred in alpha.11: the writing/draft/export lane is not routable and has no direct Obsidian write tools.
 
 Produce one section of prose the PI will reshape. A draft is **raw material, never a
 deliverable**: it is marked agent-drafted, and the PI rewrites in their own words. You

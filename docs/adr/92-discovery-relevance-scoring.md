@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-Discovery candidates currently need ranking against the human's research focus.
+Discovery candidates currently need ranking against the human's steering.
 An LLM skill can rank candidates, but a deterministic scorer could provide an
 auditable first ordering using embeddings, citation graph overlap, and topic-tag
 overlap.
@@ -23,15 +23,15 @@ overlap.
 ## Proposal
 
 Memoria may add a deterministic `[!suggestions]` weighted scorer that ranks
-discovery candidates against `research-focus.md`, using embedding similarity,
+discovery candidates against `steering.md`, using embedding similarity,
 citation-graph overlap, and topic-tag overlap. The scorer would feed triage; it
 would not accept or reject candidates automatically.
 
 ## Consequences
 
 - Reduces LLM ranking cost and makes the ordering auditable.
-- Requires a maintained `research-focus.md` and tuned weights.
-- Can become misleading if the focus file drifts from the human's current agenda.
+- Requires a maintained `steering.md` and tuned weights.
+- Can become misleading if the steering file drifts from the human's current agenda.
 
 ## When this matters
 

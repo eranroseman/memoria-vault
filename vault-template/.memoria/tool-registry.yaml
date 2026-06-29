@@ -8,9 +8,9 @@
 # Two layers, deliberately separate:
 #   - THIS file governs WHICH TOOLS a profile may invoke (capability).
 #   - lane-overrides/<lane>.yaml governs WHICH PATHS those tools may write (scope).
-# So a profile that writes only one folder still needs the vault_write *capability*
-# here; the narrowing to that folder lives in its lane-override. Only the Co-PI —
-# which writes nowhere (write_scope: []) — is denied the write capability.
+# Alpha.11 profiles do not get direct Obsidian write tools. Machine mutations go
+# through the worker/trusted-writer staging path; PI edits are observed and
+# backfilled. Lane overrides still document routing ceilings and legacy denies.
 #
 # No profile gets a direct-world toolset (terminal, file, code_execution, browser,
 # web, computer_use): agents reach the vault, operations, and APIs ONLY through MCP
@@ -34,7 +34,7 @@ groups:
   vault_read:  [obsidian.get_file_contents, obsidian.get_content, obsidian.list_files, obsidian.search, obsidian.vault_read]
   vault_write: [obsidian.append_content, obsidian.patch_content, obsidian.put_content, obsidian.vault_write, obsidian.delete_file]
   web:         [web_search, web_extract]          # "search_web" + "fetch_url" — defined for completeness, NEVER granted (see header)
-  policy:      [policy.check_permission, policy.complete_write]
+  policy:      [policy.check_permission]
   tasks:       [tasks.delegate_route_task]
   cluster_read: [cluster.cluster_build_graph, cluster.cluster_model_topics]
   cluster_map:  [cluster.cluster_emit_canvas]   # writes the Canvas artifact (staging-only) — map lane, not the read-only front
@@ -57,17 +57,17 @@ profiles:
     notes: "The conversational front (ADR-48): hard read-only (vault_write withheld, mirroring write_scope: []); carries the memory/goals/skills loop; delegates every write via tasks.delegate_route_task."
 
   memoria-librarian:
-    allow: [vault_read, vault_write, skills, kanban, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
-    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for the claim-debate canvas; no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to inbox/ + catalog/ + notes/fleeting|source/."
+    allow: [vault_read, skills, kanban, policy, cluster_read, cluster_map, ingest_read, patterns, discovery, zotero_read, qmd_read]
+    notes: "The four processing lanes (catalog · extract · link · map). Discovery via paper_search MCP (the discovery group; the web toolset stays off), citation context via pyzotero; cluster_map for projections; no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; canonical writes go through the alpha.11 worker, not direct Obsidian write tools."
 
   memoria-writer:
-    allow: [vault_read, vault_write, skills, kanban, policy, qmd_read]
-    notes: "The draft lane: generative, review-gated; vault_write lane-scoped to projects/ scratch. No todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; no web — it composes from the vault, never researches."
+    allow: [vault_read, skills, kanban, policy, qmd_read]
+    notes: "Deferred in alpha.11: the draft lane is not routable and has no direct write tools. No todo planner in dispatched workers; kanban lifecycle tools remain allowlisted for package compatibility."
 
   memoria-peer-reviewer:
-    allow: [vault_read, vault_write, skills, kanban, policy, zotero_read, qmd_read]
-    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to inbox/ cards only."
+    allow: [vault_read, skills, kanban, policy, zotero_read, qmd_read]
+    notes: "The verify lane: judgment checks + the conceptual red-team (independent of the Librarian). Citation context via pyzotero (external_api_policy: explicit_only); no todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; flags and attention rows are worker projections, not direct profile writes."
 
   memoria-engineer:
-    allow: [vault_read, vault_write, skills, kanban, policy]
-    notes: "The code lane: MCP-only (ADR-21) — no terminal or file access. It scaffolds the handoff to an external coding agent through the gated obsidian MCP; the substantive coding and git run in that external agent, not here. No todo planner in dispatched workers; kanban lifecycle tools are explicitly allowed because the policy gate is a hard allowlist over Hermes-injected worker tools; vault_write lane-scoped to projects/*/code/."
+    allow: [vault_read, skills, kanban, policy]
+    notes: "Deferred in alpha.11: the code lane is not routable and has no direct write tools. No todo planner in dispatched workers; kanban lifecycle tools remain allowlisted for package compatibility."

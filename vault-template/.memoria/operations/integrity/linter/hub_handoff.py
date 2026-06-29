@@ -3,7 +3,7 @@
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those
 findings and creates a review-gated map-lane handoff: the agent may draft a hub
-proposal in staging, but the canonical hub home (notes/hubs/) remains PI-owned.
+proposal in staging, but the canonical hub home (knowledge/hubs/) remains PI-owned.
 
     python hub_handoff.py --vault <path> [--threshold 15] [--json]
 """
@@ -27,7 +27,7 @@ import tasks_mcp
 
 from operations.integrity.linter import detectors
 
-_ALLOWED_PATHS = ["notes/fleeting/maps/", "inbox/"]
+_ALLOWED_PATHS = ["knowledge/notes/maps/"]
 _FINDING_RE = re.compile(r"topic '(.+)' has (\d+) notes")
 
 
@@ -47,11 +47,10 @@ def _expected_outputs(topic: str) -> str:
     proposal = _slug(topic)
     return "\n".join(
         [
-            f"- Draft one staged hub proposal at notes/fleeting/maps/hub-proposal-{proposal}.md.",
-            "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, lifecycle: current, topic, members: [].",
+            f"- Draft one unchecked note proposal at knowledge/notes/maps/hub-proposal-{proposal}.md.",
+            "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, check_status: unchecked, members: [].",
             "- Include only candidate member links and the threshold evidence; do not write curation prose or annotations as if approved.",
-            "- Raise or update one Inbox candidate card pointing the PI at the staged proposal.",
-            "- Do not write, move, or create files under notes/hubs/; the PI creates or promotes the final hub.",
+            "- Do not write, move, or create files under knowledge/hubs/; the PI curates the final hub.",
         ]
     )
 
@@ -63,7 +62,7 @@ def _context(finding: detectors.Finding, topic: str, count: int, threshold: int)
             f"Finding: {finding.message}",
             f"Topic: {topic}",
             f"Count: {count}; threshold: {threshold}",
-            "The Linter is report-only. The map lane may stage a proposal, but notes/hubs/ is review-gated and PI-owned.",
+            "The Linter is report-only. The map lane may stage a proposal, but knowledge/hubs/ is PI-curated.",
         ]
     )
 
@@ -93,7 +92,7 @@ def handoff_hub_thresholds(
             context=_context(finding, topic, count, threshold),
             allowed_paths=list(_ALLOWED_PATHS),
             expected_outputs=_expected_outputs(topic),
-            review_checks="Confirm the staged proposal is only a candidate; PI approval is required before anything enters notes/hubs/.",
+            review_checks="Confirm the proposal is only a suggestion; PI curation is required before anything enters knowledge/hubs/.",
             idempotency_key=key,
             card_runner=card_runner,
         )

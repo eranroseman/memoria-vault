@@ -33,7 +33,7 @@ The required plugins:
 | --- | --- |
 | `obsidian-local-rest-api` | Hermes reaches the vault over this plugin's native MCP |
 | `agent-client` | The Co-PI chat pane (ACP) inside Obsidian |
-| `obsidian-citation-plugin` | Reads `.memoria/memoria.bib`; inserts citations |
+| `obsidian-citation-plugin` | Reads generated `references.bib`; inserts citations |
 | `callout-manager` | Renders `[!brief]`, `[!suggestions]`, `[!verification]` callout types |
 | `dataview` | Powers the dashboards and queue views |
 | `templater-obsidian` | Provides the template folder integration for manual template insertion |
@@ -43,7 +43,7 @@ The required plugins:
 | `obsidian-git` | Scheduled, version-controlled vault commits |
 | `buttons` | Renders command buttons in note templates |
 | `portals` | Provides curated shortcuts to the space/Bases surfaces |
-| `memoria-inspector` | Shows the read-only Memoria Inspector sidebar |
+| `memoria-inspector` | Shows the Memoria Inspector sidebar, checked Concept graph browsing, and enqueue-only worker controls |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) for the load-bearing settings of each.
 
@@ -71,7 +71,7 @@ the certificate or a real plugin `data.json`.
 **6. Confirm plugin settings match the shipped defaults.**
 
 - Local REST API: **HTTPS server ON, port 27124** (loopback-only) — Hermes reaches the vault over the plugin's native MCP at `https://127.0.0.1:27124/mcp` and verifies the plugin cert through `OBSIDIAN_MCP_SSL_VERIFY` ([ADR-31](../../adr/31-native-obsidian-mcp.md)). Keep `OBSIDIAN_MCP_PORT` in the shared Hermes env file equal to this port.
-- Obsidian Citation Plugin: bibliography path set to `.memoria/memoria.bib`
+- Obsidian Citation Plugin: bibliography path set to `references.bib`
 
 **7. Do not install the frontend Obsidian Linter.**
 

@@ -1,16 +1,20 @@
 type: hub
-category: notes
-gated: true # review-gated zone
-initial_lifecycle: current
+category: knowledge
+gated: false
+initial_check_status: unchecked
 enums:
-  lifecycle: [current, archived]
+  check_status: [unchecked, checked, quarantined]
+  confidence: [high, medium, low]
 required:
   type: literal:hub
-  lifecycle: enum:lifecycle
+  check_status: enum:check_status
   title: str
-  topic: str
+  description: str
 optional:
+  resource: str
   members: list
+  project: str
+  confidence: enum:confidence
+  contested: bool
   links: map
-  sample: bool
-  created: date
+  tags: list

@@ -37,7 +37,7 @@ A representative decision entry:
   "timestamp": "2026-06-10T14:23:01Z",
   "profile": "memoria-librarian",
   "action": "write",
-  "path": "catalog/papers/smith-2024.md",
+  "path": "catalog/sources/smith-2024/source.md",
   "task_id": "TASK-2026-06-10-003",
   "decision": "allow",
   "policy_rule": "Librarian.write.catalog",

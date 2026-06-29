@@ -94,7 +94,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/quickadd/data.json": "246892bb0af0faf807971f20436420d5a047921d418e7d913e22100b3ad22974",
+        "plugins/quickadd/data.json": "b3237c9b6f3021feea08e664e602c9d6e844f63ab27fb2399b14ac457fe3de8e",
         "plugins/quickadd/main.js": "ad69447e88e57a1d25aaeb4db54394259b30cc12a21656602da0ac2c6e81a20b",
         "plugins/quickadd/manifest.json": "60625157623a60e143aa26ab1823fd10e2361d12b2eb946792a555839231e7d5",
         "plugins/quickadd/styles.css": "7198c40b23c4b1ba825156f376855e6122ed8a7f8792e6bd813ebb86534e133e"
@@ -110,7 +110,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/cmdr/data.json": "938fdefdf7c72ac3b93ed4c64acea13ce69f52f508685861f30c849e8a7c5006",
+        "plugins/cmdr/data.json": "21cd11a272138b0168fb284567d7e5c9a6acdb4a1bcb2e1df6739c2a9887703d",
         "plugins/cmdr/main.js": "ebfce0b5dbaac7dd46c8b51cd397a811020d079ab0bf931a64e20049d7510637",
         "plugins/cmdr/manifest.json": "c6df5e0aa6d389695a87850eeeaf836775e2cd01579f4e277d82bc7a99fbe5e8",
         "plugins/cmdr/styles.css": "91765c55d9cddfbd3a62dc06bf18dc3ea6ecb879c89f939a1e50cebd3c31c28c"
@@ -126,7 +126,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/modalforms/data.json": "d24e70757ac4aec522d524afa3a574a226c1d9ad19924ba6693317a2160ff027",
+        "plugins/modalforms/data.json": "0b64f1d816cd818ecbca34c831dca5a50e2da919e7511a9350b1d487796f2585",
         "plugins/modalforms/main.js": "47dca433e545e15de1364a8a20d910310b7c0b3a83ecfd25129b9403f91ba7d9",
         "plugins/modalforms/manifest.json": "2fbd23a868c71060dc27eebfb65c531b1babf39bb45c4cc16129aced99f66e13",
         "plugins/modalforms/styles.css": "00bded8482d79a8fcc2f782920f5a23d9417b18af4c7d5a4ace3757a0593ab10"
@@ -158,7 +158,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "unmodified-vendored-build",
       "sha256": {
-        "plugins/obsidian-citation-plugin/data.json": "1de04c7ac3cdbe5de42218481e9c28aed8a2993f42c2eb5635b6dcd0f4151897",
+        "plugins/obsidian-citation-plugin/data.json": "a6d25ae318a30676ec43f208ee24c1ee4876172db81afc1cc14b51c2d1589222",
         "plugins/obsidian-citation-plugin/main.js": "68ddf8f2d6d7566a131976dd2247722f259910fc1a54a2acdc37d044c5e03622",
         "plugins/obsidian-citation-plugin/manifest.json": "1422061978419d0184883c8c6dc8747a25f23d7e414d9af99911ec93dae0f601",
         "plugins/obsidian-citation-plugin/styles.css": "6b8e77d3f8136633bac089fc38da5f5a50f94b2a93f85838073d2014f168960f"
@@ -167,16 +167,16 @@
     {
       "id": "memoria-inspector",
       "name": "Memoria Inspector",
-      "version": "0.1.0-alpha.8",
+      "version": "0.1.0-alpha.11",
       "upstream": "https://github.com/eranroseman/memoria-vault",
-      "pinned_ref": "0.1.0-alpha.8",
+      "pinned_ref": "0.1.0-alpha.11",
       "pinned_commit": "923a61666f249349403e7a799d6bbb46c3dd11fe",
       "license": "NOASSERTION",
-      "local_patch_status": "memoria-authored-read-only-plugin",
+      "local_patch_status": "memoria-authored-enqueue-control-panel",
       "sha256": {
-        "plugins/memoria-inspector/main.js": "1e0c70016d7d16399ccb22f77f3e420efffd2259929fd43efeb8e133021c272b",
-        "plugins/memoria-inspector/manifest.json": "9ca6f0e6e94d1d5b6bebc9cbc99358ae0ad0fb8527f759a2054b3b9ea8965b8d",
-        "plugins/memoria-inspector/styles.css": "bcd5c0171a217da710a3d58d7c8168be11fdae68afff23571e5e17eb965bb096"
+        "plugins/memoria-inspector/main.js": "b8c6828e1360d4a172918d0fc2381f480a9e40ad6cd3f009f56269d7cc61a734",
+        "plugins/memoria-inspector/manifest.json": "dd9b72a2360742616e861013f99c3547b9dd550da5f793e33039438c6b533d8e",
+        "plugins/memoria-inspector/styles.css": "705c8a32812613a49e6ffa6da271fd10524172cd2feb34a7a735a3812a9c7896"
       }
     },
     {
@@ -204,7 +204,7 @@
       "license": "NOASSERTION",
       "local_patch_status": "vendored-build-with-memoria-config",
       "sha256": {
-        "plugins/portals/data.json": "9e6ffbd26951cc8d399c3f2cba4d8284ce61da708b7cfd08c38b61a663504964",
+        "plugins/portals/data.json": "b0207100722d812193fe1db2f5a86002050021f73d7b6e2be14bdf0a7d8ec5cb",
         "plugins/portals/main.js": "e568cdb13a0ef0ea8a7872218e33f95bbfbc20f2ed075f6787983d393e2b753d",
         "plugins/portals/manifest.json": "724510f1ddbc1e48a02aa22f7b8d0f4e490a1fac76f146de2e4785c3b4fc40e4",
         "plugins/portals/styles.css": "bac8168338f22adf1578fb82fc37eab5d730d085972489e2ec3690df665ea1ff"

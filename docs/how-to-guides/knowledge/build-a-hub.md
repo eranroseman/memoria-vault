@@ -7,22 +7,27 @@ nav_order: 4
 
 # Build a hub
 
-Create a structure note in `notes/hubs/` that gives a dense claim cluster a stable entry point — a navigational home that says what a topic holds, what's settled, and what's still fighting. Like claims, hubs are review-gated: agents only propose; you author ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)).
+Curate a `hub` Concept in `knowledge/hubs/` that gives a dense checked-note
+cluster a stable entry point: what the topic holds, what's settled, and what's
+still contested. The worker may suggest hub updates, but the PI owns curation.
 
 ## When to create a hub
 
-When a topic has accumulated a handful of claims that belong together — typically by the third or fourth settled claim on one topic. Earlier is premature structure; much later and the cluster is already hard to navigate.
+When a topic has accumulated a handful of checked notes that belong together.
+Earlier is premature structure; much later and the cluster is already hard to
+navigate.
 
 ## Steps
 
 **1. Create the note from the template.**
 
-In `notes/hubs/`, create a new note from `system/templates/hub.md`:
+In `knowledge/hubs/`, create a new note from `system/templates/hub.md`:
 
 ```yaml
 type: hub
-lifecycle: current
-topic: <your-topic>
+check_status: unchecked
+title: <topic title>
+description: <one-sentence topic shape>
 members: []
 links: {}
 ```
@@ -37,7 +42,8 @@ Two to four sentences in the **Shape of the topic** section: what this cluster i
 
 **4. List the members.**
 
-Add the claim notes (and key source notes) to the `members` list and wikilink them in the **Members** section. Curate — omit tangentially related notes; one strong hub beats a complete-but-noisy one.
+Add the checked notes and digests to the `members` list. Curate: omit
+tangentially related notes; one strong hub beats a complete-but-noisy one.
 
 **5. Name the gaps.**
 
@@ -45,20 +51,23 @@ Note what the cluster is missing — thin sub-topics, open questions, papers not
 
 ## Splitting a hub
 
-When one branch of a hub grows past ~15–20 member claims, split it: create a new hub for the branch, move those members over, and in the parent replace the individual links with one link to the child hub.
+When one branch of a hub grows past ~15–20 member notes, split it: create a new
+hub for the branch, move those members over, and in the parent replace the
+individual links with one link to the child hub.
 
 ## Owners
 
-You author and curate hubs. The Librarian's `map` lane can propose that a cluster deserves one (a `gap` card in the Inbox), and the Linter's `graph-analyze` detector flags orphan hubs with zero inlinks — but every structural decision is yours.
+You author and curate hubs. Machine synthesis is a suggestion; the worker does
+not overwrite curated hub judgment.
 
 ## Verify
 
-- The hub validates: `type: hub`, `topic` set, every `members` entry resolving to a real note
-- The member claims link back (open the backlinks panel on the hub)
-- The hub shows up where you'd look for the topic — link it from `research-focus.md` or a parent hub if not
+- The hub validates: `type: hub`, `check_status` set, every `members` entry resolving to a real Concept
+- The member notes link back (open the backlinks panel on the hub)
+- The hub shows up where you'd look for the topic — link it from `steering.md` or a parent hub if not
 
 ## Related
 
-- The claims that fill it: [Advance a claim to evergreen](../knowledge/promote-a-claim.md)
+- The note links that fill it: [Link checked notes](../knowledge/link-related-claims.md)
 - The hub type and schema: [Document types](../../reference/document-types.md)
 - Why hubs matter to the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

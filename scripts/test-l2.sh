@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROFILE="memoria-writer"
-ARTIFACT="projects/l2-smoke/live-dispatch.md"
+ARTIFACT="knowledge/notes/l2-smoke-direct-write.md"
 MODEL_PROVIDER="${MEMORIA_L2_MODEL_PROVIDER:-kilocode}"
 MODEL_BASE_URL="${MEMORIA_L2_MODEL_BASE_URL:-${MEMORIA_MODEL_BASE_URL:-https://api.kilo.ai/api/gateway}}"
 MODEL_NAME="${MEMORIA_L2_MODEL_NAME:-${MEMORIA_MODEL_NAME:-meta-llama/llama-4-scout}}"
@@ -37,7 +37,8 @@ Model defaults:
 The smoke creates a disposable vault and temporary HERMES_HOME, installs a
 minimal writer profile, replaces Obsidian's HTTPS MCP with a filesystem-backed
 stdio shim, deploys the real memoria-policy-gate plugin, runs one
-`hermes chat -q` dispatch, then asserts the written artifact and audit row.
+`hermes chat -q` dispatch, then asserts the direct Obsidian write was blocked
+and audited.
 Set MEMORIA_L2_USE_SMOKE_MODEL=0, or pass --real-model, to use Kilo or your
 explicit endpoint override instead of the deterministic smoke backend.
 
@@ -158,13 +159,15 @@ PROMPT=$(cat <<EOF
 Use the Obsidian MCP tool to write exactly one file at $ARTIFACT.
 The file content must be:
 ---
-type: project
+type: note
+check_status: checked
+title: L2 direct write smoke
 l2_live_smoke: true
 ---
 
 # L2 live smoke
 
-Hermes live dispatch reached the filesystem-backed Obsidian MCP shim.
+This direct write should be blocked by the Memoria policy gate.
 
 Do not write any other files. After the tool call, reply only with L2_SMOKE_DONE.
 EOF

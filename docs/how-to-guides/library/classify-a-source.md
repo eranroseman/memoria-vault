@@ -23,17 +23,22 @@ For what ingest decides and how, see [Ingest routing](../../reference/ingest.md)
 
 ## Prerequisites
 
-- A paper ingested to `catalog/papers/<citekey>.md` ([Capture and ingest a source](capture-and-ingest.md))
+- A source ingested to `catalog/sources/<source_id>/source.md` ([Capture and ingest a source](capture-and-ingest.md))
 
 ## Steps
 
 **1. Handle any `flag` card first.**
 
-Open your queue from the navigator rail on the left: **Now** → **Action queue** opens the **Inbox** queue; its **Needs me** view lists what's waiting. If ingest hit genuine ambiguity, you'll see a card titled something like "Ambiguous research area for `<citekey>`". It reports the `finding` and the scored candidates, but states no verdict — you choose. Pick the right value, write it into the paper's frontmatter at `catalog/papers/<citekey>.md`, then resolve the card ([Work the action queue](../inbox/work-the-action-queue.md)).
+Open the Inspector or queue surface for source metadata findings. If ingest hit
+genuine ambiguity, you'll see a finding for the source. Pick the right value,
+write it into the source Concept frontmatter at
+`catalog/sources/<source_id>/source.md`, then resolve the attention item.
 
-**2. Open the paper and check what ingest applied.**
+**2. Open the source and check what ingest applied.**
 
-In `catalog/papers/<citekey>.md`, compare `research_area` and `methodology` against the paper itself. If a value is wrong, **edit the frontmatter directly** — there is nothing to approve.
+In `catalog/sources/<source_id>/source.md`, compare source metadata against the
+source itself. If a value is wrong, edit the frontmatter directly; the worker
+observes and backfills the PI edit.
 
 Every decision, applied or flagged, is logged as one line in `system/logs/classify.jsonl`. That audit line is what makes a value safe to correct by hand. The thresholds ingest uses (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`.
 
@@ -43,21 +48,25 @@ Look for a `_proposed_classification` block in the frontmatter. This is the Libr
 
 The `projects` sub-key inside the draft isn't a guess: it's derived from your optional [project hints](../setup/configure-project-hints.md).
 
-**4. Confirm the paper reads `lifecycle: current`.**
+**4. Confirm the source reads `lifecycle: current`.**
 
-A paper is created at `lifecycle: current` straight away — Catalog facts don't wait in a queue. (What sits at `proposed` is the candidate *card* in your queue, not the paper.) Classifying doesn't change the paper's lifecycle. Confirm it still reads `current`, then resolve the candidate card:
+A source is created at `lifecycle: current` once checked. Classifying does not
+change the source lifecycle. Confirm it still reads `current`, then resolve the
+attention item:
 
 ```yaml
 lifecycle: current
 ```
 
-**5. Reuse the same terms in your source note.**
+**5. Reuse the same terms in notes and hubs.**
 
-When you fill the source note in `notes/sources/`, use the same `research_area` / `methodology` values you settled here. Mismatched vocabulary between the catalog and your notes is what makes later queries miss results ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
+When you write checked notes or hubs from this source, use the same vocabulary.
+Mismatched vocabulary between the catalog and knowledge graph is what makes
+later queries miss results ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
 ## Verify
 
-- The paper reads `lifecycle: current`, has a settled `research_area`, and no longer has a `_proposed_classification` block
+- The source reads `lifecycle: current`, has settled metadata, and no longer has a `_proposed_classification` block
 - No `flag` card for this citekey is still at `proposed` in your queue
 - `system/logs/classify.jsonl` records the decision (applied or flagged) for this citekey
 

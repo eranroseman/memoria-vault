@@ -33,30 +33,31 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `date` | a YAML date or an ISO-8601 date string |
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
-| `literal:<value>` | exactly that value; for example, `type: literal:claim` |
+| `literal:<value>` | exactly that value; for example, `type: literal:source` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are **allowed**. A schema example (`types/claim.yaml`):
+Unknown extra fields are **allowed**. A schema example (`types/source.yaml`):
 
 ```yaml
-type: claim
-category: notes
-gated: true
+type: source
+category: catalog
+gated: false
+initial_check_status: unchecked
 enums:
-  lifecycle: [current, retracted, archived]
-  maturity: [seedling, budding, evergreen]
+  check_status: [unchecked, checked, quarantined]
+  item_type:
+    [article, book, webpage, dataset, repository, software, audio, video, note, report]
 required:
-  type: literal:claim
-  lifecycle: enum:lifecycle
+  type: literal:source
+  check_status: enum:check_status
   title: str
-  maturity: enum:maturity
-  sources: list
+  description: str
+  source_id: str
 optional:
-  schema_version: int
+  resource: str
+  item_type: enum:item_type
   links: map
-  topics: list
-  superseded_by: str
-  created: date
+  tags: list
 ```
 
 <!-- REFERENCE:START -->
@@ -64,119 +65,62 @@ optional:
 
 Generated from `vault-template/.memoria/schemas/types`.
 
-## Lifecycle subsets
+## Check status subsets
 
-| Lifecycle subset | Types |
+| Check status subset | Types |
 | --- | --- |
-| `current` · `archived` | `organization` · `person` · `repository` · `venue` · `project` · `hub` · `worker-card` · `maintenance` · `queue` · `space` |
-| `current` · `retracted` · `archived` | `dataset` · `paper` · `claim` |
-| `proposed` · `archived` | `fleeting` |
-| `proposed` · `current` · `archived` | `code-note` · `alert` · `candidate` · `flag` · `gap` · `work-prompt` · `eval-task` · `pattern` · `worklist-item` |
-| `proposed` · `provisional` · `current` · `retracted` · `archived` | `thesis` · `source` |
+| `unchecked` · `checked` · `quarantined` | `organization` · `person` · `source` · `venue` · `digest` · `hub` · `note` · `project` · `mcp` · `operation` · `skill` · `workflow` |
 
 ## Enum values
 
 | Type | Enum | Values |
 | --- | --- | --- |
-| `dataset` | `lifecycle` | `current` · `retracted` · `archived` |
-| `organization` | `lifecycle` | `current` · `archived` |
-| `paper` | `ingest_status` | `tier0` · `enriched` · `complete` · `needs-human` |
-| `paper` | `lifecycle` | `current` · `retracted` · `archived` |
-| `person` | `lifecycle` | `current` · `archived` |
-| `repository` | `lifecycle` | `current` · `archived` |
-| `venue` | `lifecycle` | `current` · `archived` |
-| `code-note` | `agent` | `codex` · `claude-code` · `other` |
-| `code-note` | `lifecycle` | `proposed` · `current` · `archived` |
-| `project` | `argument_stage` | `cold-start` · `developing` · `mature` |
-| `project` | `evidence_saturation` | `unknown` · `unsaturated` · `saturated` · `stale` |
-| `project` | `lifecycle` | `current` · `archived` |
-| `project` | `output_mode` | `thesis` · `survey` |
-| `thesis` | `argument_stage` | `cold-start` · `developing` · `mature` |
-| `thesis` | `evidence_saturation` | `unknown` · `unsaturated` · `saturated` · `stale` |
-| `thesis` | `lifecycle` | `proposed` · `provisional` · `current` · `retracted` · `archived` |
-| `claim` | `lifecycle` | `current` · `retracted` · `archived` |
-| `claim` | `maturity` | `seedling` · `budding` · `evergreen` |
-| `fleeting` | `lifecycle` | `proposed` · `archived` |
-| `fleeting` | `origin` | `human` · `agent` · `chat` |
-| `hub` | `lifecycle` | `current` · `archived` |
-| `source` | `evidence_level` | `cebm-1` · `cebm-2` · `cebm-3` · `cebm-4` · `cebm-5` · `ungraded` |
-| `source` | `lifecycle` | `proposed` · `provisional` · `current` · `retracted` · `archived` |
-| `source` | `source_type` | `paper` · `dataset` · `repository` · `web-page` · `report` |
-| `alert` | `agent_recommendation` | `inconclusive` · `issues-found` · `clean` |
-| `alert` | `lifecycle` | `proposed` · `current` · `archived` |
-| `alert` | `loudness` | `quiet` · `notice` · `alert` · `block` |
-| `candidate` | `certainty` | `confident` · `likely` · `unsure` |
-| `candidate` | `lifecycle` | `proposed` · `current` · `archived` |
-| `candidate` | `loudness` | `quiet` · `notice` · `alert` · `block` |
-| `flag` | `agent_recommendation` | `inconclusive` · `issues-found` · `clean` |
-| `flag` | `lifecycle` | `proposed` · `current` · `archived` |
-| `flag` | `loudness` | `quiet` · `notice` · `alert` · `block` |
-| `gap` | `argument_stage` | `cold-start` · `developing` · `mature` |
-| `gap` | `certainty` | `confident` · `likely` · `unsure` |
-| `gap` | `evidence_saturation` | `unknown` · `unsaturated` · `saturated` · `stale` |
-| `gap` | `gap_type` | `additive` · `conflict` · `fragility` · `structural` · `unstated-warrant` · `refutation` |
-| `gap` | `lifecycle` | `proposed` · `current` · `archived` |
-| `gap` | `loudness` | `quiet` · `notice` · `alert` · `block` |
-| `work-prompt` | `lifecycle` | `proposed` · `current` · `archived` |
-| `work-prompt` | `loudness` | `quiet` · `notice` · `alert` · `block` |
-| `work-prompt` | `prompt_kind` | `review` · `worklist` · `nudge` · `blocked` |
-| `eval-task` | `lane` | `catalog` · `extract` · `link` · `map` · `draft` · `verify` · `code` |
-| `eval-task` | `lifecycle` | `proposed` · `current` · `archived` |
-| `pattern` | `lifecycle` | `proposed` · `current` · `archived` |
-| `pattern` | `mode` | `library` · `project` · `both` |
-| `worker-card` | `lifecycle` | `current` · `archived` |
-| `worker-card` | `status` | `triage` · `todo` · `ready` · `running` · `blocked` · `retrying` · `done` |
-| `worklist-item` | `decision` | `proposed` · `include` · `exclude` · `maybe` · `archived` |
-| `worklist-item` | `lifecycle` | `proposed` · `current` · `archived` |
-| `maintenance` | `lifecycle` | `current` · `archived` |
-| `queue` | `lifecycle` | `current` · `archived` |
-| `space` | `lifecycle` | `current` · `archived` |
-| `space` | `space` | `library` · `knowledge` · `project` |
+| `organization` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `person` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `source` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `source` | `item_type` | `article` · `book` · `webpage` · `dataset` · `repository` · `software` · `audio` · `video` · `note` · `report` |
+| `source` | `lifecycle` | `current` · `retracted` · `archived` |
+| `source` | `metadata_status` | `verified` · `partial` · `unverified` · `not-indexed` |
+| `venue` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `digest` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `digest` | `confidence` | `high` · `medium` · `low` |
+| `hub` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `hub` | `confidence` | `high` · `medium` · `low` |
+| `note` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `note` | `note_status` | `candidate` · `accepted` · `rejected` · `superseded` · `needs_review` |
+| `project` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `mcp` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `operation` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `operation` | `risk_class` | `low` · `medium` · `high` |
+| `skill` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `workflow` | `check_status` | `unchecked` · `checked` · `quarantined` |
 
 ## Per-type fields
 
 | Type | Required | Required-any | Optional |
 | --- | --- | --- | --- |
-| `dataset` | `type` · `lifecycle` · `name` | - | `doi` · `url` · `license` · `relationships` · `sample` · `created` |
-| `organization` | `type` · `lifecycle` · `name` | - | `subtype` · `location` · `relationships` · `sample` · `created` |
-| `paper` | `type` · `lifecycle` · `citekey` · `title` | - | `ingest_status` · `doi` · `authors` · `year` · `venue` · `url` · `relationships` · `research_area` · `methodology` · `sample` · `created` |
-| `person` | `type` · `lifecycle` · `name` | - | `orcid` · `affiliations` · `relationships` · `sample` · `created` |
-| `repository` | `type` · `lifecycle` · `name` | - | `url` · `language` · `license` · `relationships` · `sample` · `created` |
-| `venue` | `type` · `lifecycle` · `name` | - | `subtype` · `issn` · `relationships` · `sample` · `created` |
-| `code-note` | `type` · `lifecycle` · `title` · `project` · `agent` · `task` · `acceptance` | - | `motivating_claims` · `inputs` · `outputs` · `run_command` · `dependencies` · `repository` · `sample` · `created` |
-| `project` | `type` · `lifecycle` · `title` · `slug` · `scope_topics` · `inquiry` · `finer` · `output_mode` · `question_version` · `question_log` | - | `active_thesis` · `impact` · `on_path` · `evidence_saturation` · `argument_stage` · `computed_at` · `refutation_sufficiency` · `refutation_sufficiency_at` · `sample` · `created` |
-| `thesis` | `type` · `lifecycle` · `title` · `project` · `sources` | - | `links` · `superseded_by` · `impact` · `on_path` · `evidence_saturation` · `argument_stage` · `computed_at` · `refutation_sufficiency` · `refutation_sufficiency_at` · `promoted_at` · `promoted_by` · `sample` · `created` |
-| `claim` | `type` · `lifecycle` · `title` · `maturity` · `sources` | - | `schema_version` · `links` · `topics` · `superseded_by` · `sample` · `created` |
-| `fleeting` | `type` · `lifecycle` · `origin` | - | `title` · `sample` · `created` |
-| `hub` | `type` · `lifecycle` · `title` · `topic` | - | `members` · `links` · `sample` · `created` |
-| `source` | `type` · `lifecycle` · `title` · `entity` | - | `source_type` · `evidence_level` · `research_area` · `methodology` · `links` · `sample` · `created` |
-| `alert` | `type` · `lifecycle` · `title` · `finding` | - | `target` · `agent_recommendation` · `raised_by` · `loudness` · `sample` · `created` |
-| `candidate` | `type` · `lifecycle` · `title` · `action` · `argument_for` · `argument_against` · `what_tipped_it` · `certainty` | - | `citekey` · `url` · `raised_by` · `loudness` · `sample` · `created` |
-| `flag` | `type` · `lifecycle` · `title` · `finding` · `agent_recommendation` | `target` · `citekey` | `target` · `citekey` · `raised_by` · `loudness` · `sample` · `created` |
-| `gap` | `type` · `lifecycle` · `title` · `action` · `argument_for` · `argument_against` · `what_tipped_it` · `certainty` | - | `gap_type` · `raised_by` · `loudness` · `impact` · `on_path` · `evidence_saturation` · `argument_stage` · `computed_at` · `sample` · `created` |
-| `work-prompt` | `type` · `lifecycle` · `title` · `action` · `what_happened` | `target` · `task_id` | `prompt_kind` · `target` · `task_id` · `lane` · `raised_by` · `loudness` · `sample` · `created` |
-| `eval-task` | `type` · `title` · `lifecycle` · `workflow` · `lane` | - | `sample` · `created` · `references` |
-| `pattern` | `type` · `lifecycle` · `title` · `posture` · `mode` · `action` · `input` · `output_target` | - | `model_hint` · `version` · `adapted_from` · `sample` · `created` |
-| `worker-card` | `type` · `lifecycle` · `title` · `task_id` · `lane` · `status` | - | `as_of` · `review_status` · `retry_count` · `reason` · `expected_outputs` · `sample` · `created` |
-| `worklist-item` | `type` · `lifecycle` · `title` · `decision` · `worklist` · `item_ref` | - | `source_report` · `group` · `rank` · `reason` · `sample` · `created` |
-| `maintenance` | `type` · `lifecycle` · `title` | - | `sample` · `created` |
-| `queue` | `type` · `lifecycle` · `title` | - | `sample` · `created` |
-| `space` | `type` · `lifecycle` · `title` · `space` | - | `sample` · `created` |
+| `organization` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
+| `person` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
+| `source` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `links` · `tags` |
+| `venue` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
+| `digest` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `tags` |
+| `hub` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `tags` |
+| `note` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `extraction_confidence` · `tags` |
+| `project` | `type` · `check_status` · `title` · `description` | - | `resource` · `thesis` · `scope` · `links` · `tags` |
+| `mcp` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
+| `operation` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
+| `skill` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
+| `workflow` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
 
 <!-- REFERENCE:END -->
 
-## Creation metadata
+## Creation forms
 
-Human capture forms are declared beside the validating fields when a type has an
-Obsidian Modal Forms entry. The `creation.form` block owns the form name, title,
-field order, labels, descriptions, required-at-entry flags, and input source
-(`enum`, fixed values, note picker, or vocabulary). `scripts/gen-forms.py`
-projects that metadata into the committed Modal Forms `data.json`; it does not
-change the validator grammar above.
-
-Fields such as `summary` or `claim` are creation inputs, not necessarily
-frontmatter fields. The QuickAdd writer maps them into the note body or into
-structured frontmatter.
+Obsidian Modal Forms are generated by `scripts/gen-forms.py` into the committed
+Modal Forms `data.json`. They are UI entry points, not schema authority; the
+Concept schemas above remain the validator contract. Forms may collect values
+that are not frontmatter fields. The writer maps those values into the body or
+structured frontmatter before validation.
 
 ## Display order and grouping
 
@@ -184,89 +128,49 @@ The schema validates field presence and kind; display order is a shipped-vault
 convention. Templates and deterministic emitters put fields in this order:
 
 1. Human identity: `title` or `name`.
-2. Schema identity and PI-facing state: `type`, then `lifecycle`.
-3. Type-specific state: `maturity`, `certainty`, `agent_recommendation`,
-   `loudness`, `origin`, or `ingest_status`.
-4. Primary references: `citekey`, `entity`, `target`, `task_id`, `url`, `doi`.
-5. Classification and relations: `research_area`, `methodology`, `topics`,
-   `sources`, `links`, `relationships`.
-6. Provenance and housekeeping: owned namespaces such as `_enrichment` /
-   `_proposed_classification`, labels such as `sample`, timestamps, and version
-   fields.
+2. Schema identity and read state: `type`, then `check_status`.
+3. Human summary and pointer fields: `description`, `resource`, `source_id`.
+4. Type-specific state and references.
+5. Relations and classification: `links`, `tags`, and type-specific maps.
 
 Obsidian does not have a global property-order schema file, so the shipped
 templates, emitters, and Bases carry this convention directly.
 
-## `lifecycle` — the one chain
+## `check_status`
 
-Every typed document carries `lifecycle`, drawn from the **universal chain**
-([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)):
+Every Concept carries `check_status`, drawn from the same read-state enum:
 
 ```text
-proposed → provisional → current → retracted → archived
+unchecked → checked → quarantined
 ```
 
-Each type's schema declares the subset it uses. `proposed` always means
-_awaiting the PI_. `retracted` is a state, not a deletion; supersession keeps the
-lineage (`superseded_by`). The board's `status` enum is a separate hidden
-execution mechanic (see [Kanban board reference](kanban-board.md)).
+`unchecked` is ingestible but not promoted as checked knowledge. `checked` is
+the read barrier for machine-owned records and curated PI views. `quarantined`
+records failed validation, provenance, or foreign-write checks and stay out of
+normal read surfaces until repaired.
 
-## `maturity` — a claim property, never a gate
+## Links and resources
 
-Claims only: `seedling → budding → evergreen`. It describes how settled a claim
-is; nothing in the system blocks on it.
-
-## `links:` vs `relationships`
-
-Notes (`source`, `claim`, `hub`) carry the authored `links:` map; catalog
-entities carry the given `relationships` map. The authored-vs-given distinction
-is owned by [Wikilink and link conventions](wikilink-and-link-conventions.md).
-
-Project-gate argument edges may carry an optional `warrant` attribute on a
-`supports` relation when the author wants to state the grounds-to-claim inference
-explicitly ([ADR-79](../adr/79-argument-graph-and-warrant.md)).
-
-## Project-gate fields
-
-`project` and `thesis` notes add the Project gate's authored state and operation
-cache ([ADR-77](../adr/77-project-gate.md), [ADR-78](../adr/78-thesis-note-type.md)).
-The generated field inventory above owns the exact current field list and enum
-values.
-
-Source notes also carry optional `evidence_level`, a CEBM-style enum
-(`cebm-1` … `cebm-5`, `ungraded`).
-
-## The honesty-card fields
-
-Inbox cards split into proposals (`candidate`, `gap`), verification cards
-(`flag`, `alert`), and work prompts (`work-prompt`)
-([ADR-51](../adr/51-inbox-category-and-honesty-card.md)). Their field-level
-contract lives in [Inbox card fields](inbox-card-fields.md).
-
-## Batch worklist fields
-
-Worklist rows are `worklist-item` notes under `system/worklists/`. Their
-`lifecycle` says whether the row is still active in the vault; their separate
-`decision` field is the PI's batch-screening choice: `proposed`, `include`,
-`exclude`, `maybe`, or `archived`. The emitter raises one aggregate
-`work-prompt` for the batch, never one card per row.
+Concepts use `resource` for the backing source pointer when one exists. `links`
+is type-specific: some schemas use a list, others a map. The generated field
+inventory above owns the exact current shape.
 
 ## Other universal fields
 
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
-| `title` / `name` | `str` | Notes and cards use `title`; catalog entities use `name`. |
-| `created` | `date` | Optional everywhere. |
-| `sample` | `bool` | Optional label for bundled tutorial notes. |
-| `research_area`, `methodology`, `topics` | `list` | Controlled-vocabulary classification; values live in [Vocabulary](vocabulary.md). |
-| `ingest_status` | `enum` | Paper ingest floor/progress: `tier0`, `enriched`, `complete`, or `needs-human`. |
+| `title` | `str` | Human-readable Concept title. |
+| `check_status` | `enum` | Read-state gate: `unchecked`, `checked`, or `quarantined`. |
+| `description` | `str` | Required on all shipped Concept types except `note`, where it is optional. |
+| `resource` | `str` | Optional backing-resource pointer. |
+| `tags` | `list` | Optional local classification where the type supports it. |
 
 ## Enforcement
 
 | Where | What |
 | --- | --- |
-| Pre-commit hook | Every staged `.md` note must pass its type schema. |
+| Pre-commit hook | Every staged `.md` Concept must pass its type schema. |
 | Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
 | Exemptions | Most `system/` infrastructure and vault-root navigation pages are untyped and exempt. |
 

@@ -48,40 +48,30 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 
 | Setting | Value |
 | --- | --- |
-| Categories | `catalog` · `notes` · `projects` · `inbox` · `spaces` · `system` |
-| Gated prefixes | `notes/claims/` · `notes/hubs/` |
-| Transient prefixes | `inbox/` |
-| Skeleton entries | `38` |
+| Categories | `catalog` · `knowledge` · `capabilities` |
+| Bundle roots | `catalog` · `knowledge` · `capabilities` |
+| Machine staging roots | `.memoria/staging/catalog` · `.memoria/staging/knowledge` · `.memoria/staging/capabilities` |
+| Quarantine root | `.memoria/quarantine` |
+| Gated prefixes | - |
+| Transient prefixes | - |
+| Skeleton entries | `32` |
 
 ## Type homes
 
 | Type | Folder |
 | --- | --- |
-| `alert` | `inbox` |
-| `candidate` | `inbox` |
-| `claim` | `notes/claims` |
-| `code-note` | `projects` |
-| `dataset` | `catalog/datasets` |
-| `eval-task` | `system/eval` |
-| `flag` | `inbox` |
-| `fleeting` | `notes/fleeting` |
-| `gap` | `inbox` |
-| `hub` | `notes/hubs` |
-| `maintenance` | `spaces` |
-| `organization` | `catalog/organizations` |
-| `paper` | `catalog/papers` |
-| `pattern` | `system/patterns` |
-| `person` | `catalog/people` |
-| `project` | `projects` |
-| `queue` | `spaces` |
-| `repository` | `catalog/repositories` |
-| `source` | `notes/sources` |
-| `space` | `spaces` |
-| `thesis` | `projects` |
-| `venue` | `catalog/venues` |
-| `work-prompt` | `inbox` |
-| `worker-card` | `system/board` |
-| `worklist-item` | `system/worklists` |
+| `digest` | `knowledge/digests` |
+| `hub` | `knowledge/hubs` |
+| `mcp` | `capabilities/mcp` |
+| `note` | `knowledge/notes` |
+| `operation` | `capabilities/operations` |
+| `organization` | `catalog/entities` |
+| `person` | `catalog/entities` |
+| `project` | `knowledge/projects` |
+| `skill` | `capabilities/skills` |
+| `source` | `catalog/sources` |
+| `venue` | `catalog/entities` |
+| `workflow` | `capabilities/workflows` |
 
 ## Calibration blocks
 
@@ -89,7 +79,6 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 | --- | --- |
 | `entity_resolution` | `confidence_floor` · `model_version` |
 | `classify` | `confidence_floor` · `model_version` · `near_tie_margin` |
-| `inbox` | `archive_after_days` |
 | `clustering` | `embedding_model` · `full_cluster_min_documents` · `hdbscan_min_cluster_size` · `quality_thresholds` · `seed` · `umap_n_neighbors` |
 | `hybrid_scores` | `candidate_rank` · `outline_score` |
 

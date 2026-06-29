@@ -1,8 +1,8 @@
 # Hermes profile manifest. Read by `hermes profile install`; env_requires -> .env.EXAMPLE.
 # Schema: hermes-agent.nousresearch.com/docs/user-guide/profile-distributions
 name: memoria-engineer
-version: 0.1.0-alpha.10
-description: "Memoria Engineer — scaffolds code notes, coordinates the external coding agent, and commits in projects/*/code/."
+version: 0.1.0-alpha.11
+description: "Memoria Engineer — deferred in alpha.11; coding/autonomy work is post-checkpoint scope."
 author: "Memoria"
 license: "MIT"
 hermes_requires: ">=0.17.0"

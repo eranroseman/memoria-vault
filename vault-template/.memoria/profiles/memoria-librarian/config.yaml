@@ -12,7 +12,7 @@ mcp_servers:
     args: ['{{VAULT_PATH}}/.memoria/mcp/policy_mcp.py', --vault, '{{VAULT_PATH}}']
     timeout: 30
     tools:
-      include: [check_permission, complete_write]
+      include: [check_permission]
   ingest:
     command: '{{PYTHON}}'
     args: ['{{VAULT_PATH}}/.memoria/mcp/ingest_mcp.py', --vault, '{{VAULT_PATH}}']

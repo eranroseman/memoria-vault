@@ -17,13 +17,13 @@ LANE_OVERRIDE_RELDIR = ".memoria/lane-overrides"
 
 
 def load_gated_prefixes(vault: Path) -> tuple[str, ...]:
-    """Load review-gated prefixes from the schema home, with a stdlib fallback."""
+    """Load legacy review-gated prefixes, with a stdlib fallback."""
     try:
         import yaml
 
         path = Path(vault) / ".memoria" / "schemas" / "folders.yaml"
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        prefixes = tuple(data["gated_prefixes"])
+        prefixes = tuple(data.get("gated_prefixes") or ())
         return prefixes or REVIEW_GATED_PREFIXES
     except Exception:  # noqa: BLE001 -- schema load with import-inside-try; degrade to default prefixes
         return REVIEW_GATED_PREFIXES

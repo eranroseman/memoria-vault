@@ -18,16 +18,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.append_content
-      - obsidian.patch_content
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/", "catalog/", "notes/sources/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [paper, dataset, repository, person, organization, venue, source]
 ---
 
 # catalog-enrich-record
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 Turn a citekey into a populated paper-note. The mechanical ~80% of ingest is
 **deterministic and lives behind the `ingest_pipeline` MCP tool** (the

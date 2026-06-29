@@ -73,7 +73,7 @@ def test_profile_structure_complete():
         assert (d / ".no-bundled-skills").is_file(), f"{name} allows bundled skill seeding"
         dist = yaml.safe_load((d / "distribution.yaml").read_text(encoding="utf-8"))
         assert dist["name"] == name
-        assert dist["version"] == "0.1.0-alpha.10"
+        assert dist["version"] == "0.1.0-alpha.11"
         assert dist["hermes_requires"] == ">=0.17.0"
 
 
@@ -313,9 +313,10 @@ def test_lane_scopes_avoid_gated_zones():
             assert not scope.startswith(gated), f"{f.name}: scope {scope} is review-gated"
 
 
-def test_peer_reviewer_writes_only_inbox():
+def test_peer_reviewer_has_no_direct_write_scope():
     lane = yaml.safe_load((LANES / "peer-reviewer.yaml").read_text(encoding="utf-8"))
-    assert lane["routing"]["write_scope"] == ["inbox/"]
+    assert lane["policy"]["allow"]["write"] == []
+    assert lane["routing"]["write_scope"] == []
 
 
 def _skill_frontmatter(profile: str, skill: str) -> dict:
@@ -326,7 +327,7 @@ def _skill_frontmatter(profile: str, skill: str) -> dict:
 def test_catalog_enrich_record_creates_proposed_source_notes():
     fm = _skill_frontmatter("memoria-librarian", "catalog-enrich-record")
     memoria = fm["metadata"]["memoria"]
-    assert "notes/sources/" in memoria["write_scope"]
+    assert ".memoria/staging/knowledge/" in memoria["write_scope"]
     assert "source" in memoria["outputs"]
 
 

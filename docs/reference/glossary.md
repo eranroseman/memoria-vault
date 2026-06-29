@@ -32,7 +32,9 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
-**Vault** — the Obsidian folder tree where durable knowledge lives, organized into six legal root categories: `catalog`, `notes`, `projects`, `inbox`, `spaces`, `system` ([ADR-47](../adr/47-type-first-category-folders.md)).
+**Workspace** — the alpha.11 root containing `catalog/`, `knowledge/`,
+`capabilities/`, `journal/`, and `.memoria/`. Obsidian opens the `knowledge/`
+bundle; the plugin reads sibling bundles for catalog and capability views.
 
 ---
 
@@ -44,13 +46,22 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
 
-**Space** — a navigation surface that is also a dashboard-as-note (`type: space`): Library, Knowledge, Project, each embedding Bases views over the vault. "Gate" is reserved for the approval gate, never a space ([ADR-101](../adr/101-navigation-spaces-gate-reserved-for-approval.md)).
+**Space** — a navigation surface that is also a dashboard-as-note
+(`projection: space`): Library, Knowledge, Project, each embedding Bases views
+over the workspace. "Gate" is reserved for the approval gate, never a space.
 
-**Queue** — the **Inbox** (`type: queue`, [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)): the daily attention surface reached from **Now → Action queue**. It shows in-process Activity, then `Needs me` action cards (`candidate`, `gap`, `work-prompt`), then fleeting captures. Clearing it to empty is the goal.
+**Queue** — the **Inbox** (`projection: queue`): the daily attention surface
+reached from **Now -> Action queue**. It shows in-process Activity, then
+open attention projections such as `candidate`, `gap`, and `work-prompt`.
+Clearing it to empty is the goal.
 
-**Maintenance** — the weekly structural-debt surface (`type: maintenance`): Drift watch, Loose ends, the worker board, and "new this week".
+**Maintenance** — the weekly structural-debt surface
+(`projection: maintenance`): Drift watch, loose ends, queue state, and
+"new this week".
 
-**Rail health band** — the count the rail's **Now** shows for open `flag` / `alert` cards; non-zero means structural debt is waiting in Maintenance.
+**Rail health band** — the count the rail's **Now** shows for open `flag` /
+`alert` attention projections; non-zero means structural debt is waiting in
+Maintenance.
 
 **System dashboard** — one of the read-only, Dataview-backed notes in `system/dashboards/` (consolidated to five in [ADR-118](../adr/118-dashboard-consolidation.md)); the spaces and Maintenance carry the action surfaces.
 
@@ -70,9 +81,14 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. Each lane runs one fixed **profile** and so inherits that profile's permissions; the thing that actually runs in the lane is an **agent**. The Co-PI has no lane; operations run off the board.
 
-**Card vs task** — a *task* is a unit of delegated work; the *card* (`worker-card`) is its representation on the board. One task becomes one card — the same split as a Jira *work item* rendered as a Kanban *card*.
+**Card vs task** — a *task* is a unit of delegated work; a card is its runtime
+board representation. Alpha.11 surfaces board state as projections, not Concept
+types.
 
-**Worklist** — the batch surface for high-cardinality decisions ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)): instead of one card per item, like decisions queue into one `system/worklists/` batch where each `worklist-item` row has a `decision` field the PI can sweep in Bases.
+**Worklist** — the batch surface for high-cardinality decisions: instead of one
+attention item per row, like decisions queue into one `system/worklists/` batch
+where each `projection: worklist-item` row has a `decision` field the PI can
+sweep in Bases.
 
 ---
 
@@ -80,19 +96,34 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Golden copy** — the canonical, hash-manifested copy of every system file at `.memoria/golden/`, staged by the installer ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The Linter checks drift against it and can restore from it (propose-only by default).
 
-**Honesty card** — an Inbox proposal (`candidate` / `gap`) carrying the honesty body and **never a verdict** ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)); verification cards (`flag` / `alert`) are the complement, leading with the `finding`. The honesty-card and verification-card field contracts are specified in [Frontmatter fields](frontmatter.md).
+**Attention projection** — a generated Inbox row (`candidate`, `gap`, `flag`,
+`alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
+the owning state is journal/check/queue data.
 
-**Hub** — a review-gated structure note in `notes/hubs/` aggregating a topic's members and links ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)).
+**Hub** — a checked `hub` Concept in `knowledge/hubs/` aggregating a topic's
+members and links. Machine-curated hub changes are suggestions until the PI
+adopts them.
 
-**Lifecycle vs maturity** — two different axes, never interchangeable ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)). `lifecycle` is the one universal chain (the PI-facing state of any item); `maturity` is a claim **property** describing how settled it is — never a gate. Both chains and their values are specified in [Frontmatter fields](frontmatter.md).
+**Check status** — the read-state field on every alpha.11 Concept:
+`unchecked`, `checked`, or `quarantined`. Values are specified in
+[Frontmatter fields](frontmatter.md).
 
 **Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
 
-**Document type** — one of the 25 types defined in `.memoria/schemas/types/`; the full roster, categories, and folder homes are in [Document types](document-types.md).
+**Document type** — one of the Concept types defined in
+`.memoria/schemas/types/`; the full roster, categories, and folder homes are in
+[Document types](document-types.md).
 
-**Pattern** — a curated prompt-transformation stored as data in `system/patterns/` ([ADR-53](../adr/53-pattern-library.md)), typed and lifecycle-gated, executed only through the patterns MCP runner (one audited chokepoint; gated output targets degrade to dry-run).
+**Pattern** — compatibility name for a checked prompt operation stored as data
+in `capabilities/operations/` ([ADR-53](../adr/53-pattern-library.md)) and
+executed only through the patterns MCP runner.
 
-**State** — not a field name on its own; use the specific field. A note's state is its **`lifecycle`** (`proposed → … → archived`, [ADR-50](../adr/50-universal-lifecycle-and-maturity.md)); a board card's execution state is its **`status`** (`triage → … → done`); review carries **`review_status`**, ingest **`ingest_status`**, and the operational-health dashboard tracks **skill state**. Prefer the precise field name over a bare "state" wherever one of these is meant. Field contracts are specified in [Frontmatter fields](frontmatter.md).
+**State** — not a field name on its own; use the specific field. A Concept's
+read state is **`check_status`**; a board card's execution state is **`status`**;
+review carries **`review_status`**, ingest **`ingest_status`**, and the
+operational-health dashboard tracks **skill state**. Prefer the precise field
+name over a bare "state". Field contracts are specified in
+[Frontmatter fields](frontmatter.md).
 
 ---
 
@@ -106,7 +137,10 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Policy MCP** — the runtime write-gate: intercepts every vault action, returns `allow` / `allow_with_log` / `deny` / `dry_run`, and appends to the audit log. Enforced in-process by the fail-closed `memoria-policy-gate` plugin. See [Policy MCP](policy-mcp.md).
 
-**Review-gated zone** — a folder where the policy MCP degrades all agent writes to `dry_run` regardless of lane policy: `notes/claims/` and `notes/hubs/`, loaded from `folders.yaml`.
+**Review-gated zone** — an older policy term for folders where agent writes
+degrade to proposals. Alpha.11 replaces this with worker-owned staging and
+promotion: machine writes enter `.memoria/staging/`, and only checked Concepts
+are promoted into `catalog/`, `knowledge/`, or `capabilities/`.
 
 ---
 
@@ -114,9 +148,9 @@ For the short version of the core terms, see [Home](../README.md).
 
 | Name | Values | Set by | Scope |
 | --- | --- | --- | --- |
-| `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / operations | the soft verdict on a verification card — advisory only |
+| `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / operations | advisory only |
 | verdict band | `PASS` / `REVIEW` / `FAIL` | Linter operation | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](linter.md) |
-| `certainty` | `confident` / `likely` / `unsure` | proposing agent | the calibrated confidence on an honesty card |
+| `certainty` | `confident` / `likely` / `unsure` | proposing agent | calibrated confidence on an attention projection |
 
 **Trust score** — a 0–100 per-lane operational-health aggregate on the fleet-health dashboard; its inputs and bands are specified in [Dashboards](dashboards.md).
 

@@ -12,7 +12,7 @@ All known failure modes, sorted by severity. Each entry: symptom, severity, caus
 
 | Severity | Escalates to |
 | --- | --- |
-| `CRITICAL` | Raises `loudness: block`: blocks new delegation and review-gated promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Inbox card fields](inbox-card-fields.md)). |
+| `CRITICAL` | Raises `loudness: block`: blocks new delegation or worker promotion until acknowledged, surfaces in the rail's **Now**, and records a Telegram push attempt when the bot environment is configured ([Inbox card fields](inbox-card-fields.md)). |
 | `HIGH` | Surfaced in the rail's **Now** and in Maintenance's Drift watch. |
 | `MEDIUM` | Surfaced in Maintenance during the weekly review. |
 | `LOW` | Aggregated weekly. |
@@ -36,7 +36,7 @@ Sorted by severity, then topic.
 | `_proposed_classification` not appearing | MEDIUM | The Librarian's `catalog-classify-source` skill did not run or the capture never reached the catalog lane | Check the source card and `memoria-librarian` bundled skills, then rerun the catalog/classify task. |
 | Syncthing + `.bib` race condition | MEDIUM | VPS reads `.bib` while Syncthing is mid-transfer | Use Git pull for `.bib` distribution on `always-on` deployment — not Syncthing. |
 | Deferred always-on bridge unreachable | MEDIUM | Unsupported `always-on` topology drifted or the single dispatcher is offline | Return to the supported local install, or follow the deferred topology notes in [Always-on VPS design](../design/always-on-vps-design.md). |
-| Schema mismatch in Dataview | MEDIUM | Notes do not match the current schema | Run a manual, git-disciplined migration — there is no automated migrate command. Follow [Run a schema migration](../how-to-guides/operate/run-a-schema-migration.md) and validate with `python3 .memoria/operations/integrity/linter/detectors.py --vault .`. |
+| Schema mismatch in Dataview | MEDIUM | A hand-authored note or stale sandbox fixture does not match the current schema | Repair the specific note or reinitialize the sandbox from the current template, then validate with `python3 .memoria/operations/integrity/linter/detectors.py --vault .`. alpha.11 has no migration path. |
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host, stale `.env`, or missing Hermes cron registration | Check `hermes cron list`, the latest board/metrics outputs under `system/`, and rerun the installer profiles-only path if wrappers are missing. |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
 | Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md). |

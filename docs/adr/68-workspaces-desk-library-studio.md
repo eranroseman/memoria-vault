@@ -44,7 +44,7 @@ The shared contract, in every workspace:
 | --- | --- | --- | --- |
 | **Desk** | "What needs me?" | `system/dashboards/board-state.md` | `inbox/inbox.base`, `drift-watch.md`, `weekly-review.md` |
 | **Library** | Reading & synthesis | `system/dashboards/reading-pipeline.md` | `catalog/catalog.base`, `discuss-queue.md`, `open-questions.md`, `contradictions.md` |
-| **Studio** | Drafting | `research-focus.md` (projects/ ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base`, `system/patterns/patterns.base` |
+| **Studio** | Drafting | `steering.md` (projects/ ships empty — the priorities note is the drafting anchor) | `system/dashboards/claims.base`, `system/patterns/patterns.base` |
 
 Studio's right sidebar carries a second tab — the core backlink view — behind the
 Co-PI tab: backlinks finally live where there is an active note. **Studio replaced
@@ -60,7 +60,7 @@ HIGH/CRITICAL findings, linking board and drift-watch); (2) an **action row** of
 command buttons (capture fleeting / Zotero / URL, delegate, resolve card, talk to
 Co-PI); (3) a **navigation row** (Desk · Library · Studio · Project gate, with
 Project opening inside Studio rather than adding a fourth saved workspace); (4) the **drill-down
-index** — the collapsed dashboard callouts plus research-focus and
+index** — the collapsed dashboard callouts plus steering and
 troubleshooting. Everything else (prose, link-dumps, docs-site links beyond
 troubleshooting) is dropped.
 

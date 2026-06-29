@@ -16,8 +16,8 @@ Required or recommended alongside the Obsidian plugin set.
 
 | Add-on | Install in | Status | Purpose |
 | --- | --- | --- | --- |
-| Better BibTeX | Zotero | **Required** | Stable citekeys; auto-export `.bib` to vault; `zotero.lua` Lua filter for live Word export. |
-| MarkDB-Connect | Zotero | Recommended | Tags Zotero items that have a vault note; right-click → jump to note. Setup: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md). |
+| Better BibTeX | Zotero | **Required** | Stable citekeys; local BibTeX snapshots when needed; `zotero.lua` Lua filter for live Word export. |
+| MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.11 nested source Concepts. |
 | RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
 
 ---

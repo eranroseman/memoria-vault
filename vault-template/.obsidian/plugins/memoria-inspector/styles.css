@@ -22,6 +22,38 @@
   padding: 4px 8px;
 }
 
+.memoria-inspector__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.memoria-inspector__action {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+.memoria-inspector__check {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 0.8rem;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.memoria-inspector__input {
+  box-sizing: border-box;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.memoria-inspector__status {
+  color: var(--text-muted);
+  display: block;
+}
+
 .memoria-inspector__link {
   font-size: 0.75rem;
   padding: 2px 8px;
@@ -51,7 +83,9 @@
 .memoria-inspector__band span,
 .memoria-inspector__band small,
 .memoria-inspector__audit small,
+.memoria-inspector__flags small,
 .memoria-inspector__fleet small,
+.memoria-inspector__graph small,
 .memoria-inspector__count span {
   color: var(--text-muted);
 }
@@ -104,7 +138,9 @@
 
 .memoria-inspector__lanes,
 .memoria-inspector__audit,
-.memoria-inspector__fleet {
+.memoria-inspector__flags,
+.memoria-inspector__fleet,
+.memoria-inspector__graph {
   display: grid;
   gap: 8px;
   list-style: none;
@@ -113,9 +149,24 @@
 }
 
 .memoria-inspector__audit li,
-.memoria-inspector__fleet li {
+.memoria-inspector__flags li,
+.memoria-inspector__fleet li,
+.memoria-inspector__graph li {
   display: grid;
   gap: 2px;
+}
+
+.memoria-inspector__graph-label {
+  align-items: baseline;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.memoria-inspector__summary {
+  color: var(--text-muted);
+  display: block;
+  margin-top: 8px;
 }
 
 .memoria-inspector__empty {

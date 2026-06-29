@@ -21,7 +21,7 @@ serious operational risk.
 
 ## Proposal
 
-Memoria may add a nightly discovery cron that reads `research-focus.md`, selects
+Memoria may add a nightly discovery cron that reads `steering.md`, selects
 top priorities, runs `find` per priority, ingests confirmed candidates, enriches
 stale paper notes, commits, and posts a morning summary. It fails loud and keeps
 human confirmation gates intact.
@@ -34,7 +34,7 @@ human confirmation gates intact.
 
 ## When this matters
 
-Memoria 0.1.0 is stable, `research-focus.md` has been maintained for at least four
+Memoria 0.1.0 is stable, `steering.md` has been maintained for at least four
 weeks, always-on deployment is active, and `screening-plan.md` is written down.
 
 ## Alternatives considered

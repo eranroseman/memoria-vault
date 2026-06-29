@@ -1,6 +1,6 @@
 ---
 name: verify-card-gap
-description: "Turn a verification finding about MISSING evidence into a well-formed gap card in inbox/ — the synthesis backlog entry the PI (and the Librarian's discovery pass) picks up. Used standalone when review surfaces a hole, or called by verify-trace-claim for each failed trace. Writes only inbox/ gap cards with the full ADR-51 honesty body; never creates the missing claim or source itself."
+description: "Turn a verification finding about MISSING evidence into a worker-owned gap attention projection — the synthesis backlog entry the PI and Librarian discovery pass pick up. Used standalone when review surfaces a hole, or called by verify-trace-claim for each failed trace. Never creates the missing note or source itself."
 version: 1.0.0
 author: Memoria
 license: MIT
@@ -17,17 +17,15 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/"]
+    write_scope: []
     outputs: [gap]
 ---
 
 # verify-card-gap
 
 Turn "the evidence for X is missing" into a card the PI can act on. A gap is a
-**finding about an absence**: a claim with no supporting claim note, an argument leg
+**finding about an absence**: a claim with no supporting checked note, an argument leg
 with no source, a comparison the draft asserts but the vault cannot back. You record
 the absence precisely; you never fill it (finding the source is the Librarian's
 `catalog` lane, promoting a claim is the PI's gate).
@@ -42,19 +40,19 @@ the absence precisely; you never fill it (finding the source is the Librarian's
 
 ## Procedure
 
-1. **Check for an existing card.** Search `inbox/` (via the `obsidian` skill) for an
-   open gap card covering the same absence — extend reasoning happens in the Co-PI pane,
-   so a duplicate card is noise. If one exists, stop and report it instead.
+1. **Check for existing attention.** Search the generated attention projections for an
+   open gap covering the same absence — duplicate attention is noise. If one exists,
+   stop and report it instead.
 2. **State the gap concretely.** Quote the unsupported sentence; name what would close
-   the gap (a claim note? a source? a replication?). "Coverage is thin" is not a gap;
-   "the claim ‹…› in `projects/p1/drafts/intro.md` has no supporting claim note" is.
-3. **Write — gated.** Create `inbox/gap-<slug>.md` (schema `gap`) with the full ADR-51
-   honesty body. Related gaps from one review pass go on ONE card with a list, never N
-   cards (ADR-54).
+   the gap (a claim-bearing note? a source? a replication?). "Coverage is thin" is not
+   a gap; "the claim <...> has no supporting checked note" is.
+3. **Request attention.** Return one worker-owned `gap` attention request with the full
+   ADR-51 honesty body. Related gaps from one review pass go on one item with a list,
+   never N items (ADR-54).
 
 ## Output contract
 
-A `gap` card (schema `gap`, `lifecycle: proposed`) with every required field:
+A `gap` attention request with every required field:
 
 - `title` — the absence in one line.
 - `action` — what accepting the card means (e.g. "delegate a catalog search for
@@ -74,5 +72,5 @@ A `gap` card (schema `gap`, `lifecycle: proposed`) with every required field:
 - The card proposes; the PI disposes — never imply the gap *must* be filled.
 - `argument_against` is genuine, not a strawman; if you cannot think of one, the gap is
   probably under-specified — sharpen the finding first.
-- Never write the missing claim, never delegate work yourself (the Peer-reviewer has no
-  delegation path) — the card IS the handoff.
+- Never write the missing note, never delegate work yourself (the Peer-reviewer has no
+  delegation path) — the attention request is the handoff.

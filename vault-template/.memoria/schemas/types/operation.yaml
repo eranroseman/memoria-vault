@@ -1,0 +1,25 @@
+type: operation
+category: capabilities
+gated: false
+initial_check_status: unchecked
+enums:
+  check_status: [unchecked, checked, quarantined]
+  risk_class: [low, medium, high]
+required:
+  type: literal:operation
+  check_status: enum:check_status
+  title: str
+  description: str
+optional:
+  resource: str
+  operation_id: str
+  allowed_tools: list
+  allowed_paths: list
+  allowed_network: list
+  runner: str
+  model: str
+  prompt_version: str
+  io_schema: map
+  risk_class: enum:risk_class
+  required_checks: list
+  tags: list

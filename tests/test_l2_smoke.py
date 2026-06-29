@@ -44,10 +44,10 @@ def test_obsidian_shim_writes_and_reads_vault_relative_file(tmp_path):
     vault = tmp_path / "vault"
     vault.mkdir()
 
-    result = shim.put_content(vault, "projects/l2-smoke/live.md", "hello")
+    result = shim.put_content(vault, "knowledge/notes/live.md", "hello")
 
-    assert result == {"path": "projects/l2-smoke/live.md", "status": "written"}
-    assert shim.get_content(vault, "projects/l2-smoke/live.md") == "hello"
+    assert result == {"path": "knowledge/notes/live.md", "status": "written"}
+    assert shim.get_content(vault, "knowledge/notes/live.md") == "hello"
 
 
 def test_l2_smoke_profile_uses_filesystem_obsidian_shim(tmp_path):
@@ -93,11 +93,8 @@ def test_l2_smoke_deploys_policy_plugin_with_repo_import_path(tmp_path):
     assert f"sys.path.insert(0, {str(ROOT / 'src')!r})" in plugin
 
 
-def test_l2_smoke_asserts_artifact_and_audit_row(tmp_path, capsys):
+def test_l2_smoke_asserts_direct_write_denial_and_audit_row(tmp_path, capsys):
     vault = tmp_path / "vault"
-    artifact = vault / "projects/l2-smoke/live-dispatch.md"
-    artifact.parent.mkdir(parents=True)
-    artifact.write_text("---\ntype: project\nl2_live_smoke: true\n---\n", encoding="utf-8")
     audit = vault / "system/logs/audit.jsonl"
     audit.parent.mkdir(parents=True)
     audit.write_text(
@@ -105,19 +102,10 @@ def test_l2_smoke_asserts_artifact_and_audit_row(tmp_path, capsys):
         + "\n"
         + json.dumps(
             {
-                "path": "projects/l2-smoke/live-dispatch.md",
-                "decision": "allow_with_log",
-                "before_hash": "0" * 64,
-                "task_id": "task-1",
-            }
-        )
-        + "\n"
-        + json.dumps(
-            {
-                "path": "projects/l2-smoke/live-dispatch.md",
-                "decision": "write_complete",
-                "before_hash": "0" * 64,
-                "after_hash": "1" * 64,
+                "path": "knowledge/notes/l2-smoke-direct-write.md",
+                "decision": "deny",
+                "policy_rule": "tool-registry.allowlist",
+                "message": "blocked",
                 "task_id": "task-1",
             }
         )
@@ -125,10 +113,10 @@ def test_l2_smoke_asserts_artifact_and_audit_row(tmp_path, capsys):
         encoding="utf-8",
     )
 
-    l2_smoke.assert_smoke(vault, "projects/l2-smoke/live-dispatch.md", audit_before=1)
+    l2_smoke.assert_smoke(vault, "knowledge/notes/l2-smoke-direct-write.md", audit_before=1)
 
     out = capsys.readouterr().out
-    assert "live dispatch artifact asserted" in out
+    assert "direct Obsidian write denied" in out
     assert "task_id=task-1" in out
 
 

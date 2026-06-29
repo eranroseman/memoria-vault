@@ -1,21 +1,23 @@
 profile: memoria-engineer
 
-# The Engineer's lane ceiling (ADR-48): the code lane only (ADR-21). Scaffolds
-# handoffs to an external coding agent and owns the commit/revert gate.
+# Deferred in alpha.11: the coding/autonomy lane is not routable and has no
+# write ceiling until a later checkpoint re-enables it.
 
 policy:
   allow:
     skills:
       - obsidian
-    write:
-      - "projects/*/code/**"
+    write: []
   deny:
     skills:
       - review_gated_publish
     write:
       - "notes/**"
+      - "knowledge/**"
       - "catalog/**"
+      - "capabilities/**"
       - "inbox/**"
+      - "projects/**"
       - "system/**"
   require:
     - audit_log
@@ -24,5 +26,4 @@ policy:
 routing:
   invocation: dispatched
   external_api_policy: explicit_only
-  write_scope:
-    - "projects/*/code/"
+  write_scope: []

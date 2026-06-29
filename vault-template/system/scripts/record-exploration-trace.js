@@ -2,12 +2,11 @@
  * QuickAdd user script — "Memoria: record exploration trace".
  *
  * Captures a rejected direction/dead end beside a Librarian map-lane report.
- * The note is project-local context under notes/fleeting/maps/, not canonical
- * knowledge. It uses the ordinary fleeting schema so the artifact remains
- * visible, searchable, and easy to archive.
+ * The note is project-local context under knowledge/notes/maps/. It is born
+ * unchecked; the worker/check loop owns promotion.
  */
 
-const MAPS_DIR = "notes/fleeting/maps/";
+const MAPS_DIR = "knowledge/notes/maps/";
 const { fnv1a, uniquePath, yamlString } = require(require("path").join(globalThis.app.vault.adapter.getBasePath(), "system/scripts/quickadd-utils.js"));
 
 module.exports = async (params) => {
@@ -55,9 +54,9 @@ module.exports = async (params) => {
   const body = [
     "---",
     "title: " + yamlString("Exploration trace: " + direction),
-    "type: fleeting",
-    "lifecycle: proposed",
-    "origin: human",
+    "type: note",
+    "check_status: unchecked",
+    "description: " + yamlString("Project-local exploration trace."),
     "created: " + today,
     "---",
     "",
@@ -84,7 +83,7 @@ module.exports = async (params) => {
     "",
     "## Boundary",
     "",
-    "This is project-local exploration context. It is not a claim, source, or hub, and it is never promoted automatically into canonical knowledge.",
+    "This is project-local exploration context. It is not a source, digest, or hub, and it is never adopted automatically into curated knowledge.",
     "",
   ].join("\n");
 

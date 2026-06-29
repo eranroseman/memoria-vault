@@ -1,69 +1,29 @@
 type: source
-category: notes
+category: catalog
 gated: false
-initial_lifecycle: proposed
+initial_check_status: unchecked
 enums:
-  lifecycle: [proposed, provisional, current, retracted, archived]
-  source_type: [paper, dataset, repository, web-page, report]
-  evidence_level: [cebm-1, cebm-2, cebm-3, cebm-4, cebm-5, ungraded]
+  check_status: [unchecked, checked, quarantined]
+  lifecycle: [current, retracted, archived]
+  item_type: [article, book, webpage, dataset, repository, software, audio, video, note, report]
+  metadata_status: [verified, partial, unverified, not-indexed]
 required:
   type: literal:source
-  lifecycle: enum:lifecycle
+  check_status: enum:check_status
   title: str
-  entity: str # wikilink to the Catalog entity this note is about
+  description: str
+  source_id: str
 optional:
-  source_type: enum:source_type
-  evidence_level: enum:evidence_level
-  research_area: list
-  methodology: list
-  links: map # authored, typed note-links (ADR-52)
-  sample: bool
-  created: date
-creation:
-  form:
-    title: Memoria source capture
-    name: memoria-source-capture
-    fields:
-      - name: title
-        label: Source title
-        description: Human-readable title for the source note.
-        required: true
-        input:
-          type: text
-      - name: entity
-        label: Catalog entity
-        description: Catalog record this source note describes.
-        required: true
-        input:
-          type: note
-          folder: catalog
-      - name: source_type
-        label: Source type
-        description: Kind of source behind the note.
-        required: true
-        input:
-          type: select
-          enum: source_type
-      - name: evidence_level
-        label: Evidence level
-        description: CEBM-style appraisal grade; use ungraded until appraised.
-        input:
-          type: select
-          enum: evidence_level
-      - name: research_area
-        label: Research area
-        description: What the work is about.
-        input:
-          type: multiselect
-          vocabulary: research_area
-      - name: methodology
-        label: Methodology
-        description: How the work was structured or analyzed.
-        input:
-          type: multiselect
-          vocabulary: methodology
-      - name: summary
-        label: In my words
-        description: Short source-grounded summary in your own words.
-        input:
-          type: textarea
+  resource: str
+  lifecycle: enum:lifecycle
+  citekey: str
+  item_type: enum:item_type
+  identifiers: map
+  csl_json: map
+  raw_copy_path: str
+  content_path: str
+  raw_text_sha256: str
+  normalized_text_sha256: str
+  metadata_status: enum:metadata_status
+  links: map
+  tags: list

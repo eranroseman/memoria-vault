@@ -7,11 +7,13 @@ nav_order: 5
 
 # The Engineer
 
-The Engineer runs the **code** lane as a documentary front for an external coding agent. Its posture is **delegating**: Memoria prepares and records the handoff, but the external agent does the coding ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
+The Engineer/code lane is deferred in alpha.11. Its planned posture is
+**delegating**: Memoria prepares and records a handoff, but the external coding
+agent does the coding ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
 
 ## What it does
 
-- Scaffolds the `code` handoff into `projects/<project>/code/`.
+- Scaffolds the `code` handoff when the deferred code lane is reintroduced.
 - Records provenance and the commit/revert checkpoint.
 - Routes all writes through the gated Obsidian MCP.
 
@@ -27,7 +29,9 @@ The Engineer runs the **code** lane as a documentary front for an external codin
 
 **Not the agent that writes code.** The external agent does. The Engineer scaffolds, records, commits.
 
-**Not orchestration infrastructure.** It does not spawn the external agent as a subprocess, parse its output, or drive it through an API. The two agents coordinate through a markdown handoff and the artifacts that land in `projects/<project>/code/` — an explicit design choice, not a limitation.
+**Not orchestration infrastructure.** It does not spawn the external agent as a
+subprocess, parse its output, or drive it through an API. Coordination is
+through documented handoff artifacts, not an agent-control plane.
 
 **Not a documenter of research.** A `code` handoff records what was built and why. Writing *about* the methodology or results is the Writer's domain.
 

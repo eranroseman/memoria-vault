@@ -17,14 +17,14 @@ metadata:
       - obsidian.get_file_contents
       - obsidian.list_files
       - obsidian.search
-      - obsidian.put_content
       - policy.check_permission
-      - policy.complete_write
-    write_scope: ["inbox/"]
+    write_scope: [".memoria/staging/catalog/", ".memoria/staging/knowledge/"]
     outputs: [candidate]
 ---
 
 # extract-flag-distill
+
+> Alpha.11 boundary: do not call Obsidian write tools or write canonical files. Treat legacy "write", "gated", or "card" wording below as a worker enqueue/staging request; legacy paths such as `catalog/papers/`, `notes/sources/`, `notes/fleeting/`, and `inbox/` map to alpha.11 worker outputs (`catalog/sources/`, `knowledge/digests/`, `knowledge/notes/`, generated attention projections) rather than direct writes.
 
 The PI's reading time is the scarcest resource in the loop. This skill nominates which
 kept-but-undistilled sources deserve it: it reads the evidence already in the vault and

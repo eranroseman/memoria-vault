@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import yaml
-from operations.lib import schema, worklists
+from operations.lib import worklists
 
 
 def _frontmatter(path: Path) -> dict:
@@ -9,7 +9,7 @@ def _frontmatter(path: Path) -> dict:
     return yaml.safe_load(text.split("---", 2)[1])
 
 
-def test_emit_worklist_writes_schema_valid_rows_and_one_prompt(tmp_path):
+def test_emit_worklist_writes_projection_rows_and_one_prompt(tmp_path):
     result = worklists.emit_worklist(
         tmp_path,
         "Transformer screening",
@@ -28,12 +28,11 @@ def test_emit_worklist_writes_schema_valid_rows_and_one_prompt(tmp_path):
     assert result["worklist"] == "transformer-screening"
     item_paths = sorted((tmp_path / "system" / "worklists" / result["worklist"]).glob("*.md"))
     assert len(item_paths) == 2
-    types = schema.load_types()
     for path in item_paths:
         fm = _frontmatter(path)
-        assert schema.validate_frontmatter(fm, types["worklist-item"]) == []
-        assert fm["type"] == "worklist-item"
-        assert fm["lifecycle"] == "proposed"
+        assert fm["projection"] == "worklist-item"
+        assert fm["attention_status"] == "open"
+        assert "type" not in fm
         assert fm["decision"] == "proposed"
         assert fm["worklist"] == "transformer-screening"
         assert fm["source_report"] == "notes/fleeting/maps/transformer-report.md"
@@ -41,7 +40,8 @@ def test_emit_worklist_writes_schema_valid_rows_and_one_prompt(tmp_path):
     prompts = list((tmp_path / "inbox").glob("work-prompt-*.md"))
     assert len(prompts) == 1
     prompt_fm = _frontmatter(prompts[0])
-    assert prompt_fm["type"] == "work-prompt"
+    assert prompt_fm["projection"] == "attention"
+    assert prompt_fm["attention_kind"] == "work-prompt"
     assert prompt_fm["raised_by"] == "worklists"
     assert "system/worklists/worklists.base#By worklist" in prompt_fm["target"]
 

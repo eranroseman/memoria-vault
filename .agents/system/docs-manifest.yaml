@@ -654,6 +654,27 @@ entries:
     topic: decisions
   canonical_owner: true
   status: manual
+- path: docs/adr/121-enqueue-only-obsidian-control-panel.md
+  title: Obsidian control panel mutates only by enqueueing worker jobs
+  book: Developers
+  topic: decisions
+  frontmatter:
+    assumes:
+    - 28
+    - 74
+    - 84
+    date_proposed: 2026-06-29
+    date_resolved: 2026-06-29
+    id: 121
+    nav_exclude: true
+    status: accepted
+    superseded_by: []
+    supersedes:
+    - 84
+    title: Obsidian control panel mutates only by enqueueing worker jobs
+    topic: decisions
+  canonical_owner: true
+  status: manual
 - path: docs/adr/13-homepage-front-door.md
   title: Homepage front-door note, auto-opened by obsidian-homepage
   book: Developers
@@ -2012,8 +2033,9 @@ entries:
     date_resolved: 2026-06-19
     id: 84
     nav_exclude: true
-    status: accepted
-    superseded_by: []
+    status: superseded
+    superseded_by:
+    - 121
     supersedes:
     - 58
     title: Read-only Obsidian Inspector
@@ -2840,14 +2862,14 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/explanation/knowledge/promotion-and-gated-zones.md
-  title: Promotion and gated zones
+  title: Promotion and the write boundary
   book: Explanation
   topic: null
   frontmatter:
     grand_parent: Explanation
     nav_order: 4
     parent: Knowledge
-    title: Promotion and gated zones
+    title: Promotion and the write boundary
   canonical_owner: false
   status: manual
 - path: docs/explanation/knowledge/vocabulary-discipline.md
@@ -3121,14 +3143,14 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/knowledge/link-related-claims.md
-  title: Link related claims
+  title: Link checked notes
   book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
     nav_order: 2
     parent: Knowledge
-    title: Link related claims
+    title: Link checked notes
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/knowledge/manage-vocabulary.md
@@ -3237,7 +3259,6 @@ entries:
   topic: null
   frontmatter:
     grand_parent: How-to guides
-    nav_order: 2
     parent: Library
     title: Capture and ingest a source
   canonical_owner: false
@@ -3362,17 +3383,6 @@ entries:
     nav_order: 2
     parent: Operate
     title: Run a retraction sweep
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/operate/run-a-schema-migration.md
-  title: Run a schema migration
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 3
-    parent: Operate
-    title: Run a schema migration
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/operate/run-the-linter.md
@@ -3543,14 +3553,14 @@ entries:
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/setup/load-sample-vault.md
-  title: Load and remove the sample vault
+  title: Retired sample vault
   book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
     nav_order: 5
     parent: Setup
-    title: Load and remove the sample vault
+    title: Retired sample vault
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/setup/quickstart.md
@@ -4505,6 +4515,97 @@ entries:
   status: manual
 - path: docs/releasing/0.1.0-alpha.11/tmp/start-blocker-verification-results.md
   title: Alpha.11 start-blocker verification results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp-cluster-alpha11-results.md
+  title: WP Cluster Alpha.11 Path Repair Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp-docs-alpha10-retirement-results.md
+  title: WP-Docs Alpha.10 Surface Retirement Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp-g3-basic-cycle-results.md
+  title: WP-G3 Basic Cycle Harness Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp-gate-seeded-error-results.md
+  title: WP-Gate Seeded-Error Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp-ui-quickadd-note-cleanup-results.md
+  title: WP-UI QuickAdd Note Cleanup Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp1-schema-skeleton-results.md
+  title: WP1 schema skeleton results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp2-trusted-writer-results.md
+  title: WP2 Trusted Writer And Queue Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp3-checked-index-results.md
+  title: WP3 Checked Index Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp4-capture-results.md
+  title: WP4 Capture Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp5-operation-digest-results.md
+  title: WP5 Operation/Digest Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp6-note-gap-results.md
+  title: WP6 Note/Gap Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp7-integrity-rollback-results.md
+  title: WP7 Integrity Rollback Slice Results
+  book: Internal
+  topic: null
+  frontmatter: {}
+  canonical_owner: false
+  status: manual
+- path: docs/releasing/0.1.0-alpha.11/tmp/wp8-inspector-enqueue-results.md
+  title: WP8 Inspector Enqueue Slice Results
   book: Internal
   topic: null
   frontmatter: {}

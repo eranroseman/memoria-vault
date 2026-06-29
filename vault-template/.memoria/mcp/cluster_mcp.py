@@ -6,13 +6,13 @@ Three tools over the vault's typed graph and text:
     cluster_build_graph   NetworkX over the authored `links:` edges and the given
                           `relationships` (ADR-52) -> nodes, typed edges, communities,
                           centrality, layout coordinates. JSON only.
-    cluster_emit_canvas   The claim-debate map (graph-visualization design, section 2):
+    cluster_emit_canvas   The note-debate map (graph-visualization design, section 2):
                           the same typed graph rendered as a JSON Canvas artifact —
                           supports green / contradicts red / extends neutral, node color
-                          = maturity, node size = in-degree, communities as group nodes.
-                          Propose-class: it writes ONLY into the ungated staging home
-                          (notes/fleeting/maps/ by default) and refuses every
-                          review-gated prefix; the human edits/promotes the artifact.
+                          = note status, node size = in-degree, communities as group nodes.
+                          It writes only into the checked-note map staging home
+                          (knowledge/notes/maps/ by default) and refuses every
+                          other target; the human edits/promotes curated hubs.
     cluster_model_topics  BERTopic over note text -> topics, doc-topic map, outliers.
                           Heavy deps (bertopic -> torch) live in requirements-cluster.txt,
                           NEVER the policy-core requirements (ADR-33).
@@ -40,14 +40,12 @@ from memoria_vault.runtime.paths import resolve_vault
 _FM_RE = re.compile(r"^---\n(.*?)\n---", re.S)
 _WIKI = re.compile(r"\[\[([^\]|#]+)")
 
-NOTE_FOLDERS = ("notes/claims", "notes/hubs", "notes/sources")
-ENTITY_FOLDERS = (
-    "catalog/papers",
-    "catalog/people",
-    "catalog/organizations",
-    "catalog/venues",
-    "catalog/datasets",
-    "catalog/repositories",
+CONCEPT_FOLDERS = (
+    "knowledge/notes",
+    "knowledge/hubs",
+    "knowledge/projects",
+    "catalog/sources",
+    "catalog/entities",
 )
 
 
@@ -73,8 +71,8 @@ def _calibration(vault: Path) -> dict:
         return {}
 
 
-def _stem_targets(value) -> list[str]:
-    """Wikilink/plain values -> note stems."""
+def _raw_targets(value) -> list[str]:
+    """Wikilink/plain values -> raw target strings."""
     out = []
     vals = value if isinstance(value, list) else [value]
     for v in vals:
@@ -82,45 +80,71 @@ def _stem_targets(value) -> list[str]:
             continue
         hits = _WIKI.findall(v)
         for h in hits or [v]:
-            out.append(Path(h.strip()).stem)
+            out.append(h.strip())
     return out
 
 
 def collect_edges(vault: Path) -> tuple[list[dict], list[dict]]:
-    """The typed graph: nodes from notes+entities; edges from links:/relationships."""
+    """The typed graph: nodes from Concepts; edges from links:/relationships."""
     nodes: list[dict] = []
     edges: list[dict] = []
     seen: set[str] = set()
+    records: list[tuple[str, dict]] = []
 
-    def add_node(stem: str, ntype: str, folder: str) -> None:
-        if stem not in seen:
-            seen.add(stem)
-            nodes.append({"id": stem, "type": ntype, "folder": folder})
+    def add_node(path: Path, frontmatter: dict) -> None:
+        rel = path.relative_to(vault).as_posix()
+        node_id = rel.removesuffix(".md")
+        if node_id in seen:
+            return
+        seen.add(node_id)
+        nodes.append(
+            {
+                "id": node_id,
+                "path": rel,
+                "type": frontmatter.get("type", ""),
+                "folder": path.parent.relative_to(vault).as_posix(),
+            }
+        )
+        records.append((node_id, frontmatter))
 
-    for folders, kind in ((NOTE_FOLDERS, "links"), (ENTITY_FOLDERS, "relationships")):
-        for folder in folders:
-            d = vault / folder
-            if not d.is_dir():
+    for folder in CONCEPT_FOLDERS:
+        d = vault / folder
+        if not d.is_dir():
+            continue
+        for path in sorted(d.rglob("*.md")):
+            add_node(path, _frontmatter(path))
+
+    stem_index: dict[str, str | None] = {}
+    for node in nodes:
+        stem = Path(node["id"]).name
+        stem_index[stem] = node["id"] if stem not in stem_index else None
+
+    for node_id, frontmatter in records:
+        for kind in ("links", "relationships"):
+            conn = frontmatter.get(kind)
+            if not isinstance(conn, dict):
                 continue
-            for p in sorted(d.glob("*.md")):
-                fm = _frontmatter(p)
-                ntype = fm.get("type", "")
-                add_node(p.stem, ntype, folder)
-                conn = fm.get(kind)
-                if not isinstance(conn, dict):
-                    continue
-                for edge_type, value in conn.items():
-                    for target in _stem_targets(value):
-                        if target and target != p.stem:
-                            edges.append(
-                                {
-                                    "source": p.stem,
-                                    "target": target,
-                                    "type": edge_type,
-                                    "kind": kind,
-                                }
-                            )
+            for edge_type, value in conn.items():
+                for raw in _raw_targets(value):
+                    target = _target_id(raw, stem_index)
+                    if target and target != node_id:
+                        edges.append(
+                            {
+                                "source": node_id,
+                                "target": target,
+                                "type": edge_type,
+                                "kind": kind,
+                            }
+                        )
     return nodes, edges
+
+
+def _target_id(raw: str, stem_index: dict[str, str | None]) -> str:
+    target = raw.strip().replace("\\", "/").lstrip("./")
+    target = target.removesuffix(".md")
+    if "/" not in target and stem_index.get(target):
+        return str(stem_index[target])
+    return target
 
 
 def build_graph(vault: Path, seed: int | None = None) -> dict:
@@ -159,12 +183,13 @@ def build_graph(vault: Path, seed: int | None = None) -> dict:
     }
 
 
-# ── Canvas emission (the claim-debate map; graph-visualization design §2) ──────
+# Canvas emission: the note-debate map.
 # JSON Canvas preset colors: "1" red · "4" green; untyped/extends edges stay neutral.
 EDGE_COLORS = {"supports": "4", "contradicts": "1"}
-# Node color = maturity (seedling → evergreen).
-MATURITY_COLORS = {"seedling": "3", "budding": "5", "evergreen": "4"}
-CANVAS_HOME = "notes/fleeting/maps"  # the ONLY canvas write target (allowlist)
+# Node color = review status.
+STATUS_COLORS = {"candidate": "3", "accepted": "4", "rejected": "1", "superseded": "6"}
+DEFAULT_SCOPE = "knowledge/notes"
+CANVAS_HOME = "knowledge/notes/maps"
 
 
 def _scope_stems(vault: Path, scope: str, nodes: list[dict], edges: list[dict]) -> set[str]:
@@ -172,24 +197,30 @@ def _scope_stems(vault: Path, scope: str, nodes: list[dict], edges: list[dict]) 
     plus everything it links (one hop); a folder prefix -> notes under it."""
     scope = scope.strip().strip("/")
     if scope.endswith(".md"):
-        stem = Path(scope).stem
-        keep = {stem}
+        node_id = scope.removesuffix(".md")
+        keep = {node_id}
         for e in edges:
-            if e["source"] == stem:
+            if e["source"] == node_id:
                 keep.add(e["target"])
-            elif e["target"] == stem:
+            elif e["target"] == node_id:
                 keep.add(e["source"])
         return keep
-    return {n["id"] for n in nodes if n["folder"] == scope or n["folder"].startswith(scope + "/")}
+    return {
+        n["id"]
+        for n in nodes
+        if n["folder"] == scope
+        or n["folder"].startswith(scope + "/")
+        or n["id"].startswith(scope + "/")
+    }
 
 
 def emit_canvas(
-    vault: Path, scope: str = "notes/claims", out: str = "", seed: int | None = None
+    vault: Path, scope: str = DEFAULT_SCOPE, out: str = "", seed: int | None = None
 ) -> dict:
-    """The claim-debate map as a JSON Canvas artifact (propose-class, staging-only).
+    """The note-debate map as a JSON Canvas artifact.
 
     File nodes for in-scope notes, typed edges (supports green / contradicts red /
-    extends neutral), node color = maturity, node size = in-degree, communities
+    extends neutral), node color = status, node size = in-degree, communities
     rendered as group nodes. Deterministic for identical input (fixed seed)."""
     import networkx as nx
 
@@ -199,9 +230,7 @@ def emit_canvas(
     keep = _scope_stems(vault, scope, nodes, edges)
     by_id = {n["id"]: n for n in nodes}
     # Canvas nodes must be real files; edges must join two surviving nodes.
-    scoped = sorted(
-        s for s in keep if s in by_id and (vault / by_id[s]["folder"] / f"{s}.md").is_file()
-    )
+    scoped = sorted(s for s in keep if s in by_id and (vault / by_id[s]["path"]).is_file())
     scoped_edges = sorted(
         (e for e in edges if e["source"] in scoped and e["target"] in scoped),
         key=lambda e: (e["source"], e["type"], e["target"]),
@@ -235,7 +264,7 @@ def emit_canvas(
     geom = {}
     for s in scoped:
         n = by_id[s]
-        fm = _frontmatter(vault / n["folder"] / f"{s}.md")
+        fm = _frontmatter(vault / n["path"])
         w = 360 + 40 * min(indeg[s], 6)  # node size = in-degree
         h = 96 + 12 * min(indeg[s], 6)
         x, y = pos[s][0] - w // 2, pos[s][1] - h // 2
@@ -243,13 +272,13 @@ def emit_canvas(
         node = {
             "id": s,
             "type": "file",
-            "file": f"{n['folder']}/{s}.md",
+            "file": n["path"],
             "x": x,
             "y": y,
             "width": w,
             "height": h,
         }
-        color = MATURITY_COLORS.get(str(fm.get("maturity", "")))
+        color = STATUS_COLORS.get(str(fm.get("status", "")))
         if color:
             node["color"] = color
         canvas_nodes.append(node)
@@ -289,10 +318,10 @@ def emit_canvas(
 
     if out:
         rel = out
-    elif scope.strip("/") == "notes/claims":
-        rel = f"{CANVAS_HOME}/claim-debate.canvas"
+    elif scope.strip("/") == DEFAULT_SCOPE:
+        rel = f"{CANVAS_HOME}/note-debate.canvas"
     else:
-        rel = f"{CANVAS_HOME}/claim-debate-{Path(scope.rstrip('/')).stem}.canvas"
+        rel = f"{CANVAS_HOME}/note-debate-{Path(scope.rstrip('/')).stem}.canvas"
     norm = str(Path(rel)).replace("\\", "/")
     # Allowlist, not denylist: a canvas may land only under CANVAS_HOME (the
     # map lane's staging), resolved against symlink tricks, and only as .canvas.
@@ -304,7 +333,7 @@ def emit_canvas(
         return {
             "error": "invalid-target",
             "target": rel,
-            "note": f"canvas writes are restricted to {CANVAS_HOME}/ (staging — ADR-03/47)",
+            "note": f"canvas writes are restricted to {CANVAS_HOME}/",
         }
     if dest.suffix != ".canvas":
         return {
@@ -333,7 +362,7 @@ def emit_canvas(
 
 def model_topics(
     vault: Path,
-    folder: str = "notes/sources",
+    folder: str = DEFAULT_SCOPE,
     min_cluster_size: int | None = None,
     seed: int | None = None,
 ) -> dict:
@@ -354,11 +383,11 @@ def model_topics(
     required_documents = max(mcs * 2, corpus_floor)
     docs, names = [], []
     d = vault / folder
-    for p in sorted(d.glob("*.md")) if d.is_dir() else []:
+    for p in sorted(d.rglob("*.md")) if d.is_dir() else []:
         body = _FM_RE.sub("", p.read_text(encoding="utf-8"), count=1).strip()
         if body:
             docs.append(body)
-            names.append(p.stem)
+            names.append(p.relative_to(vault).as_posix().removesuffix(".md"))
     if len(docs) < required_documents:
         return {
             "error": "too-few-documents",
@@ -404,15 +433,15 @@ def build_server(vault: Path):
         return build_graph(vault, seed if seed >= 0 else None)
 
     @server.tool()
-    def cluster_emit_canvas(scope: str = "notes/claims", out: str = "", seed: int = -1) -> dict:
-        """The claim-debate map: write the typed claim graph as a JSON Canvas
-        artifact (supports green / contradicts red, maturity-colored nodes,
-        community groups). Propose-class — staging only, gated zones refused."""
+    def cluster_emit_canvas(scope: str = DEFAULT_SCOPE, out: str = "", seed: int = -1) -> dict:
+        """The note-debate map: write the typed note graph as a JSON Canvas
+        artifact (supports green / contradicts red, status-colored nodes,
+        community groups). Writes only under knowledge/notes/maps/."""
         return emit_canvas(vault, scope, out, seed if seed >= 0 else None)
 
     @server.tool()
     def cluster_model_topics(
-        folder: str = "notes/sources", min_cluster_size: int = 0, seed: int = -1
+        folder: str = DEFAULT_SCOPE, min_cluster_size: int = 0, seed: int = -1
     ) -> dict:
         """BERTopic topics over note text: topics, doc-topic map, outliers.
         Errors cleanly if the optional cluster deps are not installed."""
@@ -428,11 +457,11 @@ def main() -> None:
     ap.add_argument("--vault", help="vault root (or MEMORIA_VAULT_PATH)")
     ap.add_argument("--graph", action="store_true", help="one-shot graph JSON to stdout")
     ap.add_argument(
-        "--canvas", action="store_true", help="one-shot: emit the claim-debate Canvas artifact"
+        "--canvas", action="store_true", help="one-shot: emit the note-debate Canvas artifact"
     )
     ap.add_argument(
         "--scope",
-        default="notes/claims",
+        default=DEFAULT_SCOPE,
         help="canvas scope: a hub/topic note path or a folder prefix",
     )
     ap.add_argument(

@@ -13,12 +13,6 @@ classify:
   confidence_floor: 0.6
   near_tie_margin: 0.15
   model_version: null # pin if a local topic model ever replaces OpenAlex topics
-inbox:
-  # #338: the archival sweep (operations/cleanup/archive_inbox.py) flips resolved
-  # inbox cards (lifecycle: current/retracted with a `resolved:` stamp) to
-  # lifecycle: archived once the stamp is older than this many days — the
-  # verdict stays visible while fresh, then the card leaves active views.
-  archive_after_days: 30
 clustering:
   # Cluster-MCP parameters decide *how to display*, never what is canonical (D44/D48).
   embedding_model: null # pinned when the cluster MCP is configured

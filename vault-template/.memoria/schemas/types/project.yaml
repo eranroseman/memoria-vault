@@ -1,64 +1,17 @@
 type: project
-category: projects
+category: knowledge
 gated: false
-initial_lifecycle: current
+initial_check_status: unchecked
 enums:
-  lifecycle: [current, archived]
-  output_mode: [thesis, survey]
-  evidence_saturation: [unknown, unsaturated, saturated, stale]
-  argument_stage: [cold-start, developing, mature]
+  check_status: [unchecked, checked, quarantined]
 required:
   type: literal:project
-  lifecycle: enum:lifecycle
+  check_status: enum:check_status
   title: str
-  slug: str
-  scope_topics: list
-  inquiry: map
-  finer: map
-  output_mode: enum:output_mode
-  question_version: int
-  question_log: list
+  description: str
 optional:
-  active_thesis: str
-  impact: int
-  on_path: bool
-  evidence_saturation: enum:evidence_saturation
-  argument_stage: enum:argument_stage
-  computed_at: date
-  refutation_sufficiency: bool
-  refutation_sufficiency_at: date
-  sample: bool
-  created: date
-creation:
-  form:
-    title: Memoria project start
-    name: memoria-project-start
-    fields:
-      - name: title
-        label: Project title
-        description: Bounded research question or working project name.
-        required: true
-        input:
-          type: text
-      - name: scope_topics
-        label: Scope topics
-        description: Controlled vocabulary topics that bound the project.
-        input:
-          type: multiselect
-          vocabulary: research_area
-      - name: output_mode
-        label: Output mode
-        description: Thesis mode starts with a provisional answer; survey mode starts open.
-        required: true
-        input:
-          type: select
-          enum: output_mode
-      - name: provisional_thesis
-        label: Provisional thesis
-        description: One-sentence answer under test; shown only for thesis-mode projects.
-        condition:
-          dependencyName: output_mode
-          type: isExactly
-          value: thesis
-        input:
-          type: textarea
+  resource: str
+  thesis: str
+  scope: map
+  links: map
+  tags: list

@@ -110,7 +110,9 @@ A **lane override** is the write ceiling for one profile — the widest set of p
 
 > **The lane is a ceiling, not the exact scope.** A board card's `allowed_paths` may *narrow* a lane's scope for that one task but never widen it. Think of the lane as the ceiling and the card's payload as the floor.
 
-> **You do not declare review-gating per lane.** Writes to the gated path prefixes — `notes/claims/` and `notes/hubs/`, declared in `.memoria/schemas/folders.yaml` — automatically degrade to `dry_run` at the human approval gate. There is nothing to add to the lane file for this.
+> **Alpha.11 writes route through the worker.** Lane overrides are still a
+> profile ceiling for legacy profile tools, but schema-owned promotion now lives
+> in the worker staging/promote/quarantine path, not in per-lane gated prefixes.
 
 ## Add or remove a skill
 
@@ -171,7 +173,7 @@ This reports the deployed `SOUL.md`, MCP servers, skills, and `.env` key names (
 
   ```bash
   python3 .memoria/mcp/policy_mcp.py --vault <vault> \
-    --decide '{"profile":"memoria-librarian","action":"write","path":"notes/claims/x.md","task_id":"T1"}'
+    --decide '{"profile":"memoria-librarian","action":"write","path":"knowledge/notes/x.md","task_id":"T1"}'
   ```
 
 ## Related

@@ -21,6 +21,9 @@ Verdict: **PASS**.
 The OKF partial is complete as a local Memoria contract test. The llm-wiki
 partial is complete as a deterministic fixture compile following the installed
 skill's wiki shape; it did not use a model and could not run a MkDocs build
-because `mkdocs` is not installed locally. The Obsidian plugin partial proves
-the disposable pane can be installed in `Memoria-test` and read through the live
-Local REST API; it does not prove visual UI activation inside the Obsidian window.
+because `mkdocs` is not installed locally. This older Obsidian plugin partial
+proves the disposable pane can be installed in `Memoria-test` and read through
+the live Local REST API. The newer 2026-06-29 start-blocker run supersedes this
+for live command evidence by executing
+`memoria-alpha11-smoke:open-alpha11-smoke` with HTTP 204. Neither run proves
+visual rendering by screenshot or human inspection.

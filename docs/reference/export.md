@@ -27,7 +27,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 
 | Option | Output format | Use case | Tool chain |
 | --- | --- | --- | --- |
-| **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography .memoria/memoria.bib --csl .memoria/csl/<style>.csl` |
+| **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography references.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
 | **D — Google Docs** | (manual) | Real-time co-authoring only | No Pandoc route; insert citations manually via Zotero Connector |
@@ -71,7 +71,7 @@ Drafts live in their project's scratch, and every export lands beside them under
 ```bash
 pandoc projects/<project>/composition/<chapter>.md \
   --citeproc \
-  --bibliography .memoria/memoria.bib \
+  --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
   -o projects/<project>/exports/<chapter>.docx
 ```
