@@ -18,7 +18,7 @@ superseded_by: []
 Adding a skill is a runtime operation: edit `policy.allow.skills` in a lane-override
 file and drop the `SKILL.md` into the right profile's `skills/` folder. At low skill
 count that is sufficient — the bookkeeping fits in the human's head. This ADR was
-deferred until the count stopped fitting; at v0.1.0-alpha.2 the vault shipped **25
+deferred until the count stopped fitting; at 0.1.0-alpha.2 the vault shipped **25
 skills across five profiles** (threshold: > 15), and the open question became which of
 two shapes to stand up:
 

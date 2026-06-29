@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.6
+release: 0.1.0-alpha.6
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan — v0.1.0-alpha.6
+title: Release plan — 0.1.0-alpha.6
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.6
+# Release plan — 0.1.0-alpha.6
 
 **Current status: complete (internal checkpoint, untagged).** alpha.6 turns the alpha.6 ADR audit's
 findings into a checkpoint: make the **accepted** decisions that silently don't hold
@@ -53,8 +53,8 @@ measure), or anything gated on real-corpus calibration or always-on infrastructu
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.6 ships when **every gate sub-issue under
-[Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
+0.1.0-alpha.6 ships when **every gate sub-issue under
+[Release 0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635)
 is closed.** Definitions (state lives in the sub-issues, never in this table):
 
 | Gate | Proves | Verified by | Issues |
@@ -75,7 +75,7 @@ The staged plan that turns `shipped` into `approved`; a release candidate re-run
 stages green from a fresh clone on a disposable vault** (`~/Memoria-test`, never
 `~/Memoria`). Stage state lives in the stage sub-issues (S0–S5 =
 [#640](https://github.com/eranroseman/memoria-vault/issues/640)–[#645](https://github.com/eranroseman/memoria-vault/issues/645))
-under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635).
+under [Release 0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635).
 
 | Stage | Proves |
 | --- | --- |
@@ -89,7 +89,7 @@ under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vau
 ## 4. Blockers
 
 Not enumerated here — a second list would drift. **By definition the blockers are** any
-open gate/stage sub-issue under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635), plus any open
+open gate/stage sub-issue under [Release 0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635), plus any open
 High-priority blocker in the
 Memoria Issue Tracker project. Two hard facts
 this release: **[#620](https://github.com/eranroseman/memoria-vault/issues/620) is the
@@ -152,7 +152,7 @@ deferred-status ADRs):
 
 ## 7. Cut procedure
 
-1. **Every gate + stage sub-issue closed** under [Release v0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635);
+1. **Every gate + stage sub-issue closed** under [Release 0.1.0-alpha.6 (#635)](https://github.com/eranroseman/memoria-vault/issues/635);
    required CI green on `main`; no open High-priority blocker (notably
    [#620](https://github.com/eranroseman/memoria-vault/issues/620)).
 2. **Re-run all stages from a fresh clone** on a disposable vault (`~/Memoria-test`) →
@@ -181,12 +181,12 @@ deferred-status ADRs):
 | Packaging | trigger-gated | ADR-76 ([#521](https://github.com/eranroseman/memoria-vault/issues/521)) versioned-release + reconciling installer |
 
 Full phase steps and investigation detail belong in
-`release-plan-v0.1.0-alpha.6-appendix.md` if it becomes worth preserving.
+`release-plan-0.1.0-alpha.6-appendix.md` if it becomes worth preserving.
 
 ## 9. Appendix — what does NOT belong in this file
 
 The living build plan and audit scratch were pruned after closeout. Durable decisions
 live in the ADRs; issue/PR evidence remains on GitHub. The unresolved deferred-ADR
 implementability detail was carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`.
-Long-tail phase/migration detail would go in `release-plan-v0.1.0-alpha.6-appendix.md`
+Long-tail phase/migration detail would go in `release-plan-0.1.0-alpha.6-appendix.md`
 if it becomes worth preserving.

@@ -1,13 +1,13 @@
 ---
-release: vX.Y.Z
+release: 0.1.0
 status: draft        # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan — vX.Y.Z
+title: Release plan — 0.1.0
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — vX.Y.Z
+# Release plan — 0.1.0
 
 <!-- ===========================================================================
   THIS IS A TEMPLATE. It is a single, self-contained release-plan prose file:
@@ -17,14 +17,14 @@ nav_order: 2
   ── To start a new release ──────────────────────────────────────────────────
   1. Copy this file to  docs/releasing/<version>/release-plan-<version>.md.
   2. Bump `release:`, set `status: draft`, and set `released: false`.
-  3. Create the "Release vX.Y" parent issue with one sub-issue per readiness item.
+  3. Create the "Release <version>" parent issue with one sub-issue per readiness item.
   4. Rewrite the per-release prose (status line, scope, limitations).
   5. Start a sibling  release-plan-<version>-appendix.md  for anything too
      detailed to belong in a crisp plan (see §12).
 
   ── The one rule that keeps this from rotting ───────────────────────────────
   SINGLE SOURCE OF STATE. This file holds PROSE, not state. Release Gate (G#) and Stage
-  (S#) STATE lives ONLY in the "Release vX.Y" parent issue and its sub-issues; §2/§3
+  (S#) STATE lives ONLY in the "Release <version>" parent issue and its sub-issues; §2/§3
   here list the readiness/stage DEFINITIONS, not their state. Scope = the milestone +
   Memoria Issue Tracker view; build gaps = GitHub issues; automated evidence =
   Actions runs/artifacts; scope cuts = GitHub issues with Readiness: Later; version
@@ -50,11 +50,11 @@ what is deliberately later. }}
 ## 2. Definition of done — gates
 
 <!-- DEFINITIONS, not state. The release ships when every gate sub-issue under the
-     "Release vX.Y" parent issue is closed. List each gate's name + what it PROVES
+     "Release <version>" parent issue is closed. List each gate's name + what it PROVES
      here; its state is the sub-issue, never a column in this file. Keep gates few
      and verifiable — a gate is a yes/no verdict. -->
 
-vX.Y.Z ships when **every gate sub-issue under [Release vX.Y]({{ #NN }}) is closed.**
+0.1.0 ships when **every gate sub-issue under [Release 0.1.0]({{ #NN }}) is closed.**
 Definitions (confirm/adjust the thresholds for this release):
 
 | Gate | Proves | Verified by | Issue |
@@ -72,7 +72,7 @@ Definitions (confirm/adjust the thresholds for this release):
 
 The staged test plan that turns `shipped` into `approved`. A release candidate
 must re-run **all stages green from a fresh clone** on a clean target box (track
-the runs in the relevant sub-issues under [Release vX.Y]({{ #NN }})). The
+the runs in the relevant sub-issues under [Release 0.1.0]({{ #NN }})). The
 automated prefix is `scripts/verify rc`; attach or link its `summary.json`
 evidence from the release issue.
 
@@ -171,10 +171,10 @@ Before cutting a formal release or closing an internal checkpoint:
 
 <!-- NUMBERED steps. The reusable checklist for cutting THIS release. -->
 
-1. **Every gate + stage sub-issue closed** under "Release vX.Y"; required CI green on `main`; no open High-priority blocker.
+1. **Every gate + stage sub-issue closed** under "Release <version>"; required CI green on `main`; no open High-priority blocker.
 2. **Re-run all stages from a fresh clone** on a clean target: start with `scripts/verify rc`, then finish Product and Release Gate checks from the runbook; record evidence in the relevant sub-issues or Actions artifacts.
 3. **Complete §7 documentation integrity, §8 runtime readiness, and §9 close-out sweep.**
-4. **Formal release path:** merge the release-please "Release vX.Y" PR — it bumps `CHANGELOG.md`, tags `vX.Y`, and publishes the GitHub Release. Fold the §6 known limitations into the notes. Then set this file's frontmatter to `status: released`, `released: true`.
+4. **Formal release path:** merge the release-please release PR — it bumps `CHANGELOG.md`, tags the release, and publishes the GitHub Release. Fold the §6 known limitations into the notes. Then set this file's frontmatter to `status: released`, `released: true`.
 5. **Internal checkpoint path:** do not cut a tag or GitHub Release. Set this file's frontmatter to `status: complete`, `released: false` after the release parent issue is closed.
 6. **Close the milestone and the release parent issue**, rolling any unfinished issues to the next release.
 
@@ -200,4 +200,4 @@ Full phase steps and detail: see the appendix file (§12).
      doesn't crowd the plan. -->
 
 Detailed phase steps, investigation notes, and migration detail live in
-`release-plan-vX.Y.Z-appendix.md`. This plan links to it rather than absorbing it.
+`release-plan-<version>-appendix.md`. This plan links to it rather than absorbing it.

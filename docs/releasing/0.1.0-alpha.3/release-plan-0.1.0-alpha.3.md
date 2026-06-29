@@ -2,13 +2,13 @@
 release: 0.1.0-alpha.3
 status: draft
 released: false
-title: Release plan — v0.1.0-alpha.3
+title: Release plan — 0.1.0-alpha.3
 parent: 0.1.0-alpha.3
 grand_parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.3
+# Release plan — 0.1.0-alpha.3
 
 **Internal checkpoint (draft).** alpha.3 is the **UI build** — an internal milestone,
 **not a formal, published release**: there is no tag, no GitHub Release, and
@@ -28,8 +28,8 @@ flows move to alpha.4.
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.3 is complete when **every gate sub-issue under the
-[Release v0.1.0-alpha.3](https://github.com/eranroseman/memoria-vault/issues/478)
+0.1.0-alpha.3 is complete when **every gate sub-issue under the
+[Release 0.1.0-alpha.3](https://github.com/eranroseman/memoria-vault/issues/478)
 parent issue is closed**. Definitions — state lives in the sub-issues, never a
 column here:
 
@@ -91,7 +91,7 @@ alpha.3 is an **internal checkpoint, not a formal release** — there is no
 release-please cut, version tag, or GitHub Release. The checkpoint is reached when:
 
 1. Every gate + stage sub-issue under
-   [Release v0.1.0-alpha.3](https://github.com/eranroseman/memoria-vault/issues/478)
+   [Release 0.1.0-alpha.3](https://github.com/eranroseman/memoria-vault/issues/478)
    is closed; required CI is green on `main`; no open High-priority blocker remains.
 2. All stages re-run green from a fresh clone on a clean target box and throwaway
    vault, never the real `~/Memoria`.
@@ -109,8 +109,8 @@ release-please tag and GitHub Release — is the beta (§8).
 
 | Phase | When | Goal |
 | --- | --- | --- |
-| v0.1.0-alpha.4 | next | The **Project workspace** — Writer / Peer-reviewer / Engineer compose, draft, verify, and code workflows over `projects/` |
-| v0.1.0 (beta) | later | First **formally released** version — release-please tag + GitHub Release; release automation un-paused |
+| 0.1.0-alpha.4 | next | The **Project workspace** — Writer / Peer-reviewer / Engineer compose, draft, verify, and code workflows over `projects/` |
+| 0.1.0 (beta) | later | First **formally released** version — release-please tag + GitHub Release; release automation un-paused |
 
 ## 9. Appendix
 

@@ -1,18 +1,18 @@
 ---
 topic: releases
-title: v0.1 validation log
+title: 0.1.0 validation log
 parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 9
 ---
 
-# v0.1 validation log
+# 0.1.0 validation log
 
-> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+> **Frozen record.** Captures 0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
 
-The **evidence** behind v0.1 gate sign-off: what has actually been exercised, by
+The **evidence** behind 0.1.0 gate sign-off: what has actually been exercised, by
 what method, with what result. Gate/stage *readiness* status lives in
-[Release plan — v0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md) §2/§3; build *gaps* are
+[Release plan — 0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md) §2/§3; build *gaps* are
 [GitHub issues](https://github.com/eranroseman/memoria-vault/issues). This log is the
 detail those point at. Distilled from the retired build ledger on retirement; the
 blow-by-blow remains in git history.

@@ -7,7 +7,7 @@ state/path and tracked-scratch portability guards over release/test/contributor
 prose.) Guards six drift modes:
 
   1. Stale path renames — old `project/releases/`/`project/tests/` paths and
-     wrong `release/vX.Y/`/`releasing/vX.Y/` examples.
+     wrong `release/<version>/`/`releasing/<version>/` examples.
      These bit before, leaving broken cross-links after a folder rename.
   2. Broken relative links — every `[text](rel/path)` must resolve on disk.
   3. release-plan frontmatter — allowed statuses + `status: released` <-> `released: true`
@@ -40,9 +40,14 @@ ALLOWED_RELEASE_STATUSES = {"draft", "candidate", "complete", "released"}
 STALE_PATHS = [
     (re.compile(r"(?:\.\./|project/)(releases)/"), "docs/releasing/"),
     (re.compile(r"(?:\.\./|project/)(tests)/"), "docs/testing/"),
-    (re.compile(r"\brelease/vX\.Y/"), "docs/releasing/<version>/"),
-    (re.compile(r"\breleasing/vX\.Y/"), "docs/releasing/<version>/"),
-    (re.compile(r"\bdocs/releasing/vX\.Y/"), "docs/releasing/<version>/"),
+    (
+        re.compile(r"\brelease/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/"),
+        "docs/releasing/<version>/",
+    ),
+    (
+        re.compile(r"(?<!docs/)\breleasing/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/"),
+        "docs/releasing/<version>/",
+    ),
 ]
 STALE_TESTING_NAMES = {
     "coverage-matrix.md": "docs/testing/verification-matrix.md",

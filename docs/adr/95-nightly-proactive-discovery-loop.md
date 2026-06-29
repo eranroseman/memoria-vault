@@ -34,7 +34,7 @@ human confirmation gates intact.
 
 ## When this matters
 
-Memoria v0.1 is stable, `research-focus.md` has been maintained for at least four
+Memoria 0.1.0 is stable, `research-focus.md` has been maintained for at least four
 weeks, always-on deployment is active, and `screening-plan.md` is written down.
 
 ## Alternatives considered

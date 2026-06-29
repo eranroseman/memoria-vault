@@ -1,7 +1,7 @@
 name: release-please
 
 # Owns versioning + release notes (Tier 2 release management). When active, on push
-# to main release-please maintains a "Release vX.Y.Z" PR that bumps CHANGELOG.md from
+# to main release-please maintains a release PR that bumps CHANGELOG.md from
 # the Conventional Commits since the last release; merging that PR tags the version
 # and publishes the GitHub Release.
 #

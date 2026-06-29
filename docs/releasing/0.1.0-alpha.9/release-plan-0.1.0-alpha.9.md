@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.9
+release: 0.1.0-alpha.9
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan -- v0.1.0-alpha.9
+title: Release plan -- 0.1.0-alpha.9
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan -- v0.1.0-alpha.9
+# Release plan -- 0.1.0-alpha.9
 
 **Current status: complete internal checkpoint.** alpha.9 is the
 **UI/workflow and runtime-gate** checkpoint. It is not a formal release: no
@@ -38,8 +38,8 @@ contradiction linker, and not a formal public release.
 
 ## 2. Definition of done -- gates
 
-v0.1.0-alpha.9 ships when **every gate sub-issue under
-[Release v0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835)
+0.1.0-alpha.9 ships when **every gate sub-issue under
+[Release 0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835)
 is closed**. Each gate is a yes/no verdict; state and evidence live in the issue,
 not in this file.
 
@@ -57,7 +57,7 @@ not in this file.
 The staged test plan that turns `shipped` into `approved`. A release candidate
 must re-run **all stages green from a fresh clone** on a clean target box and
 record evidence in the stage sub-issues under
-[Release v0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835).
+[Release 0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835).
 
 | Stage | Proves | Stage issue |
 | --- | --- | --- |
@@ -72,7 +72,7 @@ record evidence in the stage sub-issues under
 
 Not enumerated here as a second state list. By definition the blockers are any
 open gate/stage sub-issue under
-[Release v0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835),
+[Release 0.1.0-alpha.9](https://github.com/eranroseman/memoria-vault/issues/835),
 any open issue assigned to the `0.1.0-alpha.9` milestone, and any open
 High-priority blocker in the
 Memoria Issue Tracker project.

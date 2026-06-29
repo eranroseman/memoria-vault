@@ -28,7 +28,7 @@ The admin/forensic views above are CLI-only today — fine for command-line nati
 
 ## Trade-offs
 
-- `hermes-workspace` is v0.1.0, ~9 stars, single contributor — a hackathon project, not a mature product. Documenting it in canonical docs is a stale-doc liability for near-zero benefit while the CLI fills the gap.
+- `hermes-workspace` is 0.1.0, ~9 stars, single contributor — a hackathon project, not a mature product. Documenting it in canonical docs is a stale-doc liability for near-zero benefit while the CLI fills the gap.
 - Any such surface risks becoming a second, un-gated place to act on content if scoped wrong.
 
 ## Rejection rationale
@@ -41,7 +41,7 @@ need is forensic visibility, not another write-capable workspace.
 
 ## Alternatives considered
 
-**Adopt `hermes-workspace` now as an optional documented surface.** Rejected: documenting a v0.1.0 single-contributor tool is a maintenance liability that outweighs the convenience; the CLI already covers the need.
+**Adopt `hermes-workspace` now as an optional documented surface.** Rejected: documenting a 0.1.0 single-contributor tool is a maintenance liability that outweighs the convenience; the CLI already covers the need.
 
 **Adopt it as a primary surface.** Rejected outright: it overlaps Obsidian (file browser, chat) and would create a second, un-gated place to act on content — against the "Obsidian is the content surface; the board holds state; the policy MCP gates writes" architecture.
 

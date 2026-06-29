@@ -1,17 +1,17 @@
 ---
 topic: plans
-title: GUI test plan — v0.1 (S5 + G4)
+title: GUI test plan — 0.1.0 (S5 + G4)
 status: draft
 parent: 0.1.0-alpha.1
 grand_parent: Releasing
 nav_order: 4
 ---
 
-# GUI test plan — v0.1 (Obsidian + Zotero)
+# GUI test plan — 0.1.0 (Obsidian + Zotero)
 
-> **Frozen record.** Captures v0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
+> **Frozen record.** Captures 0.1.0-alpha.1 as tested; terminology (e.g. seven profiles, numbered folders) reflects that point in time and is not current. See current docs for present-day naming.
 
-Covers the parts of the v0.1 validation that **cannot run headless** from a WSL2
+Covers the parts of the 0.1.0 validation that **cannot run headless** from a WSL2
 shell: the Obsidian/Zotero GUI stage (**S5**) and the eleven Dataview dashboards
 rendering on real data (**G4**). Everything else (installer S0–S3, the policy
 write-gate in `-z`/gateway/cron) is validated separately.
@@ -233,4 +233,4 @@ Dashboard doesn't refresh automatically.
 
 **S5 green** when A, B, D, E pass. **G4 green** when every dashboard's Dataview
 query resolves (Part C) and the seeded checks show data. Record the outcome in the
-G4/S5 rows of [Release plan — v0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md).
+G4/S5 rows of [Release plan — 0.1.0-alpha.1](release-plan-0.1.0-alpha.1.md).

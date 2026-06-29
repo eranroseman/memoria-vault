@@ -13,7 +13,7 @@ If you want a guided first experience, see [Tutorials](tutorials). If you need
 to _do_ something, see [How-to guides](how-to-guides). If you need exact values,
 field names, or configuration formats, see [Reference](reference).
 
-**v0.1** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
+**0.1.0** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
 <!-- SCREENSHOT: Replace this comment with ![Memoria vault](assets/screenshot.png) once the system is running. -->
 
@@ -144,7 +144,7 @@ Deterministic **operations** do the mechanical work, behind the policy MCP.
 
 ## Current status and limitations
 
-Memoria is at **v0.1**: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
+Memoria is at **0.1.0**: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
 
 - **No end-to-end run on a live runtime** — continuous, unattended operation through all workflow stages is not yet demonstrated.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).

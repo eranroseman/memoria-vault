@@ -10,6 +10,15 @@ worktree and the installed local tools. Live Obsidian/Zotero/Local REST API chec
 external OKF tooling, model calls, and Hermes workflow runs were not fabricated;
 they are marked blocked where they are required.
 
+## Evidence status update
+
+Later same-day disposable spikes supersede the `not-implemented-local` /
+`failed-local` rows below only as feasibility evidence. They do not mean
+production alpha.11 code exists; the rows remain implementation gaps until a
+production check says otherwise. The later scope correction also removes
+migration, upgrade, and backwards-compatibility work from alpha.11 because no
+non-sandbox install exists.
+
 ## Commands run
 
 | Command | Result |
@@ -34,6 +43,7 @@ they are marked blocked where they are required.
 - `failed-local`: the local implementation contradicts the alpha.11 assumption.
 - `blocked-live`: requires live runtime, external tool, model, or source corpus.
 - `open-design`: design/acceptance ambiguity, not a runtime behavior.
+- `superseded-scope`: the assumption was removed from alpha.11 scope.
 
 ## Findings
 
@@ -52,13 +62,13 @@ they are marked blocked where they are required.
 | 11 | The Obsidian plugin surface can carry Co-PI conversation, trace rollback, flags, and graph browsing. | failed-local | The shipped Memoria plugin is `memoria-inspector`, whose manifest describes a read-only operational inspector. Its tests assert no writes, no fetch, and no command execution. This is narrower than the alpha.11 Co-PI plugin claim. | Build a plugin spike for Co-PI pane, flags, trace-to-rollback, project/gap views, and knowledge graph browsing. |
 | 12 | Local REST API/native MCP plus Zotero Local API support the new capture path. | partial-local | ADR-31 documents an accepted Local REST API native MCP path and prior live validation, but no Obsidian process was running for a fresh smoke. Current Zotero backbone is Better BibTeX / `.memoria/memoria.bib`; ADR-05 does not implement alpha.11's Zotero Local API importer assumption. | Start Obsidian on `Memoria-test`, run native MCP read/write smoke, then test Zotero Local API annotation/source import. |
 | 13 | `capabilities/` and generated `ai-catalog.json` can be trusted as a supply-chain surface. | not-implemented-local | No `capabilities` path or `ai-catalog` file found in source or runtime test vault. | Add minimal capability Concepts and a generated trust manifest; test signed/unsigned import and no execution of untrusted capabilities. |
-| 14 | Clean rebuild migration can preserve the current record while regenerating machine layers. | not-implemented-local | No alpha.11 migrator, migration report, or dry-run fixture found. Existing installer/golden tests cover deployment/restoration, not reset migration. | Build a dry-run migrator for `Memoria-test` and produce a loss report for sources, notes, citations, claims, links, and projects. |
+| 14 | Clean rebuild migration can preserve the current record while regenerating machine layers. | superseded-scope | The later scope correction states there is no alpha.11 system installed outside the sandbox, so alpha.11 needs fresh initialization only: no migrator, upgrade path, backwards compatibility, or data-preservation checklist. | Remove migration from the ExecPlan and design SSOT; initialize only the sandbox skeleton and seed data through the alpha.11 pipeline. |
 | 15 | Git-only, single-user, multi-device operation is safe enough for alpha. | blocked-live | Current repo has git and runtime vault exists, but no two-device/offline divergence simulation was run. No alpha.11 per-machine journal partition exists to test. | Simulate two clones/devices, conflicting edits, foreign commits, pull/merge convergence, and journal partition behavior. |
 | 16 | Proposed library/tool choices fit the reset design. | partial-local | Current tests cover existing use of NetworkX graph behavior, eval scoring, ingest parsing, and policy tooling. They do not verify alpha.11 choices such as Pydantic schema emission, PyMuPDF4LLM/PDF++ span preservation, Pandoc/CSL, RapidFuzz dedupe, or SQLite-vec fallback. qmd currently fails without a usable DB/index. | Run one microspike per proposed dependency and record pass/fail ceilings. |
 | 17 | Stable `source_id` with citekey as generated alias works. | failed-local | Current ingest and docs still center `citekey`; tests verify citekey frontmatter and path behavior. No `source_id` field/path model was found for alpha.11. | Implement source identity fixtures for retitle, citekey change, source rename, and cross-bundle reference resolution. |
 | 18 | Writing/export are deferred, but the functional loop still names draft/verify/export. | open-design | The design status says writing/coding modules are deferred, while the functional loop and mechanism sections still name draft/verify/export behavior. This is an acceptance ambiguity, not a command-testable behavior. | Update the design or release acceptance criteria so alpha.11 either excludes writing/export or ships explicit stubs only. |
 | 19 | This file's lifecycle/source-of-truth claim is accurate. | failed-local | The copied file now lives in tracked release `tmp/`, but line 4 still says it is a working architecture note in `_notes/`. | Update the note's status line if this tracked copy is the active release design scratch. |
-| 20 | The alpha.11 milestone can ship the full basic knowledge cycle plus plugin as one increment. | open-design | No alpha.11 release plan, task breakdown, dependency DAG, or implementation evidence was found beyond this tmp design note. The current tree is pre-reset and lacks several load-bearing mechanisms above. | Create an alpha.11 implementation plan that sequences schema reset, writer/journal, read barrier, plugin, wiki spike, eval harness, and migration. |
+| 20 | The alpha.11 milestone can ship the full basic knowledge cycle plus plugin as one increment. | open-design | No alpha.11 release plan, task breakdown, dependency DAG, or implementation evidence was found beyond this tmp design note. The current tree is pre-reset and lacks several load-bearing mechanisms above. | Create an alpha.11 implementation plan that sequences schema reset, writer/journal, read barrier, plugin, wiki spike, eval harness, and fresh sandbox initialization. |
 
 ## Bottom line
 

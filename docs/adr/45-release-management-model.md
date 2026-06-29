@@ -16,13 +16,13 @@ superseded_by: []
 ## Context
 
 Releases were managed with a **self-contained plan file** per version: one
-`release-plan-vX.Y.md` carrying a frontmatter `released:` flag, hand-maintained §2
+`release-plan-<version>.md` carrying a frontmatter `released:` flag, hand-maintained §2
 Gate (`G1–G11`) and §3 Stage (`S0–S5`) state tables, scope, cut procedure, and roadmap,
 plus sibling run records — scope in the GitHub milestone, notes in `CHANGELOG.md`, and a
 `v*` tag triggering `release.yml`. It was git-tracked, reviewable in PRs, self-contained,
 and offline-capable. But it hurt in three observed ways: the hand-maintained markdown
 state tables **drifted** (the template itself wished for a future `status-doctor` check;
-the release scaffolding guidance and the v0.1 plan accumulated stale path/term references); there was
+the release scaffolding guidance and the 0.1.0 plan accumulated stale path/term references); there was
 **no live status surface** (you read a file to know where a release stood); and it took
 ~8 files per release with two places to keep aligned (plan gates ↔ milestone/issues).
 
@@ -31,14 +31,14 @@ the release scaffolding guidance and the v0.1 plan accumulated stale path/term r
 Adopt a **tiered, additive** model — stop anywhere, escalate later without rework. **Tier
 1 (fix the drift + add `status-doctor`) and Tier 2 are adopted; Tier 3 is deferred.**
 
-- **Readiness state** lives in the **"Release vX.Y" tracking issue** — a gate checklist
+- **Readiness state** lives in the **"Release <version>" tracking issue** — a gate checklist
   GitHub renders as a progress bar — retiring the hand-maintained §2/§3 markdown tables
   (the main drift source). *(Tracking shape amended by
   [ADR-75: Use GitHub Project fields and release sub-issues for live work
   state]({{ site.baseurl }}/adr/75-github-project-fields-and-release-sub-issues.html): the single-checklist
   tracking issue is replaced by a parent issue plus one sub-issue per gate; the
   milestone-for-scope and release-please-for-versioning decisions here stand.)*
-- **Scope** is the GitHub **milestone** (`vX.Y`).
+- **Scope** is the GitHub **milestone** (`<version>`).
 - **Version + CHANGELOG + GitHub Release** are owned by **release-please** (manifest mode)
   from Conventional Commits, replacing the tag-only `release.yml`. Don't hand-edit
   `CHANGELOG.md` or tag by hand.
@@ -61,7 +61,7 @@ scaffolded by the release playbook at `.agents/playbooks/release.md`.
 - Live status for free (progress bar + milestone %); the hand-table drift source is gone.
 - The record **splits**: prose in git, gate/stage state in GitHub — offline gate-state
   visibility is lost (an accepted trade at solo cadence).
-- release-please is opinionated and now owns versioning/notes; merging its "Release vX.Y"
+- release-please is opinionated and now owns versioning/notes; merging its release
   PR cuts the tag. (Operational caveat: its PR needs Actions PR-review permission / a
   scoped `RELEASE_PLEASE_TOKEN` — tracked separately.)
 - The release **cut** now includes an ADR retire-sweep (see [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)).

@@ -44,12 +44,17 @@ def test_check_readmes_flags_missing_indexes_only_for_multi_file_folders(tmp_pat
     (tmp_path / "sub" / "b.md").write_text("# B\n")
     (tmp_path / "single").mkdir()
     (tmp_path / "single" / "only.md").write_text("# Only\n")
+    release = tmp_path / "releasing" / "0.1.0-alpha.11"
+    release.mkdir(parents=True)
+    (release / "release-plan-0.1.0-alpha.11.md").write_text("# Plan\n")
+    (release / "validation-log.md").write_text("# Evidence\n")
 
     errs: list[str] = []
     check_readmes(tmp_path, errs)
 
     assert any("missing README.md" in e for e in errs)
     assert any("sub/" in e and "missing README.md" in e for e in errs)
+    assert not any("0.1.0-alpha.11/" in e for e in errs)
 
     (tmp_path / "README.md").write_text("# Root\n")
     errs2: list[str] = []

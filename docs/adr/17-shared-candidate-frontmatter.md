@@ -13,7 +13,7 @@ superseded_by: [50, 51]
 
 # ADR-17: Shared candidate frontmatter format
 
-> **Accepted / implemented in v0.1 (2026-06-01).** The `candidate-note` (16th) type ships: template `99-system/templates/candidate-note.md`, registered in `document-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
+> **Accepted / implemented in 0.1.0 (2026-06-01).** The `candidate-note` (16th) type ships: template `99-system/templates/candidate-note.md`, registered in `document-types.md` / `frontmatter.md`, the `weekly-review` query wired, and Verifier gap-cards unified under `source: gap`.
 >
 > **Superseded 2026-06-16 on two axes — read both.**
 > [ADR-50: One lifecycle chain for everything; maturity is a claim property; reference

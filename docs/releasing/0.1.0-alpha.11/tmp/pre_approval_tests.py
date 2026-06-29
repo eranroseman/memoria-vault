@@ -320,8 +320,8 @@ export function activate(worker) {
     )
 
 
-def test_migration_mapping() -> Result:
-    root = WORK / "migration"
+def test_legacy_mapping_superseded() -> Result:
+    root = WORK / "legacy-mapping"
     reset(root)
     old_items = [
         {"id": "p1", "type": "paper", "title": "Paper", "citekey": "paper2026"},
@@ -377,19 +377,22 @@ def test_migration_mapping() -> Result:
                 "id": item["id"],
                 "type": typ,
                 "disposition": "projection-or-worker-state",
-                "target": "migration-report",
+                "target": "legacy-mapping-report",
             }
         return {"id": item["id"], "type": typ, "disposition": "unmapped", "target": ""}
 
     report = [map_item(item) for item in old_items]
-    write(root / "migration-report.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
+    write(root / "legacy-mapping-report.json", json.dumps(report, indent=2, sort_keys=True) + "\n")
     ok = all(row["disposition"] != "unmapped" and row["target"] for row in report)
     dispos = {row["disposition"] for row in report}
     return Result(
-        "Migration mapping dry-run",
-        "pass" if ok else "fail",
-        f"inputs={len(old_items)}; dispositions={sorted(dispos)}; report={root / 'migration-report.json'}",
-        "Approve start with a real migrator later; this only proves the no-silent-loss map.",
+        "Legacy mapping spike (superseded)",
+        "superseded-scope" if ok else "fail",
+        f"inputs={len(old_items)}; dispositions={sorted(dispos)}; report={root / 'legacy-mapping-report.json'}",
+        (
+            "No alpha.11 migrator is needed because no non-sandbox install exists; "
+            "keep this only as historical spike evidence."
+        ),
     )
 
 
@@ -437,7 +440,7 @@ def test_seeded_error_harness_definition() -> Result:
         "Seeded-error harness definition",
         "pass" if ok else "fail",
         f"cases={len(harness['cases'])}; classes={sorted(classes)}; harness={root / 'seeded-error-harness.json'}",
-        "Approve start; final seeded-error verdict remains the gate before real-vault use.",
+        "Approve start; final seeded-error verdict remains the gate before non-sandbox use.",
     )
 
 
@@ -475,6 +478,8 @@ def write_report(results: list[Result]) -> None:
             "- These are disposable pre-implementation spikes, not alpha.11 implementation tests.",
             "- The plugin boundary is partial because ordinary Obsidian plugin JavaScript is trusted code;",
             "  the spike proves a narrow control-panel surface, not a platform sandbox.",
+            "- The legacy mapping spike is superseded: alpha.11 initializes a fresh sandbox and",
+            "  does not ship migration, upgrade, or backwards-compatibility work.",
             "- The final seeded-error verdict is intentionally deferred until alpha.11 exists; this run",
             "  verifies the harness definition and bar shape only.",
             "",
@@ -489,7 +494,7 @@ def main() -> None:
         test_operation_policy(),
         test_read_barrier(),
         test_plugin_boundary(),
-        test_migration_mapping(),
+        test_legacy_mapping_superseded(),
         test_seeded_error_harness_definition(),
     ]
     write_report(results)

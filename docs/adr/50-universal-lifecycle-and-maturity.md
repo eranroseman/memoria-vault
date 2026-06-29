@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-v0.1.0-alpha.1 carried several state vocabularies side by side (note lifecycle values, board
+0.1.0-alpha.1 carried several state vocabularies side by side (note lifecycle values, board
 states, a settled-claim note type), and "reference note" collided with the
 Zettelkasten term for a literature note. The design update (D4/D5/D19/D24) unified
 them.

@@ -38,17 +38,16 @@ def test_check_file_flags_stale_release_and_test_paths(tmp_path):
     rel = _release_root(tmp_path)
     stale = rel / "stale.md"
     stale.write_text(
-        "see [r](../tests/g9.md), `project/releases/v0.1/p.md`, "
-        "`release/vX.Y/p.md`, `releasing/vX.Y/p.md`, and `docs/releasing/vX.Y/p.md`\n"
+        "see [r](../tests/g9.md), `project/releases/0.1.0/p.md`, "
+        "`release/0.1.0/p.md`, and `releasing/0.1.0/p.md`\n"
     )
 
     errs = check_file(stale, tmp_path)
 
     assert any("tests" in e and "stale path" in e for e in errs)
     assert any("releases" in e and "stale path" in e for e in errs)
-    assert any("release/vX.Y/" in e and "stale path" in e for e in errs)
-    assert any("releasing/vX.Y/" in e and "stale path" in e for e in errs)
-    assert any("docs/releasing/vX.Y/" in e and "stale path" in e for e in errs)
+    assert any("release/0.1.0/" in e and "stale path" in e for e in errs)
+    assert any("releasing/0.1.0/" in e and "stale path" in e for e in errs)
 
 
 def test_check_file_flags_deleted_testing_plan_names(tmp_path):
@@ -132,7 +131,7 @@ def test_main_returns_nonzero_with_findings_and_zero_when_clean(tmp_path):
     broken = rel / "broken.md"
     broken.write_text("[gone](nope/missing.md)\n")
     stale = rel / "stale.md"
-    stale.write_text("see `release/vX.Y/p.md`\n")
+    stale.write_text("see `release/0.1.0/p.md`\n")
     testing = tmp_path / "docs" / "testing" / "g9.md"
     testing.parent.mkdir(parents=True)
     testing.write_text("see [r](missing/x.md)\n")

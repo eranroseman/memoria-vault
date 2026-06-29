@@ -28,7 +28,7 @@ superseded_by: []
 
 ## Context
 
-ADR-01's three layers (board, workers, vault) described the v0.1.0-alpha.1 infrastructure but
+ADR-01's three layers (board, workers, vault) described the 0.1.0-alpha.1 infrastructure but
 conflated two distinctions the design update pulled apart: *where* things live
 (structure) and *who* acts (actor-kind). The design work
 converged on a single model that serves as both the cognitive and the build view, with
@@ -69,7 +69,7 @@ isolation (sufficient under the solo/local premise).
 ## Alternatives considered
 
 **Keep the three-layer model.** It hid the Co-PI/Tasks split and the MCP boundary —
-the two things v0.1.0-alpha.2 builds against. **Two separate models (cognitive + build) with a
+the two things 0.1.0-alpha.2 builds against. **Two separate models (cognitive + build) with a
 mapping table.** A 1:1 mapping was the smell that they were redundant; one
 good-enough model beats two perfect ones (D42). **Strict layering for every actor.**
 False in practice — the PI edits the Vault directly; claiming otherwise misleads

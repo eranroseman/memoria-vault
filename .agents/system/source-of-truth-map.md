@@ -38,7 +38,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | ADR decision state | `docs/adr/` frontmatter and `docs/adr/README.md` | Linked GitHub issues for implementation/readiness |
 | Work readiness and scheduling | Memoria Issue Tracker fields (`Status`, `Readiness`) and milestones | ADR Related sections and release plans |
 | Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |
-| Release readiness | `Release vX.Y` parent issue + gate/stage sub-issues | Release plan and release playbook |
+| Release readiness | `Release <version>` parent issue + gate/stage sub-issues | Release plan and release playbook |
 | Release design scratch | `docs/releasing/<version>/tmp/` while in progress | Status doctor and release playbook |
 | Release prose | `docs/releasing/<version>/release-plan-*.md` | Release index and status doctor |
 | Product decisions | `docs/adr/` | Current docs and implementation |

@@ -71,7 +71,7 @@ neither:
 The cost asymmetry seals it: an engine write is cheap, testable, and idempotent; an
 LLM write costs tokens and latency and can fail in ways no test can enumerate.
 
-## How the rule lands in v0.1.0-alpha.2
+## How the rule lands in 0.1.0-alpha.2
 
 - The ingest engine assembles records, builds relationships, appends the intake
   anchor; the Librarian fills only the two judgment holes (ADR-30, ADR-56).

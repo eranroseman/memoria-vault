@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.8
+release: 0.1.0-alpha.8
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan — v0.1.0-alpha.8
+title: Release plan — 0.1.0-alpha.8
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.8
+# Release plan — 0.1.0-alpha.8
 
 **Current status: complete internal checkpoint.** alpha.8 is the **runtime-foundations &
 observability** checkpoint: it implemented every issue marked
@@ -39,7 +39,7 @@ evidence were routed to ADRs, reference docs, validation issue comments, and
 
 ## 2. Definition of done — gates
 
-v0.1.0-alpha.8 ships when **every gate sub-issue under [Release v0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740) is closed.**
+0.1.0-alpha.8 ships when **every gate sub-issue under [Release 0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740) is closed.**
 Each gate is a yes/no verdict over a cluster of the Ready issues. Definitions:
 
 | Gate | Proves | Verified by | Gate issue · Work issues |
@@ -75,8 +75,8 @@ in the stage sub-issues under the release parent issue).
 ## 4. Blockers
 
 None at closeout. All alpha.8 gate and stage sub-issues under
-[Release v0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740)
-were closed, and no open issue remained assigned to the `v0.1.0-alpha.8` milestone.
+[Release 0.1.0-alpha.8](https://github.com/eranroseman/memoria-vault/issues/740)
+were closed, and no open issue remained assigned to the `0.1.0-alpha.8` milestone.
 
 ## 5. Out of scope (later)
 

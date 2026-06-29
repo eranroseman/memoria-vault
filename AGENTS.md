@@ -257,7 +257,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
 | Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
 | Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release vX.Y" parent issue with readiness/stage sub-issues; release-please owns version/notes |
+| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release <version>" parent issue with readiness/stage sub-issues; release-please owns version/notes |
 
 Skills and plugins are accelerators, not prerequisites. If a named command is
 unavailable, use the matching portable playbook under
@@ -379,7 +379,7 @@ Transient scratch that never graduates to a decision stays in the gitignored
 
 ### Release plans (`docs/releasing/`)
 
-One folder per version, with a thin `README.md` plus a plan copied from `docs/releasing/release-plan-template.md` — the durable **prose** (what/why, readiness rationale). Readiness **state** lives only in the **"Release vX.Y" parent issue and its readiness/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
+One folder per SemVer version, with the plan copied from `docs/releasing/release-plan-template.md` as the durable **prose** (what/why, readiness rationale). Readiness **state** lives only in the **"Release <version>" parent issue and its readiness/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
 
 ---
 
@@ -390,8 +390,8 @@ One folder per version, with a thin `README.md` plus a plan copied from `docs/re
 | Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `docs/releasing/<version>/tmp/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
-| Release scope | the GitHub milestone `vX.Y` (assigned issues) + Memoria Issue Tracker view filtered to that milestone |
-| Release readiness | the **"Release vX.Y" parent issue** and its readiness/stage sub-issues, *not* the plan §2/§3 |
+| Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
+| Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, *not* the plan §2/§3 |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
 | In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |

@@ -6,8 +6,9 @@ Enforces the conventions from the mode-first refactor plan. These are all
 deliberately out of scope (a linter cannot tell reference from explanation).
 
 Checks:
-  1. README presence  — every directory under docs/ has a README.md
-                        (GitHub renders it as the folder's landing page).
+  1. README presence  — every docs directory with multiple pages has a README.md
+                        landing page, except release-version folders where the
+                        release plan is the landing document.
   2. Link integrity   — every relative Markdown link resolves to a real file,
                         and every #anchor resolves to a heading in the target
                         (GitHub does not auto-heal links when files move).
@@ -126,6 +127,7 @@ WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
 COUNT_RE = re.compile(r"\b(\d+)\b")
+RELEASE_VERSION_DIR_RE = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$")
 MODEL_SPINE = "README.md"
 MODEL_SPINE_LINK_RE = re.compile(
     r"\]\((?:\.\./)*README\.md(?:#[^)]+)?\)|"
@@ -147,11 +149,25 @@ def check_readmes(root: Path, errors: list[str]) -> None:
     if not (root / "README.md").exists():
         errors.append(f"{root}/: missing README.md")
     for d in sorted(p for p in root.rglob("*") if p.is_dir() and not _scratch(p, root)):
+        if _release_version_dir(d, root):
+            continue
         md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
         if len(md_files) <= 1:
             continue  # single-file folders need no landing page; the file is its own landing
         if not (d / "README.md").exists():
             errors.append(f"{d}/: missing README.md (folder landing page)")
+
+
+def _release_version_dir(path: Path, root: Path) -> bool:
+    try:
+        parts = path.relative_to(root).parts
+    except ValueError:
+        return False
+    if len(parts) == 2 and parts[0] == "releasing":
+        return bool(RELEASE_VERSION_DIR_RE.fullmatch(parts[1]))
+    if root.name == "releasing" and len(parts) == 1:
+        return bool(RELEASE_VERSION_DIR_RE.fullmatch(parts[0]))
+    return False
 
 
 def check_thin_folders(root: Path, warnings: list[str]) -> None:

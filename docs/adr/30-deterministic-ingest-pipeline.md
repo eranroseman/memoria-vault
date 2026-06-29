@@ -13,7 +13,7 @@ superseded_by: []
 
 # ADR-30: Tiered ingest pipeline
 
-> *Terminology note (v0.1.0-alpha.2): `captured` is now the `ingest_status: tier0` floor, **not** a lifecycle value — paper entities are `lifecycle: current` from creation ([ADR-50](50-universal-lifecycle-and-maturity.md); `paper` enum `current → retracted → archived`), and the retry sweep keys on `ingest_status`. The lifecycle chain is `proposed → provisional → current → retracted → archived` (`dormant` retired). Numbered folders (`20-sources/`, `99-system/`) are now type-first ([ADR-47](47-type-first-category-folders.md)): `catalog/`, `system/`. The pipeline decision below is unchanged.*
+> *Terminology note (0.1.0-alpha.2): `captured` is now the `ingest_status: tier0` floor, **not** a lifecycle value — paper entities are `lifecycle: current` from creation ([ADR-50](50-universal-lifecycle-and-maturity.md); `paper` enum `current → retracted → archived`), and the retry sweep keys on `ingest_status`. The lifecycle chain is `proposed → provisional → current → retracted → archived` (`dormant` retired). Numbered folders (`20-sources/`, `99-system/`) are now type-first ([ADR-47](47-type-first-category-folders.md)): `catalog/`, `system/`. The pipeline decision below is unchanged.*
 >
 > **Schema note (2026-06-16).** `ingest_status` is a paper-scoped enum, not an
 > implicit pipeline scratch field. The schema owns the legal values
@@ -30,7 +30,7 @@ superseded_by: []
 > through the gated obsidian MCP. A real paper ingested end-to-end on installer-deployed
 > lanes (vocabulary-constrained classify + `[!brief]` + ID-keyed entity links + gated
 > writes → `review_status: requested`); the Tier-1 merge is grounded by the 867-paper
-> spike. Tracked in the v0.1 release plan as G10.
+> spike. Tracked in the 0.1.0 release plan as G10.
 
 > **Verified on-box 2026-06-21 (partial — the tag-suggestion layer is absent).** The
 > deterministic spine above is real, but the embedding/zero-shot **tag-suggestion layer**

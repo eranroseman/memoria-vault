@@ -1,13 +1,13 @@
 ---
-release: v0.1.0-alpha.7
+release: 0.1.0-alpha.7
 status: complete     # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
-title: Release plan — v0.1.0-alpha.7
+title: Release plan — 0.1.0-alpha.7
 parent: Releasing
 nav_order: 2
 ---
 
-# Release plan — v0.1.0-alpha.7
+# Release plan — 0.1.0-alpha.7
 
 **Current status: complete (internal checkpoint, untagged).** alpha.7 is the
 **clean-slate Obsidian UI / navigation** checkpoint. It landed the buildable subset of
@@ -17,7 +17,7 @@ file explorer retained as fallback, and the Memoria-tuned Obsidian config + CSS 
 
 Implementation landed in
 [PR #677](https://github.com/eranroseman/memoria-vault/pull/677), with closeout
-evidence preserved in the [v0.1.0-alpha.7 validation log](validation-log.md). The durable UI decision is
+evidence preserved in the [0.1.0-alpha.7 validation log](validation-log.md). The durable UI decision is
 [ADR-81](../../adr/81-persistent-gate-dashboards.md), which supersedes ADR-68 and records
 the deferred future set. `released:` remains `false` because this checkpoint did not cut
 a tag or GitHub Release.
@@ -109,7 +109,7 @@ The deferred set lives in
 This internal checkpoint followed the untagged cut path:
 
 1. Merge the implementation PR with required CI green.
-2. Preserve closeout evidence in the [v0.1.0-alpha.7 validation log](validation-log.md).
+2. Preserve closeout evidence in the [0.1.0-alpha.7 validation log](validation-log.md).
 3. Keep ADR-81 as the durable decision record for the gate shell and deferred UI set.
 4. Skip release-please, tag, and GitHub Release.
 5. Set frontmatter to `status: complete`, `released: false`.
@@ -130,5 +130,5 @@ This internal checkpoint followed the untagged cut path:
 
 The alpha.7 living build plan and implemented design scratch were pruned after closeout.
 Durable decisions live in ADR-81; issue/PR evidence stays on GitHub, with curated
-evidence in the [v0.1.0-alpha.7 validation log](validation-log.md). Unresolved future UI
+evidence in the [0.1.0-alpha.7 validation log](validation-log.md). Unresolved future UI
 design detail was carried forward to `docs/releasing/0.1.0-alpha.8/tmp/`.

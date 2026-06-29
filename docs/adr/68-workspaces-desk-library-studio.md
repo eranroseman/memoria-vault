@@ -16,7 +16,7 @@ superseded_by: [81]
 ## Context
 
 The shipped workspace set was two layouts (**Home**, **Library**) with a promised
-third ("Project", slated for v0.1.0-alpha.3) that never shipped. The two layouts had
+third ("Project", slated for 0.1.0-alpha.3) that never shipped. The two layouts had
 no shared contract: Home put the board in the *right* pane and the homepage in the
 main pane, Library opened on an empty tab, the Co-PI chat pane appeared in neither,
 and the catalog base was serialized as a `markdown` leaf. Meanwhile `home.md` had

@@ -8,7 +8,7 @@ process prose; this playbook is the portable agent procedure for applying it.
 
 - **Scope** lives in the GitHub milestone plus the Memoria Issue Tracker table
   filtered to that milestone.
-- **Readiness** lives in the **"Release vX.Y"** parent issue and its gate/stage
+- **Readiness** lives in the **"Release <version>"** parent issue and its gate/stage
   sub-issues.
 - **Prose** lives in `docs/releasing/<version>/release-plan-<version>.md`.
 - **Build gaps** live as GitHub issues.
@@ -31,20 +31,20 @@ Do not create a second markdown state table for gate or stage progress.
 
 ## 2. Start a release
 
-1. Create `docs/releasing/<version>/README.md` as a thin index.
+1. Create `docs/releasing/<version>/`.
 2. Copy `docs/releasing/release-plan-template.md` to
    `docs/releasing/<version>/release-plan-<version>.md`.
 3. Fill the plan prose and set frontmatter to `status: draft` and `released: false`.
 4. Create the GitHub milestone:
 
    ```bash
-   gh api repos/eranroseman/memoria-vault/milestones -f title=vX.Y
+   gh api repos/eranroseman/memoria-vault/milestones -f title=0.1.0
    ```
 
 5. Assign scoped issues to the milestone and use the Memoria Issue Tracker table
    filtered to that milestone, using Status and Readiness as the live release state.
-6. Open the **"Release vX.Y"** parent issue with label `release` and milestone
-   `vX.Y`.
+6. Open the **"Release <version>"** parent issue with label `release` and milestone
+   `<version>`.
 7. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
    own evidence, owner, comments, and close condition.
 
