@@ -98,11 +98,14 @@ Issue Tracker project.
   Workaround: use `Memoria-test` or disposable workspaces only.
 - Limitation: model-quality wiki synthesis and visual Obsidian panel activation
   require live/tool-specific evidence. Impact: CI can prove structure, but these
-  gates need attended/runtime proof. Workaround: record the live evidence in the
-  gate issue or release evidence file. Zotero is in scope only as an item/source
-  import path for alpha.11; Zotero annotation import is not a release gate. The
-  local parser-backed PDF page/span/bbox fixture has passed in the Memoria-test
-  venv; broader real-corpus parser quality remains a follow-up measurement.
+  gates need attended/runtime proof. A headless Inspector fixture now proves
+  populated panel rendering from queue, lint, graph, journal, board, audit, and
+  fleet inputs; it does not replace live Obsidian pixel or human-use evidence.
+  Workaround: record the live evidence in the gate issue or release evidence
+  file. Zotero is in scope only as an item/source import path for alpha.11;
+  Zotero annotation import is not a release gate. The local parser-backed PDF
+  page/span/bbox fixture has passed in the Memoria-test venv; broader real-corpus
+  parser quality remains a follow-up measurement.
 
 ## 7. Documentation integrity
 
