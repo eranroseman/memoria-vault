@@ -64,5 +64,5 @@ type where a property suffices.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md),
-  [ADR-18](18-rename-agent-verdict.md), [ADR-10](10-claim-supersession.md); amends
+  [ADR-10](10-claim-supersession.md); amends
   [ADR-19](19-moc-threshold-alert.md)

@@ -24,7 +24,8 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 ## Consequences
 
 - The review gate stays simple: one reviewer, one verdict, no reconciliation of competing human judgments. This is a feature, not a limitation, at the target scale.
-- *Multi-machine* is not *multi-user*: one researcher operating Memoria across several machines is in scope (session files are named to avoid sync collisions — [ADR-25](25-session-logging-two-logs.md)); several humans sharing one vault is not. The distinction is owner-of-judgment count, not device count.
+- The supported operating model is one local runtime vault with one active Hermes dispatcher. A second device or sync topology would need a new deployment decision; until then, never run two dispatchers against the same vault.
+- *Multi-machine* is not *multi-user*: a future second-device design would still have one judgment owner. Several humans sharing one vault is not in scope. The distinction is owner-of-judgment count, not device count.
 - Any proposal that introduces a second judgment-owner must be treated as superseding this ADR, not extending the current design — it would touch the gate, the audit model, classification confirmation, and permissions at once.
 - Team-tool framing is off the table for v0.x, which keeps the novelty surface and the publication path ([ADR-20](20-publication-path.md)) honestly scoped to n=1 operator data.
 
@@ -38,5 +39,4 @@ Memoria is a knowledge-production system for a **single researcher**. The design
 
 - **Supporting rationale:** [What Memoria is](../design/what-memoria-is.md) ("single researcher" and "not a team tool in its current form").
 - **Related decisions:** [ADR-03 structural review gate](03-structural-review-gate.md) (assumes one reviewer); [ADR-15 project auto-classification](15-project-membership-from-topic-hint.md) (one human confirms); [ADR-20 publication path](20-publication-path.md) (n=1 operator data accepted as a known weakness).
-- **Proposals bounded by this ADR:** [Cross-vault knowledge sharing](60-cross-vault-knowledge-sharing.md) (cross-machine for one researcher is in scope; a shared multi-user memory server is not, absent a superseding decision).
 - **Source discussion:** retroactively records the scope boundary already stated in `what-memoria-is.md`.

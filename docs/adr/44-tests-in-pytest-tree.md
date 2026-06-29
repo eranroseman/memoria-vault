@@ -50,9 +50,9 @@ alpha.2**, when the installer is being reworked anyway.
   `requirements.txt` — the shipped runtime stays dependency-light).
 - Standard tooling is available: `pytest -k`, assertion introspection, and
   `coverage.py` can now measure the matrix instead of asserting it by hand.
-- The current loose-module import roots live in `pyproject.toml`; the full ADR-76
-  wheel migration later replaces those `pythonpath` entries with one installed
-  package root.
+- The current loose-module import roots live in `pyproject.toml`; package-spine
+  cleanup can later replace those `pythonpath` entries with one installed package
+  root if the loose roots become a maintenance cost.
 - Until the alpha.2 installer work lands, a deployed install has **no** post-install
   self-check. This is the status quo (it never had one) — not a regression.
 

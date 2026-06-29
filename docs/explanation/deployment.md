@@ -25,9 +25,8 @@ and for maintained rationale see the Design Book links below.
 | Dispatch | One Hermes dispatcher per vault. |
 | Secrets | Per-machine `.env` files, never committed or synced. |
 
-The multi-machine patterns (`local-mesh`, `obsidian-sync`, and `always-on`) are
-not the current operating model. They are captured as future/deferred topology in
-[ADR-63](../adr/63-multi-machine-deployment.md).
+Multi-machine patterns are not the current operating model. A future second-device
+or always-on topology needs a new deployment decision before support.
 
 Any future sync pattern keeps the same boundaries: the vault is the knowledge
 store, Hermes state remains machine-local unless explicitly promoted, and only one
@@ -41,5 +40,4 @@ dispatcher writes task state for a vault at a time.
 - Installer inventories (what gets copied where): [Installer (bootstrap)](../reference/installer.md)
 - Distribution rationale: [Distribution model](../design/distribution-model.md)
 - Installer rationale: [Bootstrap installer](../design/bootstrap-installer.md)
-- Deferred multi-machine design: [ADR-63](../adr/63-multi-machine-deployment.md)
 - The repo-as-install-unit decision: [ADR-26](../adr/26-repo-as-install-unit.md)

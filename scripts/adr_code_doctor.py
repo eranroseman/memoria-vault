@@ -48,16 +48,6 @@ CHECKS = (
         ),
     ),
     Check(
-        name="ADR-76 policy core path matches the package root",
-        adr="docs/adr/76-versioned-vault-release-reconciling-installer.md",
-        required_paths=(
-            "src/memoria_vault/runtime/policy/__init__.py",
-            "src/memoria_vault/runtime/policy/decision.py",
-        ),
-        required_text=("src/memoria_vault/runtime/policy/",),
-        forbidden_text=("vault-template/.memoria/memoria_runtime/policy/",),
-    ),
-    Check(
         name="ADR-10 supersession default query filter is implemented",
         adr="docs/adr/10-claim-supersession.md",
         required_paths=(

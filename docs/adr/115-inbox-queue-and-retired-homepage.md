@@ -47,11 +47,11 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 - **Keep Inbox nominally a "space" but stop launching into it (Phase 1 only).** Rejected: it fixes the launch redundancy but leaves the model saying a converges-to-empty queue is a durable room. Reclassifying is what makes the model say what it means.
 - **Keep the homepage plugin to force a stable daily landing.** Rejected: the old plugin opened the Inbox queue and duplicated the rail's ambient signal. The saved-shell startup macro restores the rail without another vendored community plugin.
 - **Rely on native last-session restore only.** Rejected after live Obsidian verification: a stale session can reopen without the rail or Co-PI pane, and then the normal shell fails before the user clicks anything. Loading the saved shell on startup is the boundary that makes the rail pattern durable.
-- **Delete `home.md` entirely and seed startup into Library.** Rejected: a brand-new user benefits from a curated welcome over an empty dashboard, and onboarding ([ADR-113](113-copi-guided-onboarding.md)) needs a landing to attach to. `home.md` is kept as the startup/reset welcome seed.
+- **Delete `home.md` entirely and seed startup into Library.** Rejected: a brand-new user benefits from a curated welcome over an empty dashboard, and onboarding ([ADR-112](112-tutorial-destination-first-arc.md)) needs a landing to attach to. `home.md` is kept as the startup/reset welcome seed.
 
 ## Related
 
 - **Refines:** [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces become three + the Inbox queue), [ADR-81](81-persistent-gate-dashboards.md) (dashboards stay persistent notes; only the launch target changes), [ADR-114](114-left-pane-navigator.md) (completes "Inbox is a state, not a place").
 - **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (system health is ambient).
-- **Onboarding seed:** [ADR-113](113-copi-guided-onboarding.md).
+- **Onboarding seed:** [ADR-112](112-tutorial-destination-first-arc.md).
 - **Source discussion:** the alpha.8 spaces-and-homepage clean-slate review.

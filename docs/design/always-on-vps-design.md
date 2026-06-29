@@ -7,7 +7,7 @@ nav_order: 26
 
 # Always-on VPS design
 
-> **Status — deferred.** The supported install path is local-only. Always-on deployment is not a supported setup path until [#383](https://github.com/eranroseman/memoria-vault/issues/383) validates it end to end. This page records the design boundary; the topology proposal lives in [ADR-63](../adr/63-multi-machine-deployment.md).
+> **Status — deferred.** The supported install path is local-only. Always-on deployment is not a supported setup path until [#383](https://github.com/eranroseman/memoria-vault/issues/383) validates it end to end and a new deployment decision accepts it. This page records design notes only; it is not an install recipe.
 
 The always-on idea moves Hermes from a sleep-prone desktop to a persistent host so scheduled crons can run overnight. The design is acceptable only if it preserves Memoria's single-dispatcher rule and does not turn the vault into a multi-writer system.
 
@@ -38,7 +38,7 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 | Co-PI conversation | Either desktop or VPS over an explicit ACP launch path |
 | Runtime vault files | Synced between desktop and VPS |
 
-The owner split above is a boundary, not an install recipe. Platform details stay in ADR-63 and the implementation issue until the topology is proven.
+The owner split above is a boundary, not an install recipe. Platform details stay in the implementation issue until the topology is proven.
 
 ## Validation before support
 

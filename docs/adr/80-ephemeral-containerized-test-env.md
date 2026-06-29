@@ -207,8 +207,8 @@ performance) becomes a recurring release-blocking gap; a real project's PI-touch
 budget needs L5 regression automated rather than hand-run. **Phase 1 needed no model
 work at all** — its trigger was simply that recurring L3 / recovery gap; gate 2 is
 already resolved and Phase 2 carries the remaining model / visual cost. The `assumes:` list pins the
-mechanisms it rests on — if the two-installer split (ADR-64), the write gate
-(ADR-28), or the reconciling installer (ADR-76) change shape, re-judge this.
+mechanisms it rests on — if the two-installer split (ADR-64) or the write gate
+(ADR-28) change shape, re-judge this.
 
 ## Alternatives considered
 
@@ -233,8 +233,8 @@ separate stack.
   two-installer split this builds the Linux side of),
   [ADR-29](29-testing-framework.md) (the testing framework this automates),
   [ADR-28](28-write-gate-as-plugin.md) (the deny-assertion path),
-  [ADR-76](76-versioned-vault-release-reconciling-installer.md) (the installer the
-  `MEMORIA_ENV` overlay extends), [ADR-31](31-native-obsidian-mcp.md) (HTTPS REST
+  [ADR-55](55-src-scaffold-populate-golden-copy.md) (the installer/golden-copy
+  contract the `MEMORIA_ENV` overlay extends), [ADR-31](31-native-obsidian-mcp.md) (HTTPS REST
   on same-host localhost).
 - **Files affected:** `scripts/install.sh`, `scripts/install.ps1`, profile
   `config.yaml` templates and cron wrappers (the `{{MODEL_*}}` overlay), a new

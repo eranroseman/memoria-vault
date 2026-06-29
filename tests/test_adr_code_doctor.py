@@ -38,7 +38,7 @@ def test_check_flags_missing_mechanism_and_stale_claim(tmp_path):
     errors = _m.check(root)
 
     assert any(
-        "ADR-76" in error and "src/memoria_vault/runtime/policy/decision.py" in error
+        "ADR-41" in error and "src/memoria_vault/runtime/policy/decision.py" in error
         for error in errors
     )
     assert any(

@@ -1,4 +1,4 @@
-"""Package-spine smoke tests for ADR-76/#727."""
+"""Package-spine smoke tests for the installed Memoria package."""
 
 from __future__ import annotations
 

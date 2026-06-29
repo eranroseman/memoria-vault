@@ -28,7 +28,7 @@ superseded_by: []
 
 > *Note (0.1.0-alpha.2): "seven" profile directories below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** (`.memoria/profiles/memoria-{copi,librarian,writer,peer-reviewer,engineer}`). The decision is unchanged — profiles remain hand-authored and idempotently deployed; the deferred-compiler trade-off now reads "five-profile scale".*
 
-How Memoria is packaged, installed, and kept up to date has direct upgrade-path consequences — yet the model was only described in [Distribution model](../design/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every future install and upgrade.
+How Memoria is packaged and installed was only described in [Distribution model](../design/distribution-model.md) and never recorded as a decision. Two coupled questions need a fixed answer: what is the unit a user installs (the whole repo, or just the vault?), and how do the seven Hermes profile directories stay synchronized with their vault source over time without a build step? Recording this matters because the deferral of a profile compiler and the "repo is the install unit" choice both shape every install.
 
 ## Decision
 
@@ -40,8 +40,8 @@ How Memoria is packaged, installed, and kept up to date has direct upgrade-path 
 
 ## Consequences
 
-- Upgrades are "`git pull` then re-run the idempotent profile install" — that re-run is the mechanism that keeps deployed profiles synchronized with the vault source.
-- A `profile-install-drift` detector was once planned to *catch* deployed copies diverging from source; it is **retired** ([ADR-67](67-drift-procedures-keep-or-retire.md)) — the vault-side Linter cannot see `~/.hermes`, and the idempotent re-run is both the detection and the fix.
+- There is no supported in-place migration or backwards-compatibility path while no production installation exists beyond disposable sandboxes. Refreshing a sandbox means pulling the repo and rerunning the installer/profile deploy against that sandbox.
+- A `profile-install-drift` detector was once planned to *catch* deployed copies diverging from source, but the vault-side Linter cannot see `~/.hermes`; the idempotent profile deploy is both the detection pass and the fix.
 - Hand-authoring accepts a known cost: common content (audit behavior, policy invariants, MCP connections) is duplicated across profile files kept in lockstep by human review. When that lockstep becomes painful, expand the narrow render step from [ADR-120](120-profile-config-materialization.md) rather than reintroducing a full compiler.
 - The deployed-vault-carries-no-`docs/` rule is load-bearing: a relative cross-reference from a vault file silently breaks after deployment, so vault→docs links must be GitHub URLs.
 - Windows installs must deploy off OneDrive, which the bootstrap handles by copying `src/` to a working production vault location.
