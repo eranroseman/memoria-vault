@@ -9,8 +9,9 @@ nav_order: 3
 
 Date: 2026-06-29
 
-Candidate commit: `39d22f6e` (`agent/alpha11-next` from current `main`), clean
-worktree at verification time.
+Runtime candidate commit: `39d22f6e` (`agent/alpha11-next` from then-current
+`main`), clean worktree at verification time. Later documentation-only closeout
+commits preserve this runtime evidence without changing alpha.11 runtime code.
 
 This is internal checkpoint evidence only. No release-please PR, tag, GitHub
 Release, migration, upgrade path, or backwards-compatibility work is part of the
@@ -40,12 +41,8 @@ Host evidence in the RC summary:
 
 ## Test-vault runtime
 
-The start-blocker verifier passed from the `Memoria-test` runtime venv:
-
-```bash
-/home/eranr/Memoria-test/.memoria/.venv/bin/python \
-  docs/releasing/0.1.0-alpha.11/tmp/verify_start_blockers.py
-```
+The now-retired start-blocker verifier passed from the `Memoria-test` runtime
+venv before `tmp/` disposition.
 
 Covered evidence:
 
@@ -68,19 +65,46 @@ pixel- or human-verified in this run.
 capture, Co-PI interview, digest/hub outputs, anchored note, gap re-run, Ask,
 checked-only qmd search, Canvas, and cascade rollback.
 
-`docs/releasing/0.1.0-alpha.11/tmp/wp-gate-seeded-error-results.md` records the
-frozen seeded-error bundle results: detection recall `1.0`, false-positive rate
-`0.0`, rollback completeness `1.0`, residual error rate `0.0`, and ask-routed
-checkpoint value `1.0` for the deterministic fixture.
+The WP-Gate seeded-error run recorded before `tmp/` disposition reported
+detection recall `1.0`, false-positive rate `0.0`, rollback completeness `1.0`,
+residual error rate `0.0`, and ask-routed checkpoint value `1.0` for the
+deterministic fixture.
 
 Broader semantic quality, real-corpus parser quality, visual Obsidian rendering,
 and attended PI checkpoint-cost calibration remain follow-up limitations. The
 evidence above supports the sandbox checkpoint; it is not a non-sandbox
 production claim.
 
+## Tmp disposition
+
+All tracked files in `docs/releasing/0.1.0-alpha.11/tmp/` were reviewed on
+2026-06-29 before deletion. Durable content was routed as follows:
+
+| Scratch evidence | Disposition |
+| --- | --- |
+| `0.1.0-alpha.11-design.md` | Durable decisions were folded into ADRs, system docs, the release plan, and current schema/policy tests. Remaining broad limitations are retained below. |
+| `0.1.0-alpha.11-exec-plan.md` | Work-package scope and acceptance are summarized by the release plan gates, this validation log, and passing tests. |
+| M0 and pre-approval reports/scripts | Historical feasibility evidence; superseded by source tests, package/runtime verification, and this validation log. |
+| WP1-WP8 result files | Implementation evidence summarized here; executable coverage now lives in `tests/`, `scripts/verify`, doctors, and CI. |
+| Start-blocker verifier/results | Live qmd/Zotero/PDF/Inspector/worker/source-id evidence summarized here; Zotero annotation import remains out of scope. |
+| WP-Gate seeded-error results | Deterministic fixture metrics summarized here; the frozen bundle and tests remain in the source tree. |
+
+Follow-up limitations preserved from the scratch review:
+
+- visual Obsidian rendering by screenshot or human inspection was not proven in
+  this session. No display variables (`DISPLAY`, `WAYLAND_DISPLAY`, or
+  `XDG_RUNTIME_DIR`) were available even outside the sandbox, screenshot tools
+  were absent, and `obsidian-cli` could not connect because Obsidian was not
+  running;
+- attended Co-PI/product use in `Memoria-test` remains weaker than the local
+  deterministic worker-boundary cycle and REST/workspace evidence;
+- broader semantic detector quality, live model-quality synthesis, larger
+  real-corpus PDF parser quality, and Ask retrieval benchmarks remain future
+  measurement work before any non-sandbox production claim.
+
 ## Checkpoint close-out status
 
 GitHub queries on 2026-06-29 found no open `0.1.0-alpha.11` milestone, release,
-or gate issues, and no `0.1.0-alpha.11` milestone exists. The release plan still
-uses `status: draft`; this validation log preserves candidate evidence toward
+or gate issues, and no `0.1.0-alpha.11` milestone exists. The release plan uses
+`status: candidate`; this validation log preserves candidate evidence toward
 close-out, not a tagged release.

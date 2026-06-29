@@ -1,6 +1,6 @@
 ---
 release: 0.1.0-alpha.11
-status: draft        # draft | candidate | complete | released
+status: candidate    # draft | candidate | complete | released
 released: false      # machine cut-flag; true ONLY for a formal tagged release
 title: Release plan -- 0.1.0-alpha.11
 parent: Releasing
@@ -9,10 +9,13 @@ nav_order: 2
 
 # Release plan -- 0.1.0-alpha.11
 
-**Current status: draft internal checkpoint plan.** alpha.11 is the fresh-sandbox
+**Current status: candidate internal checkpoint.** alpha.11 is the fresh-sandbox
 reset that implements the basic knowledge cycle and tests the integrity thesis.
 It is not a formal release: no release-please PR, tag, GitHub Release, migration,
-upgrade path, or backwards-compatibility work is expected.
+upgrade path, or backwards-compatibility work is expected. Candidate evidence is
+preserved in the
+[0.1.0-alpha.11 validation log](validation-log.md); remaining limits are
+sandbox/product-evidence limits, not migration or compatibility work.
 
 ## 1. Scope -- what this release is
 
@@ -155,6 +158,12 @@ Before closing this checkpoint:
 4. Delete only scratch whose durable content has landed elsewhere.
 5. Close or roll forward alpha.11 issues and milestone items.
 6. Confirm branch/worktree hygiene after merge.
+
+Current disposition: the tracked alpha.11 `tmp/` scratch was reviewed and
+removed after its durable evidence was summarized in
+the [0.1.0-alpha.11 validation log](validation-log.md). Future alpha.11 release
+state belongs in the release plan, validation log, issues, tests, ADRs, or
+system docs, not a tracked `tmp/` folder.
 
 ## 10. Cut procedure
 
