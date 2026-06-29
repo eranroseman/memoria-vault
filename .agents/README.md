@@ -31,7 +31,7 @@ copying their implementation details.
 | Template | Use |
 |---|---|
 | [Agent handoff](templates/handoff.md) | Transfer a bounded task without relying on chat history |
-| [ExecPlan](templates/exec-plan.md) | Skeleton for a complex task's self-contained living plan (instances live in `.agents/tmp/releases/<version>/`) |
+| [ExecPlan](templates/exec-plan.md) | Skeleton for a complex task's self-contained living plan (instances live in `scratch/releases/<version>/`) |
 | [Release plan](templates/release-plan.md) | Draft body for release parent issues and checkpoint prose |
 | [Review report](templates/review-report.md) | Report findings first with evidence and residual risk |
 

@@ -15,7 +15,7 @@ STALE_PATHS = [
     (re.compile(r"docs/releasing/release-plan-template\.md"), ".agents/templates/release-plan.md"),
     (
         re.compile(r"docs/releasing/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/tmp/"),
-        ".agents/tmp/releases/<version>/",
+        "scratch/releases/<version>/",
     ),
     (re.compile(r"docs/releasing/"), ".agents/playbooks/release.md or GitHub release issues"),
     (re.compile(r"docs/testing/"), "CONTRIBUTING.md or .agents/playbooks/verify-change.md"),
@@ -57,7 +57,7 @@ ROUTING_DOCS = (
 def targets(root: Path) -> list[Path]:
     files = [root / rel for rel in ROUTING_DOCS if (root / rel).is_file()]
     files += sorted((root / ".agents" / "templates").glob("*.md"))
-    files += sorted((root / ".agents" / "tmp" / "releases").glob("**/*.md"))
+    files += sorted((root / "scratch" / "releases").glob("**/*.md"))
     return sorted(files)
 
 
@@ -76,10 +76,10 @@ def check_file(p: Path, root: Path) -> list[str]:
             errs.append(f"{rel}: stale testing plan `{old}`; use `{replacement}`")
 
     if "tmp" in rel.parts and not _release_scratch(rel):
-        errs.append(f"{rel}: tmp/ is allowed only under .agents/tmp/releases/<version>/")
+        errs.append(f"{rel}: tmp/ is no longer a tracked release scratch home")
 
     if _release_scratch(rel) and PRIVATE_SCRATCH_LINK_RE.search(text):
-        errs.append(f"{rel}: tracked tmp/ note links to local/private memory outside the repo")
+        errs.append(f"{rel}: tracked scratch note links to local/private memory outside the repo")
 
     # 2. broken relative links (skip external, anchors, and {{ }} placeholders)
     for raw in MD_LINK.findall(text):
@@ -101,9 +101,7 @@ def check_file(p: Path, root: Path) -> list[str]:
 
 def _release_scratch(rel: Path) -> bool:
     parts = rel.parts
-    return (
-        len(parts) >= 5 and parts[0] == ".agents" and parts[1] == "tmp" and parts[2] == "releases"
-    )
+    return len(parts) >= 4 and parts[0] == "scratch" and parts[1] == "releases"
 
 
 def main() -> int:

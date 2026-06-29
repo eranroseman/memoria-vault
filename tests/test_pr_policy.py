@@ -7,14 +7,19 @@ is_safe = _m.is_safe
 is_sensitive = _m.is_sensitive
 
 
-def test_is_safe_accepts_only_safe_prose_prefixes():
+def test_is_safe_accepts_safe_prose_and_scratch_prefixes():
     assert is_safe("docs/reference/policy-mcp.md")
     assert is_safe("docs/explanation/deployment.md")
     assert is_safe("docs/explanation/architecture/interaction-channels.md")
     assert is_safe("_notes/scratch.md")
+    assert is_safe("scratch/releases/0.1.0-alpha.12/design.md")
+    assert is_safe("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert is_safe("scratch/fixtures/state.sqlite")
 
 
 def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
+    old_agent_tmp = ".agents" + "/tmp/releases/0.1.0-alpha.12/design.md"
+
     assert not is_safe("README.md")
     assert not is_safe("CHANGELOG.txt")
     assert not is_safe("docs/_data/nav.yml")
@@ -22,15 +27,18 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
     assert not is_safe(".github/workflows/ci.yml")
     assert not is_safe("vault-template/.memoria/mcp/policy_mcp.py")
     assert not is_safe("scripts/README.md")
+    assert not is_safe(old_agent_tmp)
 
 
 def test_is_sensitive_flags_policy_and_runtime_surfaces():
+    old_agent_tmp = ".agents" + "/tmp/releases/0.1.0-alpha.12/design.md"
     sensitive_paths = [
         ".github/workflows/ci.yml",
         ".github/scripts/pr_policy.py",
         ".github/CODEOWNERS",
         "AGENTS.md",
         ".agents/skills/schema-change/SKILL.md",
+        old_agent_tmp,
         ".claude/skills/release/SKILL.md",
         ".codex/agents-doctor.md",
         ".kilo/config.md",
@@ -52,8 +60,8 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
     assert not is_sensitive("docs/explanation/deployment.md")
     assert not is_sensitive("docs/reference/policy-mcp.md")
     assert not is_sensitive("docs/design/what-memoria-is.md")
-    assert not is_sensitive(".agents/tmp/releases/0.1.0-alpha.12/design.md")
-    assert not is_sensitive(".agents/tmp/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert not is_sensitive("scratch/releases/0.1.0-alpha.12/design.md")
+    assert not is_sensitive("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_sensitive("README.md")
 
 
@@ -88,30 +96,30 @@ def test_decide_blocks_untrusted_sensitive_changes_but_reviews_safe_changes():
     blocked, _ = decide(["scripts/install.sh"], "random-user", False)
     safe_review, reason = decide(["docs/reference/glossary.md"], "random-user", False)
     agents_block, _ = decide(["AGENTS.md"], "random-user", False)
-    agent_tmp_review, agent_tmp_reason = decide(
-        [".agents/tmp/releases/0.1.0-alpha.12/design.md"], "random-user", False
+    scratch_review, scratch_reason = decide(
+        ["scratch/releases/0.1.0-alpha.12/design.md"], "random-user", False
     )
 
     assert blocked == "block"
     assert safe_review == "needs_human"
     assert "not on the trusted" in reason
     assert agents_block == "block"
-    assert agent_tmp_review == "needs_human"
-    assert "sensitive" not in agent_tmp_reason.lower()
+    assert scratch_review == "needs_human"
+    assert "not on the trusted" in scratch_reason
 
 
-def test_decide_does_not_route_agent_tmp_changes_as_sensitive_for_trusted_authors():
+def test_decide_auto_approves_trusted_scratch_only():
     decision, reason = decide(
         [
-            ".agents/tmp/releases/0.1.0-alpha.12/design.md",
-            ".agents/tmp/releases/0.1.0-alpha.12/preimpl_spikes/run.py",
+            "scratch/releases/0.1.0-alpha.12/design.md",
+            "scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py",
         ],
         "eranroseman",
         False,
     )
 
-    assert decision == "needs_human"
-    assert "sensitive" not in reason.lower()
+    assert decision == "auto_approve"
+    assert "scratch" in reason.lower()
 
 
 def test_decide_drafts_and_empty_changesets_need_human_review():

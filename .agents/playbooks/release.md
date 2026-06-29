@@ -15,7 +15,7 @@ Release state lives in GitHub; this playbook is the portable agent procedure.
 - **Scope cuts** live as GitHub issues with Readiness `Later`; ADRs record the
   decision or rationale only when there is one.
 - **Version and notes** are owned by release-please.
-- **In-work release design notes** live under `.agents/tmp/releases/<version>/`
+- **In-work release design notes** live under `scratch/releases/<version>/`
   while the release is being shaped and are deleted before the release/checkpoint
   is done.
 
@@ -45,7 +45,7 @@ Do not create a second markdown state table for gate or stage progress.
    `<version>`.
 5. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
    own evidence, owner, comments, and close condition.
-6. Put temporary tracked design scratch in `.agents/tmp/releases/<version>/` only
+6. Put temporary tracked design scratch in `scratch/releases/<version>/` only
    when it must survive handoff.
 
 ## 3. Cut a release or checkpoint
@@ -60,7 +60,7 @@ Do not create a second markdown state table for gate or stage progress.
 4. Merge the release-please PR for formal releases. It owns version bump,
    changelog, tag, and GitHub Release notes.
 5. Close the milestone and release parent issue, rolling unfinished issues forward.
-6. Delete `.agents/tmp/releases/<version>/` design notes before calling the
+6. Delete `scratch/releases/<version>/` design notes before calling the
    release/checkpoint done, after routing durable content to ADRs, docs, or issues.
 
 ## 4. Verify

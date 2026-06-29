@@ -5,16 +5,17 @@ Emits two GitHub Actions outputs:
   reason   = human-readable string
 
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
-prose paths (docs/ or _notes/, .md/.txt only) get decision=auto_approve, which
-causes the workflow to enable auto-merge. Safe PRs can be any size — a single
-docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/ is the one
-docs/ subtree that is NOT auto-approved (it holds the decision record — see below).
+paths get decision=auto_approve, which causes the workflow to enable auto-merge.
+Safe prose paths are docs/ or _notes/ with .md/.txt files only; scratch/ is also
+safe because it is non-authoritative working material. Safe PRs can be any size —
+a single docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/
+is the one docs/ subtree that is NOT auto-approved (it holds the decision record —
+see below).
 
 Block: any PR touching sensitive paths (.github/, vault-template/.memoria/, scripts/, or
 ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
 human review. Agent instruction surfaces are also sensitive: they can change
-what future automation is allowed or encouraged to do. `.agents/tmp/` is release
-scratch, not agent instruction surface, so it is not classified as sensitive.
+what future automation is allowed or encouraged to do.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -30,12 +31,14 @@ TRUSTED_AUTHORS = {
     "dependabot[bot]",
 }
 
-# A path is safe only when it is prose under an explicitly safe prefix.
-SAFE_PREFIXES = (
+# A path is safe only when it is prose under an explicitly safe prefix, or
+# scratch material under the non-authoritative root scratch area.
+SAFE_PROSE_PREFIXES = (
     "docs/",
     "_notes/",
 )
 SAFE_SUFFIXES = (".md", ".txt")
+SAFE_SCRATCH_PREFIXES = ("scratch/",)
 
 # Any change to these paths is always blocked for human review. docs/adr/ holds the
 # decision record (ADRs at every lifecycle status) and stays review-required even
@@ -53,18 +56,16 @@ SENSITIVE_PREFIXES = (
 SENSITIVE_PATHS = {
     "AGENTS.md",
 }
-NON_SENSITIVE_PREFIXES = (".agents/tmp/",)
 
 
 def is_safe(path: str) -> bool:
-    return any(path.startswith(p) for p in SAFE_PREFIXES) and any(
-        path.endswith(s) for s in SAFE_SUFFIXES
+    return any(path.startswith(p) for p in SAFE_SCRATCH_PREFIXES) or (
+        any(path.startswith(p) for p in SAFE_PROSE_PREFIXES)
+        and any(path.endswith(s) for s in SAFE_SUFFIXES)
     )
 
 
 def is_sensitive(path: str) -> bool:
-    if any(path.startswith(p) for p in NON_SENSITIVE_PREFIXES):
-        return False
     return path in SENSITIVE_PATHS or any(path.startswith(p) for p in SENSITIVE_PREFIXES)
 
 
@@ -86,7 +87,7 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     if trusted and all_safe:
         return "auto_approve", (
             f"Trusted author (@{pr_author}), all {len(changed_paths)} changed "
-            "file(s) are in safe paths (docs / release / notes)."
+            "file(s) are in safe paths (docs / notes / scratch)."
         )
     if all_safe:
         return (

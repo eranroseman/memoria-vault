@@ -42,7 +42,7 @@ novice — can run it top to bottom. Author and run it with the
 [`.agents/templates/exec-plan.md`](.agents/templates/exec-plan.md)).
 
 An ExecPlan is a **working artifact, not a permanent record.** The instance
-lives in `.agents/tmp/releases/<version>/` under the current release or checkpoint
+lives in `scratch/releases/<version>/` under the current release or checkpoint
 (tracked for handoff, deleted before that release closes — `_notes/` is
 gitignored, so a plan meant to be resumed never lives there); its durable
 outputs route as usual — decisions to ADRs, readiness/state to issues.
@@ -177,7 +177,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
-| `cspell` | Spelling over all tracked markdown (the prose surface); scope and exclusions live in `cspell.json` |
+| `cspell` | Spelling over tracked prose markdown; scope and exclusions live in `cspell.json` |
 
 **CI invariant:** required-check workflows must have **no** `paths:` filter — a
 path-filtered required check permanently blocks PRs that don't touch those
@@ -202,7 +202,7 @@ behavior.
 | `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
 | `block` | Untrusted author on sensitive paths |
 
-Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/` except `.agents/tmp/`, `.claude/`, `.codex/`, `.kilo/`.
+Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
@@ -385,7 +385,7 @@ sub-issues**. Version, changelog, tag, and GitHub Release are owned by
 release-please. Use the portable [release playbook](.agents/playbooks/release.md)
 and [release plan template](.agents/templates/release-plan.md) to draft issue
 prose; do not create a repository release-plan folder. In-work release design
-notes may live in `.agents/tmp/releases/<version>/` while shaping a release, but
+notes may live in `scratch/releases/<version>/` while shaping a release, but
 they are deleted before that release/checkpoint is done.
 
 ---
@@ -394,13 +394,13 @@ they are deleted before that release/checkpoint is done.
 
 | Item | Goes to |
 |---|---|
-| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `.agents/tmp/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `scratch/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `.agents/tmp/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
+| In-work release design notes | `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -410,7 +410,7 @@ they are deleted before that release/checkpoint is done.
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under `.agents/tmp/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 

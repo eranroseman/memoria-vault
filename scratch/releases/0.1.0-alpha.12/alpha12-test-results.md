@@ -1,6 +1,6 @@
 # alpha.12 disposable test results
 
-Scratch: `/home/eranr/memoria-vault/.agents/tmp/alpha12-fixture`
+Scratch: `/home/eranr/memoria-vault/scratch/releases/0.1.0-alpha.12/alpha12-fixture`
 
 ## Summary
 

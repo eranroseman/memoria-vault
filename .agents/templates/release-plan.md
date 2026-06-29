@@ -40,7 +40,7 @@ This release is done when every gate/stage sub-issue below is closed.
    release scope are recorded in sub-issues.
 5. Documentation integrity is complete: shipped behavior is covered, stale
    claims are fixed, and durable decisions are captured in ADRs.
-6. `.agents/tmp/releases/{{ version }}/` scratch is deleted after durable content
+6. `scratch/releases/{{ version }}/` scratch is deleted after durable content
    is moved to ADRs, docs, release notes, or issues.
 
 ## Cut or checkpoint close

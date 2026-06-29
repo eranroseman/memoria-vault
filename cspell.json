@@ -20,6 +20,7 @@
     "vault-template/.obsidian/**",
     "_papers/**",
     "_notes/**",
+    "scratch/**",
     "**/tmp/**",
     "**/_site/**",
     "docs/.jekyll-cache/**",
