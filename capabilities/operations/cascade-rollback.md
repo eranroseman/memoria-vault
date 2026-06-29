@@ -1,0 +1,29 @@
+---
+title: "Cascade rollback"
+type: operation
+check_status: checked
+description: "Rollback traced machine descendants and flag PI-directed descendants."
+operation_id: cascade-rollback
+allowed_tools:
+  - trusted_writer
+allowed_paths:
+  - catalog/
+  - knowledge/
+  - journal/
+  - .memoria/quarantine/
+allowed_network: []
+runner: local
+model: deterministic-fixture
+prompt_version: cascade-rollback.v1
+io_schema:
+  input: traced_target
+  output: rollback_result
+risk_class: high
+required_checks:
+  - trace-integrity
+tags: [alpha11, rollback]
+---
+
+# Operation
+
+Use the trace DAG to quarantine machine-derived outputs and flag PI-derived ones.
