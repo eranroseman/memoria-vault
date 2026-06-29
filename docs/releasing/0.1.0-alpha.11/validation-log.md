@@ -10,8 +10,10 @@ nav_order: 3
 Date: 2026-06-29
 
 Runtime candidate commit: `39d22f6e` (`agent/alpha11-next` from then-current
-`main`), clean worktree at verification time. Later documentation-only closeout
-commits preserve this runtime evidence without changing alpha.11 runtime code.
+`main`), clean worktree at verification time. Later docs/test closeout commits
+preserve this runtime evidence without changing alpha.11 runtime code.
+Post-candidate evidence on current `main` adds tests/docs only; the latest
+headless Inspector render coverage is recorded below.
 
 This is internal checkpoint evidence only. No release-please PR, tag, GitHub
 Release, migration, upgrade path, or backwards-compatibility work is part of the
@@ -39,6 +41,15 @@ Host evidence in the RC summary:
 - Platform: WSL2 Linux `6.6.87.2-microsoft-standard-WSL2`, Python `3.13.12`.
 - Evidence file: `/tmp/memoria-alpha11-next-rc-escalated/summary.json`.
 
+Post-candidate CI evidence:
+
+- PR [#1013](https://github.com/eranroseman/memoria-vault/pull/1013), merged as
+  `7d31bfd5`, passed all required checks.
+- `tests/test_memoria_inspector.py` now includes a headless Obsidian-view render
+  fixture that feeds the Memoria Inspector queue, lint, integrity flag, graph,
+  board, audit, and fleet inputs and asserts the populated panels render the
+  expected product signals.
+
 ## Test-vault runtime
 
 The now-retired start-blocker verifier passed from the `Memoria-test` runtime
@@ -64,6 +75,12 @@ pixel- or human-verified in this run.
 `tests/test_alpha11_cycle.py` covers the deterministic source-to-gap cycle:
 capture, Co-PI interview, digest/hub outputs, anchored note, gap re-run, Ask,
 checked-only qmd search, Canvas, and cascade rollback.
+
+`tests/test_memoria_inspector.py` covers the Inspector control-panel boundary in
+two directions: UI controls enqueue worker-owned operation jobs instead of
+writing canonical files directly, and a populated operational fixture renders
+the main product panels from the same queue, metrics, graph, journal, board, and
+audit files the runtime vault exposes.
 
 The WP-Gate seeded-error run recorded before `tmp/` disposition reported
 detection recall `1.0`, false-positive rate `0.0`, rollback completeness `1.0`,
@@ -95,7 +112,9 @@ Follow-up limitations preserved from the scratch review:
   this session. No display variables (`DISPLAY`, `WAYLAND_DISPLAY`, or
   `XDG_RUNTIME_DIR`) were available even outside the sandbox, screenshot tools
   were absent, and `obsidian-cli` could not connect because Obsidian was not
-  running;
+  running. The headless Inspector render fixture proves data-to-panel rendering
+  for the shipped plugin, but not live Obsidian pixels, theme interaction, or
+  human-attended GUI use;
 - attended Co-PI/product use in `Memoria-test` remains weaker than the local
   deterministic worker-boundary cycle and REST/workspace evidence;
 - broader semantic detector quality, live model-quality synthesis, larger
