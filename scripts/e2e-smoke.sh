@@ -35,6 +35,8 @@ vault_assembly() {
   echo "== $(stage vault-assembly-2) =="
   "$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" stage
   git -C "$V" init -q
+  git -C "$V" config user.email "e2e@example.invalid"
+  git -C "$V" config user.name "Memoria E2E Smoke"
   git -C "$V" rev-parse --is-inside-work-tree >/dev/null || fail "disposable vault is not a git repository"
   cp "$V/.memoria/operations/integrity/linter/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
   cp "$V/.githooks/post-commit" "$V/.git/hooks/post-commit" && chmod +x "$V/.git/hooks/post-commit"
