@@ -14,21 +14,28 @@ superseded_by: []
 # ADR-29: A layered testing framework
 
 > **Amended by [ADR-44](44-tests-in-pytest-tree.md):** L1 component tests now live in a
-> repo-side `pytest` tree (`tests/`), not inline `--self-test` blocks. The pyramid,
-> verification matrix, and disciplines below are unchanged; only L1's hosting moved.
+> repo-side `pytest` tree (`tests/`), not inline `--self-test` blocks. The pyramid
+> and disciplines below are unchanged; only L1's hosting moved.
 >
 > **Amended 2026-06-23:** the release process is now described as five promotion
 > gates. The historical L0-L5 labels remain coverage aliases; humans and scripts
 > use Source, Package, Runtime, Product, and Release gates.
 >
-> **Amended 2026-06-28:** testing docs are gate-first. The former tool-specific
-> plans were collapsed into Source, Package, Runtime, Product, Release, Manual
-> GUI, and Failure Recovery plans, with the command catalogs left in Reference.
+> **Amended 2026-06-28:** testing procedure is gate-first. The former
+> tool-specific plans were collapsed into Source, Package, Runtime, Product,
+> Release, Manual GUI, and Failure Recovery gates, with command catalogs left in
+> Reference.
 >
 > **Amended 2026-06-29:** Runtime Gate may include release-specific deterministic
 > runtime-cycle checks before the live Hermes smoke. For alpha.11,
 > `scripts/verify runtime` runs `tests/test_alpha11_cycle.py` before
 > `scripts/test-l2.sh`.
+>
+> **Amended 2026-06-29:** the internal testing process folder was retired. Human
+> contributor guidance lives in
+> [CONTRIBUTING.md](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md);
+> reusable agent procedure lives in
+> [verify-change.md](https://github.com/eranroseman/memoria-vault/blob/main/.agents/playbooks/verify-change.md).
 
 ## Context
 
@@ -46,8 +53,8 @@ product workflows, and — by design — agent *output quality*.
 Adopt a **promotion-gated test framework**: cheap checks run first and often,
 expensive checks run only when their evidence matters, and every release promotes
 from source to package to runtime to product acceptance to cut readiness. The
-verification matrix owns the assurance-to-gate index; Reference owns command
-catalogs.
+`scripts/verify` modes own the executable gate front doors, `CONTRIBUTING.md`
+owns the human summary, and the verify-change playbook owns reusable procedure.
 
 **Promotion gates**
 
@@ -63,36 +70,35 @@ catalogs.
 
 | Layer | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
-| **L0 Static & schema** | required source checks + dashboard/telemetry schema-drift | [Source Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/source-gate.md) | every commit (CI) |
-| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | [Source Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/source-gate.md) | every commit (CI) |
-| **L2 Wiring / contract** | policy gate, representative CLI behavior classes, board/profile/skills/cron, architecture invariants | [Runtime Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/runtime-gate.md) | per release (cheap model, disposable vault) |
-| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero to bib, Agent Client | [Manual GUI Checks](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/manual-gui-checks.md) | per release |
-| **L4 Golden-path E2E** | one full product trace across runtime, ingest, review, telemetry, and GUI | [Product Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/product-gate.md) | per release |
+| **L0 Static & schema** | required source checks + dashboard/telemetry schema-drift | `scripts/verify pr` | every commit (CI) |
+| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | `scripts/test.sh l1` via Source Gate | every commit (CI) |
+| **L2 Wiring / contract** | policy gate, representative CLI behavior classes, board/profile/skills/cron, architecture invariants | `scripts/verify runtime` | per release (cheap model, disposable vault) |
+| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero to bib, Agent Client | verify-change manual GUI procedure | per release |
+| **L4 Golden-path E2E** | one full product trace across runtime, ingest, review, telemetry, and GUI | release issue evidence | per release |
 | **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-maintenance.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | [Package Gate](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/package-gate.md) + [Failure Recovery](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/plans/failure-recovery-checks.md) | on relevant change |
+| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | `scripts/verify package` + verify-change failure/recovery procedure | on relevant change |
 
 **Disciplines**
 
-1. **Verification matrix is the keystone.** [`verification-matrix.md`](https://github.com/eranroseman/memoria-vault/blob/main/docs/testing/verification-matrix.md) maps every required assurance -> gate -> evidence -> automation level. Gaps are tracked, not discovered by accident.
+1. **Gate front doors stay explicit.** `scripts/verify` maps each promotion gate to executable evidence; `CONTRIBUTING.md` and the verify-change playbook explain when to use each gate.
 2. **Determinism.** Below L5, assert *artifact shape and gate decision*, never prose quality. Output quality is L5's job alone.
-3. **Drift control.** A check (`scripts/check_test_refs.py`) verifies every path/link a plan references resolves, so plans can't rot silently; runs in CI alongside docs-doctor.
-4. **Explicit gate mapping.** Each gate names the layer/plan that satisfies it
-   and writes evidence for the run, so "is the release tested?" is answerable
-   from the matrix plus the release issue.
+3. **Drift control.** `status_doctor.py`, `docs_doctor.py`, and `agents_doctor.py` keep stale release/testing paths, broken links, and generated agent references from rotting silently.
+4. **Explicit evidence homes.** Automated evidence lives in `scripts/verify` bundles and CI; product/manual/release evidence lives in the release parent issue and sub-issues.
 
-All reusable procedures live in [Testing](https://github.com/eranroseman/memoria-vault/tree/main/docs/testing). New sub-plans use `templates/test-plan-template.md` only when an existing gate cannot hold the assurance.
+Reusable testing procedure lives in the verify-change playbook; release-specific
+procedure lives in the release playbook.
 
 ## Why
 
-- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without an index, coverage erodes and nobody notices; the matrix makes erosion visible.
+- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without explicit gates, coverage erodes and nobody notices.
 - The pyramid pushes coverage to the cheapest layer that can assert it: a `--self-test` on every commit beats a manual GUI step per release.
 - Separating wiring (L0–L4) from quality (L5) keeps fast deterministic checks honest and quarantines the slow, judgement-heavy eval where it belongs.
 
 ## Consequences
 
-- New artifacts: the verification matrix, gate plans, and the drift check. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately under `system/eval/`.
-- The release plan's gates reference the matrix; a release is "tested" when its required layers are green per the matrix.
-- Adding a test surface means adding a row to the matrix and pointing it at a layer — not inventing an unindexed plan.
+- The retired testing matrix and gate-plan folder are no longer repository artifacts. The eval layer (L5) is owned by ADR-11 and ships its gold tasks separately under `system/eval/`.
+- A release is "tested" when the required `scripts/verify` gates are green and the required manual/product evidence is present in the release issue trail.
+- Adding a test surface means wiring it into the appropriate gate or documenting the manual evidence in the verify-change/release playbooks — not inventing an unindexed plan.
 
 ## Current implementation mapping
 

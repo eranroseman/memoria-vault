@@ -36,12 +36,6 @@ favicon_ico: "/favicon.ico"
 plugins:
   - jekyll-seo-tag
 
-# Repo-internal documentation, kept in docs/ for relative linking but NOT
-# published to the site. The public site includes the Diátaxis docs, maintained
-# design arguments, and ADR decision records.
+# Scratch dirs under docs/ are never published.
 exclude:
-  - releasing/
-  - testing/
-  # Scratch dirs anywhere under docs/ (e.g. a release folder's tmp/): tracked in
-  # git for relative linking, never published.
   - "**/tmp/"

@@ -4,15 +4,14 @@
 #   L1  component tests — the pytest tree in tests/ (policy gate, hook, board,
 #       metrics, ingest + verify MCP, detectors, ingest spine, repo tooling).
 #       Synthetic fixtures, no vault runtime (ADR-44).
-#   L0  static + schema — docs-doctor, vault links, test-ref drift, dashboard
+#   L0  static + schema — docs-doctor, vault links, status drift, dashboard
 #       schema-drift, installer lint, syntax sanity.
 #
 # This is the direct Source Gate runner. Prefer `scripts/verify pr` before
 # pushing; it calls this script and writes a JSON evidence bundle. CI runs the
 # same checks as separate required jobs (lint [docs-doctor / docs-links /
-# check-test-refs / ruff / status-doctor] + python-selftest); this mirrors them
-# so a red push is caught locally. Higher gates need a runtime or a human — see
-# docs/testing/.
+# ruff / status-doctor] + python-selftest); this mirrors them so a red push is
+# caught locally. Higher gates need a runtime or a human.
 #
 # Usage: scripts/test.sh [l0|l1|check|all]   (default: all)   check = collect-only, no run
 set -uo pipefail
@@ -56,8 +55,6 @@ l0() {
   run python3 scripts/github_doctor.py
   run python3 scripts/ruleset_doctor.py
   run python3 scripts/plugin_provenance_doctor.py
-  if [ -f scripts/check_test_refs.py ]; then run python3 scripts/check_test_refs.py
-  else echo "→ check-test-refs    (not on this branch — skipped)"; fi
   run python3 -m py_compile scripts/verify scripts/test_env_harness.py src/memoria_vault/*.py src/memoria_vault/runtime/*.py src/memoria_vault/runtime/policy/*.py
   run python3 -m py_compile scripts/l2_obsidian_mcp_shim.py scripts/l2_openai_smoke_server.py scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py "$P"/operations/lib/*.py "$P"/operations/integrity/linter/*.py "$P"/operations/processing/ingest/*.py "$P"/operations/processing/project/*.py "$P"/operations/integrity/retraction/*.py "$P"/operations/cleanup/*.py "$P"/operations/telemetry/eval/*.py

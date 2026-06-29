@@ -9,7 +9,7 @@ is_sensitive = _m.is_sensitive
 
 def test_is_safe_accepts_only_safe_prose_prefixes():
     assert is_safe("docs/reference/policy-mcp.md")
-    assert is_safe("docs/releasing/0.1.0-alpha.2/release-plan-0.1.0-alpha.2.md")
+    assert is_safe("docs/explanation/deployment.md")
     assert is_safe("docs/explanation/architecture/interaction-channels.md")
     assert is_safe("_notes/scratch.md")
 
@@ -49,7 +49,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
 
 
 def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensitive():
-    assert not is_sensitive("docs/testing/verification-matrix.md")
+    assert not is_sensitive("docs/explanation/deployment.md")
     assert not is_sensitive("docs/reference/policy-mcp.md")
     assert not is_sensitive("docs/design/what-memoria-is.md")
     assert not is_sensitive("README.md")

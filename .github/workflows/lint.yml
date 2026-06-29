@@ -1,15 +1,14 @@
 name: lint
 
 # One job for the fast Python checks — ruff, docs-doctor, docs-links (vault link
-# resolution), check-test-refs — sharing a single runner + checkout + Python
-# setup instead of four separate workflows. Replaces ruff.yml, docs-doctor.yml,
-# docs-links.yml, check-test-refs.yml.
+# resolution), and repo doctors — sharing a single runner + checkout + Python
+# setup instead of separate workflows. Replaces ruff.yml, docs-doctor.yml, and
+# docs-links.yml.
 #
 # RULESET COORDINATION (required before merge): the branch ruleset still requires
 # `docs-doctor` and `docs-links` by name. Update Settings → Rules → Rulesets →
 # "main" → Require status checks: remove `docs-doctor` and `docs-links`, add
-# `lint`. (ruff + check-test-refs were advisory; folding them in makes them gate,
-# which is intended.) No `paths:` filter — reports on every PR (AGENTS.md §4).
+# `lint`. No `paths:` filter — reports on every PR (AGENTS.md §4).
 
 on:
   push:
@@ -46,8 +45,6 @@ jobs:
         run: python scripts/gen_profiles_ref.py --check
       - name: docs-links
         run: bash scripts/check-vault-links.sh
-      - name: check-test-refs
-        run: python scripts/check_test_refs.py
       - name: status-doctor
         run: python scripts/status_doctor.py
       - name: adr-code-doctor

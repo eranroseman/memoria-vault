@@ -5,9 +5,10 @@
   guidance comments. See ../playbooks/exec-plan.md for when and how to use it.
 
   ── Where this instance lives ───────────────────────────────────────────────
-  docs/releasing/<version>/tmp/  — under the current release/checkpoint; tracked
-  for linking and handoff, deleted before that release closes. (_notes/ is
-  gitignored, so a plan meant to be resumed or handed off never lives there.)
+  .agents/tmp/releases/<version>/  — under the current release/checkpoint;
+  tracked for linking and handoff, deleted before that release closes.
+  (_notes/ is gitignored, so a plan meant to be resumed or handed off never
+  lives there.)
   Never keep an ExecPlan as a permanent record; it is a working artifact.
 
   ── The mandates this file must satisfy ─────────────────────────────────────

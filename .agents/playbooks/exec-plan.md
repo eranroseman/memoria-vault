@@ -31,12 +31,12 @@ retired standalone proposal and design-doc folders — decisions are ADRs and
 state lives in issues — so an ExecPlan must never become a fourth permanent
 record.
 
-Put the instance in **`docs/releasing/<version>/tmp/`** under the current
-release or checkpoint: tracked so it can be linked and handed off, excluded from
-the published site, and deleted before that release/checkpoint closes (see
-`AGENTS.md` → "Release plans"). This is the repository's only home for tracked
-in-work design scratch — `_notes/` is gitignored and invisible to other agents,
-so a plan meant to be resumed or handed off never lives there.
+Put the instance in **`.agents/tmp/releases/<version>/`** under the current
+release or checkpoint: tracked so it can be linked and handed off, and deleted
+before that release/checkpoint closes (see `AGENTS.md` → "Release process").
+This is the repository's only home for tracked in-work release design scratch —
+`_notes/` is gitignored and invisible to other agents, so a plan meant to be
+resumed or handed off never lives there.
 
 The ExecPlan **orchestrates** the work; it does not replace the records that work
 produces. Durable outputs route as usual:

@@ -117,6 +117,6 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
         "bash scripts/test-l2.sh",
     ]
     assert summary["manual_follow_up"] == [
-        "Complete Product Gate checks in docs/testing/plans/product-gate.md.",
-        "Complete Release Gate checks in docs/testing/plans/release-gate.md.",
+        "Complete product/manual release evidence in the release parent issue.",
+        "Follow .agents/playbooks/release.md for release cut checks.",
     ]

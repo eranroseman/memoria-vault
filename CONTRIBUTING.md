@@ -43,8 +43,8 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Bugs, enhancements, docs fixes, and questions | [GitHub issues](https://github.com/eranroseman/memoria-vault/issues) |
 | Live planning state | Memoria Issue Tracker project fields |
 | Release scope | GitHub milestones |
+| Release readiness | The parent "Release <version>" issue and its sub-issues |
 | Decisions and durable rationale | [ADRs](docs/adr/) |
-| Release prose | `docs/releasing/<version>/` |
 
 The Project carries two fields:
 
@@ -57,6 +57,23 @@ Labels stay minimal: use `bug` and `documentation` for repo-wide search, plus
 bot-managed labels such as `dependencies`, `python`, `github_actions`, `release`,
 and `autorelease:*`. Do not recreate status, readiness, priority, or subsystem
 taxonomies as labels.
+
+## Testing and verification
+
+Testing is organized by promotion gate, not by tool. Use the cheapest gate that
+proves the change, then run the normal PR gate before handoff when the change is
+broader than a narrow doc edit.
+
+| Gate | Proves | Front door |
+|---|---|---|
+| Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | `scripts/verify pr` |
+| Package | A disposable vault assembles and the offline workflow replay works. | `scripts/verify package` |
+| Runtime | Hermes, MCP, Obsidian, model endpoint, cron, and policy boundaries work live. | `scripts/verify runtime` |
+| Release candidate | Source, Package, and Runtime run as a candidate prefix. Product/manual evidence still belongs in release issues. | `scripts/verify rc` |
+
+Product, manual GUI, failure/recovery, and release cut evidence lives in the
+relevant release parent issue or sub-issues, not in repository docs. Do not test
+installers against the real `~/Memoria`.
 
 ## Coding conventions
 

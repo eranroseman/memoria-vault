@@ -71,5 +71,5 @@ decision prose, not the live board.
 
 - **Workflows affected:**
   [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md),
-  [Releasing](https://github.com/eranroseman/memoria-vault/blob/main/docs/releasing/README.md)
+  [Release playbook](https://github.com/eranroseman/memoria-vault/blob/main/.agents/playbooks/release.md)
 - **Related decisions / Depends on:** [ADR-45](45-release-management-model.md)

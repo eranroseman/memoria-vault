@@ -1,27 +1,5 @@
 #!/usr/bin/env python3
-"""status-doctor — keep release/test/contributor docs from rotting.
-
-The project/ tree is prose plus pointers, and no other check covers its internal
-links. (ADRs are guarded by docs-doctor's general link check; this adds release
-state/path and tracked-scratch portability guards over release/test/contributor
-prose.) Guards six drift modes:
-
-  1. Stale path renames — old `project/releases/`/`project/tests/` paths and
-     wrong `release/<version>/`/`releasing/<version>/` examples.
-     These bit before, leaving broken cross-links after a folder rename.
-  2. Broken relative links — every `[text](rel/path)` must resolve on disk.
-  3. release-plan frontmatter — allowed statuses + `status: released` <-> `released: true`
-     (only fires on the release plans that carry both keys).
-  4. Tracked release-design scratch (`docs/releasing/<version>/tmp/`) must not link
-     to local/private memory outside the repo. It is tracked so branches can cite it,
-     but deleted before the release is done.
-  5. Scratch `tmp/` dirs may exist only under `docs/releasing/<version>/tmp/`.
-  6. Release agent guidance lives in the portable `.agents` playbook.
-  7. Old testing-plan filenames must not reappear after the gate-first rewrite.
-
-Scope: docs/{releasing,testing}/**/*.md + CONTRIBUTING.md + .agents/playbooks/release.md.
-Exit 0 if clean, 1 if any issue. Usage: python scripts/status_doctor.py [--self-test]
-"""
+"""Keep release/testing routing prose from rotting."""
 
 from __future__ import annotations
 
@@ -31,53 +9,55 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 MD_LINK = re.compile(r"(?<!\!)\[[^\]]*\]\(([^)]+)\)")
-ALLOWED_RELEASE_STATUSES = {"draft", "candidate", "complete", "released"}
 
-# Pre-reorg path segments and release-folder examples that no longer match the
-# repo. Canonical release prose lives in docs/releasing/<version>/.
 STALE_PATHS = [
-    (re.compile(r"(?:\.\./|project/)(releases)/"), "docs/releasing/"),
-    (re.compile(r"(?:\.\./|project/)(tests)/"), "docs/testing/"),
+    (re.compile(r"docs/releasing/release-plan-template\.md"), ".agents/templates/release-plan.md"),
+    (
+        re.compile(r"docs/releasing/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/tmp/"),
+        ".agents/tmp/releases/<version>/",
+    ),
+    (re.compile(r"docs/releasing/"), ".agents/playbooks/release.md or GitHub release issues"),
+    (re.compile(r"docs/testing/"), "CONTRIBUTING.md or .agents/playbooks/verify-change.md"),
+    (re.compile(r"(?:\.\./|project/)(releases)/"), ".agents/playbooks/release.md"),
+    (re.compile(r"(?:\.\./|project/)(tests)/"), "CONTRIBUTING.md"),
     (
         re.compile(r"\brelease/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/"),
-        "docs/releasing/<version>/",
+        ".agents/playbooks/release.md",
     ),
     (
         re.compile(r"(?<!docs/)\breleasing/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/"),
-        "docs/releasing/<version>/",
+        ".agents/playbooks/release.md",
     ),
 ]
 STALE_TESTING_NAMES = {
-    "coverage-matrix.md": "docs/testing/verification-matrix.md",
-    "e2e-golden-path-plan.md": "docs/testing/plans/product-gate.md",
-    "g10-ingest-plan.md": "docs/testing/plans/product-gate.md",
-    "g9-spine-plan.md": "docs/testing/plans/product-gate.md",
-    "gui-test-plan.md": "docs/testing/plans/manual-gui-checks.md",
-    "headless-test-plan.md": "docs/testing/plans/source-gate.md",
-    "hermes-cli-test-plan.md": "docs/testing/plans/runtime-gate.md",
-    "installer-test-plan.md": "docs/testing/plans/package-gate.md",
-    "release-candidate-runbook.md": "docs/testing/plans/release-gate.md",
-    "test-env-harness-plan.md": "docs/testing/plans/package-gate.md",
+    "coverage-matrix.md": "CONTRIBUTING.md",
+    "verification-matrix.md": "CONTRIBUTING.md",
+    "e2e-golden-path-plan.md": ".agents/playbooks/verify-change.md",
+    "g10-ingest-plan.md": ".agents/playbooks/verify-change.md",
+    "g9-spine-plan.md": ".agents/playbooks/verify-change.md",
+    "gui-test-plan.md": ".agents/playbooks/verify-change.md",
+    "headless-test-plan.md": ".agents/playbooks/verify-change.md",
+    "hermes-cli-test-plan.md": ".agents/playbooks/verify-change.md",
+    "installer-test-plan.md": ".agents/playbooks/verify-change.md",
+    "release-candidate-runbook.md": ".agents/playbooks/release.md",
+    "test-plan-template.md": ".agents/playbooks/verify-change.md",
+    "test-env-harness-plan.md": ".agents/playbooks/verify-change.md",
 }
 
 PRIVATE_SCRATCH_LINK_RE = re.compile(r"(?:^|[/(])\.claude/projects/|/memory/")
-RELEASE_PLAYBOOK = Path(".agents/playbooks/release.md")
+ROUTING_DOCS = (
+    Path("CONTRIBUTING.md"),
+    Path(".agents/playbooks/release.md"),
+    Path(".agents/playbooks/verify-change.md"),
+    Path(".agents/playbooks/exec-plan.md"),
+)
 
 
 def targets(root: Path) -> list[Path]:
-    # The release/test prose moved from project/ into docs/; docs-doctor
-    # checks docs/ links generally, this adds the released-flag consistency guard.
-    files: list[Path] = []
-    for sub in ("releasing", "testing"):
-        files += sorted((root / "docs" / sub).rglob("*.md"))
-    contributing = root / "CONTRIBUTING.md"
-    if contributing.is_file():
-        files.append(contributing)
-    playbook = root / RELEASE_PLAYBOOK
-    if playbook.is_file():
-        files.append(playbook)
+    files = [root / rel for rel in ROUTING_DOCS if (root / rel).is_file()]
+    files += sorted((root / ".agents" / "templates").glob("*.md"))
+    files += sorted((root / ".agents" / "tmp" / "releases").glob("**/*.md"))
     return sorted(files)
 
 
@@ -90,17 +70,15 @@ def check_file(p: Path, root: Path) -> list[str]:
     # 1. stale path renames / wrong canonical examples
     for rx, replacement in STALE_PATHS:
         for m in rx.finditer(text):
-            errs.append(f"{rel}: stale path `{m.group(0)}` — use `{replacement}`")
+            errs.append(f"{rel}: stale path `{m.group(0)}`; use `{replacement}`")
     for old, replacement in STALE_TESTING_NAMES.items():
         if old in text:
-            errs.append(f"{rel}: stale testing plan `{old}` — use `{replacement}`")
+            errs.append(f"{rel}: stale testing plan `{old}`; use `{replacement}`")
 
-    # 1b. scratch dirs are allowed only for in-work release design notes.
-    if "tmp" in rel.parts and not _release_tmp(rel):
-        errs.append(f"{rel}: tmp/ is allowed only under docs/releasing/<version>/tmp/")
+    if "tmp" in rel.parts and not _release_scratch(rel):
+        errs.append(f"{rel}: tmp/ is allowed only under .agents/tmp/releases/<version>/")
 
-    # 1c. tracked release-design scratch must stay portable for collaborators.
-    if _release_tmp(rel) and PRIVATE_SCRATCH_LINK_RE.search(text):
+    if _release_scratch(rel) and PRIVATE_SCRATCH_LINK_RE.search(text):
         errs.append(f"{rel}: tracked tmp/ note links to local/private memory outside the repo")
 
     # 2. broken relative links (skip external, anchors, and {{ }} placeholders)
@@ -110,7 +88,7 @@ def check_file(p: Path, root: Path) -> list[str]:
             not target
             or target.startswith(("http://", "https://", "mailto:", "#"))
             or "{{" in target
-            or target in {"...", "…"}
+            or target in {"...", "\u2026"}
         ):
             continue
         path_part = target.split("#", 1)[0]
@@ -118,36 +96,14 @@ def check_file(p: Path, root: Path) -> list[str]:
             continue
         if not (p.parent / path_part).resolve().exists():
             errs.append(f"{rel}: broken link -> {raw.strip()}")
-
-    # 3. release-plan status vocabulary + released-flag consistency
-    m = FRONTMATTER_RE.match(text)
-    if m:
-        fm = m.group(1)
-        status = _fm_value(fm, "status")
-        released = _fm_value(fm, "released")
-        if released is not None and status is not None:
-            status_l = status.lower()
-            if status_l not in ALLOWED_RELEASE_STATUSES:
-                allowed = ", ".join(sorted(ALLOWED_RELEASE_STATUSES))
-                errs.append(
-                    f"{rel}: invalid release status `{status}` — expected one of: {allowed}"
-                )
-            is_released = released.lower() == "true"
-            if is_released != (status_l == "released"):
-                errs.append(
-                    f"{rel}: frontmatter inconsistent — status:{status} vs released:{released}"
-                )
     return errs
 
 
-def _fm_value(fm: str, key: str) -> str | None:
-    m = re.search(rf"(?m)^{re.escape(key)}:\s*([^\n#]+)", fm)
-    return m.group(1).strip() if m else None
-
-
-def _release_tmp(rel: Path) -> bool:
+def _release_scratch(rel: Path) -> bool:
     parts = rel.parts
-    return len(parts) >= 5 and parts[0] == "docs" and parts[1] == "releasing" and parts[3] == "tmp"
+    return (
+        len(parts) >= 5 and parts[0] == ".agents" and parts[1] == "tmp" and parts[2] == "releases"
+    )
 
 
 def main() -> int:
@@ -158,9 +114,9 @@ def main() -> int:
     if errors:
         print(f"status-doctor: {len(errors)} issue(s)\n")
         for e in errors:
-            print(f"  ✗ {e}")
+            print(f"  x {e}")
         return 1
-    print(f"status-doctor: clean ✓ ({len(files)} project doc(s))")
+    print(f"status-doctor: clean ({len(files)} routing doc(s))")
     return 0
 
 

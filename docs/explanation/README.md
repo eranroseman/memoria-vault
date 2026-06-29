@@ -54,6 +54,5 @@ and [the review gate](../design/why-review-gate-is-structural.md).
 The maintained arguments live in the [Design Book](../design/README.md). Dated
 decisions live in [Decision records](../adr); forward-looking decisions are ADRs
 too (`status: proposed`) until accepted or rejected. Scheduling and readiness live
-on GitHub issues. The release plan lives in the repo's
-[Releasing](https://github.com/eranroseman/memoria-vault/tree/main/docs/releasing)
-docs.
+on GitHub issues and milestones. Release procedure lives in
+`.agents/playbooks/release.md`.

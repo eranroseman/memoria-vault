@@ -14,7 +14,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 alpha.** Alpha checkpoints are internal milestones, not formal releases. See [Releasing](docs/releasing/README.md) for current checkpoint state before installing.
+> **Status: v0.1 alpha.** Alpha checkpoints are internal milestones, not formal releases. Check the [milestones](https://github.com/eranroseman/memoria-vault/milestones) and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current checkpoint state before installing.
 
 ---
 
@@ -76,7 +76,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/memoria_vault/` | The installable Python package |
 | `vault-template/` | The vault source tree — the installer copies it out as your Obsidian vault |
-| `docs/` | Everything written: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), maintained design arguments (`design/`), and the `releasing/` · `testing/` process docs |
+| `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), and maintained design arguments (`design/`) |
 
 ## Documentation
 

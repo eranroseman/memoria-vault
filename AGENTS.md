@@ -42,7 +42,7 @@ novice — can run it top to bottom. Author and run it with the
 [`.agents/templates/exec-plan.md`](.agents/templates/exec-plan.md)).
 
 An ExecPlan is a **working artifact, not a permanent record.** The instance
-lives in `docs/releasing/<version>/tmp/` under the current release or checkpoint
+lives in `.agents/tmp/releases/<version>/` under the current release or checkpoint
 (tracked for handoff, deleted before that release closes — `_notes/` is
 gitignored, so a plan meant to be resumed never lives there); its durable
 outputs route as usual — decisions to ADRs, readiness/state to issues.
@@ -173,7 +173,7 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault-template/` resolve), `check-test-refs`, `status-doctor` (release/test/contributor link/path/flag drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
+| `lint` | One job for the fast Python checks: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README), `docs-links` (`docs/` refs under `vault-template/` resolve), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), `test.sh check` (the L0/L1 runner's module paths resolve) |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -290,8 +290,8 @@ the manual security review and is a first line against the "never commit
   Keep shared profile contracts in sync. No per-profile `mcp.json`.
 - **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
-  and the [release index](docs/releasing/README.md), which points to the current
-  checkpoint plan, for current blockers and known limitations.
+  and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
+  current blockers, checkpoint scope, and known limitations.
 
 ### Searching the codebase (qmd)
 
@@ -329,7 +329,7 @@ without it qmd falls back to CPU (slower, still works).
 Mixed-purpose pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, `docs/releasing/`, and `docs/testing/` are **build-excluded** from the site (see `docs/_config.yml`) — they have no Pages route, so links to them use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`), same as any other unpublished target.
+  - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
@@ -377,9 +377,16 @@ system; the decision history lives in the ADRs (and the full git history).
 Transient scratch that never graduates to a decision stays in the gitignored
 `_notes/`.
 
-### Release plans (`docs/releasing/`)
+### Release process
 
-One folder per SemVer version, with the plan copied from `docs/releasing/release-plan-template.md` as the durable **prose** (what/why, readiness rationale). Readiness **state** lives only in the **"Release <version>" parent issue and its readiness/stage sub-issues**, scope in the milestone + Memoria Issue Tracker Project view, and version/CHANGELOG/Release in release-please — never restated in the plan. `status-doctor` guards the plan against link/path/flag drift. Build gaps and scope cuts go to GitHub issues with the appropriate Readiness; architectural rationale goes to an ADR only when there is a decision to record. In-work release design notes may live in tracked `docs/releasing/<version>/tmp/` while shaping a release, but they are deleted before that release/checkpoint is done.
+Release scope lives in the GitHub milestone and Memoria Issue Tracker project view.
+Readiness lives only in the **"Release <version>" parent issue and its readiness/stage
+sub-issues**. Version, changelog, tag, and GitHub Release are owned by
+release-please. Use the portable [release playbook](.agents/playbooks/release.md)
+and [release plan template](.agents/templates/release-plan.md) to draft issue
+prose; do not create a repository release-plan folder. In-work release design
+notes may live in `.agents/tmp/releases/<version>/` while shaping a release, but
+they are deleted before that release/checkpoint is done.
 
 ---
 
@@ -387,13 +394,13 @@ One folder per SemVer version, with the plan copied from `docs/releasing/release
 
 | Item | Goes to |
 |---|---|
-| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `docs/releasing/<version>/tmp/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `.agents/tmp/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
-| Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, *not* the plan §2/§3 |
+| Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `docs/releasing/<version>/tmp/` while shaping a release; delete before release/checkpoint completion |
+| In-work release design notes | `.agents/tmp/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -403,7 +410,7 @@ One folder per SemVer version, with the plan copied from `docs/releasing/release
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under that release's tracked `tmp/` folder until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under `.agents/tmp/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 
