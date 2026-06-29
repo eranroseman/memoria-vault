@@ -1,0 +1,1 @@
+{"event": "resolved", "actor": "pi", "operation": "curate-note-candidate", "target_id": "knowledge/notes/curated-candidate.md", "target_sha256": "sha256:fc3a831fcc2bee8735de03aa88515234317a87a5a8d88a0eab99cd009787f6cc", "resolution": "accepted", "reason": "PI approved", "timestamp": "2026-06-29T14:25:23Z"}
