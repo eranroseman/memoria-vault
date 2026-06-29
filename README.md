@@ -80,15 +80,14 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 
 ## Documentation
 
-Start in [`docs/`](docs). New here? Begin with
-[Tutorial 01: See what you're building](docs/tutorials/01-see-what-you-are-building.md), or jump to the
+Start in [`docs/`](docs). New here? Begin with the
 [Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) four-quadrant split:
 
 | Quadrant | For when you want to… |
 | --- | --- |
-| [Tutorials](docs/tutorials/README.md) | Learn by doing — guided lessons from zero to a working vault |
+| [Tutorials](docs/tutorials/README.md) | Deferred for alpha.11; use Quickstart and current task guides |
 | [How-to guides](docs/how-to-guides/README.md) | Accomplish a specific task you already understand |
 | [Reference](docs/reference/README.md) | Look up exact commands, fields, schemas, and config |
 | [Explanation](docs/explanation/README.md) | Understand why the system is shaped the way it is |

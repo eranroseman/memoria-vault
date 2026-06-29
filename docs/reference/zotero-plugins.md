@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Zotero plugins
 
-Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [Obsidian plugins](obsidian-plugins.md). For setup steps see [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md).
+Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [Obsidian plugins](obsidian-plugins.md). For setup steps see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ---
 
@@ -33,7 +33,7 @@ Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-c
 | **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
 | **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
 
-For guidance on choosing between these connectors see [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md).
+For guidance on choosing between these connectors see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ### Evaluated, not in the install set
 
@@ -49,4 +49,4 @@ For guidance on choosing between these connectors see [Set up Zotero](../how-to-
 
 - Obsidian plugin set: [Obsidian plugins](obsidian-plugins.md)
 - Obsidian plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
-- Zotero setup how-to: [Set up Zotero](../how-to-guides/zotero/set-up-zotero.md)
+- Zotero setup how-to: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md)

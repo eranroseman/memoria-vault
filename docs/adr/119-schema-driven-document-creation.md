@@ -151,9 +151,9 @@ Concrete fixes the schema and form audits surfaced, folded into the phases below
   capture the full answerability lens. And add a **conditional creation field**: in **thesis** mode
   the form asks for the one-sentence **provisional thesis**; in **survey** mode it does not — keyed
   on `output_mode`, which *is* the thesis/survey distinction (thesis starts with a provisional
-  answer, survey starts open). This also **matches the tutorial** (`tutorials/01-see-what-you-are-building.md`), which
-  already describes the thesis prompt the form currently omits — so it is the *form* that catches up,
-  not the tutorial that changes. *(Phase 5.)*
+  answer, survey starts open). This also matched the then-current tutorial's
+  thesis prompt, which the form omitted — so it was the *form* that needed to
+  catch up, not the tutorial. *(Phase 5.)*
 
 ## Consequences
 

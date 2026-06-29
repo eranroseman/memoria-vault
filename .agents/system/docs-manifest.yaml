@@ -3075,17 +3075,6 @@ entries:
     title: Return to work
   canonical_owner: false
   status: manual
-- path: docs/how-to-guides/inbox/review-link-suggestions.md
-  title: Review link suggestions
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 2
-    parent: Inbox
-    title: Review link suggestions
-  canonical_owner: false
-  status: manual
 - path: docs/how-to-guides/inbox/run-the-weekly-review.md
   title: Run the weekly review
   book: How-to guides
@@ -3095,17 +3084,6 @@ entries:
     nav_order: 4
     parent: Inbox
     title: Run the weekly review
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/inbox/triage-fleeting-notes.md
-  title: Triage fleeting notes
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 1
-    parent: Inbox
-    title: Triage fleeting notes
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/inbox/work-the-action-queue.md
@@ -3164,17 +3142,6 @@ entries:
     title: Manage your topic vocabulary
   canonical_owner: false
   status: manual
-- path: docs/how-to-guides/knowledge/promote-a-claim.md
-  title: Advance a claim to evergreen
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 3
-    parent: Knowledge
-    title: Advance a claim to evergreen
-  canonical_owner: false
-  status: manual
 - path: docs/how-to-guides/knowledge/query-the-vault.md
   title: Query the vault
   book: How-to guides
@@ -3184,50 +3151,6 @@ entries:
     nav_order: 7
     parent: Knowledge
     title: Query the vault
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/knowledge/refactor-claim-notes.md
-  title: Refactor claim notes
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 5
-    parent: Knowledge
-    title: Refactor claim notes
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/knowledge/run-a-pattern.md
-  title: Run a pattern
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 8
-    parent: Knowledge
-    title: Run a pattern
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/knowledge/write-a-claim-note.md
-  title: Write a claim note
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 1
-    parent: Knowledge
-    title: Write a claim note
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/knowledge/your-first-month.md
-  title: Your first month
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 9
-    parent: Knowledge
-    title: Your first month
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/library/README.md
@@ -3285,28 +3208,6 @@ entries:
     title: Discuss a paper
   canonical_owner: false
   status: manual
-- path: docs/how-to-guides/library/find-new-sources.md
-  title: Find new sources
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 1
-    parent: Library
-    title: Find new sources
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/library/read-through-a-lens.md
-  title: Read a paper through a lens
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 6
-    parent: Library
-    title: Read a paper through a lens
-  canonical_owner: false
-  status: manual
 - path: docs/how-to-guides/library/run-a-systematic-review.md
   title: Run a systematic review
   book: How-to guides
@@ -3316,17 +3217,6 @@ entries:
     nav_order: 7
     parent: Library
     title: Run a systematic review
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/library/use-structured-capture-forms.md
-  title: Use structured capture forms
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 3
-    parent: Library
-    title: Use structured capture forms
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/operate/README.md
@@ -3419,37 +3309,15 @@ entries:
     title: Project
   canonical_owner: false
   status: manual
-- path: docs/how-to-guides/project/assess-your-corpus.md
-  title: Assess your corpus
+- path: docs/how-to-guides/project/analyze-a-project-argument.md
+  title: Analyze a project argument
   book: How-to guides
   topic: null
   frontmatter:
     grand_parent: How-to guides
-    nav_order: 2
+    nav_order: 1
     parent: Project
-    title: Assess your corpus
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/create-a-code-artifact.md
-  title: Create a code artifact
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 8
-    parent: Project
-    title: Create a code artifact
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/draft-with-writer.md
-  title: Draft with the Writer
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 5
-    parent: Project
-    title: Draft with the Writer
+    title: Analyze a project argument
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/project/export-a-draft.md
@@ -3461,61 +3329,6 @@ entries:
     nav_order: 7
     parent: Project
     title: Export a draft
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/frame-a-project.md
-  title: Frame a project
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 3
-    parent: Project
-    title: Frame a project
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/start-a-writing-project.md
-  title: Start a writing project
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 1
-    parent: Project
-    title: Start a writing project
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/supersede-a-thesis.md
-  title: Supersede a thesis
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 3.5
-    parent: Project
-    title: Supersede a thesis
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/use-canvas-for-argument-mapping.md
-  title: Use canvas for argument mapping
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 4
-    parent: Project
-    title: Use canvas for argument mapping
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/project/verify-and-revise.md
-  title: Verify and revise a draft
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 6
-    parent: Project
-    title: Verify and revise a draft
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/setup/README.md
@@ -3550,17 +3363,6 @@ entries:
     nav_order: 6
     parent: Setup
     title: Configure project hints
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/setup/load-sample-vault.md
-  title: Retired sample vault
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 5
-    parent: Setup
-    title: Retired sample vault
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/setup/quickstart.md
@@ -3607,6 +3409,17 @@ entries:
     title: Set up the vault
   canonical_owner: false
   status: manual
+- path: docs/how-to-guides/setup/set-up-zotero.md
+  title: Set up Zotero
+  book: How-to guides
+  topic: null
+  frontmatter:
+    grand_parent: How-to guides
+    nav_order: 4
+    parent: Setup
+    title: Set up Zotero
+  canonical_owner: false
+  status: manual
 - path: docs/how-to-guides/troubleshooting/README.md
   title: Troubleshooting
   book: How-to guides
@@ -3639,17 +3452,6 @@ entries:
     nav_order: 3
     parent: Troubleshooting
     title: Fix broken frontmatter
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/troubleshooting/fix-empty-enrichment.md
-  title: Fix empty enrichment
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 9
-    parent: Troubleshooting
-    title: Fix empty enrichment
   canonical_owner: false
   status: manual
 - path: docs/how-to-guides/troubleshooting/fix-missing-query-results.md
@@ -3761,40 +3563,6 @@ entries:
     nav_order: 1
     parent: Using Obsidian
     title: Vault launch screen
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/zotero/README.md
-  title: Zotero
-  book: How-to guides
-  topic: null
-  frontmatter:
-    has_children: true
-    nav_order: 10
-    parent: How-to guides
-    permalink: /how-to-guides/zotero/
-    title: Zotero
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/zotero/fix-stale-bib.md
-  title: Fix a stale .bib
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 5
-    parent: Zotero
-    title: Fix a stale .bib
-  canonical_owner: false
-  status: manual
-- path: docs/how-to-guides/zotero/set-up-zotero.md
-  title: Set up Zotero
-  book: How-to guides
-  topic: null
-  frontmatter:
-    grand_parent: How-to guides
-    nav_order: 4
-    parent: Zotero
-    title: Set up Zotero
   canonical_owner: false
   status: manual
 - path: docs/reference/README.md
@@ -4358,7 +4126,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 1
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 01: See what you''re building'
   canonical_owner: false
   status: manual
@@ -4367,7 +4137,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 2
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 02: Bring in your first source'
   canonical_owner: false
   status: manual
@@ -4376,7 +4148,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 3
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 03: Build claims and connect them'
   canonical_owner: false
   status: manual
@@ -4385,7 +4159,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 4
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 04: Draft a section from your claims'
   canonical_owner: false
   status: manual
@@ -4394,7 +4170,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 5
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 05: Verify it holds'
   canonical_owner: false
   status: manual
@@ -4403,7 +4181,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 6
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 06: Close the loop'
   canonical_owner: false
   status: manual
@@ -4412,7 +4192,9 @@ entries:
   book: Tutorials
   topic: null
   frontmatter:
+    nav_order: 7
     parent: Tutorials
+    status: deferred
     title: 'Tutorial 07: Make it your own'
   canonical_owner: false
   status: manual

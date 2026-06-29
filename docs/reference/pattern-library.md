@@ -13,7 +13,7 @@ The shipped prompt operations and the compatibility `patterns_list` /
 - The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) is the audited
   runner ([ADR-53](../adr/53-pattern-library.md)).
 - The runner composes prompts; it never writes content.
-- To invoke one from Obsidian, see [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md).
+- To inspect the available pattern actions, see [System actions](system-actions.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
 ---
@@ -151,7 +151,6 @@ A failed provenance write does not abort the run; the return value carries
 
 ## Related
 
-- Running a pattern from Obsidian: [Run a pattern](../how-to-guides/knowledge/run-a-pattern.md)
 - Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)
 - The palette commands that invoke the runner: [Obsidian command palette](obsidian-command-palette.md)
 - Every action the system performs: [System actions](system-actions.md)

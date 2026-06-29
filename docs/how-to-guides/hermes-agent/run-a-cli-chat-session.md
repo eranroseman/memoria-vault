@@ -25,7 +25,7 @@ The five aliases: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memori
 | Goal | Command |
 | --- | --- |
 | Talk to the Co-PI from the terminal | `hermes -p memoria-copi chat` |
-| Shape a task when Obsidian is unavailable | `hermes -p memoria-copi chat`, then e.g. "help me frame a verify request for projects/jitai/draft.md" |
+| Shape a task when Obsidian is unavailable | `hermes -p memoria-copi chat`, then e.g. "help me frame a verify request for knowledge/projects/jitai/drafts/draft.md" |
 | Debug the ingest path | `hermes -p memoria-librarian chat`, then ask it to dry-run `catalog-find-source` on a citekey |
 | Debug the verify checks | `hermes -p memoria-peer-reviewer chat`, then ask for a `verify-trace-claim` pass on a claim note |
 

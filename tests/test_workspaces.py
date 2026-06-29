@@ -342,10 +342,7 @@ def test_buttons_plugin_is_still_bundled_but_home_has_no_buttons():
     assert "```button" not in home
     assert "Memoria: load sample vault" not in home
     assert "Memoria: capture source from URL" not in home
-    assert (
-        "https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html"
-        in home
-    )
+    assert "https://eranroseman.github.io/memoria-vault/how-to-guides/setup/quickstart.html" in home
 
 
 def test_property_badge_snippet_ships_state_accents():

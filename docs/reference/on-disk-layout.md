@@ -97,7 +97,7 @@ behavior-preserving decision/audit/engine modules live in the installed
 
 ## `.githooks/` — source hooks
 
-Shipped in `vault-template/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `projects/`.
+Shipped in `vault-template/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `knowledge/projects/`.
 
 Runtime-only (created in the deployed vault, never shipped):
 

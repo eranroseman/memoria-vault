@@ -17,7 +17,7 @@ rail** — *Now* shows what's waiting on you, *Places* are the three rooms you w
 - **Ask the Co-PI** — the chat pane on the right can suggest what to do next.
 - **Capture a source** — use the Memoria Inspector control panel to enqueue the
   capture worker; checked sources land in [[spaces/library|Library]].
-- **Follow the reset tutorial** — [Tutorial 01: See what you're building](https://eranroseman.github.io/memoria-vault/tutorials/01-see-what-you-are-building.html).
+- **Follow the setup path** — [Quickstart](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/quickstart.html).
 
 ## The three places
 

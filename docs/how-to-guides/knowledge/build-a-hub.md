@@ -47,7 +47,9 @@ tangentially related notes; one strong hub beats a complete-but-noisy one.
 
 **5. Name the gaps.**
 
-Note what the cluster is missing — thin sub-topics, open questions, papers not yet captured. Each named gap is a ready-made discovery prompt for the Co-PI ([Find new sources](../library/find-new-sources.md)).
+Note what the cluster is missing — thin sub-topics, open questions, papers not
+yet captured. Each named gap is input for Ask, gap analysis, or the next source
+capture pass.
 
 ## Splitting a hub
 

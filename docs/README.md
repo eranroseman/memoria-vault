@@ -9,9 +9,10 @@ topic: overview
 
 A research operating system for a single researcher (the PI) — a Co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
-If you want a guided first experience, see [Tutorials](tutorials). If you need
-to _do_ something, see [How-to guides](how-to-guides). If you need exact values,
-field names, or configuration formats, see [Reference](reference).
+If you want a guided first experience, start with the
+[Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
+something, see [How-to guides](how-to-guides). If you need exact values, field
+names, or configuration formats, see [Reference](reference).
 
 **0.1.0** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
@@ -70,9 +71,11 @@ human-owned and policy-gated.
 
 ---
 
-## New here? Follow the tutorial sequence
+## New here? Start with the current path
 
-Seven tutorials, each building on the last. Start at 01 and follow the sequence — or jump in at whichever step matches where you are. The full sequence, with what you do and end with at each step, is in [Tutorials](tutorials/README.md).
+Alpha.11 does not ship a tutorial arc. Start with
+[Quickstart](how-to-guides/setup/quickstart.md), then use the current
+Obsidian, Library, Knowledge, and Project task guides below.
 
 ---
 
@@ -102,8 +105,8 @@ Design Book foundations, then the Explanation pages in this order.
 
 **Then learn it by doing**
 
-16. [Tutorials 01–07](tutorials/README.md) — build one small, well-sourced paragraph end to end
-17. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
+16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
+17. [Current task guides](how-to-guides/README.md) — work from the implemented alpha.11 surfaces
 
 ---
 
@@ -113,10 +116,10 @@ Design Book foundations, then the Explanation pages in this order.
 [Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Vault launch screen](how-to-guides/using-obsidian/use-the-vault-launch-screen.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
 
 **Daily work — sources**
-[Find new sources](how-to-guides/library/find-new-sources.md) · [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Write a claim note](how-to-guides/knowledge/write-a-claim-note.md)
+[Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
 
-**Daily work — writing**
-[Query the vault](how-to-guides/knowledge/query-the-vault.md) · [Assess your corpus](how-to-guides/project/assess-your-corpus.md) · [Draft with Writer](how-to-guides/project/draft-with-writer.md) · [Verify and revise](how-to-guides/project/verify-and-revise.md)
+**Daily work — knowledge and projects**
+[Query the vault](how-to-guides/knowledge/query-the-vault.md) · [Build a hub](how-to-guides/knowledge/build-a-hub.md) · [Analyze a project argument](how-to-guides/project/analyze-a-project-argument.md) · [Export a draft](how-to-guides/project/export-a-draft.md)
 
 **Weekly**
 [Return to work](how-to-guides/inbox/return-to-work.md) · [Weekly review](how-to-guides/inbox/run-the-weekly-review.md) · [Run the Linter](how-to-guides/operate/run-the-linter.md)
@@ -160,7 +163,7 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 ## Browse the docs
 
-[**Tutorials**](tutorials/README.md) — Guided first use.
+[**Tutorials**](tutorials/README.md) — No current alpha.11 tutorial arc; use Quickstart and current task guides.
 
 [**How-to guides**](how-to-guides/README.md) — Task recipes.
 

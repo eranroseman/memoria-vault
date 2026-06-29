@@ -64,6 +64,5 @@ See [Safe mode](../troubleshooting/safe-mode.md) — the minimal working paths w
 
 - Safe mode (when tools are broken): [Safe mode](../troubleshooting/safe-mode.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- Fix a stale .bib: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - Reinstall missing profiles: [Set up Hermes](../setup/set-up-hermes.md)
 - The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)

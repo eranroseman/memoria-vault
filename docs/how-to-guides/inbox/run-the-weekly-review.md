@@ -32,13 +32,16 @@ Maintenance's **Loose ends** view lists cards at `loudness: notice` — things t
 
 The **New this week** sections list catalog entries and notes created in the last 7 days. Scan for anything that landed and stalled: a kept paper with no source note, a source stuck at `proposed`, or a claim with no connections (cross-check Knowledge's **Open questions** view).
 
-**Step 5 — Clear the fleeting backlog (10–15 min).**
+**Step 5 — Clear unchecked note backlog (10–15 min).**
 
-Return to the Inbox queue's fleeting **To process** view. Promote, attach, or archive each note ([Triage fleeting notes](../inbox/triage-fleeting-notes.md)). Target: zero notes older than a week.
+Return to the Knowledge space's unchecked notes. Accept, edit, or archive each
+one. Target: zero unchecked PI notes older than a week.
 
-**Step 6 — Advance settled claims (5 min).**
+**Step 6 — Curate settled clusters (5 min).**
 
-Scan the Knowledge space's Claims view for long-stable `budding` claims with several inlinks; advance the genuinely settled ones to `evergreen` and slot them into hubs ([Advance a claim to evergreen](../knowledge/promote-a-claim.md)). Don't advance to clear a queue.
+Scan checked notes and digests for clusters with several useful links. Curate
+the genuinely settled ones into hubs ([Build a hub](../knowledge/build-a-hub.md)).
+Don't create hubs just to clear a queue.
 
 **Step 7 — Check structural health (5 min).**
 
@@ -51,13 +54,12 @@ Use the fleet-health dashboard from the rail health band — per-lane trust scor
 ## Verify
 
 - The Inbox's **Needs me** view is empty
-- The fleeting queue is empty in the Inbox
+- No stale unchecked note backlog remains
 - No HIGH or CRITICAL finding is outstanding in Maintenance's Drift watch
 - `steering.md` reflects what you actually intend to read next week
 
 ## Related
 
 - The Inbox discipline: [Work the action queue](../inbox/work-the-action-queue.md)
-- Fleeting triage in depth: [Triage fleeting notes](../inbox/triage-fleeting-notes.md)
 - The detectors behind Maintenance drift watch: [Run the Linter](../operate/run-the-linter.md)
 - The dashboard inventory: [Dashboards](../../reference/dashboards.md)

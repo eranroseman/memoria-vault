@@ -18,7 +18,7 @@ commit="$(git rev-parse --verify HEAD 2>/dev/null)" || exit 0
 short_commit="$(git rev-parse --short HEAD 2>/dev/null || printf '%s' "${commit:0:12}")"
 
 mapfile -t draft_paths < <(
-  git diff-tree --root --no-commit-id --name-only -r "$commit" -- 'projects/**/*.md' 'projects/*.md' 2>/dev/null \
+  git diff-tree --root --no-commit-id --name-only -r "$commit" -- 'knowledge/projects/**/*.md' 'knowledge/projects/*.md' 2>/dev/null \
     | LC_ALL=C sort -u
 )
 

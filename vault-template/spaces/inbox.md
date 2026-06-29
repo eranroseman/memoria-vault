@@ -38,7 +38,6 @@ Capture and global actions live in the ribbon; navigate spaces from the left-pan
 
 Step-by-step for working this queue:
 
-- [Review link suggestions](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/review-link-suggestions.html)
 - [Work the action queue](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/work-the-action-queue.html)
 - [Run the weekly review](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/run-the-weekly-review.html)
 - [Return to work](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/return-to-work.html)

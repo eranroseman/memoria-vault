@@ -23,4 +23,7 @@ The vault stores durable knowledge organized type-first into category folders, w
 | [Vocabulary discipline](vocabulary-discipline.md)                  | Why the classification fields are kept separate, why vocabulary consolidation is deferred, and how term drift fails silently.            |
 | [Common pitfalls](common-pitfalls.md)                              | The recurring failure modes of a vault built this way, and the automation-boundary principle underneath them.                            |
 
-For the complete document-type reference (fields, templates, lifecycle tables), see [Document types](../../reference/document-types.md). For the practice cadence that follows from this model, see [Your first month](../../how-to-guides/knowledge/your-first-month.md).
+For the complete document-type reference (fields, templates, lifecycle tables),
+see [Document types](../../reference/document-types.md). For the current task
+surface that follows from this model, see the [Knowledge how-to
+guides](../../how-to-guides/knowledge/README.md).

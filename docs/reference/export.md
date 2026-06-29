@@ -6,7 +6,9 @@ grand_parent: Reference
 
 # Export routes and formats
 
-Citation states, export routes, editor feature comparison, and deliverable folder targets. For choosing between routes and failure modes see [Export a draft](../how-to-guides/project/export-a-draft.md).
+Citation states, export routes, editor feature comparison, and deliverable
+folder targets. For choosing between routes and failure modes see
+[Export a draft](../how-to-guides/project/export-a-draft.md).
 
 ---
 
@@ -55,25 +57,28 @@ Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft
 
 ## Export target folder
 
-Drafts live in their project's scratch, and every export lands beside them under `exports/` — the project is self-contained ([ADR-47](../adr/47-type-first-category-folders.md)). There is no separate top-level deliverables tree.
+Drafts live under the project folder in `knowledge/projects/<project>/`, and
+every export lands beside them under `exports/` — the project is self-contained
+([ADR-47](../adr/47-type-first-category-folders.md)). There is no separate
+top-level deliverables tree.
 
 | Artifact | Folder |
 | --- | --- |
-| Manuscripts (papers, articles, preprints) | `projects/<slug>/exports/` |
-| Presentations (slides, talks, posters) | `projects/<slug>/exports/` |
-| Media (figures, infographics, web assets) | `projects/<slug>/exports/` |
-| Releases (datasets, models, code, supplementary) | `projects/<slug>/exports/` |
+| Manuscripts (papers, articles, preprints) | `knowledge/projects/<project>/exports/` |
+| Presentations (slides, talks, posters) | `knowledge/projects/<project>/exports/` |
+| Media (figures, infographics, web assets) | `knowledge/projects/<project>/exports/` |
+| Releases (datasets, models, code, supplementary) | `knowledge/projects/<project>/exports/` |
 
 ---
 
 ## Pandoc command shape
 
 ```bash
-pandoc projects/<project>/composition/<chapter>.md \
+pandoc knowledge/projects/<project>/drafts/<chapter>.md \
   --citeproc \
   --bibliography references.bib \
   --csl .memoria/csl/apa.csl \
-  -o projects/<project>/exports/<chapter>.docx
+  -o knowledge/projects/<project>/exports/<chapter>.docx
 ```
 
 CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placeholder; place your `.csl` files there before export.

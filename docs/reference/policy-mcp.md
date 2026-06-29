@@ -79,7 +79,7 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 {
   "profile": "memoria-writer",
   "action": "write",
-  "path": "projects/project-x/drafts/chapter-1.md",
+  "path": "knowledge/projects/project-x/drafts/chapter-1.md",
   "reason": "draft synthesis from claim notes",
   "task_id": "TASK-2026-05-31-007",
   "flags": {

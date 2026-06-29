@@ -24,8 +24,7 @@ only when you need the extra detail.
 
 | Guide | What it covers |
 | --- | --- |
-| [Retired sample vault](load-sample-vault.md) | Historical note: alpha.11 ships no tutorial corpus |
-| [Set up Zotero](../zotero/set-up-zotero.md) | Better BibTeX, citekey format, Local API, and generated `references.bib` |
+| [Set up Zotero](set-up-zotero.md) | Better BibTeX, citekey format, Local API, and generated `references.bib` |
 | [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 
 ## Advanced setup

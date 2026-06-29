@@ -58,7 +58,7 @@ Three folders to **never** point `exportSettings.defaultFolder` at:
 
 - `.memoria/` — hidden runtime internals, not a PI-facing review surface.
 - `inbox/` — reserved for agent-raised honesty cards (candidates, gaps, flags, alerts), not chat transcripts.
-- `projects/` — active project work belongs here, not chat transcripts.
+- `knowledge/projects/` — active project work belongs here, not chat transcripts.
 
 Auto-export is enabled for both new-chat and close-chat events (`autoExportOnNewChat: true`, `autoExportOnCloseChat: true`) so a pane session has a visible transcript even if Obsidian closes unexpectedly.
 

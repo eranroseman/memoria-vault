@@ -37,11 +37,7 @@ cssclasses: memoria-space
 
 Step-by-step for working this space:
 
-- [Write a claim note](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/write-a-claim-note.html)
 - [Link related claims](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-related-claims.html)
-- [Advance a claim to evergreen](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/promote-a-claim.html)
 - [Build a hub](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/build-a-hub.html)
-- [Refactor claim notes](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/refactor-claim-notes.html)
 - [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/manage-vocabulary.html)
 - [Query the vault](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/query-the-vault.html)
-- [Run a pattern](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/run-a-pattern.html)

@@ -25,7 +25,9 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 
 **If enrichment APIs are unreachable** — capture still creates the source Concept from supplied Zotero/BibTeX metadata; the per-field provenance records what's missing. The enrichment fills in on a later metadata check once connectivity is restored — a thin source is better than a deferred capture.
 
-**If `references.bib` is stale** — regenerate it from checked sources: [Fix a stale .bib](../zotero/fix-stale-bib.md).
+**If `references.bib` is stale** — regenerate tracked projections from the
+Inspector or rerun the worker operation that writes `references.bib` from
+checked source Concepts.
 
 **Never run automatically:** a schema reshape. Alpha.11 has no runtime migration
 path; schema changes are release work against the fresh template.
@@ -56,7 +58,7 @@ without any Hermes involvement.
 **Must work:**
 
 ```bash
-pandoc projects/<slug>/<draft>.md \
+pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --citeproc \
   --bibliography references.bib \
   --csl .memoria/csl/<style>.csl \
@@ -87,6 +89,5 @@ All four must return expected values before blaming a tool.
 ## Related
 
 - Return-to-work checklist: [Return to work](../inbox/return-to-work.md)
-- Fix stale .bib: [Fix a stale .bib](../zotero/fix-stale-bib.md)
 - Fix stuck card: [Fix a stuck card](fix-stuck-card.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)

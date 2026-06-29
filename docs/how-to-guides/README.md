@@ -8,7 +8,7 @@ permalink: /how-to-guides/
 # How-to guides
 
 Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already
-know the system — if you're new, start with the [Tutorials](../tutorials).
+know the system — if you're new, start with the [Quickstart](setup/quickstart.md).
 
 For operating explanations, see [Explanation](../explanation). For the design
 rationale, see [Design Book](../design/README.md). For exact field names,
@@ -32,7 +32,7 @@ Installing profiles, configuring environments, rebuilding indexes, and recoverin
 
 | Section | Use it for |
 | --- | --- |
-| [Setup]({{ site.baseurl }}/how-to-guides/setup/) | One-time machine, vault, Obsidian, Hermes, optional sample, and second-vault setup |
+| [Setup]({{ site.baseurl }}/how-to-guides/setup/) | One-time machine, vault, Obsidian, Hermes, Zotero, and second-vault setup |
 | [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Day-to-day Obsidian controls: home, surfaces, reset workspace, ACP, and the command palette |
 | [Using Hermes Agent]({{ site.baseurl }}/how-to-guides/hermes-agent/) | Profile configuration and terminal chat sessions |
 | [Inbox]({{ site.baseurl }}/how-to-guides/inbox/) | Triage, action queue, weekly review, and returning to work |
@@ -41,6 +41,5 @@ Installing profiles, configuring environments, rebuilding indexes, and recoverin
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, exporting, and code-artifact handoff |
 | [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, profile redeploy, search, eval, and logs |
 | [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) | Detect-fix-verify recipes for operational failures |
-| [Zotero]({{ site.baseurl }}/how-to-guides/zotero/) | Zotero setup and bibliography recovery |
 
 Each section README owns its guide table. This index stays intentionally shallow so guide titles and descriptions have one home.
