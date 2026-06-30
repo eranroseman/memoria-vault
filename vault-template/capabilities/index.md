@@ -10,7 +10,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Answer query](operations/answer-query.md) `operation` — Answer an Ask query over checked current Concepts with BM25 sources.
 - [Capture BibTeX source](operations/capture-bibtex-source.md) `operation` — Capture one BibTeX record as a checked catalog source.
 - [Capture PDF source](operations/capture-pdf-source.md) `operation` — Capture a supplied PDF blob as a checked catalog source.
-- [Capture source](operations/capture-source.md) `operation` — Capture supplied source metadata and text as a checked catalog source.
+- [Capture source](operations/capture-source.md) `operation` — Capture supplied source metadata and text; DOI/ISBN records stage for enrichment.
 - [Capture URL source](operations/capture-url-source.md) `operation` — Fetch a URL snapshot and capture it as a checked catalog source.
 - [Capture Zotero source](operations/capture-zotero-source.md) `operation` — Capture a Zotero item or Zotero Local API item key as a checked source.
 - [Cascade rollback](operations/cascade-rollback.md) `operation` — Rollback traced machine descendants and flag PI-directed descendants.
@@ -20,6 +20,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Compile source digest](operations/compile-source-digest.md) `operation` — Compile a checked source into a machine-owned digest, new hubs, and curated hub suggestions.
 - [Curate note candidate](operations/curate-note-candidate.md) `operation` — Record PI acceptance or rejection of a checked candidate note.
 - [Curate note link](operations/curate-note-link.md) `operation` — Record a PI-authored typed link between checked notes.
+- [Enrich source](operations/enrich-source.md) `operation` — Resolve and merge DOI provider metadata for one staged catalog source.
 - [Extract claim stubs](operations/extract-claim-stubs.md) `operation` — Draft source-grounded candidate note stubs from a source note.
 - [Integrity citation survival check](operations/integrity-citation-survival-check.md) `operation` — Verify checked keep-set Concepts embed compact citation payloads for catalog source references.
 - [Integrity claim quote check](operations/integrity-claim-quote-check.md) `operation` — Check whether a claim's quoted evidence appears in its source.

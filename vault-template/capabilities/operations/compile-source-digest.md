@@ -8,6 +8,7 @@ allowed_tools:
   - trusted_writer
 allowed_paths:
   - catalog/sources/
+  - .memoria/blobs/source-content/
   - knowledge/digests/
   - knowledge/hubs/
 allowed_network: []

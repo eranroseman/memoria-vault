@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
+    (tmp_path / "capabilities/ai-catalog.json").unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "capabilities@example.invalid")
     git(tmp_path, "config", "user.name", "Capabilities")
@@ -43,12 +44,19 @@ def git(vault: Path, *args: str) -> str:
 def test_ai_catalog_renderer_covers_shipped_operations() -> None:
     vault = ROOT / "vault-template"
 
-    assert not (vault / "capabilities/ai-catalog.json").exists()
     catalog = json.loads(render_ai_catalog(vault))
     rows = {row["id"]: row for row in catalog["capabilities"]}
 
     assert catalog["schema_version"] == 1
+    assert (vault / "capabilities/ai-catalog.json").read_text(
+        encoding="utf-8"
+    ) == render_ai_catalog(vault)
     assert rows["compile-source-digest"]["allowed_tools"] == ["trusted_writer"]
+    assert rows["enrich-source"]["allowed_network"] == [
+        "https://api.crossref.org/",
+        "https://api.openalex.org/",
+        "https://api.unpaywall.org/",
+    ]
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")
 
 

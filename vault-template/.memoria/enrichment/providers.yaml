@@ -1,0 +1,31 @@
+version: 1
+branches:
+  doi:
+    required: [crossref, openalex, unpaywall]
+    optional: []
+providers:
+  crossref:
+    enabled: true
+    base_url: https://api.crossref.org/
+    endpoint_template: https://api.crossref.org/works/{doi}
+    timeout_seconds: 10
+    rate_limit_per_second: 10
+    query_params:
+      mailto: NCBI_EMAIL
+  openalex:
+    enabled: true
+    base_url: https://api.openalex.org/
+    endpoint_template: https://api.openalex.org/works/https:%2F%2Fdoi.org%2F{doi}
+    timeout_seconds: 10
+    rate_limit_per_second: 10
+    query_params:
+      api_key: OPENALEX_API_KEY
+      mailto: NCBI_EMAIL
+  unpaywall:
+    enabled: true
+    base_url: https://api.unpaywall.org/
+    endpoint_template: https://api.unpaywall.org/v2/{doi}
+    timeout_seconds: 10
+    rate_limit_per_second: 10
+    query_params:
+      email: NCBI_EMAIL

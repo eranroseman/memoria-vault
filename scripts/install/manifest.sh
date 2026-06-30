@@ -14,6 +14,9 @@ SKELETON_DIRS=(
   .memoria/queue/running
   .memoria/queue/done
   .memoria/queue/failed
+  .memoria/blobs
+  .memoria/blobs/provider-payloads
+  .memoria/blobs/source-content
   .memoria/staging/catalog
   .memoria/staging/knowledge
   .memoria/staging/capabilities

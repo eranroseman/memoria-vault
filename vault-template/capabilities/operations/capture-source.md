@@ -2,11 +2,12 @@
 title: "Capture source"
 type: operation
 check_status: checked
-description: "Capture supplied source metadata and text as a checked catalog source."
+description: "Capture supplied source metadata and text; DOI/ISBN records stage for enrichment."
 operation_id: capture-source
 allowed_tools:
   - trusted_writer
 allowed_paths:
+  - .memoria/blobs/source-content/
   - catalog/
   - journal/
   - references.bib
@@ -25,4 +26,7 @@ tags: [alpha11, capture]
 
 # Operation
 
-Write a checked source Concept, extracted content, raw copy, and entity Concepts.
+Write supplied source content into the catalog path. Scholarly DOI/ISBN inputs
+are staged in SQLite and `.memoria/blobs/source-content/` for later enrichment;
+other inputs write a checked source Concept, extracted content, raw copy, and
+entity Concepts.

@@ -682,7 +682,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         )
         return {"commit": commit, "check": event}
     if operation_id == "capture-source":
-        from memoria_vault.runtime.capture import capture_source
+        from memoria_vault.runtime.capture import (
+            capture_source,
+            source_requires_enrichment,
+            stage_catalog_source,
+        )
 
         source_id = str(payload.get("source_id") or "").strip()
         title = str(payload.get("title") or "").strip()
@@ -704,22 +708,41 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("capture-source csl_json must be an object")
         if "raw_text" in payload and not isinstance(payload["raw_text"], str):
             raise ValueError("capture-source raw_text must be a string")
+        capture_kwargs = {
+            "raw_bytes": payload["raw_text"].encode() if "raw_text" in payload else None,
+            "raw_filename": str(payload.get("raw_filename") or "source.txt"),
+            "resource": str(payload.get("resource") or ""),
+            "item_type": str(payload.get("item_type") or "article"),
+            "identifiers": identifiers,
+            "csl_json": csl_json,
+            "metadata_status": str(payload.get("metadata_status") or "partial"),
+            "citekey": str(payload.get("citekey") or ""),
+            "machine": machine,
+            "run_id": str(payload.get("run_id") or "") or None,
+        }
+        if source_requires_enrichment(identifiers=identifiers, csl_json=csl_json):
+            result = stage_catalog_source(
+                vault,
+                source_id,
+                title,
+                description,
+                content_text,
+                **capture_kwargs,
+            )
+            return {
+                "commit": result["commit"],
+                "source_id": result["source_id"],
+                "content_path": result["content_path"],
+                "raw_path": result["raw_path"],
+                "check_status": result["check_status"],
+            }
         result = capture_source(
             vault,
             source_id,
             title,
             description,
             content_text,
-            raw_bytes=payload["raw_text"].encode() if "raw_text" in payload else None,
-            raw_filename=str(payload.get("raw_filename") or "source.txt"),
-            resource=str(payload.get("resource") or ""),
-            item_type=str(payload.get("item_type") or "article"),
-            identifiers=identifiers,
-            csl_json=csl_json,
-            metadata_status=str(payload.get("metadata_status") or "partial"),
-            citekey=str(payload.get("citekey") or ""),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
+            **capture_kwargs,
             required_checks=required_promotion_checks(policy),
         )
         return {
@@ -729,6 +752,23 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "raw_path": result["raw_path"],
             "entity_paths": result["entity_paths"],
         }
+    if operation_id == "enrich-source":
+        from memoria_vault.runtime.enrichment import enrich_source
+
+        source_id = str(payload.get("source_id") or "").strip()
+        if not source_id:
+            raise ValueError("enrich-source requires source_id")
+        provider_payloads = payload.get("provider_payloads")
+        if provider_payloads is not None and not isinstance(provider_payloads, dict):
+            raise ValueError("enrich-source provider_payloads must be an object")
+        return enrich_source(
+            vault,
+            source_id,
+            policy=policy,
+            provider_payloads=provider_payloads,
+            machine=machine,
+            run_id=str(payload.get("run_id") or "") or None,
+        )
     if operation_id == "capture-bibtex-source":
         from memoria_vault.runtime.capture import capture_bibtex_source
 

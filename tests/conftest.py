@@ -20,6 +20,7 @@ TEST_LEVELS = {
     "test_agents_doctor.py": "static",
     "test_alpha11_cycle.py": "runtime",
     "test_alpha12_state.py": "runtime",
+    "test_alpha13_enrichment.py": "runtime",
     "test_bases.py": "contract",
     "test_board_export.py": "contract",
     "test_capabilities.py": "contract",

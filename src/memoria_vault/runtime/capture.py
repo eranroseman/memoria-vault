@@ -24,6 +24,107 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import concept_text, frontmatter_doc, read_frontmatter
 
 
+def source_requires_enrichment(
+    *,
+    identifiers: dict[str, Any] | None = None,
+    csl_json: dict[str, Any] | None = None,
+) -> bool:
+    identifiers = identifiers if isinstance(identifiers, dict) else {}
+    csl_json = csl_json if isinstance(csl_json, dict) else {}
+    return bool(
+        str(identifiers.get("doi") or identifiers.get("isbn") or "").strip()
+        or str(csl_json.get("DOI") or csl_json.get("ISBN") or "").strip()
+    )
+
+
+def stage_catalog_source(
+    vault: Path,
+    source_id: str,
+    title: str,
+    description: str,
+    content_text: str,
+    *,
+    raw_bytes: bytes | None = None,
+    raw_filename: str = "source.txt",
+    resource: str = "",
+    item_type: str = "article",
+    identifiers: dict[str, Any] | None = None,
+    csl_json: dict[str, Any] | None = None,
+    metadata_status: str = "partial",
+    citekey: str = "",
+    machine: str | None = None,
+    run_id: str | None = None,
+    workflow: str = "capture_source",
+) -> dict[str, Any]:
+    """Stage a DOI/ISBN source as an unchecked DB catalog row for enrichment."""
+    vault = Path(vault)
+    source_id = _source_id(source_id)
+    if not title.strip() or not description.strip():
+        raise ValueError("title and description are required")
+    if not content_text.strip():
+        raise ValueError("content_text is required")
+    run_id = run_id or f"capture:{source_id}"
+
+    started = append_journal_event(
+        vault,
+        {"event": "run", "run_id": run_id, "workflow": workflow, "status": "started"},
+        machine=machine,
+    )
+    root = vault / ".memoria/blobs/source-content" / source_id
+    raw_path = root / "raw" / safe_filename(raw_filename or "source.txt")
+    content_path = root / "content.txt"
+    raw_sha = _write_immutable(
+        raw_path, raw_bytes if raw_bytes is not None else content_text.encode()
+    )
+    content_sha = _write_immutable(content_path, content_text.strip().encode() + b"\n")
+    raw_rel = raw_path.relative_to(vault).as_posix()
+    content_rel = content_path.relative_to(vault).as_posix()
+    state.upsert_catalog_record(
+        vault,
+        source_id=source_id,
+        title=title,
+        description=description,
+        concept_path=f"catalog/sources/{source_id}",
+        doi=str((identifiers or {}).get("doi") or (csl_json or {}).get("DOI") or "") or None,
+        resource=resource,
+        identifiers=identifiers,
+        citekey=citekey,
+        csl_json=csl_json,
+        metadata_status=metadata_status,
+        check_status="unchecked",
+        content_hash=content_sha,
+        raw_hash=raw_sha,
+        content_path=content_rel,
+        raw_path=raw_rel,
+    )
+    finished = append_journal_event(
+        vault,
+        {
+            "event": "run",
+            "run_id": run_id,
+            "workflow": workflow,
+            "status": "done",
+            "source_id": source_id,
+            "outputs": [content_rel, raw_rel],
+            "raw": raw_rel,
+        },
+        machine=machine,
+    )
+    commit = commit_writer_changes(vault, f"stage source {source_id}", [], machine=machine)
+    return {
+        "run_id": run_id,
+        "source_id": source_id,
+        "content_path": content_rel,
+        "raw_path": raw_rel,
+        "raw_sha256": raw_sha,
+        "content_sha256": content_sha,
+        "check_status": "unchecked",
+        "started": started,
+        "finished": finished,
+        "commit": commit,
+    }
+
+
 def capture_source(
     vault: Path,
     source_id: str,

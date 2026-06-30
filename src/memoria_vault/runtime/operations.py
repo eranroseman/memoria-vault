@@ -142,7 +142,8 @@ def compile_source_digest(
 
     source_rel = f"catalog/sources/{source_id}/source.md"
     source_fm = _checked_source(vault, source_rel)
-    state.upsert_catalog_source(vault, source_rel, source_fm)
+    if (vault / source_rel).is_file():
+        state.upsert_catalog_source(vault, source_rel, source_fm)
     citation = state.compact_citation(vault, source_rel)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
@@ -213,7 +214,7 @@ def compile_source_digest(
             digest_text,
         ),
         inputs=[
-            {"id": source_rel, "sha256": sha256_file(vault / source_rel)},
+            {"id": source_rel, "sha256": _source_input_sha(vault, source_rel, source_fm)},
             {"id": content_rel, "sha256": sha256_file(content_path)},
             *[
                 {
@@ -258,7 +259,7 @@ def compile_source_digest(
             ),
             inputs=[
                 {"id": digest_rel, "sha256": digest_check["output_sha256"]},
-                {"id": source_rel, "sha256": sha256_file(vault / source_rel)},
+                {"id": source_rel, "sha256": _source_input_sha(vault, source_rel, source_fm)},
             ],
             operation=operation_id,
             run_id=run_id,
@@ -305,12 +306,41 @@ def compile_source_digest(
 
 def _checked_source(vault: Path, source_rel: str) -> dict[str, Any]:
     source_path = vault / source_rel
-    if not source_path.is_file():
+    if source_path.is_file():
+        frontmatter = read_frontmatter(source_path)
+        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+            raise ValueError(f"{source_rel} is not a checked source")
+        return frontmatter
+    row = state.catalog_source(vault, source_rel)
+    if row is None:
         raise FileNotFoundError(source_path)
-    frontmatter = read_frontmatter(source_path)
-    if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+    if row.get("check_status") != "checked":
         raise ValueError(f"{source_rel} is not a checked source")
-    return frontmatter
+    return {
+        "type": "source",
+        "check_status": row["check_status"],
+        "title": row["title"],
+        "description": row.get("description") or row["title"],
+        "source_id": f"catalog/sources/{row['source_id']}",
+        "content_path": row["content_path"],
+        "identifiers": row.get("identifiers") or {},
+        "citekey": row.get("citekey") or "",
+        "csl_json": row.get("csl_json") or {},
+        "metadata_status": row.get("metadata_status") or "partial",
+        "normalized_text_sha256": row.get("normalized_text_sha256") or "",
+        "raw_text_sha256": row.get("raw_text_sha256") or "",
+    }
+
+
+def _source_input_sha(vault: Path, source_rel: str, source_fm: dict[str, Any]) -> str:
+    path = vault / source_rel
+    if path.is_file():
+        return sha256_file(path)
+    return str(
+        source_fm.get("normalized_text_sha256")
+        or source_fm.get("raw_text_sha256")
+        or _sha256_text(json.dumps(source_fm, sort_keys=True))
+    )
 
 
 def _require_tool(policy: dict[str, Any], tool: str) -> None:
