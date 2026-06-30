@@ -25,7 +25,7 @@ Settings with a fixed required value. All others are personal preference. See [e
 
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| BibTeX file (`citationExportPath`) | `references.bib` | Generated tracked projection from checked source Concepts; the worker regenerates it. |
+| BibTeX file (`citationExportPath`) | `references.bib` | Generated tracked projection from checked SQLite catalog rows; the worker regenerates it. |
 | Export format (`citationExportFormat`) | `biblatex` | Matches the Better BibTeX export. |
 | Literature note folder (`literatureNoteFolder`) | `.memoria/staging/catalog` | The plugin has no disable switch for literature-note creation, so accidental output lands in ignored staging instead of live Concepts. Source capture goes through the worker. |
 | Note title (`literatureNoteTitleTemplate`) | `@{{citekey}}` | Filename keys off the stable citekey. |

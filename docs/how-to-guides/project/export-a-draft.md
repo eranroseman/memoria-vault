@@ -16,7 +16,7 @@ yourself — there is no export lane or palette command.
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
   of the alpha.11 shipped path
-- `references.bib` current (generated from checked source Concepts)
+- `references.bib` current (generated from checked SQLite catalog rows)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
 ## Steps

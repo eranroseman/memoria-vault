@@ -123,6 +123,7 @@ status.
 | [119](119-schema-driven-document-creation.md) | Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is the single source | accepted |
 | [120](120-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 | [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | accepted |
+| [122](122-sqlite-working-state-boundary.md) | SQLite working state is a cache behind the checked Concept boundary | accepted |
 
 <!-- ADR-INDEX:END -->
 

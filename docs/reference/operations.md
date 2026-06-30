@@ -37,6 +37,7 @@ directly; package code owns the behavior.
 
 - Why operations are separate from agents: [Operations — the deterministic layer](../explanation/operations.md)
 - Ingest command details: [Ingest routing](ingest.md)
+- Runtime state boundary: [ADR-122](../adr/122-sqlite-working-state-boundary.md)
 - Project-gate cache details: [Project structural impact](project-structural-impact.md)
 - Sweep command details: [Sweeps](sweeps.md)
 - Batch worklist command details: [Worklists](worklists.md)

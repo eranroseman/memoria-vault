@@ -9,8 +9,8 @@ nav_order: 4
 # Set up Zotero
 
 Configure Zotero with Better BibTeX stable citekeys and local API access.
-Memoria generates `references.bib` from checked source Concepts; Zotero does not
-write a live bibliography file into the vault.
+Memoria generates `references.bib` from checked SQLite catalog rows; Zotero does
+not write a live bibliography file into the vault.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ This produces keys in the `mamykina2010sense` shape — lowercase author, year, 
 
 **3. Leave bibliography generation to Memoria.**
 
-Do not create a Better BibTeX auto-export into the vault. Alpha.11 capture reads
+Do not create a Better BibTeX auto-export into the vault. Capture reads
 Zotero item snapshots or one supplied BibTeX entry, writes checked source
 Concepts through the worker, then regenerates `references.bib`.
 

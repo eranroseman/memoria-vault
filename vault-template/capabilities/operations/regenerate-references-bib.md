@@ -2,7 +2,7 @@
 title: "Regenerate references.bib"
 type: operation
 check_status: checked
-description: "Regenerate the tracked BibTeX projection from checked sources."
+description: "Regenerate the tracked BibTeX projection from checked SQLite catalog rows."
 operation_id: regenerate-references-bib
 allowed_tools:
   - projection_writer
@@ -20,9 +20,10 @@ io_schema:
 risk_class: low
 required_checks:
   - projection-drift
-tags: [alpha11, projection]
+tags: [alpha12, projection]
 ---
 
 # Operation
 
-Render `references.bib` from checked catalog sources.
+Render `references.bib` from checked SQLite catalog rows, falling back to
+checked source Concepts only when no catalog rows exist.
