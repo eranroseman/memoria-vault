@@ -24,7 +24,7 @@ The table below is an orienting illustration of what each lane does and the Inbo
 | **catalog** | find sources, propose intake, the comparative `[!brief]`, draft classifications | `candidate` |
 | **extract** | claim-stubs and distill nudges from kept sources | work prompt |
 | **link** | note-link candidates with evidence and stance reasoning | link proposal |
-| **map** | corpus-maps, coverage-reports, cluster maps, writability reads, seeded canvases | `gap` |
+| **map** | corpus maps, coverage reports, cluster maps, graph/canvas proposals, gap analysis | `gap` |
 
 The lanes are individually triggered, not a pipeline — a human gate (often a long gap) sits between each. Gaps found in *map* raise Inbox `gap`s (one of the card types — `candidate` / `flag` / `gap` — see [Glossary](../../reference/glossary.md)) that re-trigger *catalog*: the loop that compounds.
 
