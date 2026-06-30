@@ -42,10 +42,11 @@ novice — can run it top to bottom. Author and run it with the
 [`.agents/templates/exec-plan.md`](.agents/templates/exec-plan.md)).
 
 An ExecPlan is a **working artifact, not a permanent record.** The instance
-lives in `scratch/releases/<version>/` under the current release or checkpoint
-(tracked for handoff, deleted before that release closes — `_notes/` is
-gitignored, so a plan meant to be resumed never lives there); its durable
-outputs route as usual — decisions to ADRs, readiness/state to issues.
+lives on the `scratch` branch under `scratch/releases/<version>/` for the
+current release or checkpoint (tracked for handoff, deleted before that release
+closes — `_notes/` is gitignored, so a plan meant to be resumed never lives
+there); its durable outputs route as usual — decisions to ADRs, readiness/state
+to issues.
 Tactical sequencing lives in the plan's Execution log; architectural and product
 decisions still go to an ADR (§"ADR template") and are linked, never recorded
 only in the plan. Skip the ceremony for small, single-sitting changes — use the
@@ -162,6 +163,33 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 
 ---
 
+## Scratch branch flow
+
+`scratch/` is ephemeral working material and lives on the dedicated `scratch`
+branch, not on `main`. Authorized contributors with repository write access may
+push scratch-only commits directly to that branch; no PR or required CI is
+expected there.
+
+Use a per-session worktree and local branch, then push the result to the shared
+remote branch:
+
+```bash
+git fetch origin scratch
+git worktree add ~/mv/<session> -b scratch/<session> origin/scratch
+cd ~/mv/<session>
+# edit scratch/... only
+git add scratch/<path>
+git commit -m "scratch: <short description>"
+git pull --rebase origin scratch
+git push origin HEAD:scratch
+```
+
+Never merge the `scratch` branch into `main`. Promote durable content by copying
+it into `docs/`, `docs/adr/`, issues, or release notes on a normal `main` PR.
+The `pr-policy` check blocks `scratch/` paths in PRs targeting `main`.
+
+---
+
 ## Required CI checks
 
 All must pass before merge:
@@ -200,7 +228,7 @@ behavior.
 |---|---|
 | `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
 | `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
-| `block` | Untrusted author on sensitive paths |
+| `block` | Untrusted author on sensitive paths, or any PR that includes `scratch/` paths |
 
 Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
@@ -385,8 +413,9 @@ sub-issues**. Version, changelog, tag, and GitHub Release are owned by
 release-please. Use the portable [release playbook](.agents/playbooks/release.md)
 and [release plan template](.agents/templates/release-plan.md) to draft issue
 prose; do not create a repository release-plan folder. In-work release design
-notes may live in `scratch/releases/<version>/` while shaping a release, but
-they are deleted before that release/checkpoint is done.
+notes may live on the `scratch` branch under `scratch/releases/<version>/`
+while shaping a release, but they are deleted before that release/checkpoint is
+done.
 
 ---
 
@@ -394,13 +423,13 @@ they are deleted before that release/checkpoint is done.
 
 | Item | Goes to |
 |---|---|
-| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc in `scratch/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc on the `scratch` branch in `scratch/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
+| In-work release design notes | `scratch` branch, under `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -410,7 +439,7 @@ they are deleted before that release/checkpoint is done.
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
+- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes on the `scratch` branch under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 

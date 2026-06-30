@@ -31,12 +31,13 @@ retired standalone proposal and design-doc folders — decisions are ADRs and
 state lives in issues — so an ExecPlan must never become a fourth permanent
 record.
 
-Put the instance in **`scratch/releases/<version>/`** under the current
-release or checkpoint: tracked so it can be linked and handed off, and deleted
-before that release/checkpoint closes (see `AGENTS.md` → "Release process").
-This is the repository's only home for tracked in-work release design scratch —
-`_notes/` is gitignored and invisible to other agents, so a plan meant to be
-resumed or handed off never lives there.
+Put the instance on the **`scratch` branch**, under
+**`scratch/releases/<version>/`** for the current release or checkpoint: tracked
+so it can be linked and handed off, and deleted before that release/checkpoint
+closes (see `AGENTS.md` → "Scratch branch flow" and "Release process"). This is
+the repository's only home for tracked in-work release design scratch — `_notes/`
+is gitignored and invisible to other agents, so a plan meant to be resumed or
+handed off never lives there.
 
 The ExecPlan **orchestrates** the work; it does not replace the records that work
 produces. Durable outputs route as usual:
@@ -82,7 +83,9 @@ produces. Durable outputs route as usual:
 
 1. **Worktree and branch first.** The first concrete step is always the
    `AGENTS.md` §1 setup (`git worktree add … -b … origin/main`); every edit,
-   commit, and PR happens from that worktree on that branch.
+   commit, and PR happens from that worktree on that branch. For the ExecPlan
+   file itself, use `AGENTS.md` → "Scratch branch flow" and push the
+   `scratch/releases/<version>/...` change directly to `origin/scratch`.
 2. Execute the Concrete steps in order. Do not stop to ask for the next step —
    the plan is the instruction set; proceed autonomously to the next milestone.
 3. At every stopping point, update Progress (timestamped), the Execution log,

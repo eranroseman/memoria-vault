@@ -3,18 +3,16 @@
 import pr_policy as _m
 
 decide = _m.decide
+is_main_excluded = _m.is_main_excluded
 is_safe = _m.is_safe
 is_sensitive = _m.is_sensitive
 
 
-def test_is_safe_accepts_safe_prose_and_scratch_prefixes():
+def test_is_safe_accepts_safe_prose_prefixes():
     assert is_safe("docs/reference/policy-mcp.md")
     assert is_safe("docs/explanation/deployment.md")
     assert is_safe("docs/explanation/architecture/interaction-channels.md")
     assert is_safe("_notes/scratch.md")
-    assert is_safe("scratch/releases/0.1.0-alpha.12/design.md")
-    assert is_safe("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
-    assert is_safe("scratch/fixtures/state.sqlite")
 
 
 def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
@@ -27,7 +25,16 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
     assert not is_safe(".github/workflows/ci.yml")
     assert not is_safe("vault-template/.memoria/mcp/policy_mcp.py")
     assert not is_safe("scripts/README.md")
+    assert not is_safe("scratch/releases/0.1.0-alpha.12/design.md")
+    assert not is_safe("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert not is_safe("scratch/fixtures/state.sqlite")
     assert not is_safe(old_agent_tmp)
+
+
+def test_is_main_excluded_flags_scratch_branch_material():
+    assert is_main_excluded("scratch/releases/0.1.0-alpha.12/design.md")
+    assert is_main_excluded("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert not is_main_excluded("docs/reference/policy-mcp.md")
 
 
 def test_is_sensitive_flags_policy_and_runtime_surfaces():
@@ -96,30 +103,25 @@ def test_decide_blocks_untrusted_sensitive_changes_but_reviews_safe_changes():
     blocked, _ = decide(["scripts/install.sh"], "random-user", False)
     safe_review, reason = decide(["docs/reference/glossary.md"], "random-user", False)
     agents_block, _ = decide(["AGENTS.md"], "random-user", False)
-    scratch_review, scratch_reason = decide(
-        ["scratch/releases/0.1.0-alpha.12/design.md"], "random-user", False
-    )
 
     assert blocked == "block"
     assert safe_review == "needs_human"
     assert "not on the trusted" in reason
     assert agents_block == "block"
-    assert scratch_review == "needs_human"
-    assert "not on the trusted" in scratch_reason
 
 
-def test_decide_auto_approves_trusted_scratch_only():
-    decision, reason = decide(
-        [
-            "scratch/releases/0.1.0-alpha.12/design.md",
-            "scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py",
-        ],
-        "eranroseman",
-        False,
+def test_decide_blocks_scratch_prs_to_main_for_any_author():
+    trusted, trusted_reason = decide(
+        ["scratch/releases/0.1.0-alpha.12/design.md"], "eranroseman", False
+    )
+    untrusted, untrusted_reason = decide(
+        ["scratch/releases/0.1.0-alpha.12/design.md"], "random-user", False
     )
 
-    assert decision == "auto_approve"
-    assert "scratch" in reason.lower()
+    assert trusted == "block"
+    assert untrusted == "block"
+    assert "scratch branch" in trusted_reason
+    assert "scratch branch" in untrusted_reason
 
 
 def test_decide_drafts_and_empty_changesets_need_human_review():

@@ -1,5 +1,0 @@
-{"operation_id": "ingest", "request_id": "req-1", "type": "requested"}
-{"output_id": "digests/s1", "request_id": "req-1", "type": "derived"}
-{"check": "span_entailment", "severity": "warn", "target_id": "digests/s1", "type": "check-fired"}
-{"status": "checked", "target_id": "digests/s1", "type": "checked"}
-{"resolution": "accepted", "target_id": "digests/s1", "type": "resolved"}
