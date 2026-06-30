@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # Memoria dev bootstrap — run ONCE per fresh clone to wire the local quality gate.
 #
-#   bash scripts/dev-setup.sh                 # toolchain + repo-local qmd index
+#   bash scripts/dev-setup.sh                 # toolchain + repo-local Node tools + qmd index
 #   bash scripts/dev-setup.sh --with-hooks    # also wire qmd auto-refresh git hooks
 #
 # This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters). It does
 # NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
-# safe to re-run. Optional system tools (shellcheck, node/npx) are reported, not
-# auto-installed (they need a package manager); the pre-commit hook skips them
-# gracefully when absent, and CI enforces them regardless.
+# safe to re-run. Python hook tools are pinned in requirements-dev.txt; Node hook
+# tools are pinned in package-lock.json and installed with npm ci.
 set -eu
 
 unset CDPATH
@@ -45,21 +44,34 @@ fi
 
 echo "==> Installing pre-commit hooks (git won't do this on clone — it's local config)"
 if command -v pre-commit >/dev/null 2>&1; then
-  pre-commit install
-  note "pre-commit hooks installed"
+  HOOKS_PATH=$(git config --get core.hooksPath || true)
+  DEFAULT_HOOKS=$(git rev-parse --git-path hooks)
+  if [ -n "$HOOKS_PATH" ]; then
+    if [ "$HOOKS_PATH" = "$DEFAULT_HOOKS" ] || [ "$HOOKS_PATH" = ".git/hooks" ]; then
+      git config --unset-all core.hooksPath
+      note "removed redundant core.hooksPath so pre-commit can manage hooks"
+    else
+      note "core.hooksPath is set to $HOOKS_PATH; unset it before installing pre-commit"
+    fi
+  fi
+  if pre-commit install --install-hooks; then
+    note "pre-commit hook and hook environments installed"
+  else
+    note "pre-commit install failed — fix the hooksPath/config issue above and rerun"
+  fi
 else
-  note "pre-commit not found — install requirements-dev.txt, then run: pre-commit install"
+  note "pre-commit not found — install requirements-dev.txt, then run: pre-commit install --install-hooks"
 fi
 
-echo "==> Setting up the repo-local qmd code-search index (needs Node >=22)"
+echo "==> Setting up repo-local Node dev tools and qmd index (needs Node >=22)"
 NODE=$(command -v node || true)
 NODE_MAJOR=0
 if [ -n "$NODE" ]; then
   NODE_MAJOR=$("$NODE" -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
 fi
 if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
-  if command -v npm >/dev/null 2>&1 && npm install --silent; then
-    note "repo-local qmd installed (node_modules/)"
+  if command -v npm >/dev/null 2>&1 && npm ci --silent; then
+    note "repo-local Node tools installed (qmd, cspell, markdownlint)"
     bash scripts/qmd-codebase-index.sh \
       || note "qmd index build skipped/failed — re-run: bash scripts/qmd-codebase-index.sh"
     if [ "$WITH_HOOKS" -eq 1 ]; then
@@ -68,20 +80,20 @@ if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
       note "(auto-refresh hooks not wired — add them with: bash scripts/qmd-install-hooks.sh)"
     fi
   else
-    note "npm install failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
+    note "npm ci failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
   fi
 else
-  note "Node >=22 not found — repo code search skipped (not required for the pre-commit hook)."
+  note "Node >=22 not found — repo Node tools and code search skipped."
   note "  fnm gives a standalone Node (independent of any runtime): https://github.com/Schniz/fnm"
-  note "  then: fnm install 22 && npm install && bash scripts/qmd-codebase-index.sh"
+  note "  then: fnm install 22 && npm ci && bash scripts/qmd-codebase-index.sh"
 fi
 
-echo "==> Optional system tools the hook uses if present (not auto-installed):"
-for t in shellcheck npx; do
-  if command -v "$t" >/dev/null 2>&1; then
+echo "==> Local hook tools:"
+for t in pre-commit no-commit-to-branch check-json ruff yamllint shellcheck cspell markdownlint; do
+  if PATH="node_modules/.bin:$PATH" command -v "$t" >/dev/null 2>&1; then
     note "✓ $t"
   else
-    note "– $t (missing; install via your OS package manager for full local parity)"
+    note "– $t (missing; rerun this script after fixing the install error above)"
   fi
 done
 
