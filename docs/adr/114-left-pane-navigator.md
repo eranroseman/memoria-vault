@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [70, 81, 101]
+assumes: [101, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -17,12 +17,11 @@ superseded_by: []
 
 Space switching happens through dashboard notes under `spaces/` opened in the **main**
 pane: each dashboard carries a nav row linking to the other three, and the Homepage
-plugin opens `spaces/inbox` on startup ([ADR-81](81-persistent-gate-dashboards.md)). The
+plugin opened `spaces/inbox` on startup before the rail consolidation. The
 left pane held only the file explorer. This left two gaps:
 
 - **No ambient awareness.** "Is anything waiting on me?" required switching to the Inbox
-  space, even though [ADR-70](70-navigation-gates-dashboards.md) already establishes that
-  system health should be *ambient*, not a destination you enter.
+  space, even though system health should be *ambient*, not a destination you enter.
 - **No persistent orientation.** The four spaces ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md))
   were reachable only from inside whichever space note was open in the main pane; nothing
   stable showed where you could go.
@@ -74,7 +73,8 @@ already covers browsing.
   `notes/sources` / `notes/claims` / `projects` / `inbox` folder paths the `.base` files use.
 - The in-note nav row on each space dashboard is now redundant with the rail but is left in
   place; it remains the fallback if the workspace layout is reset or the plugin is disabled,
-  consistent with the degradation stance in [ADR-81](81-persistent-gate-dashboards.md).
+  consistent with the degradation stance in
+  [ADR-116](116-obsidian-surface-architecture.md).
 
 ## Alternatives considered
 
@@ -90,10 +90,9 @@ already covers browsing.
 
 ## Related
 
-- **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (ambient health, JTBD
-  dashboards), [ADR-81](81-persistent-gate-dashboards.md) (dashboards as persistent notes,
-  the saved workspace), [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the
-  four spaces).
+- **Depends on:** [ADR-116](116-obsidian-surface-architecture.md) (ambient health,
+  surface primitives, and dashboards as persistent notes),
+  [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces).
 - **Reference:** [Obsidian workspaces](../reference/obsidian-workspaces.md),
   [Home — the vault front door](../explanation/obsidian/home.md).
 - **Source discussion:** the alpha.8 left-pane clean-slate review.

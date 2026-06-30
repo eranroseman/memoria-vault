@@ -13,9 +13,9 @@ The authoritative board lives in `kanban.db` — a database Obsidian cannot quer
 
 ## The Inbox board: `inbox.base`
 
-The board the PI works is **one Obsidian Base over `inbox/`** — `inbox.base`, grouped by card type, filtered on the lifecycle chain. Its **"Needs me" view** (proposed `candidate`, `gap`, and `work-prompt` cards) is shown on the Inbox queue ([ADR-81](../../adr/81-persistent-gate-dashboards.md)); flags and alerts are read from Maintenance. The full board (every card, every state) is the same Base's wider view, surfaced as the [board-state dashboard](../dashboards/daily-glance.md#board-state-support). No plugin, no custom renderer: cards are markdown notes with frontmatter, and Bases is the vault's standard view layer.
+The board the PI works is **one Obsidian Base over attention projections** — grouped by attention kind and filtered to what needs action. Its **"Needs me" view** is shown on the Queue ([ADR-116](../../adr/116-obsidian-surface-architecture.md)); flags and alerts are read from Maintenance. The full board is surfaced as the [board-state dashboard](../dashboards/daily-glance.md#board-state-support). No plugin, no custom renderer: projections are markdown notes with frontmatter, and Bases is the vault's standard view layer.
 
-This is why the board needs no bespoke UI — the Inbox category *is* agent→human messaging ([ADR-51](../../adr/51-inbox-category-and-honesty-card.md)), and a Base over it is automatically the kanban view, grouped by type, converging to empty.
+This is why the board needs no bespoke UI — the Inbox projection is agent-to-human messaging ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)), and a Base over it is automatically the kanban view, grouped by attention kind, converging to empty.
 
 ## The worker-card export: `system/board/`
 

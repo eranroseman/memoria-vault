@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
-assumes: [52, 71, 72, 79, 81]
+assumes: [52, 72, 79, 116, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -92,9 +92,9 @@ the control is the human confirmation surface.
   `vault-template/.obsidian/plugins/cmdr/data.json`, `vault-template/spaces/knowledge.md`, `docs/reference/wikilink-and-link-conventions.md`,
   `docs/reference/frontmatter.md`, and the claim-linking how-to.
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
-  [ADR-71](71-structured-capture-forms.md),
   [ADR-72](72-command-surfacing.md),
   [ADR-79](79-argument-graph-and-warrant.md),
-  [ADR-81](81-persistent-gate-dashboards.md).
+  [ADR-116](116-obsidian-surface-architecture.md),
+  [ADR-119](119-schema-driven-document-creation.md).
 - **Source discussion:** implementation tracker
   [#691](https://github.com/eranroseman/memoria-vault/issues/691).

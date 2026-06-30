@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [47]
+assumes: [119]
 supersedes: []
 superseded_by: []
 ---
@@ -59,5 +59,5 @@ commit gate + sweep bound the risk acceptably.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md),
-  [ADR-50](50-universal-lifecycle-and-maturity.md), [ADR-12](12-obsidian-linter-reference-only.md)
+- **Related decisions / Depends on:** [ADR-119](119-schema-driven-document-creation.md),
+  [ADR-12](12-obsidian-linter-reference-only.md)

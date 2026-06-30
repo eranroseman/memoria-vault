@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [21, 51]
+assumes: [21, 54]
 supersedes: []
 superseded_by: []
 ---
@@ -48,5 +48,5 @@ manual even when provenance is clear.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-51](51-inbox-category-and-honesty-card.md).
+- **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-54](54-two-decision-kinds-batch-worklists.md).
 - **Tracking issue:** [#710](https://github.com/eranroseman/memoria-vault/issues/710).

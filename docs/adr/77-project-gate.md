@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16
-assumes: [70, 48, 49, 51, 69]
+assumes: [48, 49, 54, 69, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -15,17 +15,17 @@ superseded_by: []
 
 ## Context
 
-[ADR-70](70-navigation-gates-dashboards.md) reserved the fourth top-level gate for
-Project work, and the existing workspace shell left `projects/` empty while Studio
-carried drafting. alpha.5 is the first checkpoint where that
-slot has a concrete job: bounded inquiry that turns catalog/source work into a
+The existing workspace shell left Project work mostly empty while Studio carried
+drafting. alpha.5 is the first checkpoint where that surface has a concrete job:
+bounded inquiry that turns catalog/source work into a
 defended or falsified thesis. The gate must preserve Memoria's deepest boundary:
 agents propose, deterministic Operations derive views, and the PI promotes.
 
 ## Decision
 
-Memoria adopts a **Project gate** as the fourth intent-named gate. A project is a
-bounded research inquiry rooted in a project note and one thesis target. The gate
+Memoria adopts a **Project gate** for bounded research inquiry. A project is rooted
+in a `project` Concept under `knowledge/projects/`; its optional `thesis` field
+points at the checked `note` being defended or falsified. The gate
 surfaces the project question, thesis, descriptive map, argument graph, ranked
 gaps, saturation signal, and outline path from Obsidian, using the existing
 workspace machinery and a custom Bases view where the Obsidian API permits it.
@@ -35,7 +35,7 @@ impact, graph maturity, saturation, and index-note materialization are Operation
 over vault state. Agents may discover sources, propose gaps, and draft outlines,
 but the gate never asks an LLM to judge truth, infer maturity, or promote a
 thesis. The PI remains the author of the question and thesis and the only actor
-who can promote the thesis to `current`.
+who can promote the thesis note to `checked`.
 
 The conservative graph-maturity default is a connected thesis-rooted component
 with at least five addressed relations, including at least one `supports` edge
@@ -51,13 +51,14 @@ stamps are reserved for cases where a later implementation cannot use the view.
 
 ## Consequences
 
-- Project becomes a first-class navigation destination rather than a promise
-  hidden behind Studio.
+- Project becomes a first-class work surface rather than a promise hidden behind
+  Studio.
 - The gate can argue for stopping when the argument is saturated, but only over
   relations the PI or gated proposals have actually supplied. Determinism makes
   the computation repeatable, not the conclusion true.
-- Falsifying a thesis is a finished project result: a `retracted` thesis plus the
-  argument subgraph that refuted it is preserved rather than treated as failure.
+- Falsifying a thesis is a finished project result: the project points to the checked
+  note and preserves the argument subgraph that refuted it rather than treating the
+  outcome as failure.
 - The implementation sequence is structural-first: schemas and templates, then
   graph/impact Operations, then gap/saturation logic, then the Obsidian surface.
 - The custom Bases view remains a version-pinned pilot because `registerBasesView`
@@ -80,12 +81,12 @@ default; per-note stamps need a specific rendering constraint to justify them.
 
 ## Related
 
-- **Files affected:** `vault-template/projects/`, `vault-template/system/templates/`,
+- **Files affected:** `vault-template/knowledge/projects/`, `vault-template/system/templates/`,
   `vault-template/.memoria/schemas/types/`, `vault-template/.memoria/operations/`, workspace/dashboard
   files.
-- **Related decisions / Depends on:** [ADR-70](70-navigation-gates-dashboards.md),
-  [ADR-78](78-thesis-note-type.md),
-  [ADR-79](79-argument-graph-and-warrant.md).
+- **Related decisions / Depends on:** [ADR-54](54-two-decision-kinds-batch-worklists.md),
+  [ADR-79](79-argument-graph-and-warrant.md),
+  [ADR-119](119-schema-driven-document-creation.md).
 - **Source discussion:** alpha.5 workstream
   [#577](https://github.com/eranroseman/memoria-vault/issues/577), spike workstream
   [#576](https://github.com/eranroseman/memoria-vault/issues/576), and merged implementation

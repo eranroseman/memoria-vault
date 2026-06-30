@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16
-assumes: [52, 77, 78]
+assumes: [52, 77, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -19,12 +19,14 @@ The Project gate needs to produce an argument, not just organize a cluster of
 notes. The existing descriptive knowledge map shows what exists inside a project
 scope; it does not say how a thesis is defended. The missing layer is the
 thesis-rooted argument graph: the typed relation subgraph that connects evidence,
-reasons, objections, and rebuttals to the thesis.
+reasons, objections, and rebuttals to the note identified by the project's `thesis`
+field.
 
 ## Decision
 
 Memoria treats the **argument graph** as the `supports` / `contradicts` subgraph
-rooted at a thesis. Project impact, gap ranking, saturation, and outline
+rooted at the checked `note` a project names as its thesis. Project impact, gap
+ranking, saturation, and outline
 structure derive from this graph, not from the descriptive topology alone.
 
 `warrant` becomes an optional attribute on a relation: the inferential rule that
@@ -69,9 +71,8 @@ coverage.
 - **Files affected:** relation schema/contracts, Project structural-impact
   Operation, Project dashboards.
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
-  [ADR-52](52-links-vs-relationships.md),
   [ADR-77](77-project-gate.md),
-  [ADR-78](78-thesis-note-type.md).
+  [ADR-119](119-schema-driven-document-creation.md).
 - **Source discussion:** alpha.5 structural-impact workstream
   [#579](https://github.com/eranroseman/memoria-vault/issues/579) and merged implementation
   PR [#605](https://github.com/eranroseman/memoria-vault/pull/605).

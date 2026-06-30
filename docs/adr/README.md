@@ -59,16 +59,12 @@ status.
 | [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | accepted |
 | [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | accepted |
 | [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | accepted |
-| [39](39-note-acceptance-checklists.md) | Per-note-type acceptance checklists ("frozen evaluator") | accepted |
 | [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | accepted |
 | [43](43-skill-governance.md) | Skill governance and lifecycle | accepted |
 | [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault | accepted |
-| [47](47-type-first-category-folders.md) | Type-first category folders — catalog · notes · projects · inbox · system | accepted |
 | [48](48-copi-and-agent-consolidation.md) | One Co-PI fronts everything; specialists consolidate to posture-defined agents | accepted |
 | [49](49-catalog-in-bases-linter-monitor.md) | Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate | accepted |
-| [50](50-universal-lifecycle-and-maturity.md) | One lifecycle chain for everything; maturity is a claim property; reference dropped; MOC renamed hub | accepted |
-| [51](51-inbox-category-and-honesty-card.md) | The Inbox category and the honesty card — argument for/against, what tipped it, certainty; no verdict on proposals | accepted |
 | [52](52-links-vs-relationships.md) | Notes carry authored links:, entities carry given relationships — two kinds of connection | accepted |
 | [53](53-pattern-library.md) | The pattern library — curated prompt-transformations as data in system/patterns/, one runner | accepted |
 | [54](54-two-decision-kinds-batch-worklists.md) | Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality | accepted |
@@ -79,20 +75,15 @@ status.
 | [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | accepted |
 | [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | accepted |
-| [70](70-navigation-gates-dashboards.md) | Navigation — intent-named gates, ambient maintenance, JTBD dashboards | accepted |
-| [71](71-structured-capture-forms.md) | Structured capture — forms at entry, the Linter as authority, one schema per type | accepted |
 | [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | accepted |
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [77](77-project-gate.md) | Project gate | accepted |
-| [78](78-thesis-note-type.md) | Thesis note type | accepted |
 | [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | accepted |
 | [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | accepted |
-| [81](81-persistent-gate-dashboards.md) | Persistent gate dashboards | accepted |
 | [83](83-direct-pi-relate-control.md) | Direct PI relate control | accepted |
 | [88](88-literate-code-note.md) | Literate code-note | proposed |
-| [89](89-learning-to-rank-triage.md) | Learning-to-rank triage | proposed |
 | [90](90-claim-sentence-classification.md) | Claim-sentence classification | proposed |
 | [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
 | [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | proposed |
@@ -118,9 +109,8 @@ status.
 | [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | accepted |
 | [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed | accepted |
 | [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | accepted |
-| [117](117-type-naming-scheme.md) | Document types: kind-scoped names with a fleeting exception; folder names never collide with spaces | accepted |
 | [118](118-dashboard-consolidation.md) | Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index | accepted |
-| [119](119-schema-driven-document-creation.md) | Schema-driven documents: the type schema is the complete declarative contract that validates, generates, and is the single source | accepted |
+| [119](119-schema-driven-document-creation.md) | Concept schemas own field, home, read-state, and form contracts | accepted |
 | [120](120-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
 | [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | accepted |
 | [122](122-sqlite-working-state-boundary.md) | SQLite working state is a cache behind the checked Concept boundary | accepted |

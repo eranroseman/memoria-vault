@@ -63,5 +63,4 @@ by evidence, links, and hub/project context.
 
 **Decisions**
 
-- [ADR-51](../../adr/51-inbox-category-and-honesty-card.md) — the Inbox category and the honesty card
 - [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md) — approval gates vs work prompts; classify automated; batch worklists

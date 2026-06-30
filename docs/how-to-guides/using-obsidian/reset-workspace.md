@@ -51,4 +51,4 @@ keeps the Agent Client pane on the right.
 - Workspace reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Conversation surface: [Agent Client pane](use-the-agent-client-pane.md)
 - Opening surfaces: [Navigate Memoria surfaces](navigate-memoria-surfaces.md)
-- The dashboard decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)
+- The surface architecture decision: [ADR-116](../../adr/116-obsidian-surface-architecture.md)

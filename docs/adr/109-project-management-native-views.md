@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-20
 date_resolved: 2026-06-20
-assumes: [47, 49, 50, 54, 77, 81]
+assumes: [49, 54, 77, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -24,8 +24,8 @@ from those tools, or reject them where they conflict with the vault's gate and
 lifecycle model.
 
 Memoria's constraints rule out most PM plugins as write surfaces: state must stay
-plain-text, git-diffable, lintable, and owned by the existing schemas; the universal
-lifecycle is the status vocabulary; and a view must not become a second frontmatter
+plain-text, git-diffable, lintable, and owned by the existing schemas; `check_status`
+is the read-state gate; and a view must not become a second frontmatter
 authority that writes outside the policy MCP. The recurring conflict is the same
 class of defect recorded in [ADR-12](12-obsidian-linter-reference-only.md): a plugin
 that looks convenient but rewrites, renames, or duplicates state the vault already
@@ -35,7 +35,7 @@ owns.
 
 Memoria's Project workspace uses Memoria-native project notes plus read-only views:
 Bases for portfolio/table surfaces, Dataview where calculated dashboards are needed,
-Modal Forms for schema-valid project creation, and the existing lifecycle/project
+Modal Forms for schema-valid project creation, and the existing project
 fields as the single source of truth. Project-management plugins may be studied for
 interaction ideas, but they are not adopted as bundled dependencies when they write
 parallel status fields, store project state outside notes, move files as workflow
@@ -48,9 +48,9 @@ does not become gated schema state and does not replace project lifecycle fields
 
 ## Consequences
 
-- Project state continues to live in `projects/` notes and their schema fields, not
-  in plugin databases, plugin `data.json`, external PM services, or board-column
-  sync state.
+- Project state continues to live in `knowledge/projects/` notes and their schema
+  fields, not in plugin databases, plugin `data.json`, external PM services, or
+  board-column sync state.
 - The Project space can borrow PM affordances without adopting their storage model:
   portfolio views, next-action lists, stuck-project queries, WIP visibility,
   milestone/progress summaries, and read-only relationship graphs.
@@ -72,7 +72,7 @@ view-layer model.
 **Adopt the Tasks plugin for human todos.** Borrow/adopt as an optional recommended
 plugin, not a bundled dependency. Tasks is plain Markdown and git-diffable, so it fits
 better than most PM plugins, but its checkbox metadata is body-local human context,
-not a replacement for project schemas or lifecycle.
+not a replacement for project schemas or `check_status`.
 
 **Adopt obsidian-kanban.** Rejected as a dependency; borrow only the WIP/board
 interaction idea. Board-as-Markdown is attractive, but drag-to-status workflows invite
@@ -110,8 +110,8 @@ concerns, or are stale.
 
 **Adopt PARA or Johnny Decimal folder methods.** Rejected as mechanics; borrow only
 the "active committed project" lens from PARA. Folder moves as workflow state conflict
-with [ADR-47](47-type-first-category-folders.md) and
-[ADR-50](50-universal-lifecycle-and-maturity.md).
+with the schema-owned home map and `check_status` gate in
+[ADR-119](119-schema-driven-document-creation.md).
 
 **Borrow GTD, Agile/Kanban, Zettelkasten, MOC/hub, and research-specific PM methods.**
 Borrowed selectively. The useful parts are queryable project dashboards, WIP
@@ -122,9 +122,7 @@ workbenches, and source/claim/project progress rollups.
 
 - **Workflows affected:** Project space, project notes, Project gate views, Library
   reading pipeline, weekly review.
-- **Related decisions / Depends on:** [ADR-47](47-type-first-category-folders.md),
-  [ADR-49](49-catalog-in-bases-linter-monitor.md),
-  [ADR-50](50-universal-lifecycle-and-maturity.md),
+- **Related decisions / Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
   [ADR-54](54-two-decision-kinds-batch-worklists.md),
-  [ADR-77](77-project-gate.md), [ADR-81](81-persistent-gate-dashboards.md).
+  [ADR-77](77-project-gate.md), [ADR-119](119-schema-driven-document-creation.md).
 - **Source discussion:** [#329](https://github.com/eranroseman/memoria-vault/issues/329).

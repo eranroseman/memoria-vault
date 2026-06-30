@@ -15,7 +15,13 @@ superseded_by: []
 
 ## Context
 
-Canonical zones (*0.1.0-alpha.2: `notes/claims/` and `notes/hubs/`, per [ADR-47](47-type-first-category-folders.md); Project gate thesis promotion adds a project-scoped review path; the deliverable zone remains later work. Originally `30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`, `50-deliverables/`*) must only receive content that a human has reviewed and approved. The question is whether this guarantee lives in prompt instructions, agent conventions, or infrastructure.
+Canonical zones (*0.1.0-alpha.12: checked `knowledge/notes/` and `knowledge/hubs/`,
+per [ADR-119](119-schema-driven-document-creation.md); Project gate thesis promotion
+adds a project-scoped review path; the deliverable zone remains later work. Originally
+`30-synthesis/01-claims/`, `30-synthesis/02-reference/`, `30-synthesis/03-moc/`,
+`50-deliverables/`*) must only receive content that a human has reviewed and approved.
+The question is whether this guarantee lives in prompt instructions, agent conventions,
+or infrastructure.
 
 ## Decision
 
@@ -40,7 +46,13 @@ The cost is that the human is a bottleneck. This is the point: the human must st
 
 ## Promotion within synthesis is also manual
 
-The same principle governs promotion, not just writes: maturity moves only by a human setting it (*0.1.0-alpha.2 update: the `reference` type/layer is retired by [ADR-50](50-universal-lifecycle-and-maturity.md) — an `evergreen` claim is itself the settled unit; the human-only rule on `maturity` is unchanged*). Originally: a `claim-note` graduated to the `reference` layer only by a human setting `maturity: evergreen` in the weekly review — never by an automatic maturity threshold or a link-density heuristic. (Inlink count signals "well-cited," not "stable enough for reference"; contested claims accumulate inlinks too.) *Folded in from an earlier renumbered draft on auto-promotion, which was only ever `proposed`.*
+The same principle governs promotion, not just writes: read-state changes that make a
+Concept trusted are human-gated. Earlier drafts described this as a claim `maturity`
+promotion into a `reference` layer; the current schema uses `check_status` and retired
+that separate layer. The human-only rule is unchanged: no automatic maturity threshold
+or link-density heuristic can promote content. (Inlink count signals "well-cited," not
+"stable enough"; contested claims accumulate inlinks too.) *Folded in from an earlier
+renumbered draft on auto-promotion, which was only ever `proposed`.*
 
 ## Alternatives considered
 

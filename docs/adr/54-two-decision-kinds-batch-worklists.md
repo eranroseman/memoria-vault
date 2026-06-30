@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [3, 51]
+assumes: [3]
 supersedes: []
 superseded_by: []
 ---
@@ -29,8 +29,9 @@ The worklist shape is aggregate-first: a fleeting note plus one batch card that
 summarizes the work, not one toggle or one Bases row per candidate item.
 
 - **Approval gate** — the PI reviews *agent-produced output* and accepts/rejects. The
-  item must carry the honesty card ([ADR-51](51-inbox-category-and-honesty-card.md)) —
-  never a bare "OK?".
+  item must carry an honesty-body: why this surfaced, evidence for, evidence against,
+  what would change the recommendation, known uncertainty, and the action requested —
+  never a bare "OK?" or a proposal verdict.
 - **Work prompt** — the agent signals it is *time for the PI's own thinking/writing*;
   a rich nudge with the material to start, not an approval.
 
@@ -44,6 +45,11 @@ field the PI toggles at group or item granularity — surfaced as **one aggregat
 work-prompt**, never N cards.
 No confidence-tiered auto-accept anywhere: confident-wrong is the failure mode the
 gate exists to catch.
+
+Generated attention projections use this same contract. They may carry operational
+frontmatter such as `projection: attention` and `attention_kind`, but those projections
+are not durable Concept types and their body must still give the PI real decision
+material.
 
 ## Consequences
 
@@ -65,4 +71,4 @@ through exactly the confident-wrong outputs the gate exists to catch.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-03](03-structural-review-gate.md),
-  [ADR-51](51-inbox-category-and-honesty-card.md), [ADR-15](15-project-membership-from-topic-hint.md)
+  [ADR-15](15-project-membership-from-topic-hint.md)

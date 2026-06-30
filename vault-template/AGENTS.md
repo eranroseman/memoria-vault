@@ -19,19 +19,19 @@ If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
 `worker_context` as the task spec, then finish with `kanban_complete(...)` or
 `kanban_block(...)`.
 
-## Where things live (ADR-47)
+## Where things live (ADR-119)
 
 `catalog/` source and entity Concepts · `knowledge/` digests, notes, hubs, and
 projects · `capabilities/` operations, skills, MCPs, and workflows · `system/`
 templates, dashboards, eval, and logs. `archived` is a *state*, not a folder.
 
-## State and signals (ADR-50)
+## State and signals (ADR-119)
 
 State lives in schema fields such as `check_status`, `lifecycle`, and note `status`.
 `agent_recommendation` is a soft signal, never a gate; your `clean` verdict never
 substitutes for the worker check or PI direction.
 
-## Talking to the PI (ADR-51)
+## Talking to the PI (ADR-54)
 
 Everything you need the PI to see is an **attention item** projected from journal,
 queue, check, and Concept state. Proposals carry the **honesty body**: the argument

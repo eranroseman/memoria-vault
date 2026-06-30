@@ -8,7 +8,7 @@ grand_parent: Reference
 
 Memoria ships one saved Obsidian workspace named **Memoria** in
 `vault-template/.obsidian/workspaces.json`. It is a reset layout, not the space switcher
-([ADR-81](../adr/81-persistent-gate-dashboards.md)). Space switching happens
+([ADR-116](../adr/116-obsidian-surface-architecture.md)). Space switching happens
 through the pinned `_nav.md` rail note in the left pane.
 
 ## Rail targets
@@ -53,8 +53,7 @@ The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as
 
 ## Related
 
-- Dashboard decision: [ADR-81](../adr/81-persistent-gate-dashboards.md)
-- The persistent dashboard-note model: [ADR-81](../adr/81-persistent-gate-dashboards.md)
+- Surface architecture: [ADR-116](../adr/116-obsidian-surface-architecture.md)
 - The dashboard roster: [Dashboards](dashboards.md)
 - The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)
 - Conversation surface: [Agent Client pane](../how-to-guides/using-obsidian/use-the-agent-client-pane.md)

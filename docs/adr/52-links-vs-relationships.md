@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [47, 49]
+assumes: [49, 119]
 supersedes: []
 superseded_by: []
 ---

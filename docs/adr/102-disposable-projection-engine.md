@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [49, 57, 69, 70, 81]
+assumes: [49, 57, 69, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -89,6 +89,5 @@ does not solve operator-facing dashboard ergonomics.
 - **Related decisions / Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
   [ADR-57](57-engines-write-agents-judge.md),
   [ADR-69](69-operations-layer-naming.md),
-  [ADR-70](70-navigation-gates-dashboards.md),
-  [ADR-81](81-persistent-gate-dashboards.md).
+  [ADR-116](116-obsidian-surface-architecture.md).
 - **Tracking issue:** [#719](https://github.com/eranroseman/memoria-vault/issues/719).

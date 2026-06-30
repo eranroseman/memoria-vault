@@ -43,7 +43,10 @@ Forward-looking and self-contained — the receiver needs nothing beyond it:
 
 ## Execution lifecycle — the hidden mechanic
 
-Cards carry the Hermes-native `status` enum. This chain is the **hidden execution mechanic**: the PI-facing state of any piece of work is the note's `lifecycle` (the universal chain, owned by [Frontmatter fields](frontmatter.md)), surfaced through the Inbox — not the board column. Never use one in place of the other.
+Cards carry the Hermes-native `status` enum. This chain is the **hidden execution
+mechanic**: the PI-facing state of any piece of work is the attention projection
+surfaced through the Inbox, while durable Concepts use `check_status` from
+[Frontmatter fields](frontmatter.md). Never use one in place of the other.
 
 ```text
 triage ──► todo ──► ready ──► running ──► done ──► archived
@@ -61,13 +64,13 @@ triage ──► todo ──► ready ──► running ──► done ──►
 | `done` | Worker finished. It leaves Inbox Activity; when `review_status: requested`, board export raises one `work-prompt` review card in `inbox/` (see below). | Worker |
 | `archived` | Terminal. | `hermes kanban archive` |
 
-Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the note's lifecycle (the PI's state) · `agent_recommendation` (the soft verdict on verification cards — its values are in the [Glossary](glossary.md) Verdicts table, [ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
+Three orthogonal dimensions keep an agent verdict from rubber-stamping a human decision: `status` (execution, hidden) · the Concept's `check_status` read state · `agent_recommendation` (the soft verdict on verification cards — its values are in the [Glossary](glossary.md) Verdicts table, [ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **Rejection spawns a new card** (`supersedes: <original-id>`; the original archives as `superseded`), mirroring claim supersession — each card is one attempt, so the audit trail can't lie. Abandoned work archives as `discarded`.
 
 ### Terminal states → optional action prompts
 
-The Inbox is the PI's slice of the board ([ADR-51](../adr/51-inbox-category-and-honesty-card.md)).
+The Inbox is the PI's slice of the board ([ADR-54](../adr/54-two-decision-kinds-batch-worklists.md)).
 
 | Board state | Export output | Inbox effect |
 | --- | --- | --- |

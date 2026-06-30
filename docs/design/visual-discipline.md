@@ -36,7 +36,7 @@ One Obsidian window per vault is a technical constraint as much as a discipline.
 
 The current design maps work modes to dashboard notes — Inbox, Maintenance, Library,
 Knowledge, and Project — rather than to saved Obsidian workspaces
-([ADR-81](../adr/81-persistent-gate-dashboards.md)). A space is content the vault can
+([ADR-116](../adr/116-obsidian-surface-architecture.md)). A space is content the vault can
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 
