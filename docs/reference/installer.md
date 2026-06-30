@@ -23,6 +23,36 @@ Safety features: no silent privilege escalation, `--dry-run` echoes commands and
 | `--dry-run` | Print every command that would run; change nothing. |
 | `--yes` / `-y` | Non-interactive: accept all defaults, no prompts (CI). |
 
+## Disposable local-LLM install smoke
+
+For a release-candidate proof on Linux/WSL, use:
+
+```bash
+bash scripts/install-test-vault-local-llm.sh
+```
+
+The harness treats `~/Memoria-test` as disposable and installs the real vault at
+`~/Memoria-test/vault` so tool-managed files at the root do not collide with the
+vault's own `.git`. Every run wipes that child vault, initializes Git before the
+installer so commit hooks are wired, runs `scripts/install.sh --vault ... --no-apps
+--yes` with `MEMORIA_ENV=test` and the custom model overlay, creates the baseline
+commit, then checks package import, golden-copy drift, detectors, Hermes profile
+and cron registration, and the real-model L2 smoke.
+
+Defaults target an Ollama/OpenAI-compatible endpoint:
+
+| Setting | Default |
+| --- | --- |
+| Test root | `~/Memoria-test` |
+| Vault path | `~/Memoria-test/vault` |
+| Base URL | `http://127.0.0.1:11434/v1` |
+| Model | `memoria-qwen2.5:7b-64k` |
+| Context length | `65536` |
+
+Override them with `--root`, `--vault`, `--base-url`, `--model`, and `--context`,
+or the matching `MEMORIA_TEST_*` environment variables. Use `--skip-live-llm` only
+when validating installer mechanics without a running local model.
+
 ## Environment overlays
 
 | Variable | Effect |

@@ -44,6 +44,7 @@ TEST_LEVELS = {
     "test_ingest_mcp.py": "contract",
     "test_ingest_paper.py": "contract",
     "test_installer_skeleton.py": "package",
+    "test_install_test_vault_local_llm.py": "package",
     "test_integrity.py": "runtime",
     "test_knowledge.py": "runtime",
     "test_l2_smoke.py": "runtime",

@@ -53,7 +53,7 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 | Machine staging roots | `.memoria/staging/catalog` · `.memoria/staging/knowledge` · `.memoria/staging/capabilities` |
 | Quarantine root | `.memoria/quarantine` |
 | Gated prefixes | - |
-| Transient prefixes | - |
+| Transient prefixes | `inbox/` |
 | Skeleton entries | `34` |
 
 ## Type homes
