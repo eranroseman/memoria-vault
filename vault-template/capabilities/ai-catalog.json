@@ -1,0 +1,1366 @@
+{
+  "capabilities": [
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "journal/",
+        ".memoria/index/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Record that the PI acknowledged a generated attention item.",
+      "id": "acknowledge-attention",
+      "model": "deterministic-fixture",
+      "operation_id": "acknowledge-attention",
+      "path": "capabilities/operations/acknowledge-attention.md",
+      "prompt_version": "acknowledge-attention.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "attention"
+      ],
+      "title": "Acknowledge attention",
+      "trust": {
+        "sha256": "sha256:f3e432a14f785ee915c64c0ff2240dda6765bce80a04cea142ac693639ddd9e1",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Extract and rank truth claims from selected input.",
+      "id": "analyze-claims",
+      "model": "deterministic-fixture",
+      "operation_id": "analyze-claims",
+      "path": "capabilities/operations/analyze-claims.md",
+      "prompt_version": "analyze-claims.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Analyze claims",
+      "trust": {
+        "sha256": "sha256:6d2aed6e7da70ae443a16cfc172ffcea4736898280e6125d1864fe2b41bc1e37",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "read_checked_concepts"
+      ],
+      "check_status": "checked",
+      "description": "Classify checked catalog/knowledge topic mismatches for gap analysis.",
+      "id": "analyze-gaps",
+      "model": "deterministic-fixture",
+      "operation_id": "analyze-gaps",
+      "path": "capabilities/operations/analyze-gaps.md",
+      "prompt_version": "analyze-gaps.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "gaps"
+      ],
+      "title": "Analyze gaps",
+      "trust": {
+        "sha256": "sha256:1c76de7178bfe641ce4444b9293cda04c4bbf861a731eb3eaf422781cad0ab52",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "read_checked_concepts"
+      ],
+      "check_status": "checked",
+      "description": "Report argument health for a checked project thesis graph.",
+      "id": "analyze-project-argument",
+      "model": "deterministic-fixture",
+      "operation_id": "analyze-project-argument",
+      "path": "capabilities/operations/analyze-project-argument.md",
+      "prompt_version": "analyze-project-argument.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "argument"
+      ],
+      "title": "Analyze project argument",
+      "trust": {
+        "sha256": "sha256:eebdc4d8fffccdce103bf1294218229cc840209ff1ec3997bde5713b1593d9c4",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        ".memoria/index/"
+      ],
+      "allowed_tools": [
+        "read_checked_index"
+      ],
+      "check_status": "checked",
+      "description": "Answer an Ask query over checked current Concepts with BM25 sources.",
+      "id": "answer-query",
+      "model": "deterministic-fixture",
+      "operation_id": "answer-query",
+      "path": "capabilities/operations/answer-query.md",
+      "prompt_version": "answer-query.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "ask"
+      ],
+      "title": "Answer query",
+      "trust": {
+        "sha256": "sha256:24eed69a57a5e5fbf1bb175ad3b56666bbad97c742ed643bae5bf8662232e7ff",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Capture one BibTeX record as a checked catalog source.",
+      "id": "capture-bibtex-source",
+      "model": "deterministic-fixture",
+      "operation_id": "capture-bibtex-source",
+      "path": "capabilities/operations/capture-bibtex-source.md",
+      "prompt_version": "capture-bibtex-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "capture"
+      ],
+      "title": "Capture BibTeX source",
+      "trust": {
+        "sha256": "sha256:c6c808c928606e39f02ac94cd0dadae9fe0ae14ff854c3e34945408681b23e48",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Capture a supplied PDF blob as a checked catalog source.",
+      "id": "capture-pdf-source",
+      "model": "deterministic-fixture",
+      "operation_id": "capture-pdf-source",
+      "path": "capabilities/operations/capture-pdf-source.md",
+      "prompt_version": "capture-pdf-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "capture"
+      ],
+      "title": "Capture PDF source",
+      "trust": {
+        "sha256": "sha256:a5a39ea5e68a9e5c76fab431ef24a0a55801d63b7804501e2da5bb4826c467d0",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        ".memoria/blobs/source-content/",
+        "catalog/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Capture supplied source metadata and text; DOI/ISBN records stage for enrichment.",
+      "id": "capture-source",
+      "model": "deterministic-fixture",
+      "operation_id": "capture-source",
+      "path": "capabilities/operations/capture-source.md",
+      "prompt_version": "capture-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "capture"
+      ],
+      "title": "Capture source",
+      "trust": {
+        "sha256": "sha256:c99a508ecb01414f2181983b4f9b6fd07754d11e15ecb8f167da68aa5e545be7",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [
+        "http://",
+        "https://"
+      ],
+      "allowed_paths": [
+        "catalog/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Fetch a URL snapshot and capture it as a checked catalog source.",
+      "id": "capture-url-source",
+      "model": "deterministic-fixture",
+      "operation_id": "capture-url-source",
+      "path": "capabilities/operations/capture-url-source.md",
+      "prompt_version": "capture-url-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "capture"
+      ],
+      "title": "Capture URL source",
+      "trust": {
+        "sha256": "sha256:7be6f46314e0476ee075a3e4fe2a75aed327a34f247b0f1c2f74eef7f18cd757",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [
+        "http://localhost:23119/",
+        "http://127.0.0.1:23119/"
+      ],
+      "allowed_paths": [
+        "catalog/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Capture a Zotero item or Zotero Local API item key as a checked source.",
+      "id": "capture-zotero-source",
+      "model": "deterministic-fixture",
+      "operation_id": "capture-zotero-source",
+      "path": "capabilities/operations/capture-zotero-source.md",
+      "prompt_version": "capture-zotero-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "capture",
+        "zotero"
+      ],
+      "title": "Capture Zotero source",
+      "trust": {
+        "sha256": "sha256:23a476421424228ee4a9811a74f147bf32f092d2c1c4b31257e980e0e66d3a81",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/",
+        ".memoria/quarantine/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Rollback traced machine descendants and flag PI-directed descendants.",
+      "id": "cascade-rollback",
+      "model": "deterministic-fixture",
+      "operation_id": "cascade-rollback",
+      "path": "capabilities/operations/cascade-rollback.md",
+      "prompt_version": "cascade-rollback.v1",
+      "required_checks": [
+        "trace-integrity"
+      ],
+      "risk_class": "high",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "rollback"
+      ],
+      "title": "Cascade rollback",
+      "trust": {
+        "sha256": "sha256:6ebdd45006ebcfb9f3faba3a0f25324edd6de51679526c6f66074077165f3d30",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Check whether input claims are empirically falsifiable.",
+      "id": "check-falsifiability",
+      "model": "deterministic-fixture",
+      "operation_id": "check-falsifiability",
+      "path": "capabilities/operations/check-falsifiability.md",
+      "prompt_version": "check-falsifiability.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Check falsifiability",
+      "trust": {
+        "sha256": "sha256:74ba3945919d9a02338ffa4e0e15036bc884b73087a3c49fe0269ff9cba62653",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Run bibliographic metadata checks over checked sources.",
+      "id": "check-source-metadata",
+      "model": "deterministic-fixture",
+      "operation_id": "check-source-metadata",
+      "path": "capabilities/operations/check-source-metadata.md",
+      "prompt_version": "check-source-metadata.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Check source metadata",
+      "trust": {
+        "sha256": "sha256:8991964ec52efc498cabef879d5e68c864f2b52b45be4d49e0ebcf83e97e290d",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Compare multiple notes or sources and surface grounded disagreements.",
+      "id": "compare-and-contrast",
+      "model": "deterministic-fixture",
+      "operation_id": "compare-and-contrast",
+      "path": "capabilities/operations/compare-and-contrast.md",
+      "prompt_version": "compare-and-contrast.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Compare and contrast",
+      "trust": {
+        "sha256": "sha256:46073ebf15d5317e635fa859641fb784a0548b0883f5378cc373ddc5fc67c3a1",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/sources/",
+        ".memoria/blobs/source-content/",
+        "knowledge/digests/",
+        "knowledge/hubs/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Compile a checked source into a machine-owned digest, new hubs, and curated hub suggestions.",
+      "id": "compile-source-digest",
+      "model": "deterministic-fixture",
+      "operation_id": "compile-source-digest",
+      "path": "capabilities/operations/compile-source-digest.md",
+      "prompt_version": "compile-source-digest.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Compile source digest",
+      "trust": {
+        "sha256": "sha256:6f21c76b8e5ac904912b13e5ea2924c6cf2b0425e2fc3a286fb6a1c12287b640",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/notes/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Record PI acceptance or rejection of a checked candidate note.",
+      "id": "curate-note-candidate",
+      "model": "deterministic-fixture",
+      "operation_id": "curate-note-candidate",
+      "path": "capabilities/operations/curate-note-candidate.md",
+      "prompt_version": "curate-note-candidate.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "notes"
+      ],
+      "title": "Curate note candidate",
+      "trust": {
+        "sha256": "sha256:50ce5a9cf29d3c0b2a269ce8c54d3151ffdc41dd2aa3d771d1a9a353c7e8d0ba",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/notes/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Record a PI-authored typed link between checked notes.",
+      "id": "curate-note-link",
+      "model": "deterministic-fixture",
+      "operation_id": "curate-note-link",
+      "path": "capabilities/operations/curate-note-link.md",
+      "prompt_version": "curate-note-link.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "notes"
+      ],
+      "title": "Curate note link",
+      "trust": {
+        "sha256": "sha256:94ef6d8cd374a7abbfbd61d01f687ba92c014c0f753e48b750fe102c163af908",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [
+        "https://api.crossref.org/",
+        "https://api.openalex.org/",
+        "https://api.unpaywall.org/"
+      ],
+      "allowed_paths": [
+        ".memoria/blobs/",
+        ".memoria/enrichment/providers.yaml",
+        "inbox/",
+        "journal/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "provider_fetch",
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Resolve and merge DOI provider metadata for one staged catalog source.",
+      "id": "enrich-source",
+      "model": "deterministic-fixture",
+      "operation_id": "enrich-source",
+      "path": "capabilities/operations/enrich-source.md",
+      "prompt_version": "enrich-source.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha13",
+        "enrichment",
+        "library"
+      ],
+      "title": "Enrich source",
+      "trust": {
+        "sha256": "sha256:a6b1a9d912ebf465997e30502676c10f61427b0cec121b291367bdfa24f4affe",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Draft source-grounded candidate note stubs from a source note.",
+      "id": "extract-claim-stubs",
+      "model": "deterministic-fixture",
+      "operation_id": "extract-claim-stubs",
+      "path": "capabilities/operations/extract-claim-stubs.md",
+      "prompt_version": "extract-claim-stubs.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Extract claim stubs",
+      "trust": {
+        "sha256": "sha256:59950faa4aefde687ba074769a794444097d879cc211bbb3c49fbbcfbc808e91",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Verify checked keep-set Concepts embed compact citation payloads for catalog source references.",
+      "id": "integrity-citation-survival-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-citation-survival-check",
+      "path": "capabilities/operations/integrity-citation-survival-check.md",
+      "prompt_version": "integrity-citation-survival-check.v1",
+      "required_checks": [
+        "citation-survival"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha12",
+        "integrity"
+      ],
+      "title": "Integrity citation survival check",
+      "trust": {
+        "sha256": "sha256:f848e9ed3fa6b6fa26a891abeed8805e19b17043c8d0f01de6d871442cd98bbd",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Check whether a claim's quoted evidence appears in its source.",
+      "id": "integrity-claim-quote-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-claim-quote-check",
+      "path": "capabilities/operations/integrity-claim-quote-check.md",
+      "prompt_version": "integrity-claim-quote-check.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity claim quote check",
+      "trust": {
+        "sha256": "sha256:651a30b2ad37470b5c2707772f1a6cc1a306b59336bc40eadb47b0b52b24ef2e",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Surface explicit contradiction markers as integrity findings.",
+      "id": "integrity-contradiction-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-contradiction-check",
+      "path": "capabilities/operations/integrity-contradiction-check.md",
+      "prompt_version": "integrity-contradiction-check.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity contradiction check",
+      "trust": {
+        "sha256": "sha256:e6a72bf1040f3c463061f7df265a7d104bb3cdd979c0053e4dfd52f4b89f7c37",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Check that note evidence references resolve to checked source Concepts.",
+      "id": "integrity-evidence-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-evidence-check",
+      "path": "capabilities/operations/integrity-evidence-check.md",
+      "prompt_version": "integrity-evidence-check.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity evidence check",
+      "trust": {
+        "sha256": "sha256:43354749cb22cb3dfe995569a9c733f969a969b26d8b40aca4f11e6414179102",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Check that typed note links target checked current Concepts.",
+      "id": "integrity-link-target-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-link-target-check",
+      "path": "capabilities/operations/integrity-link-target-check.md",
+      "prompt_version": "integrity-link-target-check.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity link target check",
+      "trust": {
+        "sha256": "sha256:0726f22944d62c5bc078698bca8ee58b89a9bd27a4d350bddaeb02d3ab80c129",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Detect fixture prompt-injection markers in checked source text.",
+      "id": "integrity-prompt-injection-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-prompt-injection-check",
+      "path": "capabilities/operations/integrity-prompt-injection-check.md",
+      "prompt_version": "integrity-prompt-injection-check.v1",
+      "required_checks": [],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity prompt injection check",
+      "trust": {
+        "sha256": "sha256:fbe0b48398d459b2b52e17fd4527e959f49ac10a2d6b83649f5ed4d733c759c3",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Route synthesis from uncorroborated checked sources to PI attention.",
+      "id": "integrity-provenance-checkpoint",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-provenance-checkpoint",
+      "path": "capabilities/operations/integrity-provenance-checkpoint.md",
+      "prompt_version": "integrity-provenance-checkpoint.v1",
+      "required_checks": [],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity provenance checkpoint",
+      "trust": {
+        "sha256": "sha256:a0c68db39796388b54d274e599c9f69e8d06d31d29bf52cb44d09ebb9dbb1bb3",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Check anchored note quotes against their source content.",
+      "id": "integrity-quote-anchor-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-quote-anchor-check",
+      "path": "capabilities/operations/integrity-quote-anchor-check.md",
+      "prompt_version": "integrity-quote-anchor-check.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "integrity"
+      ],
+      "title": "Integrity quote anchor check",
+      "trust": {
+        "sha256": "sha256:5f13b04b8c805e71e278acc3f2088fbc6299bf44dd50d504aea455c0d6fc0d84",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Promote an observed PI edit back to checked after worker checks pass.",
+      "id": "mark-checked",
+      "model": "deterministic-fixture",
+      "operation_id": "mark-checked",
+      "path": "capabilities/operations/mark-checked.md",
+      "prompt_version": "mark-checked.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "trace"
+      ],
+      "title": "Mark checked",
+      "trust": {
+        "sha256": "sha256:b2444921415fdb45136de311043d45ebd112037d321803d64414e11997fad6c6",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Backfill journal events for PI edits detected in git status.",
+      "id": "observe-pi-edits",
+      "model": "deterministic-fixture",
+      "operation_id": "observe-pi-edits",
+      "path": "capabilities/operations/observe-pi-edits.md",
+      "prompt_version": "observe-pi-edits.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "trace"
+      ],
+      "title": "Observe PI edits",
+      "trust": {
+        "sha256": "sha256:ab55b7094080e551b4a54e9adffa4e44f73e6ad2eb63983b68ab97a5e7c7b9b1",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/sources/",
+        "knowledge/digests/",
+        "knowledge/notes/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Propose checked note candidates from a checked source digest.",
+      "id": "propose-note-candidates",
+      "model": "deterministic-fixture",
+      "operation_id": "propose-note-candidates",
+      "path": "capabilities/operations/propose-note-candidates.md",
+      "prompt_version": "propose-note-candidates.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Propose note candidates",
+      "trust": {
+        "sha256": "sha256:e7fec1fc696b6eca862f353baa75d24372af53c0c9eec90afe43c61bfd3f63dd",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        ".memoria/index/"
+      ],
+      "allowed_tools": [
+        "indexer"
+      ],
+      "check_status": "checked",
+      "description": "Rebuild qmd's disposable input tree from checked current Concepts.",
+      "id": "rebuild-checked-qmd-source",
+      "model": "deterministic-fixture",
+      "operation_id": "rebuild-checked-qmd-source",
+      "path": "capabilities/operations/rebuild-checked-qmd-source.md",
+      "prompt_version": "rebuild-checked-qmd-source.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "index"
+      ],
+      "title": "Rebuild checked qmd source",
+      "trust": {
+        "sha256": "sha256:5c71eb4208801d5ab71d46e1464dfc7a3908dcb707dfd22f05f33c2df8951971",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/sources/",
+        "knowledge/projects/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Record one PI interview takeaway for a checked source.",
+      "id": "record-copi-interview",
+      "model": "deterministic-fixture",
+      "operation_id": "record-copi-interview",
+      "path": "capabilities/operations/record-copi-interview.md",
+      "prompt_version": "record-copi-interview.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "copi"
+      ],
+      "title": "Record Co-PI interview",
+      "trust": {
+        "sha256": "sha256:98db0c60a772c571a0c231d9eeee75eb056b54e06f0eaacc3e624e0951109f4c",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Make the strongest grounded counter-case against an argument.",
+      "id": "red-team-argument",
+      "model": "deterministic-fixture",
+      "operation_id": "red-team-argument",
+      "path": "capabilities/operations/red-team-argument.md",
+      "prompt_version": "red-team-argument.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Red-team an argument",
+      "trust": {
+        "sha256": "sha256:2f5a2aa64f4ff27bc0e4a2a559bc6f4619f1b6586edcc566b0638e11fca40b29",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "capabilities/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Regenerate the tracked capability catalog projection.",
+      "id": "regenerate-ai-catalog",
+      "model": "deterministic-fixture",
+      "operation_id": "regenerate-ai-catalog",
+      "path": "capabilities/operations/regenerate-ai-catalog.md",
+      "prompt_version": "regenerate-ai-catalog.v1",
+      "required_checks": [
+        "projection-drift"
+      ],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "projection"
+      ],
+      "title": "Regenerate ai-catalog",
+      "trust": {
+        "sha256": "sha256:eac223620ed3764d6884654bd3844818f5ff7238b6ffdbe760a923027715e698",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "index.md",
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Regenerate tracked workspace and bundle index projections.",
+      "id": "regenerate-indexes",
+      "model": "deterministic-fixture",
+      "operation_id": "regenerate-indexes",
+      "path": "capabilities/operations/regenerate-indexes.md",
+      "prompt_version": "regenerate-indexes.v1",
+      "required_checks": [
+        "projection-drift"
+      ],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "projection"
+      ],
+      "title": "Regenerate indexes",
+      "trust": {
+        "sha256": "sha256:e7682b304e5801e1ac18c3f4e15cf633305e41c13667ede86acb1b36827bac9f",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "references.bib",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Regenerate the tracked BibTeX projection from checked SQLite catalog rows.",
+      "id": "regenerate-references-bib",
+      "model": "deterministic-fixture",
+      "operation_id": "regenerate-references-bib",
+      "path": "capabilities/operations/regenerate-references-bib.md",
+      "prompt_version": "regenerate-references-bib.v1",
+      "required_checks": [
+        "projection-drift"
+      ],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha12",
+        "projection"
+      ],
+      "title": "Regenerate references.bib",
+      "trust": {
+        "sha256": "sha256:2aad293bdc5f1164e4b3fd5bd4d7f419a66ba41c1384aa65dfe03681f0be32ef",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "index.md",
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        "references.bib",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Regenerate all tracked generated workspace projections.",
+      "id": "regenerate-tracked-projections",
+      "model": "deterministic-fixture",
+      "operation_id": "regenerate-tracked-projections",
+      "path": "capabilities/operations/regenerate-tracked-projections.md",
+      "prompt_version": "regenerate-tracked-projections.v1",
+      "required_checks": [
+        "projection-drift"
+      ],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "projection"
+      ],
+      "title": "Regenerate tracked projections",
+      "trust": {
+        "sha256": "sha256:d552640409cdadd68bddebf54222375488b8c16ed2e594cb2f4f40b40866daa1",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Render a checked project argument graph as an Obsidian Canvas projection.",
+      "id": "render-project-argument-canvas",
+      "model": "deterministic-fixture",
+      "operation_id": "render-project-argument-canvas",
+      "path": "capabilities/operations/render-project-argument-canvas.md",
+      "prompt_version": "render-project-argument-canvas.v1",
+      "required_checks": [
+        "projection-drift"
+      ],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "canvas"
+      ],
+      "title": "Render project argument canvas",
+      "trust": {
+        "sha256": "sha256:4259563373ee84189399c62073f62648b9d7810c0d836fe8591426881689a352",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "journal/",
+        ".memoria/index/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Record that the PI resolved a generated attention item.",
+      "id": "resolve-attention",
+      "model": "deterministic-fixture",
+      "operation_id": "resolve-attention",
+      "path": "capabilities/operations/resolve-attention.md",
+      "prompt_version": "resolve-attention.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "attention"
+      ],
+      "title": "Resolve attention",
+      "trust": {
+        "sha256": "sha256:2e74fdc78825f0be3a1050395101192206334154b76b7defe7586a3377613f47",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "system/eval/",
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "evaluator",
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Run the frozen seeded-error integrity-loop verdict bundle.",
+      "id": "run-seeded-error-verdict",
+      "model": "deterministic-fixture",
+      "operation_id": "run-seeded-error-verdict",
+      "path": "capabilities/operations/run-seeded-error-verdict.md",
+      "prompt_version": "run-seeded-error-verdict.v1",
+      "required_checks": [
+        "seeded-error-bar"
+      ],
+      "risk_class": "high",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "gate"
+      ],
+      "title": "Run seeded-error verdict",
+      "trust": {
+        "sha256": "sha256:ce3adf894026aaeaeded12df9a6b9dd833fee510edec657acd14f306a71070c8",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Summarize selected input for later recall and connection-making.",
+      "id": "summarize-for-recall",
+      "model": "deterministic-fixture",
+      "operation_id": "summarize-for-recall",
+      "path": "capabilities/operations/summarize-for-recall.md",
+      "prompt_version": "summarize-for-recall.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Summarize for recall",
+      "trust": {
+        "sha256": "sha256:ba3c3b314a83973825d2f3a38f022b1028579bf4959b446f5bbf3e0ff23e65d6",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "List candidate tensions across notes without writing links.",
+      "id": "surface-tensions",
+      "model": "deterministic-fixture",
+      "operation_id": "surface-tensions",
+      "path": "capabilities/operations/surface-tensions.md",
+      "prompt_version": "surface-tensions.v1",
+      "required_checks": [
+        "memoria-profile"
+      ],
+      "risk_class": "medium",
+      "runner": "direct_api",
+      "title": "Surface tensions",
+      "trust": {
+        "sha256": "sha256:23c0416752c7de356b2bb7fbd7a11eb7246de6c36e91feb1cbcb71be0e727f5d",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "capabilities/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
+      "description": "Scan checked Concepts for missing or stale journal derivations.",
+      "id": "trace-integrity-scan",
+      "model": "deterministic-fixture",
+      "operation_id": "trace-integrity-scan",
+      "path": "capabilities/operations/trace-integrity-scan.md",
+      "prompt_version": "trace-integrity-scan.v1",
+      "required_checks": [],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha11",
+        "trace"
+      ],
+      "title": "Trace integrity scan",
+      "trust": {
+        "sha256": "sha256:38227bac17542ac468dff613a9d4e5a5cfe5a23995bb1ab6d485b9c1994e4dc2",
+        "source": "local"
+      },
+      "type": "operation"
+    }
+  ],
+  "generated_by": "memoria_vault.runtime.capabilities.render_ai_catalog",
+  "schema_version": 1
+}

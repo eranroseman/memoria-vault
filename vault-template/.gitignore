@@ -52,6 +52,12 @@ __pycache__/
 .memoria/state/**
 !.memoria/state/
 !.memoria/state/.gitkeep
+.memoria/blobs/provider-payloads/**
+!.memoria/blobs/provider-payloads/
+!.memoria/blobs/provider-payloads/.gitkeep
+.memoria/blobs/source-content/**
+!.memoria/blobs/source-content/
+!.memoria/blobs/source-content/.gitkeep
 
 # Captured source blobs are referenced from source Concepts and synced out of band.
 catalog/sources/*/raw/

@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # External integrations
 
-APIs and tools Memoria reaches during capture, metadata checks, retrieval, and
+APIs and tools Memoria reaches during capture, enrichment, metadata checks, retrieval, and
 local UI work. External calls are allowed only through declared operation/profile
 tool policy; captured Concepts and worker-owned projections remain Memoria's
 source of truth.
@@ -17,15 +17,15 @@ source of truth.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Import source for citekeys, PDFs, and bibliographic metadata | Capture snapshots Zotero Local API item JSON or a local BibTeX entry into checked source rows and source projection Concepts. Zotero annotations are not imported in alpha.12. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
-| **`references.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized with bibliography-changing captures; never hand-maintained. |
+| **Zotero + Better BibTeX** | Import source for citekeys, PDFs, and bibliographic metadata | Capture snapshots Zotero Local API item JSON or a local BibTeX entry into checked source rows and source projection Concepts. Zotero annotations are not imported in alpha.13. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
+| **`references.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---
 
 ## Metadata enrichment APIs
 
-Used during capture and `check_source_metadata` to populate or verify `source`
-Concept metadata and catalog entities.
+Used during `enrich-source` and `check_source_metadata` to populate or verify
+catalog source metadata and entities.
 
 | API | What it provides | Key fields populated |
 |---|---|---|
@@ -39,7 +39,7 @@ Concept metadata and catalog entities.
 
 ### API keys and rate limits
 
-Enrichment and search calls are rate-limited (or fail outright) without a free API key. Register a key per service and add it to the Librarian's `.env` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md).
+Enrichment and search calls are rate-limited (or fail outright) without a free API key or contact email. Register a key per service and add it to the Librarian's `.env` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). The DOI enrichment MVP reads `OPENALEX_API_KEY` and `NCBI_EMAIL` through `.memoria/enrichment/providers.yaml`.
 
 | Service | Where to register | Rate without key | Rate with free key |
 | --- | --- | --- | --- |

@@ -74,9 +74,12 @@ Do not configure MarkDB-Connect for alpha.11. It assumes flat citekey-named note
 files, while Memoria source Concepts live under
 `catalog/sources/<source_id>/source.md` and are worker-owned.
 
-## API keys for enrichment (optional but recommended)
+## API keys for enrichment
 
-Enrichment during ingest calls OpenAlex, Semantic Scholar, and PubMed. Without keys these calls either fail or are rate-limited. Register a free key for each service now; you'll add them to the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
+DOI enrichment calls Crossref, OpenAlex, and Unpaywall. OpenAlex requires
+`OPENALEX_API_KEY`; Crossref and Unpaywall use the contact email from
+`NCBI_EMAIL`. Add them to the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
+Semantic Scholar and PubMed enrichment are deferred beyond the DOI MVP.
 
 For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 

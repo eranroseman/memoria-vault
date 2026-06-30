@@ -111,7 +111,7 @@ Each line should carry a `"decision"` (`allow_with_log` for the Librarian's Cata
 
 ## Related
 
-- API key sources: [Set up Zotero § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment-optional-but-recommended)
+- API key sources: [Set up Zotero § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment)
 - Cost tuning: [Configure a profile § Auxiliary models](../hermes-agent/configure-a-profile.md#change-auxiliary-models-set-globally-not-per-profile)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - What the installer wires for you: [Installer (bootstrap)](../../reference/installer.md)

@@ -305,6 +305,52 @@ def mark_materialized(vault: Path, output_id: str, *, commit: str = "") -> None:
         )
 
 
+def record_projection_output(
+    vault: Path,
+    *,
+    output_id: str,
+    output_sha256: str,
+    payload_text: str,
+) -> None:
+    target = normalize_path(output_id)
+    if _sha256_text(payload_text) != output_sha256:
+        raise ValueError(f"projection payload hash mismatch for {target}")
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO outputs(
+                output_id,
+                concept_type,
+                store,
+                target_path,
+                check_status,
+                materialization_status,
+                output_sha256
+            )
+            VALUES (?, 'projection', 'file', ?, 'checked', 'pending', ?)
+            ON CONFLICT(output_id) DO UPDATE SET
+                concept_type = excluded.concept_type,
+                store = excluded.store,
+                target_path = excluded.target_path,
+                check_status = excluded.check_status,
+                materialization_status = 'pending',
+                output_sha256 = excluded.output_sha256,
+                failure_reason = NULL
+            """,
+            (target, target, output_sha256),
+        )
+        conn.execute(
+            """
+            INSERT INTO materialization_payloads(output_id, expected_sha256, payload_text)
+            VALUES (?, ?, ?)
+            ON CONFLICT(output_id) DO UPDATE SET
+                expected_sha256 = excluded.expected_sha256,
+                payload_text = excluded.payload_text
+            """,
+            (target, output_sha256, payload_text),
+        )
+
+
 def recover_pending_materializations(vault: Path) -> list[str]:
     restored: list[str] = []
     with connect(vault) as conn:
@@ -370,6 +416,49 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
     )
     csl_json = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
     doi = str(identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
+    upsert_catalog_record(
+        vault,
+        source_id=source_id,
+        concept_path=source_rel,
+        doi=doi,
+        title=str(frontmatter.get("title") or source_id),
+        description=str(frontmatter.get("description") or ""),
+        resource=str(frontmatter.get("resource") or ""),
+        identifiers=identifiers,
+        citekey=str(frontmatter.get("citekey") or csl_json.get("id") or ""),
+        csl_json=csl_json,
+        metadata_status=str(frontmatter.get("metadata_status") or "partial"),
+        check_status=str(frontmatter.get("check_status") or "unchecked"),
+        content_hash=str(frontmatter.get("normalized_text_sha256") or ""),
+        raw_hash=str(frontmatter.get("raw_text_sha256") or ""),
+        content_path=str(frontmatter.get("content_path") or ""),
+        raw_path=str(frontmatter.get("raw_copy_path") or ""),
+    )
+
+
+def upsert_catalog_record(
+    vault: Path,
+    *,
+    source_id: str,
+    title: str,
+    description: str = "",
+    concept_path: str = "",
+    doi: str | None = None,
+    resource: str = "",
+    identifiers: dict[str, Any] | None = None,
+    citekey: str = "",
+    csl_json: dict[str, Any] | None = None,
+    metadata_status: str = "partial",
+    check_status: str = "unchecked",
+    content_hash: str = "",
+    raw_hash: str = "",
+    content_path: str = "",
+    raw_path: str = "",
+) -> None:
+    stable_source_id = _source_id(source_id)
+    identifiers = dict(identifiers or {})
+    csl_json = dict(csl_json or {})
+    stable_doi = str(doi or identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
     with connect(vault) as conn:
         conn.execute(
             """
@@ -378,6 +467,7 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
                 concept_path,
                 doi,
                 title,
+                description,
                 resource,
                 identifiers_json,
                 citekey,
@@ -385,13 +475,16 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
                 metadata_status,
                 check_status,
                 content_hash,
-                raw_hash
+                raw_hash,
+                content_path,
+                raw_path
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(source_id) DO UPDATE SET
                 concept_path = excluded.concept_path,
                 doi = excluded.doi,
                 title = excluded.title,
+                description = excluded.description,
                 resource = excluded.resource,
                 identifiers_json = excluded.identifiers_json,
                 citekey = excluded.citekey,
@@ -399,24 +492,31 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
                 metadata_status = excluded.metadata_status,
                 check_status = excluded.check_status,
                 content_hash = excluded.content_hash,
-                raw_hash = excluded.raw_hash
+                raw_hash = excluded.raw_hash,
+                content_path = excluded.content_path,
+                raw_path = excluded.raw_path
             """,
             (
-                source_id,
-                normalize_path(source_rel),
-                doi,
-                str(frontmatter.get("title") or source_id),
-                str(frontmatter.get("resource") or ""),
+                stable_source_id,
+                normalize_path(concept_path)
+                if concept_path
+                else f"catalog/sources/{stable_source_id}",
+                stable_doi,
+                title or stable_source_id,
+                description,
+                resource,
                 _json(identifiers),
-                str(frontmatter.get("citekey") or csl_json.get("id") or ""),
+                citekey,
                 _json(csl_json),
-                str(frontmatter.get("metadata_status") or "partial"),
-                str(frontmatter.get("check_status") or "unchecked"),
-                str(frontmatter.get("normalized_text_sha256") or ""),
-                str(frontmatter.get("raw_text_sha256") or ""),
+                metadata_status,
+                check_status,
+                content_hash,
+                raw_hash,
+                normalize_path(content_path) if content_path else "",
+                normalize_path(raw_path) if raw_path else "",
             ),
         )
-        concept_id = f"catalog/sources/{source_id}"
+        concept_id = f"catalog/sources/{stable_source_id}"
         conn.execute(
             """
             INSERT INTO concepts(concept_id, concept_type, store, check_status)
@@ -425,8 +525,20 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
                 store = excluded.store,
                 check_status = excluded.check_status
             """,
-            (concept_id, str(frontmatter.get("check_status") or "unchecked")),
+            (concept_id, check_status),
         )
+
+
+def catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None:
+    if not db_path(vault).is_file():
+        return None
+    source_id = _source_id(source_ref)
+    with connect(vault) as conn:
+        row = conn.execute(
+            "SELECT * FROM catalog_sources WHERE source_id = ?",
+            (source_id,),
+        ).fetchone()
+    return _source_row(row) if row is not None else None
 
 
 def catalog_sources(vault: Path, *, checked_only: bool = True) -> list[dict[str, Any]]:
@@ -459,6 +571,175 @@ def has_catalog_sources(vault: Path) -> bool:
     with connect(vault) as conn:
         row = conn.execute("SELECT COUNT(*) AS count FROM catalog_sources").fetchone()
     return bool(row and row["count"])
+
+
+def start_enrichment_run(
+    vault: Path,
+    *,
+    run_id: str,
+    source_id: str,
+    required_provider_policy: dict[str, Any],
+    request_id: str = "",
+) -> None:
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO enrichment_runs(
+                run_id,
+                source_id,
+                enrichment_status,
+                required_provider_policy_json,
+                started_at,
+                request_id
+            )
+            VALUES (?, ?, 'pending', ?, ?, ?)
+            ON CONFLICT(run_id) DO UPDATE SET
+                enrichment_status = 'pending',
+                required_provider_policy_json = excluded.required_provider_policy_json,
+                started_at = excluded.started_at,
+                finished_at = NULL,
+                request_id = excluded.request_id
+            """,
+            (run_id, _source_id(source_id), _json(required_provider_policy), now_iso(), request_id),
+        )
+
+
+def finish_enrichment_run(vault: Path, run_id: str, status: str) -> None:
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            UPDATE enrichment_runs
+            SET enrichment_status = ?, finished_at = ?
+            WHERE run_id = ?
+            """,
+            (status, now_iso(), run_id),
+        )
+
+
+def store_provider_payload(
+    vault: Path,
+    *,
+    run_id: str,
+    provider: str,
+    request_key: str,
+    request_params_hash: str,
+    status: str,
+    raw_hash: str,
+    raw_path: str,
+    normalized: dict[str, Any],
+    error: str = "",
+    latency_ms: int = 0,
+    retry_count: int = 0,
+) -> None:
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO provider_payloads(
+                run_id,
+                provider,
+                request_key,
+                request_params_hash,
+                status,
+                fetched_at,
+                raw_hash,
+                raw_path,
+                normalized_json,
+                error,
+                latency_ms,
+                retry_count
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                run_id,
+                provider,
+                request_key,
+                request_params_hash,
+                status,
+                now_iso(),
+                raw_hash,
+                normalize_path(raw_path),
+                _json(normalized),
+                error,
+                latency_ms,
+                retry_count,
+            ),
+        )
+
+
+def replace_field_provenance(
+    vault: Path,
+    source_id: str,
+    rows: Iterable[dict[str, Any]],
+) -> None:
+    stable_source_id = _source_id(source_id)
+    with connect(vault) as conn:
+        conn.execute("DELETE FROM field_provenance WHERE source_id = ?", (stable_source_id,))
+        for row in rows:
+            conn.execute(
+                """
+                INSERT INTO field_provenance(
+                    source_id,
+                    field_path,
+                    value_hash,
+                    winning_provider,
+                    evidence_payload_id,
+                    alternatives_json,
+                    confidence,
+                    conflict_status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    stable_source_id,
+                    str(row["field_path"]),
+                    str(row["value_hash"]),
+                    str(row["winning_provider"]),
+                    str(row.get("evidence_payload_id") or ""),
+                    _json(row.get("alternatives") or []),
+                    str(row.get("confidence") or "high"),
+                    str(row.get("conflict_status") or "none"),
+                ),
+            )
+
+
+def replace_external_ids(vault: Path, rows: Iterable[dict[str, Any]]) -> None:
+    rows = list(rows)
+    owner_keys = {
+        (str(row["owner_type"]), str(row["owner_id"]))
+        for row in rows
+        if row.get("owner_type") and row.get("owner_id")
+    }
+    with connect(vault) as conn:
+        for owner_type, owner_id in owner_keys:
+            conn.execute(
+                "DELETE FROM external_ids WHERE owner_type = ? AND owner_id = ?",
+                (owner_type, owner_id),
+            )
+        for row in rows:
+            conn.execute(
+                """
+                INSERT INTO external_ids(
+                    owner_type,
+                    owner_id,
+                    namespace,
+                    value,
+                    source_provider,
+                    confidence,
+                    verified_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(row["owner_type"]),
+                    str(row["owner_id"]),
+                    str(row["namespace"]),
+                    str(row["value"]),
+                    str(row.get("source_provider") or ""),
+                    str(row.get("confidence") or "high"),
+                    now_iso(),
+                ),
+            )
 
 
 def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
@@ -595,6 +876,7 @@ def _init(conn: sqlite3.Connection) -> None:
             concept_path TEXT NOT NULL,
             doi TEXT UNIQUE,
             title TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
             resource TEXT NOT NULL DEFAULT '',
             identifiers_json TEXT NOT NULL DEFAULT '{}',
             citekey TEXT NOT NULL DEFAULT '',
@@ -603,7 +885,62 @@ def _init(conn: sqlite3.Connection) -> None:
                 CHECK (metadata_status IN ('verified', 'partial', 'unverified', 'not-indexed')),
             check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
             content_hash TEXT NOT NULL DEFAULT '',
-            raw_hash TEXT NOT NULL DEFAULT ''
+            raw_hash TEXT NOT NULL DEFAULT '',
+            content_path TEXT NOT NULL DEFAULT '',
+            raw_path TEXT NOT NULL DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS external_ids (
+            owner_type TEXT NOT NULL,
+            owner_id TEXT NOT NULL,
+            namespace TEXT NOT NULL,
+            value TEXT NOT NULL,
+            source_provider TEXT NOT NULL DEFAULT '',
+            confidence TEXT NOT NULL DEFAULT 'high',
+            verified_at TEXT NOT NULL,
+            PRIMARY KEY (owner_type, owner_id, namespace, value)
+        );
+        CREATE TABLE IF NOT EXISTS enrichment_runs (
+            run_id TEXT PRIMARY KEY,
+            source_id TEXT NOT NULL,
+            enrichment_status TEXT NOT NULL
+                CHECK (
+                    enrichment_status IN (
+                        'pending', 'enriched', 'partial', 'failed', 'needs_human', 'contested'
+                    )
+                ),
+            required_provider_policy_json TEXT NOT NULL DEFAULT '{}',
+            started_at TEXT NOT NULL,
+            finished_at TEXT,
+            request_id TEXT NOT NULL DEFAULT '',
+            journal_id TEXT NOT NULL DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS provider_payloads (
+            payload_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            request_key TEXT NOT NULL,
+            request_params_hash TEXT NOT NULL,
+            status TEXT NOT NULL,
+            fetched_at TEXT NOT NULL,
+            raw_hash TEXT NOT NULL,
+            raw_path TEXT NOT NULL,
+            normalized_json TEXT NOT NULL DEFAULT '{}',
+            error TEXT NOT NULL DEFAULT '',
+            latency_ms INTEGER NOT NULL DEFAULT 0,
+            retry_count INTEGER NOT NULL DEFAULT 0,
+            ttl_until TEXT NOT NULL DEFAULT '',
+            UNIQUE(run_id, provider, request_key, request_params_hash)
+        );
+        CREATE TABLE IF NOT EXISTS field_provenance (
+            source_id TEXT NOT NULL,
+            field_path TEXT NOT NULL,
+            value_hash TEXT NOT NULL,
+            winning_provider TEXT NOT NULL,
+            evidence_payload_id TEXT NOT NULL DEFAULT '',
+            alternatives_json TEXT NOT NULL DEFAULT '[]',
+            confidence TEXT NOT NULL DEFAULT 'high',
+            conflict_status TEXT NOT NULL DEFAULT 'none',
+            PRIMARY KEY (source_id, field_path)
         );
         CREATE TABLE IF NOT EXISTS derivations (
             input_id TEXT NOT NULL,
@@ -621,6 +958,9 @@ def _init(conn: sqlite3.Connection) -> None:
           );
         """
     )
+    _ensure_column(conn, "catalog_sources", "content_path", "TEXT NOT NULL DEFAULT ''")
+    _ensure_column(conn, "catalog_sources", "raw_path", "TEXT NOT NULL DEFAULT ''")
+    _ensure_column(conn, "catalog_sources", "description", "TEXT NOT NULL DEFAULT ''")
 
 
 def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
@@ -656,6 +996,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "source_id": row["source_id"],
         "concept_path": row["concept_path"],
         "title": row["title"],
+        "description": row["description"],
         "resource": row["resource"],
         "identifiers": json.loads(row["identifiers_json"] or "{}"),
         "citekey": row["citekey"],
@@ -664,7 +1005,15 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "check_status": row["check_status"],
         "normalized_text_sha256": row["content_hash"],
         "raw_text_sha256": row["raw_hash"],
+        "content_path": row["content_path"],
+        "raw_path": row["raw_path"],
     }
+
+
+def _ensure_column(conn: sqlite3.Connection, table: str, column: str, declaration: str) -> None:
+    columns = {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in columns:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
 
 
 def _source_id(value: str) -> str:
