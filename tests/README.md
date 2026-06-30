@@ -7,7 +7,6 @@ They live here as standalone files so the shipped vault carries no test code.
   on synthetic fixtures (no vault runtime, no network).
 - `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
   `pythonpath` entries for the package root, MCP entrypoints, scripts, and CI helpers.
-- `_util.py` — the shared `CheckHarness`.
 
 Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the
 `python-selftest` job. The normal local PR command is `scripts/verify pr`, which

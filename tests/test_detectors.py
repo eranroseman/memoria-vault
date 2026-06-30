@@ -5,7 +5,6 @@ import json as _json
 from datetime import UTC
 from pathlib import Path as _Path
 
-from _util import CheckHarness
 from operations.integrity.linter import detectors as _m
 
 Path = _m.Path
@@ -22,8 +21,8 @@ def test_detectors():
 
         sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
 
-        t = CheckHarness()
-        check = t.check
+        def check(name: str, cond: bool) -> None:
+            assert cond, name
 
         with tempfile.TemporaryDirectory() as td:
             v = Path(td)
@@ -277,9 +276,7 @@ def test_detectors():
             )
             check("verdict is REVIEW (HIGH+MEDIUM, no CRITICAL)", verdict(f) == "REVIEW")
 
-        return t.summary(label="detectors")
-
-    assert _run() == 0
+    _run()
 
 
 def _write_design_spec(v: _Path):

@@ -9,7 +9,6 @@ from pathlib import Path
 import board_export as _m
 import board_export_cost as _cost
 import yaml
-from _util import CheckHarness
 
 from memoria_vault.runtime.time import now_iso
 
@@ -86,8 +85,8 @@ def test_board_export():
     def _run():
         import tempfile
 
-        t = CheckHarness()
-        check = t.check
+        def check(name: str, cond: bool) -> None:
+            assert cond, name
 
         sample = [
             {
@@ -342,9 +341,7 @@ def test_board_export():
                 },
             )
 
-        return t.summary()
-
-    assert _run() == 0
+    _run()
 
 
 def test_cost_join_missing_session_is_reported_without_cost_row(tmp_path):

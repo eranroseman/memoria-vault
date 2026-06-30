@@ -38,7 +38,6 @@ Where every file lives.
 ├── capabilities/            operation, skill, MCP, and workflow Concepts
 │   ├── index.md              generated capabilities index
 │   ├── capabilities.base
-│   ├── ai-catalog.json        generated capability projection
 │   ├── operations/  skills/  mcp/  workflows/
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies

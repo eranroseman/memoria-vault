@@ -92,11 +92,9 @@ def test_tracked_projection_drift_check_covers_all_generated_outputs(tmp_path: P
     assert committed == {*TRACKED_PROJECTION_PATHS, "journal/test-machine.jsonl"}
 
     (vault / "references.bib").write_text("stale\n", encoding="utf-8")
-    (vault / "capabilities/ai-catalog.json").unlink()
 
     assert check_tracked_projections(vault)["findings"] == [
         {"path": "references.bib", "status": "stale"},
-        {"path": "capabilities/ai-catalog.json", "status": "missing"},
     ]
 
 

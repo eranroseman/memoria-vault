@@ -41,6 +41,51 @@ def read_frontmatter(path: Path) -> dict[str, Any]:
     return parse_frontmatter(safe_read(path))
 
 
+def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
+    if not text.startswith("---"):
+        return {}, text
+    end = text.find("\n---", 3)
+    if end == -1:
+        return {}, text
+    body_start = end + len("\n---")
+    if body_start < len(text) and text[body_start] == "\n":
+        body_start += 1
+    return parse_frontmatter(text), text[body_start:]
+
+
+def dump_frontmatter(frontmatter: dict[str, Any]) -> str:
+    try:
+        import yaml
+    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
+        raise RuntimeError("PyYAML is required to write frontmatter") from exc
+
+    return yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
+
+
+def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
+    if not body.startswith("\n"):
+        body = "\n" + body
+    if not body.endswith("\n"):
+        body += "\n"
+    return f"---\n{dump_frontmatter(frontmatter)}\n---{body}"
+
+
+def concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:
+    return frontmatter_doc(frontmatter, f"# {title}\n\n{body.rstrip()}\n")
+
+
+def write_frontmatter_doc(
+    path: Path,
+    frontmatter: dict[str, Any],
+    body: str,
+    *,
+    create_parent: bool = False,
+) -> None:
+    if create_parent:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(frontmatter_doc(frontmatter, body), encoding="utf-8")
+
+
 def iter_markdown(
     vault: Path, skip_dirs: set[str] | frozenset[str] | None = None
 ) -> Iterator[Path]:

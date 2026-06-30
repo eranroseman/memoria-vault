@@ -24,7 +24,7 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import concept_text, read_frontmatter, safe_read
 
 REQUIRED_POLICY_FIELDS = {
     "operation_id",
@@ -207,7 +207,7 @@ def compile_source_digest(
     digest_stage = stage_concept(
         vault,
         digest_rel,
-        _concept_text(
+        concept_text(
             digest_frontmatter,
             f"Digest: {source_fm['title']}",
             digest_text,
@@ -251,7 +251,7 @@ def compile_source_digest(
         stage = stage_concept(
             vault,
             hub_rel,
-            _concept_text(
+            concept_text(
                 hub_frontmatter,
                 topic,
                 f"Suggested update from `{digest_rel}`. Curated hubs are not overwritten.\n",
@@ -597,16 +597,6 @@ def _require_network_label(policy: dict[str, Any], label: str) -> None:
     if label in allowed:
         return
     raise PermissionError(f"operation {policy['operation_id']} cannot access {label}")
-
-
-def _concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("operation runner requires PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    return f"---\n{rendered}\n---\n# {title}\n\n{body.rstrip()}\n"
 
 
 def _sha256_text(text: str) -> str:

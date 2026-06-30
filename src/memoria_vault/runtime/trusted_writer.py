@@ -16,7 +16,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
-from memoria_vault.runtime.vaultio import parse_frontmatter
+from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
 
 EVENT_DERIVED = "derived"
 EVENT_CHECK_FIRED = "check-fired"
@@ -99,10 +99,10 @@ def observe_pi_edit(
     _bundle_for_target(contract, target)
 
     path = vault / target
-    frontmatter, body = _split_frontmatter(path.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
     frontmatter["check_status"] = "unchecked"
     _validate_concept(contract, target, frontmatter)
-    _write_concept(path, frontmatter, body)
+    write_frontmatter_doc(path, frontmatter, body, create_parent=True)
 
     event = {
         "event": EVENT_DERIVED,
@@ -193,7 +193,7 @@ def mark_checked(
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
     output_path = vault / target
-    frontmatter, body = _split_frontmatter(output_path.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(output_path.read_text(encoding="utf-8"))
     return _write_checked(
         vault,
         target,
@@ -224,12 +224,12 @@ def stage_concept(
     contract = _load_contract(vault, schemas_dir)
     _bundle_for_target(contract, target)
 
-    frontmatter, body = _split_frontmatter(content)
+    frontmatter, body = split_frontmatter(content)
     frontmatter["check_status"] = "unchecked"
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
-    _write_concept(staged_path, frontmatter, body)
+    write_frontmatter_doc(staged_path, frontmatter, body, create_parent=True)
     event = {
         "event": EVENT_DERIVED,
         "timestamp": now_iso(),
@@ -276,7 +276,7 @@ def promote_checked(
     staged_path = _staged_path(vault, target)
     if not staged_path.is_file():
         raise FileNotFoundError(staged_path)
-    frontmatter, body = _split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
     output_path = vault / target
     event = _write_checked(
         vault,
@@ -312,9 +312,9 @@ def quarantine_untraced(
         if known.get(target) == original_sha:
             continue
 
-        frontmatter, body = _split_frontmatter(source_path.read_text(encoding="utf-8"))
+        frontmatter, body = split_frontmatter(source_path.read_text(encoding="utf-8"))
         frontmatter["check_status"] = "quarantined"
-        _write_concept(source_path, frontmatter, body)
+        write_frontmatter_doc(source_path, frontmatter, body, create_parent=True)
         quarantined_sha = sha256_file(source_path)
         quarantine_path = _unique_quarantine_path(vault / ".memoria/quarantine" / target)
         quarantine_path.parent.mkdir(parents=True, exist_ok=True)
@@ -457,40 +457,13 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
 
 
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
-    frontmatter, _body = _split_frontmatter((vault / target).read_text(encoding="utf-8"))
+    frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
     frontmatter["check_status"] = "unchecked"
     _validate_concept(contract, target, frontmatter)
 
 
 def _staged_path(vault: Path, target: str) -> Path:
     return vault / ".memoria/staging" / target
-
-
-def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if not text.startswith("---"):
-        return {}, text
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}, text
-    body_start = end + len("\n---")
-    if body_start < len(text) and text[body_start] == "\n":
-        body_start += 1
-    return parse_frontmatter(text), text[body_start:]
-
-
-def _write_concept(path: Path, frontmatter: dict[str, Any], body: str) -> None:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("trusted writer requires PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    if not body.startswith("\n"):
-        body = "\n" + body
-    if not body.endswith("\n"):
-        body += "\n"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"---\n{rendered}\n---{body}", encoding="utf-8")
 
 
 def _validate_concept(contract: dict[str, Any], target: str, frontmatter: dict[str, Any]) -> None:
@@ -525,7 +498,7 @@ def _write_checked(
     promotion_checks = normalize_promotion_checks(checks)
     frontmatter["check_status"] = "checked"
     _validate_concept(contract, target, frontmatter)
-    _write_concept(output_path, frontmatter, body)
+    write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     events = []
     for check in promotion_checks:
         event = {

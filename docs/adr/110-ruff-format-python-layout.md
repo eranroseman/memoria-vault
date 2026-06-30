@@ -85,9 +85,9 @@ noise *for this codebase*, not because the rule is bad:
   eval/exec, pickle) stay enabled. Tests ignore `S` wholesale; the e2e smoke harness
   ignores `S101`.
 - **pytest-idiom rules** that clash with this suite's deliberately pytest-independent
-  test style: `PT011`/`PT017`/`PT018`. Most test files do not import pytest so they run
-  under both pytest and the ADR-44 `CheckHarness`; the `try/except/else` assertion idiom
-  is intentional. `DTZ011` (`date.today()`) is off because local-date semantics are
+  test style: `PT011`/`PT017`/`PT018`. Most test files keep plain assertions and avoid
+  pytest-specific helpers unless they need one; the `try/except/else` assertion idiom is
+  intentional. `DTZ011` (`date.today()`) is off because local-date semantics are
   intended for a single-user vault.
 
 The previously-deferred `UP017` ignore is dropped and the `datetime.timezone.utc` →

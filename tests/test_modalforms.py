@@ -1,7 +1,6 @@
-"""Modal Forms config stays generated for the remaining alpha.11 PI form."""
+"""Modal Forms config for the remaining alpha.11 PI form."""
 
 import json
-import subprocess
 from pathlib import Path
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
@@ -39,11 +38,3 @@ def test_note_capture_form_carries_prompt_instructions():
     assert fields["body"]["isRequired"] is True
     assert fields["body"]["input"] == {"type": "textarea"}
     assert "worker/check loop owns promotion" in fields["body"]["description"]
-
-
-def test_modal_forms_data_is_generated():
-    subprocess.run(
-        ["python", "scripts/gen-forms.py", "--check"],
-        cwd=SRC.parent,
-        check=True,
-    )

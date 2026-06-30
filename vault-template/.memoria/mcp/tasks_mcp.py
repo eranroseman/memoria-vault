@@ -25,10 +25,9 @@ _RUNTIME_ROOT = Path(__file__).resolve().parent.parent
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from _shared import safe_filename
 from operations.lib import loudness
 
-from memoria_vault.runtime.paths import resolve_vault
+from memoria_vault.runtime.paths import resolve_vault, safe_filename
 from memoria_vault.runtime.policy import within_scope
 
 # task lane -> the background agent that owns it.

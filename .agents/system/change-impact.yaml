@@ -52,7 +52,6 @@ areas:
       - src/memoria_vault/runtime/jsonl.py
       - src/memoria_vault/runtime/time.py
       - src/memoria_vault/runtime/paths.py
-      - vault-template/.memoria/mcp/_shared.py
     inspect:
       - Frontmatter parsing behavior and PyYAML-free fallback
       - JSONL append/iterate tolerance and parent creation

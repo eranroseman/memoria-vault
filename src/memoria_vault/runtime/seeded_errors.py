@@ -29,6 +29,7 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
+from memoria_vault.runtime.vaultio import concept_text
 
 REQUIRED_BARS = (
     "recall_min",
@@ -258,7 +259,7 @@ def _checked_stale_source(vault: Path) -> dict[str, Any]:
     stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "source",
                 "check_status": "unchecked",
@@ -297,7 +298,7 @@ def _checked_broken_digest(vault: Path) -> dict[str, Any]:
     stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "digest",
                 "check_status": "unchecked",
@@ -324,7 +325,7 @@ def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
     stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "digest",
                 "check_status": "unchecked",
@@ -354,7 +355,7 @@ def _checked_false_link_note(vault: Path) -> dict[str, Any]:
     stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "note",
                 "check_status": "unchecked",
@@ -380,7 +381,7 @@ def _checked_conflicting_doi_source(vault: Path) -> dict[str, Any]:
     stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "source",
                 "check_status": "unchecked",
@@ -419,7 +420,7 @@ def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
     entity_stage = stage_concept(
         vault,
         entity,
-        _concept_text(
+        concept_text(
             {
                 "type": "person",
                 "check_status": "unchecked",
@@ -450,7 +451,7 @@ def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
     source_stage = stage_concept(
         vault,
         target,
-        _concept_text(
+        concept_text(
             {
                 "type": "source",
                 "check_status": "unchecked",
@@ -786,13 +787,3 @@ def _git(vault: Path, *args: str) -> str:
     if proc.returncode:
         raise RuntimeError(proc.stderr or proc.stdout)
     return proc.stdout.strip()
-
-
-def _concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("seeded-error fixture requires PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    return f"---\n{rendered}\n---\n# {title}\n\n{body.rstrip()}\n"

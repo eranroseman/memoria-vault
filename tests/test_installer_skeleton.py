@@ -76,7 +76,6 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "catalog/index.md",
         "knowledge/index.md",
         "capabilities/index.md",
-        "capabilities/ai-catalog.json",
         "references.bib",
         "steering.md",
     ):

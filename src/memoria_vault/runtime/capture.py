@@ -21,7 +21,7 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import concept_text, frontmatter_doc, read_frontmatter
 
 
 def capture_source(
@@ -122,7 +122,7 @@ def capture_source(
     stage = stage_concept(
         vault,
         source_rel,
-        _concept_text(frontmatter, title, content_rel),
+        concept_text(frontmatter, title, f"Content: `{content_rel}`"),
         inputs=inputs,
         operation=workflow,
         run_id=run_id,
@@ -526,16 +526,6 @@ def _write_immutable(path: Path, data: bytes) -> str:
     return sha256_file(path)
 
 
-def _concept_text(frontmatter: dict[str, Any], title: str, content_rel: str) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("capture requires PyYAML to write source frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    return f"---\n{rendered}\n---\n# {title}\n\nContent: `{content_rel}`\n"
-
-
 def _source_frontmatter(vault: Path, source_rel: str, incoming: dict[str, Any]) -> dict[str, Any]:
     source_path = vault / source_rel
     if not source_path.is_file():
@@ -591,16 +581,10 @@ def _best_metadata_status(old: str, new: str) -> str:
 
 
 def _entity_text(frontmatter: dict[str, Any], title: str, source_rel: str) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("capture requires PyYAML to write entity frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
     links = frontmatter.get("links") if isinstance(frontmatter.get("links"), dict) else {}
     sources = [source for source in links.get("sources", [source_rel]) if isinstance(source, str)]
     source_lines = "\n".join(f"- `{source}`" for source in sources)
-    return f"---\n{rendered}\n---\n# {title}\n\nSources:\n{source_lines}\n"
+    return frontmatter_doc(frontmatter, f"# {title}\n\nSources:\n{source_lines}\n")
 
 
 def _source_entity_specs(
