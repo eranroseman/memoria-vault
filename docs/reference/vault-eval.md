@@ -25,7 +25,7 @@ lane can run and score it with nothing but the file.
 | `title` | str | The card title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `lane` | enum | The board lane the eval card routes to: `catalog` · `extract` · `link` · `map` · `draft` · `verify` · `code` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). |
+| `lane` | enum | The active board lane the eval card routes to: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). Draft and code eval lanes remain deferred with their profile packages. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 

@@ -10,7 +10,7 @@ permalink: /explanation/kanban-board/
 
 The Kanban board is Memoria's **control plane** — the trigger-and-lanes end of the loop. Every unit of background **agent** work is a card on the Hermes board (`kanban.db`, projected into Obsidian): a human action (or cron) creates a card, the dispatcher assigns it to a **lane**, the lane's agent runs it, and the result resurfaces as an **Inbox** signal. It should feel like a teammate working in the background — invisible until it has something for you.
 
-**Lanes are the four background agents** — Librarian, Writer, Peer-reviewer, Engineer (`assignee = memoria-<name>`). The Co-PI has no lane (it converses in the pane and delegates), and neither do deterministic operations; see [Profiles](../profiles/README.md) and [Operations](../operations.md).
+**Lanes are active board routes** — alpha.11 dispatches `catalog`, `extract`, `link`, and `map` to the Librarian, and `verify` to the Peer-reviewer. Writer/`draft` and Engineer/`code` profile packages ship deferred. The Co-PI has no lane (it converses in the pane and delegates), and neither do deterministic operations; see [Profiles](../profiles/README.md) and [Operations](../operations.md).
 
 The board's central design move is to keep three dimensions separate — the hidden execution `status`, the PI-facing attention state, and a soft `agent_recommendation` — so "a worker finished" never silently becomes "a human approved." Why they stay separate, and why a rejected card spawns a fresh one rather than reopening, is developed in [Board states and the review gate](states.md); the enums and lane assignments are in the [Kanban board reference](../../reference/kanban-board.md). A card is *work* (transient, archived when done); a vault note is *knowledge* (durable).
 

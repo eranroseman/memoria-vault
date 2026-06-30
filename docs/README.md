@@ -7,14 +7,14 @@ topic: overview
 
 # Memoria
 
-A research operating system for a single researcher (the PI) — a Co-PI you converse with and four background agents that read, enrich, map, verify, and write inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
+A research operating system for a single researcher (the PI) — a Co-PI you converse with and specialist background profiles that read, enrich, map, and verify inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
 something, see [How-to guides](how-to-guides). If you need exact values, field
 names, or configuration formats, see [Reference](reference).
 
-**0.1.0** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
+**Status: v0.1 alpha source install** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
 <!-- SCREENSHOT: Replace this comment with ![Memoria vault](assets/screenshot.png) once the system is running. -->
 
@@ -32,7 +32,7 @@ keeps the work visible, traceable, and review-gated.
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
 | Co-PI | The conversational agent in Obsidian. It explains, questions, reads, and delegates. It does not write directly. |
-| Lanes | The four background agents: Librarian, Writer, Peer-reviewer, and Engineer. They work through board cards. |
+| Lanes | The active board routes: Librarian handles `catalog`, `extract`, `link`, and `map`; Peer-reviewer handles `verify`. Writer/`draft` and Engineer/`code` packages ship deferred. |
 | Board | The Hermes Kanban control plane. It records delegated work, status, blockers, review, and completion. |
 | Vault | The Obsidian folder tree. It holds notes, catalog records, inbox cards, spaces, and system projections. |
 
@@ -95,7 +95,7 @@ Design Book foundations, then the Explanation pages in this order.
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
 8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
-9. [Profiles](explanation/profiles/README.md) — the Co-PI and the four background lanes
+9. [Profiles](explanation/profiles/README.md) — the Co-PI and specialist background profiles
 10. [Operations](explanation/operations.md) — the deterministic layer beneath the agents
 11. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
 12. [Decision points](explanation/kanban-board/decision-points.md) — how approvals, prompts, worklists, and triggers differ
@@ -147,7 +147,7 @@ Deterministic **operations** do the mechanical work, behind the policy MCP.
 
 ## Current status and limitations
 
-Memoria is at **0.1.0**: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
+Memoria is in the **v0.1 alpha source-install** phase: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
 
 - **No end-to-end run on a live runtime** — continuous, unattended operation through all workflow stages is not yet demonstrated.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).

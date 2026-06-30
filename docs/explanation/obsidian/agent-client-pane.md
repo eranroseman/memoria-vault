@@ -7,7 +7,7 @@ nav_order: 2
 
 # The Agent Client pane
 
-The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. The pane hosts **one agent — the Co-PI** (Memoria's single conversational agent — see [Glossary](../../reference/glossary.md)) ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The specialists (Librarian, Writer, Peer-reviewer, Engineer) are **board lanes** (background workers on the kanban board — see [Glossary](../../reference/glossary.md)), not conversation partners, and the Co-PI delegates cards (units of delegated work) to them.
+The agent-client plugin implements ACP (Agent Client Protocol) inside Obsidian: a chat pane where the human talks to a Hermes profile. The pane hosts **one agent — the Co-PI** (Memoria's single conversational agent — see [Glossary](../../reference/glossary.md)) ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The specialists (Librarian, Writer, Peer-reviewer, Engineer) are background profile packages, not conversation partners; current Co-PI delegation routes only to the active `catalog`, `extract`, `link`, `map`, and `verify` task lanes.
 
 Most Memoria work belongs on the board because it produces a reviewable artifact.
 The pane exists for synchronous, exploratory thinking where the useful output is
@@ -23,7 +23,7 @@ For *how to operate* the pane — opening it, attaching a note as context, readi
 The practical discipline the pane asks of the human:
 
 - **Stay in the pane** while the work is exploratory — questioning a source, branching framings, asking what exists. The output is your sharpened thinking; nothing needs to be filed.
-- **Leave the pane** the moment the work should produce an artifact. Either write it yourself through the gated path (a claim note, a draft edit), use the matching direct command, or ask the Co-PI to delegate it — "draft this section" becomes a card on the draft lane, with a reviewable output and an audit trail.
+- **Leave the pane** the moment the work should produce an artifact. Either write it yourself through the gated path (a claim note, a draft edit), use the matching direct command, or ask the Co-PI to delegate active lane work — "verify this draft" becomes a card on the verify lane, with a reviewable output and an audit trail.
 
 A pane session that keeps producing things you wish were files is the signal to switch modes: conversations are for converging on what to make, cards are for making it.
 

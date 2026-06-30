@@ -26,7 +26,7 @@ For the short version of the core terms, see [Home](../README.md).
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
-**Agent** — a running instance of the model doing work, operating under exactly one **profile**. Two kinds: the **Co-PI**, the interactive agent the PI talks to (it runs off the board), and **background agents**, which execute operations in **lanes**. An agent is a *process*; its permissions come from its profile, and its place on the board is its lane. Contrast *profile* (the configured posture) and *lane* (the board slot).
+**Agent** — a running instance of the model doing work, operating under exactly one **profile**. Two kinds: the **Co-PI**, the interactive agent the PI talks to (it runs off the board), and **background agents**, which execute board cards in **lanes**. An agent is a *process*; its permissions come from its profile, and its place on the board is its lane. Contrast *profile* (the configured posture) and *lane* (the board slot).
 
 **Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. A profile is *configuration* — a posture — not a running process; the process that runs under it is an **agent** and its board slot is a **lane**. Permissions live on the profile, so "agent permissions" and "a lane's permissions" are shorthand for the permissions of the profile that agent or lane runs. See [Profile capabilities](profile-capabilities.md).
 
@@ -80,7 +80,7 @@ Maintenance.
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
-**Lane** — a background agent's execution path on the board; a lane _is_ an `assignee` value. Four lanes: Librarian, Writer, Peer-reviewer, Engineer. Each lane runs one fixed **profile** and so inherits that profile's permissions; the thing that actually runs in the lane is an **agent**. The Co-PI has no lane; operations run off the board.
+**Lane** — a background agent's execution path on the board. Active alpha.11 task lanes are `catalog`, `extract`, `link`, `map`, and `verify`; Writer/`draft` and Engineer/`code` are deferred profile packages. Each active lane runs one fixed **profile** and so inherits that profile's permissions; the thing that actually runs in the lane is an **agent**. The Co-PI has no lane; operations run off the board.
 
 **Card vs task** — a *task* is a unit of delegated work; a card is its runtime
 board representation. Alpha.11 surfaces board state as projections, not Concept
