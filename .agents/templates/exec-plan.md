@@ -5,8 +5,9 @@
   guidance comments. See ../playbooks/exec-plan.md for when and how to use it.
 
   ── Where this instance lives ───────────────────────────────────────────────
-  scratch/releases/<version>/  — under the current release/checkpoint;
-  tracked for linking and handoff, deleted before that release closes.
+  scratch branch, scratch/releases/<version>/ — under the current
+  release/checkpoint; tracked for linking and handoff, deleted before that
+  release closes.
   (_notes/ is gitignored, so a plan meant to be resumed or handed off never
   lives there.)
   Never keep an ExecPlan as a permanent record; it is a working artifact.
@@ -30,7 +31,8 @@
 <!-- The minimum a stateless reader needs to orient. -->
 
 - **Task:** {{ one line }}
-- **Worktree / branch:** `~/mv/<name>` · `feat/<name>`
+- **Worktree / branch:** `~/mv/<name>` · `feat/<name>` for implementation;
+  `scratch/<name>` pushed to `origin/scratch` for this plan file
 - **Related ADRs:** {{ ADR-NN — link to `docs/adr/<NN>-*.md`, or — }}
 - **Related issues / milestone:** {{ #NN, 0.1.0 or — }}
 - **Started:** {{ YYYY-MM-DD }} · **Last updated:** {{ YYYY-MM-DD }}

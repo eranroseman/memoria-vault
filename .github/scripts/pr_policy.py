@@ -6,11 +6,13 @@ Emits two GitHub Actions outputs:
 
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
 paths get decision=auto_approve, which causes the workflow to enable auto-merge.
-Safe prose paths are docs/ or _notes/ with .md/.txt files only; scratch/ is also
-safe because it is non-authoritative working material. Safe PRs can be any size —
-a single docs pass legitimately touches 100+ nav_order fields. Note: docs/adr/
-is the one docs/ subtree that is NOT auto-approved (it holds the decision record —
-see below).
+Safe prose paths are docs/ or _notes/ with .md/.txt files only. Safe PRs can be
+any size — a single docs pass legitimately touches 100+ nav_order fields. Note:
+docs/adr/ is the one docs/ subtree that is NOT auto-approved (it holds the
+decision record — see below).
+
+Block: scratch/ is branch-owned ephemeral working material. It lives on the
+scratch branch and is not merged into main by PR.
 
 Block: any PR touching sensitive paths (.github/, vault-template/.memoria/, scripts/, or
 ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
@@ -31,14 +33,13 @@ TRUSTED_AUTHORS = {
     "dependabot[bot]",
 }
 
-# A path is safe only when it is prose under an explicitly safe prefix, or
-# scratch material under the non-authoritative root scratch area.
+# A path is safe only when it is prose under an explicitly safe prefix.
 SAFE_PROSE_PREFIXES = (
     "docs/",
     "_notes/",
 )
 SAFE_SUFFIXES = (".md", ".txt")
-SAFE_SCRATCH_PREFIXES = ("scratch/",)
+MAIN_EXCLUDED_PREFIXES = ("scratch/",)
 
 # Any change to these paths is always blocked for human review. docs/adr/ holds the
 # decision record (ADRs at every lifecycle status) and stays review-required even
@@ -59,10 +60,13 @@ SENSITIVE_PATHS = {
 
 
 def is_safe(path: str) -> bool:
-    return any(path.startswith(p) for p in SAFE_SCRATCH_PREFIXES) or (
-        any(path.startswith(p) for p in SAFE_PROSE_PREFIXES)
-        and any(path.endswith(s) for s in SAFE_SUFFIXES)
+    return any(path.startswith(p) for p in SAFE_PROSE_PREFIXES) and any(
+        path.endswith(s) for s in SAFE_SUFFIXES
     )
+
+
+def is_main_excluded(path: str) -> bool:
+    return any(path.startswith(p) for p in MAIN_EXCLUDED_PREFIXES)
 
 
 def is_sensitive(path: str) -> bool:
@@ -72,9 +76,15 @@ def is_sensitive(path: str) -> bool:
 def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[str, str]:
     """Pure decision logic. Returns (decision, reason)."""
     all_safe = all(is_safe(p) for p in changed_paths) if changed_paths else False
+    main_excluded_paths = [p for p in changed_paths if is_main_excluded(p)]
     sensitive_paths = [p for p in changed_paths if is_sensitive(p)]
     trusted = pr_author in TRUSTED_AUTHORS
 
+    if main_excluded_paths:
+        return (
+            "block",
+            "scratch/ lives on the scratch branch; do not merge scratch material into main.",
+        )
     if pr_draft:
         return "needs_human", "Draft PR — awaiting author readiness."
     if sensitive_paths and not trusted:
@@ -87,7 +97,7 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     if trusted and all_safe:
         return "auto_approve", (
             f"Trusted author (@{pr_author}), all {len(changed_paths)} changed "
-            "file(s) are in safe paths (docs / notes / scratch)."
+            "file(s) are in safe paths (docs / notes)."
         )
     if all_safe:
         return (
