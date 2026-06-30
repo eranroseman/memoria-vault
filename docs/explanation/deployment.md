@@ -21,7 +21,7 @@ and for maintained rationale see the Design Book links below.
 | --- | --- |
 | Vault | Local Obsidian folder populated from `src/` by the installer. |
 | Runtime | Hermes profiles on the same host as the production vault. |
-| Bibliography | Memoria generates tracked `references.bib` from checked source Concepts. |
+| Bibliography | Memoria generates tracked `references.bib` from checked SQLite catalog rows, with checked source Concepts as the empty-DB fallback. |
 | Dispatch | One Hermes dispatcher per vault. |
 | Secrets | Per-machine `.env` files, never committed or synced. |
 

@@ -1074,7 +1074,7 @@
         "projection_writer"
       ],
       "check_status": "checked",
-      "description": "Regenerate the tracked BibTeX projection from checked sources.",
+      "description": "Regenerate the tracked BibTeX projection from checked SQLite catalog rows.",
       "id": "regenerate-references-bib",
       "model": "deterministic-fixture",
       "operation_id": "regenerate-references-bib",
@@ -1086,12 +1086,12 @@
       "risk_class": "low",
       "runner": "local",
       "tags": [
-        "alpha11",
+        "alpha12",
         "projection"
       ],
       "title": "Regenerate references.bib",
       "trust": {
-        "sha256": "sha256:d55b24bf9d85ca586d4dd689f6baf2f352020a4e136ce9f1ab4ad5eb34f84f4e",
+        "sha256": "sha256:2aad293bdc5f1164e4b3fd5bd4d7f419a66ba41c1384aa65dfe03681f0be32ef",
         "source": "local"
       },
       "type": "operation"

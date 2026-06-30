@@ -37,7 +37,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Red-team an argument](operations/red-team-argument.md) `operation` — Make the strongest grounded counter-case against an argument.
 - [Regenerate ai-catalog](operations/regenerate-ai-catalog.md) `operation` — Regenerate the tracked capability catalog projection.
 - [Regenerate indexes](operations/regenerate-indexes.md) `operation` — Regenerate tracked workspace and bundle index projections.
-- [Regenerate references.bib](operations/regenerate-references-bib.md) `operation` — Regenerate the tracked BibTeX projection from checked sources.
+- [Regenerate references.bib](operations/regenerate-references-bib.md) `operation` — Regenerate the tracked BibTeX projection from checked SQLite catalog rows.
 - [Regenerate tracked projections](operations/regenerate-tracked-projections.md) `operation` — Regenerate all tracked generated workspace projections.
 - [Render project argument canvas](operations/render-project-argument-canvas.md) `operation` — Render a checked project argument graph as an Obsidian Canvas projection.
 - [Resolve attention](operations/resolve-attention.md) `operation` — Record that the PI resolved a generated attention item.

@@ -62,8 +62,8 @@ Each vault's Obsidian instance runs its own Local REST API plugin, and two insta
 **6. Set up Zotero for the second vault.**
 
 No per-vault Better BibTeX auto-export is needed. Keep citekeys stable in
-Zotero; each vault regenerates its own `references.bib` from checked source
-Concepts.
+Zotero; each vault regenerates its own `references.bib` from checked SQLite
+catalog rows.
 
 ## Verify
 

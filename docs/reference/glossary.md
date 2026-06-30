@@ -32,7 +32,7 @@ For the short version of the core terms, see [Home](../README.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
-**Workspace** — the alpha.11 runtime vault root containing `catalog/`,
+**Workspace** — the alpha.12 runtime vault root containing `catalog/`,
 `knowledge/`, `capabilities/`, `journal/`, and `.memoria/`. Obsidian opens this
 root. `knowledge/` is the checked knowledge bundle inside the vault, not the
 Obsidian vault root.
@@ -105,7 +105,7 @@ the owning state is journal/check/queue data.
 members and links. Machine-curated hub changes are suggestions until the PI
 adopts them.
 
-**Check status** — the read-state field on every alpha.11 Concept:
+**Check status** — the read-state field on every Concept:
 `unchecked`, `checked`, or `quarantined`. Values are specified in
 [Frontmatter fields](frontmatter.md).
 
