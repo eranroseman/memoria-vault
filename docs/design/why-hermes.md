@@ -40,7 +40,7 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 ## The programmatic surface (the API server)
 
-The API server is where programs connect to Memoria: file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. Humans use Obsidian, the CLI, or Telegram instead ([Interaction channels](../explanation/architecture/interaction-channels.md)).
+The API server is where programs connect to Memoria: file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. The PI uses Obsidian for daily action; CLI and Telegram are secondary operator/signal channels ([Interaction channels](../explanation/architecture/interaction-channels.md)).
 
 The API grants no extra power. Every write still passes through the policy MCP, so the caller has only the permissions of the profile it acts as. See [Policy MCP](../reference/policy-mcp.md) and [Hermes CLI](../reference/hermes-cli.md#api-server).
 
@@ -69,7 +69,7 @@ The rule of thumb: **Hermes moves work; Memoria decides what work means and what
 - What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-layered-architecture.md)
 - The board as a state machine: [Board states and the review gate](../explanation/kanban-board/states.md)
 - The honesty-card overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/honesty-card.md)
-- The human interaction surfaces (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/interaction-channels.md)
+- The interaction channels (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/interaction-channels.md)
 
 **Reference**
 

@@ -6,7 +6,8 @@ grand_parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **operation, not an agent** ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)).
+The Linter is an **operation, not an agent** ([ADR-69](../adr/69-operations-layer-naming.md));
+its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creation.md).
 
 | Question | Answer |
 | --- | --- |

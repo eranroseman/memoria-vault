@@ -64,8 +64,10 @@ The same trust split applies to connections: `links:` are authored note connecti
 ## Bases is the view layer; the Linter keeps it sound
 
 Catalog, knowledge, and capability Concepts surface through **Obsidian Bases**
-and generated indexes. Every row is a file; the records are the source of truth;
-nothing reads a Base as data ([ADR-49](../../adr/49-catalog-in-bases-linter-monitor.md)).
+and generated indexes. Bases are views; Concept frontmatter is governed by
+[ADR-119](../../adr/119-schema-driven-document-creation.md), and catalog rows that
+feed bibliography/materialization are governed by
+[ADR-122](../../adr/122-sqlite-working-state-boundary.md).
 
 Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through cron/CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. System-file drift can be restored from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 

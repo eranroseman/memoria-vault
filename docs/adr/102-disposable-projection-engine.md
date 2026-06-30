@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [49, 57, 69, 116]
+assumes: [57, 69, 116, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -86,7 +86,7 @@ does not solve operator-facing dashboard ergonomics.
   trend, skill state, and future integrity projections.
 - **Files affected:** future projection engine under `vault-template/.memoria/operations/`,
   projection registry, dashboard references, Linter/projector conformance tests.
-- **Related decisions / Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
+- **Related decisions / Depends on:** [ADR-119](119-schema-driven-document-creation.md),
   [ADR-57](57-engines-write-agents-judge.md),
   [ADR-69](69-operations-layer-naming.md),
   [ADR-116](116-obsidian-surface-architecture.md).

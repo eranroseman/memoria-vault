@@ -34,7 +34,10 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 ## The Bases views
 
-Obsidian Bases (`.base` files) are the database views the dashboards and space notes lean on ([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). Bases are views; the notes are the source of truth.
+Obsidian Bases (`.base` files) are the database views the dashboards and space notes lean on
+([ADR-116](../adr/116-obsidian-surface-architecture.md)). Bases are views; Concept
+frontmatter is governed by [ADR-119](../adr/119-schema-driven-document-creation.md), and
+SQLite catalog rows are governed by [ADR-122](../adr/122-sqlite-working-state-boundary.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |

@@ -88,7 +88,7 @@ failure the deferral predicted.
 **A generated report instead of a live dashboard.** A cron script writing a markdown
 snapshot would add a generator, a cadence, and a staleness window for no benefit — the
 source files are small and local, so the view layer can read them directly
-([ADR-49](49-catalog-in-bases-linter-monitor.md): dashboards are views, never a second
+([ADR-116](116-obsidian-surface-architecture.md): views are surfaces, never a second
 store).
 
 ## Related

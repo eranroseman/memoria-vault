@@ -33,13 +33,16 @@ The Co-PI remains additive. An action may be Co-PI-only only when the interactio
 itself is the product: synchronous, read-only dialogue that depends on back-and-forth
 judgment, the Co-PI's memory loop, or interactive persona tuning. If the outcome is a
 card, note, draft, report, capture, resolved Inbox item, or any other durable artifact,
-there must be a direct command/palette/terminal route, and user-facing docs must name
-that route beside any Co-PI phrasing.
+there must be a direct Obsidian UI route, and user-facing docs must name that route
+beside any Co-PI phrasing. CLI/terminal commands may remain operator, debug, admin, or
+safe-mode routes, but they do not satisfy PI accessibility.
 
 ## Consequences
 
 - Reaffirms and operationalizes the PI-direct-access rule; the Co-PI is never a
   single point of access for a deterministic or durable action.
+- Keeps CLI/terminal access out of the PI surface contract; those routes are for
+  operators and tests unless a later ADR explicitly says otherwise.
 - Requires docs to explain any Co-PI-only exception as conversation-bound rather than
   action-bound.
 - Adds Commander as a bundled plugin (pairs with the existing QuickAdd commands).

@@ -7,12 +7,12 @@ nav_order: 3
 
 # Interaction channels
 
-Memoria has one daily human surface and two secondary human channels:
+Memoria has one daily PI surface and two secondary channels:
 
 | Channel | Mode | Purpose |
 | --- | --- | --- |
-| **Obsidian** | Focused desktop work | Inbox triage, reading, writing, dashboards, and Co-PI conversation. |
-| **CLI** (`hermes ...`) | Precise occasional work | Forensic queries, profile administration, manual dispatch, backup. |
+| **Obsidian** | Focused desktop work | Inbox triage, reading, writing, dashboards, review decisions, and Co-PI conversation. |
+| **CLI** (`hermes ...`) | Operator/admin work | Forensic queries, profile administration, manual dispatch, backup, and safe-mode checks. |
 | **Telegram** | Mobile async signal | Urgent push notifications today; mobile capture remains planned work. |
 
 The API server is not a human channel. Programs use it for filesystem watchers,
