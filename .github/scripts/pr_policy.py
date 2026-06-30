@@ -11,6 +11,9 @@ any size — a single docs pass legitimately touches 100+ nav_order fields. Note
 docs/adr/ is the one docs/ subtree that is NOT auto-approved (it holds the
 decision record — see below).
 
+Needs-human: the check passes but does not enable auto-merge. It is a manual-merge
+classification, not a required-approval mechanism.
+
 Block: scratch/ is branch-owned ephemeral working material. It lives on the
 scratch branch and is not merged into main by PR.
 
@@ -86,13 +89,13 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
             "scratch/ lives on the scratch branch; do not merge scratch material into main.",
         )
     if pr_draft:
-        return "needs_human", "Draft PR — awaiting author readiness."
+        return "needs_human", "Manual merge required: Draft PR — awaiting author readiness."
     if sensitive_paths and not trusted:
         return "block", f"Sensitive paths changed by untrusted author: {sensitive_paths[:5]}"
     if sensitive_paths:
         return (
             "needs_human",
-            f"Sensitive paths changed — manual review required: {sensitive_paths[:5]}",
+            f"Manual merge required: sensitive paths changed: {sensitive_paths[:5]}",
         )
     if trusted and all_safe:
         return "auto_approve", (
@@ -102,9 +105,10 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     if all_safe:
         return (
             "needs_human",
-            f"Safe file types only, but @{pr_author} is not on the trusted-author list.",
+            f"Manual merge required: safe file types only, but @{pr_author} is "
+            "not on the trusted-author list.",
         )
-    return "needs_human", "Application code or unclassified path — human review required."
+    return "needs_human", "Manual merge required: application code or unclassified path."
 
 
 def get_pr_files(session, repo: str, pr_number: str) -> list:

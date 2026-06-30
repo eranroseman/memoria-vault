@@ -24,8 +24,8 @@ permissions:
   contents: read
 
 jobs:
-  yamllint:
-    name: yamllint (config + workflows)
+  lint-config:
+    name: lint-config
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -37,26 +37,11 @@ jobs:
       - name: yamllint tracked YAML (excludes vault-template/.obsidian, uses .yamllint)
         run: git ls-files '*.yaml' '*.yml' | grep -v 'src/\.obsidian/' | xargs -r yamllint
 
-  actionlint:
-    name: actionlint (.github/workflows)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.7
         with:
           args: -color
 
-  json-validate:
-    name: json syntax (authored)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
-        with:
-          python-version: "3.12"
       - name: validate authored JSON
         run: |
           rc=0

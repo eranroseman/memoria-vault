@@ -2,14 +2,18 @@
   "name": "memoria-vault-devtools",
   "version": "0.0.0",
   "private": true,
-  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + vault-template/.memoria/). Currently pins the repo-local qmd code-search engine; never deployed to a vault.",
+  "description": "Contributor-only dev tooling for the memoria-vault repo. NOT the Memoria product (that is scripts/install.sh + vault-template/.memoria/). Pins repo-local qmd code search and prose checks; never deployed to a vault.",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "qmd": "qmd"
+    "markdownlint": "markdownlint --config .markdownlint.json \"docs/**/*.md\"",
+    "qmd": "qmd",
+    "spellcheck": "cspell lint --no-progress --no-must-find-files --gitignore \"**/*.md\""
   },
   "devDependencies": {
-    "@tobilu/qmd": "^2.5.3"
+    "@tobilu/qmd": "^2.5.3",
+    "cspell": "8.19.4",
+    "markdownlint-cli": "0.49.0"
   }
 }

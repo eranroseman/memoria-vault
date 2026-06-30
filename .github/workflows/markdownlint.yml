@@ -30,15 +30,17 @@ permissions:
 
 jobs:
   markdownlint:
-    name: markdownlint structural (docs/)
+    name: markdownlint
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
+      - name: Install pinned Node dev tools
+        run: npm ci --ignore-scripts
       - name: markdownlint structural rules over docs/
-        run: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json 'docs/**/*.md'
+        run: npm run markdownlint

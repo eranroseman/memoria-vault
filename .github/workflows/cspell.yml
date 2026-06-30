@@ -1,15 +1,13 @@
 name: cspell
 
-# Spell-check the markdown prose surface using the shared root cspell.json and the
-# project-words.txt dictionary. Scope is owned entirely by cspell.json (`files` +
-# `ignorePaths` + `enableGlobDot`) — see the step below. cSpell is the only
-# spelling gate; Harper remains an editor hint.
+# Spell-check the markdown prose surface using the pinned repo-local cspell
+# dependency plus the shared root cspell.json and project-words.txt dictionary.
+# Scope is owned entirely by cspell.json (`files` + `ignorePaths` +
+# `enableGlobDot`) — see the package script below. cSpell is the only spelling
+# gate; Harper remains an editor hint.
 #
 # Runs unconditionally (no `paths:` filter) so it can back a required check —
 # same rationale as docs-doctor / markdownlint / python-selftest. See AGENTS.md §4.
-#
-# RULESET COORDINATION: to make this blocking, add `cspell` to the branch
-# ruleset's required status checks (Settings → Rules → Rulesets → main).
 
 on:
   push:
@@ -32,13 +30,15 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e  # v6
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
+      - name: Install pinned Node dev tools
+        run: npm ci --ignore-scripts
       - name: cspell over prose markdown
         # Scope lives only in cspell.json: `files: ["**/*.md"]` selects all markdown,
         # `enableGlobDot: true` reaches dot-directories like vault-template/.memoria/ and
         # .agents/ that a plain `**` glob would skip, and `ignorePaths` holds every
         # exclusion. `--gitignore` keeps this to tracked files. The pre-commit hook
         # defers to the same cspell.json, so there is no file list to keep aligned.
-        run: npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files --gitignore "**/*.md"
+        run: npm run spellcheck
