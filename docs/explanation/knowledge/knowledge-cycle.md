@@ -40,7 +40,7 @@ A new source's value is not the text it contains but what it contributes to exis
 
 The Inbox and space dashboards surface exactly where work has stopped. Sources awaiting reading and distillation surface in the Library reading pipeline. Unconnected claims surface in Knowledge's Open questions view; low-stakes structural debt surfaces in Maintenance's Loose ends view. Open verification findings surface as Inbox `flag`/`alert` cards in Maintenance. The correspondence between stuck points and views is not accidental — they were designed to make the cycle's failure modes visible before they compound.
 
-The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. It is also the hardest gap to notice, because a vault full of well-developed claims looks healthy even when nothing is being written. (The _map_ task's writability and readiness reports exist to prompt exactly this.)
+The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. It is also the hardest gap to notice, because a vault full of well-developed claims looks healthy even when nothing is being written. Today the _map_ task surfaces coverage, clusters, graph/canvas views, and gap cards; writability/readiness scoring is deferred future work.
 
 ## Why archiving preserves the cycle's integrity
 
