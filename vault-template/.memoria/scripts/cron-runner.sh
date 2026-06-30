@@ -6,6 +6,7 @@ py="${MEMORIA_PYTHON:-}"
 vault="${MEMORIA_VAULT:-}"
 [ -n "$py" ] || py="{{PYTHON}}"
 [ -n "$vault" ] || vault="{{VAULT_PATH}}"
+export PYTHONPATH="$vault/.memoria:$vault/.memoria/mcp:${PYTHONPATH:-}"
 job="${1:-}"
 status=0
 
