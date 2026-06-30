@@ -168,6 +168,7 @@ def test_installer_cron_helper_keeps_all_job_schedules():
     text = INSTALL.read_text(encoding="utf-8")
 
     assert "install_hermes_cron()" in helper
+    assert "hermes cron list --all" in helper
     assert 'hermes cron create "$schedule" --script "$dest_name" --no-agent' in helper
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
@@ -185,6 +186,7 @@ def test_installer_cron_helper_keeps_all_job_schedules():
 
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
+    assert 'PYTHONPATH="$vault/.memoria:$vault/.memoria/mcp:${PYTHONPATH:-}"' in text
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
     assert '-m memoria_vault.runtime.worker --vault "$vault" integrity-sweep' in text

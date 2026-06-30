@@ -179,7 +179,11 @@ entrypoint is still `scripts/e2e-smoke.sh`, which now names its PR-safe sections
 model-free cassette replay; it does **not** completely replace the ADR-29
 `scripts/test-l2.sh` concept, which described live Hermes agent-wiring against a
 cheap model and disposable vault. That live driver belongs under opt-in/nightly
-`runtime-integration` unless a deliberately small wrapper is added later. The full
+`runtime-integration`; the deliberately small wrapper is now
+`scripts/install-test-vault-local-llm.sh`. It rebuilds `~/Memoria-test/vault`
+from scratch, runs the real Linux installer with the local OpenAI-compatible model
+overlay, verifies the installed package/golden/detector/profile/cron surfaces, and
+then runs `scripts/test-l2.sh --real-model`. The full
 containerized/headless Obsidian/local-LLM design remains Phase 2 / nightly /
 release-candidate `runtime-integration`, not a required PR gate.
 

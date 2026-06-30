@@ -38,10 +38,12 @@ the repo-root `pyproject.toml` declares pytest `pythonpath` for the loose runtim
 module directories and repo tooling scripts. `python-selftest.yml`,
 `scripts/test.sh`, and the pre-commit hook run `pytest`. The deployed vault carries **zero test code**.
 
-This **amends ADR-29's L1 implementation only** — the pyramid (L0–L5), the coverage
-matrix, drift control, and gate mapping are unchanged. The installer-side **checksum +
-import smoke check** is the right home for in-situ verification and is **deferred to
-alpha.2**, when the installer is being reworked anyway.
+This **amends ADR-29's test hosting only**. The repo-side pytest tree now carries
+registered level markers (`static`, `unit`, `contract`, `package`, `runtime`,
+`live`) so scripts and CI can select the cheapest useful evidence without moving
+test code into shipped modules. The installer-side **checksum + import smoke
+check** is the right home for in-situ verification and is **deferred to alpha.2**,
+when the installer is being reworked anyway.
 
 ## Consequences
 

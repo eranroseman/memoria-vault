@@ -487,6 +487,22 @@ def test_hub_threshold_default_threshold_is_15(tmp_path):
     assert len(f) == 1 and "15 notes" in f[0].message
 
 
+def test_inbox_attention_projection_is_not_typed_or_stray(tmp_path):
+    v = tmp_path
+    (v / "inbox").mkdir()
+    (v / "inbox/gap-map-corpus.md").write_text(
+        "---\ntitle: Gap\nprojection: attention\nattention_kind: gap\nattention_status: open\n---\n",
+        encoding="utf-8",
+    )
+
+    schema = _m.frontmatter_schema_check(v)
+    misplaced = _m.misplaced_note(v)
+
+    assert not any(f.path == "inbox/gap-map-corpus.md" for f in schema)
+    assert not any(f.path == "inbox/gap-map-corpus.md" for f in misplaced)
+    assert not any(f.path == "inbox" for f in misplaced)
+
+
 def test_skeleton_drift(tmp_path):
     assert _m._FOLDERS is not None, "schema home must load in CI (PyYAML present)"
     skeleton = _m._FOLDERS["skeleton"]

@@ -32,7 +32,7 @@ if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
-TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/")
+TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/", "inbox/")
 # A typed document legitimately leaves its type-home only while it is work-in-flight
 # (inbox/workbench/logs) or after it is archived; the misplaced-note detector
 # skips both so it never flags those moves.
@@ -52,7 +52,7 @@ TYPE_HOME = {
     "workflow": "capabilities/workflows/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"catalog", "knowledge", "capabilities", "spaces", "system"}
+KNOWN_TOP_DIRS = {"catalog", "knowledge", "capabilities", "spaces", "system", "inbox"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
@@ -62,8 +62,8 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 
 def is_untyped_infra(rp: str) -> bool:
-    """Infrastructure and navigation surfaces are not alpha.11 Concepts."""
-    return rp.startswith(("spaces/", "system/"))
+    """Infrastructure, navigation, and attention projections are not Concepts."""
+    return rp.startswith(("spaces/", "system/", "inbox/"))
 
 
 LEFTOVER_PATTERNS = [
@@ -135,6 +135,11 @@ try:
     TYPE_HOME = {n: _schema.home_for(n, _FOLDERS).rstrip("/") + "/" for n in TYPE_SCHEMAS}
     KNOWN_TOP_DIRS = set(_FOLDERS["bundle_roots"])
     KNOWN_TOP_DIRS |= {str(path).split("/", 1)[0] for path in _FOLDERS.get("skeleton") or []}
+    KNOWN_TOP_DIRS |= {
+        str(path).strip("/").split("/", 1)[0]
+        for path in _FOLDERS.get("transient_prefixes") or []
+        if str(path).strip("/")
+    }
     KNOWN_TOP_DIRS.add("spaces")
 except Exception:  # noqa: BLE001
     _schema = None

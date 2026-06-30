@@ -39,6 +39,7 @@ Where every file lives.
 │   ├── index.md              generated capabilities index
 │   ├── capabilities.base
 │   ├── operations/  skills/  mcp/  workflows/
+├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
@@ -51,8 +52,9 @@ Where every file lives.
 ```
 
 The three bundle roots (`catalog`, `knowledge`, `capabilities`) are declared in
-`folders.yaml`, along with machine staging roots under `.memoria/staging/` and
-the quarantine root `.memoria/quarantine`. The Linter flags stray root folders.
+`folders.yaml`, along with the transient `inbox/` projection root, machine staging
+roots under `.memoria/staging/`, and the quarantine root `.memoria/quarantine`.
+The Linter flags stray root folders.
 What the Concept homes mean is in [Document types](document-types.md).
 
 ---

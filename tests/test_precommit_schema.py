@@ -6,7 +6,7 @@ from operations.integrity.linter import precommit_check
 
 
 def _vault(tmp_path: Path) -> Path:
-    for rel in ("catalog/sources/s1", "knowledge/notes", "system"):
+    for rel in ("catalog/sources/s1", "knowledge/notes", "system", "inbox"):
         (tmp_path / rel).mkdir(parents=True)
     return tmp_path
 
@@ -47,6 +47,15 @@ def test_untyped_infra_and_outside_paths_exempt(tmp_path):
     (vault / "system/vocab.md").write_text("---\nfoo: bar\n---\n", encoding="utf-8")
     assert precommit_check.check_paths(vault, ["system/vocab.md"]) == []
     assert precommit_check.check_paths(vault, ["/etc/hostname"]) == []
+
+
+def test_untyped_inbox_attention_projection_exempt(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "inbox/gap-map-corpus.md").write_text(
+        "---\ntitle: Gap\nprojection: attention\nattention_kind: gap\nattention_status: open\n---\n",
+        encoding="utf-8",
+    )
+    assert precommit_check.check_paths(vault, ["inbox/gap-map-corpus.md"]) == []
 
 
 def test_hook_script_ships_executable():

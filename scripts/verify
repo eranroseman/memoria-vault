@@ -4,23 +4,56 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
+import re
 import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 GATE_COMMANDS = {
-    "source": [["bash", "scripts/test.sh", "all"]],
-    "package": [["bash", "scripts/e2e-smoke.sh"]],
+    "source": [["bash", "scripts/test.sh", "source"]],
+    "package": [
+        [
+            "python3",
+            "-m",
+            "pip",
+            "wheel",
+            "--no-deps",
+            "--no-build-isolation",
+            "--wheel-dir",
+            "{evidence_dir}/dist",
+            ".",
+        ],
+        ["python3", "-m", "venv", "--clear", "{evidence_dir}/venv"],
+        [
+            "{evidence_dir}/venv/bin/python",
+            "-m",
+            "pip",
+            "install",
+            "--force-reinstall",
+            "--no-index",
+            "--find-links",
+            "{evidence_dir}/dist",
+            "memoria-vault",
+        ],
+        [
+            "{evidence_dir}/venv/bin/python",
+            "-c",
+            "import memoria_vault; print(memoria_vault.__version__)",
+        ],
+        ["bash", "scripts/e2e-smoke.sh"],
+    ],
     "runtime": [
         ["python3", "-m", "pytest", "tests/test_alpha11_cycle.py", "-q"],
         ["bash", "scripts/test-l2.sh"],
@@ -91,6 +124,46 @@ def hermes_version() -> str:
     return "unknown"
 
 
+def package_versions() -> dict[str, str]:
+    versions: dict[str, str] = {}
+    pyproject = ROOT / "pyproject.toml"
+    if pyproject.exists():
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        versions["pyproject"] = str(data.get("project", {}).get("version", "unknown"))
+    init_file = ROOT / "src" / "memoria_vault" / "__init__.py"
+    if init_file.exists():
+        match = re.search(r'^__version__ = "([^"]+)"', init_file.read_text(encoding="utf-8"), re.M)
+        versions["package_init"] = match.group(1) if match else "unknown"
+    return versions
+
+
+def artifact_hashes(evidence_dir: Path) -> list[dict[str, object]]:
+    dist = evidence_dir / "dist"
+    if not dist.exists():
+        return []
+    artifacts: list[dict[str, object]] = []
+    for path in sorted(p for p in dist.iterdir() if p.is_file()):
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        artifacts.append({"file": str(path), "bytes": path.stat().st_size, "sha256": digest})
+    return artifacts
+
+
+def cleanup_package_build_artifacts() -> None:
+    for rel in ("build", "src/memoria_vault.egg-info"):
+        path = ROOT / rel
+        if path.is_dir():
+            shutil.rmtree(path)
+
+
+def prepare_package_evidence(evidence_dir: Path) -> None:
+    for rel in ("dist", "venv"):
+        path = evidence_dir / rel
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
+
+
 def default_evidence_dir(mode: str, timestamp: str) -> Path:
     default_base = Path(tempfile.gettempdir()) / "memoria-verify"
     base = Path(os.environ.get("MEMORIA_VERIFY_EVIDENCE_DIR", str(default_base)))
@@ -108,11 +181,12 @@ def write_summary(evidence_dir: Path, summary: dict[str, object]) -> None:
 def run_step(
     gate: str,
     index: int,
-    command: list[str],
+    command_template: list[str],
     evidence_dir: Path,
     dry_run: bool,
 ) -> dict[str, object]:
     started = time.monotonic()
+    command = [part.format(evidence_dir=str(evidence_dir)) for part in command_template]
     display = shlex.join(command)
     log_path = evidence_dir / f"{index:02d}-{gate}.log"
     print(f"== {gate}: {display}")
@@ -157,6 +231,8 @@ def main() -> int:
     timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     evidence_dir = args.evidence_dir or default_evidence_dir(args.mode, timestamp)
     evidence_dir.mkdir(parents=True, exist_ok=True)
+    if "package" in MODES[args.mode]:
+        prepare_package_evidence(evidence_dir)
 
     summary: dict[str, object] = {
         "mode": args.mode,
@@ -173,6 +249,8 @@ def main() -> int:
             "python": platform.python_version(),
             "hermes": hermes_version(),
         },
+        "versions": package_versions(),
+        "artifacts": [],
         "gates": MODES[args.mode],
         "steps": [],
         "manual_follow_up": MANUAL_FOLLOW_UP.get(args.mode, []),
@@ -202,7 +280,11 @@ def main() -> int:
     else:
         result = "failed"
 
+    if not args.dry_run and "package" in MODES[args.mode]:
+        cleanup_package_build_artifacts()
+
     summary["steps"] = steps
+    summary["artifacts"] = artifact_hashes(evidence_dir)
     summary["result"] = result
     summary["exit_code"] = exit_code
     write_summary(evidence_dir, summary)

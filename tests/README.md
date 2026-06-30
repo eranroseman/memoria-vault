@@ -1,16 +1,29 @@
 # tests/
 
-L1 component tests (pytest), per [ADR-44](../docs/adr/44-tests-in-pytest-tree.md).
-They live here as standalone files so the shipped vault carries no test code.
+Pytest suite for the test levels defined by
+[ADR-29](../docs/adr/29-testing-framework.md) and hosted repo-side per
+[ADR-44](../docs/adr/44-tests-in-pytest-tree.md). Tests live here as standalone
+files so the shipped vault carries no test code.
 
 - `test_*.py` — one per module under test; imports the module and asserts its contract
   on synthetic fixtures (no vault runtime, no network).
 - `pyproject.toml` — declares install metadata for `memoria.*` plus pytest
-  `pythonpath` entries for the package root, MCP entrypoints, scripts, and CI helpers.
+  `pythonpath` entries and registered level markers.
+- `tests/conftest.py` — assigns every `test_*.py` file to exactly one level.
 
-Run: `python -m pytest tests/ -q` (or `scripts/test.sh l1`). CI runs them in the
-`python-selftest` job. The normal local PR command is `scripts/verify pr`, which
-adds the static Source Gate checks around pytest. Higher-gate procedure lives in
+| Level | Purpose | Runs |
+| --- | --- | --- |
+| `static` | formatting, lint, schema, docs refs, spell, ADR index, workflow safety | local hook, every PR |
+| `unit` | deterministic Python behavior | every PR |
+| `contract` | CLI, operations, capability manifests, templates, projections | every PR |
+| `package` | wheel build/install smoke, installer/e2e smoke helpers | package-facing PRs, release PRs |
+| `runtime` | worker loops, recovery, idempotence, migrations, long checks | nightly, release candidate |
+| `live` | real external services/providers | manual or scheduled only |
+
+Run the PR source gate with `scripts/test.sh source` or `scripts/verify pr`.
+Target a level with `python -m pytest tests/ -q -m unit` or `scripts/test.sh unit`.
+Use `python -m pytest tests/ -q -m "not slow"` for the fast local loop.
+Higher-gate procedure lives in
 [verify-change](../.agents/playbooks/verify-change.md).
 
 ## Coverage guidance
