@@ -96,6 +96,9 @@ def emit_note_candidates(
             frontmatter["quote"] = str(row["quote"])
         if isinstance(row.get("annotation_ref"), dict):
             frontmatter["annotation_ref"] = dict(row["annotation_ref"])
+        citations = row.get("citations") or digest_fm.get("citations")
+        if isinstance(citations, list):
+            frontmatter["citations"] = [dict(item) for item in citations if isinstance(item, dict)]
 
         stage = stage_concept(
             vault,

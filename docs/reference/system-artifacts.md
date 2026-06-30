@@ -12,7 +12,7 @@ Obsidian. They are not hidden `.memoria/` internals.
 | Runtime path | What it is | Reference |
 | --- | --- | --- |
 | `index.md`, `catalog/index.md`, `knowledge/index.md`, `capabilities/index.md` | Generated OKF-style workspace and bundle indexes. | [Operations](operations.md) |
-| `references.bib` | Generated BibTeX projection from checked catalog sources with citekeys. | [Ingest routing](ingest.md) |
+| `references.bib` | Generated BibTeX projection from checked SQLite catalog rows with citekeys. | [Ingest routing](ingest.md) |
 | `system/vocabulary.md` | Controlled vocabulary for `research_area`, `methodology`, and claim `topics`. | [Vocabulary](vocabulary.md) |
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
 | `catalog/catalog.base` | Bases view over `catalog/sources/`. | [Document types](document-types.md) |
@@ -27,8 +27,9 @@ The source copies are tracked in
 and
 [`vault-template/capabilities/capabilities.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/capabilities/capabilities.base).
 `capabilities/ai-catalog.json` is generated from capability Concepts,
-`references.bib` is generated from checked source Concepts, and the root and
-bundle `index.md` files are generated from checked Concept files. The tracked
+`references.bib` is generated from checked SQLite catalog rows (with source
+Concept fallback only when no catalog rows exist), and the root and bundle
+`index.md` files are generated from checked Concept files. The tracked
 projection drift check regenerates that set into a temp tree and compares it to
 the workspace copies.
 The installer copies them into the runtime vault and stages a golden copy for

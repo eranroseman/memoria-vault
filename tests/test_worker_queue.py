@@ -400,6 +400,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
         "catalog/sources/source-alpha/content.md",
         "catalog/sources/source-alpha/source.md",
         "journal/test-machine.jsonl",
+        "references.bib",
     }
 
 
@@ -513,6 +514,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
         "catalog/sources/doi-10.1000_harness.2026/content.md",
         "catalog/sources/doi-10.1000_harness.2026/source.md",
         "journal/test-machine.jsonl",
+        "references.bib",
     }
 
 
@@ -560,6 +562,7 @@ def test_worker_runs_capture_zotero_source_operation_jobs(tmp_path: Path) -> Non
         "catalog/sources/zotero-wxyz5678/content.md",
         "catalog/sources/zotero-wxyz5678/source.md",
         "journal/test-machine.jsonl",
+        "references.bib",
     }
 
 
@@ -1241,11 +1244,11 @@ def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) ->
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["changed"] is True
+    assert done["changed"] is False
     assert done["output"] == "references.bib"
     assert "@article{harness2026," in (vault / "references.bib").read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "references.bib"}
+    assert committed == {"journal/test-machine.jsonl"}
 
 
 def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
@@ -1288,6 +1291,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         "integrity-claim-quote-check-2026-06-29",
         "integrity-prompt-injection-check-2026-06-29",
         "integrity-provenance-checkpoint-2026-06-29",
+        "integrity-citation-survival-check-2026-06-29",
         "integrity-contradiction-check-2026-06-29",
         "integrity-link-target-check-2026-06-29",
     ]
@@ -1303,6 +1307,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
     assert by_operation["integrity-quote-anchor-check"]["finding_count"] == 0
     assert by_operation["integrity-claim-quote-check"]["finding_count"] == 0
     assert by_operation["integrity-prompt-injection-check"]["finding_count"] == 0
+    assert by_operation["integrity-citation-survival-check"]["finding_count"] == 1
     assert by_operation["integrity-provenance-checkpoint"]["finding_count"] == 0
     assert by_operation["integrity-contradiction-check"]["finding_count"] == 0
     assert by_operation["integrity-link-target-check"]["finding_count"] == 0

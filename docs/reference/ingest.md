@@ -6,24 +6,25 @@ grand_parent: Reference
 
 # Ingest routing
 
-Alpha.11 capture starts the catalog record. The core helper is
+Alpha.12 capture starts the catalog record. The core helper is
 `memoria_vault.runtime.capture.capture_source()`: it records a capture run,
 writes the raw blob and extracted markdown, creates a `source` Concept plus
 deterministic metadata-derived `person`/`venue` Concepts through the trusted
-writer, promotes them checked, and commits the Concepts, `content.md`, and
-journal together. The local BibTeX adapter
+writer, promotes them checked, writes the checked source metadata into the
+SQLite catalog state, and commits the Concepts, `content.md`, journal, and any
+required `references.bib` projection together. The local BibTeX adapter
 `capture_bibtex_source()` maps one BibTeX entry into that same path. The Zotero
 adapters map either one Zotero Local API item JSON snapshot
 (`capture_zotero_source()`) or fetch one item key from the local desktop API
 first (`capture_zotero_local_source()`). Zotero imports are source/item imports
-only in alpha.11; Zotero annotations are not imported. The PDF
+only in alpha.12; Zotero annotations are not imported. The PDF
 adapter `capture_pdf_source()` uses the optional PyMuPDF parser from the vault
 MCP requirements to extract page text. URL snapshots use `capture_url_source()`
 with stdlib HTML text extraction.
 
 The older paper-ingest operation under
 `vault-template/.memoria/operations/processing/ingest/` is pre-reset code. It is
-not the alpha.11 source of truth for catalog writes.
+not the alpha.12 source of truth for catalog writes.
 
 ## Current Pipeline
 
@@ -40,8 +41,9 @@ not the alpha.11 source of truth for catalog writes.
 | Metadata-derived entities | `capture_source()` | Creates checked `catalog/entities/person-*.md` Concepts from CSL authors and `catalog/entities/venue-*.md` from `container-title`, links the source to them, and merges exact deterministic entity paths by appending `links.sources`. |
 | Metadata check | `check_source_metadata()` / worker `check-source-metadata` | Flags checked sources that lack citekey, CSL-JSON basics, issued year, an external resource/identifier, or carry conflicting DOI metadata. |
 | Source Concept | trusted writer | `catalog/sources/<source_id>/source.md`, born `unchecked` in staging and promoted to `checked` only after schema/folder validation. |
-| Bibliography projection | `write_references_bib()` / worker projection refresh | Regenerates `references.bib` from checked source Concepts with citekeys; `check_references_bib()` checks this file, and `check_tracked_projections()` covers it with the rest of the tracked projection set. |
-| Commit | trusted writer | One git commit for `source.md`, `content.md`, and `journal/<machine>.jsonl`; raw stays out of git. |
+| SQLite catalog row | `memoria_vault.runtime.state` | Writes or updates checked source metadata in `.memoria/state/memoria.sqlite`, the alpha.12 catalog working-state source of truth. |
+| Bibliography projection | `write_references_bib()` / worker projection refresh | Regenerates `references.bib` from checked SQLite catalog rows, falling back to checked source Concepts only when no SQLite catalog rows exist. Bibliography-changing captures materialize it in the same worker commit; `check_references_bib()` checks this file, and `check_tracked_projections()` covers it with the rest of the tracked projection set. |
+| Commit | trusted writer | One git commit for `source.md`, `content.md`, `journal/<machine>.jsonl`, and required `references.bib`; raw stays out of git. |
 
 The current extraction input is already-normalized markdown text, one local
 BibTeX entry plus caller-supplied content, one Zotero Local API item JSON
@@ -63,7 +65,8 @@ WP4 follow-on work.
 | `raw_text_sha256`, `normalized_text_sha256` | Content hashes used by trace and later integrity checks. |
 
 The `source_id` is the stable path identifier. Citekeys are aliases and may be
-corrected without renaming the Concept.
+corrected without renaming the Concept; marking the edited source checked
+refreshes the SQLite catalog row before `references.bib` is rendered.
 
 ## Read Barrier
 

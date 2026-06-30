@@ -24,5 +24,6 @@ optional:
   temporal_scope_end: date
   status: enum:note_status
   evidence_set: list
+  citations: list
   extraction_confidence: str
   tags: list

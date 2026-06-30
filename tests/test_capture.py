@@ -91,6 +91,7 @@ def test_capture_source_writes_catalog_files_and_trace(tmp_path: Path) -> None:
         "catalog/sources/source-alpha/content.md",
         "catalog/sources/source-alpha/source.md",
         "journal/test-machine.jsonl",
+        "references.bib",
     }
 
 
@@ -659,10 +660,10 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
 
     result = write_references_bib(vault, commit=True, machine="test-machine")
 
-    assert result["changed"] is True
+    assert result["changed"] is False
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "references.bib"}
+    assert committed == {"journal/test-machine.jsonl"}
 
     (vault / "references.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)

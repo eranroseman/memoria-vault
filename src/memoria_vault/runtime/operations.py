@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 from urllib import error, request
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -141,6 +142,8 @@ def compile_source_digest(
 
     source_rel = f"catalog/sources/{source_id}/source.md"
     source_fm = _checked_source(vault, source_rel)
+    state.upsert_catalog_source(vault, source_rel, source_fm)
+    citation = state.compact_citation(vault, source_rel)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
     if not content_path.is_file():
@@ -183,26 +186,29 @@ def compile_source_digest(
         machine=machine,
     )
 
+    digest_frontmatter = {
+        "type": "digest",
+        "check_status": "unchecked",
+        "title": f"Digest: {source_fm['title']}",
+        "description": source_fm["description"],
+        "source_id": f"catalog/sources/{source_id}",
+        "confidence": "medium",
+        "evidence_set": [source_rel],
+        "massw": {
+            "context": source_fm["title"],
+            "key_idea": topics[0],
+            "method": "compile-source-digest",
+            "outcome": topics[1],
+            "projected_impact": topics[2],
+        },
+    }
+    if citation:
+        digest_frontmatter["citations"] = [citation]
     digest_stage = stage_concept(
         vault,
         digest_rel,
         _concept_text(
-            {
-                "type": "digest",
-                "check_status": "unchecked",
-                "title": f"Digest: {source_fm['title']}",
-                "description": source_fm["description"],
-                "source_id": f"catalog/sources/{source_id}",
-                "confidence": "medium",
-                "evidence_set": [source_rel],
-                "massw": {
-                    "context": source_fm["title"],
-                    "key_idea": topics[0],
-                    "method": "compile-source-digest",
-                    "outcome": topics[1],
-                    "projected_impact": topics[2],
-                },
-            },
+            digest_frontmatter,
             f"Digest: {source_fm['title']}",
             digest_text,
         ),
@@ -231,19 +237,22 @@ def compile_source_digest(
     for topic in topics:
         hub_rel = f"knowledge/hubs/{_topic_slug(topic)}.md"
         hub_exists = (vault / hub_rel).exists()
+        hub_frontmatter = {
+            "type": "hub",
+            "check_status": "unchecked",
+            "title": topic,
+            "description": f"Machine suggestion from {source_fm['title']}.",
+            "members": [digest_rel, source_rel],
+            "confidence": "low",
+            "tags": ["suggestion"],
+        }
+        if citation:
+            hub_frontmatter["citations"] = [citation]
         stage = stage_concept(
             vault,
             hub_rel,
             _concept_text(
-                {
-                    "type": "hub",
-                    "check_status": "unchecked",
-                    "title": topic,
-                    "description": f"Machine suggestion from {source_fm['title']}.",
-                    "members": [digest_rel, source_rel],
-                    "confidence": "low",
-                    "tags": ["suggestion"],
-                },
+                hub_frontmatter,
                 topic,
                 f"Suggested update from `{digest_rel}`. Curated hubs are not overwritten.\n",
             ),

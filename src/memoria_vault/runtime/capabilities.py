@@ -1,4 +1,4 @@
-"""Generated alpha.11 capability catalog projection."""
+"""Generated alpha.12 capability catalog projection."""
 
 from __future__ import annotations
 

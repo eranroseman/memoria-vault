@@ -7,6 +7,7 @@
 SKELETON_DIRS=(
   .memoria/index
   .memoria/index/qmd
+  .memoria/audit
   .memoria/quarantine
   .memoria/queue
   .memoria/queue/pending
@@ -16,6 +17,7 @@ SKELETON_DIRS=(
   .memoria/staging/catalog
   .memoria/staging/knowledge
   .memoria/staging/capabilities
+  .memoria/state
   journal
   catalog
   catalog/sources

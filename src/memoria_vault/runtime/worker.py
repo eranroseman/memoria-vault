@@ -1,4 +1,4 @@
-"""Minimal alpha.11 local worker queue."""
+"""Alpha.12 local worker queue with SQLite request state."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -29,6 +30,7 @@ INTEGRITY_SWEEP_OPERATIONS = (
     "integrity-claim-quote-check",
     "integrity-prompt-injection-check",
     "integrity-provenance-checkpoint",
+    "integrity-citation-survival-check",
     "integrity-contradiction-check",
     "integrity-link-target-check",
 )
@@ -43,6 +45,7 @@ def enqueue_trusted_write(
     operation: str = "trusted-write",
     run_id: str | None = None,
     idempotency_key: str | None = None,
+    trigger_type: str = "command",
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
@@ -50,6 +53,8 @@ def enqueue_trusted_write(
     existing = _find_job(vault, job_id)
     if existing:
         return _read_json(existing)
+    if existing_job := state.request_job(vault, job_id):
+        return existing_job
 
     job = {
         "job_id": job_id,
@@ -62,6 +67,22 @@ def enqueue_trusted_write(
         "operation": operation,
         "run_id": run_id or job_id,
     }
+    envelope = state.request_envelope(
+        request_id=job_id,
+        trigger_type=trigger_type,
+        operation_id=operation,
+        args={
+            "target_path": target_path,
+            "content": content,
+            "inputs": list(inputs or []),
+            "run_id": run_id or job_id,
+        },
+        idempotency_key=idempotency_key or job_id,
+        target_path=target_path,
+        actor="operation",
+        provenance={"surface": "worker"},
+    )
+    job = state.save_request(vault, envelope, job)
     _write_json(_job_path(vault, "pending", job_id), job)
     return job
 
@@ -72,6 +93,13 @@ def enqueue_operation(
     *,
     payload: dict[str, Any] | None = None,
     idempotency_key: str | None = None,
+    trigger_type: str = "command",
+    target_path: str = "",
+    target_hash: str = "",
+    causal_refs: list[str | dict[str, Any]] | None = None,
+    actor: str = "pi",
+    provenance: dict[str, Any] | None = None,
+    schedule_id: str | None = None,
 ) -> dict[str, Any]:
     """Queue one operation request for the local worker."""
     vault = Path(vault)
@@ -79,15 +107,32 @@ def enqueue_operation(
     existing = _find_job(vault, job_id)
     if existing:
         return _read_json(existing)
+    if existing_job := state.request_job(vault, job_id):
+        return existing_job
 
+    args = dict(payload or {})
     job = {
         "job_id": job_id,
         "kind": "operation",
         "status": "pending",
         "created_at": now_iso(),
         "operation_id": operation_id,
-        "payload": dict(payload or {}),
+        "payload": args,
     }
+    envelope = state.request_envelope(
+        request_id=job_id,
+        trigger_type=trigger_type,
+        operation_id=operation_id,
+        args=args,
+        idempotency_key=idempotency_key or job_id,
+        target_path=target_path,
+        target_hash=target_hash,
+        causal_refs=causal_refs or [],
+        actor=actor,
+        provenance=provenance or {"surface": "worker"},
+        schedule_id=schedule_id,
+    )
+    job = state.save_request(vault, envelope, job)
     _write_json(_job_path(vault, "pending", job_id), job)
     return job
 
@@ -95,10 +140,14 @@ def enqueue_operation(
 def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] | None:
     """Claim and run the oldest pending worker job."""
     vault = Path(vault)
-    pending = sorted(_queue_dir(vault, "pending").glob("*.json"))
-    if not pending:
-        return None
-    running = _claim_job(vault, pending[0])
+    sqlite_job = state.next_pending_job(vault)
+    if sqlite_job is not None:
+        running = _claim_sqlite_job(vault, sqlite_job)
+    else:
+        pending = sorted(_queue_dir(vault, "pending").glob("*.json"))
+        if not pending:
+            return None
+        running = _claim_job(vault, pending[0])
     job = _read_json(running)
     try:
         result = _run_job(vault, job, machine)
@@ -141,6 +190,8 @@ def enqueue_integrity_sweep(
             operation_id,
             payload={"shadow": shadow},
             idempotency_key=f"{operation_id}-{key}",
+            trigger_type="schedule",
+            schedule_id=key,
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
@@ -250,6 +301,20 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         from memoria_vault.runtime.integrity import check_provenance_checkpoint
 
         result = check_provenance_checkpoint(
+            vault,
+            shadow=bool(payload.get("shadow", True)),
+            machine=machine,
+            commit=True,
+        )
+        return {
+            "commit": result["commit"],
+            "finding_count": len(result["findings"]),
+            "findings": result["findings"],
+        }
+    if operation_id == "integrity-citation-survival-check":
+        from memoria_vault.runtime.integrity import check_citation_survival
+
+        result = check_citation_survival(
             vault,
             shadow=bool(payload.get("shadow", True)),
             machine=machine,
@@ -532,7 +597,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
 
-        bundle_path = vault / "system/eval/alpha11-seeded-errors.json"
+        bundle_path = vault / "system/eval/alpha12-seeded-errors.json"
+        if not bundle_path.is_file():
+            bundle_path = vault / "system/eval/alpha11-seeded-errors.json"
         with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
             return run_seeded_error_verdict(
                 Path(tmpdir),
@@ -875,19 +942,33 @@ def _claim_job(vault: Path, path: Path) -> Path:
     _write_json(path, job)
     running.parent.mkdir(parents=True, exist_ok=True)
     path.replace(running)
+    state.set_request_running(vault, str(job["job_id"]), job)
     return running
 
 
-def _finish_job(vault: Path, running: Path, state: str, job: dict[str, Any]) -> None:
-    target = _job_path(vault, state, str(job["job_id"]))
+def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> Path:
+    job_id = str(job["job_id"])
+    pending = _job_path(vault, "pending", job_id)
+    if pending.exists():
+        return _claim_job(vault, pending)
+    job = {**job, "status": "running", "started_at": now_iso()}
+    running = _job_path(vault, "running", job_id)
+    _write_json(running, job)
+    state.set_request_running(vault, job_id, job)
+    return running
+
+
+def _finish_job(vault: Path, running: Path, status: str, job: dict[str, Any]) -> None:
+    target = _job_path(vault, status, str(job["job_id"]))
     _write_json(running, job)
     target.parent.mkdir(parents=True, exist_ok=True)
     running.replace(target)
+    state.finish_request(vault, str(job["job_id"]), status, job)
 
 
 def _find_job(vault: Path, job_id: str) -> Path | None:
-    for state in QUEUE_STATES:
-        path = _job_path(vault, state, job_id)
+    for queue_state in QUEUE_STATES:
+        path = _job_path(vault, queue_state, job_id)
         if path.exists():
             return path
     return None
@@ -927,10 +1008,18 @@ def _write_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = ArgumentParser(description="Run alpha.11 local worker jobs.")
+    parser = ArgumentParser(description="Run alpha.12 local worker jobs.")
     parser.add_argument(
         "command",
-        choices=("enqueue-operation", "integrity-sweep", "observe-pi-edits", "run-pending"),
+        choices=(
+            "enqueue-operation",
+            "integrity-sweep",
+            "observe-pi-edits",
+            "scan",
+            "run-scheduled",
+            "run-pending",
+            "recover",
+        ),
     )
     parser.add_argument("--vault", required=True)
     parser.add_argument("--machine", default="memoria-scheduled-checks")
@@ -940,6 +1029,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--operation-id", default=None)
     parser.add_argument("--payload", default="{}")
     parser.add_argument("--idempotency-key", default=None)
+    parser.add_argument("--trigger-type", default="command")
+    parser.add_argument("--schedule-id", default=None)
     args = parser.parse_args(argv)
 
     vault = Path(args.vault)
@@ -956,11 +1047,39 @@ def main(argv: list[str] | None = None) -> int:
                     args.operation_id,
                     payload=payload,
                     idempotency_key=args.idempotency_key,
+                    trigger_type=args.trigger_type,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
             )
         )
+        return 0
+    if args.command == "scan":
+        enqueue_operation(
+            vault,
+            "observe-pi-edits",
+            idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
+            trigger_type="file_change",
+            provenance={"surface": "worker-scan"},
+        )
+        run_pending_jobs(vault, machine=args.machine, limit=1)
+        return 0
+    if args.command == "run-scheduled":
+        if not args.operation_id:
+            parser.error("run-scheduled requires --operation-id")
+        payload = json.loads(args.payload)
+        if not isinstance(payload, dict):
+            parser.error("--payload must be a JSON object")
+        enqueue_operation(
+            vault,
+            args.operation_id,
+            payload=payload,
+            idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
+            trigger_type="schedule",
+            schedule_id=args.schedule_id,
+            provenance={"surface": "worker-schedule"},
+        )
+        run_pending_jobs(vault, machine=args.machine, limit=1)
         return 0
     if args.command == "integrity-sweep":
         run_integrity_sweep(
@@ -974,6 +1093,9 @@ def main(argv: list[str] | None = None) -> int:
         from memoria_vault.runtime.trusted_writer import observe_pi_edits_from_status
 
         observe_pi_edits_from_status(vault, machine=args.machine)
+        return 0
+    if args.command == "recover":
+        print(json.dumps(state.recover_pending_materializations(vault), ensure_ascii=False))
         return 0
     run_pending_jobs(vault, machine=args.machine, limit=args.limit)
     return 0
