@@ -1,58 +1,53 @@
 # Memoria pre-commit configuration.
-# Install once per clone:  pre-commit install   (run via  bash scripts/dev-setup.sh)
+# Install once per clone:  pre-commit install --install-hooks   (or run scripts/dev-setup.sh)
 # Run manually over all files:  pre-commit run --all-files
 # Skip a single hook once:  SKIP=<hook-id> git commit
 # Bypass everything (rarely):  git commit --no-verify
 
 repos:
-  # ---------------------------------------------------------------------------
-  # Official hooks (pre-commit/pre-commit-hooks)
-  # ---------------------------------------------------------------------------
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+  - repo: local
     hooks:
       # Block 0: no direct commits to main (main is PR-protected; block, don't warn)
       - id: no-commit-to-branch
-        args: [--branch, main]
+        name: no-commit-to-branch
+        language: system
+        entry: no-commit-to-branch --branch main
+        always_run: true
+        pass_filenames: false
+
       # Block 8: JSON syntax check (exclude vendored Obsidian plugin files)
       - id: check-json
+        name: check json
+        language: system
+        entry: check-json
+        files: \.json$
         exclude: src/\.obsidian/plugins/
 
-  # ---------------------------------------------------------------------------
-  # ruff (Python linter) — production, tooling, and tests.
-  # ---------------------------------------------------------------------------
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.20
-    hooks:
       - id: ruff
-        files: ^src/memoria_vault/|^scripts/|^vault-template/\.memoria/|^\.github/scripts/|^tests/
-      - id: ruff-format
-        files: ^src/memoria_vault/|^scripts/|^vault-template/\.memoria/|^\.github/scripts/|^tests/
+        name: ruff
+        language: system
+        entry: ruff check --force-exclude
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
 
-  # ---------------------------------------------------------------------------
-  # yamllint  —  Block 7
-  # ---------------------------------------------------------------------------
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.38.0
-    hooks:
+      - id: ruff-format
+        name: ruff format
+        language: system
+        entry: ruff format --force-exclude
+        files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
+
       - id: yamllint
+        name: yamllint
+        language: system
+        entry: yamllint
+        files: \.(yaml|yml)$
         exclude: src/\.obsidian/
 
-  # ---------------------------------------------------------------------------
-  # shellcheck  —  Block 2 partial
-  # ---------------------------------------------------------------------------
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
       - id: shellcheck
-        args: [--severity=warning]
+        name: shellcheck
+        language: system
+        entry: shellcheck --severity=warning
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
 
-  # ---------------------------------------------------------------------------
-  # Local hooks
-  # ---------------------------------------------------------------------------
-  - repo: local
-    hooks:
       # Block 1: docs-doctor
       - id: docs-doctor
         name: docs-doctor

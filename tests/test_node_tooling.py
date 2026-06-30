@@ -1,4 +1,4 @@
-"""Guards the repo-local Node tooling used by required prose checks."""
+"""Guards repo-local tooling used by required checks."""
 
 import json
 from pathlib import Path
@@ -8,6 +8,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = ROOT / "package.json"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
+REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
 CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
@@ -38,6 +39,21 @@ def test_node_workflows_do_not_download_cli_packages_at_run_time():
         text = path.read_text(encoding="utf-8")
         assert "npx --yes" not in text
         assert "npm ci --ignore-scripts" in text
+
+
+def test_precommit_hooks_use_local_pinned_tools():
+    config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
+    assert [repo["repo"] for repo in config["repos"]] == ["local"]
+
+    requirements = REQUIREMENTS_DEV.read_text(encoding="utf-8").splitlines()
+    for package in (
+        "pre-commit==4.6.0",
+        "pre-commit-hooks==5.0.0",
+        "ruff==0.15.20",
+        "shellcheck-py==0.10.0.1",
+        "yamllint==1.38.0",
+    ):
+        assert package in requirements
 
 
 def test_precommit_node_hooks_fail_fast_without_network_downloads():
