@@ -6,7 +6,8 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Memoria is in **early pre-alpha development — there is no installable release yet.**
+Memoria is in **early pre-alpha development — there is no formal tagged release yet.**
+The install path runs from current `main` as an alpha source install.
 
 Release automation is paused (see `.github/workflows/release-please.yml`) so no
 versions are minted until the first real release is cut. The earlier

@@ -14,7 +14,7 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
 
-> **Status: v0.1 alpha.** Alpha checkpoints are internal milestones, not formal releases. Check the [milestones](https://github.com/eranroseman/memoria-vault/milestones) and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current checkpoint state before installing.
+> **Status: v0.1 alpha source install.** No formal release has been cut yet; the install commands below run from current `main`. Alpha checkpoints are internal milestones. Check the [milestones](https://github.com/eranroseman/memoria-vault/milestones) and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current checkpoint state before installing.
 
 ---
 
@@ -29,9 +29,10 @@ Each agent runs inside Hermes and communicates with Obsidian through the [obsidi
 
 ---
 
-## Install
+## Install From Main
 
-One line. Inspect the script first if you like — that's the recommended path.
+This is an alpha source install, not a formal release artifact. Inspect the
+script first if you like — that's the recommended path.
 
 **Linux (Ubuntu/Debian) or WSL2:**
 
@@ -59,7 +60,8 @@ For the full flag list (`--dry-run`, `--no-apps`, `--profiles-only`, and more), 
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
 - A **`KILOCODE_API_KEY`** — get one at [kilo.ai](https://kilo.ai). The shipped model provider is `kilocode`; other providers can be swapped in the profile configs.
-- The installer provisions **Hermes** (+ the ACP extra) and **guides** the Obsidian/Zotero installs — you don't need them beforehand.
+- An **`OPENALEX_API_KEY`** — required for source ingest metadata since 2026-02.
+- The installer provisions **Hermes** (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later when you need bibliography imports.
 
 ---
 

@@ -63,7 +63,7 @@ Areas of particular interest:
 
 - **scripts/install.sh / scripts/install.ps1** — path traversal, argument injection, unsafe downloads, or privilege escalation in the installer
 - **API key handling** — keys exposed in logs, written to unexpected locations, or leaked through environment variables
-- **Hermes profile configs** (`vault/.memoria/profiles/`) — prompt injection, write-gate bypass, or lane policy circumvention via profile YAML
+- **Hermes profile configs** (`vault-template/.memoria/profiles/` in source; `<vault>/.memoria/profiles/` after install) — prompt injection, write-gate bypass, or lane policy circumvention via profile YAML
 - **Policy MCP layer** — any path that allows an agent to write to canonical vault zones without human confirmation
 
 ## Out of Scope

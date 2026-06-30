@@ -22,12 +22,12 @@ repos:
   # ruff (Python linter) — production, tooling, and tests.
   # ---------------------------------------------------------------------------
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.17
+    rev: v0.15.20
     hooks:
       - id: ruff
-        files: ^memoria/|^scripts/|^src/\.memoria/|^\.github/scripts/|^tests/
+        files: ^src/memoria_vault/|^scripts/|^vault-template/\.memoria/|^\.github/scripts/|^tests/
       - id: ruff-format
-        files: ^memoria/|^scripts/|^src/\.memoria/|^\.github/scripts/|^tests/
+        files: ^src/memoria_vault/|^scripts/|^vault-template/\.memoria/|^\.github/scripts/|^tests/
 
   # ---------------------------------------------------------------------------
   # yamllint  —  Block 7
