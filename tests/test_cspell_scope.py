@@ -58,7 +58,9 @@ def test_precommit_hook_triggers_on_any_markdown():
     assert hook["files"] == r"\.md$", (
         "pre-commit must trigger on any .md, not a docs/src/root allow-list"
     )
-    assert "npx --no-install cspell" in hook["entry"]
+    assert "PATH=node_modules/.bin:$PATH" in hook["entry"]
+    assert "cspell lint --no-progress --no-must-find-files" in hook["entry"]
+    assert "npx" not in hook["entry"]
 
 
 def test_required_check_is_scope_agnostic():

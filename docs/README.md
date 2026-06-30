@@ -135,9 +135,9 @@ Design Book foundations, then the Explanation pages in this order.
 | ----------------- | ----------------------------------------------------------------------------- |
 | **Co-PI**         | The one agent you converse with — questions, explains, and delegates; read-only |
 | **Librarian**     | The four processing lanes (catalog · extract · link · map) — intake to corpus maps |
-| **Writer**        | Turns evidence into draft prose — lands in review, never direct to canonical  |
+| **Writer**        | Deferred draft lane — planned to turn evidence into review-bound prose |
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
-| **Engineer**      | Scaffolds handoffs to external coding agents and owns the commit/revert checkpoint |
+| **Engineer**      | Deferred code lane — planned to scaffold handoffs to external coding agents |
 
 Deterministic **operations** do the mechanical work, behind the policy MCP.
 

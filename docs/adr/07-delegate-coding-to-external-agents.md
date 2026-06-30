@@ -23,7 +23,11 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 **Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The current lane context lives in [The Engineer](../explanation/profiles/engineer.md).
 
-> **Current vs. planned agents.** The shipped Engineer lane wires **`codex` and `claude-code`** as the current external coding agents — the agent IDs referenced in `memoria-engineer/distribution.yaml` (env keys per agent), with the lane scoped by `lane-overrides/engineer.yaml`. **Kilo Code and Aider are planned future additions**, not yet wired. (`kilocode` today is the Engineer's *model provider* in `config.yaml`, distinct from a coding-agent skill.)
+> **Current implementation status.** The Engineer/code lane is deferred in
+> alpha.11. `memoria-engineer/distribution.yaml` reserves optional environment
+> keys for `codex` and `claude-code`, but `lane-overrides/engineer.yaml` grants no
+> write scope and the lane is not routable. The delegation decision stands; the
+> handoff workflow and external-agent wiring are post-checkpoint work.
 
 ## Consequences
 
