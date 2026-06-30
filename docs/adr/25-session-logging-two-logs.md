@@ -40,7 +40,7 @@ The two are never combined. The `sessions/` directory is intentionally **not** p
 
 **Weekly rotation of `audit.jsonl`.** Rejected ([#393](https://github.com/eranroseman/memoria-vault/issues/393)): rotation would force every full-history consumer — the `write_complete` pairing reads, the `vault-hash-drift` walk, the session digests — to stitch across rotated files, for no benefit at single-researcher write volume. Append-only forever keeps one walk = the whole history; the `audit-log-size` advisory keeps growth visible.
 
-**An LLM-written narrative summary.** Rejected: the Linter is a zero-LLM engine ([ADR-49](49-catalog-in-bases-linter-monitor.md)), and a digest derived deterministically from the audit trail is reproducible, auditable, and free — the narrative reading stays with the researcher.
+**An LLM-written narrative summary.** Rejected: the Linter is a zero-LLM operation ([ADR-69](69-operations-layer-naming.md)), and a digest derived deterministically from the audit trail is reproducible, auditable, and free — the narrative reading stays with the researcher.
 
 **One combined log.** Rejected: the two readers want opposite shapes. A single log is either too verbose to verify (audit polluted with narrative) or too noisy to read (summaries polluted with per-write events). Separation lets each serve its reader.
 

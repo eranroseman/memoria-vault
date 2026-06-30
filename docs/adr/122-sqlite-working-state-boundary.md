@@ -1,17 +1,17 @@
 ---
 topic: decisions
 id: 122
-title: SQLite working state is a cache behind the checked Concept boundary
+title: SQLite working state and catalog records sit behind the checked Concept boundary
 nav_exclude: true
 status: accepted
 date_proposed: 2026-06-30
 date_resolved: 2026-06-30
-assumes: [28, 55, 121]
-supersedes: []
+assumes: [28, 55, 119, 121]
+supersedes: [49]
 superseded_by: []
 ---
 
-# ADR-122: SQLite working state is a cache behind the checked Concept boundary
+# ADR-122: SQLite working state and catalog records sit behind the checked Concept boundary
 
 ## Context
 
@@ -21,17 +21,32 @@ durable surface, but it could not represent a queued request without a fragile J
 mirror, replay a checked file from a stored payload, or render `references.bib` from
 one checked catalog table.
 
+[ADR-49](49-catalog-in-bases-linter-monitor.md) made markdown records under
+`catalog/` the catalog source of truth so Obsidian Bases could render them. That
+model is now too strong: the worker needs indexed catalog rows for materialization,
+idempotency, bibliography rendering, and later provider provenance, while Bases are
+only a view layer.
+
 ## Decision
 
-Memoria stores runtime working state in `.memoria/state/memoria.sqlite`, with the
-worker still owning canonical writes through the trusted-writer path. The SQLite DB
-records request envelopes, append-only hash-chained journal rows, catalog source rows,
-file output state, materialization payloads, and derivation links.
+Memoria stores runtime working state and catalog record state in
+`.memoria/state/memoria.sqlite`, with the worker still owning canonical writes through
+the trusted-writer path. The SQLite DB records request envelopes, append-only
+hash-chained journal rows, catalog source rows, file output state, materialization
+payloads, and derivation links.
 
-The DB is not a second live Concept store. A file-backed Concept becomes consumable
-only after it is both `checked` and materialized; checked Concepts and tracked
-projections remain the PI-facing vault surface. `.memoria/queue/` stays as an
-Obsidian-compatible mirror for pending/running/done/failed jobs, not the state owner.
+The DB is not a second live Concept store. File-backed Concepts become consumable only
+after they are both `checked` and materialized; checked Concepts and tracked projections
+remain the PI-facing vault surface. Catalog rows are records behind that surface:
+`references.bib`, digests, source citations, and any catalog UI read from them, but
+markdown catalog frontmatter does not overrule them.
+
+PI catalog mutation follows [ADR-121](121-enqueue-only-obsidian-control-panel.md):
+an Obsidian control-panel UI may enqueue worker jobs, but it must not write catalog
+rows, Concepts, journal files, projections, or `check_status` directly. CLI commands
+may inspect, verify, or administer the engine; they are not a PI action surface.
+`.memoria/queue/` stays as an Obsidian-compatible mirror for pending/running/done/failed
+jobs, not the state owner.
 
 ## Consequences
 
@@ -41,6 +56,9 @@ Obsidian-compatible mirror for pending/running/done/failed jobs, not the state o
   missing payload failures recorded fail-closed.
 - `references.bib` renders from checked SQLite catalog rows, with checked source
   Concepts as a fallback only when no catalog rows exist.
+- [ADR-49](49-catalog-in-bases-linter-monitor.md)'s catalog-frontmatter source-of-truth
+  decision is superseded. Bases may still render catalog-shaped views while those
+  files exist, but they are projections/fallbacks, not the catalog authority.
 - Git remains the reviewable record for Concepts, projections, and JSONL journals;
   SQLite supports operations and recovery behind that surface.
 - Integrity checks must protect citation survival so notes, digests, and hubs remain
@@ -52,6 +70,10 @@ Obsidian-compatible mirror for pending/running/done/failed jobs, not the state o
 to delete or strand mid-transition, and the worker needs idempotency, causal refs, and
 schedule metadata in one durable envelope.
 
+**Keep catalog markdown records as the source of truth.** Rejected because it makes
+bibliography rendering, provider provenance, idempotent enrichment, and materialization
+recovery depend on a file shape optimized for Obsidian views rather than worker state.
+
 **Promote SQLite to the canonical Concept store.** Rejected because it would make the
 PI-facing knowledge corpus opaque to Obsidian, Git diffs, and the existing checked
 Concept schema/linter boundary.
@@ -62,8 +84,10 @@ JSONL remains the audit and replay projection.
 
 ## Related
 
+- **Supersedes:** [ADR-49](49-catalog-in-bases-linter-monitor.md)
 - **Depends on:** [ADR-28](28-write-gate-as-plugin.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md),
+  [ADR-119](119-schema-driven-document-creation.md),
   [ADR-121](121-enqueue-only-obsidian-control-panel.md)
 - **Implementation:** `src/memoria_vault/runtime/state.py`,
   `src/memoria_vault/runtime/worker.py`,

@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [49, 101, 114, 115]
+assumes: [101, 114, 115, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -19,7 +19,7 @@ The Obsidian surface grew one decision at a time — the navigation rail
 ([ADR-114](114-left-pane-navigator.md)), the Inbox→queue reclassification
 ([ADR-115](115-inbox-queue-and-retired-homepage.md)), the older JTBD-dashboard
 model, the spaces vocabulary ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)),
-and the Bases view layer ([ADR-49](49-catalog-in-bases-linter-monitor.md)). Each was locally sound, but
+and the schema-backed Bases view layer ([ADR-119](119-schema-driven-document-creation.md)). Each was locally sound, but
 the accreted whole carries three overlaps a clean-slate review surfaced:
 
 1. **Two navigation taxonomies.** The rail navigates by *intent* (Library · Knowledge ·
@@ -151,7 +151,7 @@ no new machinery.
   left pane keeps the rail + Portals two-tab layout), [ADR-115](115-inbox-queue-and-retired-homepage.md) (the queue splits
   off Maintenance by cadence), [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)
   (a space is defined as a collection of views).
-- **Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md) (Bases are the view
-  layer; notes are the source of truth).
+- **Depends on:** [ADR-119](119-schema-driven-document-creation.md) (Concept schemas and
+  checked frontmatter are the source for Bases views).
 - **Source discussion:** the alpha.8 left-pane / Portals / Inbox / spaces / home /
   dashboards clean-slate review.

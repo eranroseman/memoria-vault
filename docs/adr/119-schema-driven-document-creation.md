@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [49, 52, 116]
+assumes: [52, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -89,9 +89,7 @@ links and duplicates the schema-owned `check_status` gate.
 
 - **Refines:** [ADR-116](116-obsidian-surface-architecture.md) (one definition, many
   surfaced views).
-- **Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md) (schemas as the
-  authoritative contract the Linter and Bases read), [ADR-52](52-links-vs-relationships.md)
-  (typed relationships).
+- **Depends on:** [ADR-52](52-links-vs-relationships.md) (typed relationships).
 - **Generated views:** [Document types](../reference/document-types.md),
   [Frontmatter fields](../reference/frontmatter.md), and
   [On-disk layout](../reference/on-disk-layout.md).

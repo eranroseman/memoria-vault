@@ -3,15 +3,20 @@ topic: decisions
 id: 49
 title: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [119]
 supersedes: []
-superseded_by: []
+superseded_by: [122]
 ---
 
 # ADR-49: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate
+
+> Superseded by [ADR-122](122-sqlite-working-state-boundary.md): catalog record
+> state now lives in SQLite behind the checked Concept boundary. Bases may remain a
+> view/projection layer, but catalog frontmatter is no longer the catalog source of
+> truth.
 
 ## Context
 

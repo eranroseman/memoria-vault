@@ -63,7 +63,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 
 ```text
 .memoria/
-├── schemas/                 THE single schema source (ADR-49/119)
+├── schemas/                 THE single schema source (ADR-119)
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
@@ -127,8 +127,8 @@ Runtime-only (created in the deployed vault, never shipped):
 
 The `.base` files sit alongside their data: `catalog/catalog.base`,
 `knowledge/views/knowledge.base`, and `capabilities/capabilities.base`
-([ADR-49](../adr/49-catalog-in-bases-linter-monitor.md)). What each view shows
-is in [Dashboards](dashboards.md#the-bases-views).
+([ADR-116](../adr/116-obsidian-surface-architecture.md)). What each view shows is in
+[Dashboards](dashboards.md#the-bases-views).
 
 ---
 

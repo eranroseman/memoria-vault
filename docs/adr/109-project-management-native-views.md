@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-20
 date_resolved: 2026-06-20
-assumes: [49, 54, 77, 119]
+assumes: [54, 77, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -66,7 +66,7 @@ does not become gated schema state and does not replace project lifecycle fields
 ## Alternatives considered
 
 **Adopt native Obsidian Bases and Dataview.** Adopted. They are already bundled or
-native, read the vault's plain-text fields, and match [ADR-49](49-catalog-in-bases-linter-monitor.md)'s
+native, read the vault's plain-text fields, and match [ADR-116](116-obsidian-surface-architecture.md)'s
 view-layer model.
 
 **Adopt the Tasks plugin for human todos.** Borrow/adopt as an optional recommended
@@ -122,7 +122,7 @@ workbenches, and source/claim/project progress rollups.
 
 - **Workflows affected:** Project space, project notes, Project gate views, Library
   reading pipeline, weekly review.
-- **Related decisions / Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
+- **Related decisions / Depends on:** [ADR-116](116-obsidian-surface-architecture.md),
   [ADR-54](54-two-decision-kinds-batch-worklists.md),
   [ADR-77](77-project-gate.md), [ADR-119](119-schema-driven-document-creation.md).
 - **Source discussion:** [#329](https://github.com/eranroseman/memoria-vault/issues/329).

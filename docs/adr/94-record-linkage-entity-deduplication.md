@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [30, 49]
+assumes: [30, 122]
 supersedes: []
 superseded_by: []
 ---
@@ -47,5 +47,5 @@ identity merge needs deterministic evidence and review.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-49](49-catalog-in-bases-linter-monitor.md).
+- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-122](122-sqlite-working-state-boundary.md).
 - **Tracking issue:** [#707](https://github.com/eranroseman/memoria-vault/issues/707).

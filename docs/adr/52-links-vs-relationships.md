@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [49, 119]
+assumes: [119, 122]
 supersedes: []
 superseded_by: []
 ---
@@ -59,4 +59,4 @@ words the PI would say.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-09](09-contradictions-dashboard.md),
-  [ADR-10](10-claim-supersession.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)
+  [ADR-10](10-claim-supersession.md), [ADR-119](119-schema-driven-document-creation.md)

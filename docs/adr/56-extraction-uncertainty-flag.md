@@ -63,4 +63,4 @@ repeatedly — the floor here routes *to* a human, never around one.
 ## Related
 
 - **Related decisions / Depends on:** amends [ADR-30](30-deterministic-ingest-pipeline.md);
-  [ADR-54](54-two-decision-kinds-batch-worklists.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)
+  [ADR-54](54-two-decision-kinds-batch-worklists.md), [ADR-122](122-sqlite-working-state-boundary.md)

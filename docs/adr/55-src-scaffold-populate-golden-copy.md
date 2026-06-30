@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [26, 49]
+assumes: [26, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -94,4 +94,4 @@ install; `vault-template/` populate + golden staging keeps authoring (repo) and 
 ## Related
 
 - **Related decisions / Depends on:** amends [ADR-26](26-repo-as-install-unit.md);
-  [ADR-49](49-catalog-in-bases-linter-monitor.md), [ADR-119](119-schema-driven-document-creation.md)
+  [ADR-119](119-schema-driven-document-creation.md)
