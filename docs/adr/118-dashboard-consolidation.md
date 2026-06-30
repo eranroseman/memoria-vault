@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [49, 70, 116, 121]
+assumes: [49, 116, 121]
 supersedes: []
 superseded_by: []
 ---
@@ -133,8 +133,7 @@ exists in the target `.base`.
 
 - **Refines:** [ADR-116](116-obsidian-surface-architecture.md) (the View primitive; spaces are
   view collections; operational dashboards are pull-only), [ADR-121](121-enqueue-only-obsidian-control-panel.md)
-  (the Inspector/control-panel boundary), [ADR-70](70-navigation-gates-dashboards.md)
-  (ambient health; one decision per dashboard).
+  (the Inspector/control-panel boundary).
 - **Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md) (Bases are the view layer;
   notes are the source of truth).
 - **Source discussion:** the alpha.8 dashboards clean-slate review.

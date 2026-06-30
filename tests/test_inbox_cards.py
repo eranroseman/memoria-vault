@@ -109,7 +109,7 @@ def test_work_prompt_carries_no_verdict(tmp_path):
         tmp_path, "Review: X", "review it", "lane finished X", "board-export", task_id="t_1"
     )
     text = p.read_text(encoding="utf-8")
-    assert "agent_recommendation" not in text  # ADR-51: never a verdict
+    assert "agent_recommendation" not in text  # ADR-54: never a verdict
     assert "finding" not in _frontmatter(p)
 
 

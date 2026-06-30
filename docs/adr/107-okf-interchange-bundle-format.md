@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [26, 30, 47, 50, 52, 101, 102]
+assumes: [26, 30, 52, 101, 102, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -23,7 +23,7 @@ total: OKF's *Concept* is a typed markdown document (a tangible asset or an
 abstract idea), its *Concept ID* is the file path minus `.md`, relationships are
 markdown links, and it reserves `index.md` (progressive disclosure) and `log.md`
 (history). That an external, vendor-backed spec landed on the same shape is
-validation of [ADR-47](47-type-first-category-folders.md) /
+validation of [ADR-119](119-schema-driven-document-creation.md) /
 [ADR-26](26-repo-as-install-unit.md), but it also names a contract Memoria lacks.
 
 Memoria's **outbound** layer is its least-defined. The Path-4 open-artifact
@@ -57,8 +57,9 @@ loss is documented, not hidden:
 - typed `links:` / `relationships:` ([ADR-52](52-links-vs-relationships.md))
   collapse to untyped markdown links, with the relation type emitted as prose per
   OKF convention — graph-queryable typing does not survive the round trip;
-- `lifecycle` / `maturity` / gate state ([ADR-50](50-universal-lifecycle-and-maturity.md))
-  survive only as custom frontmatter that conformant consumers may ignore;
+- `check_status` and type-specific workflow state
+  ([ADR-119](119-schema-driven-document-creation.md)) survive only as custom
+  frontmatter that conformant consumers may ignore;
 - the bundle carries no gate, no Linter, and no MCP surface — it is inert data.
 
 The serialization runs through the projection engine's reconciliation and failure
@@ -128,11 +129,10 @@ corpus; deferring it is a sequencing choice, not a different decision.
 - **Related decisions / Depends on:**
   [ADR-26](26-repo-as-install-unit.md),
   [ADR-30](30-deterministic-ingest-pipeline.md),
-  [ADR-47](47-type-first-category-folders.md),
-  [ADR-50](50-universal-lifecycle-and-maturity.md),
   [ADR-52](52-links-vs-relationships.md),
   [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md),
-  [ADR-102](102-disposable-projection-engine.md);
+  [ADR-102](102-disposable-projection-engine.md),
+  [ADR-119](119-schema-driven-document-creation.md);
   serves the deferred Path-4 release of [ADR-20](20-publication-path.md).
 - **Reference:** Open Knowledge Format (OKF) v0.1 draft —
   `GoogleCloudPlatform/knowledge-catalog`, `okf/SPEC.md`.

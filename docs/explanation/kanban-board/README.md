@@ -12,13 +12,13 @@ The Kanban board is Memoria's **control plane** — the trigger-and-lanes end of
 
 **Lanes are the four background agents** — Librarian, Writer, Peer-reviewer, Engineer (`assignee = memoria-<name>`). The Co-PI has no lane (it converses in the pane and delegates), and neither do deterministic operations; see [Profiles](../profiles/README.md) and [Operations](../operations.md).
 
-The board's central design move is to keep three dimensions separate — the hidden execution `status`, the PI-facing lifecycle state, and a soft `agent_recommendation` — so "a worker finished" never silently becomes "a human approved." Why they stay separate, and why a rejected card spawns a fresh one rather than reopening, is developed in [Board states and the review gate](states.md); the enums and lane assignments are in the [Kanban board reference](../../reference/kanban-board.md). A card is *work* (transient, archived when done); a vault note is *knowledge* (durable).
+The board's central design move is to keep three dimensions separate — the hidden execution `status`, the PI-facing attention state, and a soft `agent_recommendation` — so "a worker finished" never silently becomes "a human approved." Why they stay separate, and why a rejected card spawns a fresh one rather than reopening, is developed in [Board states and the review gate](states.md); the enums and lane assignments are in the [Kanban board reference](../../reference/kanban-board.md). A card is *work* (transient, archived when done); a vault note is *knowledge* (durable).
 
 ## Documents in this section
 
 | Page                                                          | What it covers                                                                                                                                                                          |
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Board states and the review gate](states.md)                 | What a card carries; why execution, review, and PI-facing lifecycle are separate; and why rejection spawns a new card. |
+| [Board states and the review gate](states.md)                 | What a card carries; why execution, review, and PI-facing attention state are separate; and why rejection spawns a new card. |
 | [The honesty card](honesty-card.md)                            | The card the PI actually reads: argument for, argument against, what tipped it, certainty — and no verdict on proposals; finding-first verification cards; graded loudness.               |
 | [Decision points](decision-points.md)                         | Approval gates, work prompts, batch worklists, and automated steps. |
 | [How the board surfaces in Obsidian](obsidian-projection.md)  | The read-only projections — the Inbox queue view and the `system/board/` worker-card export — that let Obsidian read the authoritative `kanban.db`.                    |

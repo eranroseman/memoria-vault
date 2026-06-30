@@ -11,7 +11,7 @@ Where every file lives.
 - The repo ships the vault source under **`vault-template/`**.
 - The installer scaffolds a runtime vault, then populates it from `vault-template/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
 - Repo and runtime vault share the same internal shape; runtime-only artifacts are listed below.
-- The legal root categories come from [ADR-47](../adr/47-type-first-category-folders.md) and `vault-template/.memoria/schemas/folders.yaml`.
+- The legal root categories come from [ADR-119](../adr/119-schema-driven-document-creation.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
@@ -64,7 +64,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 
 ```text
 .memoria/
-├── schemas/                 THE single schema source (ADR-49/50)
+├── schemas/                 THE single schema source (ADR-49/119)
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)

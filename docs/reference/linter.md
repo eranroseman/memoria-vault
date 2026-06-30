@@ -53,7 +53,7 @@ python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--t
 
 ## The pre-commit hook
 
-The pre-commit hook ([ADR-50](../adr/50-universal-lifecycle-and-maturity.md)): the installer wires `vault-template/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `vault-template/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`vault-template/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): the installer wires `vault-template/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `vault-template/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`vault-template/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

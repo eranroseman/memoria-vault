@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
-assumes: [30, 51]
+assumes: [30, 54]
 supersedes: []
 superseded_by: []
 ---
@@ -63,4 +63,4 @@ repeatedly — the floor here routes *to* a human, never around one.
 ## Related
 
 - **Related decisions / Depends on:** amends [ADR-30](30-deterministic-ingest-pipeline.md);
-  [ADR-51](51-inbox-category-and-honesty-card.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)
+  [ADR-54](54-two-decision-kinds-batch-worklists.md), [ADR-49](49-catalog-in-bases-linter-monitor.md)

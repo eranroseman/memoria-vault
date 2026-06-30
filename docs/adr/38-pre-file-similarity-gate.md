@@ -13,15 +13,22 @@ superseded_by: []
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
 
-> *Terminology note (0.1.0-alpha.2): the `reference` type is retired ([ADR-50](50-universal-lifecycle-and-maturity.md)) — read "`claim-note` or `reference-note`" below as just claim and hub notes — and `30-synthesis/` is now `notes/claims/` + `notes/hubs/` ([ADR-47](47-type-first-category-folders.md)). The decision is unchanged.*
+> *Terminology note (0.1.0-alpha.12): synthesis material now lives in checked
+> `note` and `hub` Concepts under `knowledge/notes/` and `knowledge/hubs/`
+> ([ADR-119](119-schema-driven-document-creation.md)). The decision is unchanged.*
 
 ## What
 
-A similarity check at the *moment a synthesis note is created*: before a `claim-note` or `reference-note` is filed into `30-synthesis/`, run a `qmd` hybrid search against existing synthesis notes and, if the top match exceeds a threshold, flag the note and present the neighbours to the human to confirm / merge / override. Borrowed from Karpathy's overnight-loop pattern (gate every addition against existing state), adapted from "revert if loss didn't improve" to "don't file if it duplicates."
+A similarity check at the *moment a synthesis note is created*: before a checked
+`note` or `hub` is filed into `knowledge/`, run a `qmd` hybrid search against
+existing synthesis notes and, if the top match exceeds a threshold, flag the note
+and present the neighbours to the human to confirm / merge / override. Borrowed
+from Karpathy's overnight-loop pattern (gate every addition against existing state),
+adapted from "revert if loss didn't improve" to "don't file if it duplicates."
 
 ## Why
 
-Memoria catches duplicates **retrospectively**: `find-duplicates` runs on a cadence and surfaces near-duplicates *after* they exist and have been wikilinked, at which point merging is painful (every inbound link must be repointed). The most common synthesis failure — paraphrasing something already in `30-synthesis/` — slips through until the next sweep.
+Memoria catches duplicates **retrospectively**: `find-duplicates` runs on a cadence and surfaces near-duplicates *after* they exist and have been wikilinked, at which point merging is painful (every inbound link must be repointed). The most common synthesis failure — paraphrasing something already in `knowledge/` — slips through until the next sweep.
 
 ## Trade-offs
 
@@ -50,7 +57,7 @@ Before filing, run a `qmd` similarity check against existing synthesis notes. If
 
 ```bash
 # Ratchet: check the proposed note against existing synthesis notes before filing.
-qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
+qmd search "{proposed note title or claim}" --scope knowledge --top 3
 # If top score > 0.8 -> present neighbours; human confirms new / merges / overrides.
 # Requires a current qmd index; run `qmd index --incremental` if stale.
 ```
@@ -66,7 +73,8 @@ qmd search "{proposed note title or claim}" --scope 30-synthesis --top 3
 ## Related
 
 - **Tracking issue:** [#370](https://github.com/eranroseman/memoria-vault/issues/370) — implementation readiness lives on the issue.
-- **Pairs with:** [ADR-39 — note-acceptance checklists](39-note-acceptance-checklists.md)
+- **Pairs with:** the Concept schema and Linter quality gates in
+  [ADR-119](119-schema-driven-document-creation.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
 - **Profiles:** [Linter](../explanation/operations.md), [Mapper](../explanation/profiles/librarian.md)
-- **Document types gated:** [claim-note, reference-note](../reference/document-types.md)
+- **Document types gated:** checked [note and hub Concepts](../reference/document-types.md)

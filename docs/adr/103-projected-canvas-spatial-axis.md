@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [52, 79, 81, 83, 102]
+assumes: [52, 79, 83, 102, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -19,7 +19,7 @@ ADR-79 gives Project work an argument-graph vocabulary, but the current shipped 
 is intentionally tabular: Spaces and Bases carry the day-to-day workflow. Canvas
 could help when arrangement and edges are the content, but Canvas JSON is invisible
 to the Linter, Bases, and graph operations. Treating hand-drawn Canvas edges as
-truth would repeat the off-store failure that ADR-71 rejected.
+truth would repeat the off-store failure that the Concept schema boundary rejects.
 
 ## Proposal
 
@@ -83,7 +83,7 @@ therefore the shipped posture. It may become too narrow for dense argument revie
   Canvas projection tests, and relation-authoring docs.
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
   [ADR-79](79-argument-graph-and-warrant.md),
-  [ADR-81](81-persistent-gate-dashboards.md),
   [ADR-83](83-direct-pi-relate-control.md),
-  [ADR-102](102-disposable-projection-engine.md).
+  [ADR-102](102-disposable-projection-engine.md),
+  [ADR-116](116-obsidian-surface-architecture.md).
 - **Tracking issue:** [#721](https://github.com/eranroseman/memoria-vault/issues/721).

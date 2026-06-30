@@ -46,7 +46,13 @@ The one transition the dashboards cannot surface is when developed claims are ne
 
 Notes that are no longer useful do not become invisible by deletion — they become gaps in the provenance graph. A deleted source note breaks every claim that cited it; a deleted claim leaves later notes without their grounding.
 
-Archiving preserves the chain, and since `archived` became a **state rather than a folder** ([ADR-50](../../adr/50-universal-lifecycle-and-maturity.md)), it costs nothing structurally: the note stays in its type-home, remains readable and in Git history, drops out of active views and the agents' working scope, and can still be traced from any note that linked to it. No file moves, so no links break. The cycle's integrity depends on every step being traceable backward, not just forward. Archiving itself is propose-only for every actor but the PI.
+Archiving preserves the chain, and since state is frontmatter rather than a folder
+([ADR-119](../../adr/119-schema-driven-document-creation.md)), it costs nothing
+structurally: the note stays in its type-home, remains readable and in Git history,
+drops out of active views and the agents' working scope, and can still be traced from
+any note that linked to it. No file moves, so no links break. The cycle's integrity
+depends on every step being traceable backward, not just forward. Archiving itself is
+propose-only for every actor but the PI.
 
 ## Related
 

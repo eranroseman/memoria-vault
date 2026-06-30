@@ -6,7 +6,7 @@ nav_exclude: true
 status: proposed
 date_proposed: 2026-06-19
 date_resolved:
-assumes: [30, 51]
+assumes: [30, 54]
 supersedes: []
 superseded_by: []
 ---
@@ -46,5 +46,5 @@ review and context; the classifier only narrows the candidate set.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-51](51-inbox-category-and-honesty-card.md).
+- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-54](54-two-decision-kinds-batch-worklists.md).
 - **Tracking issue:** [#703](https://github.com/eranroseman/memoria-vault/issues/703).

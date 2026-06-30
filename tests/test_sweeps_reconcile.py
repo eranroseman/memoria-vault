@@ -17,8 +17,7 @@ def test_reconcile_intake():
             v = Path(td)
             sources = v / "catalog/sources"
             # one tier0 note (a retry target) + one already-enriched + one complete;
-            # paper entities are lifecycle: current from creation (ADR-50) — the
-            # retry sweep keys on ingest_status, not lifecycle.
+            # retry sweep keys on ingest_status, not read state.
             (sources / "stuck2024A").mkdir(parents=True)
             (sources / "done2024B").mkdir(parents=True)
             (sources / "live2024C").mkdir(parents=True)

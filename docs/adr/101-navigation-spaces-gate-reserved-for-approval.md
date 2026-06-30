@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
-assumes: [48, 70, 77]
+assumes: [48, 77, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -52,6 +52,6 @@ So "gate" carried two heavily-used senses at once — a navigation surface (a pl
 
 ## Related
 
-- **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (the surfaces as JTBD dashboards), [ADR-77](77-project-gate.md) (the Project surface + its readiness gate), [ADR-48](48-copi-and-agent-consolidation.md) (the lanes are the agents' work breakdown).
+- **Depends on:** [ADR-116](116-obsidian-surface-architecture.md) (the surfaces as view collections), [ADR-77](77-project-gate.md) (the Project surface + its readiness gate), [ADR-48](48-copi-and-agent-consolidation.md) (the lanes are the agents' work breakdown).
 - **Reserves "gate" for:** [ADR-03](03-structural-review-gate.md), [ADR-28](28-write-gate-as-plugin.md), [ADR-41](41-configurable-review-gate-mode.md).
 - **Source discussion:** the alpha.8 overloaded-terminology audit (gate's four senses).

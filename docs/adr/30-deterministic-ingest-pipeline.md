@@ -13,7 +13,11 @@ superseded_by: []
 
 # ADR-30: Tiered ingest pipeline
 
-> *Terminology note (0.1.0-alpha.2): `captured` is now the `ingest_status: tier0` floor, **not** a lifecycle value — paper entities are `lifecycle: current` from creation ([ADR-50](50-universal-lifecycle-and-maturity.md); `paper` enum `current → retracted → archived`), and the retry sweep keys on `ingest_status`. The lifecycle chain is `proposed → provisional → current → retracted → archived` (`dormant` retired). Numbered folders (`20-sources/`, `99-system/`) are now type-first ([ADR-47](47-type-first-category-folders.md)): `catalog/`, `system/`. The pipeline decision below is unchanged.*
+> *Terminology note (0.1.0-alpha.12): `captured` is now the `ingest_status: tier0`
+> floor, **not** a read-state value, and the retry sweep keys on `ingest_status`.
+> Concept homes and `check_status` are owned by
+> [ADR-119](119-schema-driven-document-creation.md). The pipeline decision below is
+> unchanged.*
 >
 > **Schema note (2026-06-16).** `ingest_status` is a paper-scoped enum, not an
 > implicit pipeline scratch field. The schema owns the legal values

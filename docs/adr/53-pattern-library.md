@@ -59,4 +59,4 @@ on epistemics.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-03](03-structural-review-gate.md),
-  [ADR-43](43-skill-governance.md), [ADR-51](51-inbox-category-and-honesty-card.md)
+  [ADR-43](43-skill-governance.md), [ADR-54](54-two-decision-kinds-batch-worklists.md)

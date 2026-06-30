@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [70, 81, 101, 114]
+assumes: [101, 114, 116]
 supersedes: []
 superseded_by: []
 ---
@@ -22,7 +22,7 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 1. **Inbox was the fourth co-equal space** ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) — `type: space`, `space: inbox`), despite being a triage queue that converges to empty rather than a room you dwell in.
 2. **Every space note carried a nav row** — the switcher the rail replaced.
-3. **The homepage plugin opened the Inbox on launch** ([ADR-81](81-persistent-gate-dashboards.md)). With the rail now carrying the "what needs me?" signal, forcing the full queue as the launch workspace is redundant, casts a knowledge/writing tool as inbox-management, and — since empty is the goal — often lands the human on nothing.
+3. **The homepage plugin opened the Inbox on launch.** With the rail now carrying the "what needs me?" signal, forcing the full queue as the launch workspace is redundant, casts a knowledge/writing tool as inbox-management, and — since empty is the goal — often lands the human on nothing.
 
 ## Decision
 
@@ -51,7 +51,6 @@ committed to a principle the rest of the model had not caught up to: **the Inbox
 
 ## Related
 
-- **Refines:** [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces become three + the Inbox queue), [ADR-81](81-persistent-gate-dashboards.md) (dashboards stay persistent notes; only the launch target changes), [ADR-114](114-left-pane-navigator.md) (completes "Inbox is a state, not a place").
-- **Depends on:** [ADR-70](70-navigation-gates-dashboards.md) (system health is ambient).
+- **Refines:** [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces become three + the Inbox queue), [ADR-114](114-left-pane-navigator.md) (completes "Inbox is a state, not a place"), [ADR-116](116-obsidian-surface-architecture.md) (surface primitives and ambient health).
 - **Onboarding seed:** [ADR-112](112-tutorial-destination-first-arc.md).
 - **Source discussion:** the alpha.8 spaces-and-homepage clean-slate review.

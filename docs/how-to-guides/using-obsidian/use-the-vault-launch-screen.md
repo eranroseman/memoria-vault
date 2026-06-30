@@ -7,7 +7,7 @@ nav_order: 1
 
 # Vault launch screen
 
-On startup — and after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at loading the tutorial sample, capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Navigation between surfaces is the left-pane rail ([ADR-81](../../adr/81-persistent-gate-dashboards.md)).
+On startup — and after a layout reset — you land on the vault-root `home.md` welcome note: a short "start here" screen that points you at loading the tutorial sample, capturing your first source, the three places (Library · Knowledge · Project), and asking the Co-PI. Navigation between surfaces is the left-pane rail ([ADR-116](../../adr/116-obsidian-surface-architecture.md)).
 
 ## Prerequisites
 
@@ -42,7 +42,7 @@ Keep `steering.md` current — the Librarian reads it at the start of every sess
 ## Related
 
 - Why the launch screen is a plain note, not a custom app: [Home welcome note](../../explanation/obsidian/home.md)
-- The persistent dashboard decision: [ADR-81](../../adr/81-persistent-gate-dashboards.md)
+- The surface architecture decision: [ADR-116](../../adr/116-obsidian-surface-architecture.md)
 - What each dashboard shows: [explanation/dashboards/](../../explanation/dashboards)
 - The reset workspace: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - Updating steering on schedule: [Run the weekly review](../inbox/run-the-weekly-review.md)

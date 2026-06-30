@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19
-assumes: [50, 51, 54]
+assumes: [54, 119]
 supersedes: []
 superseded_by: []
 ---
@@ -25,7 +25,7 @@ Memoria will, when scheduled, add:
 
 2. **Agent-consensus pre-filter.** Before a candidate reaches the review queue, a second independent profile pass reviews the output; agreement sets `consensus: true`, disagreement `consensus: false`, and the operator processes disagreement cards first. It does not bypass the gate — the gate stays structural; the pre-filter only routes. To avoid correlated errors (the Bisht et al. 2026 hivemind finding), the two profiles use models from different providers or fine-tuning regimes.
 
-3. **Tournament pairwise ranking.** When the discovery inbox is large (> 50 candidates), candidates are ranked by pairwise LLM comparison against `steering.md` to surface the top-N first; lower-ranked candidates can be deferred. This is an explicit cold-start fallback for the learning-to-rank model — once that model has enough training data, Memoria switches to it (cheaper, faster, personalized).
+3. **Tournament pairwise ranking.** When the discovery inbox is large (> 50 candidates), candidates are ranked by pairwise LLM comparison against `steering.md` to surface the top-N first; lower-ranked candidates can be deferred. This is an explicit cold-start fallback for the learning-to-rank model — once that model has enough training data, Memoria switches to it (cheaper, faster, personalized). This ADR owns the learning-to-rank direction; implementation readiness stays on the tracking issue.
 
 ## Consequences
 
@@ -53,5 +53,5 @@ ADR may change routing or review visibility until those fields are filled.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-50 lifecycle](50-universal-lifecycle-and-maturity.md) (the card states triage moves between); [ADR-51 inbox honesty card](51-inbox-category-and-honesty-card.md) (the inbox surface these improvements feed); [ADR-54 batch worklists](54-two-decision-kinds-batch-worklists.md) (the batch-approval mechanism semi-auto triage builds on).
+- **Related decisions / Depends on:** [ADR-54 batch worklists](54-two-decision-kinds-batch-worklists.md) (the batch-approval mechanism semi-auto triage builds on); [ADR-119 Concept schemas](119-schema-driven-document-creation.md) (the read-state gate and Concept schema boundary).
 - **Tracking issue:** [#416](https://github.com/eranroseman/memoria-vault/issues/416) — implementation readiness lives on the issue.

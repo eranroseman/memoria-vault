@@ -6,7 +6,7 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [49, 70, 101, 114, 115]
+assumes: [49, 101, 114, 115]
 supersedes: []
 superseded_by: []
 ---
@@ -17,10 +17,9 @@ superseded_by: []
 
 The Obsidian surface grew one decision at a time — the navigation rail
 ([ADR-114](114-left-pane-navigator.md)), the Inbox→queue reclassification
-([ADR-115](115-inbox-queue-and-retired-homepage.md)), the JTBD dashboards
-([ADR-70](70-navigation-gates-dashboards.md)), the spaces vocabulary
-([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)), and the Bases view
-layer ([ADR-49](49-catalog-in-bases-linter-monitor.md)). Each was locally sound, but
+([ADR-115](115-inbox-queue-and-retired-homepage.md)), the older JTBD-dashboard
+model, the spaces vocabulary ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)),
+and the Bases view layer ([ADR-49](49-catalog-in-bases-linter-monitor.md)). Each was locally sound, but
 the accreted whole carries three overlaps a clean-slate review surfaced:
 
 1. **Two navigation taxonomies.** The rail navigates by *intent* (Library · Knowledge ·
@@ -151,8 +150,7 @@ no new machinery.
 - **Refines:** [ADR-114](114-left-pane-navigator.md) (the rail gains a Now health band; the
   left pane keeps the rail + Portals two-tab layout), [ADR-115](115-inbox-queue-and-retired-homepage.md) (the queue splits
   off Maintenance by cadence), [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)
-  (a space is defined as a collection of views), [ADR-70](70-navigation-gates-dashboards.md)
-  (ambient health becomes the rail's Now band).
+  (a space is defined as a collection of views).
 - **Depends on:** [ADR-49](49-catalog-in-bases-linter-monitor.md) (Bases are the view
   layer; notes are the source of truth).
 - **Source discussion:** the alpha.8 left-pane / Portals / Inbox / spaces / home /

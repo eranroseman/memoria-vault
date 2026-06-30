@@ -1,6 +1,6 @@
 # Board State
 
-The Inbox board — the agent→human action queue (ADR-51). Cards in `proposed` are
+The Inbox board — the agent-to-human action queue (ADR-54). Attention items are
 waiting on you; the queue converges to empty. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/#board-state-support).
 
 ![[inbox.base#Needs me]]
