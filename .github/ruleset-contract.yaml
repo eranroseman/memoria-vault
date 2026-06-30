@@ -7,6 +7,8 @@ required_checks:
   - PSScriptAnalyzer (scripts/install.ps1)
   - python-selftest
   - cspell
+  - lint-config
+  - markdownlint
 workflow_jobs:
   pr-policy: .github/workflows/pr-review-gate.yml
   lint: .github/workflows/lint.yml
@@ -14,3 +16,5 @@ workflow_jobs:
   PSScriptAnalyzer (scripts/install.ps1): .github/workflows/lint-installers.yml
   python-selftest: .github/workflows/python-selftest.yml
   cspell: .github/workflows/cspell.yml
+  lint-config: .github/workflows/lint-config.yml
+  markdownlint: .github/workflows/markdownlint.yml

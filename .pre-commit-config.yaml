@@ -69,11 +69,11 @@ repos:
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$|^scripts/test-l2\.sh$
         pass_filenames: false
 
-      # Block 3 partial: pytest
+      # Block 3 partial: fast pytest collection. Full tests run in scripts/verify pr and CI.
       - id: pytest
-        name: pytest
+        name: pytest-collect
         language: system
-        entry: env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python -m pytest tests/ -q
+        entry: bash scripts/test.sh check
         files: \.py$
         pass_filenames: false
 
@@ -97,7 +97,7 @@ repos:
       - id: markdownlint-structural
         name: markdownlint-structural
         language: system
-        entry: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json
+        entry: npx --no-install markdownlint --config .markdownlint.json
         files: ^docs/.*\.md$
         exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
@@ -109,7 +109,7 @@ repos:
       - id: cspell
         name: cspell
         language: system
-        entry: npx --yes cspell@8.19.4 lint --no-progress --no-must-find-files
+        entry: npx --no-install cspell lint --no-progress --no-must-find-files
         files: \.md$
         pass_filenames: true
 

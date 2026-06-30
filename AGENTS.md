@@ -148,6 +148,7 @@ remove the task worktree and fast-forward:
 cd ~/memoria-vault
 gh pr merge <n> --squash --delete-branch
 git worktree remove ~/mv/<session>  # refuses if the task worktree is dirty
+git branch -D <branch>              # after verifying the PR is merged; squash merges are not ancestry-merged
 git status --short                  # must be empty before resync
 git fetch origin
 git merge --ff-only origin/main
@@ -170,17 +171,17 @@ branch, not on `main`. Authorized contributors with repository write access may
 push scratch-only commits directly to that branch; no PR or required CI is
 expected there.
 
-Use a per-session worktree and local branch, then push the result to the shared
-remote branch:
+For scratch-only work, use a reusable scratch worktree and push directly to the
+shared remote branch. This path intentionally has **no PR** and no required CI:
 
 ```bash
 git fetch origin scratch
-git worktree add ~/mv/<session> -b scratch/<session> origin/scratch
-cd ~/mv/<session>
+git worktree add ~/mv/scratch scratch   # first time only; use `-b scratch origin/scratch` in a fresh clone
+cd ~/mv/scratch
+git pull --ff-only origin scratch
 # edit scratch/... only
 git add scratch/<path>
 git commit -m "scratch: <short description>"
-git pull --rebase origin scratch
 git push origin HEAD:scratch
 ```
 
@@ -206,6 +207,8 @@ a reader mirror guarded by `python scripts/agents_doctor.py`.
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
 | `cspell` | Spelling over tracked prose markdown; scope and exclusions live in `cspell.json` |
+| `lint-config` | YAML, GitHub Actions workflow, and authored JSON syntax |
+| `markdownlint` | Structural Markdown rendering rules over `docs/` |
 
 **CI invariant:** required-check workflows must have **no** `paths:` filter — a
 path-filtered required check permanently blocks PRs that don't touch those
@@ -227,13 +230,15 @@ behavior.
 | Decision | Trigger |
 |---|---|
 | `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
-| `needs_human` | Trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths |
+| `needs_human` | Manual merge required: trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths. This classification disables auto-merge; it is not a GitHub approval gate by itself. |
 | `block` | Untrusted author on sensitive paths, or any PR that includes `scratch/` paths |
 
 Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
-On `auto_approve` PRs, the workflow enables squash auto-merge immediately.
+On `auto_approve` PRs, the workflow enables squash auto-merge immediately. On
+`needs_human` PRs, the check passes but leaves merge timing and review judgment
+to the maintainer.
 
 ---
 
