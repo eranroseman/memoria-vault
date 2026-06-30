@@ -19,4 +19,5 @@ optional:
   contradictions: list
   massw: map
   evidence_set: list
+  citations: list
   tags: list

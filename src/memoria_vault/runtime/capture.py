@@ -11,6 +11,7 @@ from typing import Any
 from urllib.parse import quote, urlparse
 from urllib.request import urlopen
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -132,6 +133,14 @@ def capture_source(
         for spec in entity_specs
     ]
     check = promote_checked(vault, source_rel, checks=promotion_checks, machine=machine)
+    checked_frontmatter = read_frontmatter(vault / source_rel)
+    state.upsert_catalog_source(vault, source_rel, checked_frontmatter)
+    commit_paths = [source_rel, content_rel, *(spec["path"] for spec in entity_specs)]
+    projected_outputs: list[str] = []
+    if _has_bibliography_fields(checked_frontmatter):
+        references = write_references_bib(vault, commit=False, machine=machine)
+        commit_paths.append(references["path"])
+        projected_outputs.append(references["path"])
     finished = append_journal_event(
         vault,
         {
@@ -139,7 +148,12 @@ def capture_source(
             "run_id": run_id,
             "workflow": workflow,
             "status": "done",
-            "outputs": [source_rel, content_rel, *(spec["path"] for spec in entity_specs)],
+            "outputs": [
+                source_rel,
+                content_rel,
+                *(spec["path"] for spec in entity_specs),
+                *projected_outputs,
+            ],
             "raw": raw_rel,
         },
         machine=machine,
@@ -147,7 +161,7 @@ def capture_source(
     commit = commit_writer_changes(
         vault,
         f"capture source {source_id}",
-        [source_rel, content_rel, *(spec["path"] for spec in entity_specs)],
+        commit_paths,
         machine=machine,
     )
     return {
@@ -417,13 +431,21 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
 def render_references_bib(vault: Path) -> str:
     """Render checked source Concepts as the generated references.bib projection."""
     entries = []
-    for path in sorted((Path(vault) / "catalog" / "sources").glob("*/source.md")):
-        frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
-            continue
-        if not frontmatter.get("citekey"):
-            continue
-        entries.append(_render_source_bibtex(frontmatter))
+    if state.has_catalog_sources(vault):
+        sources = state.catalog_sources(vault)
+    else:
+        sources = []
+        for path in sorted((Path(vault) / "catalog" / "sources").glob("*/source.md")):
+            frontmatter = read_frontmatter(path)
+            if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+                continue
+            sources.append(frontmatter)
+    for frontmatter in sources:
+        csl_json = (
+            frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
+        )
+        if frontmatter.get("citekey") or csl_json.get("id"):
+            entries.append(_render_source_bibtex(frontmatter))
     return ("\n\n".join(entries) + "\n") if entries else ""
 
 
@@ -469,6 +491,14 @@ def write_references_bib(
 def check_references_bib(vault: Path, *, output_path: str = "references.bib") -> bool:
     path = Path(vault) / output_path
     return path.is_file() and path.read_text(encoding="utf-8") == render_references_bib(vault)
+
+
+def _has_bibliography_fields(frontmatter: dict[str, Any]) -> bool:
+    return bool(
+        str(frontmatter.get("citekey") or "").strip()
+        or frontmatter.get("csl_json")
+        or frontmatter.get("identifiers")
+    )
 
 
 def _source_id(value: str) -> str:

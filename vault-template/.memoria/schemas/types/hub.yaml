@@ -17,4 +17,5 @@ optional:
   confidence: enum:confidence
   contested: bool
   links: map
+  citations: list
   tags: list

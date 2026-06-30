@@ -572,6 +572,39 @@
         "integrity_checker"
       ],
       "check_status": "checked",
+      "description": "Verify checked keep-set Concepts embed compact citation payloads for catalog source references.",
+      "id": "integrity-citation-survival-check",
+      "model": "deterministic-fixture",
+      "operation_id": "integrity-citation-survival-check",
+      "path": "capabilities/operations/integrity-citation-survival-check.md",
+      "prompt_version": "integrity-citation-survival-check.v1",
+      "required_checks": [
+        "citation-survival"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha12",
+        "integrity"
+      ],
+      "title": "Integrity citation survival check",
+      "trust": {
+        "sha256": "sha256:f848e9ed3fa6b6fa26a891abeed8805e19b17043c8d0f01de6d871442cd98bbd",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "catalog/",
+        "knowledge/",
+        "journal/"
+      ],
+      "allowed_tools": [
+        "integrity_checker"
+      ],
+      "check_status": "checked",
       "description": "Check whether a claim's quoted evidence appears in its source.",
       "id": "integrity-claim-quote-check",
       "model": "deterministic-fixture",

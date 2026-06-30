@@ -36,9 +36,9 @@ Total types: **12** (Catalog Concepts: 4, Knowledge Concepts: 4, Capability Conc
 
 | Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `digest` | `knowledge/digests` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `tags` |
-| `hub` | `knowledge/hubs` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `tags` |
-| `note` | `knowledge/notes` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `extraction_confidence` · `tags` |
+| `digest` | `knowledge/digests` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
+| `hub` | `knowledge/hubs` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `citations` · `tags` |
+| `note` | `knowledge/notes` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
 | `project` | `knowledge/projects` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `thesis` · `scope` · `links` · `tags` |
 
 ## Capability Concepts (4)

@@ -1,4 +1,4 @@
-"""Alpha.11 trusted-writer primitives for staging, promotion, and trace scans."""
+"""Alpha.12 trusted-writer primitives for staging, promotion, and trace scans."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
@@ -74,7 +75,10 @@ def commit_writer_changes(
     selected = sorted(rels)
     _git(vault, ["git", "add", "--", *selected])
     _git(vault, ["git", "commit", "-m", message, "--", *selected])
-    return _git(vault, ["git", "rev-parse", "HEAD"])
+    commit = _git(vault, ["git", "rev-parse", "HEAD"])
+    for rel in selected:
+        state.mark_materialized(vault, rel, commit=commit)
+    return commit
 
 
 def observe_pi_edit(
@@ -239,6 +243,17 @@ def stage_concept(
     if run_id:
         event["run_id"] = run_id
     _append_event(vault, machine, event)
+    state.record_file_output(
+        vault,
+        output_id=target,
+        concept_type=str(frontmatter["type"]),
+        check_status=str(frontmatter["check_status"]),
+        output_sha256=event["output_sha256"],
+        staging_id=event["staging_id"],
+        payload_text=staged_path.read_text(encoding="utf-8"),
+        actor=actor,
+        inputs=event["inputs"],
+    )
     return event
 
 
@@ -523,6 +538,14 @@ def _write_checked(
         }
         _append_event(vault, machine, event)
         events.append(event)
+    state.mark_checked(
+        vault,
+        target,
+        sha256_file(output_path),
+        output_path.read_text(encoding="utf-8"),
+    )
+    if frontmatter.get("type") == "source":
+        state.upsert_catalog_source(vault, target, frontmatter)
     return events[0]
 
 
@@ -558,6 +581,7 @@ def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> None:
     append_jsonl(_journal_path(vault, machine), [event])
+    state.append_journal_event(vault, event, machine=machine)
 
 
 def _journal_path(vault: Path, machine: str | None) -> Path:

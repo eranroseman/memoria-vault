@@ -8,6 +8,7 @@ from collections import deque
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -257,6 +258,43 @@ def check_source_metadata(
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(vault, "source metadata check", [], machine=machine)
+    return {"findings": findings, "commit": commit_hash}
+
+
+def check_citation_survival(
+    vault: Path,
+    *,
+    shadow: bool = True,
+    machine: str | None = None,
+    commit: bool = False,
+) -> dict[str, Any]:
+    """Flag checked keep-set Concepts whose source references lack survival citations."""
+    vault = Path(vault)
+    findings: list[dict[str, Any]] = []
+    for path in iter_markdown(vault):
+        rel = path.relative_to(vault).as_posix()
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("check_status") != "checked":
+            continue
+        if frontmatter.get("type") not in {"digest", "note", "hub"}:
+            continue
+        for reason in state.check_citation_payload(frontmatter):
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    rel,
+                    check="citation-survival",
+                    status="failed",
+                    reason=reason,
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
+    commit_hash = ""
+    if findings and commit:
+        commit_hash = commit_writer_changes(
+            vault, "integrity citation survival check", [], machine=machine
+        )
     return {"findings": findings, "commit": commit_hash}
 
 

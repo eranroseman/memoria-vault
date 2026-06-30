@@ -21,6 +21,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Curate note candidate](operations/curate-note-candidate.md) `operation` — Record PI acceptance or rejection of a checked candidate note.
 - [Curate note link](operations/curate-note-link.md) `operation` — Record a PI-authored typed link between checked notes.
 - [Extract claim stubs](operations/extract-claim-stubs.md) `operation` — Draft source-grounded candidate note stubs from a source note.
+- [Integrity citation survival check](operations/integrity-citation-survival-check.md) `operation` — Verify checked keep-set Concepts embed compact citation payloads for catalog source references.
 - [Integrity claim quote check](operations/integrity-claim-quote-check.md) `operation` — Check whether a claim's quoted evidence appears in its source.
 - [Integrity contradiction check](operations/integrity-contradiction-check.md) `operation` — Surface explicit contradiction markers as integrity findings.
 - [Integrity evidence check](operations/integrity-evidence-check.md) `operation` — Check that note evidence references resolve to checked source Concepts.

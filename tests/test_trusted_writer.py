@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    shutil.copyfile(ROOT / "vault-template/.gitignore", tmp_path / ".gitignore")
     return tmp_path
 
 
@@ -297,7 +298,7 @@ def test_two_device_git_writes_keep_per_machine_journals_mergeable(tmp_path: Pat
     git(seed, "init", "-q", "-b", "main")
     git(seed, "config", "user.email", "seed@example.invalid")
     git(seed, "config", "user.name", "Seed")
-    git(seed, "add", "-f", ".memoria/schemas")
+    git(seed, "add", "-f", ".gitignore", ".memoria/schemas")
     git(seed, "commit", "-q", "-m", "seed schema")
     remote = tmp_path / "remote.git"
     git(tmp_path, "init", "--bare", "-q", "-b", "main", remote.as_posix())
@@ -341,7 +342,7 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     git(seed, "init", "-q", "-b", "main")
     git(seed, "config", "user.email", "seed@example.invalid")
     git(seed, "config", "user.name", "Seed")
-    git(seed, "add", "-f", ".memoria/schemas")
+    git(seed, "add", "-f", ".gitignore", ".memoria/schemas")
     git(seed, "commit", "-q", "-m", "seed schema")
     stage_concept(seed, "knowledge/notes/shared.md", note_text(title="Shared"), machine="seed")
     promote_checked(seed, "knowledge/notes/shared.md", machine="seed")

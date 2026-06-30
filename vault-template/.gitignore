@@ -32,7 +32,7 @@ __pycache__/
 # (.memoria/.venv). Per-machine, regenerable, never committed.
 .memoria/.venv/
 
-# Alpha.11 worker holding areas: runtime content is disposable, the skeleton
+# Alpha.12 worker holding areas: runtime content is disposable, the skeleton
 # .gitkeep files are tracked so fresh installs create the directories.
 .memoria/index/**
 !.memoria/index/
@@ -49,6 +49,9 @@ __pycache__/
 !.memoria/queue/
 !.memoria/queue/*/
 !.memoria/queue/*/.gitkeep
+.memoria/state/**
+!.memoria/state/
+!.memoria/state/.gitkeep
 
 # Captured source blobs are referenced from source Concepts and synced out of band.
 catalog/sources/*/raw/

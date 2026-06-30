@@ -87,7 +87,9 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 ├── plugins/memoria-policy-gate/   the fail-closed write-gate Hermes plugin
 ├── scripts/                 cron wrappers (worker, sweeps, lint, board-export, retraction refresh)
 ├── tool-registry.yaml       authoritative per-profile tool allowlist
-├── index/ · queue/ · staging/ · quarantine/   disposable alpha.11 worker state
+├── state/                   SQLite working-state DB (`memoria.sqlite`)
+├── audit/                   git-trackable audit anchors
+├── index/ · queue/ · staging/ · quarantine/   disposable worker mirrors/holding areas
 ├── design-system.md · project-hints.yaml.example
 ```
 
