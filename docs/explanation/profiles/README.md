@@ -8,7 +8,7 @@ permalink: /explanation/profiles/
 
 # Profiles
 
-Memoria runs **one conversational agent — the Co-PI — and four background agents** it delegates to ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The PI talks to the Co-PI; background agents run as board lanes and surface only when they need attention. A profile's stable trait is its **posture** — a stance like *faithful* or *skeptical* — while skills attach per lane.
+Memoria ships **one conversational profile — the Co-PI — and four background profile packages** ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The PI talks to the Co-PI; active background lanes run board cards and surface only when they need attention. A profile's stable trait is its **posture** — a stance like *faithful* or *skeptical* — while skills attach per lane.
 
 For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README.md).
 
@@ -18,7 +18,7 @@ For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README
 | --- | --- | --- | --- |
 | **[The Co-PI](co-pi.md)** | reflective thinking-partner | the Agent Client pane | Holds the conversation, asks the sharpening questions, and delegates every write as a task card. Read-only by design. |
 
-## The four background lanes
+## Background profiles
 
 | Agent | Posture | Lane(s) | What it does |
 | --- | --- | --- | --- |
@@ -49,7 +49,7 @@ originating lane's write ceiling, and the PI disposes.
 
 ## Where to go next
 
-- Why one Co-PI + four background lanes: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why one Co-PI + specialist background profiles: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - The deterministic actors that left the profile set: [Operations](../operations.md)
 - How cards reach the lanes and come back: [The Kanban board](../kanban-board/README.md)

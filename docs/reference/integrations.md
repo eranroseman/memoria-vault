@@ -92,7 +92,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Kilo Code gateway** | Production model provider for the five shipped Hermes profiles. Profile defaults route Co-PI and Peer-reviewer to Opus, Writer to Sonnet, and Librarian/Engineer to Haiku. |
-| **Kilocode / Aider / Claude Code** | External coding agent the Engineer hands substantive code work off to. The Engineer is MCP-only — it has no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)); it writes scaffolds through the gated obsidian MCP into `knowledge/projects/*/code/`, and the third-party agent runs under execution isolation. Not invoked by other profiles. |
+| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for the deferred Engineer/code lane. It is not invoked by alpha.11 task routing. When reintroduced, the Engineer remains MCP-only — no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)) — and handoff artifacts stay review-gated. |
 
 ---
 

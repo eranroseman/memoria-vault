@@ -27,7 +27,7 @@ history, see [Developers](../developers.md).
 
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
-3. **[Profiles](profiles/README.md)** — the Co-PI and the four background lanes.
+3. **[Profiles](profiles/README.md)** — the Co-PI and specialist background profiles.
 4. **[Operations](operations.md)** — the deterministic layer below the agents.
 5. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
 6. **[Obsidian](obsidian/README.md)** — how the human works in the vault.

@@ -10,9 +10,11 @@ Lookup tables for the Hermes Kanban board — the control plane for every unit o
 
 ---
 
-## Lanes = the four background agents
+## Assignees and active task lanes
 
-A lane _is_ an `assignee` value. Four lanes only ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. The lane → profile map (which task lanes each assignee serves) is owned by [Profile capabilities](profile-capabilities.md).
+An assignee is the background profile that owns a card. Four background profile packages ship ([ADR-48](../adr/48-copi-and-agent-consolidation.md)): `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`.
+
+The active task-lane map is narrower: alpha.11 routes only `catalog`, `extract`, `link`, `map`, and `verify`. Writer/`draft` and Engineer/`code` packages are present but deferred. The lane -> profile map is owned by [Profile capabilities](profile-capabilities.md).
 
 ---
 
@@ -91,7 +93,6 @@ Back-pressure protects the human bottleneck:
 | --- | --- | --- |
 | Review queue | 5 cards in `done` awaiting the PI | Dispatcher delays new done cards once the queue is full. |
 | Per worker lane | 1 `running` card | A lane holds one card at a time — the invariant that makes idempotent re-ingest safe. |
-| Writer lane (drafts in flight) | Bounded (no fixed number) | Protects synthesis quality, not throughput. |
 
 ---
 
