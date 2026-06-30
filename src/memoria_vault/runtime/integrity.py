@@ -19,7 +19,12 @@ from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
 )
-from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, read_frontmatter
+from memoria_vault.runtime.vaultio import (
+    iter_markdown,
+    read_frontmatter,
+    split_frontmatter,
+    write_frontmatter_doc,
+)
 
 
 def record_integrity_check(
@@ -570,10 +575,10 @@ def _quarantine_machine_descendant(
 ) -> None:
     source = vault / output_id
     original_sha = sha256_file(source)
-    frontmatter, body = _split_frontmatter(source.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(source.read_text(encoding="utf-8"))
     if frontmatter:
         frontmatter["check_status"] = "quarantined"
-        _write_concept(source, frontmatter, body)
+        write_frontmatter_doc(source, frontmatter, body)
     quarantined_sha = sha256_file(source)
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / output_id)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
@@ -849,7 +854,7 @@ def _support_terms(text: str) -> set[str]:
 
 
 def _concept_scan_text(vault: Path, path: Path, frontmatter: dict[str, Any]) -> str:
-    parsed, body = _split_frontmatter(path.read_text(encoding="utf-8"))
+    parsed, body = split_frontmatter(path.read_text(encoding="utf-8"))
     parts = [
         body,
         str(parsed.get("title") or frontmatter.get("title") or ""),
@@ -882,32 +887,6 @@ def _prompt_injection_marker(text: str) -> str:
         if marker in normalized:
             return marker
     return ""
-
-
-def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if not text.startswith("---"):
-        return {}, text
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}, text
-    body_start = end + len("\n---")
-    if body_start < len(text) and text[body_start] == "\n":
-        body_start += 1
-    return parse_frontmatter(text), text[body_start:]
-
-
-def _write_concept(path: Path, frontmatter: dict[str, Any], body: str) -> None:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("integrity rollback requires PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    if not body.startswith("\n"):
-        body = "\n" + body
-    if not body.endswith("\n"):
-        body += "\n"
-    path.write_text(f"---\n{rendered}\n---{body}", encoding="utf-8")
 
 
 def _unique_path(path: Path) -> Path:

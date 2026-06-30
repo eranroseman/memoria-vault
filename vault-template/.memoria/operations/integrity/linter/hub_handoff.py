@@ -24,7 +24,6 @@ for _path in (_RUNTIME_ROOT, _RUNTIME_ROOT / "mcp"):
         sys.path.insert(0, str(_path))
 
 import tasks_mcp
-
 from operations.integrity.linter import detectors
 
 _ALLOWED_PATHS = ["knowledge/notes/maps/"]

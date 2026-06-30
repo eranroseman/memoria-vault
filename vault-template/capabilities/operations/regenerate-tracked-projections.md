@@ -28,4 +28,4 @@ tags: [alpha11, projection]
 
 # Operation
 
-Render `index.md`, bundle indexes, `references.bib`, and `ai-catalog.json`.
+Render `index.md`, bundle indexes, and `references.bib`.

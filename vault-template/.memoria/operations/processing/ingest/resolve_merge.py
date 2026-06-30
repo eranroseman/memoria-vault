@@ -36,12 +36,13 @@ _RUNTIME_ROOT = Path(__file__).resolve().parents[3]
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from memoria_vault.runtime.diagnostics import record_event
 from operations.processing.ingest import ingest_paper
 from operations.processing.ingest.resolve_merge_logic import agreement as agreement
 from operations.processing.ingest.resolve_merge_logic import merge
 from operations.processing.ingest.resolve_merge_logic import union_refs as union_refs
 from operations.processing.ingest.resolve_merge_pubmed import parse_pubmed
+
+from memoria_vault.runtime.diagnostics import record_event
 
 S2_BASE = "https://api.semanticscholar.org/graph/v1"
 OA_BASE = "https://api.openalex.org"

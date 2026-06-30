@@ -86,9 +86,8 @@ def _bootstrap_vault_runtime_package() -> None:
 
 _bootstrap_vault_runtime_package()
 
-from _shared import load_json, safe_filename
-
 from memoria_vault.runtime.diagnostics import record_event
+from memoria_vault.runtime.paths import load_json, safe_filename
 
 # obsidian (mcp-obsidian) tool-name keyword -> policy action. Matched by substring
 # so it survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools

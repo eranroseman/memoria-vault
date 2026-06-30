@@ -7,7 +7,8 @@ import argparse
 import json
 from pathlib import Path
 
-from _shared import now_iso, resolve_vault
+from memoria_vault.runtime.paths import resolve_vault
+from memoria_vault.runtime.time import now_iso
 
 HEARTBEAT_RELPATH = "system/logs/cron-heartbeat.jsonl"
 

@@ -14,7 +14,6 @@ _RUNTIME_ROOT = Path(__file__).resolve().parents[3]
 if str(_RUNTIME_ROOT) not in sys.path:
     sys.path.insert(0, str(_RUNTIME_ROOT))
 
-from memoria_vault.runtime.time import utc_z
 from operations.processing.project.structural_impact_graph import (
     Edge,
     Note,
@@ -32,6 +31,8 @@ from operations.processing.project.structural_impact_graph import (
     truthy,
     values_as_set,
 )
+
+from memoria_vault.runtime.time import utc_z
 
 CONFIDENT_GAP_KINDS = {"additive", "conflict", "fragility"}
 ADVISORY_GAP_KINDS = {"structural", "refutation"}

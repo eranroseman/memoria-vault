@@ -21,7 +21,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
-    (tmp_path / "capabilities/ai-catalog.json").unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "capabilities@example.invalid")
     git(tmp_path, "config", "user.name", "Capabilities")
@@ -41,11 +40,11 @@ def git(vault: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def test_shipped_ai_catalog_projection_is_current() -> None:
+def test_ai_catalog_renderer_covers_shipped_operations() -> None:
     vault = ROOT / "vault-template"
 
-    assert check_ai_catalog(vault)
-    catalog = json.loads((vault / "capabilities/ai-catalog.json").read_text(encoding="utf-8"))
+    assert not (vault / "capabilities/ai-catalog.json").exists()
+    catalog = json.loads(render_ai_catalog(vault))
     rows = {row["id"]: row for row in catalog["capabilities"]}
 
     assert catalog["schema_version"] == 1

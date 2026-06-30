@@ -25,7 +25,6 @@ def test_policy_hook_bootstraps_vault_venv_runtime_package(tmp_path):
     mcp.mkdir(parents=True)
     mcp_src = Path(_m.__file__).resolve().parent
     shutil.copy(mcp_src / "policy_hook.py", mcp / "policy_hook.py")
-    shutil.copy(mcp_src / "_shared.py", mcp / "_shared.py")
 
     runtime = vault / ".memoria" / ".venv" / "lib" / "python9.9" / "site-packages"
     package = runtime / "memoria_vault"
@@ -139,7 +138,6 @@ def _vault_with_policy(tmp_path):
     mcp_src = Path(_m.__file__).resolve().parent
     shutil.copy(mcp_src / "policy_mcp.py", vault / ".memoria" / "mcp" / "policy_mcp.py")
     shutil.copy(mcp_src / "policy_server.py", vault / ".memoria" / "mcp" / "policy_server.py")
-    shutil.copy(mcp_src / "_shared.py", vault / ".memoria" / "mcp" / "_shared.py")
     (lanes / "writer.yaml").write_text(
         "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
         '      - "inbox/**"\n      - "knowledge/hubs/**"\n'

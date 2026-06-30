@@ -27,8 +27,8 @@ import os
 import sys
 from pathlib import Path
 
-# Make policy_hook importable when run as a standalone script: it pulls in `_shared`
-# (this dir) and the `memoria_vault` package (repo root/src). pytest provides these via the
+# Make policy_hook importable when run as a standalone script: it pulls in this
+# dir and the `memoria_vault` package (repo root/src). pytest provides these via the
 # pyproject `pythonpath`; a bare `python …/hermes_contract_doctor.py` does not.
 _HERE = Path(__file__).resolve().parent
 for _p in (_HERE, _HERE.parents[0], _HERE.parents[2], _HERE.parents[2] / "src"):

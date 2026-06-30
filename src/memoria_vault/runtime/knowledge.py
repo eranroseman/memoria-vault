@@ -19,7 +19,13 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, read_frontmatter
+from memoria_vault.runtime.vaultio import (
+    concept_text,
+    iter_markdown,
+    read_frontmatter,
+    split_frontmatter,
+    write_frontmatter_doc,
+)
 
 
 def emit_note_candidates(
@@ -103,7 +109,7 @@ def emit_note_candidates(
         stage = stage_concept(
             vault,
             note_rel,
-            _concept_text(frontmatter, title, body),
+            concept_text(frontmatter, title, body),
             inputs=[{"id": digest_rel, "sha256": sha256_file(vault / digest_rel)}],
             operation=operation_id,
             run_id=run_id,
@@ -158,14 +164,14 @@ def curate_note_candidate(
     note = vault / note_rel
     if not note.is_file():
         raise FileNotFoundError(note)
-    frontmatter, body = _split_frontmatter(note.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(note.read_text(encoding="utf-8"))
     if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
         raise ValueError(f"{note_rel} is not a checked note")
     if frontmatter.get("status") != "candidate":
         raise ValueError(f"{note_rel} is not a candidate note")
 
     frontmatter["status"] = status
-    _write_concept(note, frontmatter, body)
+    write_frontmatter_doc(note, frontmatter, body)
     event = append_journal_event(
         vault,
         {
@@ -205,7 +211,7 @@ def curate_note_link(
     source_note = vault / source_rel
     if not source_note.is_file():
         raise FileNotFoundError(source_note)
-    frontmatter, body = _split_frontmatter(source_note.read_text(encoding="utf-8"))
+    frontmatter, body = split_frontmatter(source_note.read_text(encoding="utf-8"))
     if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
         raise ValueError(f"{source_rel} is not a checked note")
     _checked_concept(vault, target_rel)
@@ -222,7 +228,7 @@ def curate_note_link(
     if changed:
         bucket.append(target_rel)
         frontmatter["links"] = links
-        _write_concept(source_note, frontmatter, body)
+        write_frontmatter_doc(source_note, frontmatter, body)
 
     event = append_journal_event(
         vault,
@@ -818,42 +824,6 @@ def _string_list(value: object) -> list[str]:
     if isinstance(value, str) and value.strip():
         return [value]
     return []
-
-
-def _concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("knowledge helpers require PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    return f"---\n{rendered}\n---\n# {title}\n\n{body.rstrip()}\n"
-
-
-def _split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
-    if not text.startswith("---"):
-        return {}, text
-    end = text.find("\n---", 3)
-    if end == -1:
-        return {}, text
-    body_start = end + len("\n---")
-    if body_start < len(text) and text[body_start] == "\n":
-        body_start += 1
-    return parse_frontmatter(text), text[body_start:]
-
-
-def _write_concept(path: Path, frontmatter: dict[str, Any], body: str) -> None:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("knowledge helpers require PyYAML to write frontmatter") from exc
-
-    rendered = yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
-    if not body.startswith("\n"):
-        body = "\n" + body
-    if not body.endswith("\n"):
-        body += "\n"
-    path.write_text(f"---\n{rendered}\n---{body}", encoding="utf-8")
 
 
 def _sha256_text(text: str) -> str:

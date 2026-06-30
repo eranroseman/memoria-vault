@@ -30,13 +30,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
-from _shared import (
-    iter_jsonl as _iter_jsonl_raw,
-)
-from _shared import (
-    parse_iso,
-    resolve_vault,
-)
+from memoria_vault.runtime.jsonl import iter_jsonl as _iter_jsonl_raw
+from memoria_vault.runtime.paths import resolve_vault
+from memoria_vault.runtime.time import parse_iso
 
 METRICS_RELDIR = "system/metrics"
 AUDIT_RELPATH = "system/logs/audit.jsonl"

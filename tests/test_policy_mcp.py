@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import pytest
-from _util import CheckHarness
 
 from memoria_vault.runtime.policy import (
     AUDIT_RELPATH,
@@ -26,8 +25,8 @@ def test_policy_mcp():
     def _run():
         import tempfile
 
-        t = CheckHarness()
-        check = t.check
+        def check(name: str, cond: bool) -> None:
+            assert cond, name
 
         # ---- glob matcher ------------------------------------------------------ #
         check("glob: '**' matches anything", path_matches("a/b/c.md", ["**"]))
@@ -379,9 +378,7 @@ def test_policy_mcp():
             no_task = engine.check("memoria-coder", "write", "40-workbench/x/06-code/m.py", "")
             check("missing task_id -> deny", no_task["decision"] == "deny")
 
-        return t.summary(label="all" if yaml is not None else "core")
-
-    assert _run() == 0
+    _run()
 
 
 # Loaded from the real shipped lane-override YAMLs, not in-test mirrors, so a
