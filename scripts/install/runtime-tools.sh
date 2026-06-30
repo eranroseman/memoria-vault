@@ -75,7 +75,7 @@ install_hermes_cron() {
   vault_esc="$(sed_repl "$VAULT_PATH")"
   run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
   run chmod +x "$dst"
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list 2>/dev/null | grep -q "$job_name"; then
+  if [ "$DRY_RUN" -eq 0 ] && hermes cron list --all 2>/dev/null | grep -q "$job_name"; then
     say "  $present_label cron already present — wrapper refreshed, job left as-is"
   else
     run hermes cron create "$schedule" --script "$dest_name" --no-agent \
