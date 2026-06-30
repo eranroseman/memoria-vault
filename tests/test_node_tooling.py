@@ -41,10 +41,14 @@ def test_node_workflows_do_not_download_cli_packages_at_run_time():
 
 
 def test_precommit_node_hooks_fail_fast_without_network_downloads():
-    assert _local_hook("cspell")["entry"].startswith("npx --no-install cspell ")
-    assert _local_hook("markdownlint-structural")["entry"].startswith(
-        "npx --no-install markdownlint "
-    )
+    for hook_id, command in (
+        ("cspell", "cspell lint --no-progress --no-must-find-files"),
+        ("markdownlint-structural", "markdownlint --config .markdownlint.json"),
+    ):
+        entry = _local_hook(hook_id)["entry"]
+        assert "PATH=node_modules/.bin:$PATH" in entry
+        assert command in entry
+        assert "npx" not in entry
 
 
 def test_lint_config_and_markdownlint_are_required_checks():

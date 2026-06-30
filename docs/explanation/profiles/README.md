@@ -23,9 +23,9 @@ For the shared PI, Co-PI, lanes, board, and vault terms, see [Home](../../README
 | Agent | Posture | Lane(s) | What it does |
 | --- | --- | --- | --- |
 | **[The Librarian](librarian.md)** | faithful | catalog · extract · link · map | Intake, distillation, connection, and corpus mapping. Proposes generously; the review gate filters. |
-| **[The Writer](writer.md)** | generative, draft-only | draft | Composes prose and outlines into project scratch. Never canonizes, never self-verifies. |
+| **[The Writer](writer.md)** | generative, draft-only | draft | Deferred in alpha.11; planned to compose prose and outlines into project scratch. |
 | **[The Peer-reviewer](peer-reviewer.md)** | skeptical, independent | verify | The formal review gate: judgment checks and the conceptual red-team. Flags, never fixes. |
-| **[The Engineer](engineer.md)** | delegating | code | Scaffolds the handoff to an external coding agent and owns the commit/revert checkpoint. Writes no code itself. |
+| **[The Engineer](engineer.md)** | delegating | code | Deferred in alpha.11; planned to scaffold external-agent handoffs. Writes no code itself. |
 
 All five profiles ship. Deterministic work — ingest, search, clustering, project structural impact, verification sweeps, and the Linter — is [Operations](../operations.md), not agents: no posture, no board lane.
 
@@ -38,8 +38,8 @@ delegators first:
 
 | Profile | Delegation posture |
 | --- | --- |
-| Engineer | Widest: substantive coding goes to the external agent by design; commits stay per task. |
-| Writer | Supportive: facts and cleanup; synthesis stays local. |
+| Engineer | Deferred: substantive coding will go to the external agent by design; commits stay per task. |
+| Writer | Deferred: facts and cleanup may be delegated later; synthesis stays local. |
 | Librarian | Targeted: narrow enrichment and source lookups; discovery ownership stays local. |
 | Peer-reviewer | Very low: delegation weakens independence; it runs its own traces. |
 | Co-PI | None as a helper-spawn model: every write leaves as a routed board card under another lane's ceiling. |
