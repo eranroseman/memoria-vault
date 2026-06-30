@@ -1,5 +1,5 @@
 <!-- cspell:words SSOT SQLite Crossref OpenAlex Unpaywall DOI ISBN PubMed arXiv CSL BibTeX -->
-<!-- cspell:words PydanticAI allowlist frontmatter idempotency Obsidian Hermes Memoria -->
+<!-- cspell:words PydanticAI allowlist frontmatter idempotency Obsidian Hermes Memoria Ollama -->
 
 # ExecPlan - alpha.11-13 SSOT and CLI-first implementation
 
@@ -32,7 +32,7 @@ places. This plan lands the smallest coherent pivot:
 - SQLite plus worker queues own catalog and operation state.
 - Files remain durable notes, references, projections, templates, and shipped
   vault material, but not the source catalog database.
-- Hermes becomes an optional adapter, not the product runtime contract.
+- Hermes is not part of the alpha.11-13 design or product runtime contract.
 - Current docs describe only implemented behavior; forward-looking decisions
   live in ADRs or scratch plans.
 
@@ -50,16 +50,17 @@ Terms used in this plan:
   the alpha.11-13 design files govern this pivot until a superseding ADR is
   accepted.
 - CLI-first: product flows start from `memoria ...` commands and queue/worker
-  state. Obsidian and Hermes can call into those flows, but do not own them.
+  state. Obsidian or other adapters may call into those flows, but do not own
+  them.
 - Catalog: source identity, source metadata, provider evidence, provenance,
   checked/unchecked state, and enrichment state stored in SQLite.
 - Keep-set: user-authored durable notes and references. Keep-set files may link
   to `source_id`, but do not define catalog truth.
 - Projection: generated consumer files such as indexes, references, capability
   JSON, or docs mirrors. Projections must be regeneratable from their owner.
-- Hermes adapter: optional compatibility integration for environments that
-  still run Hermes. It must not be required by the CLI, tests, or installer
-  defaults.
+- Legacy Hermes integration: existing repo material that must be removed from
+  the required path or left as historical/adapter-only documentation. It must
+  not be required by the CLI, tests, or installer defaults.
 
 Known implementation gaps from current code:
 
@@ -127,9 +128,17 @@ explicitly asks for a single PR.
 
 6. Documentation and installer PR.
    Update public docs, reference docs, README text, installer references, and
-   test guidance to reflect the implemented CLI-first behavior. Keep Hermes docs
-   only as optional adapter or historical material. Ensure generated references
-   and drift doctors agree with the implementation.
+   test guidance to reflect the implemented CLI-first behavior. Keep Hermes
+   material only as legacy adapter or historical material. Ensure generated
+   references and drift doctors agree with the implementation.
+
+7. Installed local-provider testing PR.
+   Fold `scratch/local-llm-installed-testing-design.md` into the source test
+   guidance as non-PR gates. Add an `install` gate for fresh disposable vault
+   installs and a `runtime-local` gate for installed CLI workflows against an
+   OpenAI-compatible local endpoint. These gates must not require Hermes,
+   Obsidian, or external providers; normal PRs still run only static, unit, and
+   contract checks unless package-facing behavior changes.
 
 Non-goals for this checkpoint:
 
@@ -251,7 +260,36 @@ python -m pytest tests/test_cspell_scope.py tests/test_ruleset_doctor.py tests/t
 Expected result: docs describe the implemented CLI-first system, generated
 references match source contracts, `cspell`, `markdownlint`, and `lint-config`
 contract tests pass, and installer tests no longer assume Hermes is mandatory
-unless an optional Hermes adapter path is being tested.
+unless a legacy adapter path is being tested.
+
+Installed local-provider gates:
+
+```bash
+curl -fsS http://127.0.0.1:11434/v1/models
+ollama list
+
+TEST_VAULT=/home/eranr/Memoria-test/vault-local-installed
+MEMORIA_ENV=test \
+MEMORIA_MODEL_PROVIDER=custom \
+MEMORIA_MODEL_BASE_URL=http://127.0.0.1:11434/v1 \
+MEMORIA_MODEL_NAME=memoria-qwen2.5:7b-64k \
+MEMORIA_MODEL_CONTEXT_LENGTH=65536 \
+  bash scripts/install.sh --vault "$TEST_VAULT" --no-apps --yes
+
+MEMORIA_LOCAL_MODEL_PROVIDER=custom \
+MEMORIA_LOCAL_MODEL_BASE_URL=http://127.0.0.1:11434/v1 \
+MEMORIA_LOCAL_MODEL_NAME=memoria-qwen2.5:7b-64k \
+MEMORIA_LOCAL_MODEL_CONTEXT_LENGTH=65536 \
+OPENAI_API_KEY=dummy \
+  bash scripts/test-local-installed.sh --vault "$TEST_VAULT" --real-model
+```
+
+Expected result after the gate exists: `install` creates a disposable vault
+skeleton, golden manifest, vault-local Python environment, local-provider
+configuration, git hooks when applicable, and a clean golden-restore report.
+`runtime-local` proves installed CLI dispatch reaches the local LLM, forbidden
+direct writes through Memoria operations fail closed, audit rows carry a task
+id, and no forbidden artifact is created. Do not assert generated prose.
 
 Full gate before PR merge:
 
@@ -291,7 +329,9 @@ The implementation is complete only when all of these are true:
   renamed as optional adapter reference, or rewritten so it cannot be mistaken
   for the primary command reference.
 - Installer docs and tests no longer install Hermes/profiles by default unless
-  the optional adapter is explicitly requested.
+- the legacy adapter is explicitly requested.
+- Installed local-provider gates cover `install` and `runtime-local` without
+  requiring Hermes, Obsidian, or external providers.
 
 ## 6. Idempotence And Recovery
 
@@ -332,6 +372,10 @@ The implementation is complete only when all of these are true:
 - 2026-06-30 - The implementation sequence starts with a small CLI spine so
   later catalog and enrichment changes have a stable operator surface and test
   entrypoint.
+- 2026-06-30 - Folded the local LLM installed-system testing design into this
+  plan as CLI/local-provider gates. Hermes is deliberately excluded from those
+  gates; existing `scripts/test-l2.sh` remains a legacy Hermes smoke until it is
+  replaced or retired.
 
 ## 9. Surprises
 
@@ -361,6 +405,8 @@ The implementation is complete only when all of these are true:
 ## 11. Artifacts And Notes
 
 - Plan authored on `scratch` in `~/mv/scratch`.
+- Local installed testing design input:
+  `scratch/local-llm-installed-testing-design.md`.
 - No implementation tests were run while creating this plan.
 - Existing non-scratch worktree changes in `~/mv/docs-gap-analysis` were left
   untouched.
