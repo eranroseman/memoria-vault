@@ -24,6 +24,15 @@ pythonpath = [
   "scripts",
   ".github/scripts",
 ]
+markers = [
+  "static: formatting, lint, schema, docs refs, spell, ADR index, workflow safety",
+  "unit: deterministic Python behavior with no runtime fixture",
+  "contract: CLI, operations, manifests, templates, projections, and compatibility contracts",
+  "package: build/install/smoke and installer-facing behavior",
+  "runtime: worker loops, recovery, idempotence, migrations, and long local checks",
+  "live: real external services/providers; never required for normal PR merge",
+  "slow: deterministic but slow enough to skip from the default local loop",
+]
 
 [tool.ruff]
 # Width is owned by the formatter (`ruff format`), not the E501 lint rule. 100 is

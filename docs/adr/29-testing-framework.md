@@ -36,6 +36,10 @@ superseded_by: []
 > [CONTRIBUTING.md](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md);
 > reusable agent procedure lives in
 > [verify-change.md](https://github.com/eranroseman/memoria-vault/blob/main/.agents/playbooks/verify-change.md).
+>
+> **Amended 2026-06-30:** executable test selection is now expressed as six
+> pytest levels: `static`, `unit`, `contract`, `package`, `runtime`, and `live`.
+> The historical L0/L1 names remain script aliases only.
 
 ## Context
 
@@ -68,15 +72,14 @@ owns the human summary, and the verify-change playbook owns reusable procedure.
 
 **Coverage aliases**
 
-| Layer | Covers | Plan / owner | Trigger |
+| Level | Covers | Plan / owner | Trigger |
 | --- | --- | --- | --- |
-| **L0 Static & schema** | required source checks + dashboard/telemetry schema-drift | `scripts/verify pr` | every commit (CI) |
-| **L1 Component** | `pytest tests/` (gate, hook, board, metrics, ingest/verify MCP, detectors, ingest spine, repo tooling) — ADR-44 | `scripts/test.sh l1` via Source Gate | every commit (CI) |
-| **L2 Wiring / contract** | policy gate, representative CLI behavior classes, board/profile/skills/cron, architecture invariants | `scripts/verify runtime` | per release (cheap model, disposable vault) |
-| **L3 System integration** | plugins, REST bridge, dashboards render, Zotero to bib, Agent Client | verify-change manual GUI procedure | per release |
-| **L4 Golden-path E2E** | one full product trace across runtime, ingest, review, telemetry, and GUI | release issue evidence | per release |
-| **L5 Quality / eval** | agent *output* quality (gold tasks, scored) | [ADR-11](11-vault-eval-maintenance.md) vault-eval | per release / model swap |
-| **Cross-cutting** | Installer clean-install · Recovery · Security · Performance · Deployment | `scripts/verify package` + verify-change failure/recovery procedure | on relevant change |
+| **static** | formatting, lint, schema, docs refs, spell, ADR index, workflow safety | `scripts/test.sh static` / `l0` | every PR |
+| **unit** | deterministic Python behavior | `scripts/test.sh unit` | every PR |
+| **contract** | CLI, operations, capability manifests, templates, projections | `scripts/test.sh contract` | every PR |
+| **package** | wheel build/install smoke, installer/e2e smoke helpers | `scripts/verify package` | package-facing PRs, release PRs |
+| **runtime** | worker loops, recovery, idempotence, migrations, long checks | `scripts/verify runtime` | nightly, release candidate |
+| **live** | real external services/providers | `scripts/test.sh live` / manual evidence | manual or scheduled only |
 
 **Disciplines**
 

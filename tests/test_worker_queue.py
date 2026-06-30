@@ -6,6 +6,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -1074,6 +1076,7 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
     assert [source["path"] for source in done["sources"]] == ["knowledge/notes/checked.md"]
 
 
+@pytest.mark.slow
 def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     eval_dir = vault / "system/eval"
@@ -1315,6 +1318,16 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
     again = enqueue_integrity_sweep(vault, shadow=False, sweep_id="2026-06-29")
 
     assert {job["status"] for job in again} == {"done"}
+
+    replay = run_integrity_sweep(
+        vault,
+        shadow=False,
+        sweep_id="2026-06-29",
+        machine="test-machine",
+    )
+
+    assert {job["status"] for job in replay["jobs"]} == {"done"}
+    assert replay["results"] == []
 
 
 def test_worker_marks_invalid_job_failed_without_bundle_write(tmp_path: Path) -> None:

@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.seeded_errors import (
     _metrics_by_error_class,
     load_seeded_error_bundle,
@@ -80,6 +82,7 @@ def test_metrics_by_error_class_counts_matching_check_false_positives() -> None:
     assert by_class["structural:quote-anchor"]["false_positive_rate"] == 0.5
 
 
+@pytest.mark.slow
 def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     tmp_path: Path,
 ) -> None:
