@@ -118,7 +118,15 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     digest.add_argument("--hub-topic", action="append", default=[])
     digest.set_defaults(handler=_cmd_work_digest)
 
-    for name in ("interview", "update"):
+    interview = work_sub.add_parser("interview")
+    _common(interview)
+    interview.add_argument("--work-id", required=True)
+    interview.add_argument("--response", required=True)
+    interview.add_argument("--prompt", default="What matters about this source?")
+    interview.add_argument("--project-id", default="")
+    interview.set_defaults(handler=_cmd_work_interview)
+
+    for name in ("update",):
         cmd = work_sub.add_parser(name)
         _common(cmd)
         cmd.set_defaults(handler=_not_implemented(f"work {name}"))
@@ -437,6 +445,22 @@ def _cmd_work_digest(args: argparse.Namespace) -> int:
             args,
             "compile-source-digest",
             {"source_id": args.work_id, "hub_topics": args.hub_topic or DEFAULT_DIGEST_TOPICS},
+        ),
+        args,
+    )
+
+
+def _cmd_work_interview(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "record-copi-interview",
+            {
+                "source_id": args.work_id,
+                "prompt": args.prompt,
+                "response": args.response,
+                "project_id": args.project_id,
+            },
         ),
         args,
     )

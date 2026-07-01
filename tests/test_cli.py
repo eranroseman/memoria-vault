@@ -276,6 +276,31 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
         == 0
     )
     capsys.readouterr()
+    assert (
+        main(
+            [
+                "work",
+                "interview",
+                "--workspace",
+                str(workspace),
+                "--work-id",
+                "doi-10.1000_alpha",
+                "--prompt",
+                "What matters?",
+                "--response",
+                "The PI cares about the methods caveat.",
+                "--project-id",
+                "knowledge/projects/project-alpha.md",
+                "--json",
+                "--idempotency-key",
+                "interview-alpha",
+            ]
+        )
+        == 0
+    )
+    interview = json.loads(capsys.readouterr().out)
+    assert interview["result"]["source_id"] == "catalog/sources/doi-10.1000_alpha/source.md"
+    assert interview["result"]["turn_id"].startswith("journal:copi-interview:")
 
     rc = main(
         [
@@ -295,12 +320,25 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
     assert rc == 0
     assert output["ok"] is True
     assert output["result"]["digest_path"] == "knowledge/digests/doi-10.1000_alpha.md"
+    assert output["result"]["interview_count"] == 1
     digest = workspace / output["result"]["digest_path"]
     assert digest.is_file()
     body = digest.read_text(encoding="utf-8")
     assert "Alpha Source" in body
     assert "10.1000/alpha" in body
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("interview-alpha",),
+        ).fetchone()
+    assert row["operation_id"] == "record-copi-interview"
+    assert json.loads(row["args_json"]) == {
+        "source_id": "doi-10.1000_alpha",
+        "prompt": "What matters?",
+        "response": "The PI cares about the methods caveat.",
+        "project_id": "knowledge/projects/project-alpha.md",
+    }
 
 
 def test_cli_project_gaps_runs_gap_analysis_request(
