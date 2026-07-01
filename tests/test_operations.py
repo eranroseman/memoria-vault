@@ -104,6 +104,8 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert digest_fm["type"] == "digest"
     assert digest_fm["check_status"] == "checked"
     assert digest_fm["source_id"] == "catalog/sources/source-alpha"
+    assert digest_fm["evidence_set"] == ["catalog/sources/source-alpha"]
+    assert result["derived"]["inputs"][0]["id"] == "catalog/sources/source-alpha"
     assert result["hub_paths"] == [
         "knowledge/hubs/methods.md",
         "knowledge/hubs/outcomes.md",
@@ -118,7 +120,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert read_frontmatter(staged_hub)["check_status"] == "unchecked"
     assert read_frontmatter(staged_hub)["tags"] == ["suggestion"]
     promoted_hub = vault / "knowledge/hubs/methods.md"
-    assert read_frontmatter(promoted_hub)["check_status"] == "checked"
+    promoted_hub_fm = read_frontmatter(promoted_hub)
+    assert promoted_hub_fm["check_status"] == "checked"
+    assert promoted_hub_fm["members"] == [
+        "knowledge/digests/source-alpha.md",
+        "catalog/sources/source-alpha",
+    ]
 
     events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
     assert [event["event"] for event in events] == [
