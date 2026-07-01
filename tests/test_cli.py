@@ -358,6 +358,69 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     }
 
 
+def test_cli_project_trace_and_export_argument_canvas(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+
+    rc = main(
+        [
+            "project",
+            "trace",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--json",
+            "--idempotency-key",
+            "project-trace",
+        ]
+    )
+    trace = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert trace["ok"] is True
+    assert trace["result"]["argument_stage"] == "developing"
+    assert trace["result"]["relation_count"] == 2
+    assert trace["result"]["supports_count"] == 1
+    assert trace["result"]["contradicts_count"] == 1
+
+    rc = main(
+        [
+            "project",
+            "export",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--json",
+            "--idempotency-key",
+            "project-export",
+        ]
+    )
+    exported = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert exported["ok"] is True
+    assert exported["result"]["canvas_path"] == "knowledge/projects/project-alpha/argument.canvas"
+    canvas = json.loads((workspace / exported["result"]["canvas_path"]).read_text(encoding="utf-8"))
+    assert {edge["label"] for edge in canvas["edges"]} == {"supports", "contradicts"}
+    with state.connect(workspace) as conn:
+        rows = conn.execute(
+            """
+            SELECT request_id, operation_id
+            FROM operation_requests
+            WHERE request_id IN ('project-trace', 'project-export')
+            ORDER BY request_id
+            """
+        ).fetchall()
+    assert [(row["request_id"], row["operation_id"]) for row in rows] == [
+        ("project-export", "render-project-argument-canvas"),
+        ("project-trace", "analyze-project-argument"),
+    ]
+
+
 def test_cli_note_candidate_accept_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -786,6 +849,36 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
     monkeypatch.setenv("QMD_LOG", str(qmd_log))
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
     return qmd_log
+
+
+def _write_project_argument_fixture(workspace: Path) -> None:
+    project = workspace / "knowledge/projects/project-alpha.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Alpha project\n"
+        "thesis: knowledge/notes/thesis.md\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    notes = {
+        "thesis": "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+        "support": (
+            "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+            "links:\n  supports:\n    - knowledge/notes/thesis.md\n"
+        ),
+        "refute": (
+            "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
+            "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n"
+        ),
+    }
+    for name, frontmatter in notes.items():
+        note = workspace / f"knowledge/notes/{name}.md"
+        note.parent.mkdir(parents=True, exist_ok=True)
+        note.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
 
 
 def _doi_provider_payloads() -> dict[str, object]:
