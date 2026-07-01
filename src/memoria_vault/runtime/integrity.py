@@ -522,17 +522,25 @@ def resolve_attention(
     target_id: str,
     *,
     resolution: str,
+    outcome: str | None = None,
     reason: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
     """Record a PI attention disposition through the worker-owned journal."""
     if resolution not in {"acknowledged", "resolved"}:
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
+    outcome = outcome or resolution
+    supported_outcomes = (
+        {"acknowledged"} if resolution == "acknowledged" else {"resolved", "dismissed"}
+    )
+    if outcome not in supported_outcomes:
+        raise ValueError(f"unsupported attention outcome for {resolution}: {outcome!r}")
     vault = Path(vault)
     target = normalize_path(target_id)
     event = {
         "event": EVENT_RESOLVED,
         "resolution": resolution,
+        "outcome": outcome,
         "target_id": target,
         "reason": reason,
         "actor": "pi",
@@ -550,7 +558,7 @@ def resolve_attention(
             touched.append(target)
     commit = commit_writer_changes(
         vault,
-        f"{resolution} attention {Path(target).stem}",
+        f"{outcome} attention {Path(target).stem}",
         touched,
         machine=machine,
     )

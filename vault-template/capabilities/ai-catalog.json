@@ -1217,7 +1217,7 @@
         "trusted_writer"
       ],
       "check_status": "checked",
-      "description": "Record that the PI resolved a generated attention item.",
+      "description": "Record that the PI resolved or dismissed a generated attention item.",
       "id": "resolve-attention",
       "model": "deterministic-fixture",
       "operation_id": "resolve-attention",
@@ -1232,7 +1232,7 @@
       ],
       "title": "Resolve attention",
       "trust": {
-        "sha256": "sha256:2e74fdc78825f0be3a1050395101192206334154b76b7defe7586a3377613f47",
+        "sha256": "sha256:ac01a98dcd2b1cc37a745f176f08349c86cb244c32c68df3fdbd50a6727acd06",
         "source": "local"
       },
       "type": "operation"

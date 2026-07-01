@@ -41,7 +41,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Regenerate references.bib](operations/regenerate-references-bib.md) `operation` — Regenerate the tracked BibTeX projection from checked SQLite catalog rows.
 - [Regenerate tracked projections](operations/regenerate-tracked-projections.md) `operation` — Regenerate all tracked generated workspace projections.
 - [Render project argument canvas](operations/render-project-argument-canvas.md) `operation` — Render a checked project argument graph as an Obsidian Canvas projection.
-- [Resolve attention](operations/resolve-attention.md) `operation` — Record that the PI resolved a generated attention item.
+- [Resolve attention](operations/resolve-attention.md) `operation` — Record that the PI resolved or dismissed a generated attention item.
 - [Run seeded-error verdict](operations/run-seeded-error-verdict.md) `operation` — Run the frozen seeded-error integrity-loop verdict bundle.
 - [Summarize for recall](operations/summarize-for-recall.md) `operation` — Summarize selected input for later recall and connection-making.
 - [Surface tensions](operations/surface-tensions.md) `operation` — List candidate tensions across notes without writing links.

@@ -258,7 +258,8 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     resolve = attention_sub.add_parser("resolve")
     _common(resolve)
     resolve.add_argument("attention_path")
-    resolve.add_argument("--reason", default="PI resolved attention")
+    resolve.add_argument("--outcome", choices=("resolved", "dismissed"), default="resolved")
+    resolve.add_argument("--reason")
     resolve.set_defaults(handler=_cmd_attention_resolve)
     worklist = attention_sub.add_parser("worklist")
     _common(worklist)
@@ -958,11 +959,14 @@ def _cmd_attention_resolve(args: argparse.Namespace) -> int:
     rel, path = _workspace_file(workspace, args.attention_path)
     if _attention_card(path, workspace) is None:
         return _fail(f"attention projection not found: {rel}", json_output=args.json)
+    reason = args.reason or (
+        "PI dismissed attention" if args.outcome == "dismissed" else "PI resolved attention"
+    )
     return _emit(
         _enqueue_and_run(
             args,
             "resolve-attention",
-            {"target_id": rel, "reason": args.reason},
+            {"target_id": rel, "reason": reason, "outcome": args.outcome},
         ),
         args,
     )
