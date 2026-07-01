@@ -53,17 +53,16 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         "answer-query",
         payload={"query": "alpha", "k": 1},
         idempotency_key="ask-alpha",
-        trigger_type="file_change",
         target_path="knowledge/notes/alpha.md",
         target_hash="sha256:abc",
         causal_refs=[{"id": "journal:1"}],
-        provenance={"source": "pytest"},
+        provenance={"surface": "workspace-scan", "source": "pytest"},
+        schedule_id="manual-scan",
     )
 
     envelope = job["request_envelope"]
     assert {
         "request_id",
-        "trigger_type",
         "operation_id",
         "args",
         "idempotency_key",
@@ -74,14 +73,21 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         "provenance",
         "schedule_id",
     } <= set(envelope)
-    assert envelope["trigger_type"] == "file_change"
+    assert "trigger_type" not in envelope
     assert envelope["args"] == {"query": "alpha", "k": 1}
+    assert envelope["provenance"]["surface"] == "workspace-scan"
+    assert envelope["schedule_id"] == "manual-scan"
 
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT trigger_type, operation_id, args_json FROM operation_requests"
+            "SELECT operation_id, args_json, provenance_json, schedule_id FROM operation_requests"
         ).fetchone()
-    assert tuple(row) == ("file_change", "answer-query", '{"k":1,"query":"alpha"}')
+    assert tuple(row) == (
+        "answer-query",
+        '{"k":1,"query":"alpha"}',
+        '{"source":"pytest","surface":"workspace-scan"}',
+        "manual-scan",
+    )
 
 
 def test_worker_runs_sqlite_pending_request_without_queue_mirror(tmp_path: Path) -> None:

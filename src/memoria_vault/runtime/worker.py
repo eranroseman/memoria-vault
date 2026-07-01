@@ -45,7 +45,6 @@ def enqueue_trusted_write(
     operation: str = "trusted-write",
     run_id: str | None = None,
     idempotency_key: str | None = None,
-    trigger_type: str = "command",
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
@@ -69,7 +68,6 @@ def enqueue_trusted_write(
     }
     envelope = state.request_envelope(
         request_id=job_id,
-        trigger_type=trigger_type,
         operation_id=operation,
         args={
             "target_path": target_path,
@@ -93,7 +91,6 @@ def enqueue_operation(
     *,
     payload: dict[str, Any] | None = None,
     idempotency_key: str | None = None,
-    trigger_type: str = "command",
     target_path: str = "",
     target_hash: str = "",
     causal_refs: list[str | dict[str, Any]] | None = None,
@@ -121,7 +118,6 @@ def enqueue_operation(
     }
     envelope = state.request_envelope(
         request_id=job_id,
-        trigger_type=trigger_type,
         operation_id=operation_id,
         args=args,
         idempotency_key=idempotency_key or job_id,
@@ -190,8 +186,8 @@ def enqueue_integrity_sweep(
             operation_id,
             payload={"shadow": shadow},
             idempotency_key=f"{operation_id}-{key}",
-            trigger_type="schedule",
             schedule_id=key,
+            provenance={"surface": "worker-schedule"},
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
@@ -720,7 +716,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "machine": machine,
             "run_id": str(payload.get("run_id") or "") or None,
         }
-        if source_requires_enrichment(identifiers=identifiers, csl_json=csl_json):
+        if bool(payload.get("stage_only")) or source_requires_enrichment(
+            identifiers=identifiers, csl_json=csl_json
+        ):
             result = stage_catalog_source(
                 vault,
                 source_id,
@@ -865,7 +863,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "entity_paths": result["entity_paths"],
         }
     if operation_id == "capture-url-source":
-        from memoria_vault.runtime.capture import capture_url_source
+        from memoria_vault.runtime.capture import capture_url_source, stage_url_source
 
         url = str(payload.get("url") or "").strip()
         if not url:
@@ -874,7 +872,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         if not isinstance(timeout, int | float):
             raise ValueError("capture-url-source timeout must be numeric")
         require_allowed_network(policy, url)
-        result = capture_url_source(
+        capture = stage_url_source if bool(payload.get("stage_only")) else capture_url_source
+        result = capture(
             vault,
             url,
             title=str(payload.get("title") or "") or None,
@@ -882,16 +881,25 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             timeout=float(timeout),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
-            required_checks=required_promotion_checks(policy),
+            **(
+                {}
+                if payload.get("stage_only")
+                else {"required_checks": required_promotion_checks(policy)}
+            ),
         )
-        return {
+        output = {
             "commit": result["commit"],
-            "source_path": result["source_path"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
         }
+        if "source_path" in result:
+            output["source_path"] = result["source_path"]
+        else:
+            output["source_id"] = result["source_id"]
+            output["check_status"] = result["check_status"]
+        return output
     if operation_id == "capture-pdf-source":
-        from memoria_vault.runtime.capture import capture_pdf_source
+        from memoria_vault.runtime.capture import capture_pdf_source, stage_pdf_source
 
         source_id = str(payload.get("source_id") or "").strip()
         title = str(payload.get("title") or "").strip()
@@ -911,7 +919,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("capture-pdf-source identifiers must be an object")
         if csl_json is not None and not isinstance(csl_json, dict):
             raise ValueError("capture-pdf-source csl_json must be an object")
-        result = capture_pdf_source(
+        capture = stage_pdf_source if bool(payload.get("stage_only")) else capture_pdf_source
+        result = capture(
             vault,
             source_id,
             title,
@@ -926,15 +935,24 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             citekey=str(payload.get("citekey") or ""),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
-            required_checks=required_promotion_checks(policy),
+            **(
+                {}
+                if payload.get("stage_only")
+                else {"required_checks": required_promotion_checks(policy)}
+            ),
         )
-        return {
+        output = {
             "commit": result["commit"],
-            "source_path": result["source_path"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
-            "entity_paths": result["entity_paths"],
         }
+        if "source_path" in result:
+            output["source_path"] = result["source_path"]
+            output["entity_paths"] = result["entity_paths"]
+        else:
+            output["source_id"] = result["source_id"]
+            output["check_status"] = result["check_status"]
+        return output
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
@@ -1069,7 +1087,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--operation-id", default=None)
     parser.add_argument("--payload", default="{}")
     parser.add_argument("--idempotency-key", default=None)
-    parser.add_argument("--trigger-type", default="command")
     parser.add_argument("--schedule-id", default=None)
     args = parser.parse_args(argv)
 
@@ -1087,7 +1104,6 @@ def main(argv: list[str] | None = None) -> int:
                     args.operation_id,
                     payload=payload,
                     idempotency_key=args.idempotency_key,
-                    trigger_type=args.trigger_type,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
@@ -1099,7 +1115,6 @@ def main(argv: list[str] | None = None) -> int:
             vault,
             "observe-pi-edits",
             idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
-            trigger_type="file_change",
             provenance={"surface": "worker-scan"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1115,7 +1130,6 @@ def main(argv: list[str] | None = None) -> int:
             args.operation_id,
             payload=payload,
             idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
-            trigger_type="schedule",
             schedule_id=args.schedule_id,
             provenance={"surface": "worker-schedule"},
         )

@@ -1,4 +1,4 @@
-"""SQLite-backed alpha.12 working state for queue, journal, catalog, and barriers."""
+"""SQLite-backed working state for queue, journal, catalog, and barriers."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 
 DB_REL = ".memoria/state/memoria.sqlite"
-TRIGGER_TYPES = frozenset({"command", "file_change", "schedule"})
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed"})
 
 
@@ -36,7 +35,6 @@ def connect(vault: Path) -> sqlite3.Connection:
 def request_envelope(
     *,
     request_id: str,
-    trigger_type: str,
     operation_id: str,
     args: dict[str, Any] | None = None,
     idempotency_key: str | None = None,
@@ -47,15 +45,11 @@ def request_envelope(
     provenance: dict[str, Any] | None = None,
     schedule_id: str | None = None,
 ) -> dict[str, Any]:
-    trigger = trigger_type.strip()
-    if trigger not in TRIGGER_TYPES:
-        raise ValueError(f"trigger_type must be one of {sorted(TRIGGER_TYPES)}")
     operation = operation_id.strip()
     if not operation:
         raise ValueError("operation_id is required")
     return {
         "request_id": safe_filename(request_id),
-        "trigger_type": trigger,
         "operation_id": operation,
         "args": dict(args or {}),
         "idempotency_key": idempotency_key or request_id,
@@ -89,7 +83,6 @@ def save_request(vault: Path, envelope: dict[str, Any], job: dict[str, Any]) -> 
             """
             INSERT INTO operation_requests(
                 request_id,
-                trigger_type,
                 operation_id,
                 args_json,
                 idempotency_key,
@@ -104,11 +97,10 @@ def save_request(vault: Path, envelope: dict[str, Any], job: dict[str, Any]) -> 
                 kind,
                 job_json
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
             """,
             (
                 envelope["request_id"],
-                envelope["trigger_type"],
                 envelope["operation_id"],
                 _json(envelope["args"]),
                 idem,
@@ -799,8 +791,6 @@ def _init(conn: sqlite3.Connection) -> None:
         """
         CREATE TABLE IF NOT EXISTS operation_requests (
             request_id TEXT PRIMARY KEY,
-            trigger_type TEXT NOT NULL
-                CHECK (trigger_type IN ('command', 'file_change', 'schedule')),
             operation_id TEXT NOT NULL,
             args_json TEXT NOT NULL DEFAULT '{}',
             idempotency_key TEXT UNIQUE,
