@@ -43,7 +43,7 @@ This page is a guarded mirror, not the source of truth. Action implementation li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Rebuild checked qmd source | worker operation `rebuild-checked-qmd-source` + runtime helper (`rebuild_checked_qmd_source`) | Rebuilds `.memoria/index/qmd/checked/` from checked, current Concepts plus generated checked Work text and graph neighborhoods, then writes the disposable qmd manifest. |
-| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the deterministic BM25 Ask/Query contract over checked current Concepts: sources, unknowns, staleness, and contradictions. |
+| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, and contradictions. |
 
 ### Knowledge construction (`memoria_vault.runtime.knowledge`)
 

@@ -7,7 +7,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Analyze claims](operations/analyze-claims.md) `operation` — Extract and rank truth claims from selected input.
 - [Analyze gaps](operations/analyze-gaps.md) `operation` — Classify checked catalog/knowledge topic mismatches for gap analysis.
 - [Analyze project argument](operations/analyze-project-argument.md) `operation` — Report argument health for a checked project thesis graph.
-- [Answer query](operations/answer-query.md) `operation` — Answer an Ask query over checked current Concepts with BM25 sources.
+- [Answer query](operations/answer-query.md) `operation` — Answer an Ask query over checked retrieval documents with BM25 sources.
 - [Capture BibTeX source](operations/capture-bibtex-source.md) `operation` — Stage one BibTeX record as an unchecked catalog Work seed.
 - [Capture PDF source](operations/capture-pdf-source.md) `operation` — Capture a supplied PDF blob as a checked catalog source.
 - [Capture source](operations/capture-source.md) `operation` — Capture supplied source metadata and text; DOI/ISBN records stage for enrichment.
@@ -34,7 +34,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Mark checked](operations/mark-checked.md) `operation` — Promote an observed PI edit back to checked after worker checks pass.
 - [Observe PI edits](operations/observe-pi-edits.md) `operation` — Backfill journal events for PI edits detected in git status.
 - [Propose note candidates](operations/propose-note-candidates.md) `operation` — Propose checked note candidates from a checked source digest.
-- [Rebuild checked qmd source](operations/rebuild-checked-qmd-source.md) `operation` — Rebuild qmd's disposable input tree from checked current Concepts.
+- [Rebuild checked qmd source](operations/rebuild-checked-qmd-source.md) `operation` — Rebuild qmd's disposable input tree from checked retrieval documents.
 - [Record Co-PI interview](operations/record-copi-interview.md) `operation` — Record one PI interview takeaway for a checked source.
 - [Red-team an argument](operations/red-team-argument.md) `operation` — Make the strongest grounded counter-case against an argument.
 - [Regenerate capability index](operations/regenerate-capability-index.md) `operation` — Regenerate the tracked capability index projection.

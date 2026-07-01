@@ -5,7 +5,10 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.search_index import (
+    _bm25,
+    _tokens,
     answer_query,
+    checked_concepts,
     evaluate_bm25,
     filter_checked_results,
     rebuild_checked_qmd_source,
@@ -65,6 +68,7 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha context without graph target")
     content = vault / ".memoria/blobs/source-content/source-alpha/full-text/alpha.txt"
     content.parent.mkdir(parents=True)
     content.write_text("full text rarealpha retrieval token", encoding="utf-8")
@@ -98,6 +102,7 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
 
     assert [row["path"] for row in manifest["documents"]] == [
         "graph-neighborhoods/source-alpha.md",
+        "knowledge/notes/checked.md",
         "works/source-alpha.md",
     ]
     work = vault / ".memoria/index/qmd/checked/works/source-alpha.md"
@@ -109,6 +114,11 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
         {"file": graph.as_posix()}
     ]
     assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "works/source-alpha.md"
+    concept_only = [
+        (path.relative_to(vault).as_posix(), _tokens(path.read_text(encoding="utf-8")))
+        for path in checked_concepts(vault)
+    ]
+    assert _bm25(concept_only, "Beta Work") == []
     assert (
         answer_query(vault, "Beta Work")["sources"][0]["path"]
         == "graph-neighborhoods/source-alpha.md"

@@ -128,7 +128,7 @@
         "read_checked_index"
       ],
       "check_status": "checked",
-      "description": "Answer an Ask query over checked current Concepts with BM25 sources.",
+      "description": "Answer an Ask query over checked retrieval documents with BM25 sources.",
       "id": "answer-query",
       "model": "deterministic-fixture",
       "operation_id": "answer-query",
@@ -143,7 +143,7 @@
       ],
       "title": "Answer query",
       "trust": {
-        "sha256": "sha256:24eed69a57a5e5fbf1bb175ad3b56666bbad97c742ed643bae5bf8662232e7ff",
+        "sha256": "sha256:6fdf05ad648d54a24d943d20eb47103856e88c3499a5425f4fdce48017662276",
         "source": "local"
       },
       "type": "operation"
@@ -990,7 +990,7 @@
         "indexer"
       ],
       "check_status": "checked",
-      "description": "Rebuild qmd's disposable input tree from checked current Concepts.",
+      "description": "Rebuild qmd's disposable input tree from checked retrieval documents.",
       "id": "rebuild-checked-qmd-source",
       "model": "deterministic-fixture",
       "operation_id": "rebuild-checked-qmd-source",
@@ -1005,7 +1005,7 @@
       ],
       "title": "Rebuild checked qmd source",
       "trust": {
-        "sha256": "sha256:5c71eb4208801d5ab71d46e1464dfc7a3908dcb707dfd22f05f33c2df8951971",
+        "sha256": "sha256:3afe86102448ea6f90ea5e3f39ff944228ded63772469a0fd52113c4d370e1c4",
         "source": "local"
       },
       "type": "operation"
