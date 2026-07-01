@@ -1389,6 +1389,33 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert shown["event"]["event_id"] == event_id
 
 
+def test_cli_doctor_repair_restores_packaged_seed_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    operation = workspace / "capabilities/operations/compile-source-digest.md"
+    provider_config = workspace / ".memoria/config/providers.yaml"
+    template_operation = ROOT / "vault-template/capabilities/operations/compile-source-digest.md"
+    template_provider_config = ROOT / "vault-template/.memoria/config/providers.yaml"
+    operation.unlink()
+    provider_config.write_text("broken: true\n", encoding="utf-8")
+
+    rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["checks"]["state_db"] is True
+    assert "capabilities" in output["repaired"]
+    assert operation.read_text(encoding="utf-8") == template_operation.read_text(encoding="utf-8")
+    assert provider_config.read_text(encoding="utf-8") == template_provider_config.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_cli_workspace_scan_fixture_quarantines_generated_projection(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

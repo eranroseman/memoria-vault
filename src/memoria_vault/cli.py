@@ -23,6 +23,16 @@ from memoria_vault.runtime.worker import (
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
+SEED_TREES = (
+    ("vault-template/.memoria/schemas", ".memoria/schemas"),
+    ("vault-template/capabilities", "capabilities"),
+    ("vault-template/.memoria/config", ".memoria/config"),
+    ("vault-template/system/eval", "system/eval"),
+)
+SEED_FILES = (
+    ("vault-template/steering.md", "steering.md"),
+    ("vault-template/system/vocabulary.md", "system/vocabulary.md"),
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -56,6 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(doctor, workspace_required=False)
     doctor.add_argument("--check", choices=("qmd", "runner"), default=None)
     doctor.add_argument("--provider", default=None)
+    doctor.add_argument("--repair", action="store_true")
     doctor.set_defaults(handler=_cmd_doctor)
     bundle = doctor_sub.add_parser("bundle")
     _common(bundle)
@@ -390,12 +401,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     workspace.mkdir(parents=True, exist_ok=True)
     for rel in created:
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _copy_seed_tree("vault-template/.memoria/schemas", workspace / ".memoria/schemas")
-    _copy_seed_tree("vault-template/capabilities", workspace / "capabilities")
-    _copy_seed_tree("vault-template/.memoria/config", workspace / ".memoria/config")
-    _copy_seed_tree("vault-template/system/eval", workspace / "system/eval")
-    _copy_seed_file("vault-template/steering.md", workspace / "steering.md")
-    _copy_seed_file("vault-template/system/vocabulary.md", workspace / "system/vocabulary.md")
+    _seed_workspace(workspace, overwrite=False)
     state.connect(workspace).close()
     from memoria_vault.runtime.projections import write_tracked_projections
 
@@ -422,6 +428,11 @@ def _cmd_status(args: argparse.Namespace) -> int:
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace).resolve() if args.workspace else Path.cwd()
+    repaired: list[str] = []
+    if args.repair:
+        if not workspace.is_dir():
+            return _fail("doctor --repair requires an existing workspace", json_output=args.json)
+        repaired = _repair_workspace(workspace)
     checks: dict[str, Any] = {
         "workspace_exists": workspace.is_dir(),
         "state_db": state.db_path(workspace).is_file(),
@@ -441,6 +452,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 "node_version": status["node_version"],
                 "qmd_doctor_output": status["qmd_doctor_output"],
                 "qmd_collection_output": status["qmd_collection_output"],
+                "repaired": repaired,
             },
             args,
         )
@@ -456,10 +468,19 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 "base_url": status["base_url"],
                 "model": status["model"],
                 "error": status["error"],
+                "repaired": repaired,
             },
             args,
         )
-    return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
+    return _emit(
+        {
+            "ok": all(checks.values()),
+            "workspace": str(workspace),
+            "checks": checks,
+            "repaired": repaired,
+        },
+        args,
+    )
 
 
 def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
@@ -1395,18 +1416,37 @@ def _workspace_plan(workspace: Path) -> list[str]:
     ]
 
 
-def _copy_seed_tree(source_rel: str, target: Path) -> None:
+def _seed_workspace(workspace: Path, *, overwrite: bool) -> None:
+    for source_rel, target_rel in SEED_TREES:
+        _copy_seed_tree(source_rel, workspace / target_rel, overwrite=overwrite)
+    for source_rel, target_rel in SEED_FILES:
+        _copy_seed_file(source_rel, workspace / target_rel, overwrite=overwrite)
+
+
+def _repair_workspace(workspace: Path) -> list[str]:
+    for rel in _workspace_plan(workspace):
+        (workspace / rel).mkdir(parents=True, exist_ok=True)
+    _seed_workspace(workspace, overwrite=True)
+    state.connect(workspace).close()
+    from memoria_vault.runtime.projections import write_tracked_projections
+
+    write_tracked_projections(workspace)
+    _ensure_git(workspace)
+    return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
+
+
+def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
     source = _repo_root() / source_rel
     if not source.is_dir():
         return
-    if target.exists() and any(target.iterdir()):
+    if target.exists() and any(target.iterdir()) and not overwrite:
         return
     shutil.copytree(source, target, dirs_exist_ok=True)
 
 
-def _copy_seed_file(source_rel: str, target: Path) -> None:
+def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
     source = _repo_root() / source_rel
-    if source.is_file() and not target.exists():
+    if source.is_file() and (overwrite or not target.exists()):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
 
