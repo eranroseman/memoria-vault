@@ -290,6 +290,51 @@ def mark_checked(vault: Path, output_id: str, output_sha256: str, payload_text: 
             )
 
 
+def record_observed_file_edit(
+    vault: Path,
+    *,
+    output_id: str,
+    concept_type: str,
+    output_sha256: str,
+) -> None:
+    target = normalize_path(output_id)
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO concepts(concept_id, concept_type, store, check_status)
+            VALUES (?, ?, 'file', 'unchecked')
+            ON CONFLICT(concept_id) DO UPDATE SET
+                concept_type = excluded.concept_type,
+                store = excluded.store,
+                check_status = 'unchecked'
+            """,
+            (target, concept_type),
+        )
+        conn.execute(
+            """
+            INSERT INTO outputs(
+                output_id,
+                concept_type,
+                store,
+                target_path,
+                check_status,
+                materialization_status,
+                output_sha256
+            )
+            VALUES (?, ?, 'file', ?, 'unchecked', 'materialized', ?)
+            ON CONFLICT(output_id) DO UPDATE SET
+                concept_type = excluded.concept_type,
+                store = excluded.store,
+                target_path = excluded.target_path,
+                check_status = 'unchecked',
+                materialization_status = 'materialized',
+                output_sha256 = excluded.output_sha256,
+                failure_reason = NULL
+            """,
+            (target, concept_type, target, output_sha256),
+        )
+
+
 def mark_materialized(vault: Path, output_id: str, *, commit: str = "") -> None:
     target = normalize_path(output_id)
     with connect(vault) as conn:

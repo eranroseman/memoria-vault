@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -145,12 +146,22 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
     )
 
     assert read_frontmatter(target)["check_status"] == "unchecked"
+    assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"][-1] == {
         "id": "knowledge/notes/pi.md",
         "sha256": prior_sha,
         "role": "prior-head",
     }
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM outputs WHERE output_id = 'knowledge/notes/pi.md'"
+        ).fetchone()
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/notes/pi.md'"
+        ).fetchone()
+    assert row["check_status"] == "unchecked"
+    assert consumable is None
 
     check_event = mark_checked(vault, "knowledge/notes/pi.md", machine="test-machine")
 
@@ -183,6 +194,7 @@ def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -
 
     event = observe_pi_edit_from_head(vault, "knowledge/notes/pi.md", machine="test-machine")
 
+    assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"] == [
         {"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"},
@@ -217,6 +229,10 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
     result = observe_pi_edits_from_status(vault, machine="test-machine")
 
     assert result["paths"] == ["knowledge/notes/pi-new.md", "knowledge/notes/pi.md"]
+    assert [event["event"] for event in result["observed"]] == [
+        "observed_external_edit",
+        "observed_external_edit",
+    ]
     assert [event["actor"] for event in result["observed"]] == ["pi", "pi"]
     assert (
         result["observed"][0]["inputs"][-1]["sha256"]
