@@ -1,0 +1,27 @@
+---
+title: "Run vault eval"
+type: operation
+check_status: checked
+description: "Plan the current vault-eval task set through the local runtime engine."
+operation_id: eval-run
+allowed_tools:
+  - eval_dispatch
+allowed_paths:
+  - system/eval/
+allowed_network: []
+runner: pydantic-ai
+model: deterministic-fixture
+prompt_version: eval-run.v1
+io_schema:
+  input: eval_run_request
+  output: eval_run_plan
+risk_class: low
+required_checks:
+  - eval-task-schema
+tags: [alpha14, eval]
+---
+
+# Operation
+
+Read checked `system/eval/` task Concepts, create local idempotent eval task
+plans, and write `system/eval/last-run.md` unless the request is a dry run.

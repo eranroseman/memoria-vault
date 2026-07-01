@@ -4,7 +4,8 @@ import shutil
 from pathlib import Path
 
 import yaml
-from operations.lib import schema
+
+from memoria_vault.runtime.subsystems.lib import schema
 
 ALPHA11_TYPES = {
     "source",

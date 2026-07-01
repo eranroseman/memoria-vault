@@ -1,8 +1,10 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
-from operations.processing.project import structural_impact as impact
-from operations.processing.project import structural_impact_graph as impact_graph
+from memoria_vault.runtime.subsystems.processing.project import structural_impact as impact
+from memoria_vault.runtime.subsystems.processing.project import (
+    structural_impact_graph as impact_graph,
+)
 
 
 def write(path: Path, text: str):

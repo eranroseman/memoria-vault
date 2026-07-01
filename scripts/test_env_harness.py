@@ -108,7 +108,7 @@ def populate_vault(root: Path, vault: Path) -> None:
     src = root / "vault-template"
     if not vault.exists() or not any(vault.iterdir()):
         shutil.copytree(src, vault, dirs_exist_ok=True, ignore=shutil.ignore_patterns(*SKIP_COPY))
-    from operations.lib import schema
+    from memoria_vault.runtime.subsystems.lib import schema
 
     folders = schema.load_folders(root / "vault-template/.memoria/schemas")
     for folder in folders["skeleton"]:
@@ -121,7 +121,7 @@ def write_frontmatter(path: Path, fm: dict[str, Any], body: str) -> None:
 
 
 def validate_typed_note(vault: Path, rel: str) -> None:
-    from operations.lib import schema
+    from memoria_vault.runtime.subsystems.lib import schema
 
     path = vault / rel
     fm = read_frontmatter(path)
@@ -166,7 +166,7 @@ def assert_expectations(vault: Path, expect: dict[str, Any], artifacts: list[str
 
 
 def apply_classification(vault: Path, args: dict[str, Any]) -> str:
-    from operations.processing.ingest import classify
+    from memoria_vault.runtime.subsystems.processing.ingest import classify
 
     citekey = args["citekey"]
     rel = f"catalog/sources/{citekey}/source.md"
@@ -228,11 +228,10 @@ def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> 
 
 
 def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
-    from operations.lib import inbox
-    from operations.processing.ingest import ingest_paper
-    from operations.processing.project import structural_impact
-
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
+    from memoria_vault.runtime.subsystems.lib import inbox
+    from memoria_vault.runtime.subsystems.processing.ingest import ingest_paper
+    from memoria_vault.runtime.subsystems.processing.project import structural_impact
 
     tool = step["tool"]
     args = step.get("args", {})

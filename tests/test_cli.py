@@ -1754,8 +1754,12 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
         )
         == 0
     )
-    alias = json.loads(capsys.readouterr().out)
-    assert alias["ok"] is True
+    eval_run = json.loads(capsys.readouterr().out)
+    assert eval_run["ok"] is True
+    assert eval_run["result"]["operation_id"] == "eval-run"
+    assert eval_run["result"]["outputs"] == ["system/eval/last-run.md"]
+    assert eval_run["result"]["dry_run"] is False
+    assert (workspace / "system/eval/last-run.md").is_file()
 
 
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(

@@ -1,6 +1,6 @@
 """L1 component tests for retraction (ADR-44)."""
 
-from operations.integrity.retraction import retraction as _m
+from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
 
 Path = _m.Path
 build_rw_index = _m.build_rw_index

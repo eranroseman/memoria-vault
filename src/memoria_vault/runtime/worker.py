@@ -639,6 +639,13 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 bundle_path=bundle_path,
                 machine=machine or "seeded-gate",
             )
+    if operation_id == "eval-run":
+        from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
+
+        dry_run = bool(payload.get("dry_run", False))
+        result = eval_dispatch.dispatch(vault, dry_run=dry_run)
+        outputs = [] if dry_run else ["system/eval/last-run.md"]
+        return {"outputs": outputs, **result}
     if operation_id == "check-source-metadata":
         from memoria_vault.runtime.integrity import check_source_metadata
 

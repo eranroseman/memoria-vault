@@ -1,6 +1,6 @@
 """L1 component tests for runner (ADR-44)."""
 
-from operations.processing.ingest import runner as _m
+from memoria_vault.runtime.subsystems.processing.ingest import runner as _m
 
 _bib_local_pdf = _m._bib_local_pdf
 run = _m.run

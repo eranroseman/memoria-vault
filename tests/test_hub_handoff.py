@@ -2,8 +2,7 @@
 
 from pathlib import Path
 
-import tasks_mcp
-from operations.integrity.linter import hub_handoff
+from memoria_vault.runtime.subsystems.integrity.linter import hub_handoff
 
 
 def _vault(tmp_path: Path) -> Path:
@@ -29,36 +28,19 @@ def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
     v = _vault(tmp_path)
     for i in range(3):
         _claim(v, f"sleep-{i}")
-    calls = []
-
-    class Result:
-        stdout = '{"id":"card-42"}'
-
-    def fake_runner(cmd, **kwargs):
-        calls.append(cmd)
-        return Result()
-
-    rows = hub_handoff.handoff_hub_thresholds(v, threshold=3, card_runner=fake_runner)
+    rows = hub_handoff.handoff_hub_thresholds(v, threshold=3)
 
     assert len(rows) == 1
     assert rows[0]["topic"] == "sleep"
     assert rows[0]["count"] == 3
-    assert rows[0]["delegation"] == {
-        "created": True,
-        "card_id": "card-42",
-        "lane": "map",
-        "assignee": "memoria-librarian",
-        "status": "ready",
-    }
-    cmd = calls[0]
-    assert cmd[:3] == ["hermes", "kanban", "create"]
-    assert cmd[cmd.index("--assignee") + 1] == "memoria-librarian"
-    assert cmd[cmd.index("--idempotency-key") + 1] == "hub-threshold-sleep"
-    body = cmd[cmd.index("--body") + 1]
-    allowed = body.split("## Allowed paths", 1)[1].split("## Expected outputs", 1)[0]
-    assert "knowledge/notes/maps/" in allowed
-    assert "knowledge/hubs/" not in allowed
-    assert "Do not write, move, or create files under knowledge/hubs/" in body
+    assert rows[0]["lane"] == "map"
+    assert rows[0]["goal"] == "Draft hub proposal: sleep"
+    assert rows[0]["idempotency_key"] == "hub-threshold-sleep"
+    assert rows[0]["allowed_paths"] == ["knowledge/notes/maps/"]
+    assert "knowledge/hubs/" not in "\n".join(rows[0]["allowed_paths"])
+    assert (
+        "Do not write, move, or create files under knowledge/hubs/" in rows[0]["expected_outputs"]
+    )
 
 
 def test_existing_hub_suppresses_handoff(tmp_path):
@@ -71,13 +53,13 @@ def test_existing_hub_suppresses_handoff(tmp_path):
         encoding="utf-8",
     )
 
-    assert (
-        hub_handoff.handoff_hub_thresholds(v, threshold=3, card_runner=lambda *a, **k: None) == []
-    )
+    assert hub_handoff.handoff_hub_thresholds(v, threshold=3) == []
 
 
-def test_map_lane_ceiling_still_rejects_canonical_hub_home(tmp_path):
+def test_handoff_never_allows_canonical_hub_home(tmp_path):
     v = _vault(tmp_path)
-    assert tasks_mcp.validate(v, "map", ["knowledge/notes/maps/"]) == []
-    errs = tasks_mcp.validate(v, "map", ["knowledge/hubs/"])
-    assert errs and "exceeds" in errs[0]
+    for i in range(3):
+        _claim(v, f"sleep-{i}")
+    rows = hub_handoff.handoff_hub_thresholds(v, threshold=3)
+    assert rows[0]["allowed_paths"] == ["knowledge/notes/maps/"]
+    assert "knowledge/hubs/" not in rows[0]["allowed_paths"]

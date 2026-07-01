@@ -1,7 +1,8 @@
 """L1 component tests for ingest_paper (ADR-44)."""
 
 import pytest
-from operations.processing.ingest import ingest_paper as _m
+
+from memoria_vault.runtime.subsystems.processing.ingest import ingest_paper as _m
 
 _EXPECT = _m._EXPECT
 _FIXTURE = _m._FIXTURE

@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from operations.integrity.linter import golden_restore as golden
+from memoria_vault.runtime.subsystems.integrity.linter import golden_restore as golden
 
 
 def _seed(v: Path) -> None:

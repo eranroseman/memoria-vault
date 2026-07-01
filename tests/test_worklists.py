@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import yaml
-from operations.lib import worklists
+
+from memoria_vault.runtime.subsystems.lib import worklists
 
 
 def _frontmatter(path: Path) -> dict:

@@ -21,6 +21,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Curate note candidate](operations/curate-note-candidate.md) `operation` — Record PI acceptance or rejection of a checked candidate note.
 - [Curate note link](operations/curate-note-link.md) `operation` — Record a PI-authored typed link between checked notes.
 - [Enrich source](operations/enrich-source.md) `operation` — Resolve and merge DOI provider metadata for one staged catalog source.
+- [Run vault eval](operations/eval-run.md) `operation` — Plan the current vault-eval task set through the local runtime engine.
 - [Export project](operations/export-project.md) `operation` — Export a checked project composition to Markdown or a Pandoc-backed format.
 - [Extract claim stubs](operations/extract-claim-stubs.md) `operation` — Draft source-grounded candidate note stubs from a source note.
 - [Integrity citation survival check](operations/integrity-citation-survival-check.md) `operation` — Verify checked keep-set Concepts embed compact citation payloads for catalog source references.

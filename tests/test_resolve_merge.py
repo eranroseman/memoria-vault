@@ -1,7 +1,7 @@
 """L1 component test for resolve_merge — extracted from its former --self-test (ADR-44)."""
 
-from operations.processing.ingest import resolve_merge as _m
-from operations.processing.ingest import resolve_merge_logic as _logic
+from memoria_vault.runtime.subsystems.processing.ingest import resolve_merge as _m
+from memoria_vault.runtime.subsystems.processing.ingest import resolve_merge_logic as _logic
 
 _get = _m._get
 agreement = _m.agreement

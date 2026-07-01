@@ -308,7 +308,7 @@ def test_worker_skills_and_curator_are_locked_down():
 
 def test_lane_scopes_avoid_gated_zones():
     """No lane's write_scope may sit inside a review-gated prefix (ADR-03/47)."""
-    from operations.lib import schema
+    from memoria_vault.runtime.subsystems.lib import schema
 
     gated = tuple(schema.gated_prefixes(schema.load_folders()))
     for f in LANES.glob("*.yaml"):
