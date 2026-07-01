@@ -212,7 +212,7 @@ def _request_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     request_sub = request.add_subparsers(dest="request_command", required=True)
     list_cmd = request_sub.add_parser("list")
     _common(list_cmd)
-    list_cmd.add_argument("--status", choices=("pending", "running", "done", "failed"))
+    list_cmd.add_argument("--status", choices=("pending", "running", "done", "failed", "cancelled"))
     list_cmd.set_defaults(handler=_cmd_request_list)
     show = request_sub.add_parser("show")
     _common(show)
@@ -894,9 +894,9 @@ def _cmd_request_cancel(args: argparse.Namespace) -> int:
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
     job = json.loads(row["job_json"])
-    job["status"] = "failed"
+    job["status"] = "cancelled"
     job["error"] = f"cancelled: {args.reason}"
-    _write_request_job(workspace, args.request_id, "failed", job)
+    _write_request_job(workspace, args.request_id, "cancelled", job)
     state.append_journal_event(
         workspace,
         {
@@ -1374,7 +1374,10 @@ def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[
                 args_json = ?,
                 job_json = ?,
                 error = ?,
-                completed_at = CASE WHEN ? IN ('done', 'failed') THEN datetime('now') ELSE NULL END
+                completed_at = CASE
+                    WHEN ? IN ('done', 'failed', 'cancelled') THEN datetime('now')
+                    ELSE NULL
+                END
             WHERE request_id = ?
             """,
             (

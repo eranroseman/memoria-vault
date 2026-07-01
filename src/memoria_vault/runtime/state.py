@@ -15,7 +15,7 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 
 DB_REL = ".memoria/state/memoria.sqlite"
-REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed"})
+REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 
 
 def db_path(vault: Path) -> Path:
@@ -811,7 +811,7 @@ def _init(conn: sqlite3.Connection) -> None:
             provenance_json TEXT NOT NULL DEFAULT '{}',
             schedule_id TEXT,
             status TEXT NOT NULL
-                CHECK (status IN ('pending', 'running', 'done', 'failed')),
+                CHECK (status IN ('pending', 'running', 'done', 'failed', 'cancelled')),
             created_at TEXT NOT NULL,
             started_at TEXT,
             completed_at TEXT,
@@ -974,7 +974,10 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
             UPDATE operation_requests
             SET status = ?,
                 started_at = COALESCE(started_at, ?),
-                completed_at = CASE WHEN ? IN ('done', 'failed') THEN ? ELSE completed_at END,
+                completed_at = CASE
+                    WHEN ? IN ('done', 'failed', 'cancelled') THEN ?
+                    ELSE completed_at
+                END,
                 job_json = ?,
                 error = ?
             WHERE request_id = ?

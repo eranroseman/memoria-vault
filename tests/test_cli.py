@@ -1007,7 +1007,24 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
         == 0
     )
     cancelled = json.loads(capsys.readouterr().out)
-    assert cancelled["request"]["status"] == "failed"
+    assert cancelled["request"]["status"] == "cancelled"
+
+    assert (
+        main(
+            [
+                "request",
+                "list",
+                "--workspace",
+                str(workspace),
+                "--status",
+                "cancelled",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    cancelled_list = json.loads(capsys.readouterr().out)
+    assert [row["request_id"] for row in cancelled_list["requests"]] == ["recoverable-request"]
 
     assert (
         main(["request", "retry", "--workspace", str(workspace), "recoverable-request", "--json"])
