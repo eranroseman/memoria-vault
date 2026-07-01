@@ -288,8 +288,8 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     assert events[1]["model"] == "memoria-test-model"
 
 
-@pytest.mark.parametrize("runner", ["direct_api", "hermes"])
-def test_operation_policy_rejects_removed_runner_values(tmp_path: Path, runner: str) -> None:
+@pytest.mark.parametrize("runner", ["hermes", "raw-http"])
+def test_operation_policy_rejects_unsupported_runner_values(tmp_path: Path, runner: str) -> None:
     vault = workspace(tmp_path)
     policy = vault / "capabilities/operations/compile-source-digest.md"
     policy.write_text(

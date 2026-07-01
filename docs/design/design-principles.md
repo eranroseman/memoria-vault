@@ -45,7 +45,7 @@ Code artifacts belong in the vault and are traceable to the literature that moti
 
 **9. Simplest stack that solves the real bottleneck.**
 
-Every tool in the stack addresses a specific friction point. Tools that don't address real friction are liabilities — they add maintenance overhead, failure modes, and cognitive load. The design is deliberately narrow: Zotero for references, Obsidian for the vault, Hermes for the agent layer. Extensions earn their place by removing friction, not adding features.
+Every tool in the stack addresses a specific friction point. Tools that don't address real friction are liabilities — they add maintenance overhead, failure modes, and cognitive load. The required core is deliberately narrow: the standalone CLI/engine plus the vault catalog. Zotero, Obsidian, and Hermes are optional adapters that earn their place by removing friction, not adding features.
 
 **10. The agent lives in the editor.**
 

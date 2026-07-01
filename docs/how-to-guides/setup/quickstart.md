@@ -81,4 +81,4 @@ those commands as the day-1 path for the space you are in.
 - Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
 - API keys and profile secrets: [Set up Hermes](set-up-hermes.md)
 - First source task: [Capture and ingest a source](../library/capture-and-ingest.md)
-- Optional bibliographic backbone: [Set up Zotero](set-up-zotero.md)
+- Optional Zotero import/export setup: [Set up Zotero](set-up-zotero.md)

@@ -6,17 +6,20 @@ grand_parent: Reference
 
 # Zotero plugins
 
-Plugins that install in **Zotero** (not Obsidian), plus the Zotero↔Obsidian connector comparison. For the Obsidian plugin set (including `obsidian-citation-plugin`, the connector Memoria ships with) see [Obsidian plugins](obsidian-plugins.md). For setup steps see [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
+Optional plugins that install in **Zotero** (not Obsidian), plus a historical
+Zotero↔Obsidian connector comparison. For the Obsidian adapter plugin set see
+[Obsidian plugins](obsidian-plugins.md). For setup steps see
+[Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ---
 
 ## Zotero add-ons
 
-Required or recommended alongside the Obsidian plugin set.
+Optional add-ons for users who keep references in Zotero.
 
 | Add-on | Install in | Status | Purpose |
 | --- | --- | --- | --- |
-| Better BibTeX | Zotero | **Required** | Stable citekeys; local BibTeX snapshots when needed; `zotero.lua` Lua filter for live Word export. |
+| Better BibTeX | Zotero | Optional, recommended for Zotero users | Stable citekeys; local BibTeX snapshots when needed; `zotero.lua` Lua filter for live Word export. |
 | MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.11 nested source Concepts. |
 | RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
 
@@ -24,7 +27,9 @@ Required or recommended alongside the Obsidian plugin set.
 
 ## Zotero ↔ Obsidian connector comparison
 
-Four Obsidian plugins connect Zotero to Obsidian. Memoria ships with `obsidian-citation-plugin` (documented in [Obsidian plugins](obsidian-plugins.md)); the others are documented here for evaluation.
+Four Obsidian plugins connect Zotero to Obsidian. The standalone CLI/runtime
+does not require any of them; this comparison is retained only for optional
+adapter evaluation.
 
 | Plugin | Connects via | Zotero must run | Annotation import | Bulk import | Stability |
 | --- | --- | --- | --- | --- | --- |
@@ -39,7 +44,7 @@ For guidance on choosing between these connectors see [Set up Zotero](../how-to-
 
 | Plugin | Status | Notes |
 | --- | --- | --- |
-| zotlit | Future migration target | Reads Zotero SQLite directly — faster for bulk imports. See comparison table above. |
+| zotlit | Not in use | Reads Zotero SQLite directly — faster for bulk imports, but not part of the standalone import path. |
 | zotero-integration | Not in use | Imports Zotero items via HTTP API; useful if a PDF-annotation workflow is adopted. |
 | Inciteful | Not in use | Citation-network discovery (Zotero plugin + public Inciteful API). Surfaces central related papers not yet in the library — a complement to OpenAlex forward/backward snowballing in the discover stage. Additive to an already-covered capability. |
 

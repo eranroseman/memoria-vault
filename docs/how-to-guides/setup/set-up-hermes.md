@@ -8,11 +8,13 @@ nav_order: 4
 
 # Set up Hermes
 
-Fill the API secrets, propagate them into the five profiles, and verify that Hermes can reach the vault. Without secrets the profiles install but can't call any model or external API.
+Optional adapter setup: fill the API secrets, propagate them into the five
+Hermes profiles, and verify that Hermes can reach the vault. The standalone
+CLI/runtime works without this adapter.
 
 ## Prerequisites
 
-- Hermes installed and on your `PATH` (`hermes --version` returns a version) — the bootstrap does this for you
+- Hermes installed and on your `PATH` (`hermes --version` returns a version) — install with `--with-hermes` / `-WithHermes` when you want this adapter
 - Memoria installed — the bootstrap (`scripts/install.sh`, or `scripts/install.ps1` on Windows) run ([Set up the vault](set-up-the-vault.md))
 - Obsidian running with the Local REST API plugin active ([Set up Obsidian](set-up-obsidian.md)) — you need the `apiKey` from that step
 
@@ -33,7 +35,6 @@ NCBI_API_KEY=...                      # PubMed/PMC, optional (the var is NCBI_AP
 NCBI_EMAIL=you@example.com            # Entrez contact email; also reused as the Crossref mailto / Unpaywall email param
 MEMORIA_TELEGRAM_BOT_TOKEN=...        # optional urgent alert/block pushes
 MEMORIA_TELEGRAM_CHAT_ID=...          # optional urgent alert/block pushes
-# Zotero needs no key — pyzotero reads the local desktop API (http://localhost:23119, read-only)
 # ANTHROPIC_API_KEY=sk-ant-...        # only if you switch config.yaml to provider: anthropic
 ```
 
@@ -116,7 +117,7 @@ Each line should carry a `"decision"` (`allow_with_log` for the Librarian's Cata
 
 ## Related
 
-- API key sources: [Set up Zotero § API keys for enrichment](set-up-zotero.md#api-keys-for-enrichment)
+- API key sources: [External integrations](../../reference/integrations.md#api-keys-and-rate-limits)
 - Cost tuning: [Configure a profile § Auxiliary models](../hermes-agent/configure-a-profile.md#change-auxiliary-models-set-globally-not-per-profile)
 - Re-deploying after profile edits: [Redeploy profiles](../operate/redeploy-profiles.md)
 - What the installer wires for you: [Installer (bootstrap)](../../reference/installer.md)

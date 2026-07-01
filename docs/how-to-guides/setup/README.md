@@ -17,14 +17,14 @@ only when you need the extra detail.
 | --- | --- |
 | [Quickstart](quickstart.md) | Four-step fast path for a new machine |
 | [Set up the vault](set-up-the-vault.md) | Clone the repo and run the install script |
-| [Set up Obsidian](set-up-obsidian.md) | Open the vault and install required plugins |
-| [Set up Hermes](set-up-hermes.md) | Install profiles and fill `.env` secrets |
 
 ## Optional setup
 
 | Guide | What it covers |
 | --- | --- |
-| [Set up Zotero](set-up-zotero.md) | Better BibTeX, citekey format, Local API, and generated `references.bib` |
+| [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian and install adapter plugins |
+| [Set up Hermes](set-up-hermes.md) | Install optional Hermes profiles and fill adapter `.env` secrets |
+| [Set up Zotero](set-up-zotero.md) | Better BibTeX citekey shape and portable export imports |
 | [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 
 ## Advanced setup
