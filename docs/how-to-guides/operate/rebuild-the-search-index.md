@@ -8,13 +8,13 @@ nav_order: 5
 
 # Rebuild the search index
 
-Rebuild the checked-only qmd input tree and refresh qmd's local index. Alpha.11
-uses checked-only BM25 as the accepted retrieval baseline; vector and hybrid
-retrieval are later eval work ([External integrations](../../reference/integrations.md)).
+Rebuild the checked-only qmd input tree and refresh qmd's local index. Alpha.14
+uses qmd as the required local retrieval engine, with deterministic BM25 fallback
+for degraded local runs ([External integrations](../../reference/integrations.md)).
 
 ## When to rebuild
 
-- The Co-PI's vault answers miss checked Concepts you know exist ([Query the vault](../knowledge/query-the-vault.md))
+- `memoria ask` misses checked Concepts you know exist ([Query the vault](../knowledge/query-the-vault.md))
 - A checked source, digest, note, or hub was promoted and does not appear in search
 - `qmd search "known term"` returns empty or omits checked Concepts you know exist
 
@@ -26,52 +26,54 @@ Before rebuilding, rule out cheaper causes:
 | --- | --- | --- |
 | One new Concept is not found | It is not `check_status: checked`, or the checked input tree is stale | Confirm the Concept is checked; then rebuild |
 | Search misses many checked Concepts or returns empty | Stale or missing checked input tree / qmd index | Run this guide |
-| Raw `qmd search` finds it but the Co-PI does not cite it | Not an index problem | Use [Query the vault](../knowledge/query-the-vault.md) troubleshooting |
+| Raw `qmd search` finds it but `memoria ask` does not cite it | Not an index problem | Use [Query the vault](../knowledge/query-the-vault.md) troubleshooting |
 
 ## Steps
 
-**1. Rebuild the checked input tree.**
+**1. Check qmd readiness.**
 
 ```bash
-cd <vault>
-python -m memoria_vault.runtime.worker enqueue-operation \
-  --vault . \
-  --operation-id rebuild-checked-qmd-source \
-  --idempotency-key rebuild-checked-qmd-source
-python -m memoria_vault.runtime.worker run-pending --vault . --limit 1
+memoria doctor --workspace <workspace> --check qmd
 ```
 
-This copies only checked, current Catalog and Knowledge Concepts into
-`.memoria/index/qmd/checked/` and writes `.memoria/index/qmd/manifest.json`.
+Fix any failed readiness row before rebuilding. `--embeddings` also requires
+qmd's model cache; run `qmd pull` if the doctor reports missing models.
 
-**2. Register and update qmd.**
+**2. Rebuild the checked input tree and qmd index.**
 
 ```bash
-qmd collection add .memoria/index/qmd/checked --name memoria-checked --mask '**/*.md'
-qmd update
+memoria workspace rebuild --workspace <workspace> --search
 ```
 
-The index lives inside the vault and is gitignored — never commit it.
+This copies only checked, current Catalog and Knowledge Concepts plus checked
+Work text and graph neighborhoods into `.memoria/index/qmd/checked/`, writes
+`.memoria/index/qmd/manifest.json`, registers the qmd collection, and runs
+`qmd update`. The index lives inside the workspace and is gitignored — never
+commit it.
+
+Add embeddings only after qmd models are present:
+
+```bash
+memoria workspace rebuild --workspace <workspace> --search --embeddings
+```
 
 **3. Verify the rebuild.**
 
 ```bash
-qmd search "<term>"
+memoria ask --workspace <workspace> --question "<term>"
 ```
 
-Confirm the expected checked retrieval documents now appear. Then test the
-consumer you actually noticed the staleness in — ask the Co-PI a question whose
-answer lives in a recently checked Concept or Work and check that it cites that
-source.
+Confirm the expected checked retrieval documents now appear. Use raw
+`qmd search "<term>"` only when you need to distinguish qmd index state from
+Memoria's checked-read filtering.
 
 ## Verify
 
 ```bash
-qmd search "term in checked Work or Concept"
+memoria ask --workspace <workspace> --question "term in checked Work or Concept"
 ```
 
-Returns the retrieval document, and the Co-PI's vault answers cite recently
-checked sources again.
+Returns the retrieval document, and Ask cites recently checked sources again.
 
 ## Related
 

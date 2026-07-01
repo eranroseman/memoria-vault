@@ -139,7 +139,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Vault read / gated write | obsidian native MCP (all lanes) | File reads, search, and writes into the vault over the Local REST API plugin's MCP — every write passing the policy gate. |
-| Vault search | filtered qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Checked-only qmd search over retrieval documents, local and read-only; unchecked and quarantined rows are hidden by the read barrier, and BM25 is the current eval baseline. |
+| Vault search | optional filtered qmd MCP adapter | Wraps the same checked-only qmd search tree used by `memoria ask`; unchecked and quarantined rows are hidden by the read barrier. The standalone CLI/runtime does not require MCP. |
 | Literature discovery | paper_search MCP (Librarian) | Searches arXiv, PubMed, Semantic Scholar, Google Scholar, and bioRxiv (Unpaywall email for OA lookups). |
 | Zotero reads | pyzotero MCP (Librarian, Peer-reviewer) | Read-only citekey resolution, metadata, and citation context from the local Zotero library — no write-back. |
 
