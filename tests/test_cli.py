@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
 import tomllib
 from pathlib import Path
 
@@ -173,3 +175,86 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     assert row["check_status"] == "unchecked"
     assert json.loads(row["identifiers_json"]) == {"isbn": "9780000000002"}
     assert "trigger_type" not in columns
+
+
+def test_cli_doctor_qmd_checks_workspace_local_state(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fake_qmd_toolchain(tmp_path, monkeypatch)
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["checks"]["node_22"] is True
+    assert output["checks"]["qmd_absolute"] is True
+    assert output["qmd_path"].startswith(str(tmp_path))
+
+
+def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    qmd_log = _fake_qmd_toolchain(tmp_path, monkeypatch)
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    note = workspace / "knowledge/notes/qmd.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "workspace",
+            "rebuild",
+            "--workspace",
+            str(workspace),
+            "--search",
+            "--embeddings",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["qmd"]["manifest"]["documents"][0]["path"] == "knowledge/notes/qmd.md"
+    assert (workspace / ".memoria/index/qmd/checked/knowledge/notes/qmd.md").is_file()
+    lines = qmd_log.read_text(encoding="utf-8").splitlines()
+    assert lines == [
+        "collection add "
+        f"{workspace}/.memoria/index/qmd/checked --name memoria-checked --mask **/*.md"
+        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+        f"update|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+        "embed --chunk-strategy auto"
+        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+    ]
+
+
+def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    qmd_log = tmp_path / "qmd.log"
+    node = bin_dir / "node"
+    node.write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
+    qmd = bin_dir / "qmd"
+    qmd.write_text(
+        f"#!{sys.executable}\n"
+        "import os, pathlib, sys\n"
+        "pathlib.Path(os.environ['QMD_LOG']).open('a', encoding='utf-8').write(\n"
+        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('XDG_CONFIG_HOME', '')\n"
+        "    + '|' + os.environ.get('XDG_CACHE_HOME', '') + '\\n'\n"
+        ")\n",
+        encoding="utf-8",
+    )
+    node.chmod(0o755)
+    qmd.chmod(0o755)
+    monkeypatch.setenv("QMD_LOG", str(qmd_log))
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+    return qmd_log

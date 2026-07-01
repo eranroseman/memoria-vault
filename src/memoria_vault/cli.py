@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -182,7 +183,9 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
         if name == "rebuild":
             cmd.add_argument("--search", action="store_true")
             cmd.add_argument("--embeddings", action="store_true")
-        cmd.set_defaults(handler=_not_implemented(f"workspace {name}"))
+            cmd.set_defaults(handler=_cmd_workspace_rebuild)
+        else:
+            cmd.set_defaults(handler=_not_implemented(f"workspace {name}"))
 
 
 def _eval_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -257,7 +260,18 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         "git": shutil.which("git") is not None,
     }
     if args.check == "qmd":
-        checks.update(_qmd_checks(workspace))
+        status = _qmd_status(workspace)
+        checks.update(status["checks"])
+        return _emit(
+            {
+                "ok": all(checks.values()),
+                "workspace": str(workspace),
+                "checks": checks,
+                "qmd_path": status["qmd_path"],
+                "node_version": status["node_version"],
+            },
+            args,
+        )
     return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
 
 
@@ -365,6 +379,23 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     restored = state.recover_pending_materializations(_workspace(args))
     return _emit({"ok": True, "restored": restored}, args)
+
+
+def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
+    if args.embeddings and not args.search:
+        return _fail("workspace rebuild --embeddings requires --search", json_output=args.json)
+    workspace = _workspace(args)
+    from memoria_vault.runtime.capture import write_references_bib
+
+    references = write_references_bib(workspace)
+    payload: dict[str, Any] = {"ok": True, "references": references}
+    if args.search:
+        from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
+
+        manifest = rebuild_checked_qmd_source(workspace)
+        payload["qmd"] = _run_qmd_rebuild(workspace, embeddings=args.embeddings)
+        payload["qmd"]["manifest"] = manifest
+    return _emit(payload, args)
 
 
 def _not_implemented(command: str):
@@ -494,16 +525,76 @@ def _read_csl_item(text: str) -> dict[str, Any]:
     raise ValueError("CSL import expects a JSON object or one-item array")
 
 
-def _qmd_checks(workspace: Path) -> dict[str, bool]:
+def _qmd_status(workspace: Path) -> dict[str, Any]:
     qmd = shutil.which("qmd")
     node = shutil.which("node")
-    return {
+    node_version = _node_version(node) if node else ""
+    checks = {
         "node": node is not None,
+        "node_22": _node_major(node_version) >= 22,
         "qmd": qmd is not None,
+        "qmd_absolute": bool(qmd and Path(qmd).is_absolute()),
         "qmd_checked_root": (workspace / ".memoria/index/qmd/checked").is_dir(),
         "qmd_config_home": (workspace / ".memoria/index/qmd/config").is_dir(),
         "qmd_cache_home": (workspace / ".memoria/index/qmd/cache").is_dir(),
     }
+    return {
+        "checks": checks,
+        "qmd_path": str(Path(qmd).resolve()) if qmd else "",
+        "node_version": node_version,
+    }
+
+
+def _run_qmd_rebuild(workspace: Path, *, embeddings: bool) -> dict[str, Any]:
+    status = _qmd_status(workspace)
+    if not all(status["checks"].values()):
+        failed = [key for key, ok in status["checks"].items() if not ok]
+        raise RuntimeError(f"qmd is not ready: {', '.join(failed)}")
+    qmd = status["qmd_path"]
+    env = _qmd_env(workspace)
+    checked = workspace / ".memoria/index/qmd/checked"
+    commands = [
+        [qmd, "collection", "add", str(checked), "--name", "memoria-checked", "--mask", "**/*.md"],
+        [qmd, "update"],
+    ]
+    if embeddings:
+        commands.append([qmd, "embed", "--chunk-strategy", "auto"])
+    for command in commands:
+        _run(command, cwd=workspace, env=env)
+    return {
+        "qmd_path": qmd,
+        "config_home": env["XDG_CONFIG_HOME"],
+        "cache_home": env["XDG_CACHE_HOME"],
+        "commands": [" ".join(command) for command in commands],
+    }
+
+
+def _qmd_env(workspace: Path) -> dict[str, str]:
+    env = dict(os.environ)
+    config = workspace / ".memoria/index/qmd/config"
+    cache = workspace / ".memoria/index/qmd/cache"
+    config.mkdir(parents=True, exist_ok=True)
+    cache.mkdir(parents=True, exist_ok=True)
+    env["XDG_CONFIG_HOME"] = str(config)
+    env["XDG_CACHE_HOME"] = str(cache)
+    return env
+
+
+def _node_version(node: str) -> str:
+    proc = subprocess.run([node, "--version"], check=False, text=True, capture_output=True)
+    return proc.stdout.strip()
+
+
+def _node_major(version_text: str) -> int:
+    text = version_text.strip().removeprefix("v")
+    major = text.split(".", 1)[0]
+    return int(major) if major.isdigit() else 0
+
+
+def _run(command: list[str], *, cwd: Path, env: dict[str, str]) -> None:
+    proc = subprocess.run(command, cwd=cwd, env=env, check=False, text=True, capture_output=True)
+    if proc.returncode:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
 
 
 def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:
