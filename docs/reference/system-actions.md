@@ -123,7 +123,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Compile digest or record interview | `memoria work digest`, `memoria work interview` | Queues and runs source synthesis jobs, recording Co-PI interview takeaways and digest materialization through the same request/journal path. |
 | Ask query | `memoria ask --question ...` | Runs `answer-query` and returns the deterministic Ask/Query response contract over checked-current Concepts. |
 | Curate notes and links | `memoria note propose`, `accept`, `reject`, `link` | Runs note proposal, accept/reject, and typed-link curation through worker-owned requests and journal rows. |
-| Analyze project | `memoria project gaps`, `trace`, `export` | Runs checked graph gap analysis, argument tracing, and project export from the CLI control plane. |
+| Analyze project | `memoria project gaps`, `trace`, `export` | Runs checked graph gap analysis, argument tracing, and deterministic Markdown/Pandoc project export from the CLI control plane. |
 | Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, AI catalog, indexes, and checked-only qmd inputs from worker-readable state. |
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |

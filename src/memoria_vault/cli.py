@@ -200,6 +200,8 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     export = project_sub.add_parser("export")
     _common(export)
     export.add_argument("project_path")
+    export.add_argument("--format", choices=("markdown", "docx", "pdf", "odt"), default="markdown")
+    export.add_argument("--output")
     export.set_defaults(handler=_cmd_project_export)
     suggest = project_sub.add_parser("suggest-hubs")
     _common(suggest)
@@ -698,14 +700,24 @@ def _cmd_project_trace(args: argparse.Namespace) -> int:
 
 
 def _cmd_project_export(args: argparse.Namespace) -> int:
-    return _emit(
-        _enqueue_and_run(
-            args,
-            "render-project-argument-canvas",
-            {"project_path": args.project_path},
-        ),
+    result = _enqueue_and_run(
         args,
+        "export-project",
+        {
+            "project_path": args.project_path,
+            "format": args.format,
+            "output_path": args.output or "",
+        },
     )
+    if result.get("ok") and not args.json and not args.quiet:
+        export_result = result.get("result") or {}
+        content = str(export_result.get("content") or "")
+        if content and not args.output:
+            print(content, end="" if content.endswith("\n") else "\n")
+        else:
+            print(export_result.get("output_path") or "ok")
+        return 0
+    return _emit(result, args)
 
 
 def _cmd_note_capture(args: argparse.Namespace) -> int:

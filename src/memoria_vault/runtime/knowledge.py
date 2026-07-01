@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime.operations import load_operation_policy, required_promotion_checks
@@ -456,6 +459,240 @@ def write_project_argument_canvas(
         "event": event,
         "commit": commit_id,
     }
+
+
+def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, Any]:
+    """Render a deterministic Markdown export for one checked project."""
+    vault = Path(vault)
+    argument = analyze_project_argument(vault, project_path)
+    project_rel = argument["project_path"]
+    project_frontmatter, project_body = split_frontmatter(
+        (vault / project_rel).read_text(encoding="utf-8")
+    )
+    project_title = str(project_frontmatter.get("title") or Path(project_rel).stem)
+    node_titles = {node["path"]: node["title"] for node in argument["nodes"]}
+
+    lines = [f"# {project_title}", ""]
+    description = str(project_frontmatter.get("description") or "").strip()
+    if description:
+        lines.extend([description, ""])
+    body = project_body.strip()
+    if body:
+        lines.extend(["## Project", "", body, ""])
+
+    lines.extend(
+        [
+            "## Argument Snapshot",
+            "",
+            f"- Project: `{project_rel}`",
+            f"- Thesis: `{argument['thesis_path'] or 'none'}`",
+            f"- Stage: {argument['argument_stage']}",
+            f"- Evidence saturation: {argument['evidence_saturation']}",
+            f"- Displayed confidence: {argument['displayed_confidence']}",
+            f"- Relations: {argument['relation_count']}",
+            f"- Supports: {argument['supports_count']}",
+            f"- Contradicts: {argument['contradicts_count']}",
+            f"- Extends: {argument['extends_count']}",
+            "",
+        ]
+    )
+    _append_project_export_nodes(lines, argument["nodes"])
+    _append_project_export_edges(lines, argument["edges"], node_titles)
+    _append_project_export_hubs(lines, _project_export_hubs(vault, project_rel))
+    _append_project_export_findings(lines, "Findings", argument["findings"])
+    _append_project_export_findings(lines, "Gap Findings", argument["gap_findings"])
+    _append_project_export_findings(lines, "Advisories", argument["advisories"])
+    _append_project_export_references(lines, vault)
+    return {
+        "project_path": project_rel,
+        "format": "markdown",
+        "content": "\n".join(lines).rstrip() + "\n",
+        "node_count": argument["node_count"],
+        "edge_count": len(argument["edges"]),
+        "relation_count": argument["relation_count"],
+    }
+
+
+def write_project_export(
+    vault: Path,
+    project_path: str,
+    *,
+    export_format: str = "markdown",
+    output_path: str = "",
+) -> dict[str, Any]:
+    """Write or return a deterministic project export."""
+    vault = Path(vault)
+    export_format = export_format.strip().lower() or "markdown"
+    if export_format not in {"markdown", "docx", "pdf", "odt"}:
+        raise ValueError(f"unsupported project export format: {export_format}")
+
+    rendered = render_project_export_markdown(vault, project_path)
+    content = str(rendered["content"])
+    output = output_path.strip()
+    if export_format == "markdown":
+        display_path = _write_project_export_output(vault, output, content) if output else ""
+        return {
+            **rendered,
+            "format": export_format,
+            "output_path": display_path,
+            "content": "" if display_path else content,
+        }
+
+    if not output:
+        raise ValueError("project export --output is required for Pandoc formats")
+    pandoc = shutil.which("pandoc")
+    if pandoc is None:
+        raise RuntimeError(f"Pandoc is required for project export format: {export_format}")
+    target = _project_export_output_path(vault, output)
+    with TemporaryDirectory(prefix="memoria-project-export-") as tmp:
+        source = Path(tmp) / "project.md"
+        source.write_text(content, encoding="utf-8")
+        proc = subprocess.run(
+            [pandoc, str(source), "-o", str(target)],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+    if proc.returncode:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "Pandoc export failed")
+    return {
+        **rendered,
+        "format": export_format,
+        "output_path": _project_export_display_path(vault, target),
+        "content": "",
+    }
+
+
+def _append_project_export_nodes(lines: list[str], nodes: list[dict[str, Any]]) -> None:
+    if not nodes:
+        return
+    lines.extend(["## Argument Nodes", ""])
+    for node in nodes:
+        lines.append(f"- {node['title']} ({node['role']}): `{node['path']}`")
+    lines.append("")
+
+
+def _append_project_export_edges(
+    lines: list[str], edges: list[dict[str, Any]], node_titles: dict[str, str]
+) -> None:
+    if not edges:
+        return
+    lines.extend(["## Argument Links", ""])
+    for edge in edges:
+        source = node_titles.get(edge["source"], edge["source"])
+        target = node_titles.get(edge["target"], edge["target"])
+        lines.append(f"- {source} --{edge['type']}--> {target}")
+    lines.append("")
+
+
+def _append_project_export_hubs(lines: list[str], hubs: list[dict[str, str]]) -> None:
+    if not hubs:
+        return
+    lines.extend(["## Project Hubs", ""])
+    for hub in hubs:
+        description = f" -- {hub['description']}" if hub["description"] else ""
+        lines.append(f"- {hub['title']}: `{hub['path']}`{description}")
+    lines.append("")
+
+
+def _append_project_export_findings(
+    lines: list[str], heading: str, rows: list[dict[str, Any]]
+) -> None:
+    if not rows:
+        return
+    lines.extend([f"## {heading}", ""])
+    for row in rows:
+        severity = row.get("severity", "info")
+        kind = row.get("kind", "finding")
+        advice = str(row.get("advice") or "").strip()
+        suffix = f": {advice}" if advice else ""
+        lines.append(f"- {severity}: {kind}{suffix}")
+    lines.append("")
+
+
+def _append_project_export_references(lines: list[str], vault: Path) -> None:
+    references = vault / "references.bib"
+    if not references.is_file():
+        return
+    text = references.read_text(encoding="utf-8").strip()
+    if not text:
+        return
+    lines.extend(["## References", "", "```bibtex", text, "```", ""])
+
+
+def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
+    base = vault / "knowledge/hubs"
+    if not base.exists():
+        return []
+    rows = []
+    for path in iter_markdown(base, skip_dirs=frozenset()):
+        frontmatter = read_frontmatter(path)
+        rel = path.relative_to(vault).as_posix()
+        if (
+            frontmatter.get("type") == "hub"
+            and frontmatter.get("check_status") == "checked"
+            and _is_current_concept(rel, frontmatter)
+            and _frontmatter_mentions_project(frontmatter, project_rel)
+        ):
+            rows.append(
+                {
+                    "path": rel,
+                    "title": str(frontmatter.get("title") or path.stem),
+                    "description": str(frontmatter.get("description") or ""),
+                }
+            )
+    return sorted(rows, key=lambda row: (row["title"].lower(), row["path"]))
+
+
+def _frontmatter_mentions_project(frontmatter: dict[str, Any], project_rel: str) -> bool:
+    project_refs = {
+        project_rel,
+        project_rel.removesuffix("/project.md"),
+        project_rel.removesuffix(".md"),
+        Path(project_rel).stem,
+    }
+    return any(
+        value in project_refs for value in _frontmatter_string_values(frontmatter.get("project"))
+    ) or any(
+        value in project_refs for value in _frontmatter_string_values(frontmatter.get("links"))
+    )
+
+
+def _frontmatter_string_values(value: Any) -> Iterable[str]:
+    if isinstance(value, str):
+        text = value.strip()
+        if text:
+            yield text
+        return
+    if isinstance(value, dict):
+        for item in value.values():
+            yield from _frontmatter_string_values(item)
+        return
+    if isinstance(value, list):
+        for item in value:
+            yield from _frontmatter_string_values(item)
+
+
+def _write_project_export_output(vault: Path, output_path: str, content: str) -> str:
+    target = _project_export_output_path(vault, output_path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content, encoding="utf-8")
+    return _project_export_display_path(vault, target)
+
+
+def _project_export_output_path(vault: Path, output_path: str) -> Path:
+    target = Path(output_path).expanduser()
+    if not target.is_absolute():
+        target = vault / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    return target
+
+
+def _project_export_display_path(vault: Path, target: Path) -> str:
+    try:
+        return target.resolve().relative_to(vault.resolve()).as_posix()
+    except ValueError:
+        return str(target)
 
 
 def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[str, Any]:

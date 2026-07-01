@@ -7,13 +7,16 @@ nav_order: 7
 
 # Export a draft
 
-Run Pandoc to convert a project-local Markdown draft into a Word document, PDF,
-or clean Markdown for submission. Export is a terminal operation you run
-yourself — there is no export lane or palette command.
+Use `memoria project export` for a checked project composition or review packet.
+Use direct Pandoc when you are converting a hand-authored manuscript draft with
+custom CSL, live Zotero fields, or route-specific citation behavior. Export is a
+terminal operation you run yourself — there is no export lane or palette command.
 
 ## Prerequisites
 
-- Pandoc installed and on your `PATH` (`pandoc --version` returns a version)
+- Memoria CLI installed for checked project exports
+- Pandoc installed and on your `PATH` (`pandoc --version` returns a version) for
+  `.docx`, `.pdf`, `.odt`, or direct manuscript routes
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
   of the alpha.11 shipped path
 - `references.bib` current (generated from checked SQLite catalog rows)
@@ -25,7 +28,22 @@ yourself — there is no export lane or palette command.
 
 Citations convert mostly one-way (see [Export routes and formats](../../reference/export.md)). Static Pandoc citations are frozen; live Word/LibreOffice fields stay restylable; Google Docs has no automated route at all.
 
-**2. Export to Word (`.docx`) — the default static route.**
+**2. Export the checked project composition.**
+
+Markdown has no external prerequisite:
+
+```bash
+memoria project export \
+  --workspace /path/to/workspace \
+  project-alpha \
+  --format markdown \
+  --output knowledge/projects/project-alpha/exports/project-alpha.md
+```
+
+For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
+`--output`; Memoria fails clearly if Pandoc is not installed.
+
+**3. Export a manuscript draft to Word (`.docx`) — the default static route.**
 
 Run from the vault root; keep project drafts under the project folder:
 
@@ -39,7 +57,7 @@ pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --output knowledge/projects/<project>/exports/<output>.docx
 ```
 
-**3. Export to PDF.**
+**4. Export a manuscript draft to PDF.**
 
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
@@ -54,7 +72,7 @@ pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --output knowledge/projects/<project>/exports/<output>.pdf
 ```
 
-**4. Export to clean Markdown** (conference systems, CMS upload):
+**5. Export a manuscript draft to clean Markdown** (conference systems, CMS upload):
 
 ```bash
 pandoc knowledge/projects/<project>/drafts/<draft>.md \
@@ -63,7 +81,7 @@ pandoc knowledge/projects/<project>/drafts/<draft>.md \
   --output knowledge/projects/<project>/exports/<output>.md
 ```
 
-**5. Convert wikilinks first.**
+**6. Convert wikilinks first.**
 
 Pandoc does not understand `[[wikilink]]` syntax. Convert any body wikilinks to plain text (or standard Markdown links) before export, or use a Pandoc Lua filter.
 

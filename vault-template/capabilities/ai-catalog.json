@@ -579,6 +579,37 @@
     {
       "allowed_network": [],
       "allowed_paths": [
+        "knowledge/",
+        "references.bib"
+      ],
+      "allowed_tools": [
+        "projection_writer"
+      ],
+      "check_status": "checked",
+      "description": "Export a checked project composition to Markdown or a Pandoc-backed format.",
+      "id": "export-project",
+      "model": "deterministic-fixture",
+      "operation_id": "export-project",
+      "path": "capabilities/operations/export-project.md",
+      "prompt_version": "export-project.v1",
+      "required_checks": [],
+      "risk_class": "low",
+      "runner": "local",
+      "tags": [
+        "alpha14",
+        "project",
+        "export"
+      ],
+      "title": "Export project",
+      "trust": {
+        "sha256": "sha256:457bcc64b19799eb2ad6869b6c6e831c59bb522e2f8b8825a8022a5a27fee92a",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
         "catalog/",
         "knowledge/"
       ],
