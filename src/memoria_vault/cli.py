@@ -170,7 +170,15 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     gaps.add_argument("--seed-term", action="append", default=[])
     gaps.add_argument("--dense-threshold", type=int, default=2)
     gaps.set_defaults(handler=_cmd_project_gaps)
-    for name in ("trace", "suggest-hubs", "export"):
+    trace = project_sub.add_parser("trace")
+    _common(trace)
+    trace.add_argument("project_path")
+    trace.set_defaults(handler=_cmd_project_trace)
+    export = project_sub.add_parser("export")
+    _common(export)
+    export.add_argument("project_path")
+    export.set_defaults(handler=_cmd_project_export)
+    for name in ("suggest-hubs",):
         cmd = project_sub.add_parser(name)
         _common(cmd)
         cmd.set_defaults(handler=_not_implemented(f"project {name}"))
@@ -451,6 +459,24 @@ def _cmd_project_gaps(args: argparse.Namespace) -> int:
             args,
             "analyze-gaps",
             {"seed_terms": args.seed_term, "dense_threshold": args.dense_threshold},
+        ),
+        args,
+    )
+
+
+def _cmd_project_trace(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(args, "analyze-project-argument", {"project_path": args.project_path}),
+        args,
+    )
+
+
+def _cmd_project_export(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "render-project-argument-canvas",
+            {"project_path": args.project_path},
         ),
         args,
     )
