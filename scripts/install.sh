@@ -920,7 +920,7 @@ print_next_steps() {
   say "  3. Verify the profiles:        hermes profile list"
   say "  4. Open the Agent Client pane in Obsidian, or test it with: hermes -p memoria-copi acp"
   say "  5. Open the Library gate from the Obsidian gate nav row"
-  say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
+  say "  6. Zotero (optional import/export): see the bring-in-a-paper tutorial on the docs site"
   # The fresh installer initializes Git before this point. This branch only helps
   # hand-built/profile-only vaults.
   if [ -n "$VAULT_PATH" ] && [ ! -d "$VAULT_PATH/.git" ]; then
@@ -1089,8 +1089,8 @@ main() {
   wire_eval_cron
   if [ "$NO_APPS" -eq 0 ]; then
     ensure_obsidian
-    # Zotero setup moved to the tutorial (ADR-55) — it's the PI's bibliographic
-    # backbone choice, not core provisioning.
+    # Zotero setup moved to the tutorial (ADR-124) — it is an optional
+    # import/export adapter, not core provisioning.
   fi
   print_secrets_guidance
   print_next_steps

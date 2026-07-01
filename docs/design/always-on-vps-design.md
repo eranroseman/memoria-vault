@@ -22,7 +22,7 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 | Property | Reason |
 | --- | --- |
 | One dispatcher per vault | Two machines dispatching the same board can race on card state and produce conflicting audit rows. |
-| Desktop owns Obsidian and Zotero | The human review surface and bibliographic manager stay local to the PI's machine. |
+| Desktop owns Obsidian and optional reference-manager UI | The human review surface and any desktop-only reference tooling stay local to the PI's machine. |
 | VPS owns crons and dispatch | Scheduled work needs an always-awake host. |
 | Vault files sync between machines | The PI must see the results locally, while the VPS can process background work. |
 | Worker-generated projections avoid mid-transfer reads | The ingest path depends on stable source/citekey metadata; partial sync is a real failure mode. |
@@ -32,7 +32,7 @@ The design does **not** make Memoria multi-writer. It preserves the solo-researc
 
 | Component | Required owner |
 | --- | --- |
-| Obsidian and Zotero | Desktop |
+| Obsidian and optional reference-manager UI | Desktop |
 | Hermes dispatch and scheduled crons | VPS |
 | qmd index for background work | VPS |
 | Co-PI conversation | Either desktop or VPS over an explicit ACP launch path |
