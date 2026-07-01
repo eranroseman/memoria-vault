@@ -496,6 +496,59 @@ def test_cli_project_trace_and_export_markdown(
     ]
 
 
+def test_cli_project_create_makes_exportable_checked_project(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    export_path = tmp_path / "project.md"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "project",
+                "create",
+                "--workspace",
+                str(workspace),
+                "p1",
+                "--title",
+                "Project One",
+                "--description",
+                "Seed project.",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    created = json.loads(capsys.readouterr().out)
+    assert created["project_path"] == "knowledge/projects/p1.md"
+    project_fm = read_frontmatter(workspace / "knowledge/projects/p1.md")
+    assert project_fm["check_status"] == "checked"
+    assert project_fm["standing"] == "current"
+
+    assert (
+        main(
+            [
+                "project",
+                "export",
+                "--workspace",
+                str(workspace),
+                "p1",
+                "--format",
+                "markdown",
+                "--output",
+                str(export_path),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    exported = json.loads(capsys.readouterr().out)
+    assert exported["result"]["project_path"] == "knowledge/projects/p1.md"
+    assert "# Project One" in export_path.read_text(encoding="utf-8")
+
+
 def test_cli_note_candidate_accept_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1704,18 +1757,19 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
     assert rc == 0
     assert output["ok"] is True
     assert output["qmd"]["manifest"]["documents"][0]["path"] == "knowledge/notes/qmd.md"
+    assert output["qmd"]["index_path"] == f"{workspace}/.memoria/index/qmd/index.sqlite"
+    assert output["qmd"]["cache_home"] == ""
     assert (workspace / ".memoria/index/qmd/checked/knowledge/notes/qmd.md").is_file()
     lines = qmd_log.read_text(encoding="utf-8").splitlines()
+    qmd_env = f"{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/index.sqlite|"
     assert lines == [
-        f"doctor|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
-        "collection remove memoria-checked"
-        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+        f"doctor|{qmd_env}",
+        f"collection remove memoria-checked|{qmd_env}",
         "collection add "
         f"{workspace}/.memoria/index/qmd/checked --name memoria-checked --mask **/*.md"
-        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
-        f"update|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
-        "embed --chunk-strategy auto"
-        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+        f"|{qmd_env}",
+        f"update|{qmd_env}",
+        f"embed --chunk-strategy auto|{qmd_env}",
     ]
 
 
@@ -1771,7 +1825,8 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         f"#!{sys.executable}\n"
         "import os, pathlib, sys\n"
         "pathlib.Path(os.environ['QMD_LOG']).open('a', encoding='utf-8').write(\n"
-        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('XDG_CONFIG_HOME', '')\n"
+        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('QMD_CONFIG_DIR', '')\n"
+        "    + '|' + os.environ.get('INDEX_PATH', '')\n"
         "    + '|' + os.environ.get('XDG_CACHE_HOME', '') + '\\n'\n"
         ")\n"
         "if sys.argv[1:3] == ['collection', 'remove'] and os.environ.get('QMD_REMOVE_MISSING'):\n"
@@ -1784,6 +1839,7 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
     node.chmod(0o755)
     qmd.chmod(0o755)
     monkeypatch.setenv("QMD_LOG", str(qmd_log))
+    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
     return qmd_log
 

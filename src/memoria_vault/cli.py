@@ -188,6 +188,12 @@ def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     project = sub.add_parser("project")
     project_sub = project.add_subparsers(dest="project_command", required=True)
+    create = project_sub.add_parser("create")
+    _common(create)
+    create.add_argument("project_id")
+    create.add_argument("--title", default="")
+    create.add_argument("--description", default="")
+    create.set_defaults(handler=_cmd_project_create)
     ask = project_sub.add_parser("ask")
     _common(ask)
     ask.add_argument("project_id")
@@ -629,6 +635,52 @@ def _cmd_project_ask(args: argparse.Namespace) -> int:
         ),
         args,
     )
+
+
+def _cmd_project_create(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.paths import safe_filename
+    from memoria_vault.runtime.policy.paths import normalize_path
+    from memoria_vault.runtime.time import now_iso
+    from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+    from memoria_vault.runtime.vaultio import write_frontmatter_doc
+
+    workspace = _workspace(args)
+    rel = normalize_path(args.project_id)
+    if "/" not in rel:
+        rel = f"knowledge/projects/{safe_filename(rel).strip('._-') or 'project'}.md"
+    elif not rel.endswith(".md"):
+        rel += ".md"
+    if not rel.startswith("knowledge/projects/"):
+        return _fail(f"project must live under knowledge/projects: {rel}", json_output=args.json)
+    target = workspace / rel
+    if target.exists():
+        return _fail(f"project already exists: {rel}", json_output=args.json)
+    title = args.title.strip() or Path(rel).stem.replace("-", " ").title()
+    description = args.description.strip() or title
+    frontmatter = {
+        "id": rel.removesuffix(".md"),
+        "type": "project",
+        "title": title,
+        "check_status": "checked",
+        "standing": "current",
+        "description": description,
+        "created": now_iso(),
+    }
+    write_frontmatter_doc(workspace / rel, frontmatter, description, create_parent=True)
+    event = append_journal_event(
+        workspace,
+        {
+            "event": "project_created",
+            "operation": "project-create",
+            "output_id": rel,
+            "actor": "pi",
+        },
+        machine="memoria-cli",
+    )
+    commit = commit_writer_changes(
+        workspace, f"create project {Path(rel).stem}", [rel], machine="memoria-cli"
+    )
+    return _emit({"ok": True, "project_path": rel, "event": event, "commit": commit}, args)
 
 
 def _cmd_project_gaps(args: argparse.Namespace) -> int:
@@ -1930,8 +1982,8 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
         "qmd": qmd is not None,
         "qmd_absolute": bool(qmd and Path(qmd).is_absolute()),
         "qmd_checked_root": (workspace / ".memoria/index/qmd/checked").is_dir(),
-        "qmd_config_home": (workspace / ".memoria/index/qmd/config").is_dir(),
-        "qmd_cache_home": (workspace / ".memoria/index/qmd/cache").is_dir(),
+        "qmd_config_dir": (workspace / ".memoria/index/qmd/config").is_dir(),
+        "qmd_index_home": (workspace / ".memoria/index/qmd").is_dir(),
         "qmd_doctor": bool(doctor.get("qmd_doctor", False)),
         "qmd_embedding_models": bool(doctor.get("qmd_embedding_models", False)),
     }
@@ -2009,20 +2061,21 @@ def _run_qmd_rebuild(workspace: Path, *, embeddings: bool) -> dict[str, Any]:
             raise
     return {
         "qmd_path": qmd,
-        "config_home": env["XDG_CONFIG_HOME"],
-        "cache_home": env["XDG_CACHE_HOME"],
+        "config_home": env["QMD_CONFIG_DIR"],
+        "cache_home": env.get("XDG_CACHE_HOME", ""),
+        "index_path": env["INDEX_PATH"],
         "commands": [" ".join(command) for command in commands],
     }
 
 
 def _qmd_env(workspace: Path) -> dict[str, str]:
     env = dict(os.environ)
-    config = workspace / ".memoria/index/qmd/config"
-    cache = workspace / ".memoria/index/qmd/cache"
+    root = workspace / ".memoria/index/qmd"
+    config = root / "config"
+    index = root / "index.sqlite"
     config.mkdir(parents=True, exist_ok=True)
-    cache.mkdir(parents=True, exist_ok=True)
-    env["XDG_CONFIG_HOME"] = str(config)
-    env["XDG_CACHE_HOME"] = str(cache)
+    env["QMD_CONFIG_DIR"] = str(config)
+    env["INDEX_PATH"] = str(index)
     return env
 
 
