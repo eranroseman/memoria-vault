@@ -37,8 +37,10 @@ This produces keys in the `mamykina2010sense` shape — lowercase author, year, 
 **3. Leave bibliography generation to Memoria.**
 
 Do not create a Better BibTeX auto-export into the vault. Capture reads
-Zotero item snapshots or one supplied BibTeX entry, writes checked source
-Concepts through the worker, then regenerates `references.bib`.
+Zotero item snapshots when explicitly requested. Portable BibTeX files are
+standalone imports: they stage unchecked SQLite Work rows and queue DOI
+enrichment; `references.bib` is regenerated only after enrichment checks the
+Work.
 
 **4. Pin citekeys for existing items.**
 

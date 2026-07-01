@@ -489,30 +489,30 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/doi-10.1000_harness.2026/source.md"
-    source_fm = read_frontmatter(vault / done["source_path"])
-    assert source_fm["check_status"] == "checked"
-    assert source_fm["citekey"] == "harness2026"
-    assert source_fm["identifiers"] == {"doi": "10.1000/harness.2026"}
-    assert done["entity_paths"] == [
-        "catalog/entities/person-river-ada.md",
-        "catalog/entities/person-morgan-lin.md",
-        "catalog/entities/venue-journal-of-testable-systems.md",
-    ]
-    assert done["raw_path"] == "catalog/sources/doi-10.1000_harness.2026/raw/harness2026.bib"
+    assert done["source_id"] == "doi-10.1000_harness.2026"
+    assert done["check_status"] == "unchecked"
+    assert done["raw_path"].endswith("/raw/harness2026.bib")
     assert (
         (vault / done["raw_path"]).read_text(encoding="utf-8").startswith("@article{harness2026,")
     )
+    assert not (vault / "catalog/sources/doi-10.1000_harness.2026/source.md").exists()
+    assert not (vault / "references.bib").exists()
+    with state.connect(vault) as conn:
+        source = conn.execute(
+            "SELECT citekey, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
+            ("doi-10.1000_harness.2026",),
+        ).fetchone()
+        enrich = conn.execute(
+            "SELECT status, operation_id FROM operation_requests WHERE request_id = ?",
+            ("enrich-doi-10.1000_harness.2026",),
+        ).fetchone()
+    assert source["citekey"] == "harness2026"
+    assert source["check_status"] == "unchecked"
+    assert json.loads(source["identifiers_json"]) == {"doi": "10.1000/harness.2026"}
+    assert tuple(enrich) == ("pending", "enrich-source")
+    assert done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {
-        "catalog/entities/person-morgan-lin.md",
-        "catalog/entities/person-river-ada.md",
-        "catalog/entities/venue-journal-of-testable-systems.md",
-        "catalog/sources/doi-10.1000_harness.2026/content.md",
-        "catalog/sources/doi-10.1000_harness.2026/source.md",
-        "journal/test-machine.jsonl",
-        "references.bib",
-    }
+    assert committed == {"journal/test-machine.jsonl"}
 
 
 def test_worker_runs_capture_zotero_source_operation_jobs(tmp_path: Path) -> None:

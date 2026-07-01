@@ -5,9 +5,15 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.vaultio import read_frontmatter
-from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
+from memoria_vault.runtime.worker import (
+    enqueue_operation,
+    enqueue_trusted_write,
+    run_next_job,
+    run_request,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -41,8 +47,8 @@ def run_operation(
     *,
     key: str,
 ) -> dict:
-    enqueue_operation(vault, operation_id, payload=payload or {}, idempotency_key=key)
-    done = run_next_job(vault, machine="cycle-machine")
+    job = enqueue_operation(vault, operation_id, payload=payload or {}, idempotency_key=key)
+    done = run_request(vault, str(job["job_id"]), machine="cycle-machine")
     assert done is not None
     assert done["status"] == "done"
     return done
@@ -120,18 +126,42 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         },
         key="capture-source",
     )
-    assert capture["source_path"] == "catalog/sources/doi-10.1000_cycle.2026/source.md"
-    source_frontmatter = read_frontmatter(vault / capture["source_path"])
-    assert source_frontmatter["check_status"] == "checked"
-    assert source_frontmatter["source_id"] == "doi-10.1000_cycle.2026"
-    assert source_frontmatter["citekey"] == "cycle2026"
-    assert source_frontmatter["identifiers"] == {"doi": "10.1000/cycle.2026"}
-    assert source_frontmatter["csl_json"]["DOI"] == "10.1000/cycle.2026"
-    assert Path(source_frontmatter["content_path"]).is_relative_to(
-        "catalog/sources/doi-10.1000_cycle.2026"
+    source_id = capture["source_id"]
+    source_ref = f"catalog/sources/{source_id}/source.md"
+    assert source_id == "doi-10.1000_cycle.2026"
+    assert capture["check_status"] == "unchecked"
+    assert capture["enrichment_job"]["operation_id"] == "enrich-source"
+    assert not (vault / source_ref).exists()
+    source = state.catalog_source(vault, source_id)
+    assert source is not None
+    assert source["check_status"] == "unchecked"
+    assert source["citekey"] == "cycle2026"
+    assert source["identifiers"] == {"doi": "10.1000/cycle.2026"}
+    assert source["csl_json"]["DOI"] == "10.1000/cycle.2026"
+    assert source["content_path"].startswith(
+        ".memoria/blobs/source-content/doi-10.1000_cycle.2026/"
     )
-    assert Path(source_frontmatter["raw_copy_path"]).is_relative_to(
-        "catalog/sources/doi-10.1000_cycle.2026/raw"
+    assert source["raw_path"].startswith(
+        ".memoria/blobs/source-content/doi-10.1000_cycle.2026/raw/"
+    )
+    state.upsert_catalog_record(
+        vault,
+        source_id=source["source_id"],
+        concept_path=source["concept_path"],
+        doi=source["identifiers"]["doi"],
+        title=source["title"],
+        description=source["description"],
+        resource=source["resource"],
+        identifiers=source["identifiers"],
+        citekey=source["citekey"],
+        csl_json=source["csl_json"],
+        metadata_status="verified",
+        text_status=source["text_status"],
+        check_status="checked",
+        content_hash=source["normalized_text_sha256"],
+        raw_hash=source["raw_text_sha256"],
+        content_path=source["content_path"],
+        raw_path=source["raw_path"],
     )
 
     run_operation(
@@ -173,9 +203,9 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
                     "body": "The fixture source supports the project thesis about recall.",
                     "claim_text": "Sleep memory consolidation improves recall.",
                     "quote": "Sleep memory consolidation improves recall",
-                    "evidence_set": [capture["source_path"]],
+                    "evidence_set": [source_ref],
                     "annotation_ref": {
-                        "source_path": capture["source_path"],
+                        "source_path": source_ref,
                         "page": 1,
                         "quote": "Sleep memory consolidation improves recall",
                         "bbox": [10, 20, 120, 40],
@@ -190,7 +220,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     note_frontmatter = read_frontmatter(vault / note_path)
     assert note_frontmatter["status"] == "candidate"
     assert note_frontmatter["annotation_ref"] == {
-        "source_path": capture["source_path"],
+        "source_path": source_ref,
         "page": 1,
         "quote": "Sleep memory consolidation improves recall",
         "bbox": [10, 20, 120, 40],
@@ -233,7 +263,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     manifest = run_operation(vault, "rebuild-checked-qmd-source", key="rebuild-qmd")
     indexed_paths = {row["path"] for row in manifest["documents"]}
-    assert capture["source_path"] in indexed_paths
+    assert f"works/{source_id}.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
     assert note_path in indexed_paths
 
@@ -253,14 +283,20 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     assert any(event.get("event") == "model_call" for event in events)
     assert any(event.get("operation") == "curate-note-link" for event in events)
     assert all(
-        read_frontmatter(vault / path)["check_status"] == "checked" for path in indexed_paths
+        read_frontmatter(
+            (vault / path)
+            if (vault / path).is_file()
+            else (vault / ".memoria/index/qmd/checked" / path)
+        )["check_status"]
+        == "checked"
+        for path in indexed_paths
     )
 
     rollback = run_operation(
         vault,
         "cascade-rollback",
         {
-            "target_id": capture["source_path"],
+            "target_id": source_ref,
             "reason": "cycle source rollback proof",
         },
         key="rollback-cycle",
@@ -268,7 +304,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     reverted = set(rollback["rollback"]["reverted"])
     assert digest["digest_path"] in reverted
     assert note_path in reverted
-    assert (vault / capture["source_path"]).is_file()
+    assert not (vault / source_ref).exists()
     assert not (vault / digest["digest_path"]).exists()
     assert not (vault / note_path).exists()
     assert (
