@@ -127,7 +127,31 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     note = sub.add_parser("note")
     note_sub = note.add_subparsers(dest="note_command", required=True)
-    for name in ("capture", "propose", "accept", "reject", "link"):
+    propose = note_sub.add_parser("propose")
+    _common(propose)
+    propose.add_argument("--digest-path", required=True)
+    candidates = propose.add_mutually_exclusive_group(required=True)
+    candidates.add_argument("--candidate-json", action="append")
+    candidates.add_argument("--candidates-file")
+    propose.set_defaults(handler=_cmd_note_propose)
+    accept = note_sub.add_parser("accept")
+    _common(accept)
+    accept.add_argument("note_path")
+    accept.add_argument("--reason", default="")
+    accept.set_defaults(handler=_cmd_note_accept)
+    reject = note_sub.add_parser("reject")
+    _common(reject)
+    reject.add_argument("note_path")
+    reject.add_argument("--reason", default="")
+    reject.set_defaults(handler=_cmd_note_reject)
+    link = note_sub.add_parser("link")
+    _common(link)
+    link.add_argument("source_note_path")
+    link.add_argument("--type", choices=("supports", "contradicts", "extends"), required=True)
+    link.add_argument("--target", required=True)
+    link.add_argument("--reason", default="")
+    link.set_defaults(handler=_cmd_note_link)
+    for name in ("capture",):
         cmd = note_sub.add_parser(name)
         _common(cmd)
         cmd.set_defaults(handler=_not_implemented(f"note {name}"))
@@ -432,6 +456,52 @@ def _cmd_project_gaps(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_note_propose(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "propose-note-candidates",
+            {"digest_path": args.digest_path, "candidates": _note_candidates(args)},
+        ),
+        args,
+    )
+
+
+def _cmd_note_accept(args: argparse.Namespace) -> int:
+    return _cmd_note_curate(args, "accepted")
+
+
+def _cmd_note_reject(args: argparse.Namespace) -> int:
+    return _cmd_note_curate(args, "rejected")
+
+
+def _cmd_note_curate(args: argparse.Namespace, status: str) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "curate-note-candidate",
+            {"note_path": args.note_path, "status": status, "reason": args.reason},
+        ),
+        args,
+    )
+
+
+def _cmd_note_link(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "curate-note-link",
+            {
+                "source_note_path": args.source_note_path,
+                "link_type": args.type,
+                "target_path": args.target,
+                "reason": args.reason,
+            },
+        ),
+        args,
+    )
+
+
 def _cmd_operation_list(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -652,6 +722,17 @@ def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("operation payload must be a JSON object")
     return payload
+
+
+def _note_candidates(args: argparse.Namespace) -> list[dict[str, Any]]:
+    if args.candidates_file:
+        data = json.loads(Path(args.candidates_file).read_text(encoding="utf-8"))
+        rows = data if isinstance(data, list) else [data]
+    else:
+        rows = [json.loads(raw) for raw in args.candidate_json or []]
+    if not rows or not all(isinstance(row, dict) for row in rows):
+        raise ValueError("note candidates must be JSON objects")
+    return rows
 
 
 def _request_summary(row: Any) -> dict[str, Any]:
