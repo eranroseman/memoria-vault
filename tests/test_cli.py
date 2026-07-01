@@ -469,6 +469,53 @@ def test_cli_request_list_show_and_resume_pending_request(
     assert row["status"] == "done"
 
 
+def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    assert (workspace / "system/eval/alpha12-seeded-errors.json").is_file()
+
+    def fake_verdict(
+        vault: Path, *, template_root: Path, bundle_path: Path, machine: str
+    ) -> dict[str, object]:
+        assert vault != workspace
+        assert template_root == workspace
+        assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert machine == "memoria-cli"
+        return {"passed": True, "metrics": {"expected_errors": 1}}
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
+        fake_verdict,
+    )
+
+    rc = main(
+        [
+            "eval",
+            "seeded-error-verdict",
+            "--workspace",
+            str(workspace),
+            "--json",
+            "--idempotency-key",
+            "seeded-verdict",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["result"]["passed"] is True
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("seeded-verdict",),
+        ).fetchone()
+    assert row["operation_id"] == "run-seeded-error-verdict"
+    assert json.loads(row["args_json"]) == {}
+
+
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
