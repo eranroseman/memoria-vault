@@ -437,6 +437,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 "checks": checks,
                 "qmd_path": status["qmd_path"],
                 "node_version": status["node_version"],
+                "qmd_doctor_output": status["qmd_doctor_output"],
             },
             args,
         )
@@ -1922,6 +1923,7 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
     qmd = shutil.which("qmd")
     node = shutil.which("node")
     node_version = _node_version(node) if node else ""
+    doctor = _qmd_doctor_status(workspace, str(Path(qmd).resolve())) if qmd else {}
     checks = {
         "node": node is not None,
         "node_22": _node_major(node_version) >= 22,
@@ -1930,11 +1932,14 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
         "qmd_checked_root": (workspace / ".memoria/index/qmd/checked").is_dir(),
         "qmd_config_home": (workspace / ".memoria/index/qmd/config").is_dir(),
         "qmd_cache_home": (workspace / ".memoria/index/qmd/cache").is_dir(),
+        "qmd_doctor": bool(doctor.get("qmd_doctor", False)),
+        "qmd_embedding_models": bool(doctor.get("qmd_embedding_models", False)),
     }
     return {
         "checks": checks,
         "qmd_path": str(Path(qmd).resolve()) if qmd else "",
         "node_version": node_version,
+        "qmd_doctor_output": doctor.get("qmd_doctor_output", ""),
     }
 
 
@@ -1977,20 +1982,31 @@ def _runner_status(provider: str | None) -> dict[str, Any]:
 
 def _run_qmd_rebuild(workspace: Path, *, embeddings: bool) -> dict[str, Any]:
     status = _qmd_status(workspace)
-    if not all(status["checks"].values()):
-        failed = [key for key, ok in status["checks"].items() if not ok]
+    checks = dict(status["checks"])
+    if not embeddings:
+        checks.pop("qmd_embedding_models", None)
+    if not all(checks.values()):
+        failed = [key for key, ok in checks.items() if not ok]
+        if embeddings and "qmd_embedding_models" in failed:
+            raise RuntimeError("qmd embedding models are missing; run `qmd pull` before embeddings")
         raise RuntimeError(f"qmd is not ready: {', '.join(failed)}")
     qmd = status["qmd_path"]
     env = _qmd_env(workspace)
     checked = workspace / ".memoria/index/qmd/checked"
     commands = [
+        [qmd, "collection", "remove", "memoria-checked"],
         [qmd, "collection", "add", str(checked), "--name", "memoria-checked", "--mask", "**/*.md"],
         [qmd, "update"],
     ]
     if embeddings:
         commands.append([qmd, "embed", "--chunk-strategy", "auto"])
     for command in commands:
-        _run(command, cwd=workspace, env=env)
+        try:
+            _run(command, cwd=workspace, env=env)
+        except RuntimeError as exc:
+            if command[1:3] == ["collection", "remove"] and "Collection not found" in str(exc):
+                continue
+            raise
     return {
         "qmd_path": qmd,
         "config_home": env["XDG_CONFIG_HOME"],
@@ -2008,6 +2024,33 @@ def _qmd_env(workspace: Path) -> dict[str, str]:
     env["XDG_CONFIG_HOME"] = str(config)
     env["XDG_CACHE_HOME"] = str(cache)
     return env
+
+
+def _qmd_doctor_status(
+    workspace: Path, qmd: str, *, env: dict[str, str] | None = None
+) -> dict[str, Any]:
+    try:
+        proc = subprocess.run(
+            [qmd, "doctor"],
+            cwd=workspace,
+            env=env or _qmd_env(workspace),
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "qmd_doctor": False,
+            "qmd_embedding_models": False,
+            "qmd_doctor_output": "qmd doctor timed out",
+        }
+    output = "\n".join(value for value in (proc.stdout, proc.stderr) if value).strip()
+    return {
+        "qmd_doctor": proc.returncode == 0,
+        "qmd_embedding_models": proc.returncode == 0 and "model cache: missing" not in output,
+        "qmd_doctor_output": output[-4000:],
+    }
 
 
 def _node_version(node: str) -> str:

@@ -1707,6 +1707,9 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
     assert (workspace / ".memoria/index/qmd/checked/knowledge/notes/qmd.md").is_file()
     lines = qmd_log.read_text(encoding="utf-8").splitlines()
     assert lines == [
+        f"doctor|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
+        "collection remove memoria-checked"
+        f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
         "collection add "
         f"{workspace}/.memoria/index/qmd/checked --name memoria-checked --mask **/*.md"
         f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
@@ -1714,6 +1717,47 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
         "embed --chunk-strategy auto"
         f"|{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/cache",
     ]
+
+
+def test_cli_doctor_qmd_requires_embedding_models_for_required_qmd(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fake_qmd_toolchain(tmp_path, monkeypatch)
+    monkeypatch.setenv("QMD_DOCTOR_OUTPUT", "model cache: missing 3/3")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert output["ok"] is False
+    assert output["checks"]["qmd_doctor"] is True
+    assert output["checks"]["qmd_embedding_models"] is False
+    assert "model cache: missing" in output["qmd_doctor_output"]
+
+
+def test_cli_workspace_rebuild_ignores_missing_qmd_collection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fake_qmd_toolchain(tmp_path, monkeypatch)
+    monkeypatch.setenv("QMD_REMOVE_MISSING", "1")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    note = workspace / "knowledge/notes/qmd.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
+        encoding="utf-8",
+    )
+
+    rc = main(["workspace", "rebuild", "--workspace", str(workspace), "--search", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
 
 
 def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -1729,7 +1773,12 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         "pathlib.Path(os.environ['QMD_LOG']).open('a', encoding='utf-8').write(\n"
         "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('XDG_CONFIG_HOME', '')\n"
         "    + '|' + os.environ.get('XDG_CACHE_HOME', '') + '\\n'\n"
-        ")\n",
+        ")\n"
+        "if sys.argv[1:3] == ['collection', 'remove'] and os.environ.get('QMD_REMOVE_MISSING'):\n"
+        "    print('Collection not found: memoria-checked', file=sys.stderr)\n"
+        "    sys.exit(1)\n"
+        "if sys.argv[1:] == ['doctor']:\n"
+        "    print(os.environ.get('QMD_DOCTOR_OUTPUT', 'model cache: ready'))\n",
         encoding="utf-8",
     )
     node.chmod(0o755)
