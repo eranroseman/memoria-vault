@@ -728,6 +728,53 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     }
 
 
+def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha digest\n"
+        "tags: [sleep]\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    enqueue_operation(
+        workspace,
+        "analyze-gaps",
+        payload={"seed_terms": ["new area"], "dense_threshold": 1},
+        idempotency_key="pending-gaps",
+    )
+
+    rc = main(
+        [
+            "workspace",
+            "run",
+            "--workspace",
+            str(workspace),
+            "--schedule-id",
+            "queue-drain",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["schedule_id"] == "queue-drain"
+    assert output["ran"] == 1
+    assert output["results"][0]["status"] == "done"
+
+
 def test_cli_request_list_show_and_resume_pending_request(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1219,9 +1266,24 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert scan["result"]["observed_count"] == 1
     assert scan["result"]["paths"] == ["knowledge/digests/hub-seed.md"]
 
-    assert main(["workspace", "check", "--workspace", str(workspace), "--json"]) == 0
+    assert (
+        main(
+            [
+                "workspace",
+                "check",
+                "--workspace",
+                str(workspace),
+                "--schedule-id",
+                "structural-check",
+                "--json",
+            ]
+        )
+        == 0
+    )
     check = json.loads(capsys.readouterr().out)
     assert check["ok"] is True
+    assert check["schedule_id"] == "structural-check"
+    assert {job["request_envelope"]["schedule_id"] for job in check["jobs"]} == {"structural-check"}
 
     assert (
         main(
