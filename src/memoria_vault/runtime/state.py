@@ -1003,9 +1003,6 @@ def _init(conn: sqlite3.Connection) -> None:
           );
         """
     )
-    _ensure_column(conn, "catalog_sources", "content_path", "TEXT NOT NULL DEFAULT ''")
-    _ensure_column(conn, "catalog_sources", "raw_path", "TEXT NOT NULL DEFAULT ''")
-    _ensure_column(conn, "catalog_sources", "description", "TEXT NOT NULL DEFAULT ''")
 
 
 def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
@@ -1056,12 +1053,6 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "content_path": row["content_path"],
         "raw_path": row["raw_path"],
     }
-
-
-def _ensure_column(conn: sqlite3.Connection, table: str, column: str, declaration: str) -> None:
-    columns = {str(row["name"]) for row in conn.execute(f"PRAGMA table_info({table})")}
-    if column not in columns:
-        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {declaration}")
 
 
 def _source_id(value: str) -> str:
