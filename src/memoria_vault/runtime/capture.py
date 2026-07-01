@@ -684,17 +684,9 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
 
 
 def render_references_bib(vault: Path) -> str:
-    """Render checked source Concepts as the generated references.bib projection."""
+    """Render checked SQLite catalog Works as the generated references.bib projection."""
     entries = []
-    if state.has_catalog_sources(vault):
-        sources = state.catalog_sources(vault)
-    else:
-        sources = []
-        for path in sorted((Path(vault) / "catalog" / "sources").glob("*/source.md")):
-            frontmatter = read_frontmatter(path)
-            if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
-                continue
-            sources.append(frontmatter)
+    sources = state.catalog_sources(vault)
     for frontmatter in sources:
         csl_json = (
             frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}

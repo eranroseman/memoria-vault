@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -175,7 +176,14 @@ def _workspace_index() -> str:
 
 def _bundle_index(vault: Path, bundle: str) -> str:
     bundle_root = vault / bundle
-    rows = [_concept_row(bundle_root, path) for path in _concept_paths(bundle_root)]
+    concept_paths = _concept_paths(bundle_root)
+    if bundle == "catalog":
+        concept_paths = [
+            path for path in concept_paths if not _legacy_source_markdown(bundle_root, path)
+        ]
+    rows = [_concept_row(bundle_root, path) for path in concept_paths]
+    if bundle == "catalog":
+        rows.extend(_catalog_source_rows(vault))
     body = "\n".join(rows) if rows else "_No checked Concepts._"
     return _generated(
         f"{bundle.title()} index",
@@ -202,6 +210,21 @@ def _concept_row(bundle_root: Path, path: Path) -> str:
     description = str(frontmatter.get("description") or "").strip()
     suffix = f" — {description}" if description else ""
     return f"- [{title}]({rel}) `{concept_type}`{suffix}"
+
+
+def _legacy_source_markdown(bundle_root: Path, path: Path) -> bool:
+    rel = path.relative_to(bundle_root).as_posix()
+    return rel.startswith("sources/") and rel.endswith("/source.md")
+
+
+def _catalog_source_rows(vault: Path) -> list[str]:
+    rows: list[str] = []
+    for source in state.catalog_sources(vault):
+        title = str(source.get("title") or source["source_id"])
+        description = str(source.get("description") or "").strip()
+        suffix = f" — {description}" if description else ""
+        rows.append(f"- {title} `source` `catalog/sources/{source['source_id']}`{suffix}")
+    return rows
 
 
 def _generated(title: str, note: str, body: str) -> str:

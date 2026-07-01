@@ -4,10 +4,13 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from memoria_vault.runtime import state
+from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.projections import (
     TRACKED_PROJECTION_PATHS,
     check_tracked_projections,
     check_workspace_indexes,
+    render_workspace_index,
     write_tracked_projections,
     write_workspace_indexes,
 )
@@ -39,6 +42,28 @@ def git(vault: Path, *args: str) -> str:
     if proc.returncode:
         raise AssertionError(proc.stderr or proc.stdout)
     return proc.stdout.strip()
+
+
+def add_catalog_work(vault: Path, source_id: str = "db-source") -> str:
+    state.upsert_catalog_record(
+        vault,
+        source_id=source_id,
+        title="DB Source",
+        description="A SQLite-only checked source.",
+        citekey="db2026",
+        csl_json={
+            "id": "db2026",
+            "type": "article-journal",
+            "title": "DB Source",
+            "author": [{"family": "River", "given": "Ada"}],
+            "issued": {"date-parts": [[2026]]},
+            "DOI": "10.1000/db",
+        },
+        metadata_status="verified",
+        text_status="full-text",
+        check_status="checked",
+    )
+    return f"catalog/sources/{source_id}"
 
 
 def test_shipped_workspace_indexes_are_current() -> None:
@@ -96,6 +121,50 @@ def test_tracked_projection_drift_check_covers_all_generated_outputs(tmp_path: P
     assert check_tracked_projections(vault)["findings"] == [
         {"path": "references.bib", "status": "stale"},
     ]
+
+
+def test_tracked_projections_render_sqlite_catalog_work_without_source_markdown(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    source_ref = add_catalog_work(vault)
+
+    result = write_tracked_projections(vault, commit=True, machine="test-machine")
+
+    references = (vault / "references.bib").read_text(encoding="utf-8")
+    catalog_index = (vault / "catalog/index.md").read_text(encoding="utf-8")
+    assert "references.bib" in result["changed"]
+    assert "@article{db2026," in references
+    assert "doi = {10.1000/db}" in references
+    assert f"`{source_ref}`" in catalog_index
+    assert "DB Source `source`" in catalog_index
+    assert not (vault / "catalog/sources/db-source/source.md").exists()
+    assert check_tracked_projections(vault)["ok"]
+
+
+def test_references_bib_ignores_legacy_source_markdown_without_catalog_row(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    source = vault / "catalog/sources/legacy/source.md"
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text(
+        "---\n"
+        "type: source\n"
+        "check_status: checked\n"
+        "title: Legacy Source\n"
+        "source_id: legacy\n"
+        "citekey: legacy2026\n"
+        "csl_json:\n"
+        "  id: legacy2026\n"
+        "  title: Legacy Source\n"
+        "---\n"
+        "# Legacy Source\n",
+        encoding="utf-8",
+    )
+
+    assert render_references_bib(vault) == ""
+    assert "Legacy Source" not in render_workspace_index(vault, "catalog/index.md")
 
 
 def test_worker_runs_workspace_index_projection_operation_jobs(tmp_path: Path) -> None:
