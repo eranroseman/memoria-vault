@@ -120,7 +120,9 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     interview = work_sub.add_parser("interview")
     _common(interview)
     interview.add_argument("--work-id", required=True)
-    interview.add_argument("--response", required=True)
+    response = interview.add_mutually_exclusive_group(required=True)
+    response.add_argument("--response")
+    response.add_argument("--fixture")
     interview.add_argument("--prompt", default="What matters about this source?")
     interview.add_argument("--project-id", default="")
     interview.set_defaults(handler=_cmd_work_interview)
@@ -599,12 +601,7 @@ def _cmd_work_interview(args: argparse.Namespace) -> int:
         _enqueue_and_run(
             args,
             "record-copi-interview",
-            {
-                "source_id": args.work_id,
-                "prompt": args.prompt,
-                "response": args.response,
-                "project_id": args.project_id,
-            },
+            _interview_payload(args),
         ),
         args,
     )
@@ -1331,6 +1328,27 @@ def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
     payload = json.loads(raw)
     if not isinstance(payload, dict):
         raise ValueError("operation payload must be a JSON object")
+    return payload
+
+
+def _interview_payload(args: argparse.Namespace) -> dict[str, Any]:
+    payload = {
+        "source_id": args.work_id,
+        "prompt": args.prompt,
+        "response": args.response or "",
+        "project_id": args.project_id,
+    }
+    if args.fixture:
+        fixture = json.loads(Path(args.fixture).read_text(encoding="utf-8"))
+        if not isinstance(fixture, dict):
+            raise ValueError("interview fixture must contain a JSON object")
+        payload.update(
+            {
+                key: str(fixture[key])
+                for key in ("prompt", "response", "project_id")
+                if key in fixture
+            }
+        )
     return payload
 
 
