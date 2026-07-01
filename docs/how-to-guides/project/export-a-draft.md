@@ -17,6 +17,8 @@ terminal operation you run yourself — there is no export lane or palette comma
 - Memoria CLI installed for checked project exports
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version) for
   `.docx`, `.pdf`, `.odt`, or direct manuscript routes
+- A checked project Concept; create the project shell with
+  `memoria project create --workspace <vault> <project> --title "<title>" --description "<description>"`
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
   of the alpha.11 shipped path
 - `references.bib` current (generated from checked SQLite catalog rows)
