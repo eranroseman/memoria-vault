@@ -17,6 +17,8 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job, run_pending_jobs
 
+DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
@@ -371,7 +373,7 @@ def _cmd_work_digest(args: argparse.Namespace) -> int:
         _enqueue_and_run(
             args,
             "compile-source-digest",
-            {"source_id": args.work_id, "hub_topics": args.hub_topic},
+            {"source_id": args.work_id, "hub_topics": args.hub_topic or DEFAULT_DIGEST_TOPICS},
         ),
         args,
     )

@@ -227,6 +227,80 @@ def test_cli_work_capture_pdf_extracts_text_without_legacy_markdown(
     )
 
 
+def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    replay = tmp_path / "providers.json"
+    replay.write_text(json.dumps(_doi_provider_payloads()), encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "work",
+                "capture",
+                "--workspace",
+                str(workspace),
+                "--doi",
+                "10.1000/alpha",
+                "--title",
+                "Alpha Source",
+                "--json",
+                "--idempotency-key",
+                "capture-alpha",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "work",
+                "enrich",
+                "--workspace",
+                str(workspace),
+                "--work-id",
+                "doi-10.1000_alpha",
+                "--provider-replay",
+                str(replay),
+                "--json",
+                "--idempotency-key",
+                "enrich-alpha",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "digest",
+            "--workspace",
+            str(workspace),
+            "--work-id",
+            "doi-10.1000_alpha",
+            "--json",
+            "--idempotency-key",
+            "digest-alpha",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["result"]["digest_path"] == "knowledge/digests/doi-10.1000_alpha.md"
+    digest = workspace / output["result"]["digest_path"]
+    assert digest.is_file()
+    body = digest.read_text(encoding="utf-8")
+    assert "Alpha Source" in body
+    assert "10.1000/alpha" in body
+    assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
+
+
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -363,3 +437,42 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
     monkeypatch.setenv("QMD_LOG", str(qmd_log))
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
     return qmd_log
+
+
+def _doi_provider_payloads() -> dict[str, object]:
+    return {
+        "crossref": {
+            "message": {
+                "DOI": "10.1000/alpha",
+                "URL": "https://doi.org/10.1000/alpha",
+                "type": "journal-article",
+                "title": ["Alpha Source"],
+                "container-title": ["Journal of Testable Systems"],
+                "author": [{"given": "Ada", "family": "River"}],
+                "issued": {"date-parts": [[2026]]},
+                "relation": {},
+            }
+        },
+        "openalex": {
+            "id": "https://openalex.org/W123",
+            "doi": "https://doi.org/10.1000/alpha",
+            "title": "Alpha Source",
+            "authorships": [
+                {
+                    "author": {
+                        "id": "https://openalex.org/A123",
+                        "display_name": "Ada River",
+                    },
+                    "institutions": [],
+                }
+            ],
+            "primary_location": {"source": {"display_name": "Journal of Testable Systems"}},
+            "topics": [{"display_name": "Research workflows"}],
+        },
+        "unpaywall": {
+            "doi": "10.1000/alpha",
+            "is_oa": True,
+            "oa_status": "gold",
+            "best_oa_location": {"url_for_pdf": "https://example.test/alpha.pdf"},
+        },
+    }
