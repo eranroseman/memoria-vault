@@ -80,6 +80,12 @@ def provider_payloads(
                 "relation": {"is-retracted-by": [{"id": "10.1000/retraction"}]}
                 if retracted
                 else {},
+                "reference": [
+                    {
+                        "DOI": "10.1000/beta",
+                        "article-title": "Beta Reference",
+                    }
+                ],
             }
         },
         "openalex": {
@@ -108,7 +114,9 @@ def provider_payloads(
                     "issn_l": "1234-5678",
                 }
             },
-            "topics": [{"display_name": "Research workflows"}],
+            "referenced_works": ["https://openalex.org/W999"],
+            "related_works": ["https://openalex.org/W888"],
+            "topics": [{"id": "https://openalex.org/T123", "display_name": "Research workflows"}],
         },
         "unpaywall": {
             "doi": "10.1000/alpha",
@@ -257,6 +265,12 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         materialization = conn.execute(
             "SELECT materialization_status FROM outputs WHERE output_id = 'references.bib'"
         ).fetchone()
+        graph_edges = conn.execute(
+            "SELECT relation_type, target_id FROM work_graph_edges ORDER BY relation_type, target_id"
+        ).fetchall()
+        discovered = conn.execute(
+            "SELECT check_status FROM catalog_sources WHERE source_id IN ('W888', 'W999')"
+        ).fetchall()
 
     assert source["check_status"] == "checked"
     assert source["metadata_status"] == "verified"
@@ -271,8 +285,24 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert ("title", "crossref") in [tuple(row) for row in provenance]
     assert ("doi", "10.1000/alpha") in [tuple(row) for row in external_ids]
     assert materialization["materialization_status"] == "materialized"
+    assert [tuple(row) for row in graph_edges] == [
+        ("references", "doi:10.1000/beta"),
+        ("references", "https://openalex.org/W999"),
+        ("related", "https://openalex.org/W888"),
+        ("topic", "https://openalex.org/T123"),
+    ]
+    assert discovered == []
+    assert len(done["discovery_candidate_paths"]) == 3
+    for rel in done["discovery_candidate_paths"]:
+        text = (vault / rel).read_text(encoding="utf-8")
+        assert "projection: attention" in text
+        assert "attention_kind: candidate" in text
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "references.bib"}
+    assert committed == {
+        *done["discovery_candidate_paths"],
+        "journal/test-machine.jsonl",
+        "references.bib",
+    }
 
 
 def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
