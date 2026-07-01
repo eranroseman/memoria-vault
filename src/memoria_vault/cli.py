@@ -348,6 +348,7 @@ def _eval_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     seeded.set_defaults(handler=_cmd_eval_seeded_error_verdict)
     run = eval_sub.add_parser("run")
     _common(run)
+    run.add_argument("--dry-run", action="store_true")
     run.set_defaults(handler=_cmd_eval_run)
 
 
@@ -1169,7 +1170,7 @@ def _cmd_workspace_export(args: argparse.Namespace) -> int:
 
 
 def _cmd_eval_run(args: argparse.Namespace) -> int:
-    return _cmd_eval_seeded_error_verdict(args)
+    return _emit(_enqueue_and_run(args, "eval-run", {"dry_run": bool(args.dry_run)}), args)
 
 
 def _cmd_steering_show(args: argparse.Namespace) -> int:

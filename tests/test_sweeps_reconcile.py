@@ -1,6 +1,6 @@
 """L1 component test for sweeps — extracted from its former --self-test (ADR-44)."""
 
-from operations.cleanup import reconcile as _m
+from memoria_vault.runtime.subsystems.cleanup import reconcile as _m
 
 Path = _m.Path
 note_for = _m.note_for

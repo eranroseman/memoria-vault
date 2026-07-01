@@ -1,6 +1,6 @@
 """L1 component test for extract — extracted from its former --self-test (ADR-44)."""
 
-from operations.processing.ingest import extract as _m
+from memoria_vault.runtime.subsystems.processing.ingest import extract as _m
 
 Path = _m.Path
 coherence = _m.coherence

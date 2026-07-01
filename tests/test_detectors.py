@@ -5,7 +5,7 @@ import json as _json
 from datetime import UTC
 from pathlib import Path as _Path
 
-from operations.integrity.linter import detectors as _m
+from memoria_vault.runtime.subsystems.integrity.linter import detectors as _m
 
 Path = _m.Path
 run_all = _m.run_all

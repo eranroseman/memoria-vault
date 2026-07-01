@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from operations.processing.ingest import runner
+from memoria_vault.runtime.subsystems.processing.ingest import runner
 
 BIB = (
     "@article{x2024Test,\n  title = {A Test},\n  author = {Doe, Jane},\n"

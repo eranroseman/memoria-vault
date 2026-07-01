@@ -4,7 +4,8 @@ import re
 
 import pytest
 import yaml
-from operations.lib import inbox
+
+from memoria_vault.runtime.subsystems.lib import inbox
 
 
 def _frontmatter(path) -> dict:

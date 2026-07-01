@@ -14,7 +14,8 @@ import json
 from ingest_fixtures import merged_record as _merged
 from ingest_fixtures import run_enriched_pipeline as _run_pipeline
 from ingest_fixtures import topic as _topic
-from operations.processing.ingest import classify
+
+from memoria_vault.runtime.subsystems.processing.ingest import classify
 
 # --------------------------------------------------------------------------- #
 # fixtures (the test_classify.py shapes)

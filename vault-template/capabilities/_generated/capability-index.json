@@ -574,6 +574,37 @@
     {
       "allowed_network": [],
       "allowed_paths": [
+        "system/eval/"
+      ],
+      "allowed_tools": [
+        "eval_dispatch"
+      ],
+      "check_status": "checked",
+      "description": "Plan the current vault-eval task set through the local runtime engine.",
+      "id": "eval-run",
+      "model": "deterministic-fixture",
+      "operation_id": "eval-run",
+      "path": "capabilities/operations/eval-run.md",
+      "prompt_version": "eval-run.v1",
+      "required_checks": [
+        "eval-task-schema"
+      ],
+      "risk_class": "low",
+      "runner": "pydantic-ai",
+      "tags": [
+        "alpha14",
+        "eval"
+      ],
+      "title": "Run vault eval",
+      "trust": {
+        "sha256": "sha256:1a5c212187db84615b81369b6698847311edad03caf5352ece781df7a78769b3",
+        "source": "local"
+      },
+      "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
         "knowledge/",
         "references.bib"
       ],

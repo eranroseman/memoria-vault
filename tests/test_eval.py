@@ -1,13 +1,13 @@
 """vault-eval (ADR-11): the shipped gold set validates; dispatch fans it out
-as one idempotent kanban card per (current task, quarter), never gating."""
+as one idempotent local eval task per (current task, quarter), never gating."""
 
 import datetime
 import re
 from pathlib import Path
 
-import tasks_mcp
 import yaml
-from operations.telemetry.eval import eval_dispatch
+
+from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
 EVAL = SRC / "system" / "eval"
@@ -59,9 +59,8 @@ def test_gold_set_covers_the_four_minimum_workflows():
         assert by_workflow.get(wf, 0) >= 2, f"workflow {wf} needs ≥ 2 gold tasks"
 
 
-def test_lane_profile_mirrors_tasks_mcp():
-    """The dispatcher's lane → profile map cannot drift from the Co-PI's (ADR-48)."""
-    assert eval_dispatch.LANE_PROFILE == tasks_mcp.LANE_PROFILE
+def test_lane_profile_keeps_supported_eval_lanes():
+    assert set(eval_dispatch.LANE_PROFILE) == {"catalog", "extract", "link", "map", "verify"}
 
 
 def test_gold_task_lanes_match_the_routed_lanes():

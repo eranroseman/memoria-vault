@@ -4,7 +4,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from operations.lib import schema
+from memoria_vault.runtime.subsystems.lib import schema
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
