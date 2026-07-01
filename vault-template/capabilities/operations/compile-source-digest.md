@@ -12,7 +12,7 @@ allowed_paths:
   - knowledge/digests/
   - knowledge/hubs/
 allowed_network: []
-runner: direct_api
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: compile-source-digest.v1
 io_schema:

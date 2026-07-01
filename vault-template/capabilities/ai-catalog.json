@@ -50,10 +50,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Analyze claims",
       "trust": {
-        "sha256": "sha256:6d2aed6e7da70ae443a16cfc172ffcea4736898280e6125d1864fe2b41bc1e37",
+        "sha256": "sha256:150ea58204a232b6e79f16d7188c11630172b4c195fefa1ea7001559527c9462",
         "source": "local"
       },
       "type": "operation"
@@ -375,10 +375,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Check falsifiability",
       "trust": {
-        "sha256": "sha256:74ba3945919d9a02338ffa4e0e15036bc884b73087a3c49fe0269ff9cba62653",
+        "sha256": "sha256:4f51bf84a93dbc3674947d27f099ab62e2dfa686dbd6f640cc9fb0afa68e9836",
         "source": "local"
       },
       "type": "operation"
@@ -433,10 +433,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Compare and contrast",
       "trust": {
-        "sha256": "sha256:46073ebf15d5317e635fa859641fb784a0548b0883f5378cc373ddc5fc67c3a1",
+        "sha256": "sha256:cdf3c2ad057055c30003e86521e875c757b7792364ea8c2611e81bd500ba4160",
         "source": "local"
       },
       "type": "operation"
@@ -463,10 +463,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Compile source digest",
       "trust": {
-        "sha256": "sha256:6f21c76b8e5ac904912b13e5ea2924c6cf2b0425e2fc3a286fb6a1c12287b640",
+        "sha256": "sha256:97a504f1f72b9079f84c616239f281268e3aac9cce44039d250e557ee3a6760a",
         "source": "local"
       },
       "type": "operation"
@@ -596,10 +596,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Extract claim stubs",
       "trust": {
-        "sha256": "sha256:59950faa4aefde687ba074769a794444097d879cc211bbb3c49fbbcfbc808e91",
+        "sha256": "sha256:d217bb5be6f184019fe4407ce53522a70c2fd532b547323800b11afe575e6440",
         "source": "local"
       },
       "type": "operation"
@@ -940,10 +940,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Propose note candidates",
       "trust": {
-        "sha256": "sha256:e7fec1fc696b6eca862f353baa75d24372af53c0c9eec90afe43c61bfd3f63dd",
+        "sha256": "sha256:fdb51eaa7962c238da0e5953a1ff8e5ad85c1b402848cdba186d28bf76e8a793",
         "source": "local"
       },
       "type": "operation"
@@ -1031,10 +1031,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Red-team an argument",
       "trust": {
-        "sha256": "sha256:2f5a2aa64f4ff27bc0e4a2a559bc6f4619f1b6586edcc566b0638e11fca40b29",
+        "sha256": "sha256:5bc950c65735ddf1c4dabda9b329da7b125842d43eec3209e175430aff459679",
         "source": "local"
       },
       "type": "operation"
@@ -1292,10 +1292,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Summarize for recall",
       "trust": {
-        "sha256": "sha256:ba3c3b314a83973825d2f3a38f022b1028579bf4959b446f5bbf3e0ff23e65d6",
+        "sha256": "sha256:88e2da575ea4abee1bade29b62f9ed0ca09d817b8376ac78125168167ed436bb",
         "source": "local"
       },
       "type": "operation"
@@ -1320,10 +1320,10 @@
         "memoria-profile"
       ],
       "risk_class": "medium",
-      "runner": "direct_api",
+      "runner": "pydantic-ai",
       "title": "Surface tensions",
       "trust": {
-        "sha256": "sha256:23c0416752c7de356b2bb7fbd7a11eb7246de6c36e91feb1cbcb71be0e727f5d",
+        "sha256": "sha256:06b9dff324f3d483fef16b2c90512cebe62a19de4e809302217ba259eead40bf",
         "source": "local"
       },
       "type": "operation"
