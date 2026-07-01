@@ -1,4 +1,4 @@
-"""Alpha.13 DOI catalog enrichment over the alpha.12 worker/state boundary."""
+"""DOI catalog enrichment over the SQLite worker/state boundary."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def enrich_source(
         raise ValueError(f"unknown catalog source: {source_id}")
     doi = _doi(source)
     if not doi:
-        raise ValueError("alpha.13 enrich-source MVP requires a DOI")
+        raise ValueError("enrich-source requires a DOI catalog identifier")
 
     config = load_provider_config(vault)
     issues = provider_allowlist_issues(config, policy)
