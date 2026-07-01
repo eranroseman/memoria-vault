@@ -117,7 +117,8 @@ adopts them.
 
 **Pattern** — compatibility name for a checked prompt operation stored as data
 in `capabilities/operations/` ([ADR-53](../adr/53-pattern-library.md)) and
-executed only through the patterns MCP runner.
+executed through `memoria operation run`; the patterns MCP remains a read-only
+compatibility prompt composer.
 
 **State** — not a field name on its own; use the specific field. A Concept's
 read state is **`check_status`**; a board card's execution state is **`status`**;

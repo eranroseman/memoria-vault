@@ -23,7 +23,12 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import concept_text, read_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import (
+    concept_text,
+    read_frontmatter,
+    safe_read,
+    split_frontmatter,
+)
 
 REQUIRED_POLICY_FIELDS = {
     "operation_id",
@@ -122,6 +127,115 @@ def required_promotion_checks(policy: dict[str, Any]) -> list[str]:
         return normalize_promotion_checks(checks)
     except ValueError as exc:
         raise ValueError(f"{operation_id} cannot promote checked Concepts: {exc}") from exc
+
+
+def run_prompt_operation(
+    vault: Path,
+    operation_id: str,
+    payload: dict[str, Any],
+    *,
+    machine: str | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Run one checked prompt operation through the standard staged write path."""
+    vault = Path(vault)
+    policy = load_operation_policy(vault, operation_id)
+    _require_tool(policy, "trusted_writer")
+    manifest = capability_manifest_path(vault, "operation", operation_id)
+    _frontmatter, pattern = split_frontmatter(manifest.read_text(encoding="utf-8"))
+    if "{{input}}" not in pattern:
+        raise ValueError(f"{operation_id} is not a prompt operation")
+
+    input_refs = _prompt_input_refs(payload)
+    input_text = str(payload.get("input_text") or "").strip()
+    inputs = []
+    if input_refs:
+        parts = []
+        for rel in input_refs:
+            _require_path(policy, rel)
+            text, input_row = _checked_prompt_input(vault, rel)
+            parts.append(f"## {rel}\n\n{text}")
+            inputs.append(input_row)
+        if not input_text:
+            input_text = "\n\n".join(parts)
+    if not input_text:
+        raise ValueError(f"{operation_id} requires input_text or input_ref")
+
+    run_id = run_id or f"{operation_id}:{_sha256_text(input_text).removeprefix('sha256:')[:12]}"
+    prompt = _prompt_text(vault, pattern, input_text)
+    started = append_journal_event(
+        vault,
+        {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
+        machine=machine,
+    )
+    output = _run_prompt_model(policy, prompt, input_text)
+    model_call = append_journal_event(
+        vault,
+        {
+            "event": "model_call",
+            "run_id": run_id,
+            "runner": policy["runner"],
+            "provider": policy.get("provider", "local"),
+            "model": policy["model"],
+            "route": "prompt-operation",
+            "purpose": operation_id,
+            "prompt_version": policy["prompt_version"],
+            "toolset": policy["allowed_tools"],
+            "fallback_used": False,
+            "compression_used": False,
+            "input_hash": _sha256_text(input_text),
+            "output_hash": _sha256_text(output),
+        },
+        machine=machine,
+    )
+    output_path = f"knowledge/notes/{safe_filename(operation_id)}-{safe_filename(run_id)}.md"
+    frontmatter = {
+        "type": "note",
+        "check_status": "unchecked",
+        "title": f"{policy['title']} report",
+        "description": str(policy.get("description") or policy["title"]),
+        "status": "candidate",
+        "evidence_set": [row["id"] for row in inputs],
+        "tags": ["prompt-operation", operation_id],
+    }
+    stage = stage_concept(
+        vault,
+        output_path,
+        concept_text(frontmatter, f"{policy['title']} report", output),
+        inputs=inputs,
+        operation=operation_id,
+        run_id=run_id,
+        machine=machine,
+    )
+    finished = append_journal_event(
+        vault,
+        {
+            "event": "run",
+            "run_id": run_id,
+            "workflow": operation_id,
+            "status": "done",
+            "outputs": [output_path],
+        },
+        machine=machine,
+    )
+    commit = commit_writer_changes(
+        vault,
+        f"run prompt operation {operation_id}",
+        [stage["staging_id"]],
+        machine=machine,
+    )
+    return {
+        "run_id": run_id,
+        "operation_id": operation_id,
+        "output_path": output_path,
+        "staging_id": stage["staging_id"],
+        "input_refs": [row["id"] for row in inputs],
+        "started": started,
+        "model_call": model_call,
+        "derived": stage,
+        "finished": finished,
+        "commit": commit,
+    }
 
 
 def compile_source_digest(
@@ -355,6 +469,66 @@ def _source_input_sha(vault: Path, source_rel: str, source_fm: dict[str, Any]) -
         or source_fm.get("raw_text_sha256")
         or _sha256_text(json.dumps(source_fm, sort_keys=True))
     )
+
+
+def _prompt_input_refs(payload: dict[str, Any]) -> list[str]:
+    raw = payload.get("input_refs")
+    if raw is None:
+        raw = payload.get("input_ref")
+    if raw is None:
+        return []
+    if isinstance(raw, str):
+        return [normalize_path(raw)]
+    if not isinstance(raw, list):
+        raise ValueError("input_refs must be a list")
+    refs = []
+    for item in raw:
+        if isinstance(item, str):
+            refs.append(normalize_path(item))
+        elif isinstance(item, dict) and isinstance(item.get("id"), str):
+            refs.append(normalize_path(item["id"]))
+        else:
+            raise ValueError("input_refs entries must be strings or objects with id")
+    return refs
+
+
+def _checked_prompt_input(vault: Path, relpath: str) -> tuple[str, dict[str, str]]:
+    path = vault / normalize_path(relpath)
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    frontmatter = read_frontmatter(path)
+    if frontmatter.get("check_status") != "checked":
+        raise ValueError(f"{relpath} is not checked")
+    return safe_read(path), {"id": normalize_path(relpath), "sha256": sha256_file(path)}
+
+
+def _prompt_text(vault: Path, pattern: str, input_text: str) -> str:
+    preamble_path = vault / "system/patterns/_preamble.md"
+    preamble = preamble_path.read_text(encoding="utf-8") if preamble_path.is_file() else ""
+    prompt = pattern.replace("{{input}}", input_text)
+    return f"{preamble}\n\n---\n\n{prompt}".strip()
+
+
+def _run_prompt_model(policy: dict[str, Any], prompt: str, input_text: str) -> str:
+    if policy["model"] == "deterministic-fixture":
+        return _prompt_fixture_body(policy, input_text)
+    if policy["runner"] == "pydantic-ai":
+        return _pydantic_ai_chat(policy, prompt)
+    raise ValueError(f"unsupported operation runner: {policy['runner']}")
+
+
+def _prompt_fixture_body(policy: dict[str, Any], input_text: str) -> str:
+    excerpt = " ".join(input_text.split())[:700]
+    return "\n\n".join(
+        [
+            f"## {policy['title']}",
+            str(policy.get("description") or "").strip(),
+            "## Input excerpt",
+            excerpt,
+            "## Review note",
+            "Deterministic fixture output; review before promotion.",
+        ]
+    ).strip()
 
 
 def _require_tool(policy: dict[str, Any], tool: str) -> None:

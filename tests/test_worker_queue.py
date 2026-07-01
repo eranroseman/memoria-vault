@@ -123,6 +123,36 @@ def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path
     assert after_done["commit"] == done["commit"]
 
 
+def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_note(vault, "claim", "checked", "Claim: Alpha reduces beta.")
+
+    queued = enqueue_operation(
+        vault,
+        "analyze-claims",
+        payload={"input_ref": "knowledge/notes/claim.md"},
+        idempotency_key="analyze-claims",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["output_path"] == "knowledge/notes/analyze-claims-analyze-claims.md"
+    assert done["staging_id"] == (
+        ".memoria/staging/knowledge/notes/analyze-claims-analyze-claims.md"
+    )
+    assert not (vault / done["output_path"]).exists()
+    staged = vault / done["staging_id"]
+    fm = read_frontmatter(staged)
+    assert fm["check_status"] == "unchecked"
+    assert fm["status"] == "candidate"
+    assert fm["evidence_set"] == ["knowledge/notes/claim.md"]
+    assert "Alpha reduces beta" in staged.read_text(encoding="utf-8")
+    committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
+    assert committed == {"journal/test-machine.jsonl", done["staging_id"]}
+
+
 def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     vault = workspace(tmp_path)
 

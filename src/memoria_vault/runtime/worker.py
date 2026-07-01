@@ -717,6 +717,24 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             machine=machine,
         )
         return {"commit": commit, "check": event}
+    if operation_id in {
+        "analyze-claims",
+        "check-falsifiability",
+        "compare-and-contrast",
+        "extract-claim-stubs",
+        "red-team-argument",
+        "summarize-for-recall",
+        "surface-tensions",
+    }:
+        from memoria_vault.runtime.operations import run_prompt_operation
+
+        return run_prompt_operation(
+            vault,
+            operation_id,
+            payload,
+            machine=machine,
+            run_id=str(job["job_id"]),
+        )
     if operation_id == "update-work":
         source_id = str(payload.get("source_id") or "").strip()
         if not source_id:
