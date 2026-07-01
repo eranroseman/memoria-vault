@@ -32,11 +32,16 @@ Link for usefulness, not completeness. Add a typed link only when "*what contrad
 | `contradicts` | The two notes disagree | Symmetric — set it on either; the graph reads both ways |
 | `extends` | This note elaborates the linked note | Directional — set it on the elaborating note |
 
-**3. Queue the link through the Inspector or edit directly.**
+**3. Record the link through the CLI or edit directly.**
 
-In the Inspector control panel, set the source note path, target path, and link
-type, then enqueue the matching link action. The worker records the journal row
-and commits the checked note update.
+Run the link command with the source note path, target path, and link type. The
+worker records the journal row and commits the checked note update.
+
+```bash
+memoria note link --workspace <vault> knowledge/notes/source.md \
+  --type contradicts \
+  --target knowledge/notes/receptivity-decreases-under-high-cognitive-load.md
+```
 
 For a direct PI edit, extend the note's `links:` map:
 

@@ -42,7 +42,7 @@ The required plugins:
 | `obsidian-git` | Manual vault-history checkpoints from inside Obsidian |
 | `buttons` | Renders command buttons in note templates |
 | `portals` | Provides curated shortcuts to the space/Bases surfaces |
-| `memoria-inspector` | Shows the Memoria Inspector sidebar, checked Concept graph browsing, and enqueue-only worker controls |
+| `memoria-inspector` | Shows the read-only Memoria Inspector sidebar and checked Concept graph browsing |
 
 All settings ship pre-configured except the per-machine ones below (REST API secrets, agent-client command paths). See [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md) for the load-bearing settings of each.
 

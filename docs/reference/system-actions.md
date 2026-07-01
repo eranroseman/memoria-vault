@@ -114,28 +114,22 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Board export | board export (`board_export.py`, 60 s cron) | Projects kanban cards into `system/board/` and appends board-state, transition, cost, and blind-review telemetry; review disposition is emitted by QuickAdd when the human resolves a work prompt. |
 | Metrics aggregate | metrics aggregator (`metrics_aggregate.py`, weekly cron) | Rolls audit + board + lint signals into per-lane trust-score notes under `system/metrics/`. |
 
-## Obsidian control panel
+## CLI requests and read-only Inspector
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Enqueue integrity evidence check | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `integrity-evidence-check`; the plugin does not write Concepts, journal rows, projections, or `check_status` directly. |
-| Enqueue quote anchor check | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `integrity-quote-anchor-check`; the worker owns journal rows and routing. |
-| Enqueue claim quote check | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `integrity-claim-quote-check`; the worker owns journal rows and routing. |
-| Enqueue link target check | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `integrity-link-target-check`; the worker owns journal rows and routing. |
-| Enqueue source metadata check | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `check-source-metadata`; the worker owns journal rows and routing. |
-| Enqueue projection refresh | Memoria Inspector (`memoria-inspector`) | Writes one `regenerate-tracked-projections` job to `.memoria/queue/pending/`; the worker owns generated projection writes. |
-| Enqueue search rebuild | Memoria Inspector (`memoria-inspector`) | Writes one `rebuild-checked-qmd-source` job to `.memoria/queue/pending/`; the worker rebuilds the disposable checked-only qmd input tree. |
-| Enqueue Ask query | Memoria Inspector (`memoria-inspector`) | Writes one `answer-query` job with the PI-entered query to `.memoria/queue/pending/`; the worker returns the deterministic BM25 Ask/Query contract. |
-| Enqueue Co-PI interview record | Memoria Inspector (`memoria-inspector`) | Writes one `record-copi-interview` job with the PI-entered source id and takeaway; the worker records the interview turn in the journal for later source synthesis. |
-| Enqueue note candidate curation | Memoria Inspector (`memoria-inspector`) | Writes one `curate-note-candidate` job with the PI-entered note path and accept/reject decision; the worker owns the note status update and journal row. |
-| Enqueue note link curation | Memoria Inspector (`memoria-inspector`) | Writes one `curate-note-link` job with PI-entered source note, target Concept, and relation type; the worker owns the `links` map update and journal row. |
-| Enqueue gap analysis | Memoria Inspector (`memoria-inspector`) | Writes one `analyze-gaps` job to `.memoria/queue/pending/`; the worker returns deterministic gap rows over checked-current Concepts. |
-| Enqueue project argument analysis | Memoria Inspector (`memoria-inspector`) | Writes one `analyze-project-argument` job with the PI-entered project path; the worker returns the checked-note argument-health payload. |
-| Enqueue project argument Canvas | Memoria Inspector (`memoria-inspector`) | Writes one `render-project-argument-canvas` job with the PI-entered project path; the worker owns the generated Canvas projection and journal row. |
-| Enqueue trace rollback | Memoria Inspector (`memoria-inspector`) | Writes one `kind: operation` job to `.memoria/queue/pending/` for the worker to run `cascade-rollback` against a PI-entered trace target; the worker owns the rollback commit and journal rows. |
+| Run integrity check | `memoria operation run <operation-id>` | Inserts one SQLite request and runs worker-owned integrity operations such as `integrity-evidence-check`, `integrity-quote-anchor-check`, `integrity-claim-quote-check`, `integrity-link-target-check`, and `check-source-metadata`; the worker owns journal rows and routing. |
+| Capture or enrich source | `memoria work capture`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/state/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
+| Compile digest or record interview | `memoria work digest`, `memoria work interview` | Queues and runs source synthesis jobs, recording Co-PI interview takeaways and digest materialization through the same request/journal path. |
+| Ask query | `memoria ask --question ...` | Runs `answer-query` and returns the deterministic Ask/Query response contract over checked-current Concepts. |
+| Curate notes and links | `memoria note propose`, `accept`, `reject`, `link` | Runs note proposal, accept/reject, and typed-link curation through worker-owned requests and journal rows. |
+| Analyze project | `memoria project gaps`, `trace`, `export` | Runs checked graph gap analysis, argument tracing, and project export from the CLI control plane. |
+| Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, AI catalog, indexes, and checked-only qmd inputs from worker-readable state. |
+| Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
-| Enqueue attention disposition | Memoria Inspector (`memoria-inspector`) | Writes `acknowledge-attention` or `resolve-attention` jobs to `.memoria/queue/pending/`; the worker records the PI disposition as a committed journal `resolved` row. |
-| Inspect worker queue | Memoria Inspector (`memoria-inspector`) | Reads `.memoria/queue/{pending,running,failed}/` job files and shows queue counts plus recent failed jobs; it does not modify queue state. |
+| Resolve attention | `memoria attention resolve` | Runs the attention-disposition request and records the PI disposition as a committed journal `resolved` row. |
+| Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
+| Inspect operational state | Memoria Inspector (`memoria-inspector`) | Reads board snapshots, recent audit rows, failed integrity flags, lint verdicts, lane metrics, and checked graph data; it does not write worker requests or Concept state. |
 | Browse checked graph | Memoria Inspector (`memoria-inspector`) | Reads checked `catalog/` and `knowledge/` Concepts plus their declared references, previews recent nodes and edges, then opens existing Concept notes, normalized edge targets, or `knowledge/views/knowledge.base`; it does not write graph state. |
 
 ## External MCP servers (declared per profile)

@@ -8,15 +8,17 @@ grand_parent: How-to guides
 
 Alpha.11 capture creates a checked source Concept under
 `catalog/sources/<source_id>/` through the worker/trusted-writer path. The
-Inspector ships a URL capture control; the same backend also supports direct
-BibTeX, Zotero-item, local item-key, PDF, and raw-content helpers.
+CLI ships URL and PDF capture controls; the same backend also supports direct
+BibTeX, CSL JSON, Zotero export, and raw-content helpers.
 
-**1. Queue URL capture from Obsidian when you have a URL.**
+**1. Capture a URL from the CLI.**
 
-Open Memoria Inspector, paste the URL into **Source URL**, then click
-**Capture URL**. The plugin writes one `capture-url-source` job to
-`.memoria/queue/pending/`; the worker fetches, normalizes, checks, commits, and
-journals the source.
+```bash
+memoria work capture --workspace <vault> --url https://example.test/source
+```
+
+The CLI writes one SQLite request for `capture-url-source`; the worker fetches,
+normalizes, checks, commits, and journals the source.
 
 **2. Use backend capture helpers for non-URL inputs.**
 

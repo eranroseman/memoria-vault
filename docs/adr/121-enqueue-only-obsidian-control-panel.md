@@ -3,15 +3,19 @@ topic: decisions
 id: 121
 title: Obsidian control panel mutates only by enqueueing worker jobs
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-29
 date_resolved: 2026-06-29
 assumes: [28, 74]
 supersedes: []
-superseded_by: []
+superseded_by: [122]
 ---
 
 # ADR-121: Obsidian control panel mutates only by enqueueing worker jobs
+
+> Superseded by [ADR-122](122-sqlite-working-state-boundary.md): SQLite request
+> state is the worker authority, `.memoria/queue/` is removed, and the Memoria
+> Inspector is read-only.
 
 ## Context
 

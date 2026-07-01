@@ -106,7 +106,7 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
     )
 
 
-def test_worker_runs_sqlite_pending_request_without_queue_mirror(tmp_path: Path) -> None:
+def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     queued = enqueue_trusted_write(
         vault,
@@ -114,13 +114,13 @@ def test_worker_runs_sqlite_pending_request_without_queue_mirror(tmp_path: Path)
         note_text("SQLite worker"),
         idempotency_key="sqlite-worker",
     )
-    (vault / ".memoria/queue/pending/sqlite-worker.json").unlink()
 
     done = run_next_job(vault, machine="alpha12-machine")
 
     assert done is not None
     assert done["status"] == "done"
     assert done["job_id"] == queued["job_id"]
+    assert not (vault / ".memoria/queue").exists()
     assert read_frontmatter(vault / "knowledge/notes/sqlite-worker.md")["check_status"] == "checked"
     with state.connect(vault) as conn:
         status = conn.execute(

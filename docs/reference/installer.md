@@ -96,7 +96,7 @@ All six are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrapper
 | --- | --- | --- | --- |
 | `memoria-board-export` | `* * * * *` | `board_export.py` | Projects the live kanban board into `system/board/` and appends its telemetry logs (metrics aggregation is the separate weekly `memoria-metrics` job). |
 | `memoria-sweeps` | `*/15 * * * *` | `operations/cleanup/reconcile.py` | Recovers stalled captures: enqueues idempotent re-ingest cards (see [Ingest routing](ingest.md)). |
-| `memoria-worker` | `* * * * *` | `memoria_vault.runtime.worker` | Observes direct PI edits and drains up to 10 pending `.memoria/queue/` jobs through the worker/trusted-writer boundary. |
+| `memoria-worker` | `* * * * *` | `memoria_vault.runtime.worker` | Observes direct PI edits and drains up to 10 pending SQLite request jobs through the worker/trusted-writer boundary. |
 | `memoria-lint` | `0 6 * * *` | `operations/integrity/linter/detectors.py` + `golden_restore.py check` | The daily monitor: structural detectors + golden-copy drift (see [Linter: detectors and auto-fix](linter.md)). |
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
 | `memoria-eval` | `0 7 1 */3 *` | `operations/telemetry/eval/eval_score.py` + `eval_dispatch.py` | Quarterly vault-eval: scores the previous quarter's run into `system/metrics/eval/runs.jsonl`, then fans the `system/eval/` gold set out as one idempotent eval card per task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |

@@ -42,10 +42,6 @@ def test_alpha11_fresh_package_contract_is_shipped():
     required_dirs = {
         ".memoria/index/qmd",
         ".memoria/quarantine",
-        ".memoria/queue/pending",
-        ".memoria/queue/running",
-        ".memoria/queue/done",
-        ".memoria/queue/failed",
         ".memoria/staging/catalog",
         ".memoria/staging/knowledge",
         ".memoria/staging/capabilities",
@@ -83,10 +79,6 @@ def test_alpha11_fresh_package_contract_is_shipped():
     for rel in (
         ".memoria/index/qmd",
         ".memoria/quarantine",
-        ".memoria/queue/pending",
-        ".memoria/queue/running",
-        ".memoria/queue/done",
-        ".memoria/queue/failed",
         ".memoria/staging/catalog",
         ".memoria/staging/knowledge",
         ".memoria/staging/capabilities",

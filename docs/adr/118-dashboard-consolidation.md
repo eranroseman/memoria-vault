@@ -6,17 +6,16 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
-assumes: [116, 119, 121]
+assumes: [116, 119, 122]
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-118: Dashboard consolidation and the read-only system window
 
-> Status note, 2026-06-29: [ADR-121](121-enqueue-only-obsidian-control-panel.md)
-> supersedes the read-only-only Inspector boundary for alpha.11. The Inspector
-> remains the system health index described here, and its only mutation path is
-> enqueueing worker jobs under `.memoria/queue/pending/`.
+> Status note, 2026-07-01: [ADR-122](122-sqlite-working-state-boundary.md)
+> restores the read-only Inspector boundary. SQLite request state is now the
+> worker authority, and worker requests run through the `memoria` CLI.
 
 ## Context
 
@@ -28,7 +27,7 @@ leftover; and the read-only operational dashboards.
 
 ADR-116's **View** primitive says a view has *one definition, surfaced by embedding* — so a
 standalone page whose view already lives in a space is redundant. And the
-Inspector/control-panel boundary from [ADR-121](121-enqueue-only-obsidian-control-panel.md)
+Inspector boundary from [ADR-122](122-sqlite-working-state-boundary.md)
 is the natural always-on system window, but the Inspector predates the operational
 dashboards it should summarize and the rail health-band
 ([ADR-116](116-obsidian-surface-architecture.md) Phase 2) it now overlaps.
@@ -78,7 +77,7 @@ pull-on-trigger dashboards, reached by deep-link and the Inspector.
 
 ### 5. Make the Inspector the read-only system index — and update it
 
-The [ADR-121](121-enqueue-only-obsidian-control-panel.md) Inspector pane (verdict band ·
+The [ADR-122](122-sqlite-working-state-boundary.md) Inspector pane (verdict band ·
 board counts · recent audit) is the always-available system window behind the pull
 dashboards. Update it:
 
@@ -132,8 +131,8 @@ exists in the target `.base`.
 ## Related
 
 - **Refines:** [ADR-116](116-obsidian-surface-architecture.md) (the View primitive; spaces are
-  view collections; operational dashboards are pull-only), [ADR-121](121-enqueue-only-obsidian-control-panel.md)
-  (the Inspector/control-panel boundary).
+  view collections; operational dashboards are pull-only), [ADR-122](122-sqlite-working-state-boundary.md)
+  (the read-only Inspector and SQLite request boundary).
 - **Depends on:** [ADR-119](119-schema-driven-document-creation.md) (Concept schemas and
   checked frontmatter are the source for Bases views).
 - **Source discussion:** the alpha.8 dashboards clean-slate review.

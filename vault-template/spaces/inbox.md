@@ -18,12 +18,12 @@ cssclasses: memoria-space
 
 Recent background tasks. Only queued or running work appears here.
 
-Runtime queue files live under `.memoria/queue/`; the Obsidian activity panel is
+Runtime request state lives in `.memoria/state/memoria.sqlite`; the Obsidian activity panel is
 WP8 plugin work.
 
 ## Needs me
 
-Attention projections are generated from journal/check/queue state; the plugin
+Attention projections are generated from journal/check/request state; the plugin
 panel is WP8 work.
 
 ## Notes to check

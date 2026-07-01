@@ -87,8 +87,6 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     target = vault / "knowledge/notes/worker.md"
     assert read_frontmatter(target)["check_status"] == "checked"
     assert not (vault / ".memoria/staging/knowledge/notes/worker.md").exists()
-    assert (vault / ".memoria/queue/done/write-worker.json").is_file()
-    assert not (vault / ".memoria/queue/pending/write-worker.json").exists()
 
     journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert [event["event"] for event in journal_events] == ["derived", "check-fired"]
@@ -96,7 +94,7 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     assert committed == {"journal/test-machine.jsonl", "knowledge/notes/worker.md"}
 
 
-def test_enqueue_trusted_write_is_idempotent_across_queue_states(tmp_path: Path) -> None:
+def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
     first = enqueue_trusted_write(
@@ -114,6 +112,7 @@ def test_enqueue_trusted_write_is_idempotent_across_queue_states(tmp_path: Path)
 
     assert first == second
     [done] = run_pending_jobs(vault, machine="test-machine")
+    assert not (vault / ".memoria/queue").exists()
     after_done = enqueue_trusted_write(
         vault,
         "knowledge/notes/worker.md",
@@ -145,7 +144,6 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     output = json.loads(capsys.readouterr().out)
     assert output["job_id"] == "ask-alpha"
     assert output["payload"] == {"query": "alpha", "k": 1}
-    assert (vault / ".memoria/queue/pending/ask-alpha.json").is_file()
 
 
 def test_worker_requires_checked_operation_policy_before_dispatch(tmp_path: Path) -> None:
@@ -199,7 +197,6 @@ def test_worker_runs_integrity_operation_jobs(tmp_path: Path) -> None:
     assert done["status"] == "done"
     assert done["finding_count"] == 1
     assert done["findings"][0]["route"] == "ask"
-    assert (vault / ".memoria/queue/done/integrity-check.json").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl"}
 
@@ -233,7 +230,6 @@ def test_worker_runs_claim_quote_integrity_operation_jobs(tmp_path: Path) -> Non
     assert done["status"] == "done"
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "claim-quote-support"
-    assert (vault / ".memoria/queue/done/claim-check.json").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl"}
 
@@ -284,7 +280,6 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
     assert done["status"] == "done"
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "quote-anchor"
-    assert (vault / ".memoria/queue/done/quote-anchor-check.json").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl"}
 
@@ -470,7 +465,6 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
     assert "coherence check" in done["error"]
     assert not (vault / "catalog/sources/pdf-missing-selector").exists()
     assert not (vault / "journal").exists()
-    assert (vault / ".memoria/queue/failed/capture-pdf-missing-selector.json").is_file()
 
 
 def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> None:
@@ -1134,7 +1128,6 @@ def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
     assert done["rollback"]["reverted"] == ["knowledge/notes/rollback.md"]
     assert not (vault / "knowledge/notes/rollback.md").exists()
     assert (vault / ".memoria/quarantine/knowledge/notes/rollback.md").is_file()
-    assert (vault / ".memoria/queue/done/rollback-worker.json").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl", "knowledge/notes/rollback.md"}
 
@@ -1157,7 +1150,6 @@ def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None
     assert done["resolution"]["resolution"] == "acknowledged"
     assert done["resolution"]["target_id"] == "knowledge/notes/attention.md"
     assert done["resolution"]["actor"] == "pi"
-    assert (vault / ".memoria/queue/done/ack-attention.json").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl"}
 
@@ -1356,5 +1348,4 @@ def test_worker_marks_invalid_job_failed_without_bundle_write(tmp_path: Path) ->
     assert failed is not None
     assert failed["status"] == "failed"
     assert "missing required field 'title'" in failed["error"]
-    assert (vault / ".memoria/queue/failed/bad-job.json").is_file()
     assert not (vault / "knowledge/notes/bad.md").exists()

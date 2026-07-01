@@ -156,10 +156,10 @@
       "pinned_ref": "0.1.0-alpha.11",
       "pinned_commit": "923a61666f249349403e7a799d6bbb46c3dd11fe",
       "license": "NOASSERTION",
-      "local_patch_status": "memoria-authored-enqueue-control-panel",
+      "local_patch_status": "memoria-authored-read-only-inspector",
       "sha256": {
-        "plugins/memoria-inspector/main.js": "b8c6828e1360d4a172918d0fc2381f480a9e40ad6cd3f009f56269d7cc61a734",
-        "plugins/memoria-inspector/manifest.json": "dd9b72a2360742616e861013f99c3547b9dd550da5f793e33039438c6b533d8e",
+        "plugins/memoria-inspector/main.js": "26b409a604e32fa3021ffb9624e01213c100f202641e6f58b429426e46ada58a",
+        "plugins/memoria-inspector/manifest.json": "aa57e041603495bc2c54527829844fa73e5c565b7b655bccbd9527c73ce27dcd",
         "plugins/memoria-inspector/styles.css": "705c8a32812613a49e6ffa6da271fd10524172cd2feb34a7a735a3812a9c7896"
       }
     },

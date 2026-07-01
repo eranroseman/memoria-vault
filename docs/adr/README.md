@@ -112,7 +112,7 @@ status.
 | [118](118-dashboard-consolidation.md) | Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index | accepted |
 | [119](119-schema-driven-document-creation.md) | Concept schemas own field, home, read-state, and form contracts | accepted |
 | [120](120-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | accepted |
-| [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | accepted |
+| [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | superseded → ADR-122 |
 | [122](122-sqlite-working-state-boundary.md) | SQLite working state and catalog records sit behind the checked Concept boundary | accepted |
 | [123](123-doi-catalog-enrichment-gate.md) | DOI catalog enrichment gates checked source promotion | accepted |
 

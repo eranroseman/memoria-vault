@@ -73,8 +73,9 @@ MVP only needs Crossref, OpenAlex, and Unpaywall for citation/OA promotion. Sema
 Scholar, PubMed, arXiv, graph, embedding, and full-text work can append evidence later
 without blocking the first gate.
 
-**Expose a CLI or direct DB edit path as the PI surface.** Rejected by ADR-121. Catalog
-view/edit controls must be Obsidian enqueue-only operations when that surface ships.
+**Expose a direct DB edit path as the PI surface.** Rejected by ADR-122. Catalog
+view/edit controls must route through CLI request envelopes and worker-owned
+promotion; direct SQLite edits are not a supported PI surface.
 
 ## Related
 
@@ -82,7 +83,6 @@ view/edit controls must be Obsidian enqueue-only operations when that surface sh
   [ADR-32](32-external-access-over-mcp.md),
   [ADR-57](57-engines-write-agents-judge.md),
   [ADR-119](119-schema-driven-document-creation.md),
-  [ADR-121](121-enqueue-only-obsidian-control-panel.md),
   [ADR-122](122-sqlite-working-state-boundary.md)
 - **Implementation:** `src/memoria_vault/runtime/capture.py`,
   `src/memoria_vault/runtime/enrichment.py`,
