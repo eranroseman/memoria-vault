@@ -9,7 +9,7 @@ allowed_tools:
 allowed_paths:
   - knowledge/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: analyze-project-argument.v1
 io_schema:

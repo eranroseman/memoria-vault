@@ -12,7 +12,7 @@ allowed_paths:
   - journal/
   - references.bib
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: capture-source.v1
 io_schema:
@@ -28,5 +28,4 @@ tags: [alpha11, capture]
 
 Write supplied source content into the catalog path. Scholarly DOI/ISBN inputs
 are staged in SQLite and `.memoria/blobs/source-content/` for later enrichment;
-other inputs write a checked source Concept, extracted content, raw copy, and
-entity Concepts.
+portable file/text inputs write a catalog DB row plus immutable blob payloads.

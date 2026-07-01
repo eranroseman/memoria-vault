@@ -10,7 +10,7 @@ allowed_paths:
   - catalog/
   - knowledge/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: analyze-gaps.v1
 io_schema:

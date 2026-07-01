@@ -17,7 +17,7 @@ allowed_network:
   - https://api.crossref.org/
   - https://api.openalex.org/
   - https://api.unpaywall.org/
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: enrich-source.v1
 io_schema:

@@ -9,7 +9,7 @@ allowed_tools:
 allowed_paths:
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: update-work.v1
 io_schema:

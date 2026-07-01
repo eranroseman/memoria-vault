@@ -11,7 +11,7 @@ allowed_paths:
   - knowledge/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: integrity-claim-quote-check.v1
 io_schema:

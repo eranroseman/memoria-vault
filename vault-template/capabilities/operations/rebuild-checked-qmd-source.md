@@ -12,7 +12,7 @@ allowed_paths:
   - capabilities/
   - .memoria/index/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: rebuild-checked-qmd-source.v1
 io_schema:

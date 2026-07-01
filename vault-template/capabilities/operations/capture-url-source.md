@@ -13,7 +13,7 @@ allowed_paths:
 allowed_network:
   - http://
   - https://
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: capture-url-source.v1
 io_schema:

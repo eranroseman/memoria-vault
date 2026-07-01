@@ -11,7 +11,7 @@ allowed_paths:
   - knowledge/projects/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: record-copi-interview.v1
 io_schema:

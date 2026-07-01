@@ -13,7 +13,7 @@ allowed_paths:
   - capabilities/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: regenerate-indexes.v1
 io_schema:

@@ -14,7 +14,7 @@ allowed_paths:
   - references.bib
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: regenerate-tracked-projections.v1
 io_schema:

@@ -13,7 +13,7 @@ allowed_paths:
   - knowledge/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: run-seeded-error-verdict.v1
 io_schema:

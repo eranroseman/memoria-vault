@@ -42,7 +42,7 @@ REQUIRED_POLICY_FIELDS = {
     "risk_class",
     "required_checks",
 }
-SUPPORTED_OPERATION_RUNNERS = frozenset({"local", "pydantic-ai"})
+SUPPORTED_OPERATION_RUNNERS = frozenset({"pydantic-ai"})
 DEFAULT_LOCAL_MODEL_BASE_URL = "http://127.0.0.1:11434/v1"
 
 
