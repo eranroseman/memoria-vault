@@ -119,7 +119,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Run integrity check | `memoria operation run <operation-id>` | Inserts one SQLite request and runs worker-owned integrity operations such as `integrity-evidence-check`, `integrity-quote-anchor-check`, `integrity-claim-quote-check`, `integrity-link-target-check`, and `check-source-metadata`; the worker owns journal rows and routing. |
-| Capture or enrich source | `memoria work capture`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/state/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
+| Capture or enrich source | `memoria work capture`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
 | Compile digest or record interview | `memoria work digest`, `memoria work interview` | Queues and runs source synthesis jobs, recording Co-PI interview takeaways and digest materialization through the same request/journal path. |
 | Ask query | `memoria ask --question ...` | Runs `answer-query` and returns the deterministic Ask/Query response contract over checked-current Concepts. |
 | Curate notes and links | `memoria note propose`, `accept`, `reject`, `link` | Runs note proposal, accept/reject, and typed-link curation through worker-owned requests and journal rows. |

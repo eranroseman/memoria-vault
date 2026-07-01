@@ -543,7 +543,7 @@
       ],
       "allowed_paths": [
         ".memoria/blobs/",
-        ".memoria/enrichment/providers.yaml",
+        ".memoria/config/providers.yaml",
         "inbox/",
         "journal/",
         "references.bib"
@@ -571,7 +571,7 @@
       ],
       "title": "Enrich source",
       "trust": {
-        "sha256": "sha256:a6b1a9d912ebf465997e30502676c10f61427b0cec121b291367bdfa24f4affe",
+        "sha256": "sha256:6db8eaa829146523adecff5a8949b7b1b1d4c8f13a0ce59cee509864be1ab68e",
         "source": "local"
       },
       "type": "operation"

@@ -8,6 +8,7 @@ SKELETON_DIRS=(
   .memoria/index
   .memoria/index/qmd
   .memoria/audit
+  .memoria/config
   .memoria/quarantine
   .memoria/blobs
   .memoria/blobs/provider-payloads
@@ -15,7 +16,6 @@ SKELETON_DIRS=(
   .memoria/staging/catalog
   .memoria/staging/knowledge
   .memoria/staging/capabilities
-  .memoria/state
   journal
   catalog
   catalog/sources

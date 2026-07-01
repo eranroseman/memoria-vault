@@ -9,7 +9,7 @@ allowed_tools:
   - projection_writer
 allowed_paths:
   - .memoria/blobs/
-  - .memoria/enrichment/providers.yaml
+  - .memoria/config/providers.yaml
   - inbox/
   - journal/
   - references.bib

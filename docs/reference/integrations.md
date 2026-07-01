@@ -39,7 +39,7 @@ catalog source metadata and entities.
 
 ### API keys and rate limits
 
-Enrichment and search calls are rate-limited (or fail outright) without a free API key or contact email. Register a key per service and add it to the Librarian's `.env` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). The DOI enrichment MVP reads `OPENALEX_API_KEY` and `NCBI_EMAIL` through `.memoria/enrichment/providers.yaml`.
+Enrichment and search calls are rate-limited (or fail outright) without a free API key or contact email. Register a key per service and add it to the local environment used to run `memoria`. The DOI enrichment MVP reads `OPENALEX_API_KEY` and `NCBI_EMAIL` through `.memoria/config/providers.yaml`.
 
 | Service | Where to register | Rate without key | Rate with free key |
 | --- | --- | --- | --- |
