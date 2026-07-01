@@ -38,6 +38,7 @@ REQUIRED_POLICY_FIELDS = {
     "required_checks",
 }
 SUPPORTED_OPERATION_RUNNERS = frozenset({"local", "pydantic-ai"})
+DEFAULT_LOCAL_MODEL_BASE_URL = "http://127.0.0.1:11434/v1"
 
 
 def record_copi_interview_turn(
@@ -465,11 +466,7 @@ def _digest_prompt(
 
 
 def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
-    base_url = (
-        os.environ.get("MEMORIA_MODEL_BASE_URL")
-        or os.environ.get("OPENAI_BASE_URL")
-        or "https://api.openai.com/v1"
-    ).rstrip("/")
+    base_url = model_base_url(policy.get("provider", "local"))
     _require_network(policy, base_url)
     api_key = (
         os.environ.get("MEMORIA_MODEL_API_KEY")
@@ -495,6 +492,16 @@ def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
     return text
+
+
+def model_base_url(provider: str | None = None) -> str:
+    configured = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
+    if configured:
+        return configured.rstrip("/")
+    provider_name = (provider or "default").strip() or "default"
+    if provider_name == "local":
+        return DEFAULT_LOCAL_MODEL_BASE_URL
+    return "https://api.openai.com/v1"
 
 
 def _load_pydantic_ai_openai() -> tuple[Any, Any, Any]:

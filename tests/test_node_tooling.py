@@ -1,12 +1,14 @@
 """Guards repo-local tooling used by required checks."""
 
 import json
+import tomllib
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = ROOT / "package.json"
+PYPROJECT = ROOT / "pyproject.toml"
 PRECOMMIT = ROOT / ".pre-commit-config.yaml"
 REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
 CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
@@ -54,6 +56,12 @@ def test_precommit_hooks_use_local_pinned_tools():
         "yamllint==1.38.0",
     ):
         assert package in requirements
+
+
+def test_runtime_package_declares_yaml_dependency():
+    pyproject = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+
+    assert "PyYAML>=6.0" in pyproject["project"]["dependencies"]
 
 
 def test_precommit_node_hooks_fail_fast_without_network_downloads():
