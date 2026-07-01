@@ -4,6 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.integrity import (
     cascade_rollback,
@@ -64,6 +65,26 @@ def note_text(title: str, *, status: str = "checked") -> str:
     )
 
 
+def catalog_db_source(vault: Path, source_id: str, content_text: str) -> str:
+    content_rel = f".memoria/blobs/source-content/{source_id}/content.txt"
+    content_path = vault / content_rel
+    content_path.parent.mkdir(parents=True, exist_ok=True)
+    content_path.write_text(f"{content_text.strip()}\n", encoding="utf-8")
+    state.upsert_catalog_record(
+        vault,
+        source_id=source_id,
+        title="DB Source",
+        description="A SQLite-only checked source.",
+        citekey=f"{source_id}2026",
+        csl_json={"id": f"{source_id}2026", "title": "DB Source"},
+        metadata_status="verified",
+        text_status="full-text",
+        check_status="checked",
+        content_path=content_rel,
+    )
+    return f"catalog/sources/{source_id}"
+
+
 def test_integrity_check_routes_shadow_before_active_flags(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = "knowledge/notes/seeded.md"
@@ -119,7 +140,31 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
     assert finding["check"] == "evidence-resolves"
     assert finding["target_id"] == target
     assert finding["route"] == "ask"
-    assert "catalog/sources/missing/source.md" in finding["reason"]
+    assert "catalog/sources/missing" in finding["reason"]
+
+
+def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source_ref = catalog_db_source(vault, "db-source", "The checked source text is in SQLite.")
+    target = "knowledge/notes/db-evidence.md"
+    (vault / target).parent.mkdir(parents=True, exist_ok=True)
+    (vault / target).write_text(
+        "---\n"
+        "type: note\n"
+        "check_status: checked\n"
+        "title: DB evidence\n"
+        f"source_id: {source_ref}\n"
+        "evidence_set:\n"
+        f"  - {source_ref}\n"
+        "---\n"
+        "# DB evidence\n",
+        encoding="utf-8",
+    )
+
+    result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
+
+    assert result["findings"] == []
+    assert not (vault / "catalog/sources/db-source/source.md").exists()
 
 
 def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> None:
@@ -273,7 +318,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
     assert finding["check"] == "provenance-checkpoint"
     assert finding["target_id"] == target
     assert finding["route"] == "ask"
-    assert "partial-source/source.md (partial)" in finding["reason"]
+    assert "catalog/sources/partial-source (partial)" in finding["reason"]
 
 
 def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path) -> None:
@@ -320,6 +365,47 @@ def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path
     assert finding["check"] == "quote-anchor"
     assert finding["target_id"] == target
     assert finding["route"] == "ask"
+
+
+def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source_ref = catalog_db_source(
+        vault,
+        "db-anchor",
+        "The measured endpoint was survey response, not mortality.",
+    )
+    target = "knowledge/notes/db-wrong-extraction.md"
+    control = "knowledge/notes/db-anchored.md"
+    (vault / target).parent.mkdir(parents=True, exist_ok=True)
+    (vault / target).write_text(
+        "---\n"
+        "type: note\n"
+        "check_status: checked\n"
+        "title: DB wrong extraction\n"
+        f"source_id: {source_ref}\n"
+        "quote: The appendix reported a mortality benefit.\n"
+        "---\n"
+        "# DB wrong extraction\n",
+        encoding="utf-8",
+    )
+    (vault / control).write_text(
+        "---\n"
+        "type: note\n"
+        "check_status: checked\n"
+        "title: DB anchored\n"
+        f"source_id: {source_ref}\n"
+        "quote: The measured endpoint was survey response, not mortality.\n"
+        "---\n"
+        "# DB anchored\n",
+        encoding="utf-8",
+    )
+
+    result = check_quote_anchor_support(vault, shadow=False, machine="integrity-machine")
+
+    [finding] = result["findings"]
+    assert finding["check"] == "quote-anchor"
+    assert finding["target_id"] == target
+    assert not (vault / "catalog/sources/db-anchor/source.md").exists()
 
 
 def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -> None:
@@ -616,7 +702,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
 
     result = cascade_rollback(
         vault,
-        "catalog/sources/source-alpha/source.md",
+        "catalog/sources/source-alpha",
         reason="seeded poisoned source",
         machine="integrity-machine",
     )

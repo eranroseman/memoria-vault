@@ -9,6 +9,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.integrity import (
     cascade_rollback,
@@ -164,6 +165,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
         operation="seeded-unchecked-source",
         machine="seeded-pi-edit",
     )
+    _set_catalog_check_status(vault, "unchecked-source", "unchecked")
     stale_source = _checked_stale_source(vault)
     broken_digest = _checked_broken_digest(vault)
     contradiction_digest = _checked_contradiction_digest(vault)
@@ -290,7 +292,37 @@ def _checked_stale_source(vault: Path) -> dict[str, Any]:
     )
     check = promote_checked(vault, target, machine="seeded-source")
     commit = commit_writer_changes(vault, "seed stale source", [target], machine="seeded-source")
+    _set_catalog_standing(vault, "stale-source", "retracted")
     return {"source_path": target, "derived": stage, "checked": check, "commit": commit}
+
+
+def _set_catalog_check_status(vault: Path, source_id: str, check_status: str) -> None:
+    with state.connect(vault) as conn:
+        conn.execute(
+            "UPDATE catalog_sources SET check_status = ? WHERE source_id = ?",
+            (check_status, source_id),
+        )
+        conn.execute(
+            "UPDATE concepts SET check_status = ? WHERE concept_id = ?",
+            (check_status, f"catalog/sources/{source_id}"),
+        )
+
+
+def _set_catalog_standing(vault: Path, source_id: str, standing: str) -> None:
+    source = state.catalog_source(vault, source_id)
+    if source is None:
+        return
+    csl_json = dict(source["csl_json"])
+    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    csl_json["memoria"] = {**memoria, "standing": standing}
+    with state.connect(vault) as conn:
+        conn.execute(
+            "UPDATE catalog_sources SET csl_json = ? WHERE source_id = ?",
+            (
+                json.dumps(csl_json, ensure_ascii=False, sort_keys=True, separators=(",", ":")),
+                source_id,
+            ),
+        )
 
 
 def _checked_broken_digest(vault: Path) -> dict[str, Any]:

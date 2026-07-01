@@ -16,6 +16,7 @@ from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_CHECK_FIRED,
     EVENT_DERIVED,
+    EVENT_OBSERVED_EXTERNAL_EDIT,
     EVENT_RESOLVED,
     append_journal_event,
     commit_writer_changes,
@@ -322,13 +323,7 @@ def check_provenance_checkpoint(
         if frontmatter.get("type") not in {"digest", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
-            source = vault / evidence_rel
-            if not source.is_file():
-                continue
-            source_fm = read_frontmatter(source)
-            if source_fm.get("type") != "source" or source_fm.get("check_status") != "checked":
-                continue
-            status = str(source_fm.get("metadata_status") or "")
+            source_ref, status = _source_metadata_status(vault, evidence_rel)
             if status in {"partial", "unverified", "not-indexed"}:
                 findings.append(
                     record_integrity_check(
@@ -336,7 +331,7 @@ def check_provenance_checkpoint(
                         rel,
                         check="provenance-checkpoint",
                         status="failed",
-                        reason=f"uncorroborated checked source: {evidence_rel} ({status})",
+                        reason=f"uncorroborated checked source: {source_ref} ({status})",
                         shadow=shadow,
                         machine=machine,
                     )
@@ -638,7 +633,7 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     derived: dict[str, dict[str, Any]] = {}
     for path in sorted((vault / "journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
-            if event.get("event") != EVENT_DERIVED:
+            if event.get("event") not in {EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT}:
                 continue
             output_id = event.get("output_id")
             if isinstance(output_id, str):
@@ -698,17 +693,15 @@ def _link_ref(value: str) -> str:
 
 def _source_rel(value: str) -> str:
     rel = normalize_path(value)
-    if rel.endswith(".md"):
-        return rel
-    if rel.startswith("catalog/sources/"):
-        return f"{rel.rstrip('/')}/source.md"
-    return f"catalog/sources/{rel.strip('/')}/source.md"
+    if source_ref := _source_ref(rel):
+        return source_ref
+    return f"catalog/sources/{rel.strip('/')}"
 
 
 def _concept_rel(value: str) -> str:
     rel = normalize_path(value)
-    if rel.startswith("catalog/sources/") and not rel.endswith(".md"):
-        return f"{rel.rstrip('/')}/source.md"
+    if source_ref := _source_ref(rel):
+        return source_ref
     return rel
 
 
@@ -717,10 +710,19 @@ def _evidence_status(vault: Path, rel: str) -> dict[str, str]:
 
 
 def _concept_status(vault: Path, rel: str) -> dict[str, str]:
-    path = vault / rel
+    if source_ref := _source_ref(rel):
+        row = state.catalog_source(vault, source_ref)
+        if row is not None:
+            return _source_row_status(row)
+        path = vault / f"{source_ref}/source.md"
+    else:
+        path = vault / rel
     if not path.is_file():
         return {"status": "missing"}
-    frontmatter = read_frontmatter(path)
+    return _frontmatter_status(read_frontmatter(path))
+
+
+def _frontmatter_status(frontmatter: dict[str, Any]) -> dict[str, str]:
     if frontmatter.get("check_status") != "checked":
         return {"status": "unchecked"}
     lifecycle = str(frontmatter.get("lifecycle") or "")
@@ -732,21 +734,76 @@ def _concept_status(vault: Path, rel: str) -> dict[str, str]:
     return {"status": "checked"}
 
 
+def _source_row_status(row: dict[str, Any]) -> dict[str, str]:
+    if row.get("check_status") != "checked":
+        return {"status": "unchecked"}
+    csl_json = row.get("csl_json") if isinstance(row.get("csl_json"), dict) else {}
+    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    standing = str(memoria.get("standing") or "")
+    if standing in {"retracted", "archived", "superseded"}:
+        return {"status": "stale", "lifecycle": standing}
+    return {"status": "checked"}
+
+
 def _checked_source_texts(vault: Path, frontmatter: dict[str, Any]) -> list[str]:
     texts: list[str] = []
     for evidence_rel in _evidence_refs(frontmatter):
-        path = vault / evidence_rel
+        if source_ref := _source_ref(evidence_rel):
+            row = state.catalog_source(vault, source_ref)
+            if row is not None:
+                if row.get("check_status") == "checked":
+                    _append_content_path_text(vault, texts, str(row.get("content_path") or ""))
+                continue
+            path = vault / f"{source_ref}/source.md"
+        else:
+            path = vault / evidence_rel
         evidence_fm = read_frontmatter(path)
         if evidence_fm.get("type") != "source" or evidence_fm.get("check_status") != "checked":
             continue
-        content_path = evidence_fm.get("content_path")
-        if isinstance(content_path, str) and content_path.strip():
-            content = vault / normalize_path(content_path)
-            if content.is_file():
-                texts.append(content.read_text(encoding="utf-8"))
+        _append_content_path_text(vault, texts, str(evidence_fm.get("content_path") or ""))
         if path.is_file():
             texts.append(path.read_text(encoding="utf-8"))
     return texts
+
+
+def _append_content_path_text(vault: Path, texts: list[str], content_path: str) -> None:
+    if not content_path.strip():
+        return
+    content = vault / normalize_path(content_path)
+    if content.is_file():
+        texts.append(content.read_text(encoding="utf-8"))
+
+
+def _source_metadata_status(vault: Path, rel: str) -> tuple[str, str]:
+    if source_ref := _source_ref(rel):
+        row = state.catalog_source(vault, source_ref)
+        if row is not None:
+            if row.get("check_status") != "checked":
+                return source_ref, ""
+            return source_ref, str(row.get("metadata_status") or "")
+        path = vault / f"{source_ref}/source.md"
+    else:
+        source_ref = rel
+        path = vault / rel
+    if not path.is_file():
+        return source_ref, ""
+    source_fm = read_frontmatter(path)
+    if source_fm.get("type") != "source" or source_fm.get("check_status") != "checked":
+        return source_ref, ""
+    return source_ref, str(source_fm.get("metadata_status") or "")
+
+
+def _source_ref(value: str) -> str:
+    rel = normalize_path(value).rstrip("/")
+    prefix = "catalog/sources/"
+    if not rel.startswith(prefix):
+        return ""
+    source_id = rel.removeprefix(prefix)
+    if source_id.endswith("/source.md"):
+        source_id = source_id.removesuffix("/source.md")
+    if not source_id or "/" in source_id:
+        return ""
+    return f"{prefix}{source_id}"
 
 
 def _source_metadata_issues(frontmatter: dict[str, Any]) -> list[str]:
