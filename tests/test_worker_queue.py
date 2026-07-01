@@ -1214,7 +1214,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
     queued = enqueue_operation(
         vault,
         "mark-checked",
-        payload={"target_path": "knowledge/notes/pi.md", "check": "memoria-profile"},
+        payload={"target_path": "knowledge/notes/pi.md", "check": "memoria-runtime"},
         idempotency_key="mark-pi-checked",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -1222,7 +1222,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["check"]["check"] == "memoria-profile"
+    assert done["check"]["check"] == "memoria-runtime"
     assert done["check"]["status"] == "passed"
     assert read_frontmatter(vault / "knowledge/notes/pi.md")["check_status"] == "checked"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())

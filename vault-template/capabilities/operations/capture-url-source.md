@@ -21,7 +21,7 @@ io_schema:
   output: checked_source
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 tags: [alpha11, capture]
 ---
 

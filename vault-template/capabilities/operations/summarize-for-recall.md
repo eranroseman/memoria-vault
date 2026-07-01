@@ -18,7 +18,7 @@ io_schema:
   output: recall_summary
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: librarian
 mode: both
 action: summarize

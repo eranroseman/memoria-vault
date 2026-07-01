@@ -148,7 +148,7 @@ def test_compile_source_digest_rejects_unsupported_required_promotion_check(
     policy = vault / "capabilities/operations/compile-source-digest.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - memoria-profile",
+            "  - memoria-runtime",
             "  - later-integrity",
         ),
         encoding="utf-8",
