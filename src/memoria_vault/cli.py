@@ -95,7 +95,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     _common(import_cmd)
     import_cmd.add_argument("--format", choices=("bibtex", "csl", "zotero-export"), required=True)
     import_cmd.add_argument("--file", required=True)
-    import_cmd.set_defaults(handler=_not_implemented("work import"))
+    import_cmd.set_defaults(handler=_cmd_work_import)
 
     enrich = work_sub.add_parser("enrich")
     _common(enrich)
@@ -311,6 +311,23 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_work_import(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    text = path.read_text(encoding="utf-8")
+    if args.format == "bibtex":
+        from memoria_vault.runtime.capture import bibtex_capture_payload
+
+        payload = bibtex_capture_payload(text)
+    elif args.format == "csl":
+        from memoria_vault.runtime.capture import csl_capture_payload
+
+        csl_item = _read_csl_item(text)
+        payload = csl_capture_payload(csl_item, raw_text=text)
+    else:
+        return _fail("work import --format zotero-export is not wired yet", json_output=args.json)
+    return _emit(_enqueue_and_run(args, "capture-source", payload), args)
+
+
 def _cmd_work_enrich(args: argparse.Namespace) -> int:
     payload: dict[str, Any] = {"source_id": args.work_id}
     if args.provider_replay:
@@ -464,6 +481,17 @@ def _read_provider_replay(path: Path) -> dict[str, Any]:
     for child in sorted(path.glob("*.json")):
         payloads[child.stem] = json.loads(child.read_text(encoding="utf-8"))
     return payloads
+
+
+def _read_csl_item(text: str) -> dict[str, Any]:
+    data = json.loads(text)
+    if isinstance(data, list):
+        if len(data) != 1 or not isinstance(data[0], dict):
+            raise ValueError("CSL import expects one item")
+        return data[0]
+    if isinstance(data, dict):
+        return data
+    raise ValueError("CSL import expects a JSON object or one-item array")
 
 
 def _qmd_checks(workspace: Path) -> dict[str, bool]:

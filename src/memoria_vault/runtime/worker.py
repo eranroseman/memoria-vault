@@ -716,7 +716,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "machine": machine,
             "run_id": str(payload.get("run_id") or "") or None,
         }
-        if source_requires_enrichment(identifiers=identifiers, csl_json=csl_json):
+        if bool(payload.get("stage_only")) or source_requires_enrichment(
+            identifiers=identifiers, csl_json=csl_json
+        ):
             result = stage_catalog_source(
                 vault,
                 source_id,

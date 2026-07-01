@@ -66,3 +66,110 @@ def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
         "command": "capture-source",
         "surface": "memoria-cli",
     }
+
+
+def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    bibtex = tmp_path / "source.bib"
+    bibtex.write_text(
+        """@article{alpha2026,
+  title = {Alpha Import},
+  author = {River, Ada},
+  year = {2026},
+  doi = {10.1000/import.2026},
+  abstract = {Portable file import.}
+}
+""",
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            "bibtex",
+            "--file",
+            str(bibtex),
+            "--json",
+            "--idempotency-key",
+            "import-bibtex",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["result"]["source_id"] == "doi-10.1000_import.2026"
+    assert not (workspace / "catalog/sources/doi-10.1000_import.2026/source.md").exists()
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT title, check_status, content_path FROM catalog_sources WHERE source_id = ?",
+            ("doi-10.1000_import.2026",),
+        ).fetchone()
+    assert tuple(row) == (
+        "Alpha Import",
+        "unchecked",
+        output["result"]["content_path"],
+    )
+
+
+def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    csl = tmp_path / "book.csl.json"
+    csl.write_text(
+        json.dumps(
+            {
+                "id": "book2026",
+                "type": "book",
+                "title": "Standalone Book",
+                "ISBN": "9780000000002",
+                "author": [{"family": "River", "given": "Ada"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "import",
+            "--workspace",
+            str(workspace),
+            "--format",
+            "csl",
+            "--file",
+            str(csl),
+            "--json",
+            "--idempotency-key",
+            "import-csl",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["result"]["source_id"] == "book2026"
+    assert not (workspace / "catalog/sources/book2026/source.md").exists()
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT title, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
+            ("book2026",),
+        ).fetchone()
+        columns = {
+            column["name"] for column in conn.execute("PRAGMA table_info(operation_requests)")
+        }
+    assert row["title"] == "Standalone Book"
+    assert row["check_status"] == "unchecked"
+    assert json.loads(row["identifiers_json"]) == {"isbn": "9780000000002"}
+    assert "trigger_type" not in columns

@@ -328,6 +328,78 @@ def capture_bibtex_source(
     )
 
 
+def bibtex_capture_payload(
+    bibtex: str,
+    *,
+    content_text: str | None = None,
+    source_id: str | None = None,
+    description: str | None = None,
+) -> dict[str, Any]:
+    """Build a capture-source payload from one BibTeX entry."""
+    entry = parse_bibtex_entry(bibtex)
+    fields = entry["fields"]
+    citekey = entry["citekey"]
+    title = fields.get("title") or citekey
+    doi = fields.get("doi", "")
+    resource = fields.get("url") or (f"https://doi.org/{doi}" if doi else "")
+    identifiers = {
+        key: value
+        for key in ("doi", "isbn", "issn", "pmid", "pmcid", "arxiv")
+        if (value := fields.get(key))
+    }
+    return {
+        "source_id": source_id or _bibtex_default_source_id(fields, citekey),
+        "title": title,
+        "description": description
+        or fields.get("abstract")
+        or f"BibTeX {entry['entry_type']} source.",
+        "content_text": content_text or fields.get("abstract") or title,
+        "raw_text": bibtex.strip() + "\n",
+        "raw_filename": f"{safe_filename(citekey)}.bib",
+        "resource": resource,
+        "item_type": _item_type(entry["entry_type"]),
+        "identifiers": identifiers,
+        "csl_json": _csl_json(entry),
+        "metadata_status": "partial",
+        "citekey": citekey,
+        "stage_only": True,
+    }
+
+
+def csl_capture_payload(
+    csl_json: dict[str, Any],
+    *,
+    raw_text: str,
+    content_text: str | None = None,
+    source_id: str | None = None,
+    description: str | None = None,
+) -> dict[str, Any]:
+    """Build a capture-source payload from one CSL-JSON item."""
+    title = str(csl_json.get("title") or csl_json.get("id") or "").strip()
+    if not title:
+        raise ValueError("CSL item requires title or id")
+    doi = str(csl_json.get("DOI") or "").strip()
+    isbn = str(csl_json.get("ISBN") or "").strip()
+    url = str(csl_json.get("URL") or "").strip()
+    identifiers = {key: value for key, value in {"doi": doi, "isbn": isbn}.items() if value}
+    stable_id = source_id or str(csl_json.get("id") or doi or isbn or url or title)
+    return {
+        "source_id": stable_id,
+        "title": title,
+        "description": description or str(csl_json.get("abstract") or f"CSL {title} source."),
+        "content_text": content_text or str(csl_json.get("abstract") or title),
+        "raw_text": raw_text.strip() + "\n",
+        "raw_filename": f"{safe_filename(stable_id)}.csl.json",
+        "resource": url or (f"https://doi.org/{doi}" if doi else ""),
+        "item_type": str(csl_json.get("type") or "article"),
+        "identifiers": identifiers,
+        "csl_json": csl_json,
+        "metadata_status": "partial",
+        "citekey": str(csl_json.get("id") or ""),
+        "stage_only": True,
+    }
+
+
 def capture_zotero_source(
     vault: Path,
     item: dict[str, Any],
