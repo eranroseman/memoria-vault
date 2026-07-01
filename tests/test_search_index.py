@@ -233,8 +233,13 @@ def test_answer_query_uses_qmd_after_rebuild(
 def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    npm_root = tmp_path / "npm-global"
+    npm_bin = npm_root / "bin"
+    npm_bin.mkdir(parents=True)
     qmd_log = tmp_path / "qmd.log"
-    qmd = bin_dir / "qmd"
+    npm = bin_dir / "npm"
+    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
+    qmd = npm_bin / "qmd"
     qmd.write_text(
         f"#!{sys.executable}\n"
         "import json, os, pathlib, sys\n"
@@ -250,6 +255,7 @@ def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         "]))\n",
         encoding="utf-8",
     )
+    npm.chmod(0o755)
     qmd.chmod(0o755)
     monkeypatch.setenv("QMD_LOG", str(qmd_log))
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")

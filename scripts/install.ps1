@@ -382,8 +382,12 @@ function Install-RuntimeScaffold {
 }
 
 function Resolve-Qmd {
-    $qmd = Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')
-    if ($qmd) { return $qmd }
+    if ($env:MEMORIA_QMD_BIN) {
+        if ([System.IO.Path]::IsPathRooted($env:MEMORIA_QMD_BIN) -and (Test-Path -Path $env:MEMORIA_QMD_BIN -PathType Leaf)) {
+            return (Resolve-Path $env:MEMORIA_QMD_BIN).Path
+        }
+        return $null
+    }
     $npm = Get-CommandPath @('npm.cmd', 'npm.exe', 'npm')
     if (-not $npm -or $DryRun) { return $null }
     $prefix = (& $npm prefix -g 2>$null | Select-Object -First 1)
@@ -413,6 +417,7 @@ function Install-Qmd {
             return
         }
     }
+    $script:QmdBin = $qmd
 
     $checked = Join-Path $Vault '.memoria/index/qmd/checked'
     $config = Join-Path $Vault '.memoria/index/qmd/config'
@@ -486,7 +491,7 @@ function Set-TemplateValues {
     $text = Get-Content -Raw -Path $Path
     $py = if ($script:VenvPython) { ConvertTo-ForwardPath $script:VenvPython } else { 'python' }
     $vaultPath = ConvertTo-ForwardPath (Resolve-Path $Vault).Path
-    $qmd = Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')
+    $qmd = if ($script:QmdBin) { $script:QmdBin } else { Resolve-Qmd }
     if (-not $qmd) { $qmd = 'qmd' }
     $text = $text.Replace('{{PYTHON}}', $py)
     $text = $text.Replace('{{VAULT_PATH}}', $vaultPath)
