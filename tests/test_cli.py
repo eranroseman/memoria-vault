@@ -16,6 +16,16 @@ from memoria_vault.runtime.worker import enqueue_operation
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def _assert_alpha14_request_columns(columns: set[str]) -> None:
+    assert {
+        "input_refs_json",
+        "output_intents_json",
+        "primary_target",
+        "precondition_hashes_json",
+    } <= columns
+    assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
+
+
 def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
@@ -64,7 +74,7 @@ def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
             "SELECT operation_id, provenance_json FROM operation_requests WHERE request_id = ?",
             ("capture-alpha",),
         ).fetchone()
-    assert "trigger_type" not in columns
+    _assert_alpha14_request_columns(columns)
     assert row["operation_id"] == "capture-source"
     assert json.loads(row["provenance_json"]) == {
         "command": "capture-source",
@@ -388,7 +398,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
             "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
             ("project-gaps",),
         ).fetchone()
-    assert "trigger_type" not in columns
+    _assert_alpha14_request_columns(columns)
     assert row["operation_id"] == "analyze-gaps"
     assert json.loads(row["args_json"]) == {
         "seed_terms": ["new area"],
@@ -687,6 +697,12 @@ def test_cli_request_list_show_and_resume_pending_request(
     assert shown["request"]["operation_id"] == "analyze-gaps"
     assert shown["request"]["args"] == {"seed_terms": ["new area"], "dense_threshold": 1}
     assert shown["request"]["provenance"] == {"surface": "test"}
+    assert shown["request"]["input_refs"] == []
+    assert shown["request"]["output_intents"] == []
+    assert shown["request"]["primary_target"] == ""
+    assert shown["request"]["precondition_hashes"] == {}
+    assert "target_path" not in shown["request"]
+    assert "target_hash" not in shown["request"]
 
     rc = main(["request", "resume", "--workspace", str(workspace), "resume-gaps", "--json"])
     resumed = json.loads(capsys.readouterr().out)
@@ -1209,7 +1225,7 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     assert row["title"] == "Standalone Book"
     assert row["check_status"] == "unchecked"
     assert json.loads(row["identifiers_json"]) == {"isbn": "9780000000002"}
-    assert "trigger_type" not in columns
+    _assert_alpha14_request_columns(columns)
 
 
 def test_cli_doctor_qmd_checks_workspace_local_state(
