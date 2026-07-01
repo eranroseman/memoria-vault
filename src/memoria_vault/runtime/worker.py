@@ -570,6 +570,27 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "node_count": result["node_count"],
             "edge_count": result["edge_count"],
         }
+    if operation_id == "export-project":
+        from memoria_vault.runtime.knowledge import write_project_export
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("export-project requires project_path")
+        result = write_project_export(
+            vault,
+            project_path,
+            export_format=str(payload.get("format") or "markdown"),
+            output_path=str(payload.get("output_path") or ""),
+        )
+        return {
+            "project_path": result["project_path"],
+            "format": result["format"],
+            "output_path": result["output_path"],
+            "content": result["content"],
+            "node_count": result["node_count"],
+            "edge_count": result["edge_count"],
+            "relation_count": result["relation_count"],
+        }
     if operation_id == "rebuild-checked-qmd-source":
         from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 

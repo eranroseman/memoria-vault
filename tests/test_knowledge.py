@@ -5,6 +5,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.knowledge import (
@@ -14,6 +16,7 @@ from memoria_vault.runtime.knowledge import (
     curate_note_link,
     emit_note_candidates,
     write_project_argument_canvas,
+    write_project_export,
 )
 from memoria_vault.runtime.operations import compile_source_digest
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
@@ -436,3 +439,62 @@ def test_write_project_argument_canvas_projects_checked_note_links(tmp_path: Pat
         "knowledge/notes/support.md",
     }
     assert canvas["edges"][0]["label"] == "supports"
+
+
+def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -> None:
+    _md(
+        tmp_path / "knowledge/projects/project-alpha.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "knowledge/hubs/alpha-hub.md",
+        "type: hub\ncheck_status: checked\ntitle: Alpha hub\n"
+        "description: Curated project context\nproject: knowledge/projects/project-alpha.md\n",
+    )
+    (tmp_path / "references.bib").write_text("@article{alpha,title={Alpha}}\n", encoding="utf-8")
+
+    result = write_project_export(
+        tmp_path,
+        "project-alpha",
+        output_path="exports/project-alpha.md",
+    )
+
+    assert result["project_path"] == "knowledge/projects/project-alpha.md"
+    assert result["format"] == "markdown"
+    assert result["output_path"] == "exports/project-alpha.md"
+    assert result["content"] == ""
+    text = (tmp_path / result["output_path"]).read_text(encoding="utf-8")
+    assert "# Alpha project" in text
+    assert "## Argument Snapshot" in text
+    assert "- Thesis: `knowledge/notes/thesis.md`" in text
+    assert "- Support --supports--> Thesis" in text
+    assert "- Alpha hub: `knowledge/hubs/alpha-hub.md` -- Curated project context" in text
+    assert "```bibtex\n@article{alpha,title={Alpha}}\n```" in text
+
+
+def test_write_project_export_requires_pandoc_for_non_markdown(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _md(
+        tmp_path / "knowledge/projects/project-alpha.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n",
+    )
+    monkeypatch.setattr("memoria_vault.runtime.knowledge.shutil.which", lambda _name: None)
+
+    with pytest.raises(RuntimeError, match="Pandoc is required"):
+        write_project_export(
+            tmp_path,
+            "project-alpha",
+            export_format="docx",
+            output_path="exports/project-alpha.docx",
+        )

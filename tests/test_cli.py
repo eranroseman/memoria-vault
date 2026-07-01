@@ -406,7 +406,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     }
 
 
-def test_cli_project_trace_and_export_argument_canvas(
+def test_cli_project_trace_and_export_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -442,6 +442,10 @@ def test_cli_project_trace_and_export_argument_canvas(
             "--workspace",
             str(workspace),
             "project-alpha",
+            "--format",
+            "markdown",
+            "--output",
+            "exports/project-alpha.md",
             "--json",
             "--idempotency-key",
             "project-export",
@@ -451,9 +455,15 @@ def test_cli_project_trace_and_export_argument_canvas(
 
     assert rc == 0
     assert exported["ok"] is True
-    assert exported["result"]["canvas_path"] == "knowledge/projects/project-alpha/argument.canvas"
-    canvas = json.loads((workspace / exported["result"]["canvas_path"]).read_text(encoding="utf-8"))
-    assert {edge["label"] for edge in canvas["edges"]} == {"supports", "contradicts"}
+    assert exported["result"]["format"] == "markdown"
+    assert exported["result"]["output_path"] == "exports/project-alpha.md"
+    assert exported["result"]["content"] == ""
+    exported_text = (workspace / "exports/project-alpha.md").read_text(encoding="utf-8")
+    assert "# Alpha project" in exported_text
+    assert "## Argument Snapshot" in exported_text
+    assert "- Stage: developing" in exported_text
+    assert "- Support --supports--> Thesis" in exported_text
+    assert "- Refute --contradicts--> Thesis" in exported_text
     with state.connect(workspace) as conn:
         rows = conn.execute(
             """
@@ -464,7 +474,7 @@ def test_cli_project_trace_and_export_argument_canvas(
             """
         ).fetchall()
     assert [(row["request_id"], row["operation_id"]) for row in rows] == [
-        ("project-export", "render-project-argument-canvas"),
+        ("project-export", "export-project"),
         ("project-trace", "analyze-project-argument"),
     ]
 
