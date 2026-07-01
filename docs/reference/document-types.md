@@ -45,7 +45,7 @@ Total types: **12** (Catalog Concepts: 4, Knowledge Concepts: 4, Capability Conc
 
 | Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `mcp` | `capabilities/mcp` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
+| `adapter` | `capabilities/adapters` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
 | `operation` | `capabilities/operations` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
 | `skill` | `capabilities/skills` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
 | `workflow` | `capabilities/workflows` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |

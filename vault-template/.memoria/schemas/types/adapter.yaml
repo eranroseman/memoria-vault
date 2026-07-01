@@ -1,11 +1,11 @@
-type: mcp
+type: adapter
 category: capabilities
 gated: false
 initial_check_status: unchecked
 enums:
   check_status: [unchecked, checked, quarantined]
 required:
-  type: literal:mcp
+  type: literal:adapter
   check_status: enum:check_status
   title: str
   description: str

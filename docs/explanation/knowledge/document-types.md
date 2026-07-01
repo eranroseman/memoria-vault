@@ -19,7 +19,7 @@ as checked knowledge.
 | --- | --- | --- |
 | `catalog/` | Source records and named entities. | `source`, `person`, `organization`, `venue` |
 | `knowledge/` | Readable knowledge artifacts and PI curation. | `digest`, `note`, `hub`, `project` |
-| `capabilities/` | Things the system can run or expose. | `operation`, `skill`, `mcp`, `workflow` |
+| `capabilities/` | Things the system can run or expose. | `operation`, `skill`, `adapter`, `workflow` |
 
 The exhaustive field lists live in [Document types](../../reference/document-types.md).
 

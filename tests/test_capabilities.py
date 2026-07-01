@@ -146,6 +146,38 @@ def test_same_stem_capability_asset_folder_is_allowed(tmp_path: Path) -> None:
     assert load_operation_policy(vault, "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
+def test_adapter_capabilities_are_cataloged_and_mcp_type_is_rejected(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    (vault / "capabilities/adapters/local-editor.md").write_text(
+        "---\n"
+        "type: adapter\n"
+        "check_status: unchecked\n"
+        "title: Local editor\n"
+        "description: Optional editor adapter metadata.\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    legacy = tmp_path / "legacy-mcp.md"
+    legacy.write_text(
+        "---\n"
+        "type: mcp\n"
+        "check_status: unchecked\n"
+        "title: Legacy MCP\n"
+        "description: Old capability type.\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+
+    rows = {row["id"]: row for row in json.loads(render_capability_index(vault))["capabilities"]}
+
+    assert rows["local-editor"]["type"] == "adapter"
+    assert rows["local-editor"]["path"] == "capabilities/adapters/local-editor.md"
+    with pytest.raises(ValueError, match="unsupported capability type: mcp"):
+        import_capability(vault, legacy)
+
+
 def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     incoming = tmp_path / "incoming/remote-danger.md"

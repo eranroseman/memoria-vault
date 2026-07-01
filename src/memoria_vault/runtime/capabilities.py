@@ -13,11 +13,11 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 from memoria_vault.runtime.vaultio import parse_frontmatter, read_frontmatter, safe_read
 
-CAPABILITY_TYPES = {"operation", "skill", "mcp", "workflow"}
+CAPABILITY_TYPES = {"operation", "skill", "adapter", "workflow"}
 CAPABILITY_HOMES = {
+    "adapter": "adapters",
     "operation": "operations",
     "skill": "skills",
-    "mcp": "mcp",
     "workflow": "workflows",
 }
 CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"

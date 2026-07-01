@@ -43,7 +43,7 @@ in [Document types](../../reference/document-types.md).
 | --- | --- | --- |
 | Catalog | source, person, organization, venue | Objective records from capture/import; checked before consumption. |
 | Knowledge | digest, note, hub, project | The working graph. Digests are machine-owned checked records; notes and hub curation are PI judgment. |
-| Capabilities | operation, skill, MCP, workflow | Executable capability records; imports are supply-chain input and are quarantined until vetted. |
+| Capabilities | operation, skill, adapter, workflow | Executable capability records; imports are supply-chain input and are quarantined until vetted. |
 
 ## Write Boundary
 
