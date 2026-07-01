@@ -144,6 +144,22 @@ def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] |
         if not pending:
             return None
         running = _claim_job(vault, pending[0])
+    return _run_claimed_job(vault, running, machine)
+
+
+def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> dict[str, Any]:
+    """Claim and run one pending operation request."""
+    vault = Path(vault)
+    job = state.request_job(vault, request_id)
+    if job is None:
+        raise FileNotFoundError(f"request not found: {request_id}")
+    if job.get("status") != "pending":
+        raise ValueError(f"request {request_id} is not pending")
+    running = _claim_sqlite_job(vault, job)
+    return _run_claimed_job(vault, running, machine)
+
+
+def _run_claimed_job(vault: Path, running: Path, machine: str | None) -> dict[str, Any]:
     job = _read_json(running)
     try:
         result = _run_job(vault, job, machine)

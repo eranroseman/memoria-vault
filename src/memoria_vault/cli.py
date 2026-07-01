@@ -15,7 +15,12 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.worker import enqueue_operation, run_next_job, run_pending_jobs
+from memoria_vault.runtime.worker import (
+    enqueue_operation,
+    run_next_job,
+    run_pending_jobs,
+    run_request,
+)
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
 
@@ -150,7 +155,19 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
 def _request_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     request = sub.add_parser("request")
     request_sub = request.add_subparsers(dest="request_command", required=True)
-    for name in ("answer", "amend", "cancel", "retry", "resume", "list", "show"):
+    list_cmd = request_sub.add_parser("list")
+    _common(list_cmd)
+    list_cmd.add_argument("--status", choices=("pending", "running", "done", "failed"))
+    list_cmd.set_defaults(handler=_cmd_request_list)
+    show = request_sub.add_parser("show")
+    _common(show)
+    show.add_argument("request_id")
+    show.set_defaults(handler=_cmd_request_show)
+    resume = request_sub.add_parser("resume")
+    _common(resume)
+    resume.add_argument("request_id")
+    resume.set_defaults(handler=_cmd_request_resume)
+    for name in ("answer", "amend", "cancel", "retry"):
         cmd = request_sub.add_parser(name)
         _common(cmd)
         cmd.set_defaults(handler=_not_implemented(f"request {name}"))
@@ -439,6 +456,41 @@ def _cmd_operation_run(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_request_list(args: argparse.Namespace) -> int:
+    sql = """
+        SELECT request_id, operation_id, status, created_at, completed_at, error
+        FROM operation_requests
+    """
+    params: tuple[str, ...] = ()
+    if args.status:
+        sql += " WHERE status = ?"
+        params = (args.status,)
+    sql += " ORDER BY created_at, request_id"
+    with state.connect(_workspace(args)) as conn:
+        requests = [_request_summary(row) for row in conn.execute(sql, params)]
+    return _emit({"ok": True, "requests": requests}, args)
+
+
+def _cmd_request_show(args: argparse.Namespace) -> int:
+    with state.connect(_workspace(args)) as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM operation_requests
+            WHERE request_id = ?
+            """,
+            (args.request_id,),
+        ).fetchone()
+    if row is None:
+        return _fail(f"request not found: {args.request_id}", json_output=args.json)
+    return _emit({"ok": True, "request": _request_detail(row)}, args)
+
+
+def _cmd_request_resume(args: argparse.Namespace) -> int:
+    result = run_request(_workspace(args), args.request_id, machine="memoria-cli")
+    return _emit({"ok": result.get("status") == "done", "result": result}, args)
+
+
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
     results = run_pending_jobs(_workspace(args), limit=args.limit, machine="memoria-cli")
     return _emit({"ok": True, "ran": len(results), "results": results}, args)
@@ -592,6 +644,33 @@ def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("operation payload must be a JSON object")
     return payload
+
+
+def _request_summary(row: Any) -> dict[str, Any]:
+    return {
+        "request_id": row["request_id"],
+        "operation_id": row["operation_id"],
+        "status": row["status"],
+        "created_at": row["created_at"],
+        "completed_at": row["completed_at"],
+        "error": row["error"],
+    }
+
+
+def _request_detail(row: Any) -> dict[str, Any]:
+    return {
+        **_request_summary(row),
+        "args": json.loads(row["args_json"]),
+        "idempotency_key": row["idempotency_key"],
+        "target_path": row["target_path"],
+        "target_hash": row["target_hash"],
+        "causal_refs": json.loads(row["causal_refs_json"]),
+        "actor": row["actor"],
+        "provenance": json.loads(row["provenance_json"]),
+        "schedule_id": row["schedule_id"],
+        "kind": row["kind"],
+        "job": json.loads(row["job_json"]),
+    }
 
 
 def _read_csl_item(text: str) -> dict[str, Any]:
