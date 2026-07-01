@@ -1318,11 +1318,11 @@ def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) ->
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["changed"] is False
+    assert done["changed"] is True
     assert done["output"] == "references.bib"
     assert "@article{harness2026," in (vault / "references.bib").read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {"journal/test-machine.jsonl", "references.bib"}
 
 
 def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:

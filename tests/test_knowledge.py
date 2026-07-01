@@ -113,7 +113,7 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert fm["check_status"] == "checked"
     assert fm["status"] == "candidate"
     assert fm["source_id"] == "catalog/sources/source-alpha"
-    assert fm["evidence_set"] == ["catalog/sources/source-alpha/source.md"]
+    assert fm["evidence_set"] == ["catalog/sources/source-alpha"]
     assert fm["claim_text"] == "Framing changes which outcomes matter."
 
     events = list(iter_jsonl(vault / "journal/note-machine.jsonl"))
@@ -149,8 +149,8 @@ def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) 
         machine="digest-machine",
     )
     annotation_ref = {
-        "source_id": "catalog/sources/pdf-source/source.md",
-        "raw_copy_path": "catalog/sources/pdf-source/raw/paper.pdf",
+        "source_id": "catalog/sources/pdf-source",
+        "raw_copy_path": ".memoria/blobs/source-content/pdf-source/raw/paper.pdf",
         "page": 3,
         "text_quote": "anchored finding",
         "bbox": [72, 144, 300, 180],
@@ -174,8 +174,6 @@ def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) 
 
     [note_rel] = result["note_paths"]
     note_fm = read_frontmatter(vault / note_rel)
-    source_fm = read_frontmatter(vault / "catalog/sources/pdf-source/source.md")
-    assert source_fm["raw_copy_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
     assert note_fm["annotation_ref"] == annotation_ref
     assert note_fm["quote"] == "anchored finding"
 

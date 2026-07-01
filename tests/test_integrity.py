@@ -494,7 +494,7 @@ def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
     assert finding["route"] == "ask"
 
 
-def test_source_metadata_check_flags_ambiguous_linked_entity_identity(
+def test_db_capture_does_not_create_legacy_entity_identity_findings(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -553,15 +553,10 @@ def test_source_metadata_check_flags_ambiguous_linked_entity_identity(
 
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
-    findings = result["findings"]
-    assert {finding["target_id"] for finding in findings} == {
-        "catalog/sources/source-one/source.md",
-        "catalog/sources/source-two/source.md",
-    }
-    assert {finding["reason"] for finding in findings} == {
-        "ambiguous entity identity: catalog/entities/person-ada-river.md"
-    }
-    assert {finding["route"] for finding in findings} == {"ask"}
+    assert result["findings"] == []
+    assert not (vault / "catalog/sources/source-one/source.md").exists()
+    assert not (vault / "catalog/sources/source-two/source.md").exists()
+    assert not (vault / "catalog/entities/person-ada-river.md").exists()
 
 
 def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:

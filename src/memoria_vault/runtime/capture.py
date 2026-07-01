@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterable
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -17,11 +16,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
-    normalize_promotion_checks,
-    promote_checked,
-    stage_concept,
 )
-from memoria_vault.runtime.vaultio import concept_text, frontmatter_doc, read_frontmatter
 
 
 def source_requires_enrichment(
@@ -41,6 +36,13 @@ def _normalize_text_status(value: str) -> str:
     status = str(value or "full-text").strip().lower()
     if status not in {"full-text", "abstract-only", "metadata-only"}:
         raise ValueError("text_status must be full-text, abstract-only, or metadata-only")
+    return status
+
+
+def _normalize_check_status(value: str) -> str:
+    status = str(value or "unchecked").strip().lower()
+    if status not in {"unchecked", "checked", "quarantined"}:
+        raise ValueError("check_status must be unchecked, checked, or quarantined")
     return status
 
 
@@ -71,8 +73,9 @@ def stage_catalog_source(
     machine: str | None = None,
     run_id: str | None = None,
     workflow: str = "capture_source",
+    check_status: str = "unchecked",
 ) -> dict[str, Any]:
-    """Stage a DOI/ISBN source as an unchecked DB catalog row for enrichment."""
+    """Stage a source as a DB catalog row plus immutable blob payloads."""
     vault = Path(vault)
     source_id = _source_id(source_id)
     if not title.strip() or not description.strip():
@@ -80,6 +83,17 @@ def stage_catalog_source(
     if not content_text.strip():
         raise ValueError("content_text is required")
     text_status = _normalize_text_status(text_status)
+    check_status = _normalize_check_status(check_status)
+    existing = state.catalog_source(vault, source_id)
+    if existing:
+        identifiers = _merge_mapping(existing.get("identifiers"), identifiers)
+        csl_json = _merge_mapping(existing.get("csl_json"), csl_json)
+        metadata_status = _best_metadata_status(
+            str(existing.get("metadata_status") or ""),
+            metadata_status,
+        )
+        resource = resource or str(existing.get("resource") or "")
+        citekey = citekey or str(existing.get("citekey") or "")
     run_id = run_id or f"capture:{source_id}"
 
     started = append_journal_event(
@@ -109,7 +123,7 @@ def stage_catalog_source(
         csl_json=csl_json,
         metadata_status=metadata_status,
         text_status=text_status,
-        check_status="unchecked",
+        check_status=check_status,
         content_hash=content_sha,
         raw_hash=raw_sha,
         content_path=content_rel,
@@ -132,12 +146,13 @@ def stage_catalog_source(
     return {
         "run_id": run_id,
         "source_id": source_id,
+        "source_path": f"catalog/sources/{source_id}",
         "content_path": content_rel,
         "raw_path": raw_rel,
         "raw_sha256": raw_sha,
         "content_sha256": content_sha,
         "text_status": text_status,
-        "check_status": "unchecked",
+        "check_status": check_status,
         "started": started,
         "finished": finished,
         "commit": commit,
@@ -163,147 +178,28 @@ def capture_source(
     machine: str | None = None,
     run_id: str | None = None,
     workflow: str = "capture_source",
-    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    """Capture one source into catalog files through the trusted writer."""
-    vault = Path(vault)
-    promotion_checks = normalize_promotion_checks(required_checks)
-    source_id = _source_id(source_id)
-    if not title.strip() or not description.strip():
-        raise ValueError("title and description are required")
-    if not content_text.strip():
-        raise ValueError("content_text is required")
-    text_status = _normalize_text_status(text_status)
-    run_id = run_id or f"capture:{source_id}"
-
-    started = append_journal_event(
+    """Capture one source as a checked SQLite catalog row plus blob payloads."""
+    return stage_catalog_source(
         vault,
-        {
-            "event": "run",
-            "run_id": run_id,
-            "workflow": workflow,
-            "status": "started",
-        },
+        source_id,
+        title,
+        description,
+        content_text,
+        raw_bytes=raw_bytes,
+        raw_filename=raw_filename,
+        resource=resource,
+        item_type=item_type,
+        identifiers=identifiers,
+        csl_json=csl_json,
+        metadata_status=metadata_status,
+        text_status=text_status,
+        citekey=citekey,
         machine=machine,
-    )
-
-    root = vault / "catalog" / "sources" / source_id
-    raw_path = root / "raw" / safe_filename(raw_filename or "source.txt")
-    content_path = root / "content.md"
-    raw_sha = _write_immutable(
-        raw_path, raw_bytes if raw_bytes is not None else content_text.encode()
-    )
-    content_sha = _write_immutable(content_path, content_text.strip().encode() + b"\n")
-    raw_rel = raw_path.relative_to(vault).as_posix()
-    content_rel = content_path.relative_to(vault).as_posix()
-    source_rel = f"catalog/sources/{source_id}/source.md"
-    inputs = [
-        {"id": raw_rel, "sha256": raw_sha},
-        {"id": content_rel, "sha256": content_sha},
-    ]
-    frontmatter: dict[str, Any] = {
-        "type": "source",
-        "check_status": "unchecked",
-        "title": title,
-        "description": description,
-        "source_id": source_id,
-        "item_type": item_type,
-        "raw_copy_path": raw_rel,
-        "content_path": content_rel,
-        "raw_text_sha256": raw_sha,
-        "normalized_text_sha256": content_sha,
-        "metadata_status": metadata_status,
-        "text_status": text_status,
-    }
-    if resource:
-        frontmatter["resource"] = resource
-    if citekey:
-        frontmatter["citekey"] = citekey
-    if identifiers:
-        frontmatter["identifiers"] = identifiers
-    if csl_json:
-        frontmatter["csl_json"] = csl_json
-    frontmatter = _source_frontmatter(vault, source_rel, frontmatter)
-    entity_specs = _source_entity_specs(vault, frontmatter.get("csl_json") or {}, source_rel)
-    if entity_links := _source_entity_links(entity_specs):
-        frontmatter["links"] = entity_links
-    frontmatter = _source_frontmatter(vault, source_rel, frontmatter)
-
-    entity_stages = [
-        stage_concept(
-            vault,
-            spec["path"],
-            _entity_text(spec["frontmatter"], spec["title"], source_rel),
-            inputs=inputs,
-            operation=workflow,
-            run_id=run_id,
-            machine=machine,
-        )
-        for spec in entity_specs
-    ]
-
-    stage = stage_concept(
-        vault,
-        source_rel,
-        concept_text(frontmatter, title, f"Content: `{content_rel}`"),
-        inputs=inputs,
-        operation=workflow,
         run_id=run_id,
-        machine=machine,
+        workflow=workflow,
+        check_status="checked",
     )
-    entity_checks = [
-        promote_checked(vault, spec["path"], checks=promotion_checks, machine=machine)
-        for spec in entity_specs
-    ]
-    check = promote_checked(vault, source_rel, checks=promotion_checks, machine=machine)
-    checked_frontmatter = read_frontmatter(vault / source_rel)
-    state.upsert_catalog_source(vault, source_rel, checked_frontmatter)
-    commit_paths = [source_rel, content_rel, *(spec["path"] for spec in entity_specs)]
-    projected_outputs: list[str] = []
-    if _has_bibliography_fields(checked_frontmatter):
-        references = write_references_bib(vault, commit=False, machine=machine)
-        commit_paths.append(references["path"])
-        projected_outputs.append(references["path"])
-    finished = append_journal_event(
-        vault,
-        {
-            "event": "run",
-            "run_id": run_id,
-            "workflow": workflow,
-            "status": "done",
-            "outputs": [
-                source_rel,
-                content_rel,
-                *(spec["path"] for spec in entity_specs),
-                *projected_outputs,
-            ],
-            "raw": raw_rel,
-        },
-        machine=machine,
-    )
-    commit = commit_writer_changes(
-        vault,
-        f"capture source {source_id}",
-        commit_paths,
-        machine=machine,
-    )
-    return {
-        "run_id": run_id,
-        "source_path": source_rel,
-        "content_path": content_rel,
-        "raw_path": raw_rel,
-        "raw_sha256": raw_sha,
-        "content_sha256": content_sha,
-        "text_status": text_status,
-        "started": started,
-        "derived": stage,
-        "entity_derived": entity_stages,
-        "entity_checked": entity_checks,
-        "entity_paths": [spec["path"] for spec in entity_specs],
-        "checked": check,
-        "finished": finished,
-        "commit": commit,
-    }
 
 
 def capture_bibtex_source(
@@ -315,7 +211,6 @@ def capture_bibtex_source(
     description: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
-    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one source from a local BibTeX entry."""
     entry = parse_bibtex_entry(bibtex)
@@ -349,7 +244,6 @@ def capture_bibtex_source(
         machine=machine,
         run_id=run_id or f"capture-bibtex:{citekey}",
         workflow="capture_bibtex_source",
-        required_checks=required_checks,
     )
 
 
@@ -499,7 +393,6 @@ def capture_url_source(
     timeout: float = 10.0,
     machine: str | None = None,
     run_id: str | None = None,
-    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture one URL snapshot with stdlib HTML text extraction."""
     resource = url.strip()
@@ -529,7 +422,6 @@ def capture_url_source(
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
-        required_checks=required_checks,
     )
 
 
@@ -591,7 +483,6 @@ def capture_pdf_source(
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
-    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     """Capture a PDF raw blob and extracted page text."""
     stable_source_id = _source_id(source_id)
@@ -617,7 +508,6 @@ def capture_pdf_source(
         machine=machine,
         run_id=run_id or f"capture-pdf:{_source_id(source_id)}",
         workflow="capture_pdf_source",
-        required_checks=required_checks,
     )
 
 
@@ -773,31 +663,6 @@ def _write_immutable(path: Path, data: bytes) -> str:
     return sha256_file(path)
 
 
-def _source_frontmatter(vault: Path, source_rel: str, incoming: dict[str, Any]) -> dict[str, Any]:
-    source_path = vault / source_rel
-    if not source_path.is_file():
-        return incoming
-    existing = dict(read_frontmatter(source_path))
-    if existing.get("type") != "source":
-        raise ValueError(f"{source_rel} already exists as {existing.get('type')}, not source")
-    if str(existing.get("source_id") or "") != str(incoming.get("source_id") or ""):
-        raise ValueError(f"{source_rel} source_id does not match recapture")
-
-    merged = {**existing, **incoming}
-    merged["check_status"] = "unchecked"
-    merged["metadata_status"] = _best_metadata_status(
-        str(existing.get("metadata_status") or ""),
-        str(incoming.get("metadata_status") or ""),
-    )
-    if identifiers := _merge_mapping(existing.get("identifiers"), incoming.get("identifiers")):
-        merged["identifiers"] = identifiers
-    if csl_json := _merge_mapping(existing.get("csl_json"), incoming.get("csl_json")):
-        merged["csl_json"] = csl_json
-    if links := _merge_link_mapping(existing.get("links"), incoming.get("links")):
-        merged["links"] = links
-    return merged
-
-
 def _merge_mapping(old: Any, new: Any) -> dict[str, Any]:
     merged: dict[str, Any] = {}
     for source in (old, new):
@@ -807,208 +672,9 @@ def _merge_mapping(old: Any, new: Any) -> dict[str, Any]:
     return merged
 
 
-def _merge_link_mapping(old: Any, new: Any) -> dict[str, list[str]]:
-    merged: dict[str, list[str]] = {}
-    for source in (old, new):
-        if not isinstance(source, dict):
-            continue
-        for key, values in source.items():
-            if not isinstance(values, list):
-                continue
-            target = merged.setdefault(str(key), [])
-            for value in values:
-                if isinstance(value, str) and value not in target:
-                    target.append(value)
-    return merged
-
-
 def _best_metadata_status(old: str, new: str) -> str:
     rank = {"": 0, "not-indexed": 1, "unverified": 2, "partial": 3, "verified": 4}
     return new if rank.get(new, 0) >= rank.get(old, 0) else old
-
-
-def _entity_text(frontmatter: dict[str, Any], title: str, source_rel: str) -> str:
-    links = frontmatter.get("links") if isinstance(frontmatter.get("links"), dict) else {}
-    sources = [source for source in links.get("sources", [source_rel]) if isinstance(source, str)]
-    source_lines = "\n".join(f"- `{source}`" for source in sources)
-    return frontmatter_doc(frontmatter, f"# {title}\n\nSources:\n{source_lines}\n")
-
-
-def _source_entity_specs(
-    vault: Path, csl_json: dict[str, Any], source_rel: str
-) -> list[dict[str, Any]]:
-    specs: list[dict[str, Any]] = []
-    seen: set[str] = set()
-    authors = csl_json.get("author")
-    if isinstance(authors, list):
-        for author in authors:
-            if not isinstance(author, dict):
-                continue
-            if name := _csl_author_name(author):
-                _add_entity_spec(
-                    vault,
-                    specs,
-                    seen,
-                    "person",
-                    name,
-                    source_rel,
-                    external_ids=_csl_author_external_ids(author),
-                )
-    if venue := str(csl_json.get("container-title") or "").strip():
-        _add_entity_spec(
-            vault,
-            specs,
-            seen,
-            "venue",
-            venue,
-            source_rel,
-            external_ids=_csl_venue_external_ids(csl_json),
-        )
-    return specs
-
-
-def _add_entity_spec(
-    vault: Path,
-    specs: list[dict[str, Any]],
-    seen: set[str],
-    kind: str,
-    name: str,
-    source_rel: str,
-    external_ids: dict[str, Any] | None = None,
-) -> None:
-    slug = _entity_slug(name)
-    path = f"catalog/entities/{kind}-{slug}.md"
-    if path in seen:
-        return
-    seen.add(path)
-    frontmatter = _entity_frontmatter(vault, path, kind, name, source_rel, external_ids or {})
-    specs.append(
-        {
-            "path": path,
-            "title": str(frontmatter.get("title") or name),
-            "frontmatter": frontmatter,
-        }
-    )
-
-
-def _entity_frontmatter(
-    vault: Path,
-    path: str,
-    kind: str,
-    name: str,
-    source_rel: str,
-    external_ids: dict[str, Any],
-) -> dict[str, Any]:
-    entity_path = vault / path
-    if entity_path.is_file():
-        frontmatter = dict(read_frontmatter(entity_path))
-        if frontmatter.get("type") != kind:
-            raise ValueError(f"{path} already exists as {frontmatter.get('type')}, not {kind}")
-    else:
-        frontmatter = {
-            "type": kind,
-            "title": name,
-            "description": f"Catalog {kind} derived from source metadata.",
-            "canonical_name": name,
-        }
-    frontmatter["check_status"] = "unchecked"
-    _merge_entity_external_ids(frontmatter, external_ids)
-    links = frontmatter.get("links") if isinstance(frontmatter.get("links"), dict) else {}
-    sources = [source for source in links.get("sources", []) if isinstance(source, str)]
-    if source_rel not in sources:
-        sources.append(source_rel)
-    frontmatter["links"] = {**links, "sources": sources}
-    return frontmatter
-
-
-def _merge_entity_external_ids(frontmatter: dict[str, Any], incoming: dict[str, Any]) -> None:
-    incoming_ids = {
-        str(key): str(value).strip() for key, value in incoming.items() if str(value).strip()
-    }
-    if not incoming_ids:
-        return
-    existing = (
-        dict(frontmatter["external_ids"])
-        if isinstance(frontmatter.get("external_ids"), dict)
-        else {}
-    )
-    conflicts = []
-    for key, value in incoming_ids.items():
-        if key not in existing:
-            existing[key] = value
-            continue
-        if str(existing[key]).strip() != value:
-            conflicts.append(
-                {
-                    "field": key,
-                    "existing": str(existing[key]).strip(),
-                    "incoming": value,
-                }
-            )
-    frontmatter["external_ids"] = existing
-    if conflicts:
-        metadata = (
-            dict(frontmatter["metadata"]) if isinstance(frontmatter.get("metadata"), dict) else {}
-        )
-        prior = metadata.get("identity_conflicts")
-        rows = [row for row in prior if isinstance(row, dict)] if isinstance(prior, list) else []
-        for conflict in conflicts:
-            if conflict not in rows:
-                rows.append(conflict)
-        metadata["identity_status"] = "ambiguous"
-        metadata["identity_conflicts"] = rows
-        frontmatter["metadata"] = metadata
-
-
-def _source_entity_links(specs: list[dict[str, Any]]) -> dict[str, list[str]]:
-    links: dict[str, list[str]] = {}
-    authors = [spec["path"] for spec in specs if spec["frontmatter"]["type"] == "person"]
-    venues = [spec["path"] for spec in specs if spec["frontmatter"]["type"] == "venue"]
-    if authors:
-        links["authors"] = authors
-    if venues:
-        links["venues"] = venues
-    return links
-
-
-def _csl_author_name(author: dict[str, Any]) -> str:
-    if literal := str(author.get("literal") or "").strip():
-        return literal
-    family = str(author.get("family") or "").strip()
-    given = str(author.get("given") or "").strip()
-    if family and given:
-        return f"{given} {family}"
-    return family
-
-
-def _csl_author_external_ids(author: dict[str, Any]) -> dict[str, str]:
-    ids: dict[str, str] = {}
-    for key in ("ORCID", "orcid"):
-        value = str(author.get(key) or "").strip()
-        if value:
-            ids["orcid"] = _normalized_orcid(value)
-            break
-    return ids
-
-
-def _csl_venue_external_ids(csl_json: dict[str, Any]) -> dict[str, str]:
-    ids: dict[str, str] = {}
-    for key in ("ISSN", "issn", "ISSN-L", "issn-l"):
-        value = str(csl_json.get(key) or "").strip()
-        if value:
-            ids[key.casefold()] = value
-    return ids
-
-
-def _normalized_orcid(value: str) -> str:
-    return re.sub(r"^https?://orcid\.org/", "", value.strip(), flags=re.IGNORECASE)
-
-
-def _entity_slug(name: str) -> str:
-    slug = safe_filename(re.sub(r"\s+", "-", name.casefold())).strip("._-")
-    if not slug:
-        raise ValueError("entity canonical_name is required")
-    return slug
 
 
 def _extract_pdf_pages(raw_bytes: bytes) -> list[dict[str, Any]]:
