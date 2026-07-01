@@ -811,11 +811,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         )
         return {"source_id": source["source_id"], "work": updated}
     if operation_id == "capture-source":
-        from memoria_vault.runtime.capture import (
-            capture_source,
-            source_requires_enrichment,
-            stage_catalog_source,
-        )
+        from memoria_vault.runtime.capture import stage_catalog_source
 
         source_id = str(payload.get("source_id") or "").strip()
         title = str(payload.get("title") or "").strip()
@@ -850,41 +846,21 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "machine": machine,
             "run_id": str(payload.get("run_id") or "") or None,
         }
-        if bool(payload.get("stage_only")) or source_requires_enrichment(
-            identifiers=identifiers, csl_json=csl_json
-        ):
-            result = stage_catalog_source(
-                vault,
-                source_id,
-                title,
-                description,
-                content_text,
-                **capture_kwargs,
-            )
-            return {
-                "commit": result["commit"],
-                "source_id": result["source_id"],
-                "content_path": result["content_path"],
-                "raw_path": result["raw_path"],
-                "text_status": result["text_status"],
-                "check_status": result["check_status"],
-            }
-        result = capture_source(
+        result = stage_catalog_source(
             vault,
             source_id,
             title,
             description,
             content_text,
             **capture_kwargs,
-            required_checks=required_promotion_checks(policy),
         )
         return {
             "commit": result["commit"],
-            "source_path": result["source_path"],
+            "source_id": result["source_id"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
             "text_status": result["text_status"],
-            "entity_paths": result["entity_paths"],
+            "check_status": result["check_status"],
         }
     if operation_id == "enrich-source":
         from memoria_vault.runtime.enrichment import enrich_source
@@ -1034,7 +1010,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "enrichment_job": enrichment_job,
         }
     if operation_id == "capture-url-source":
-        from memoria_vault.runtime.capture import capture_url_source, stage_url_source
+        from memoria_vault.runtime.capture import stage_url_source
 
         url = str(payload.get("url") or "").strip()
         if not url:
@@ -1043,8 +1019,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         if not isinstance(timeout, int | float):
             raise ValueError("capture-url-source timeout must be numeric")
         require_allowed_network(policy, url)
-        capture = stage_url_source if bool(payload.get("stage_only")) else capture_url_source
-        result = capture(
+        result = stage_url_source(
             vault,
             url,
             title=str(payload.get("title") or "") or None,
@@ -1052,26 +1027,17 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             timeout=float(timeout),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
-            **(
-                {}
-                if payload.get("stage_only")
-                else {"required_checks": required_promotion_checks(policy)}
-            ),
         )
-        output = {
+        return {
             "commit": result["commit"],
+            "source_id": result["source_id"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
             "text_status": result["text_status"],
+            "check_status": result["check_status"],
         }
-        if "source_path" in result:
-            output["source_path"] = result["source_path"]
-        else:
-            output["source_id"] = result["source_id"]
-            output["check_status"] = result["check_status"]
-        return output
     if operation_id == "capture-pdf-source":
-        from memoria_vault.runtime.capture import capture_pdf_source, stage_pdf_source
+        from memoria_vault.runtime.capture import stage_pdf_source
 
         source_id = str(payload.get("source_id") or "").strip()
         title = str(payload.get("title") or "").strip()
@@ -1091,8 +1057,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("capture-pdf-source identifiers must be an object")
         if csl_json is not None and not isinstance(csl_json, dict):
             raise ValueError("capture-pdf-source csl_json must be an object")
-        capture = stage_pdf_source if bool(payload.get("stage_only")) else capture_pdf_source
-        result = capture(
+        result = stage_pdf_source(
             vault,
             source_id,
             title,
@@ -1107,25 +1072,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             citekey=str(payload.get("citekey") or ""),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
-            **(
-                {}
-                if payload.get("stage_only")
-                else {"required_checks": required_promotion_checks(policy)}
-            ),
         )
-        output = {
+        return {
             "commit": result["commit"],
+            "source_id": result["source_id"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
             "text_status": result["text_status"],
+            "check_status": result["check_status"],
         }
-        if "source_path" in result:
-            output["source_path"] = result["source_path"]
-            output["entity_paths"] = result["entity_paths"]
-        else:
-            output["source_id"] = result["source_id"]
-            output["check_status"] = result["check_status"]
-        return output
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
