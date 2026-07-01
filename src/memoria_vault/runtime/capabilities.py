@@ -7,12 +7,19 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 from memoria_vault.runtime.vaultio import parse_frontmatter, read_frontmatter, safe_read
 
 CAPABILITY_TYPES = {"operation", "skill", "mcp", "workflow"}
+CAPABILITY_HOMES = {
+    "operation": "operations",
+    "skill": "skills",
+    "mcp": "mcp",
+    "workflow": "workflows",
+}
 CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"
 
 
@@ -76,6 +83,18 @@ def check_capability_index(vault: Path, *, output_path: str = CAPABILITY_INDEX_P
     return path.is_file() and path.read_text(encoding="utf-8") == render_capability_index(vault)
 
 
+def capability_manifest_path(vault: Path, capability_type: str, capability_id: str) -> Path:
+    home = CAPABILITY_HOMES.get(capability_type)
+    if home is None:
+        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
+    root = Path(vault) / "capabilities" / home
+    stem = safe_filename(capability_id)
+    path = root / f"{stem}.md"
+    if not path.is_file() and path.with_suffix("").is_dir():
+        _raise_directory_only(path.with_suffix(""), path, base=Path(vault))
+    return path
+
+
 def import_capability(
     vault: Path,
     source_path: Path | str,
@@ -128,10 +147,32 @@ def _capability_paths(vault: Path) -> list[Path]:
     root = vault / "capabilities"
     if not root.is_dir():
         return []
+    _reject_directory_only_manifests(root)
     return sorted(
         path
-        for path in root.glob("*/*.md")
+        for home in CAPABILITY_HOMES.values()
+        for path in (root / home).glob("*.md")
         if read_frontmatter(path).get("type") in CAPABILITY_TYPES
+    )
+
+
+def _reject_directory_only_manifests(root: Path) -> None:
+    for home in CAPABILITY_HOMES.values():
+        home_path = root / home
+        if not home_path.is_dir():
+            continue
+        for asset_dir in sorted(path for path in home_path.iterdir() if path.is_dir()):
+            sibling = asset_dir.with_suffix(".md")
+            if not sibling.is_file():
+                _raise_directory_only(asset_dir, sibling, base=root.parent)
+
+
+def _raise_directory_only(asset_dir: Path, sibling: Path, *, base: Path) -> None:
+    asset_display = asset_dir.relative_to(base).as_posix()
+    sibling_display = sibling.relative_to(base).as_posix()
+    raise ValueError(
+        "directory-only capability manifest is invalid: "
+        f"{asset_display}; expected sibling {sibling_display}"
     )
 
 
