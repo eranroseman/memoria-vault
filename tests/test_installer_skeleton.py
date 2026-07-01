@@ -8,6 +8,7 @@ from operations.lib import schema
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
+INSTALL_PS = ROOT / "scripts" / "install.ps1"
 MANIFEST = ROOT / "scripts" / "install" / "manifest.sh"
 RUNTIME_TOOLS = ROOT / "scripts" / "install" / "runtime-tools.sh"
 
@@ -191,7 +192,7 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
     assert "--with-hermes" in text
     assert "--with-cluster" in text
     assert "Proceed with the standalone Memoria install?" in default_branch
-    assert 'doctor bundle --workspace "$VAULT_PATH"' in text
+    assert "memoria_vault.cli doctor bundle --workspace" in text
     for required in (
         "ensure_prereqs",
         "resolve_repo",
@@ -214,6 +215,42 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
         "wire_eval_cron",
         "ensure_obsidian",
         "print_secrets_guidance",
+    ):
+        assert adapter_only not in default_branch
+
+
+def test_windows_installer_defaults_to_standalone_cli_runtime():
+    text = INSTALL_PS.read_text(encoding="utf-8")
+    default_branch = re.search(
+        r"if \(-not \$WithHermes\) \{(?P<body>.*?)\n    \}\n\n    if \(\$WithHermes\)",
+        text,
+        re.S,
+    ).group("body")
+
+    assert "[switch]$WithHermes" in text
+    assert "[switch]$WithCluster" in text
+    assert "Default path: standalone CLI/runtime workspace" in text
+    assert "memoria_vault.cli doctor bundle --workspace" in text
+    assert "memoria_vault.cli workspace rebuild --workspace" in text
+    for required in (
+        "Assert-RequiredCommands",
+        "Get-RepoRoot",
+        "Copy-VaultSource",
+        "Install-McpDeps",
+        "Install-RuntimeScaffold",
+        "Initialize-VaultGit",
+        "Install-VaultHooks",
+        "Install-Qmd",
+        "Write-CliNextSteps",
+    ):
+        assert required in default_branch
+    for adapter_only in (
+        "Install-Hermes",
+        "Enable-MemoriaCssSnippets",
+        "Install-Profiles",
+        "Install-Crons",
+        "Write-SecretsGuidance",
+        "Install-WingetApp",
     ):
         assert adapter_only not in default_branch
 
@@ -250,11 +287,16 @@ def test_installer_registers_qmd_with_workspace_local_state():
     assert 'QMD_CONFIG_DIR="$VAULT_PATH/.memoria/index/qmd/config"' in text
     assert 'INDEX_PATH="$VAULT_PATH/.memoria/index/qmd/index.sqlite"' in text
     assert "--name memoria-checked" in text
+    ps = INSTALL_PS.read_text(encoding="utf-8")
+    assert "$env:QMD_CONFIG_DIR = $config" in ps
+    assert "$env:INDEX_PATH = $index" in ps
+    assert "--name memoria-checked --mask '**/*.md'" in ps
 
 
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text
+    assert "Zotero.Zotero" not in INSTALL_PS.read_text(encoding="utf-8")
 
 
 def test_installer_escapes_template_replacements():
@@ -267,7 +309,7 @@ def test_installer_escapes_template_replacements():
 
 def test_installers_verify_generated_profiles_use_https_ssl_verify():
     sh = INSTALL.read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     for text, function_name in (
         (sh, "verify_profile_obsidian_mcp"),
         (ps, "Assert-ProfileObsidianMcpHttps"),
@@ -284,7 +326,7 @@ def test_installers_verify_generated_profiles_use_https_ssl_verify():
 
 def test_installers_render_profile_model_placeholders():
     sh = INSTALL.read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     for placeholder in ("{{MODEL_PROVIDER}}", "{{MODEL_BASE_URL}}", "{{MODEL_DEFAULT}}"):
         assert placeholder in sh
         assert placeholder in ps
@@ -324,7 +366,7 @@ def test_installer_treats_python_as_a_hard_prerequisite():
 
 def test_installers_treat_git_as_a_hard_prerequisite():
     sh = INSTALL.read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "ensure_git_available()" in sh
     assert "Git is required on PATH" in sh
     assert "ensure_git_available" in re.search(
@@ -372,13 +414,13 @@ def test_installers_install_memoria_package_non_editable():
     ).group("body")
     assert 'install --quiet "$REPO_DIR"' in install_mcp_deps
     assert '-e "$REPO_DIR"' not in install_mcp_deps
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "@('-m', 'pip', 'install', $RepoRoot)" in ps
 
 
 def test_installers_refuse_existing_vaults_instead_of_refreshing():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "This installer is fresh-install only" in sh
     assert "Refresh it from the repo" not in sh
     assert "This installer is fresh-install only" in ps
@@ -386,17 +428,25 @@ def test_installers_refuse_existing_vaults_instead_of_refreshing():
 
 def test_fresh_installer_copies_the_runtime_src_tree():
     text = INSTALL.read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     assert (ROOT / "vault-template" / "_nav.md").is_file()
     assert 'rsync -a --exclude \'.git\' "$src"/ "$VAULT_PATH"/' in text
     assert 'cp -R \\"$src\\"/. \\"$VAULT_PATH\\"/' in text
     assert 'run git -C "$VAULT_PATH" init -q' in text
     assert 'run git -C "$VAULT_PATH" branch -M main' in text
     assert 'git -C "$VAULT_PATH" commit' not in text
+    assert "Invoke-Robocopy -Source $src -Destination $Vault" in ps
+    assert "Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'init', '-q')" in ps
+    assert (
+        "Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'branch', '-M', 'main')" in ps
+    )
+    assert "golden_restore.py" in ps
+    assert "Install-VaultHooks" in ps
 
 
 def test_installers_refuse_profile_deploy_without_policy_gate():
     sh = (ROOT / "scripts/install.sh").read_text(encoding="utf-8")
-    ps = (ROOT / "scripts/install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
 
     assert "refusing to deploy $prof without the write gate" in sh
     assert "refusing to deploy $ProfileName without the write gate" in ps
@@ -404,7 +454,7 @@ def test_installers_refuse_profile_deploy_without_policy_gate():
 
 def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     for text, function_name in (
         (sh, "ensure_memoria_css_snippets"),
         (ps, "Enable-MemoriaCssSnippets"),
@@ -423,7 +473,7 @@ def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance
 
 def test_installers_reconcile_profile_skills_on_profile_deploy():
     sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
 
     for text, function_name in (
         (sh, "sync_profile_skills"),
@@ -437,9 +487,9 @@ def test_installers_reconcile_profile_skills_on_profile_deploy():
 
 
 def test_windows_profiles_only_reinstalls_mcp_deps_from_checkout():
-    ps = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    ps = INSTALL_PS.read_text(encoding="utf-8")
     body = re.search(
-        r"else \{\n        Assert-RequiredCommands(?P<body>.*?)\n    \}\n\n    Install-Profiles",
+        r"if \(\$ProfilesOnly\) \{\n        Assert-RequiredCommands(?P<body>.*?)\n        return\n    \}",
         ps,
         re.S,
     ).group("body")
@@ -450,12 +500,12 @@ def test_windows_profiles_only_reinstalls_mcp_deps_from_checkout():
 
 
 def test_windows_installer_uv_fallback_enables_mcp_extra():
-    text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    text = INSTALL_PS.read_text(encoding="utf-8")
     assert "'--extra', 'mcp', 'hermes'" in text
 
 
 def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
-    text = (ROOT / "scripts" / "install.ps1").read_text(encoding="utf-8")
+    text = INSTALL_PS.read_text(encoding="utf-8")
     assert "function Assert-ObsidianMcpEnv" in text
     assert "OBSIDIAN_MCP_PORT" in text
     assert "OBSIDIAN_MCP_SSL_VERIFY" in text

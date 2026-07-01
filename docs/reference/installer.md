@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Installer (bootstrap)
 
-The bootstrap installers (`scripts/install.sh` for the standalone Linux/WSL CLI/runtime path; `scripts/install.ps1` for the current native Windows Hermes adapter path): what each step does, the flags, and the optional crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `vault-template/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `vault-template/`, and stages a restorable golden copy of every system file.
+The bootstrap installers (`scripts/install.sh` for Linux/WSL and `scripts/install.ps1` for Windows): what each step does, the flags, and the optional crons they wire. The default path is a standalone CLI/runtime workspace. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `vault-template/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `vault-template/`, and stages a restorable golden copy of every system file.
 
 Safety features: no silent privilege escalation, `--dry-run` echoes commands and touches nothing, and `--yes` is the only non-interactive path.
 
@@ -16,11 +16,11 @@ Safety features: no silent privilege escalation, `--dry-run` echoes commands and
 
 | Flag | Effect |
 | --- | --- |
-| `--vault DIR` | Install the runtime vault here (default `~/Memoria`; prompted otherwise). Pick a folder outside any cloud-synced tree. |
-| `--with-hermes` | Linux/WSL adapter path: also install Hermes, deploy the five profiles, wire Hermes crons, install profile skills, and guide Obsidian setup. |
-| `--with-cluster` | Install the optional clustering stack (`bertopic` → `torch`, about 2 GB). Without this flag, graph tools still work and topic modeling errors cleanly. |
-| `--profiles-only` | Skip fresh vault creation; just deploy runtime deps, the five profiles, and crons from an existing vault after editing profile source or adding keys to `~/.hermes/.env`. |
-| `--only NAMES` | Restrict the profile step to a comma-separated subset (e.g. `--only memoria-librarian`); pairs with `--profiles-only`. |
+| `--vault DIR` / `-Vault DIR` | Install the runtime vault here (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows). Pick a folder outside any cloud-synced tree. |
+| `--with-hermes` / `-WithHermes` | Adapter path: also install Hermes, deploy the five profiles, wire Hermes crons, install or refresh profile skills, and guide Obsidian setup. |
+| `--with-cluster` / `-WithCluster` | Install the optional clustering stack (`bertopic` → `torch`, about 2 GB). Without this flag, graph tools still work and topic modeling errors cleanly. |
+| `--profiles-only` / `-ProfilesOnly` | Skip fresh vault creation; just deploy runtime deps, the five profiles, and crons from an existing vault after editing profile source or adding keys to the Hermes `.env`. |
+| `--only NAMES` / `-Only NAMES` | Restrict the profile step to a comma-separated subset (e.g. `--only memoria-librarian`); pairs with `--profiles-only`. |
 | `--no-apps` / `-NoApps` | Skip the Obsidian guidance (headless / server installs). |
 | `--dry-run` | Print every command that would run; change nothing. |
 | `--yes` / `-y` | Non-interactive: accept all defaults, no prompts (CI). |
@@ -59,7 +59,7 @@ when validating installer mechanics without a running local model.
 | Variable | Effect |
 | --- | --- |
 | `MEMORIA_ENV=prod` | Default. Renders the shipped Kilo Code gateway model tiers: Co-PI and Peer-reviewer on Opus, Writer on Sonnet, Librarian and Engineer on Haiku. |
-| `MEMORIA_ENV=test` | Linux/WSL test overlay. Renders every profile to `kilocode` + `https://api.kilo.ai/api/gateway` + `meta-llama/llama-4-scout`. |
+| `MEMORIA_ENV=test` | Test overlay for the Hermes adapter. Renders every profile to `kilocode` + `https://api.kilo.ai/api/gateway` + `meta-llama/llama-4-scout`. |
 | `MEMORIA_MODEL_PROVIDER` | Overrides the test overlay provider. Use `custom` for a local OpenAI-compatible endpoint. |
 | `MEMORIA_MODEL_BASE_URL` | Overrides the test overlay endpoint. |
 | `MEMORIA_MODEL_NAME` | Overrides the test overlay model name. |
@@ -82,22 +82,22 @@ The model overlay changes only the Hermes model block in the `--with-hermes` ada
 | 5. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing and registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index paths. |
 | 6. CLI next steps | Prints the exact vault-local Python commands for `memoria doctor bundle --workspace ...`, `memoria workspace rebuild --search`, and `memoria ask`. |
 
-With `--with-hermes`, the Linux/WSL installer adds the adapter steps after the standalone runtime is installed:
+With `--with-hermes` / `-WithHermes`, the installers add the adapter steps after the standalone runtime is installed:
 
 | Adapter step | What happens |
 | --- | --- |
 | Hermes | Runs the official Hermes installer and verifies ACP. |
 | Obsidian CSS and agent-client seed | Reconciles the Memoria CSS snippets and seeds `agent-client/data.json` for the WSL test path. |
 | Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, reconciles profile-owned skills, bootstraps `.env`, propagates shared secrets from `~/.hermes/.env`, and deploys the `memoria-policy-gate` write-gate plugin per lane. |
-| Skills | Clones the K-Dense bundle, verifies bundled official Hermes skills, installs the official optional `research/qmd` skill, and installs the `obsidian-markdown` hub skill. |
-| Obsidian | Guided, not silent: Linux offers the Flatpak/AppImage path. Zotero is not provisioned. |
+| Skills | Linux/WSL clones the K-Dense bundle, verifies bundled official Hermes skills, installs the official optional `research/qmd` skill, and installs the `obsidian-markdown` hub skill. Windows refreshes the bundled profile skills from the vault source. |
+| Obsidian | Guided, not silent: Linux offers the Flatpak/AppImage path; Windows offers winget guidance. Zotero is not provisioned. |
 | Secrets + next steps | Prints where Hermes profile keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist. |
 
 ---
 
 ## The crons it wires
 
-With `--with-hermes`, all six are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappers are substituted into `~/.hermes/scripts/` and the job creation is idempotent. The standalone CLI/runtime path does not wire Hermes crons.
+With `--with-hermes` / `-WithHermes`, all six are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappers are substituted into the Hermes scripts directory and the job creation is idempotent. The standalone CLI/runtime path does not wire Hermes crons.
 
 | Cron | Schedule | Runs | Effect |
 | --- | --- | --- | --- |

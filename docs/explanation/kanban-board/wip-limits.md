@@ -8,9 +8,9 @@ nav_order: 5
 # WIP limits and back-pressure
 
 The board's WIP limits exist to make overload visible before it becomes
-rubber-stamping. Hermes owns the dispatcher and the card states; Memoria sets
-caps that protect auditability, human review, and synthesis quality. Exact cap
-values live in the [Kanban board reference](../../reference/kanban-board.md#wip-limits).
+rubber-stamping. In the Hermes adapter, Hermes owns the dispatcher and the card
+states; Memoria sets caps that protect auditability, human review, and synthesis
+quality. Exact cap values live in the [Kanban board reference](../../reference/kanban-board.md#wip-limits).
 
 ## One running card per lane
 

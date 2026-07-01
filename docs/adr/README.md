@@ -46,7 +46,7 @@ status.
 | [19](19-moc-threshold-alert.md) | Agent-proposed hubs (threshold alert and Mapper handoff) | accepted |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired) | accepted |
-| [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | accepted |
+| [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | superseded → ADR-64 |
 | [23](23-scoped-memory-substrates.md) | Memory is seven scoped substrates, not one store | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
 | [25](25-session-logging-two-logs.md) | Two separate session logs — hash-paired audit vs. per-session digests | accepted |
@@ -72,7 +72,7 @@ status.
 | [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | accepted |
 | [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | accepted |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
-| [64](64-native-windows-support.md) | Native Windows support: production on Windows, testing on Linux | accepted |
+| [64](64-native-windows-support.md) | Native Windows support | accepted |
 | [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | accepted |
 | [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | accepted |
 | [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | accepted |

@@ -33,7 +33,7 @@ bounded the way it is.
 | [Why specialist profiles](why-specialist-profiles.md) | Why Memoria has one conversational Co-PI plus specialist background profiles |
 | [Why the review gate is structural](why-review-gate-is-structural.md) | Why the human approval gate is enforced by architecture |
 | [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md) | Why synthesis stays human-owned |
-| [Why Hermes](why-hermes.md) | Why Hermes is the execution layer |
+| [Why Hermes](why-hermes.md) | Why the optional Hermes adapter exists |
 | [Why deterministic methods](why-deterministic-methods.md) | Why deterministic methods are preferred where correctness matters |
 
 ## Design areas
