@@ -18,7 +18,7 @@ io_schema:
   output: counter_case
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: peer-reviewer
 mode: project
 action: check

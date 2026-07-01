@@ -18,7 +18,7 @@ io_schema:
   output: note_candidates
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: librarian
 mode: library
 action: extract

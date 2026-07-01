@@ -20,7 +20,7 @@ io_schema:
   output: backfilled_events
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 tags: [alpha11, trace]
 ---
 

@@ -18,7 +18,7 @@ io_schema:
   output: claim_analysis
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: peer-reviewer
 mode: both
 action: analyze

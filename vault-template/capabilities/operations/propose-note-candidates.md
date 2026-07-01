@@ -19,7 +19,7 @@ io_schema:
   output: note_candidates
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: co-pi
 mode: knowledge
 action: distill

@@ -204,6 +204,6 @@ Draft/export skills are deferred after alpha.11 and do not ship in the template.
 
 | Action | What it does |
 | --- | --- |
-| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set `check_status: checked`; operation-owned promotions enforce their `required_checks` (`memoria-profile` in alpha.12) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
+| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set `check_status: checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
 | Golden restore `--apply` | The PI (not the cron) decides to write golden bytes back over drifted system files. |

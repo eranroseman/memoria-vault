@@ -20,7 +20,7 @@ io_schema:
   output: digest_plus_hubs_and_suggestions
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: co-pi
 mode: knowledge
 action: synthesize

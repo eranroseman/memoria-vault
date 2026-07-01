@@ -18,7 +18,7 @@ io_schema:
   output: tension_candidates
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: librarian
 mode: library
 action: link

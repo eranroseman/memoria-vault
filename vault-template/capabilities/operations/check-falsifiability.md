@@ -18,7 +18,7 @@ io_schema:
   output: falsifiability_report
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 posture: peer-reviewer
 mode: both
 action: check

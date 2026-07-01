@@ -18,7 +18,7 @@ io_schema:
   output: linked_note
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 tags: [alpha11, notes]
 ---
 

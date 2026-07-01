@@ -25,7 +25,7 @@ io_schema:
   output: enriched_source
 risk_class: medium
 required_checks:
-  - memoria-profile
+  - memoria-runtime
 tags: [alpha13, enrichment, library]
 ---
 

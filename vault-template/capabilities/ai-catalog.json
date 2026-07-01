@@ -47,13 +47,13 @@
       "path": "capabilities/operations/analyze-claims.md",
       "prompt_version": "analyze-claims.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Analyze claims",
       "trust": {
-        "sha256": "sha256:150ea58204a232b6e79f16d7188c11630172b4c195fefa1ea7001559527c9462",
+        "sha256": "sha256:dcf86c0926a3f375eb794b3b407766a8e0219a81209c6e9f85e73790ea683c1f",
         "source": "local"
       },
       "type": "operation"
@@ -166,7 +166,7 @@
       "path": "capabilities/operations/capture-bibtex-source.md",
       "prompt_version": "capture-bibtex-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -176,7 +176,7 @@
       ],
       "title": "Capture BibTeX source",
       "trust": {
-        "sha256": "sha256:c6c808c928606e39f02ac94cd0dadae9fe0ae14ff854c3e34945408681b23e48",
+        "sha256": "sha256:82e3d53579343d624c8f85d80b6cd8c67bc588e2a739b2bc67132e8d63faab7c",
         "source": "local"
       },
       "type": "operation"
@@ -199,7 +199,7 @@
       "path": "capabilities/operations/capture-pdf-source.md",
       "prompt_version": "capture-pdf-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -209,7 +209,7 @@
       ],
       "title": "Capture PDF source",
       "trust": {
-        "sha256": "sha256:a5a39ea5e68a9e5c76fab431ef24a0a55801d63b7804501e2da5bb4826c467d0",
+        "sha256": "sha256:f4ba5bd82e06511af186407fa5a92dfa0582723cf5f1860a554aa48976d6faa9",
         "source": "local"
       },
       "type": "operation"
@@ -233,7 +233,7 @@
       "path": "capabilities/operations/capture-source.md",
       "prompt_version": "capture-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -243,7 +243,7 @@
       ],
       "title": "Capture source",
       "trust": {
-        "sha256": "sha256:c99a508ecb01414f2181983b4f9b6fd07754d11e15ecb8f167da68aa5e545be7",
+        "sha256": "sha256:bd94618ca93252d9c05f88953f09abca41887b437774857f120842b86c3bd909",
         "source": "local"
       },
       "type": "operation"
@@ -269,7 +269,7 @@
       "path": "capabilities/operations/capture-url-source.md",
       "prompt_version": "capture-url-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -279,7 +279,7 @@
       ],
       "title": "Capture URL source",
       "trust": {
-        "sha256": "sha256:7be6f46314e0476ee075a3e4fe2a75aed327a34f247b0f1c2f74eef7f18cd757",
+        "sha256": "sha256:200db32eb7ed1ac842073f2171658f8a4cf1c388ee1c5555bcd859365442d835",
         "source": "local"
       },
       "type": "operation"
@@ -305,7 +305,7 @@
       "path": "capabilities/operations/capture-zotero-source.md",
       "prompt_version": "capture-zotero-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -316,7 +316,7 @@
       ],
       "title": "Capture Zotero source",
       "trust": {
-        "sha256": "sha256:23a476421424228ee4a9811a74f147bf32f092d2c1c4b31257e980e0e66d3a81",
+        "sha256": "sha256:2306fce4f92c3a5e92b793e27eb28837f511951a8d37287d484189cc7b1fe8ff",
         "source": "local"
       },
       "type": "operation"
@@ -372,13 +372,13 @@
       "path": "capabilities/operations/check-falsifiability.md",
       "prompt_version": "check-falsifiability.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Check falsifiability",
       "trust": {
-        "sha256": "sha256:4f51bf84a93dbc3674947d27f099ab62e2dfa686dbd6f640cc9fb0afa68e9836",
+        "sha256": "sha256:106aadb8261974e426e160229748e7ea07d2ba4b1cd15a34606ed22b5a94533b",
         "source": "local"
       },
       "type": "operation"
@@ -430,13 +430,13 @@
       "path": "capabilities/operations/compare-and-contrast.md",
       "prompt_version": "compare-and-contrast.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Compare and contrast",
       "trust": {
-        "sha256": "sha256:cdf3c2ad057055c30003e86521e875c757b7792364ea8c2611e81bd500ba4160",
+        "sha256": "sha256:5f724607e19ab92a4576b09fee6685c5378d5826b5e10e59ba2566eefcba03f6",
         "source": "local"
       },
       "type": "operation"
@@ -460,13 +460,13 @@
       "path": "capabilities/operations/compile-source-digest.md",
       "prompt_version": "compile-source-digest.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Compile source digest",
       "trust": {
-        "sha256": "sha256:97a504f1f72b9079f84c616239f281268e3aac9cce44039d250e557ee3a6760a",
+        "sha256": "sha256:a176d651c81cf5a5e0ac792374cdaf45e7d977ec41b571d5006ad78d8e4891d1",
         "source": "local"
       },
       "type": "operation"
@@ -488,7 +488,7 @@
       "path": "capabilities/operations/curate-note-candidate.md",
       "prompt_version": "curate-note-candidate.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -498,7 +498,7 @@
       ],
       "title": "Curate note candidate",
       "trust": {
-        "sha256": "sha256:50ce5a9cf29d3c0b2a269ce8c54d3151ffdc41dd2aa3d771d1a9a353c7e8d0ba",
+        "sha256": "sha256:c2e2b8bc480e8c5cb00704900708971fd4dca76a7c2eecb93e2b18ab5cc0811f",
         "source": "local"
       },
       "type": "operation"
@@ -520,7 +520,7 @@
       "path": "capabilities/operations/curate-note-link.md",
       "prompt_version": "curate-note-link.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -530,7 +530,7 @@
       ],
       "title": "Curate note link",
       "trust": {
-        "sha256": "sha256:94ef6d8cd374a7abbfbd61d01f687ba92c014c0f753e48b750fe102c163af908",
+        "sha256": "sha256:6befbcbedddf80e47aad04e92faa9e9bc54c4f888399818f5f85be2e7b927465",
         "source": "local"
       },
       "type": "operation"
@@ -560,7 +560,7 @@
       "path": "capabilities/operations/enrich-source.md",
       "prompt_version": "enrich-source.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -571,7 +571,7 @@
       ],
       "title": "Enrich source",
       "trust": {
-        "sha256": "sha256:6db8eaa829146523adecff5a8949b7b1b1d4c8f13a0ce59cee509864be1ab68e",
+        "sha256": "sha256:f8808bd7cf14431b1aa3210b9e3c36ee1b1d5f145bf8cbe421b33107d711b263",
         "source": "local"
       },
       "type": "operation"
@@ -624,13 +624,13 @@
       "path": "capabilities/operations/extract-claim-stubs.md",
       "prompt_version": "extract-claim-stubs.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Extract claim stubs",
       "trust": {
-        "sha256": "sha256:d217bb5be6f184019fe4407ce53522a70c2fd532b547323800b11afe575e6440",
+        "sha256": "sha256:0f2e9d6fc8432fadd91451ba01d69c29bae9b6ec8dbfd1f301d276de3393eefb",
         "source": "local"
       },
       "type": "operation"
@@ -901,7 +901,7 @@
       "path": "capabilities/operations/mark-checked.md",
       "prompt_version": "mark-checked.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -911,7 +911,7 @@
       ],
       "title": "Mark checked",
       "trust": {
-        "sha256": "sha256:b2444921415fdb45136de311043d45ebd112037d321803d64414e11997fad6c6",
+        "sha256": "sha256:024971e1fcc1a033518f2ffbddef7b693b58c076f9d2dd4b227e1b214d93811b",
         "source": "local"
       },
       "type": "operation"
@@ -935,7 +935,7 @@
       "path": "capabilities/operations/observe-pi-edits.md",
       "prompt_version": "observe-pi-edits.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "local",
@@ -945,7 +945,7 @@
       ],
       "title": "Observe PI edits",
       "trust": {
-        "sha256": "sha256:ab55b7094080e551b4a54e9adffa4e44f73e6ad2eb63983b68ab97a5e7c7b9b1",
+        "sha256": "sha256:8ecc41ae37bd24f628717558b39746e653925325ada247e646b8dbc31ea29850",
         "source": "local"
       },
       "type": "operation"
@@ -968,13 +968,13 @@
       "path": "capabilities/operations/propose-note-candidates.md",
       "prompt_version": "propose-note-candidates.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Propose note candidates",
       "trust": {
-        "sha256": "sha256:fdb51eaa7962c238da0e5953a1ff8e5ad85c1b402848cdba186d28bf76e8a793",
+        "sha256": "sha256:58462c9e3898bcaab24f0b5162c67a92b4f23235d89280395618f378f51abdbe",
         "source": "local"
       },
       "type": "operation"
@@ -1059,13 +1059,13 @@
       "path": "capabilities/operations/red-team-argument.md",
       "prompt_version": "red-team-argument.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Red-team an argument",
       "trust": {
-        "sha256": "sha256:5bc950c65735ddf1c4dabda9b329da7b125842d43eec3209e175430aff459679",
+        "sha256": "sha256:e38aced7519369cc619e0cfd1513da5a73bf3aaaa516035652b085098c629d96",
         "source": "local"
       },
       "type": "operation"
@@ -1320,13 +1320,13 @@
       "path": "capabilities/operations/summarize-for-recall.md",
       "prompt_version": "summarize-for-recall.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Summarize for recall",
       "trust": {
-        "sha256": "sha256:88e2da575ea4abee1bade29b62f9ed0ca09d817b8376ac78125168167ed436bb",
+        "sha256": "sha256:d1a7f8150b2d57ee7f2563724a472387ef7f15f0a66658e3bf841492e82db2fd",
         "source": "local"
       },
       "type": "operation"
@@ -1348,13 +1348,13 @@
       "path": "capabilities/operations/surface-tensions.md",
       "prompt_version": "surface-tensions.v1",
       "required_checks": [
-        "memoria-profile"
+        "memoria-runtime"
       ],
       "risk_class": "medium",
       "runner": "pydantic-ai",
       "title": "Surface tensions",
       "trust": {
-        "sha256": "sha256:06b9dff324f3d483fef16b2c90512cebe62a19de4e809302217ba259eead40bf",
+        "sha256": "sha256:ee6da29bb2a8ac81b55af1a40be384063f7ea1b224c148f5f0e55cd7d78dbce6",
         "source": "local"
       },
       "type": "operation"

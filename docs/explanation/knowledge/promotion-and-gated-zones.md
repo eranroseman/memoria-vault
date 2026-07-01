@@ -24,7 +24,7 @@ Promotion is not a file move. A Concept is born in its type home and stays
 there; the boundary is the **state transition** and its trace. Machine writes
 stage first, promote through the trusted writer, and record `derived` plus
 `check-fired` events. Operation-owned promotions use that operation's
-`required_checks`; alpha.11 enforces `memoria-profile` before promotion and
+`required_checks`; the standalone runtime enforces `memoria-runtime` before promotion and
 fails closed on an empty or unsupported promotion-check list. PI edits are direct
 and then observed/backfilled. Foreign writes are quarantined by scan.
 

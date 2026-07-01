@@ -23,13 +23,13 @@ EVENT_OBSERVED_EXTERNAL_EDIT = "observed_external_edit"
 EVENT_CHECK_FIRED = "check-fired"
 EVENT_RESOLVED = "resolved"
 TRACE_OUTPUT_EVENTS = frozenset({EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT})
-SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-profile"})
+SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-runtime"})
 
 
 def normalize_promotion_checks(
     checks: Iterable[str] | None = None,
     *,
-    default: str = "memoria-profile",
+    default: str = "memoria-runtime",
 ) -> list[str]:
     """Return the checks the worker can enforce before marking a Concept checked."""
     raw_checks = [default] if checks is None else list(checks)
@@ -191,7 +191,7 @@ def mark_checked(
     vault: Path,
     target_path: str,
     *,
-    check: str = "memoria-profile",
+    check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     machine: str | None = None,
     schemas_dir: Path | None = None,
@@ -271,7 +271,7 @@ def promote_checked(
     vault: Path,
     target_path: str,
     *,
-    check: str = "memoria-profile",
+    check: str = "memoria-runtime",
     checks: Iterable[str] | None = None,
     machine: str | None = None,
     schemas_dir: Path | None = None,
