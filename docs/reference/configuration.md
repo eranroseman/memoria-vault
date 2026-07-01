@@ -60,9 +60,9 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 
 | Type | Folder |
 | --- | --- |
+| `adapter` | `capabilities/adapters` |
 | `digest` | `knowledge/digests` |
 | `hub` | `knowledge/hubs` |
-| `mcp` | `capabilities/mcp` |
 | `note` | `knowledge/notes` |
 | `operation` | `capabilities/operations` |
 | `organization` | `catalog/entities` |

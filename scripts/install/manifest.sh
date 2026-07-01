@@ -27,9 +27,9 @@ SKELETON_DIRS=(
   knowledge/projects
   knowledge/views
   capabilities
+  capabilities/adapters
   capabilities/operations
   capabilities/skills
-  capabilities/mcp
   capabilities/workflows
   system/exports
   system/exports/assets

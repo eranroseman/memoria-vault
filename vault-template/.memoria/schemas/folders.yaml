@@ -13,9 +13,9 @@ homes:
   note: knowledge/notes
   hub: knowledge/hubs
   project: knowledge/projects
+  adapter: capabilities/adapters
   operation: capabilities/operations
   skill: capabilities/skills
-  mcp: capabilities/mcp
   workflow: capabilities/workflows
 
 machine_staging_roots:
@@ -53,9 +53,9 @@ skeleton:
   - knowledge/projects
   - knowledge/views
   - capabilities
+  - capabilities/adapters
   - capabilities/operations
   - capabilities/skills
-  - capabilities/mcp
   - capabilities/workflows
   - system/exports
   - system/exports/assets

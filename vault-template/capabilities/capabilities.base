@@ -27,11 +27,11 @@ views:
       - description
       - resource
   - type: table
-    name: MCP Servers
+    name: Adapters
     filters:
       and:
-        - file.inFolder("capabilities/mcp")
-        - type == "mcp"
+        - file.inFolder("capabilities/adapters")
+        - type == "adapter"
     order:
       - formula.note
       - check_status

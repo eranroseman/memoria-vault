@@ -17,7 +17,7 @@ Obsidian. They are not hidden `.memoria/` internals.
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
 | `catalog/catalog.base` | Bases view over `catalog/sources/`. | [Document types](document-types.md) |
 | `knowledge/views/knowledge.base` | Bases views over `digest`, `note`, `hub`, and `project` Concepts. | [Dashboards](dashboards.md) |
-| `capabilities/capabilities.base` | Bases views over `operation`, `skill`, `mcp`, and `workflow` Concepts. | [System actions](system-actions.md) |
+| `capabilities/capabilities.base` | Bases views over `operation`, `skill`, `adapter`, and `workflow` Concepts. | [System actions](system-actions.md) |
 | `capabilities/_generated/capability-index.json` | Generated tracked index of capability Concepts with local trust hashes. | [Operations](operations.md) |
 
 The source copies are tracked in

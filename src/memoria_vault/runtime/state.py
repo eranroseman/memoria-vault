@@ -929,7 +929,7 @@ def _init(conn: sqlite3.Connection) -> None:
             concept_type TEXT NOT NULL
                 CHECK (concept_type IN (
                     'source', 'digest', 'note', 'hub', 'capability',
-                    'operation', 'skill', 'mcp', 'workflow', 'person',
+                    'operation', 'skill', 'adapter', 'workflow', 'person',
                     'organization', 'venue', 'project'
                 )),
             store TEXT NOT NULL CHECK (store IN ('db', 'file')),

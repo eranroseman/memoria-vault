@@ -57,9 +57,9 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "knowledge/hubs",
         "knowledge/projects",
         "capabilities",
+        "capabilities/adapters",
         "capabilities/operations",
         "capabilities/skills",
-        "capabilities/mcp",
         "capabilities/workflows",
     }
     skeleton = set(schema.load_folders()["skeleton"])

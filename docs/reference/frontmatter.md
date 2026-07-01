@@ -69,7 +69,7 @@ Generated from `vault-template/.memoria/schemas/types`.
 
 | Check status subset | Types |
 | --- | --- |
-| `unchecked` · `checked` · `quarantined` | `organization` · `person` · `source` · `venue` · `digest` · `hub` · `note` · `project` · `mcp` · `operation` · `skill` · `workflow` |
+| `unchecked` · `checked` · `quarantined` | `organization` · `person` · `source` · `venue` · `digest` · `hub` · `note` · `project` · `adapter` · `operation` · `skill` · `workflow` |
 
 ## Enum values
 
@@ -90,7 +90,7 @@ Generated from `vault-template/.memoria/schemas/types`.
 | `note` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `note` | `note_status` | `candidate` · `accepted` · `rejected` · `superseded` · `needs_review` |
 | `project` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `mcp` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `adapter` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `operation` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `operation` | `risk_class` | `low` · `medium` · `high` |
 | `skill` | `check_status` | `unchecked` · `checked` · `quarantined` |
@@ -108,7 +108,7 @@ Generated from `vault-template/.memoria/schemas/types`.
 | `hub` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `citations` · `tags` |
 | `note` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
 | `project` | `type` · `check_status` · `title` · `description` | - | `resource` · `thesis` · `scope` · `links` · `tags` |
-| `mcp` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
+| `adapter` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
 | `operation` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
 | `skill` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
 | `workflow` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |

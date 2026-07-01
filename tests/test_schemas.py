@@ -15,9 +15,9 @@ ALPHA11_TYPES = {
     "note",
     "hub",
     "project",
+    "adapter",
     "operation",
     "skill",
-    "mcp",
     "workflow",
 }
 

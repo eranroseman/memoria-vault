@@ -35,10 +35,10 @@ Where every file lives.
 │   ├── index.md              generated knowledge index
 │   ├── digests/  notes/  hubs/  projects/
 │   └── views/knowledge.base
-├── capabilities/            operation, skill, MCP, and workflow Concepts
+├── capabilities/            operation, skill, adapter, and workflow Concepts
 │   ├── index.md              generated capabilities index
 │   ├── capabilities.base
-│   ├── operations/  skills/  mcp/  workflows/
+│   ├── operations/  skills/  adapters/  workflows/
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
