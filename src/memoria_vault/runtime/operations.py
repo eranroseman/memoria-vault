@@ -9,7 +9,6 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-from urllib import error, request
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import capability_manifest_path
@@ -472,38 +471,40 @@ def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
         or "https://api.openai.com/v1"
     ).rstrip("/")
     _require_network(policy, base_url)
-    payload = {
-        "model": policy["model"],
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0,
-        "max_tokens": int(os.environ.get("MEMORIA_MODEL_MAX_TOKENS", "2048")),
-    }
     api_key = (
         os.environ.get("MEMORIA_MODEL_API_KEY")
         or os.environ.get("OPENAI_API_KEY")
         or os.environ.get("KILOCODE_API_KEY")
     )
-    headers = {"Content-Type": "application/json"}
+    Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+    provider_kwargs = {"base_url": base_url}
     if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-    req = request.Request(
-        f"{base_url}/chat/completions",
-        data=json.dumps(payload).encode("utf-8"),
-        headers=headers,
-        method="POST",
-    )
+        provider_kwargs["api_key"] = api_key
+    model = OpenAIChatModel(policy["model"], provider=OpenAIProvider(**provider_kwargs))
+    agent = Agent(model)
+    settings = {
+        "temperature": 0,
+        "max_tokens": int(os.environ.get("MEMORIA_MODEL_MAX_TOKENS", "2048")),
+        "timeout": float(os.environ.get("MEMORIA_MODEL_TIMEOUT", "90")),
+    }
     try:
-        with request.urlopen(
-            req, timeout=float(os.environ.get("MEMORIA_MODEL_TIMEOUT", "90"))
-        ) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
+        result = agent.run_sync(prompt, model_settings=settings)
+    except Exception as exc:
         raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
-    content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content")
-    text = str(content or "").strip()
+    text = str(getattr(result, "output", "") or "").strip()
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
     return text
+
+
+def _load_pydantic_ai_openai() -> tuple[Any, Any, Any]:
+    try:
+        from pydantic_ai import Agent
+        from pydantic_ai.models.openai import OpenAIChatModel
+        from pydantic_ai.providers.openai import OpenAIProvider
+    except ImportError as exc:
+        raise RuntimeError("pydantic-ai runner requires pydantic-ai-slim[openai]") from exc
+    return Agent, OpenAIChatModel, OpenAIProvider
 
 
 def _validate_digest_output(

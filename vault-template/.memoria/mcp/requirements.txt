@@ -11,6 +11,10 @@ mcp>=1.28.1
 # its tests run without PyYAML; only the live server's lane loading needs it.
 PyYAML>=6.0.3
 
+# Operation runner for typed LLM calls through OpenAI-compatible local or remote
+# endpoints.
+pydantic-ai-slim[openai]>=1.0
+
 # Local-PDF full-text extraction for the ingest pipeline (extract.py, the
 # memoria-ingest MCP server). Lazy-imported, so ingest still runs without it
 # (PMC / pre-extracted tiers); installing it enables the local Zotero-PDF
