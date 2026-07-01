@@ -1664,20 +1664,20 @@ def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
 
 
 def _operation_rows(workspace: Path) -> list[dict[str, Any]]:
-    from memoria_vault.runtime.vaultio import read_frontmatter
+    from memoria_vault.runtime.capabilities import render_capability_index
 
     operations = []
-    for path in sorted((workspace / "capabilities/operations").glob("*.md")):
-        frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "operation":
+    catalog = json.loads(render_capability_index(workspace))
+    for row in catalog["capabilities"]:
+        if row.get("type") != "operation":
             continue
         operations.append(
             {
-                "operation_id": frontmatter.get("operation_id") or path.stem,
-                "title": frontmatter.get("title") or path.stem,
-                "check_status": frontmatter.get("check_status") or "",
-                "risk_class": frontmatter.get("risk_class") or "",
-                "runner": frontmatter.get("runner") or "",
+                "operation_id": row.get("operation_id") or row["id"],
+                "title": row.get("title") or row["id"],
+                "check_status": row.get("check_status") or "",
+                "risk_class": row.get("risk_class") or "",
+                "runner": row.get("runner") or "",
             }
         )
     return operations
