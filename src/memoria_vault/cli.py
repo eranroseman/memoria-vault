@@ -916,6 +916,11 @@ def _cmd_request_retry(args: argparse.Namespace) -> int:
     row = _request_row(workspace, args.request_id)
     if row is None:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
+    if row["status"] not in {"failed", "cancelled"}:
+        return _fail(
+            f"request retry requires failed or cancelled status, got {row['status']}",
+            json_output=args.json,
+        )
     job = json.loads(row["job_json"])
     job["status"] = "pending"
     job.pop("error", None)

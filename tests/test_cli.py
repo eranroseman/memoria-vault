@@ -1033,6 +1033,14 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     retried = json.loads(capsys.readouterr().out)
     assert retried["request"]["status"] == "pending"
 
+    assert (
+        main(["request", "retry", "--workspace", str(workspace), "recoverable-request", "--json"])
+        == 2
+    )
+    retry_pending = json.loads(capsys.readouterr().out)
+    assert retry_pending["ok"] is False
+    assert "failed or cancelled" in retry_pending["error"]
+
     assert main(["steering", "show", "--workspace", str(workspace), "--json"]) == 0
     steering = json.loads(capsys.readouterr().out)
     assert steering["path"] == "steering.md"
