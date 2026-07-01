@@ -170,8 +170,8 @@ def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     link = note_sub.add_parser("link")
     _common(link)
     link.add_argument("source_note_path")
-    link.add_argument("--type", choices=("supports", "contradicts", "extends"), required=True)
-    link.add_argument("--target", required=True)
+    link.add_argument("link_type", choices=("supports", "contradicts", "extends"))
+    link.add_argument("target_path")
     link.add_argument("--reason", default="")
     link.set_defaults(handler=_cmd_note_link)
     capture = note_sub.add_parser("capture")
@@ -774,8 +774,8 @@ def _cmd_note_link(args: argparse.Namespace) -> int:
             "curate-note-link",
             {
                 "source_note_path": args.source_note_path,
-                "link_type": args.type,
-                "target_path": args.target,
+                "link_type": args.link_type,
+                "target_path": args.target_path,
                 "reason": args.reason,
             },
         ),
