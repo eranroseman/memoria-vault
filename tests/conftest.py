@@ -26,6 +26,7 @@ TEST_LEVELS = {
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
     "test_classify.py": "unit",
+    "test_cli.py": "contract",
     "test_cluster_mcp.py": "contract",
     "test_cron_heartbeat.py": "contract",
     "test_cspell_scope.py": "static",
