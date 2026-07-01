@@ -14,7 +14,13 @@ from urllib import error, parse, request
 import yaml
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import render_references_bib
+from memoria_vault.runtime.capture import (
+    _extract_pdf_pages,
+    _html_text,
+    _pdf_content_text,
+    _validate_pdf_text_coherence,
+    render_references_bib,
+)
 from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -160,6 +166,8 @@ def enrich_source(
     content_path = str(source.get("content_path") or "")
     if text_status != "full-text":
         acquired_text = _fixture_full_text(payloads, fixture_payloads)
+        if not acquired_text:
+            acquired_text = _fetch_discovered_full_text(policy, payloads)
         if acquired_text:
             content_hash, content_path = _write_acquired_text_blob(
                 vault, source["source_id"], acquired_text
@@ -441,6 +449,60 @@ def _fixture_full_text(
             if text:
                 return text
     return ""
+
+
+def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict[str, Any]]) -> str:
+    url = _open_access_text_url(payloads.get("unpaywall", {}))
+    if not url:
+        return ""
+    from memoria_vault.runtime.operations import require_allowed_network
+
+    try:
+        require_allowed_network(policy, url)
+    except PermissionError:
+        return ""
+    req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha14"})
+    try:
+        with request.urlopen(req, timeout=20) as resp:
+            raw = resp.read()
+            content_type = _response_content_type(resp)
+    except (OSError, error.HTTPError):
+        return ""
+    return _extract_full_text(url, raw, content_type)
+
+
+def _open_access_text_url(payload: dict[str, Any]) -> str:
+    location = payload.get("best_oa_location")
+    if not isinstance(location, dict):
+        return ""
+    for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
+        url = str(location.get(key) or "").strip()
+        if url:
+            return url
+    return ""
+
+
+def _response_content_type(resp: Any) -> str:
+    headers = getattr(resp, "headers", None)
+    if hasattr(headers, "get"):
+        return str(headers.get("Content-Type") or "")
+    info = resp.info() if hasattr(resp, "info") else None
+    return str(info.get("Content-Type") or "") if hasattr(info, "get") else ""
+
+
+def _extract_full_text(url: str, raw: bytes, content_type: str) -> str:
+    lower_type = content_type.casefold()
+    path = parse.urlsplit(url).path.casefold()
+    if "html" in lower_type or path.endswith((".html", ".htm")):
+        return _html_text(raw)[1].strip()
+    if "pdf" in lower_type or path.endswith(".pdf"):
+        try:
+            pages = _extract_pdf_pages(raw)
+            _validate_pdf_text_coherence(pages)
+            return _pdf_content_text(pages).strip()
+        except (ImportError, RuntimeError, ValueError):
+            return ""
+    return raw.decode("utf-8", errors="replace").strip()
 
 
 def _location_value(payload: dict[str, Any], key: str) -> Any:
