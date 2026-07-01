@@ -542,46 +542,36 @@ def test_worker_runs_capture_zotero_source_operation_jobs(tmp_path: Path) -> Non
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/zotero-wxyz5678/source.md"
-    assert done["content_path"] == "catalog/sources/zotero-wxyz5678/content.md"
-    assert done["raw_path"] == "catalog/sources/zotero-wxyz5678/raw/zotero-wxyz5678.zotero.json"
-    source_fm = read_frontmatter(vault / done["source_path"])
-    assert source_fm["check_status"] == "checked"
-    assert source_fm["citekey"] == "lin2026queued"
-    assert source_fm["identifiers"] == {"doi": "10.1000/queued.zotero"}
-    assert done["entity_paths"] == ["catalog/entities/person-morgan-lin.md"]
+    assert done["source_id"] == "zotero-wxyz5678"
+    assert done["content_path"] == ".memoria/blobs/source-content/zotero-wxyz5678/content.txt"
+    assert done["raw_path"] == (
+        ".memoria/blobs/source-content/zotero-wxyz5678/raw/zotero-wxyz5678.zotero.json"
+    )
+    assert done["check_status"] == "unchecked"
+    assert not (vault / "catalog/sources/zotero-wxyz5678/source.md").exists()
     assert (vault / done["content_path"]).read_text(encoding="utf-8") == (
         "Queued Zotero capture fixture.\n"
     )
+    with state.connect(vault) as conn:
+        source = conn.execute(
+            "SELECT citekey, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
+            ("zotero-wxyz5678",),
+        ).fetchone()
+        enrich = conn.execute(
+            "SELECT status, operation_id FROM operation_requests WHERE request_id = ?",
+            ("enrich-zotero-wxyz5678",),
+        ).fetchone()
+    assert source["citekey"] == "lin2026queued"
+    assert source["check_status"] == "unchecked"
+    assert json.loads(source["identifiers_json"]) == {"doi": "10.1000/queued.zotero"}
+    assert tuple(enrich) == ("pending", "enrich-source")
+    assert done["enrichment_job"]["job_id"] == "enrich-zotero-wxyz5678"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {
-        "catalog/entities/person-morgan-lin.md",
-        "catalog/sources/zotero-wxyz5678/content.md",
-        "catalog/sources/zotero-wxyz5678/source.md",
-        "journal/test-machine.jsonl",
-        "references.bib",
-    }
+    assert committed == {"journal/test-machine.jsonl"}
 
 
-def test_worker_runs_capture_zotero_source_from_local_api_key(tmp_path: Path, monkeypatch) -> None:
+def test_worker_rejects_capture_zotero_source_from_local_api_key(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    item = {
-        "key": "FETCH01",
-        "data": {
-            "key": "FETCH01",
-            "itemType": "journalArticle",
-            "title": "Fetched Worker Zotero Source",
-            "date": "2026",
-            "abstractNote": "Worker fetched through the local API.",
-        },
-    }
-    calls = []
-
-    def fake_read(url: str, timeout: float):
-        calls.append((url, timeout))
-        return item
-
-    monkeypatch.setattr("memoria_vault.runtime.capture._read_zotero_json", fake_read)
 
     queued = enqueue_operation(
         vault,
@@ -597,13 +587,9 @@ def test_worker_runs_capture_zotero_source_from_local_api_key(tmp_path: Path, mo
     done = run_next_job(vault, machine="test-machine")
 
     assert queued["kind"] == "operation"
-    assert calls == [("http://localhost:23119/api/users/0/items/FETCH01", 2.0)]
     assert done is not None
-    assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/zotero-fetch01/source.md"
-    assert read_frontmatter(vault / done["source_path"])["title"] == (
-        "Fetched Worker Zotero Source"
-    )
+    assert done["status"] == "failed"
+    assert done["error"] == "capture-zotero-source accepts exported zotero_item only"
 
 
 def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypatch) -> None:
