@@ -11,7 +11,7 @@ allowed_paths:
   - knowledge/
   - .memoria/index/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: answer-query.v1
 io_schema:

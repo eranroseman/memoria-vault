@@ -10,7 +10,7 @@ allowed_paths:
   - journal/
   - .memoria/index/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: acknowledge-attention.v1
 io_schema:

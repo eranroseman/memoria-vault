@@ -12,7 +12,7 @@ allowed_paths:
   - journal/
   - .memoria/quarantine/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: cascade-rollback.v1
 io_schema:

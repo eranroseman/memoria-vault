@@ -10,7 +10,7 @@ allowed_paths:
   - knowledge/
   - references.bib
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: export-project.v1
 io_schema:

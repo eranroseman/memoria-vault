@@ -10,7 +10,7 @@ allowed_paths:
   - .memoria/blobs/source-content/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: capture-bibtex-source.v1
 io_schema:

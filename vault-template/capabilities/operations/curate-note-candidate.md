@@ -10,7 +10,7 @@ allowed_paths:
   - knowledge/notes/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: curate-note-candidate.v1
 io_schema:

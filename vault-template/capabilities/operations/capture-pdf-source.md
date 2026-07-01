@@ -11,7 +11,7 @@ allowed_paths:
   - journal/
   - references.bib
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: capture-pdf-source.v1
 io_schema:

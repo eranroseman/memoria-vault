@@ -10,7 +10,7 @@ allowed_paths:
   - catalog/
   - journal/
 allowed_network: []
-runner: local
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: check-source-metadata.v1
 io_schema:
