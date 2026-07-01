@@ -538,6 +538,47 @@ def capture_url_source(
     )
 
 
+def stage_url_source(
+    vault: Path,
+    url: str,
+    *,
+    title: str | None = None,
+    description: str | None = None,
+    timeout: float = 10.0,
+    machine: str | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Stage one URL snapshot as an unchecked DB row plus text/blob payloads."""
+    resource = url.strip()
+    if not resource:
+        raise ValueError("url is required")
+    raw_bytes = _read_url_bytes(resource, timeout)
+    extracted_title, content_text = _html_text(raw_bytes)
+    final_title = title or extracted_title or resource
+    source_id = _url_source_id(resource)
+    return stage_catalog_source(
+        vault,
+        source_id,
+        final_title,
+        description or f"URL snapshot captured from {resource}.",
+        content_text,
+        raw_bytes=raw_bytes,
+        raw_filename=f"{safe_filename(source_id)}.html",
+        resource=resource,
+        item_type="webpage",
+        csl_json={
+            "id": source_id,
+            "type": "webpage",
+            "title": final_title,
+            "URL": resource,
+        },
+        metadata_status="partial",
+        machine=machine,
+        run_id=run_id or f"capture-url:{resource}",
+        workflow="capture_url_source",
+    )
+
+
 def capture_pdf_source(
     vault: Path,
     source_id: str,
@@ -580,6 +621,49 @@ def capture_pdf_source(
         run_id=run_id or f"capture-pdf:{_source_id(source_id)}",
         workflow="capture_pdf_source",
         required_checks=required_checks,
+    )
+
+
+def stage_pdf_source(
+    vault: Path,
+    source_id: str,
+    title: str,
+    description: str,
+    raw_bytes: bytes,
+    *,
+    raw_filename: str = "source.pdf",
+    resource: str = "",
+    item_type: str = "article",
+    identifiers: dict[str, Any] | None = None,
+    csl_json: dict[str, Any] | None = None,
+    metadata_status: str = "partial",
+    citekey: str = "",
+    machine: str | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Stage a PDF raw blob and extracted text as an unchecked DB row."""
+    stable_source_id = _source_id(source_id)
+    pdf_raw_filename = raw_filename or "source.pdf"
+    pages = _extract_pdf_pages(raw_bytes)
+    _validate_pdf_text_coherence(pages)
+    content_text = _pdf_content_text(pages)
+    return stage_catalog_source(
+        vault,
+        stable_source_id,
+        title,
+        description,
+        content_text,
+        raw_bytes=raw_bytes,
+        raw_filename=pdf_raw_filename,
+        resource=resource,
+        item_type=item_type,
+        identifiers=identifiers,
+        csl_json=csl_json,
+        metadata_status=metadata_status,
+        citekey=citekey,
+        machine=machine,
+        run_id=run_id or f"capture-pdf:{stable_source_id}",
+        workflow="capture_pdf_source",
     )
 
 

@@ -122,6 +122,111 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
     )
 
 
+def test_cli_work_capture_file_stages_text_without_legacy_markdown(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    text = tmp_path / "work.txt"
+    text.write_text("Full text from the PI.\n", encoding="utf-8")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "capture",
+            "--workspace",
+            str(workspace),
+            "--file",
+            str(text),
+            "--title",
+            "PI text",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["result"]["source_id"] == "work"
+    assert not (workspace / "catalog/sources/work/source.md").exists()
+    assert (workspace / output["result"]["content_path"]).read_text(encoding="utf-8") == (
+        "Full text from the PI.\n"
+    )
+
+
+def test_cli_work_capture_url_fetches_text_without_legacy_markdown(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    def fake_read(url: str, timeout: float) -> bytes:
+        assert url == "https://example.test/source"
+        assert timeout == 10.0
+        return b"<html><title>Fetched</title><body><p>Fetched full text.</p></body></html>"
+
+    monkeypatch.setattr("memoria_vault.runtime.capture._read_url_bytes", fake_read)
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "capture",
+            "--workspace",
+            str(workspace),
+            "--url",
+            "https://example.test/source",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    source_id = output["result"]["source_id"]
+    assert output["result"]["check_status"] == "unchecked"
+    assert not (workspace / f"catalog/sources/{source_id}/source.md").exists()
+    assert "Fetched full text." in (workspace / output["result"]["content_path"]).read_text(
+        encoding="utf-8"
+    )
+
+
+def test_cli_work_capture_pdf_extracts_text_without_legacy_markdown(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    pdf = tmp_path / "paper.pdf"
+    pdf.write_bytes(b"%PDF fixture")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.capture._extract_pdf_pages",
+        lambda raw: [{"page": 1, "text": "Extracted PDF text."}],
+    )
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "work",
+            "capture",
+            "--workspace",
+            str(workspace),
+            "--pdf",
+            str(pdf),
+            "--title",
+            "PDF work",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["result"]["source_id"] == "paper"
+    assert not (workspace / "catalog/sources/paper/source.md").exists()
+    assert "Extracted PDF text." in (workspace / output["result"]["content_path"]).read_text(
+        encoding="utf-8"
+    )
+
+
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import shutil
@@ -285,6 +286,26 @@ def _cmd_ask(args: argparse.Namespace) -> int:
 
 
 def _cmd_work_capture(args: argparse.Namespace) -> int:
+    if args.url:
+        payload = {
+            "url": args.url,
+            "title": args.title,
+            "description": args.description,
+            "stage_only": True,
+        }
+        return _emit(_enqueue_and_run(args, "capture-url-source", payload), args)
+    if args.pdf:
+        path = Path(args.pdf)
+        source_id = path.stem
+        payload = {
+            "source_id": source_id,
+            "title": args.title or source_id,
+            "description": args.description or f"Captured PDF: {path.name}",
+            "raw_pdf_base64": base64.b64encode(path.read_bytes()).decode(),
+            "raw_filename": path.name,
+            "stage_only": True,
+        }
+        return _emit(_enqueue_and_run(args, "capture-pdf-source", payload), args)
     title = args.title or args.doi or args.url or Path(args.file or args.pdf).stem
     description = args.description or f"Captured work: {title}"
     text = args.text or ""
@@ -298,11 +319,6 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
         text = path.read_text(encoding="utf-8")
         raw_text = text
         raw_filename = path.name
-    if args.pdf:
-        path = Path(args.pdf)
-        raw_text = path.read_bytes().decode("latin-1")
-        raw_filename = path.name
-        text = text or title
     if not text:
         text = title
     return _emit(
@@ -319,6 +335,7 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
                 "resource": resource,
                 "identifiers": identifiers,
                 "csl_json": _csl_json(source_id, title, args.doi, resource),
+                "stage_only": bool(args.file),
             },
         ),
         args,
