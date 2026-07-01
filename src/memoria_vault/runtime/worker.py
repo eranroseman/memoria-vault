@@ -713,6 +713,81 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             machine=machine,
         )
         return {"commit": commit, "check": event}
+    if operation_id == "update-work":
+        source_id = str(payload.get("source_id") or "").strip()
+        if not source_id:
+            raise ValueError("update-work requires source_id")
+        source = state.catalog_source(vault, source_id)
+        if source is None:
+            raise ValueError(f"work not found: {source_id}")
+
+        identifiers = dict(source["identifiers"])
+        csl_json = dict(source["csl_json"])
+        if doi := str(payload.get("doi") or "").strip():
+            identifiers["doi"] = doi
+            csl_json["DOI"] = doi
+        if "resource" in payload:
+            csl_json["URL"] = str(payload.get("resource") or "")
+
+        memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+        if standing := str(payload.get("standing") or "").strip():
+            if standing not in {"current", "archived", "retracted", "superseded"}:
+                raise ValueError(f"update-work standing is invalid: {standing}")
+            memoria["standing"] = standing
+        for payload_key, memoria_key in (("research_area", "research_area"), ("topic", "topics")):
+            if payload_key not in payload:
+                continue
+            values = payload[payload_key]
+            if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+                raise ValueError(f"update-work {payload_key} must be a list of strings")
+            memoria[memoria_key] = [value for value in values if value.strip()]
+        if memoria:
+            csl_json["memoria"] = memoria
+
+        metadata_status = str(payload.get("metadata_status") or source["metadata_status"])
+        if metadata_status not in {"verified", "partial", "unverified", "not-indexed"}:
+            raise ValueError(f"update-work metadata_status is invalid: {metadata_status}")
+        check_status = str(payload.get("check_status") or source["check_status"])
+        if check_status not in {"unchecked", "checked", "quarantined"}:
+            raise ValueError(f"update-work check_status is invalid: {check_status}")
+
+        state.upsert_catalog_record(
+            vault,
+            source_id=source["source_id"],
+            concept_path=source["concept_path"],
+            doi=identifiers.get("doi"),
+            title=str(payload.get("title") or source["title"]),
+            description=(
+                str(payload["description"]) if "description" in payload else source["description"]
+            ),
+            resource=str(payload["resource"]) if "resource" in payload else source["resource"],
+            identifiers=identifiers,
+            citekey=str(payload["citekey"]) if "citekey" in payload else source["citekey"],
+            csl_json=csl_json,
+            metadata_status=metadata_status,
+            text_status=source["text_status"],
+            check_status=check_status,
+            content_hash=source["normalized_text_sha256"],
+            raw_hash=source["raw_text_sha256"],
+            content_path=source["content_path"],
+            raw_path=source["raw_path"],
+        )
+        updated = state.catalog_source(vault, source["source_id"])
+        state.append_journal_event(
+            vault,
+            {
+                "event": "work_updated",
+                "operation": "update-work",
+                "source_id": source["source_id"],
+                "updates": {
+                    key: value
+                    for key, value in payload.items()
+                    if key != "source_id" and value not in (None, [], "")
+                },
+            },
+            machine=machine,
+        )
+        return {"source_id": source["source_id"], "work": updated}
     if operation_id == "capture-source":
         from memoria_vault.runtime.capture import (
             capture_source,

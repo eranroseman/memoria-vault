@@ -948,13 +948,21 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
                 "--research-area",
                 "personal-informatics",
                 "--json",
+                "--idempotency-key",
+                "update-zotero",
             ]
         )
         == 0
     )
     updated = json.loads(capsys.readouterr().out)
-    assert updated["work"]["title"] == "Updated Zotero Work"
-    assert updated["work"]["csl_json"]["memoria"]["standing"] == "archived"
+    assert updated["result"]["work"]["title"] == "Updated Zotero Work"
+    assert updated["result"]["work"]["csl_json"]["memoria"]["standing"] == "archived"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, status FROM operation_requests WHERE request_id = ?",
+            ("update-zotero",),
+        ).fetchone()
+    assert tuple(row) == ("update-work", "done")
 
     assert (
         main(

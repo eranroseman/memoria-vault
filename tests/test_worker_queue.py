@@ -1229,6 +1229,52 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
     assert committed == {"journal/test-machine.jsonl", "knowledge/notes/pi.md"}
 
 
+def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        source_id="alpha",
+        title="Original",
+        description="Original description",
+        identifiers={"doi": "10.1000/original"},
+        csl_json={"title": "Original", "DOI": "10.1000/original"},
+        check_status="checked",
+    )
+
+    queued = enqueue_operation(
+        vault,
+        "update-work",
+        payload={
+            "source_id": "alpha",
+            "title": "Updated",
+            "standing": "archived",
+            "research_area": ["personal-informatics"],
+        },
+        idempotency_key="update-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["work"]["title"] == "Updated"
+    assert done["work"]["csl_json"]["memoria"]["standing"] == "archived"
+    assert done["work"]["csl_json"]["memoria"]["research_area"] == ["personal-informatics"]
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT payload_json
+            FROM journal_events
+            WHERE event_type = 'work_updated'
+            ORDER BY event_id DESC
+            LIMIT 1
+            """
+        ).fetchone()
+    event = json.loads(row["payload_json"])
+    assert event["operation"] == "update-work"
+    assert event["updates"]["title"] == "Updated"
+
+
 def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_bibtex_source(
