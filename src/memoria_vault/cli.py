@@ -22,6 +22,7 @@ from memoria_vault.runtime.worker import (
 )
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
+JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1170,8 +1171,16 @@ def _cmd_journal_list(args: argparse.Namespace) -> int:
     clauses = []
     params: list[str] = []
     if args.operation:
-        clauses.append("json_extract(payload_json, '$.operation') = ?")
-        params.append(args.operation)
+        operations = _journal_operation_values(args.operation)
+        placeholders = ", ".join("?" for _ in operations)
+        clauses.append(
+            "("
+            f"json_extract(payload_json, '$.operation') IN ({placeholders}) OR "
+            f"json_extract(payload_json, '$.workflow') IN ({placeholders})"
+            ")"
+        )
+        params.extend(operations)
+        params.extend(operations)
     if args.request_id:
         clauses.append("json_extract(payload_json, '$.request_id') = ?")
         params.append(args.request_id)
@@ -1787,6 +1796,10 @@ def _journal_row(row: Any) -> dict[str, Any]:
         "prev_hash": row["prev_hash"],
         "row_hash": row["row_hash"],
     }
+
+
+def _journal_operation_values(operation: str) -> list[str]:
+    return sorted({operation, *JOURNAL_OPERATION_ALIASES.get(operation, ())})
 
 
 def _request_summary(row: Any) -> dict[str, Any]:
