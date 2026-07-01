@@ -1441,7 +1441,6 @@ def _workspace_plan(workspace: Path) -> list[str]:
         ".memoria/config",
         ".memoria/index/qmd/checked",
         ".memoria/index/qmd/config",
-        ".memoria/index/qmd/cache",
     ]
 
 

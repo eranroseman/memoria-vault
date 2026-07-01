@@ -67,6 +67,7 @@ def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
     assert rc == 0
     assert output["ok"] is True
     assert output["result"]["source_id"] == "doi-10.1000_alpha"
+    assert not (workspace / ".memoria/index/qmd/cache").exists()
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
     assert (workspace / output["result"]["content_path"]).is_file()
     with state.connect(workspace) as conn:
