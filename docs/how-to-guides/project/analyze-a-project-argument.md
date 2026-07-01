@@ -21,14 +21,9 @@ argument Canvas projection beside the project.
 **1. Run the analysis from the CLI.**
 
 Worker actions start from SQLite requests owned by the `memoria` CLI. The
-Inspector only shows operational state inside Obsidian.
-If the project does not exist yet, create the checked project shell first:
-
-```bash
-memoria project create --workspace <vault> my-project \
-  --title "My project" \
-  --description "Project direction."
-```
+Inspector only shows operational state inside Obsidian. If the project does not
+exist yet, author a checked project Concept under `knowledge/projects/`, then
+run `memoria workspace scan --workspace <vault>`.
 
 **2. Enter the project path.**
 
