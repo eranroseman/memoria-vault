@@ -30,7 +30,7 @@ only a view layer.
 ## Decision
 
 Memoria stores runtime working state and catalog record state in
-`.memoria/state/memoria.sqlite`, with the worker still owning canonical writes through
+`.memoria/memoria.sqlite`, with the worker still owning canonical writes through
 the trusted-writer path. The SQLite DB records request envelopes, append-only
 hash-chained journal rows, catalog source rows, file output state, materialization
 payloads, and derivation links.

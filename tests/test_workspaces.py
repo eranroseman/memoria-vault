@@ -195,7 +195,7 @@ def test_maintenance_collection_embeds_debt_views():
     assert "type: maintenance" not in text
     assert "`journal/`" in text
     assert "`.memoria/quarantine/`" in text
-    assert "`.memoria/state/memoria.sqlite`" in text
+    assert "`.memoria/memoria.sqlite`" in text
     assert "## New this week — catalog" in text
     assert "## New this week — notes" in text
     assert 'FROM "catalog"' in text

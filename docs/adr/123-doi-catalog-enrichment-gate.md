@@ -28,7 +28,7 @@ For DOI-keyed scholarly sources, Memoria splits capture from checked promotion.
 `capture-source` stages durable unchecked catalog state in SQLite and stores source
 content/raw blobs under `.memoria/blobs/source-content/`; it does not write
 `catalog/sources/<source_id>/source.md` or update `references.bib`. `enrich-source`
-is the promotion gate: it loads `.memoria/enrichment/providers.yaml`, fetches required
+is the promotion gate: it loads `.memoria/config/providers.yaml`, fetches required
 Crossref, OpenAlex, and Unpaywall payloads through the operation network allowlist,
 caches raw provider payloads under `.memoria/blobs/provider-payloads/`, writes
 canonical CSL metadata, external IDs, enrichment runs, provider payload rows, and
@@ -89,6 +89,6 @@ promotion; direct SQLite edits are not a supported PI surface.
   `src/memoria_vault/runtime/state.py`,
   `src/memoria_vault/runtime/worker.py`,
   `vault-template/capabilities/operations/enrich-source.md`,
-  `vault-template/.memoria/enrichment/providers.yaml`
+  `vault-template/.memoria/config/providers.yaml`
 - **Checks:** `tests/test_alpha13_enrichment.py`, `tests/test_capabilities.py`,
   `tests/test_projections.py`, `tests/test_operations.py`

@@ -85,12 +85,12 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 │   └── memoria-{copi,librarian,writer,peer-reviewer,engineer}/
 │       ├── SOUL.md · config.yaml · distribution.yaml · skills/
 ├── lane-overrides/          the five lane ceilings: copi/librarian/writer/peer-reviewer/engineer.yaml
-├── enrichment/             provider policy for catalog enrichment (`providers.yaml`)
+├── config/                 provider policy for catalog enrichment (`providers.yaml`)
 ├── blobs/                  gitignored provider payloads and staged source content
 ├── plugins/memoria-policy-gate/   the fail-closed write-gate Hermes plugin
 ├── scripts/                 cron wrappers (worker, sweeps, lint, board-export, retraction refresh)
 ├── tool-registry.yaml       authoritative per-profile tool allowlist
-├── state/                   SQLite working-state DB (`memoria.sqlite`)
+├── memoria.sqlite           SQLite working-state DB
 ├── audit/                   git-trackable audit anchors
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ├── design-system.md · project-hints.yaml.example

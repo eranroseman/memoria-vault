@@ -41,6 +41,7 @@ def test_skeleton_covers_every_type_home():
 def test_alpha11_fresh_package_contract_is_shipped():
     required_dirs = {
         ".memoria/index/qmd",
+        ".memoria/config",
         ".memoria/quarantine",
         ".memoria/staging/catalog",
         ".memoria/staging/knowledge",
@@ -74,6 +75,7 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "capabilities/index.md",
         "references.bib",
         "steering.md",
+        ".memoria/config/providers.yaml",
     ):
         assert (ROOT / "vault-template" / rel).is_file(), rel
     for rel in (

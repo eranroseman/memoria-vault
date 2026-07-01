@@ -14,7 +14,7 @@ from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 
-DB_REL = ".memoria/state/memoria.sqlite"
+DB_REL = ".memoria/memoria.sqlite"
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 
 

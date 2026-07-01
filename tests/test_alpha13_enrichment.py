@@ -20,12 +20,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/enrichment", tmp_path / ".memoria/enrichment")
+    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
     shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "alpha13@example.invalid")
     git(tmp_path, "config", "user.name", "Alpha13")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/enrichment", "capabilities")
+    git(tmp_path, "add", ".memoria/schemas", ".memoria/config", "capabilities")
     git(tmp_path, "commit", "-m", "seed alpha13 workspace")
     return tmp_path
 

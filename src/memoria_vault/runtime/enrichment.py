@@ -20,7 +20,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 
-PROVIDER_CONFIG = ".memoria/enrichment/providers.yaml"
+PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 
 
 def load_provider_config(vault: Path) -> dict[str, Any]:

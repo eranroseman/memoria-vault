@@ -383,11 +383,10 @@ def _cmd_init(args: argparse.Namespace) -> int:
         (workspace / rel).mkdir(parents=True, exist_ok=True)
     _copy_seed_tree("vault-template/.memoria/schemas", workspace / ".memoria/schemas")
     _copy_seed_tree("vault-template/capabilities", workspace / "capabilities")
-    _copy_seed_tree("vault-template/.memoria/enrichment", workspace / ".memoria/enrichment")
+    _copy_seed_tree("vault-template/.memoria/config", workspace / ".memoria/config")
     _copy_seed_tree("vault-template/system/eval", workspace / "system/eval")
     _copy_seed_file("vault-template/steering.md", workspace / "steering.md")
     _copy_seed_file("vault-template/system/vocabulary.md", workspace / "system/vocabulary.md")
-    _seed_provider_config(workspace)
     state.connect(workspace).close()
     from memoria_vault.runtime.projections import write_tracked_projections
 
@@ -1238,14 +1237,6 @@ def _copy_seed_tree(source_rel: str, target: Path) -> None:
 
 def _copy_seed_file(source_rel: str, target: Path) -> None:
     source = _repo_root() / source_rel
-    if source.is_file() and not target.exists():
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-
-
-def _seed_provider_config(workspace: Path) -> None:
-    source = workspace / ".memoria/enrichment/providers.yaml"
-    target = workspace / ".memoria/config/providers.yaml"
     if source.is_file() and not target.exists():
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
