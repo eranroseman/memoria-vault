@@ -53,8 +53,10 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         "answer-query",
         payload={"query": "alpha", "k": 1},
         idempotency_key="ask-alpha",
-        target_path="knowledge/notes/alpha.md",
-        target_hash="sha256:abc",
+        input_refs=["knowledge/notes/input.md"],
+        output_intents=[{"id": "knowledge/notes/alpha.md", "kind": "answer"}],
+        primary_target="knowledge/notes/alpha.md",
+        precondition_hashes={"knowledge/notes/input.md": "sha256:abc"},
         causal_refs=[{"id": "journal:1"}],
         provenance={"surface": "workspace-scan", "source": "pytest"},
         schedule_id="manual-scan",
@@ -66,8 +68,10 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         "operation_id",
         "args",
         "idempotency_key",
-        "target_path",
-        "target_hash",
+        "input_refs",
+        "output_intents",
+        "primary_target",
+        "precondition_hashes",
         "causal_refs",
         "actor",
         "provenance",
@@ -75,16 +79,28 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
     } <= set(envelope)
     assert "trigger_type" not in envelope
     assert envelope["args"] == {"query": "alpha", "k": 1}
+    assert envelope["input_refs"] == [{"id": "knowledge/notes/input.md"}]
+    assert envelope["output_intents"] == [{"id": "knowledge/notes/alpha.md", "kind": "answer"}]
+    assert envelope["primary_target"] == "knowledge/notes/alpha.md"
+    assert envelope["precondition_hashes"] == {"knowledge/notes/input.md": "sha256:abc"}
     assert envelope["provenance"]["surface"] == "workspace-scan"
     assert envelope["schedule_id"] == "manual-scan"
 
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT operation_id, args_json, provenance_json, schedule_id FROM operation_requests"
+            """
+            SELECT operation_id, args_json, input_refs_json, output_intents_json,
+                   primary_target, precondition_hashes_json, provenance_json, schedule_id
+            FROM operation_requests
+            """
         ).fetchone()
     assert tuple(row) == (
         "answer-query",
         '{"k":1,"query":"alpha"}',
+        '[{"id":"knowledge/notes/input.md"}]',
+        '[{"id":"knowledge/notes/alpha.md","kind":"answer"}]',
+        "knowledge/notes/alpha.md",
+        '{"knowledge/notes/input.md":"sha256:abc"}',
         '{"source":"pytest","surface":"workspace-scan"}',
         "manual-scan",
     )
