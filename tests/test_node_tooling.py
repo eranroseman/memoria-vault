@@ -48,9 +48,9 @@ def test_precommit_hooks_use_local_pinned_tools():
     requirements = REQUIREMENTS_DEV.read_text(encoding="utf-8").splitlines()
     for package in (
         "pre-commit==4.6.0",
-        "pre-commit-hooks==5.0.0",
+        "pre-commit-hooks==6.0.0",
         "ruff==0.15.20",
-        "shellcheck-py==0.10.0.1",
+        "shellcheck-py==0.11.0.1",
         "yamllint==1.38.0",
     ):
         assert package in requirements
