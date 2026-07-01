@@ -59,8 +59,8 @@ def record_copi_interview_turn(
     """Record one PI interview turn for later source synthesis."""
     vault = Path(vault)
     source_id = _source_id(source_id)
-    source_rel = f"catalog/sources/{source_id}/source.md"
-    _checked_source(vault, source_rel)
+    source_ref = _source_ref(source_id)
+    _checked_source(vault, source_ref)
     answer = response.strip()
     if not answer:
         raise ValueError("response is required")
@@ -259,19 +259,20 @@ def compile_source_digest(
     if not 5 <= len(topics) <= 15:
         raise ValueError("hub_topics must contain 5 to 15 topics")
 
-    source_rel = f"catalog/sources/{source_id}/source.md"
-    source_fm = _checked_source(vault, source_rel)
+    source_ref = _source_ref(source_id)
+    source_fm = _checked_source(vault, source_ref)
     _require_digestable_text(source_fm)
-    if (vault / source_rel).is_file():
-        state.upsert_catalog_source(vault, source_rel, source_fm)
-    citation = state.compact_citation(vault, source_rel)
+    legacy_source_rel = f"{source_ref}/source.md"
+    if (vault / legacy_source_rel).is_file():
+        state.upsert_catalog_source(vault, legacy_source_rel, source_fm)
+    citation = state.compact_citation(vault, source_ref)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
     if not content_path.is_file():
         raise FileNotFoundError(content_path)
 
     digest_rel = f"knowledge/digests/{source_id}.md"
-    _require_path(policy, source_rel)
+    _require_path(policy, source_ref)
     _require_path(policy, content_rel)
     _require_path(policy, digest_rel)
     for topic in topics:
@@ -312,9 +313,9 @@ def compile_source_digest(
         "check_status": "unchecked",
         "title": f"Digest: {source_fm['title']}",
         "description": source_fm["description"],
-        "source_id": f"catalog/sources/{source_id}",
+        "source_id": source_ref,
         "confidence": "medium",
-        "evidence_set": [source_rel],
+        "evidence_set": [source_ref],
         "massw": {
             "context": source_fm["title"],
             "key_idea": topics[0],
@@ -334,7 +335,7 @@ def compile_source_digest(
             digest_text,
         ),
         inputs=[
-            {"id": source_rel, "sha256": _source_input_sha(vault, source_rel, source_fm)},
+            {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
             {"id": content_rel, "sha256": sha256_file(content_path)},
             *[
                 {
@@ -363,7 +364,7 @@ def compile_source_digest(
             "check_status": "unchecked",
             "title": topic,
             "description": f"Machine suggestion from {source_fm['title']}.",
-            "members": [digest_rel, source_rel],
+            "members": [digest_rel, source_ref],
             "confidence": "low",
             "tags": ["suggestion"],
         }
@@ -379,7 +380,7 @@ def compile_source_digest(
             ),
             inputs=[
                 {"id": digest_rel, "sha256": digest_check["output_sha256"]},
-                {"id": source_rel, "sha256": _source_input_sha(vault, source_rel, source_fm)},
+                {"id": source_ref, "sha256": _source_input_sha(vault, source_ref, source_fm)},
             ],
             operation=operation_id,
             run_id=run_id,
@@ -424,18 +425,25 @@ def compile_source_digest(
     }
 
 
-def _checked_source(vault: Path, source_rel: str) -> dict[str, Any]:
-    source_path = vault / source_rel
+def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
+    source_ref = _source_ref(source_ref)
+    source_path = vault / source_ref
     if source_path.is_file():
         frontmatter = read_frontmatter(source_path)
         if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
-            raise ValueError(f"{source_rel} is not a checked source")
+            raise ValueError(f"{source_ref} is not a checked source")
         return frontmatter
-    row = state.catalog_source(vault, source_rel)
+    legacy_path = vault / source_ref / "source.md"
+    if legacy_path.is_file():
+        frontmatter = read_frontmatter(legacy_path)
+        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+            raise ValueError(f"{source_ref} is not a checked source")
+        return frontmatter
+    row = state.catalog_source(vault, source_ref)
     if row is None:
         raise FileNotFoundError(source_path)
     if row.get("check_status") != "checked":
-        raise ValueError(f"{source_rel} is not a checked source")
+        raise ValueError(f"{source_ref} is not a checked source")
     return {
         "type": "source",
         "check_status": row["check_status"],
@@ -461,10 +469,14 @@ def _require_digestable_text(source_fm: dict[str, Any]) -> None:
         )
 
 
-def _source_input_sha(vault: Path, source_rel: str, source_fm: dict[str, Any]) -> str:
-    path = vault / source_rel
+def _source_input_sha(vault: Path, source_ref: str, source_fm: dict[str, Any]) -> str:
+    source_ref = _source_ref(source_ref)
+    path = vault / source_ref
     if path.is_file():
         return sha256_file(path)
+    legacy_path = path / "source.md"
+    if legacy_path.is_file():
+        return sha256_file(legacy_path)
     return str(
         source_fm.get("normalized_text_sha256")
         or source_fm.get("raw_text_sha256")
@@ -552,6 +564,10 @@ def _source_id(value: str) -> str:
     if not source_id:
         raise ValueError("source_id is required")
     return source_id
+
+
+def _source_ref(value: str) -> str:
+    return f"catalog/sources/{_source_id(value)}"
 
 
 def _topic_title(value: str) -> str:
