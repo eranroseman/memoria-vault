@@ -12,6 +12,7 @@ from memoria_vault.runtime.operations import (
     compile_source_digest,
     load_operation_policy,
     record_copi_interview_turn,
+    require_allowed_network,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -56,6 +57,18 @@ def test_load_operation_policy_requires_io_schema_shape(tmp_path: Path) -> None:
         match=r"compile-source-digest io_schema\.output must be a non-empty string",
     ):
         load_operation_policy(vault, "compile-source-digest")
+
+
+def test_allowed_network_rejects_host_prefix_bypass() -> None:
+    policy = {
+        "operation_id": "net-test",
+        "allowed_network": ["https://api.openalex.org/", "http://"],
+    }
+
+    require_allowed_network(policy, "https://api.openalex.org/works/W1")
+    require_allowed_network(policy, "http://example.test/source")
+    with pytest.raises(PermissionError, match=r"api\.openalex\.org\.evil"):
+        require_allowed_network(policy, "https://api.openalex.org.evil/works/W1")
 
 
 def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(

@@ -38,14 +38,15 @@ def load_provider_config(vault: Path) -> dict[str, Any]:
 
 
 def provider_allowlist_issues(config: dict[str, Any], policy: dict[str, Any]) -> list[str]:
-    allowed = [str(value).rstrip("/") + "/" for value in policy.get("allowed_network") or []]
+    from memoria_vault.runtime.operations import network_allowed
+
     providers = config.get("providers") if isinstance(config.get("providers"), dict) else {}
     issues = []
     for name, spec in sorted(providers.items()):
         if not isinstance(spec, dict) or not spec.get("enabled", True):
             continue
         base_url = str(spec.get("base_url") or "").strip()
-        if base_url and not any(base_url.startswith(prefix) for prefix in allowed):
+        if base_url and not network_allowed(policy, base_url):
             issues.append(f"{name} base_url not allowed: {base_url}")
     return issues
 

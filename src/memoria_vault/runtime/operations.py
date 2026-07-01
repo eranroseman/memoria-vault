@@ -729,14 +729,36 @@ def _significant_terms(*values: str) -> set[str]:
 
 
 def _require_network(policy: dict[str, Any], base_url: str) -> None:
-    for allowed in policy.get("allowed_network") or []:
-        if base_url.startswith(str(allowed).rstrip("/")):
+    for allowed in _allowed_network_prefixes(policy):
+        if _network_target(base_url).startswith(allowed):
             return
     raise PermissionError(f"operation {policy['operation_id']} cannot access {base_url}")
 
 
 def require_allowed_network(policy: dict[str, Any], target_url: str) -> None:
     _require_network(policy, target_url)
+
+
+def network_allowed(policy: dict[str, Any], target_url: str) -> bool:
+    return any(
+        _network_target(target_url).startswith(prefix)
+        for prefix in _allowed_network_prefixes(policy)
+    )
+
+
+def _allowed_network_prefixes(policy: dict[str, Any]) -> list[str]:
+    prefixes = []
+    for value in policy.get("allowed_network") or []:
+        text = str(value).strip()
+        if not text:
+            continue
+        prefixes.append(text if text.endswith("://") else text.rstrip("/") + "/")
+    return prefixes
+
+
+def _network_target(target_url: str) -> str:
+    text = str(target_url).strip()
+    return text if text.endswith("://") else text.rstrip("/") + "/"
 
 
 def _require_network_label(policy: dict[str, Any], label: str) -> None:

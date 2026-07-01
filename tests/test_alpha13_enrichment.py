@@ -170,6 +170,25 @@ def test_enrich_source_manifest_and_provider_allowlist_agree() -> None:
     assert provider_allowlist_issues(config, policy) == []
 
 
+def test_provider_allowlist_rejects_host_prefix_bypass() -> None:
+    policy = {
+        "operation_id": "enrich-source",
+        "allowed_network": ["https://api.openalex.org/"],
+    }
+    config = {
+        "providers": {
+            "openalex": {
+                "enabled": True,
+                "base_url": "https://api.openalex.org.evil/",
+            }
+        }
+    }
+
+    assert provider_allowlist_issues(config, policy) == [
+        "openalex base_url not allowed: https://api.openalex.org.evil/"
+    ]
+
+
 def test_provider_endpoint_uses_configured_env_query_params(monkeypatch) -> None:
     config = load_provider_config(ROOT / "vault-template")
     monkeypatch.setenv("NCBI_EMAIL", "pi@example.test")
