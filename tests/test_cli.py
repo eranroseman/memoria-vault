@@ -1336,6 +1336,61 @@ def test_cli_doctor_qmd_checks_workspace_local_state(
     assert output["qmd_path"].startswith(str(tmp_path))
 
 
+def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    seen = {}
+
+    class FakeProvider:
+        def __init__(self, **kwargs):
+            seen["provider_kwargs"] = kwargs
+
+    class FakeModel:
+        def __init__(self, model_name, *, provider):
+            seen["model_name"] = model_name
+            seen["provider"] = provider
+
+    class FakeAgent:
+        def __init__(self, model):
+            seen["model"] = model
+
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://127.0.0.1:11434/v1")
+    monkeypatch.setenv("MEMORIA_MODEL", "local-test-model")
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "local",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["provider"] == "local"
+    assert output["base_url"] == "http://127.0.0.1:11434/v1"
+    assert output["model"] == "local-test-model"
+    assert output["checks"]["runner_dependency"] is True
+    assert output["checks"]["runner_base_url"] is True
+    assert output["checks"]["runner_agent_constructed"] is True
+    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["model_name"] == "local-test-model"
+    assert seen["model"] is not None
+
+
 def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

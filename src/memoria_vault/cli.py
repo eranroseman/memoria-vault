@@ -434,6 +434,21 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             },
             args,
         )
+    if args.check == "runner":
+        status = _runner_status(args.provider)
+        checks.update(status["checks"])
+        return _emit(
+            {
+                "ok": all(checks.values()),
+                "workspace": str(workspace),
+                "checks": checks,
+                "provider": status["provider"],
+                "base_url": status["base_url"],
+                "model": status["model"],
+                "error": status["error"],
+            },
+            args,
+        )
     return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
 
 
@@ -1721,6 +1736,46 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
         "checks": checks,
         "qmd_path": str(Path(qmd).resolve()) if qmd else "",
         "node_version": node_version,
+    }
+
+
+def _runner_status(provider: str | None) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import _load_pydantic_ai_openai
+
+    provider_name = (provider or "default").strip() or "default"
+    configured_base_url = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get(
+        "OPENAI_BASE_URL"
+    )
+    base_url = (configured_base_url or "https://api.openai.com/v1").rstrip("/")
+    api_key = (
+        os.environ.get("MEMORIA_MODEL_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
+        or os.environ.get("KILOCODE_API_KEY")
+    )
+    model_name = os.environ.get("MEMORIA_MODEL") or os.environ.get("OPENAI_MODEL") or "doctor"
+    checks = {
+        "runner_dependency": False,
+        "runner_base_url": provider_name != "local" or bool(configured_base_url),
+        "runner_agent_constructed": False,
+    }
+    error = ""
+    try:
+        Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
+        checks["runner_dependency"] = True
+        provider_kwargs = {"base_url": base_url}
+        if api_key:
+            provider_kwargs["api_key"] = api_key
+        model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
+        Agent(model)
+        checks["runner_agent_constructed"] = True
+    except Exception as exc:  # noqa: BLE001 -- doctor reports adapter failures as data.
+        error = str(exc)
+    return {
+        "checks": checks,
+        "provider": provider_name,
+        "base_url": base_url,
+        "model": model_name,
+        "error": error,
     }
 
 
