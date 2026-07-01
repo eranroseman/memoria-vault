@@ -415,21 +415,19 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/source-alpha/source.md"
-    assert done["content_path"] == "catalog/sources/source-alpha/content.md"
-    assert done["raw_path"] == "catalog/sources/source-alpha/raw/alpha.txt"
-    source_fm = read_frontmatter(vault / done["source_path"])
-    assert source_fm["check_status"] == "checked"
-    assert source_fm["resource"] == "https://example.test/alpha"
+    assert done["source_id"] == "source-alpha"
+    assert done["check_status"] == "unchecked"
+    assert done["content_path"] == ".memoria/blobs/source-content/source-alpha/content.txt"
+    assert done["raw_path"] == ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
+    assert not (vault / "catalog/sources/source-alpha/source.md").exists()
+    source = state.catalog_source(vault, "source-alpha")
+    assert source is not None
+    assert source["check_status"] == "unchecked"
+    assert source["resource"] == "https://example.test/alpha"
     assert (vault / done["content_path"]).read_text(encoding="utf-8") == "Extracted alpha text.\n"
     assert (vault / done["raw_path"]).read_text(encoding="utf-8") == "raw alpha bytes"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {
-        "catalog/sources/source-alpha/content.md",
-        "catalog/sources/source-alpha/source.md",
-        "journal/test-machine.jsonl",
-        "references.bib",
-    }
+    assert committed == {"journal/test-machine.jsonl"}
 
 
 def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypatch) -> None:
@@ -462,9 +460,11 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/pdf-source/source.md"
-    assert done["content_path"] == "catalog/sources/pdf-source/content.md"
-    assert done["raw_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
+    assert done["source_id"] == "pdf-source"
+    assert done["check_status"] == "unchecked"
+    assert done["content_path"] == ".memoria/blobs/source-content/pdf-source/content.txt"
+    assert done["raw_path"] == ".memoria/blobs/source-content/pdf-source/raw/paper.pdf"
+    assert not (vault / "catalog/sources/pdf-source/source.md").exists()
     assert "anchored evidence" in (vault / done["content_path"]).read_text(encoding="utf-8")
 
 
@@ -647,10 +647,13 @@ def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypat
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_path"] == "catalog/sources/url-example.test-path-page/source.md"
-    source_fm = read_frontmatter(vault / done["source_path"])
-    assert source_fm["title"] == "Worker URL"
-    assert source_fm["resource"] == "https://example.test/path/page"
+    assert done["source_id"] == "url-example.test-path-page"
+    assert done["check_status"] == "unchecked"
+    assert not (vault / "catalog/sources/url-example.test-path-page/source.md").exists()
+    source = state.catalog_source(vault, "url-example.test-path-page")
+    assert source is not None
+    assert source["title"] == "Worker URL"
+    assert source["resource"] == "https://example.test/path/page"
     assert "Worker page text." in (vault / done["content_path"]).read_text(encoding="utf-8")
 
 
