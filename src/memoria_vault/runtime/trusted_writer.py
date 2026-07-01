@@ -19,8 +19,10 @@ from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
 
 EVENT_DERIVED = "derived"
+EVENT_OBSERVED_EXTERNAL_EDIT = "observed_external_edit"
 EVENT_CHECK_FIRED = "check-fired"
 EVENT_RESOLVED = "resolved"
+TRACE_OUTPUT_EVENTS = frozenset({EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT})
 SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-profile"})
 
 
@@ -104,11 +106,19 @@ def observe_pi_edit(
     _validate_concept(contract, target, frontmatter)
     write_frontmatter_doc(path, frontmatter, body, create_parent=True)
 
+    output_sha256 = sha256_file(path)
+    state.record_observed_file_edit(
+        vault,
+        output_id=target,
+        concept_type=str(frontmatter["type"]),
+        output_sha256=output_sha256,
+    )
+
     event = {
-        "event": EVENT_DERIVED,
+        "event": EVENT_OBSERVED_EXTERNAL_EDIT,
         "timestamp": now_iso(),
         "output_id": target,
-        "output_sha256": sha256_file(path),
+        "output_sha256": output_sha256,
         "inputs": [
             *_input_rows(inputs),
             {"id": target, "sha256": prior_sha256, "role": "prior-head"},
@@ -357,7 +367,7 @@ def rebuild_trace_state(vault: Path) -> dict[str, dict[str, Any]]:
     """Rebuild the latest known output/check state from all per-machine journals."""
     outputs: dict[str, dict[str, Any]] = {}
     for event in _iter_events(Path(vault)):
-        if event.get("event") == EVENT_DERIVED:
+        if event.get("event") in TRACE_OUTPUT_EVENTS:
             output_id = event.get("output_id")
         elif event.get("event") == EVENT_CHECK_FIRED:
             output_id = event.get("target_id")
@@ -579,7 +589,7 @@ def _known_current_hashes(vault: Path) -> dict[str, str]:
 def _latest_derived_inputs(vault: Path, target: str) -> list[dict[str, Any]]:
     inputs: list[dict[str, Any]] = []
     for event in _iter_events(vault):
-        if event.get("event") == EVENT_DERIVED and event.get("output_id") == target:
+        if event.get("event") in TRACE_OUTPUT_EVENTS and event.get("output_id") == target:
             inputs = _input_rows(event.get("inputs") or [])
     return inputs
 

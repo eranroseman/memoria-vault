@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -1185,6 +1186,17 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert done["observed_count"] == 1
     assert done["paths"] == ["knowledge/notes/pi.md"]
     assert read_frontmatter(vault / "knowledge/notes/pi.md")["check_status"] == "unchecked"
+    journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    assert journal_events[-1]["event"] == "observed_external_edit"
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM outputs WHERE output_id = 'knowledge/notes/pi.md'"
+        ).fetchone()
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/notes/pi.md'"
+        ).fetchone()
+    assert row["check_status"] == "unchecked"
+    assert consumable is None
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl", "knowledge/notes/pi.md"}
 
