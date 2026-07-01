@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
 import shutil
+import sys
 from pathlib import Path
+
+import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.search_index import (
@@ -205,3 +209,48 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
     missing = answer_query(vault, "absent")
     assert missing["sources"] == []
     assert missing["unknowns"] == ["No checked current sources matched: absent"]
+
+
+def test_answer_query_uses_qmd_after_rebuild(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path / "vault")
+    qmd_log = _fake_qmd_query(tmp_path, monkeypatch)
+    note(vault, "checked", "checked", "alpha beta")
+    note(vault, "unchecked", "unchecked", "poison alpha")
+    rebuild_checked_qmd_source(vault)
+
+    answer = answer_query(vault, "alpha")
+
+    assert answer["engine"] == "qmd"
+    assert [source["path"] for source in answer["sources"]] == ["knowledge/notes/checked.md"]
+    qmd_env = f"{vault}/.memoria/index/qmd/config|{vault}/.memoria/index/qmd/index.sqlite"
+    assert qmd_log.read_text(encoding="utf-8").strip() == (
+        f"query lex: alpha\nvec: alpha --no-rerank --format json -n 15 -c memoria-checked|{qmd_env}"
+    )
+
+
+def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    qmd_log = tmp_path / "qmd.log"
+    qmd = bin_dir / "qmd"
+    qmd.write_text(
+        f"#!{sys.executable}\n"
+        "import json, os, pathlib, sys\n"
+        "pathlib.Path(os.environ['QMD_LOG']).write_text(\n"
+        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('QMD_CONFIG_DIR', '')\n"
+        "    + '|' + os.environ.get('INDEX_PATH', '')\n"
+        "    + '\\n',\n"
+        "    encoding='utf-8',\n"
+        ")\n"
+        "print(json.dumps([\n"
+        "    {'file': 'qmd://memoria-checked/knowledge/notes/unchecked.md', 'score': 9},\n"
+        "    {'file': 'qmd://memoria-checked/knowledge/notes/checked.md', 'score': 8},\n"
+        "]))\n",
+        encoding="utf-8",
+    )
+    qmd.chmod(0o755)
+    monkeypatch.setenv("QMD_LOG", str(qmd_log))
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+    return qmd_log

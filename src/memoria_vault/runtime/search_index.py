@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import shutil
+import subprocess
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
@@ -139,20 +141,41 @@ def answer_query(
     k: int = 5,
     include_stale: bool = False,
 ) -> dict[str, Any]:
-    """Return a deterministic Ask/Query contract over checked BM25 hits."""
+    """Return a deterministic Ask/Query contract over checked retrieval hits."""
     vault = Path(vault)
     docs = [
         (document["path"], document["text"], document["frontmatter"])
         for document in checked_search_documents(vault, include_stale=include_stale)
     ]
+    qmd_hits = _qmd_query_hits(vault, query, k=k, include_stale=include_stale)
+    if qmd_hits is not None:
+        frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
+        return _answer_from_hits(
+            query,
+            qmd_hits,
+            frontmatter_by_path,
+            engine="qmd",
+        )
     tokenized = [(path, _tokens(text)) for path, text, _frontmatter in docs]
     frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
     hits = _bm25(tokenized, query)[:k]
+    return _answer_from_hits(query, hits, frontmatter_by_path, engine="bm25")
+
+
+def _answer_from_hits(
+    query: str,
+    hits: list[tuple[str, float]],
+    frontmatter_by_path: dict[str, dict[str, Any]],
+    *,
+    engine: str,
+) -> dict[str, Any]:
     sources = []
     staleness = []
     contradictions = []
     for path, score in hits:
-        frontmatter = frontmatter_by_path[path]
+        frontmatter = frontmatter_by_path.get(path)
+        if frontmatter is None:
+            continue
         source = {
             "path": path,
             "title": frontmatter.get("title") or Path(path).stem,
@@ -168,12 +191,76 @@ def answer_query(
                 contradictions.append({"path": path, "contradiction": item})
     return {
         "query": query,
-        "engine": "bm25",
+        "engine": engine,
         "sources": sources,
         "unknowns": [] if sources else [f"No checked current sources matched: {query}"],
         "staleness": staleness,
         "contradictions": contradictions,
     }
+
+
+def _qmd_query_hits(
+    vault: Path, query: str, *, k: int, include_stale: bool
+) -> list[tuple[str, float]] | None:
+    qmd = shutil.which("qmd")
+    if not qmd or include_stale or not (vault / QMD_MANIFEST).is_file():
+        return None
+    text = " ".join(query.split())
+    if not text:
+        return []
+    try:
+        proc = subprocess.run(
+            [
+                str(Path(qmd).resolve()),
+                "query",
+                f"lex: {text}\nvec: {text}",
+                "--no-rerank",
+                "--format",
+                "json",
+                "-n",
+                str(max(k * 3, k)),
+                "-c",
+                "memoria-checked",
+            ],
+            cwd=vault,
+            env=_qmd_env(vault),
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        return None
+    if proc.returncode:
+        return None
+    try:
+        rows = json.loads(proc.stdout or "[]")
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(rows, list):
+        return None
+    hits: list[tuple[str, float]] = []
+    seen: set[str] = set()
+    for row in filter_checked_results(vault, (row for row in rows if isinstance(row, dict))):
+        rel = qmd_result_path(row.get("file") or row.get("path") or "", vault)
+        if rel.startswith(f"{QMD_INPUT_ROOT}/"):
+            rel = rel.removeprefix(f"{QMD_INPUT_ROOT}/")
+        if not rel or rel in seen:
+            continue
+        seen.add(rel)
+        score = row.get("score")
+        hits.append((rel, float(score) if isinstance(score, int | float) else 0.0))
+        if len(hits) >= k:
+            break
+    return hits
+
+
+def _qmd_env(vault: Path) -> dict[str, str]:
+    env = dict(os.environ)
+    root = vault / ".memoria/index/qmd"
+    env["QMD_CONFIG_DIR"] = str(root / "config")
+    env["INDEX_PATH"] = str(root / "index.sqlite")
+    return env
 
 
 def evaluate_bm25(
