@@ -150,8 +150,10 @@ def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     note_sub = note.add_subparsers(dest="note_command", required=True)
     propose = note_sub.add_parser("propose")
     _common(propose)
-    propose.add_argument("--digest-path", required=True)
-    candidates = propose.add_mutually_exclusive_group(required=True)
+    digest = propose.add_mutually_exclusive_group(required=True)
+    digest.add_argument("--digest-path")
+    digest.add_argument("--work-id")
+    candidates = propose.add_mutually_exclusive_group()
     candidates.add_argument("--candidate-json", action="append")
     candidates.add_argument("--candidates-file")
     propose.set_defaults(handler=_cmd_note_propose)
@@ -731,11 +733,16 @@ def _cmd_note_capture(args: argparse.Namespace) -> int:
 
 
 def _cmd_note_propose(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    digest_path = args.digest_path or _digest_path_for_work(args.work_id)
     return _emit(
         _enqueue_and_run(
             args,
             "propose-note-candidates",
-            {"digest_path": args.digest_path, "candidates": _note_candidates(args)},
+            {
+                "digest_path": digest_path,
+                "candidates": _note_candidates(args, workspace, digest_path),
+            },
         ),
         args,
     )
@@ -1352,15 +1359,47 @@ def _interview_payload(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
-def _note_candidates(args: argparse.Namespace) -> list[dict[str, Any]]:
+def _note_candidates(
+    args: argparse.Namespace, workspace: Path, digest_path: str
+) -> list[dict[str, Any]]:
     if args.candidates_file:
         data = json.loads(Path(args.candidates_file).read_text(encoding="utf-8"))
         rows = data if isinstance(data, list) else [data]
-    else:
+    elif args.candidate_json:
         rows = [json.loads(raw) for raw in args.candidate_json or []]
+    else:
+        rows = [_candidate_from_digest(workspace, digest_path)]
     if not rows or not all(isinstance(row, dict) for row in rows):
         raise ValueError("note candidates must be JSON objects")
     return rows
+
+
+def _digest_path_for_work(work_id: str) -> str:
+    from memoria_vault.runtime.paths import safe_filename
+
+    source_id = safe_filename(work_id.strip())
+    if not source_id:
+        raise ValueError("work-id is required")
+    return f"knowledge/digests/{source_id}.md"
+
+
+def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
+    from memoria_vault.runtime.vaultio import split_frontmatter
+
+    digest = workspace / digest_path
+    frontmatter, body = split_frontmatter(digest.read_text(encoding="utf-8"))
+    if frontmatter.get("type") != "digest" or frontmatter.get("check_status") != "checked":
+        raise ValueError(f"{digest_path} is not a checked digest")
+    title = str(frontmatter.get("title") or Path(digest_path).stem).removeprefix("Digest: ").strip()
+    excerpt = " ".join(body.split())
+    if not excerpt:
+        excerpt = str(frontmatter.get("description") or title)
+    return {
+        "title": f"Candidate from {title}",
+        "body": excerpt[:600],
+        "claim_text": excerpt[:240],
+        "tags": ["candidate"],
+    }
 
 
 def _operation_rows(workspace: Path) -> list[dict[str, Any]]:
