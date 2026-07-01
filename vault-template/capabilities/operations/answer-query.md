@@ -2,7 +2,7 @@
 title: "Answer query"
 type: operation
 check_status: checked
-description: "Answer an Ask query over checked current Concepts with BM25 sources."
+description: "Answer an Ask query over checked retrieval documents with BM25 sources."
 operation_id: answer-query
 allowed_tools:
   - read_checked_index
@@ -24,4 +24,5 @@ tags: [alpha11, ask]
 
 # Operation
 
-Return sources, unknowns, staleness, and contradictions for a checked-only query.
+Return sources, unknowns, staleness, and contradictions for a checked-only query
+over current Concepts, checked Work text, and graph-neighborhood documents.

@@ -22,7 +22,7 @@ QMD_MANIFEST = ".memoria/index/qmd/manifest.json"
 
 
 def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -> dict[str, Any]:
-    """Rebuild qmd's disposable input tree from checked Concepts only."""
+    """Rebuild qmd's disposable input tree from checked retrieval documents."""
     vault = Path(vault)
     out = vault / normalize_path(output_root)
     if out.exists():
@@ -97,7 +97,7 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
 
 
 def filter_checked_results(vault: Path, rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Filter qmd-style JSON result rows to checked Concepts."""
+    """Filter qmd-style JSON result rows to checked retrieval documents."""
     vault = Path(vault)
     out = []
     for row in rows:
@@ -182,7 +182,7 @@ def evaluate_bm25(
     *,
     k: int = 5,
 ) -> dict[str, Any]:
-    """Run a tiny BM25 baseline over checked Concepts for later retrieval evals."""
+    """Run a tiny BM25 baseline over checked retrieval documents."""
     docs = [(document["path"], document["text"]) for document in checked_search_documents(vault)]
     tokenized = [(path, _tokens(text)) for path, text in docs]
     results = []
