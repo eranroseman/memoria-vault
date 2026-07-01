@@ -1389,6 +1389,37 @@
         "source": "local"
       },
       "type": "operation"
+    },
+    {
+      "allowed_network": [],
+      "allowed_paths": [
+        "journal/"
+      ],
+      "allowed_tools": [
+        "trusted_writer"
+      ],
+      "check_status": "checked",
+      "description": "Apply PI-owned Work metadata and lifecycle updates through the worker queue.",
+      "id": "update-work",
+      "model": "deterministic-fixture",
+      "operation_id": "update-work",
+      "path": "capabilities/operations/update-work.md",
+      "prompt_version": "update-work.v1",
+      "required_checks": [
+        "memoria-runtime"
+      ],
+      "risk_class": "medium",
+      "runner": "local",
+      "tags": [
+        "alpha14",
+        "catalog"
+      ],
+      "title": "Update Work",
+      "trust": {
+        "sha256": "sha256:9667c244e27efb1c9d8e9f0da107ddb57175717912a2dbd7a6b5afeb9a2df4eb",
+        "source": "local"
+      },
+      "type": "operation"
     }
   ],
   "generated_by": "memoria_vault.runtime.capabilities.render_capability_index",

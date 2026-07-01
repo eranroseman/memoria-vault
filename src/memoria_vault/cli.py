@@ -597,55 +597,10 @@ def _cmd_work_interview(args: argparse.Namespace) -> int:
 
 def _cmd_work_update(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    source = state.catalog_source(workspace, args.work_id)
-    if source is None:
+    if state.catalog_source(workspace, args.work_id) is None:
         return _fail(f"work not found: {args.work_id}", json_output=args.json)
-    identifiers = dict(source["identifiers"])
-    csl_json = dict(source["csl_json"])
-    if args.doi:
-        identifiers["doi"] = args.doi
-        csl_json["DOI"] = args.doi
-    if args.resource:
-        csl_json["URL"] = args.resource
-    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
-    if args.standing:
-        memoria["standing"] = args.standing
-    if args.research_area:
-        memoria["research_area"] = args.research_area
-    if args.topic:
-        memoria["topics"] = args.topic
-    if memoria:
-        csl_json["memoria"] = memoria
-    state.upsert_catalog_record(
-        workspace,
-        source_id=source["source_id"],
-        concept_path=source["concept_path"],
-        doi=identifiers.get("doi"),
-        title=args.title or source["title"],
-        description=args.description if args.description is not None else source["description"],
-        resource=args.resource if args.resource is not None else source["resource"],
-        identifiers=identifiers,
-        citekey=args.citekey if args.citekey is not None else source["citekey"],
-        csl_json=csl_json,
-        metadata_status=args.metadata_status or source["metadata_status"],
-        text_status=source["text_status"],
-        check_status=args.check_status or source["check_status"],
-        content_hash=source["normalized_text_sha256"],
-        raw_hash=source["raw_text_sha256"],
-        content_path=source["content_path"],
-        raw_path=source["raw_path"],
-    )
-    state.append_journal_event(
-        workspace,
-        {
-            "event": "work_updated",
-            "operation": "work-update",
-            "source_id": source["source_id"],
-            "updates": _present_updates(args),
-        },
-        machine="memoria-cli",
-    )
-    return _emit({"ok": True, "work": state.catalog_source(workspace, args.work_id)}, args)
+    payload = {"source_id": args.work_id, **_present_updates(args)}
+    return _emit(_enqueue_and_run(args, "update-work", payload), args)
 
 
 def _cmd_project_ask(args: argparse.Namespace) -> int:

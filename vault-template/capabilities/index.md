@@ -47,3 +47,4 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Summarize for recall](operations/summarize-for-recall.md) `operation` — Summarize selected input for later recall and connection-making.
 - [Surface tensions](operations/surface-tensions.md) `operation` — List candidate tensions across notes without writing links.
 - [Trace integrity scan](operations/trace-integrity-scan.md) `operation` — Scan checked Concepts for missing or stale journal derivations.
+- [Update Work](operations/update-work.md) `operation` — Apply PI-owned Work metadata and lifecycle updates through the worker queue.
