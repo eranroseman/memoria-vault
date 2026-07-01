@@ -628,6 +628,51 @@ def test_cli_note_candidate_accept_and_link_flow(
     }
 
 
+def test_cli_note_propose_can_derive_candidate_from_work_digest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha source\n"
+        "description: Alpha\n"
+        "source_id: catalog/sources/source-alpha\n"
+        "---\n"
+        "## Synthesis\n\nFraming changes which outcomes matter.\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "note",
+            "propose",
+            "--workspace",
+            str(workspace),
+            "--work-id",
+            "source-alpha",
+            "--json",
+            "--idempotency-key",
+            "note-propose-work",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    [note_path] = output["result"]["note_paths"]
+    note = workspace / note_path
+    note_fm = read_frontmatter(note)
+    assert note_fm["check_status"] == "checked"
+    assert note_fm["status"] == "candidate"
+    assert note_fm["source_id"] == "catalog/sources/source-alpha"
+    assert "Framing changes which outcomes matter." in note.read_text(encoding="utf-8")
+
+
 def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
