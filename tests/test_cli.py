@@ -851,6 +851,28 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     }
 
 
+def test_cli_operation_list_rejects_directory_only_manifest(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    asset_dir = workspace / "capabilities/operations/directory-only"
+    asset_dir.mkdir()
+    (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
+
+    rc = main(["operation", "list", "--workspace", str(workspace), "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert (
+        output["error"] == "directory-only capability manifest is invalid: "
+        "capabilities/operations/directory-only; "
+        "expected sibling capabilities/operations/directory-only.md"
+    )
+
+
 def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
