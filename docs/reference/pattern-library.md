@@ -6,13 +6,14 @@ grand_parent: Reference
 
 # Pattern library
 
-The shipped prompt operations and the compatibility `patterns_list` /
-`patterns_run` contract.
+The shipped prompt operations, the CLI worker runner, and the compatibility
+`patterns_list` / `patterns_run` contract.
 
 - Prompt operations are checked `operation` Concepts in `capabilities/operations/`.
-- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) is the audited
-  runner ([ADR-53](../adr/53-pattern-library.md)).
-- The runner composes prompts; it never writes content.
+- `memoria operation run <pattern-id>` is the core runner: it reads checked input
+  refs, records request/journal provenance, and stages one unchecked report note.
+- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) remains a
+  compatibility prompt composer ([ADR-53](../adr/53-pattern-library.md)).
 - To inspect the available pattern actions, see [System actions](system-actions.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
@@ -67,7 +68,20 @@ other Concept files.
 
 ---
 
-## The runner
+## The CLI Runner
+
+`memoria operation run <pattern-id>` loads the checked operation, accepts
+`input_text`, `input_ref`, or `input_refs` in `--payload-json`, and runs through
+the same SQLite request queue as other operations. File refs must be checked
+Concepts under the operation's `allowed_paths`.
+
+The result stages one unchecked `note` report under `.memoria/staging/knowledge/`
+with `status: candidate`, an `evidence_set` pointing at the checked inputs, and
+request/journal rows for the run, model call, and derived output. The canonical
+`knowledge/notes/...` target is not materialized or checked until the normal
+promotion path accepts it.
+
+## Compatibility MCP Runner
 
 The MCP exposes two compatibility tools. Both are read-only; neither writes a
 vault note.
@@ -125,10 +139,10 @@ The product reaches canonical notes only through the normal promotion path.
 
 ---
 
-## Provenance
+## Compatibility MCP Provenance
 
-Every run appends one JSONL line to `system/logs/patterns.jsonl` before the
-prompt is returned.
+Every compatibility MCP run appends one JSONL line to
+`system/logs/patterns.jsonl` before the prompt is returned.
 
 ```json
 {"timestamp": "2026-06-01T14:23:01Z", "run_id": "a1b2c3d4", "pattern": "analyze-claims", "version": "1.0", "input_ref": "knowledge/notes/example.md", "input_chars": 0, "output_target": ".memoria/staging/knowledge/", "dry_run": false}

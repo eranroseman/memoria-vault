@@ -72,6 +72,7 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
     catalog_ids = {row["id"] for row in catalog["capabilities"]}
 
     assert worker_ids <= catalog_ids
+    assert catalog_ids <= worker_ids
     for operation_id in sorted(catalog_ids):
         load_operation_policy(vault, operation_id)
 

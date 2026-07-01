@@ -56,6 +56,7 @@ This page is a guarded mirror, not the source of truth. Action implementation li
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Counts checked-current source/digest/accepted-note topic signals and reports `new-topic`, `undigested`, and `under-warranted` gaps with proposed seed actions. |
 | Analyze project argument | worker operation `analyze-project-argument` + runtime helper (`analyze_project_argument`) | Follows checked, non-candidate note links around a checked project's `thesis` note and returns relation counts, stage, saturation, gap/advisory taxonomy, nodes, and edges. |
 | Render project argument Canvas | worker operation `render-project-argument-canvas` + runtime helper (`write_project_argument_canvas`) | Renders the checked-note argument graph for one project as a generated `knowledge/projects/<project>/argument.canvas` projection and commits it with a journal row. |
+| Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for checked prompt-operation manifests such as `analyze-claims`, records request/journal provenance, and stages one unchecked report note under `.memoria/staging/knowledge/`. |
 
 ### Integrity loop (`memoria_vault.runtime.integrity`)
 
