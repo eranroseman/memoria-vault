@@ -7,10 +7,10 @@ import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime.capabilities import (
-    check_ai_catalog,
+    check_capability_index,
     import_capability,
-    render_ai_catalog,
-    write_ai_catalog,
+    render_capability_index,
+    write_capability_index,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
-    (tmp_path / "capabilities/ai-catalog.json").unlink(missing_ok=True)
+    (tmp_path / "capabilities/_generated/capability-index.json").unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "capabilities@example.invalid")
     git(tmp_path, "config", "user.name", "Capabilities")
@@ -41,16 +41,16 @@ def git(vault: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def test_ai_catalog_renderer_covers_shipped_operations() -> None:
+def test_capability_index_renderer_covers_shipped_operations() -> None:
     vault = ROOT / "vault-template"
 
-    catalog = json.loads(render_ai_catalog(vault))
+    catalog = json.loads(render_capability_index(vault))
     rows = {row["id"]: row for row in catalog["capabilities"]}
 
     assert catalog["schema_version"] == 1
-    assert (vault / "capabilities/ai-catalog.json").read_text(
+    assert (vault / "capabilities/_generated/capability-index.json").read_text(
         encoding="utf-8"
-    ) == render_ai_catalog(vault)
+    ) == render_capability_index(vault)
     assert rows["compile-source-digest"]["allowed_tools"] == ["trusted_writer"]
     assert rows["enrich-source"]["allowed_network"] == [
         "https://api.crossref.org/",
@@ -66,7 +66,7 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
     worker_ids = set(re.findall(r'operation_id == "([^"]+)"', worker))
     for block in re.findall(r"operation_id in \{([^}]+)\}", worker):
         worker_ids.update(re.findall(r'"([^"]+)"', block))
-    catalog = json.loads(render_ai_catalog(vault))
+    catalog = json.loads(render_capability_index(vault))
     catalog_ids = {row["id"] for row in catalog["capabilities"]}
 
     assert worker_ids <= catalog_ids
@@ -74,27 +74,30 @@ def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
         load_operation_policy(vault, operation_id)
 
 
-def test_ai_catalog_projection_drift_check(tmp_path: Path) -> None:
+def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
-    result = write_ai_catalog(vault, commit=True, machine="test-machine")
+    result = write_capability_index(vault, commit=True, machine="test-machine")
 
     assert result["changed"] is True
-    assert check_ai_catalog(vault)
+    assert check_capability_index(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"capabilities/ai-catalog.json", "journal/test-machine.jsonl"}
+    assert committed == {
+        "capabilities/_generated/capability-index.json",
+        "journal/test-machine.jsonl",
+    }
 
-    (vault / "capabilities/ai-catalog.json").write_text("{}\n", encoding="utf-8")
-    assert not check_ai_catalog(vault)
+    (vault / "capabilities/_generated/capability-index.json").write_text("{}\n", encoding="utf-8")
+    assert not check_capability_index(vault)
 
 
-def test_worker_runs_ai_catalog_projection_operation_jobs(tmp_path: Path) -> None:
+def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
     queued = enqueue_operation(
         vault,
-        "regenerate-ai-catalog",
-        idempotency_key="ai-catalog",
+        "regenerate-capability-index",
+        idempotency_key="capability-index",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -102,10 +105,13 @@ def test_worker_runs_ai_catalog_projection_operation_jobs(tmp_path: Path) -> Non
     assert done is not None
     assert done["status"] == "done"
     assert done["changed"] is True
-    assert done["output"] == "capabilities/ai-catalog.json"
-    assert check_ai_catalog(vault)
+    assert done["output"] == "capabilities/_generated/capability-index.json"
+    assert check_capability_index(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"capabilities/ai-catalog.json", "journal/test-machine.jsonl"}
+    assert committed == {
+        "capabilities/_generated/capability-index.json",
+        "journal/test-machine.jsonl",
+    }
 
 
 def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: Path) -> None:
@@ -131,7 +137,7 @@ def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: 
     assert (vault / result["quarantine_path"]).is_file()
     assert not (vault / "capabilities/operations/remote-danger.md").exists()
     assert "remote-danger" not in {
-        row["id"] for row in json.loads(render_ai_catalog(vault))["capabilities"]
+        row["id"] for row in json.loads(render_capability_index(vault))["capabilities"]
     }
     event = list(iter_jsonl(vault / "journal/test-machine.jsonl"))[-1]
     assert event["check"] == "capability-import-trust"

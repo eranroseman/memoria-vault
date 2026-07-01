@@ -992,10 +992,10 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "changed": result["changed"],
             "output": result["path"],
         }
-    if operation_id == "regenerate-ai-catalog":
-        from memoria_vault.runtime.capabilities import write_ai_catalog
+    if operation_id == "regenerate-capability-index":
+        from memoria_vault.runtime.capabilities import write_capability_index
 
-        result = write_ai_catalog(vault, commit=True, machine=machine)
+        result = write_capability_index(vault, commit=True, machine=machine)
         return {
             "commit": result["commit"],
             "changed": result["changed"],

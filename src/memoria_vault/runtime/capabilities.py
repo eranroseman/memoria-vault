@@ -1,4 +1,4 @@
-"""Generated alpha.12 capability catalog projection."""
+"""Generated alpha.14 capability index projection."""
 
 from __future__ import annotations
 
@@ -13,30 +13,31 @@ from memoria_vault.runtime.trusted_writer import append_journal_event, commit_wr
 from memoria_vault.runtime.vaultio import parse_frontmatter, read_frontmatter, safe_read
 
 CAPABILITY_TYPES = {"operation", "skill", "mcp", "workflow"}
+CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"
 
 
-def render_ai_catalog(vault: Path) -> str:
-    """Render capability Concepts as the generated ai-catalog projection."""
+def render_capability_index(vault: Path) -> str:
+    """Render capability Concepts as the generated capability index projection."""
     vault = Path(vault)
     payload = {
         "schema_version": 1,
-        "generated_by": "memoria_vault.runtime.capabilities.render_ai_catalog",
+        "generated_by": "memoria_vault.runtime.capabilities.render_capability_index",
         "capabilities": [_catalog_row(vault, path) for path in _capability_paths(vault)],
     }
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
 
-def write_ai_catalog(
+def write_capability_index(
     vault: Path,
     *,
-    output_path: str = "capabilities/ai-catalog.json",
+    output_path: str = CAPABILITY_INDEX_PATH,
     commit: bool = False,
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Write the generated ai-catalog projection."""
+    """Write the generated capability index projection."""
     vault = Path(vault)
     output = vault / normalize_path(output_path)
-    text = render_ai_catalog(vault)
+    text = render_capability_index(vault)
     old = output.read_text(encoding="utf-8") if output.exists() else None
     changed = old != text
     if changed:
@@ -49,8 +50,8 @@ def write_ai_catalog(
             vault,
             {
                 "event": "run",
-                "run_id": "projection:ai-catalog.json",
-                "workflow": "generate_ai_catalog",
+                "run_id": "projection:capability-index.json",
+                "workflow": "generate_capability_index",
                 "status": "done",
                 "outputs": [normalize_path(output_path)],
             },
@@ -58,7 +59,7 @@ def write_ai_catalog(
         )
         commit_id = commit_writer_changes(
             vault,
-            "regenerate ai-catalog.json",
+            "regenerate capability-index.json",
             [output_path],
             machine=machine,
         )
@@ -70,9 +71,9 @@ def write_ai_catalog(
     }
 
 
-def check_ai_catalog(vault: Path, *, output_path: str = "capabilities/ai-catalog.json") -> bool:
+def check_capability_index(vault: Path, *, output_path: str = CAPABILITY_INDEX_PATH) -> bool:
     path = Path(vault) / normalize_path(output_path)
-    return path.is_file() and path.read_text(encoding="utf-8") == render_ai_catalog(vault)
+    return path.is_file() and path.read_text(encoding="utf-8") == render_capability_index(vault)
 
 
 def import_capability(

@@ -1,9 +1,9 @@
 ---
-title: "Regenerate ai-catalog"
+title: "Regenerate capability index"
 type: operation
 check_status: checked
-description: "Regenerate the tracked capability catalog projection."
-operation_id: regenerate-ai-catalog
+description: "Regenerate the tracked capability index projection."
+operation_id: regenerate-capability-index
 allowed_tools:
   - projection_writer
 allowed_paths:
@@ -12,10 +12,10 @@ allowed_paths:
 allowed_network: []
 runner: local
 model: deterministic-fixture
-prompt_version: regenerate-ai-catalog.v1
+prompt_version: regenerate-capability-index.v1
 io_schema:
   input: capability_concepts
-  output: ai_catalog_projection
+  output: capability_index_projection
 risk_class: low
 required_checks:
   - projection-drift
@@ -24,4 +24,4 @@ tags: [alpha11, projection]
 
 # Operation
 
-Render `capabilities/ai-catalog.json` from checked capability Concepts.
+Render `capabilities/_generated/capability-index.json` from checked capability Concepts.
