@@ -981,7 +981,10 @@ def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
 
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
     results = run_pending_jobs(_workspace(args), limit=args.limit, machine="memoria-cli")
-    return _emit({"ok": True, "ran": len(results), "results": results}, args)
+    payload = {"ok": True, "ran": len(results), "results": results}
+    if args.schedule_id:
+        payload["schedule_id"] = args.schedule_id
+    return _emit(payload, args)
 
 
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
@@ -1012,11 +1015,33 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.projections import check_tracked_projections
     from memoria_vault.runtime.worker import INTEGRITY_SWEEP_OPERATIONS
 
+    projections = check_tracked_projections(_workspace(args))
+    if args.schedule_id:
+        from memoria_vault.runtime.worker import run_integrity_sweep
+
+        sweep = run_integrity_sweep(
+            _workspace(args),
+            shadow=bool(args.shadow),
+            sweep_id=args.schedule_id,
+            machine="memoria-cli",
+        )
+        results = [
+            {"ok": result.get("status") == "done", "result": result} for result in sweep["results"]
+        ]
+        return _emit(
+            {
+                "ok": all(result["ok"] for result in results) and projections["ok"],
+                "schedule_id": args.schedule_id,
+                "jobs": sweep["jobs"],
+                "checks": results,
+                "projections": projections,
+            },
+            args,
+        )
     results = [
         _enqueue_and_run(args, operation_id, {"shadow": bool(args.shadow)})
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
-    projections = check_tracked_projections(_workspace(args))
     return _emit(
         {
             "ok": all(result["ok"] for result in results) and projections["ok"],
