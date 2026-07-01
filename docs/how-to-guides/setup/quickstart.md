@@ -8,16 +8,14 @@ nav_order: 1
 
 # Quickstart
 
-Four steps from zero to an installed vault. For the full walkthrough with
-explanations, see [Set up the vault](set-up-the-vault.md) through
-[Set up Hermes](set-up-hermes.md). Once you're installed, use the vault launch
-screen and current task guides as the alpha.11 first path.
+Four steps from zero to an installed standalone CLI/runtime workspace. For the
+full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 ## Prerequisites
 
-- Git on your `PATH`; on **Windows**, PowerShell 5.1+ for the native production installer. Sandbox images must include Git too.
-- A `KILOCODE_API_KEY` (the shipped model provider is `kilocode` — kilo.ai) and an `OPENALEX_API_KEY` ([openalex.org/settings/api](https://openalex.org/settings/api) — required since 2026-02)
-- The installer provisions Hermes, verifies ACP, and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later when you need imports ([Set up Zotero](set-up-zotero.md)).
+- Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
+- Runtime provider keys for the CLI features you plan to use.
+- Optional adapters come later: `--with-hermes` for the Hermes/Obsidian path, Zotero when you need imports ([Set up Zotero](set-up-zotero.md)).
 
 ## Steps
 
@@ -29,17 +27,22 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 ```
 
 ```powershell
-# Windows production (PowerShell): native Hermes + native vault
+# Windows adapter path (PowerShell): native Hermes + native vault
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer provisions Hermes, scaffolds your runtime vault (default `~/Memoria`), deploys the **five profiles** (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`), and wires the maintenance crons — full walkthrough in [Set up the vault](set-up-the-vault.md).
+The Linux/WSL installer scaffolds your runtime vault (default `~/Memoria`), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, stages the golden copy, and wires local hooks when the vault is already a git repo. Add `--with-hermes` only when you want the Hermes/Obsidian adapter.
 
-**2. Open the vault in Obsidian.** Open the folder the installer reported (default `~/Memoria`) → Open folder as vault. The required plugins ship pre-installed in `.obsidian/plugins/` — turn off **Restricted mode** (Settings → Community plugins) to activate them, then restart Obsidian. You do not browse or install plugins.
+**2. Verify the CLI runtime.**
 
-**3. Fill the secrets.** Copy the `apiKey` from Settings → Local REST API, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2). At minimum you need `KILOCODE_API_KEY` (model access), the `OBSIDIAN_*` keys (the REST API key, port, and cert path), and `OPENALEX_API_KEY` — the full annotated list is in [Set up Hermes](set-up-hermes.md).
+```bash
+~/Memoria/.memoria/.venv/bin/memoria doctor bundle --workspace ~/Memoria
+~/Memoria/.memoria/.venv/bin/memoria workspace rebuild --workspace ~/Memoria --search
+```
 
-Propagate them into every profile (profile runs read only their own `.env`):
+**3. Fill optional adapter secrets.** For the Hermes/Obsidian adapter, copy the Local REST API `apiKey`, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2). At minimum that adapter needs `KILOCODE_API_KEY`, the `OBSIDIAN_*` keys, and `OPENALEX_API_KEY` — the full annotated list is in [Set up Hermes](set-up-hermes.md).
+
+Propagate them into every Hermes profile (profile runs read only their own `.env`):
 
 ```powershell
 .\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria"
@@ -49,10 +52,10 @@ Propagate them into every profile (profile runs read only their own `.env`):
 bash scripts/install.sh --profiles-only --vault ~/Memoria
 ```
 
-**4. Make the vault a git repo.** The installer deliberately doesn't `git init` for you; manual Obsidian Git checkpoints, rollback/history, the pre-commit schema check, and verify-on-commit need a repo:
+**4. Make the first checkpoint.** The installer initializes Git and wires hooks, but it does not create the first commit or set a remote:
 
 ```bash
-cd ~/Memoria && git init && git add -A && git commit -m "Initial Memoria vault"
+cd ~/Memoria && git add -A && git commit -m "Initial Memoria vault"
 ```
 
 The remote-and-backup details are in [Set up the vault](set-up-the-vault.md).
@@ -63,9 +66,9 @@ those commands as the day-1 path for the space you are in.
 
 ## Verify
 
-- `hermes profile list` shows the five `memoria-*` profiles
-- `Cmd/Ctrl-P` → `Mem` lists the `Memoria:` commands
-- The runtime vault has a `.git/` directory after the initial commit
+- `~/Memoria/.memoria/.venv/bin/memoria status --workspace ~/Memoria` returns workspace status
+- `~/Memoria/.memoria/.venv/bin/memoria ask --workspace ~/Memoria --question "What needs attention?"` reaches the CLI ask path once provider keys are configured
+- The runtime vault has a `.git/` directory after install
 
 ## Related
 

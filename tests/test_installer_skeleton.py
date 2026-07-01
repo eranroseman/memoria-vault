@@ -178,6 +178,46 @@ def test_installer_cron_helper_keeps_all_job_schedules():
         assert job in text
 
 
+def test_linux_installer_defaults_to_standalone_cli_runtime():
+    text = INSTALL.read_text(encoding="utf-8")
+    default_branch = re.search(
+        r'if \[ "\$WITH_HERMES" -eq 0 \]; then(?P<body>.*?)\n  fi\n\n  print_hermes_plan',
+        text,
+        re.S,
+    ).group("body")
+
+    assert "WITH_HERMES=0" in text
+    assert "WITH_CLUSTER=0" in text
+    assert "--with-hermes" in text
+    assert "--with-cluster" in text
+    assert "Proceed with the standalone Memoria install?" in default_branch
+    assert 'doctor bundle --workspace "$VAULT_PATH"' in text
+    for required in (
+        "ensure_prereqs",
+        "resolve_repo",
+        "load_install_modules",
+        "copy_vault",
+        "install_mcp_deps",
+        "ensure_qmd",
+        "print_cli_next_steps",
+    ):
+        assert required in default_branch
+    for adapter_only in (
+        "ensure_hermes",
+        "install_profiles",
+        "install_skills",
+        "wire_telemetry_cron",
+        "wire_sweeps_cron",
+        "wire_worker_cron",
+        "wire_lint_cron",
+        "wire_metrics_cron",
+        "wire_eval_cron",
+        "ensure_obsidian",
+        "print_secrets_guidance",
+    ):
+        assert adapter_only not in default_branch
+
+
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert 'PYTHONPATH="$vault/.memoria:$vault/.memoria/mcp:${PYTHONPATH:-}"' in text
@@ -203,6 +243,13 @@ def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
         text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_installer_registers_qmd_with_workspace_local_state():
+    text = RUNTIME_TOOLS.read_text(encoding="utf-8")
+    assert 'QMD_CONFIG_DIR="$VAULT_PATH/.memoria/index/qmd/config"' in text
+    assert 'INDEX_PATH="$VAULT_PATH/.memoria/index/qmd/index.sqlite"' in text
+    assert "--name memoria-checked" in text
 
 
 def test_zotero_left_the_installer():
@@ -269,6 +316,8 @@ def test_installer_treats_python_as_a_hard_prerequisite():
         re.S,
     ).group("body")
     assert 'missing="$missing python3"' in ensure_prereqs
+    assert "have pandoc || missing" not in ensure_prereqs
+    assert "Pandoc not found" in ensure_prereqs
     assert "python_install_guidance" in ensure_prereqs
     assert "sudo apt-get install -y$missing" in ensure_prereqs
 
@@ -301,6 +350,19 @@ def test_mcp_deps_fail_loudly_without_python():
     assert "skipping MCP deps" not in install_mcp_deps
 
 
+def test_optional_cluster_stack_requires_explicit_flag():
+    text = INSTALL.read_text(encoding="utf-8")
+    install_mcp_deps = re.search(
+        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
+        text,
+        re.S,
+    ).group("body")
+
+    assert 'if [ "$WITH_CLUSTER" -eq 1 ]; then' in install_mcp_deps
+    assert "Install the OPTIONAL clustering stack" not in install_mcp_deps
+    assert "confirm " not in install_mcp_deps
+
+
 def test_installers_install_memoria_package_non_editable():
     text = INSTALL.read_text(encoding="utf-8")
     install_mcp_deps = re.search(
@@ -327,6 +389,9 @@ def test_fresh_installer_copies_the_runtime_src_tree():
     assert (ROOT / "vault-template" / "_nav.md").is_file()
     assert 'rsync -a --exclude \'.git\' "$src"/ "$VAULT_PATH"/' in text
     assert 'cp -R \\"$src\\"/. \\"$VAULT_PATH\\"/' in text
+    assert 'run git -C "$VAULT_PATH" init -q' in text
+    assert 'run git -C "$VAULT_PATH" branch -M main' in text
+    assert 'git -C "$VAULT_PATH" commit' not in text
 
 
 def test_installers_refuse_profile_deploy_without_policy_gate():

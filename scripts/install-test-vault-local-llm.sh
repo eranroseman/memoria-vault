@@ -177,7 +177,7 @@ run env \
   MEMORIA_MODEL_BASE_URL="$BASE_URL" \
   MEMORIA_MODEL_NAME="$MODEL" \
   MEMORIA_MODEL_CONTEXT_LENGTH="$CONTEXT" \
-  bash "$ROOT/scripts/install.sh" --vault "$VAULT" --no-apps --yes
+  bash "$ROOT/scripts/install.sh" --with-hermes --vault "$VAULT" --no-apps --yes
 
 hdr "Baseline commit"
 run git -C "$VAULT" add -A

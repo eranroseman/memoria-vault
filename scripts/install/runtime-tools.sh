@@ -17,40 +17,43 @@ ensure_qmd() {
     ok "qmd present: $q"
   elif have npm && node --version 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])'; then
     run npm install -g @tobilu/qmd \
-      || warn "qmd install failed — search MCP will not serve (npm install -g @tobilu/qmd)"
+      || warn "qmd install failed — search will not be ready (npm install -g @tobilu/qmd)"
     q="$(resolve_qmd)"
   else
-    warn "qmd not installed and Node >=22 unavailable — search MCP will not serve until you: npm install -g @tobilu/qmd"
+    warn "qmd not installed and Node >=22 unavailable — search will not be ready until you: npm install -g @tobilu/qmd"
   fi
   QMD_BIN="$q"
   if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
     run mkdir -p "$VAULT_PATH/.memoria/index/qmd/checked"
-    run "$q" collection add "$VAULT_PATH/.memoria/index/qmd/checked" \
+    run mkdir -p "$VAULT_PATH/.memoria/index/qmd/config"
+    run env QMD_CONFIG_DIR="$VAULT_PATH/.memoria/index/qmd/config" \
+      INDEX_PATH="$VAULT_PATH/.memoria/index/qmd/index.sqlite" \
+      "$q" collection add "$VAULT_PATH/.memoria/index/qmd/checked" \
       --name memoria-checked --mask "**/*.md" \
-      || warn "qmd collection add failed — register manually: qmd collection add \"$VAULT_PATH/.memoria/index/qmd/checked\" --name memoria-checked --mask '**/*.md'"
+      || warn "qmd collection add failed — run: memoria workspace rebuild --workspace \"$VAULT_PATH\" --search"
     say "  (registered checked-only qmd input; the worker rebuilds it from checked Concepts)"
   fi
 }
 
 wire_commit_gate() {
-  if [ -d "$VAULT_PATH/.git" ]; then
+  if [ -d "$VAULT_PATH/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
     run mkdir -p "$VAULT_PATH/.git/hooks"
     run cp "$VAULT_PATH/.memoria/operations/integrity/linter/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
     run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
     ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
   else
-    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the pre-commit hook)"
+    say "  (vault is not a git repo yet — initialize git, then copy .memoria/operations/integrity/linter/pre-commit into .git/hooks/pre-commit)"
   fi
 }
 
 wire_verify_on_commit_hook() {
-  if [ -d "$VAULT_PATH/.git" ]; then
+  if [ -d "$VAULT_PATH/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
     run mkdir -p "$VAULT_PATH/.git/hooks"
     run cp "$VAULT_PATH/.githooks/post-commit" "$VAULT_PATH/.git/hooks/post-commit"
     run chmod +x "$VAULT_PATH/.git/hooks/post-commit"
     ok "post-commit verify trigger wired (.git/hooks/post-commit)"
   else
-    say "  (vault is not a git repo yet — re-run with --profiles-only after git init to wire the post-commit verify trigger)"
+    say "  (vault is not a git repo yet — initialize git, then copy .githooks/post-commit into .git/hooks/post-commit)"
   fi
 }
 

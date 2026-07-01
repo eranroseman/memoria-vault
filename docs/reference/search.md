@@ -95,8 +95,8 @@ neighborhood documents when results go stale. The rebuild procedure is owned by
 | `memoria workspace rebuild --workspace <path> --search --embeddings` | Also runs qmd embedding after `qmd pull` has populated the model cache. |
 | `memoria ask --workspace <path> --question "..."` | Queries checked retrieval documents through the Ask/Query contract. |
 | `qmd search "<term>"` | One-shot query — the fastest way to confirm whether the index, not Memoria, is the problem. |
-| `qmd collection add .memoria/index/qmd/checked --name memoria-checked --mask '**/*.md'` | Raw equivalent of the collection registration done by `workspace rebuild --search`. |
-| `qmd update` | Raw qmd index refresh. |
+| `QMD_CONFIG_DIR=.memoria/index/qmd/config INDEX_PATH=.memoria/index/qmd/index.sqlite qmd collection add .memoria/index/qmd/checked --name memoria-checked --mask '**/*.md'` | Raw equivalent of the collection registration done by `workspace rebuild --search`. |
+| `QMD_CONFIG_DIR=.memoria/index/qmd/config INDEX_PATH=.memoria/index/qmd/index.sqlite qmd update` | Raw qmd index refresh. |
 
 ---
 

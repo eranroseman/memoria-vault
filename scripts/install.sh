@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Memoria bootstrap installer  (Linux/WSL testing path; Windows production uses install.ps1)
+# Memoria bootstrap installer  (Linux/WSL path; Windows uses install.ps1)
 # =============================================================================
-# One command sets up the Linux/WSL test system: clones the vault, installs Hermes,
-# verifies ACP, deploys the five memoria-* profiles, provisions skills, and guides
-# the GUI app (Obsidian). macOS is not supported. (Zotero: see the tutorial.)
+# One command sets up the standalone Memoria CLI/runtime workspace: clones the
+# vault, installs the package into the vault-local venv, wires local integrity
+# hooks, and registers qmd search. Hermes/Obsidian profile setup is an optional
+# adapter path behind --with-hermes. macOS is not supported.
 #
 # Inspect-first (recommended):
 #   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -16,6 +17,9 @@
 #
 # Flags:
 #   --vault DIR       install the runtime vault here (default: ~/Memoria; prompted otherwise)
+#   --with-hermes     also install Hermes, deploy memoria-* profiles, wire Hermes crons,
+#                     install profile skills, and guide Obsidian setup
+#   --with-cluster    install the optional clustering stack (bertopic -> torch, ~2GB)
 #   --profiles-only   skip the bootstrap; just (re)deploy profiles from an existing vault
 #                     (the maintenance path — run after editing the vault source)
 #   --only NAMES      restrict the profile step to these (comma-separated), e.g.
@@ -29,7 +33,7 @@
 # `sudo` command and runs it only on your confirmation (apt will prompt for your
 # password). --dry-run echoes everything and touches nothing.
 #
-# Honors $HERMES_HOME (default ~/.hermes), matching Hermes's own convention.
+# Honors $HERMES_HOME (default ~/.hermes) only when --with-hermes or --profiles-only is used.
 # Honors $MEMORIA_ENV for Linux/WSL test profile model wiring:
 #   prod (default) -> shipped Kilo Code gateway tiers
 #   test           -> Kilo Llama 4 Scout by default; explicit env can point local
@@ -70,6 +74,8 @@ HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/
 DRY_RUN=0
 ASSUME_YES=0
 PROFILES_ONLY=0
+WITH_HERMES=0
+WITH_CLUSTER=0
 NO_APPS=0
 VAULT_OVERRIDE=""
 ONLY=""
@@ -233,6 +239,8 @@ parse_args() {
       --vault=*) VAULT_OVERRIDE="${1#*=}"; shift ;;
       --only) ONLY="${2:-}"; shift 2 ;;
       --only=*) ONLY="${1#*=}"; shift ;;
+      --with-hermes) WITH_HERMES=1; shift ;;
+      --with-cluster) WITH_CLUSTER=1; shift ;;
       --profiles-only) PROFILES_ONLY=1; shift ;;
       --no-apps) NO_APPS=1; shift ;;
       --dry-run) DRY_RUN=1; shift ;;
@@ -248,29 +256,42 @@ parse_args() {
 # =============================================================================
 print_plan() {
   hdr "Memoria installer"
+  say "This will set up the standalone CLI/runtime workspace:"
+  say "  1. ensure prerequisites (git, Python 3 + venv; pandoc optional for exports)"
+  say "  2. fetch the Memoria vault repo"
+  say "  3. copy the runtime vault to your chosen folder"
+  say "  4. install runtime dependencies + the memoria CLI into .memoria/.venv"
+  say "  5. register qmd search, initialize git, and wire local hooks"
+  say "  6. print CLI next steps"
+  say ""
+  say "Optional adapter path: add --with-hermes to install Hermes profiles, skills, crons, and Obsidian guidance."
+  [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
+  return 0
+}
+
+print_hermes_plan() {
+  hdr "Memoria installer + Hermes adapter"
   say "This will, with your confirmation at each external step:"
-  say "  1. ensure prerequisites (git, pandoc)"
+  say "  1. ensure prerequisites (git, Python 3 + venv; pandoc optional for exports)"
   say "  2. fetch the Memoria vault repo"
   say "  3. install Hermes (official installer) + verify ACP"
   say "  4. copy the runtime vault to your chosen folder"
-  say "  5. install MCP server dependencies (pip)"
+  say "  5. install runtime dependencies (pip)"
   say "  6. deploy the five memoria-* Hermes profiles"
   say "  7. provision skills (K-Dense clone, official qmd optional skill, kepano hub skill)"
   say "  8. guide the Obsidian install (Zotero moved to the tutorial)"
   say "  9. print where to put your API keys + next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
   return 0
-  say ""
 }
 
 # =============================================================================
-# Step 1 — prerequisites (Hermes provisions uv/python/node/ripgrep/ffmpeg itself)
+# Step 1 — prerequisites
 # =============================================================================
 ensure_prereqs() {
   hdr "Prerequisites"
   local missing=""
   have git    || missing="$missing git"
-  have pandoc || missing="$missing pandoc"
   # We install MCP deps into a venv (Step 5). Debian/Ubuntu ship the `venv` module
   # but withhold `ensurepip` until python3-venv is installed, so a venv created
   # without it has no pip. Probe ensurepip (not just venv) and add the package if
@@ -281,7 +302,11 @@ ensure_prereqs() {
   elif ! "$PYTHON" -c "import ensurepip" >/dev/null 2>&1 && have apt-get; then
     missing="$missing python3-venv"
   fi
-  if [ -z "$missing" ]; then ok "git, pandoc, and venv support present"; return; fi
+  if [ -z "$missing" ]; then
+    ok "git and venv support present"
+    have pandoc || warn "Pandoc not found — DOCX/PDF exports are unavailable until installed."
+    return
+  fi
 
   warn "Missing:$missing"
   case " $missing " in
@@ -300,6 +325,7 @@ ensure_prereqs() {
   else
     die "No apt-get found. This installer supports Ubuntu/Debian (or WSL2). Install$missing manually; if Python is missing, install Python 3.11+ plus venv support first."
   fi
+  have pandoc || warn "Pandoc not found — DOCX/PDF exports are unavailable until installed."
 }
 
 # =============================================================================
@@ -405,50 +431,56 @@ copy_vault() {
     || warn "golden copy not staged — run golden_restore.py stage manually (lint:restore needs it)"
   ok "Golden copy staged (.memoria/golden/)"
 
-  ensure_memoria_css_snippets
+  if [ "$WITH_HERMES" -eq 1 ]; then
+    ensure_memoria_css_snippets
+  fi
+
+  if [ ! -d "$VAULT_PATH/.git" ]; then
+    run git -C "$VAULT_PATH" init -q
+    run git -C "$VAULT_PATH" branch -M main
+    ok "Git repo initialized for checkpoints and hooks"
+  fi
 
   wire_commit_gate
   wire_verify_on_commit_hook
 
-  # Seed the per-machine Obsidian plugin config that does NOT self-generate.
-  # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
-  # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
-  # it from the example. First-install only; never clobber an edited one.
-  # `windowsWslMode` is only for the Linux/WSL test path where Obsidian is on
-  # Windows but Hermes runs inside WSL. Production Windows uses install.ps1 and
-  # leaves the shipped native-Hermes default alone.
-  local acp_dir="$VAULT_PATH/.obsidian/plugins/agent-client"
-  if [ -f "$acp_dir/data.json.example" ] && [ ! -f "$acp_dir/data.json" ]; then
-    local wsl_mode=false
-    if grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null || [ -n "${WSL_DISTRO_NAME:-}" ]; then
-      wsl_mode=true
+  if [ "$WITH_HERMES" -eq 1 ]; then
+    # Seed the per-machine Obsidian plugin config that does NOT self-generate.
+    # `obsidian-local-rest-api` regenerates its own data.json (apiKey + TLS material)
+    # on first Obsidian launch, so we leave it alone. `agent-client` does not — seed
+    # it from the example. First-install only; never clobber an edited one.
+    # `windowsWslMode` is only for the Linux/WSL test path where Obsidian is on
+    # Windows but Hermes runs inside WSL. Production Windows uses install.ps1 and
+    # leaves the shipped native-Hermes default alone.
+    local acp_dir="$VAULT_PATH/.obsidian/plugins/agent-client"
+    if [ -f "$acp_dir/data.json.example" ] && [ ! -f "$acp_dir/data.json" ]; then
+      local wsl_mode=false
+      if grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null || [ -n "${WSL_DISTRO_NAME:-}" ]; then
+        wsl_mode=true
+      fi
+      run_sh "sed -e 's|{{HOME}}|$HOME|g' -e 's|\"windowsWslMode\": false|\"windowsWslMode\": $wsl_mode|' \
+                  \"$acp_dir/data.json.example\" > \"$acp_dir/data.json\""
+      say "  seeded agent-client/data.json from its example ({{HOME}} -> $HOME, windowsWslMode: $wsl_mode)"
     fi
-    run_sh "sed -e 's|{{HOME}}|$HOME|g' -e 's|\"windowsWslMode\": false|\"windowsWslMode\": $wsl_mode|' \
-                \"$acp_dir/data.json.example\" > \"$acp_dir/data.json\""
-    say "  seeded agent-client/data.json from its example ({{HOME}} -> $HOME, windowsWslMode: $wsl_mode)"
   fi
 
-  # The runtime vault is the user's own repo — they set up git themselves, with
-  # their own identity and remote. We don't `git init`/commit under a synthetic
-  # author. Obsidian Git needs a repo for manual checkpoints, so point the way:
-  if [ ! -d "$VAULT_PATH/.git" ]; then
-    say "  This folder is your vault — set up your own git here (Obsidian Git needs a repo):"
-    say "      cd \"$VAULT_PATH\""
-    say "      git init && git add -A && git commit -m \"Initial Memoria vault\""
-    say "      (then re-run with --profiles-only to wire the git hooks)"
-    say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
-  fi
+  # The runtime vault is the user's own repo — the installer initializes Git so
+  # hooks can be wired, but it never commits or sets identity/remotes.
+  say "  Create your first checkpoint when ready:"
+  say "      cd \"$VAULT_PATH\""
+  say "      git add -A && git commit -m \"Initial Memoria vault\""
+  say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
 }
 
 # =============================================================================
-# Step 5 — MCP server dependencies
+# Step 5 — runtime dependencies
 # =============================================================================
 # Deps go into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
 # modern Ubuntu/Debian's PEP-668 "externally-managed-environment" pip block, keeps
 # Memoria's deps off the system site-packages, and gives a stable interpreter path
 # that install_profiles wires into config.yaml (see PYTHON_BIN below).
 install_mcp_deps() {
-  hdr "MCP server dependencies"
+  hdr "Runtime dependencies"
   detect_python
   local reqs="$VAULT_PATH/.memoria/mcp/requirements.txt"
   # In --dry-run the vault was not actually copied, so reqs won't exist yet —
@@ -488,7 +520,7 @@ install_mcp_deps() {
       run "$PYTHON" -m pip install --user --break-system-packages --quiet "$REPO_DIR" \
         || die "Memoria package install failed. Re-run from a clean checkout or install python3-venv."
       VENV_PYTHON="$PYTHON"   # runtime uses the same interpreter the deps landed in
-      ok "MCP dependencies installed (user site-packages, system override)"
+      ok "Runtime dependencies installed (user site-packages, system override)"
       return
     fi
   fi
@@ -496,16 +528,16 @@ install_mcp_deps() {
   run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
   run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
   run "$VENV_PYTHON" -m pip install --quiet "$REPO_DIR" || die "Memoria package install into the venv failed."
-  ok "MCP dependencies installed into $venv"
+  ok "Runtime dependencies installed into $venv"
 
   # Optional heavy stack (ADR-33): the cluster MCP's topic modeling needs
-  # bertopic (-> torch). Graph tools work without it; offer, don't force.
+  # bertopic (-> torch). Graph tools work without it; require an explicit flag.
   if [ -f "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" ]; then
-    if confirm "Install the OPTIONAL clustering stack (bertopic -> torch, ~2GB)? Topic modeling needs it; graph analysis does not."; then
+    if [ "$WITH_CLUSTER" -eq 1 ]; then
       run "$VENV_PYTHON" -m pip install --quiet -r "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" \
         || warn "cluster deps failed — install later: $VENV_PYTHON -m pip install -r .memoria/mcp/requirements-cluster.txt"
     else
-      say "  (skipped — cluster_model_topics will error cleanly until installed)"
+      say "  (skipped optional clustering stack — rerun with --with-cluster if topic modeling needs bertopic/torch)"
     fi
   fi
 }
@@ -889,18 +921,30 @@ print_next_steps() {
   say "  4. Open the Agent Client pane in Obsidian, or test it with: hermes -p memoria-copi acp"
   say "  5. Open the Library gate from the Obsidian gate nav row"
   say "  6. Zotero (optional backbone): see the bring-in-a-paper tutorial on the docs site"
-  # Obsidian Git needs a repo for manual checkpoints; we deliberately don't auto-init (the
-  # vault is the user's own repo). Surface the one-liner only if it's not a repo yet.
+  # The fresh installer initializes Git before this point. This branch only helps
+  # hand-built/profile-only vaults.
   if [ -n "$VAULT_PATH" ] && [ ! -d "$VAULT_PATH/.git" ]; then
     say ""
-    say "  Tip: Obsidian Git needs the vault to be a git repo (we don't auto-init — it's yours):"
-    say "         cd \"$VAULT_PATH\" && git init && git add -A && git commit -m \"Initial Memoria vault\""
+    say "  Tip: checkpoints and hooks need the vault to be a git repo:"
+    say "         cd \"$VAULT_PATH\" && git init"
     say "         (then: bash scripts/install.sh --profiles-only --vault \"$VAULT_PATH\" — wires the pre-commit schema gate)"
   fi
   say ""
   say "Re-deploy after editing the vault source:  bash scripts/install.sh --profiles-only --vault \"${VAULT_PATH:-<vault>}\""
   # NB: trailing `&&` test must not become the function's (and script's) exit
   # status — on a real run [ "$DRY_RUN" -eq 1 ] is false and would exit 1.
+  [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
+  return 0
+}
+
+print_cli_next_steps() {
+  hdr "Next steps"
+  local pycmd="${VENV_PYTHON:-$VAULT_PATH/.memoria/.venv/bin/python}"
+  [ -n "$VAULT_PATH" ] && say "  Workspace: $VAULT_PATH"
+  say "  1. Check the bundle:  \"$pycmd\" -m memoria_vault.cli doctor bundle --workspace \"$VAULT_PATH\""
+  say "  2. Rebuild search:    \"$pycmd\" -m memoria_vault.cli workspace rebuild --workspace \"$VAULT_PATH\" --search"
+  say "  3. Ask from CLI:      \"$pycmd\" -m memoria_vault.cli ask --workspace \"$VAULT_PATH\" --question \"What needs attention?\""
+  say "  4. First checkpoint:  cd \"$VAULT_PATH\" && git add -A && git commit -m \"Initial Memoria vault\""
   [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
   return 0
 }
@@ -987,6 +1031,10 @@ wire_eval_cron() {
 main() {
   parse_args "$@"
 
+  if [ "$PROFILES_ONLY" -eq 1 ] && [ "$WITH_HERMES" -eq 1 ]; then
+    die "--profiles-only already targets the Hermes adapter; do not combine it with --with-hermes."
+  fi
+
   if [ "$PROFILES_ONLY" -eq 1 ]; then
     load_install_modules
     ensure_git_available
@@ -1008,8 +1056,22 @@ main() {
     return
   fi
 
-  print_plan
-  confirm "Proceed with the full Memoria install?" || die "Aborted — nothing changed."
+  if [ "$WITH_HERMES" -eq 0 ]; then
+    print_plan
+    confirm "Proceed with the standalone Memoria install?" || die "Aborted — nothing changed."
+    ensure_prereqs
+    resolve_repo
+    load_install_modules
+    copy_vault
+    install_mcp_deps
+    ensure_qmd
+    print_cli_next_steps
+    hdr "Done"
+    return
+  fi
+
+  print_hermes_plan
+  confirm "Proceed with the Memoria install plus Hermes adapter?" || die "Aborted — nothing changed."
   ensure_prereqs
   resolve_repo
   load_install_modules
