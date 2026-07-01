@@ -10,6 +10,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.trusted_writer import append_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation
 
@@ -1382,6 +1383,44 @@ def test_cli_workspace_recover_fixture_replays_pending_materialization(
             "SELECT output_id FROM consumable_outputs WHERE output_id = ?", (target,)
         ).fetchone()
     assert consumable["output_id"] == target
+
+
+def test_cli_journal_list_operation_alias_includes_digest_workflow(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    append_journal_event(
+        workspace,
+        {"event": "run", "workflow": "compile-source-digest", "status": "done"},
+        machine="memoria-cli",
+    )
+    append_journal_event(
+        workspace,
+        {"event": "run", "workflow": "regenerate-tracked-projections", "status": "done"},
+        machine="memoria-cli",
+    )
+
+    assert (
+        main(
+            [
+                "journal",
+                "list",
+                "--workspace",
+                str(workspace),
+                "--operation",
+                "work.digest",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    journal = json.loads(capsys.readouterr().out)
+
+    assert [event["payload"]["workflow"] for event in journal["events"]] == [
+        "compile-source-digest"
+    ]
 
 
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
