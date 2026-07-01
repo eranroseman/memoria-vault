@@ -59,17 +59,19 @@ The index lives inside the vault and is gitignored — never commit it.
 qmd search "<term>"
 ```
 
-Confirm the expected checked Concepts now appear. Then test the consumer you actually
-noticed the staleness in — ask the Co-PI a question whose answer lives in a recently
-checked Concept and check that it cites that Concept.
+Confirm the expected checked retrieval documents now appear. Then test the
+consumer you actually noticed the staleness in — ask the Co-PI a question whose
+answer lives in a recently checked Concept or Work and check that it cites that
+source.
 
 ## Verify
 
 ```bash
-qmd search "term in a checked Concept"
+qmd search "term in checked Work or Concept"
 ```
 
-Returns the Concept, and the Co-PI's vault answers cite recently checked Concepts again.
+Returns the retrieval document, and the Co-PI's vault answers cite recently
+checked sources again.
 
 ## Related
 

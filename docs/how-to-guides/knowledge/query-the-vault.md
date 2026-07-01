@@ -42,8 +42,9 @@ The active note is passed as a readable reference; attach others when the questi
 
 **2. Interrogate the answer.**
 
-The Co-PI reads the vault directly and never writes. Alpha.11 retrieval uses the
-filtered `qmd` MCP over checked current Concepts; BM25 is the baseline, while
+The Co-PI reads the vault directly and never writes. Retrieval uses the
+filtered `qmd` MCP over checked retrieval documents: current Concepts plus
+generated checked Work text and graph neighborhoods. BM25 is the baseline, while
 vector/hybrid evaluation is later work ([The
 Co-PI]({{ site.baseurl }}/explanation/profiles/co-pi.html)). Unchecked or
 quarantined machine output stays invisible until the worker promotes it. Push on

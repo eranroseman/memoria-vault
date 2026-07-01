@@ -6,16 +6,16 @@ grand_parent: Reference
 
 # Ingest routing
 
-Alpha.13 capture starts the catalog record, but scholarly identifiers no longer
+Worker capture starts the catalog record, but scholarly identifiers do not
 become checked source Concepts before provider verification. Worker
 `capture-source` stages DOI/ISBN inputs as unchecked SQLite catalog rows plus
 durable content/raw blobs under `.memoria/blobs/source-content/`; worker
 `enrich-source` resolves required DOI providers, records provenance, and checks
 the row only when provider and retraction checks pass.
 
-The legacy direct helper `memoria_vault.runtime.capture.capture_source()` still
-handles already-supplied non-enrichment source payloads: it records a capture
-run, writes the raw blob and extracted markdown, creates a `source` Concept plus
+The runtime helper `memoria_vault.runtime.capture.capture_source()` handles
+already-supplied non-enrichment source payloads: it records a capture run,
+writes the raw blob and extracted markdown, creates a `source` Concept plus
 deterministic metadata-derived `person`/`venue` Concepts through the trusted
 writer, promotes them checked, writes the checked source metadata into the
 SQLite catalog state, and commits the Concepts, `content.md`, journal, and any
@@ -23,15 +23,15 @@ required `references.bib` projection together. Portable BibTeX/CSL imports use
 the unchecked SQLite staging path instead of the checked source-Concept path. The Zotero
 adapters map either one Zotero Local API item JSON snapshot
 (`capture_zotero_source()`) or fetch one item key from the local desktop API
-first (`capture_zotero_local_source()`). Zotero imports are source/item imports
-only in alpha.13; Zotero annotations are not imported. The PDF adapter
+first (`capture_zotero_local_source()`). Zotero imports are optional source/item
+imports; Zotero annotations are not imported. The PDF adapter
 `capture_pdf_source()` uses the optional PyMuPDF parser from the vault MCP
 requirements to extract page text. URL snapshots use `capture_url_source()`
 with stdlib HTML text extraction.
 
 The older paper-ingest operation under
 `vault-template/.memoria/operations/processing/ingest/` is pre-reset code. It is
-not the alpha.13 source of truth for catalog writes.
+not the source of truth for catalog writes.
 
 ## Current Pipeline
 
