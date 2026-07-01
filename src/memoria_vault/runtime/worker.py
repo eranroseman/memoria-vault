@@ -34,6 +34,12 @@ INTEGRITY_SWEEP_OPERATIONS = (
 )
 
 
+def _payload_doi(payload: dict[str, Any]) -> str:
+    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
+    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
+    return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
+
+
 def enqueue_trusted_write(
     vault: Path,
     target_path: str,
@@ -801,7 +807,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             run_id=str(payload.get("run_id") or "") or None,
         )
     if operation_id == "capture-bibtex-source":
-        from memoria_vault.runtime.capture import capture_bibtex_source
+        from memoria_vault.runtime.capture import bibtex_capture_payload, stage_catalog_source
 
         bibtex_value = payload.get("bibtex")
         if bibtex_value is not None and not isinstance(bibtex_value, str):
@@ -821,23 +827,54 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("capture-bibtex-source description must be a string")
         if run_id is not None and not isinstance(run_id, str):
             raise ValueError("capture-bibtex-source run_id must be a string")
-        result = capture_bibtex_source(
-            vault,
+        capture_payload = bibtex_capture_payload(
             bibtex,
             content_text=content_text,
             source_id=source_id or None,
             description=description or None,
-            machine=machine,
-            run_id=run_id or None,
-            required_checks=required_promotion_checks(policy),
         )
+        if run_id:
+            capture_payload["run_id"] = run_id
+        result = stage_catalog_source(
+            vault,
+            str(capture_payload["source_id"]),
+            str(capture_payload["title"]),
+            str(capture_payload["description"]),
+            str(capture_payload["content_text"]),
+            raw_bytes=str(capture_payload["raw_text"]).encode(),
+            raw_filename=str(capture_payload["raw_filename"]),
+            resource=str(capture_payload.get("resource") or ""),
+            item_type=str(capture_payload.get("item_type") or "article"),
+            identifiers=capture_payload.get("identifiers"),
+            csl_json=capture_payload.get("csl_json"),
+            metadata_status=str(capture_payload.get("metadata_status") or "partial"),
+            text_status=str(capture_payload.get("text_status") or "metadata-only"),
+            citekey=str(capture_payload.get("citekey") or ""),
+            machine=machine,
+            run_id=str(capture_payload.get("run_id") or "") or None,
+            workflow="capture_bibtex_source",
+        )
+        enrichment_job = None
+        if _payload_doi(capture_payload):
+            enrichment_job = enqueue_operation(
+                vault,
+                "enrich-source",
+                payload={"source_id": result["source_id"]},
+                idempotency_key=f"enrich-{result['source_id']}",
+                input_refs=[{"id": result["source_id"], "kind": "catalog_source"}],
+                primary_target=f"catalog/sources/{result['source_id']}",
+                causal_refs=[str(job["job_id"])],
+                actor="operation",
+                provenance={"surface": "worker", "command": "capture-bibtex-source"},
+            )
         return {
             "commit": result["commit"],
-            "source_path": result["source_path"],
+            "source_id": result["source_id"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
             "text_status": result["text_status"],
-            "entity_paths": result["entity_paths"],
+            "check_status": result["check_status"],
+            "enrichment_job": enrichment_job,
         }
     if operation_id == "capture-zotero-source":
         from memoria_vault.runtime.capture import capture_zotero_local_source, capture_zotero_source

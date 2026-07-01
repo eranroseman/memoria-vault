@@ -555,7 +555,10 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
         from memoria_vault.runtime.capture import csl_capture_payload
 
         payload = csl_capture_payload(_read_zotero_export_item(text), raw_text=text)
-    return _emit(_enqueue_and_run(args, "capture-source", payload), args)
+    output = _enqueue_and_run(args, "capture-source", payload)
+    if enrichment := _queue_import_enrichment(args, payload, output):
+        output["enrichment_job"] = enrichment
+    return _emit(output, args)
 
 
 def _cmd_work_enrich(args: argparse.Namespace) -> int:
@@ -1185,6 +1188,37 @@ def _enqueue_and_run(
         "job": job,
         "result": result,
     }
+
+
+def _queue_import_enrichment(
+    args: argparse.Namespace, payload: dict[str, Any], output: dict[str, Any]
+) -> dict[str, Any] | None:
+    result = output.get("result")
+    if not isinstance(result, dict) or result.get("status") != "done":
+        return None
+    if not _payload_doi(payload):
+        return None
+    source_id = str(result.get("source_id") or "").strip()
+    if not source_id:
+        return None
+    workspace = _workspace(args)
+    return enqueue_operation(
+        workspace,
+        "enrich-source",
+        payload={"source_id": source_id},
+        idempotency_key=f"enrich-{source_id}",
+        input_refs=[{"id": source_id, "kind": "catalog_source"}],
+        primary_target=f"catalog/sources/{source_id}",
+        causal_refs=[str(output["job"]["job_id"])],
+        provenance={"surface": "memoria-cli", "command": "work-import"},
+        schedule_id=args.schedule_id,
+    )
+
+
+def _payload_doi(payload: dict[str, Any]) -> str:
+    identifiers = payload.get("identifiers") if isinstance(payload.get("identifiers"), dict) else {}
+    csl_json = payload.get("csl_json") if isinstance(payload.get("csl_json"), dict) else {}
+    return str(identifiers.get("doi") or csl_json.get("DOI") or "").strip()
 
 
 def _workspace(args: argparse.Namespace) -> Path:

@@ -151,15 +151,14 @@
     {
       "allowed_network": [],
       "allowed_paths": [
-        "catalog/",
-        "journal/",
-        "references.bib"
+        ".memoria/blobs/source-content/",
+        "journal/"
       ],
       "allowed_tools": [
         "trusted_writer"
       ],
       "check_status": "checked",
-      "description": "Capture one BibTeX record as a checked catalog source.",
+      "description": "Stage one BibTeX record as an unchecked catalog Work seed.",
       "id": "capture-bibtex-source",
       "model": "deterministic-fixture",
       "operation_id": "capture-bibtex-source",
@@ -171,12 +170,12 @@
       "risk_class": "medium",
       "runner": "local",
       "tags": [
-        "alpha11",
+        "alpha14",
         "capture"
       ],
       "title": "Capture BibTeX source",
       "trust": {
-        "sha256": "sha256:82e3d53579343d624c8f85d80b6cd8c67bc588e2a739b2bc67132e8d63faab7c",
+        "sha256": "sha256:9294a7a08910bcb96e08b27197fdd184547d07b27c16c891c0fcef00bb599f8e",
         "source": "local"
       },
       "type": "operation"

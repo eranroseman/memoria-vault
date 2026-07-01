@@ -19,8 +19,8 @@ run, writes the raw blob and extracted markdown, creates a `source` Concept plus
 deterministic metadata-derived `person`/`venue` Concepts through the trusted
 writer, promotes them checked, writes the checked source metadata into the
 SQLite catalog state, and commits the Concepts, `content.md`, journal, and any
-required `references.bib` projection together. The local BibTeX adapter
-`capture_bibtex_source()` maps one BibTeX entry into that path. The Zotero
+required `references.bib` projection together. Portable BibTeX/CSL imports use
+the unchecked SQLite staging path instead of the checked source-Concept path. The Zotero
 adapters map either one Zotero Local API item JSON snapshot
 (`capture_zotero_source()`) or fetch one item key from the local desktop API
 first (`capture_zotero_local_source()`). Zotero imports are source/item imports
@@ -42,7 +42,7 @@ not the alpha.13 source of truth for catalog writes.
 | DOI enrichment | `enrich_source()` via worker `enrich-source` | Requires Crossref, OpenAlex, Unpaywall, and full text for DOI records, caches raw provider JSON under `.memoria/blobs/provider-payloads/`, fetches provider-discovered open-access text only when the operation manifest allows that URL, merges canonical CSL-JSON, external IDs, field provenance, and first-order Work graph edges, blocks with attention when full text is absent, then checks the catalog row, emits unchecked discovery candidate attention cards, and materializes `references.bib`. |
 | Raw copy | `capture_source()` / `stage_catalog_source()` | Non-enrichment captures write `catalog/sources/<source_id>/raw/<filename>` plus `raw_text_sha256`; DOI/ISBN staging writes equivalent raw blobs under `.memoria/blobs/source-content/<source_id>/`. Raw blobs are gitignored and synced out of band. |
 | Extracted content | `capture_source()` / `stage_catalog_source()` | Non-enrichment captures write `catalog/sources/<source_id>/content.md`; DOI/ISBN staging writes `.memoria/blobs/source-content/<source_id>/content.md`, both with `normalized_text_sha256`. |
-| BibTeX import | `capture_bibtex_source()` | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.bib`, and the same checked source Concept. |
+| BibTeX import | `memoria work import --format bibtex` / worker `capture-bibtex-source` | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, durable raw `.bib` blob, and an unchecked SQLite catalog row. DOI imports queue `enrich-source`; no source/entity markdown or `references.bib` is written at import time. |
 | Zotero item import | `capture_zotero_source()` / `capture_zotero_local_source()` / worker `capture-zotero-source` | Maps one Zotero Local API item JSON snapshot or fetches one local API item key, then writes stable `source_id`, citekey alias, CSL-JSON-shaped metadata, identifiers, raw `.zotero.json`, and the same checked source Concept. |
 | URL snapshot | `capture_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes the same checked source Concept path. |
 | PDF import | `capture_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed markdown behind a basic text-coherence guard and writes the same checked source Concept path. |

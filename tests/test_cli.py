@@ -121,17 +121,24 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
     assert rc == 0
     assert output["ok"] is True
     assert output["result"]["source_id"] == "doi-10.1000_import.2026"
+    assert output["enrichment_job"]["operation_id"] == "enrich-source"
+    assert output["enrichment_job"]["status"] == "pending"
     assert not (workspace / "catalog/sources/doi-10.1000_import.2026/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT title, check_status, content_path FROM catalog_sources WHERE source_id = ?",
             ("doi-10.1000_import.2026",),
         ).fetchone()
+        enrich = conn.execute(
+            "SELECT operation_id, status FROM operation_requests WHERE request_id = ?",
+            ("enrich-doi-10.1000_import.2026",),
+        ).fetchone()
     assert tuple(row) == (
         "Alpha Import",
         "unchecked",
         output["result"]["content_path"],
     )
+    assert tuple(enrich) == ("enrich-source", "pending")
 
 
 def test_cli_work_capture_file_stages_text_without_legacy_markdown(

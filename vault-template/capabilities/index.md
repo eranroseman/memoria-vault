@@ -8,7 +8,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Analyze gaps](operations/analyze-gaps.md) `operation` — Classify checked catalog/knowledge topic mismatches for gap analysis.
 - [Analyze project argument](operations/analyze-project-argument.md) `operation` — Report argument health for a checked project thesis graph.
 - [Answer query](operations/answer-query.md) `operation` — Answer an Ask query over checked current Concepts with BM25 sources.
-- [Capture BibTeX source](operations/capture-bibtex-source.md) `operation` — Capture one BibTeX record as a checked catalog source.
+- [Capture BibTeX source](operations/capture-bibtex-source.md) `operation` — Stage one BibTeX record as an unchecked catalog Work seed.
 - [Capture PDF source](operations/capture-pdf-source.md) `operation` — Capture a supplied PDF blob as a checked catalog source.
 - [Capture source](operations/capture-source.md) `operation` — Capture supplied source metadata and text; DOI/ISBN records stage for enrichment.
 - [Capture URL source](operations/capture-url-source.md) `operation` — Fetch a URL snapshot and capture it as a checked catalog source.

@@ -17,7 +17,7 @@ source of truth.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Import source for citekeys, PDFs, and bibliographic metadata | Capture snapshots Zotero Local API item JSON or a local BibTeX entry into checked source rows and source projection Concepts. Zotero annotations are not imported in alpha.13. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
+| **Zotero + Better BibTeX** | Optional source for citekeys, PDFs, and bibliographic metadata | Zotero snapshots can still be captured as source rows; portable BibTeX files are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. Zotero annotations are not imported. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
 | **`references.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---
