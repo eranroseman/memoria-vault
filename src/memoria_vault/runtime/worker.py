@@ -45,7 +45,6 @@ def enqueue_trusted_write(
     operation: str = "trusted-write",
     run_id: str | None = None,
     idempotency_key: str | None = None,
-    trigger_type: str = "command",
 ) -> dict[str, Any]:
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
@@ -69,7 +68,6 @@ def enqueue_trusted_write(
     }
     envelope = state.request_envelope(
         request_id=job_id,
-        trigger_type=trigger_type,
         operation_id=operation,
         args={
             "target_path": target_path,
@@ -93,7 +91,6 @@ def enqueue_operation(
     *,
     payload: dict[str, Any] | None = None,
     idempotency_key: str | None = None,
-    trigger_type: str = "command",
     target_path: str = "",
     target_hash: str = "",
     causal_refs: list[str | dict[str, Any]] | None = None,
@@ -121,7 +118,6 @@ def enqueue_operation(
     }
     envelope = state.request_envelope(
         request_id=job_id,
-        trigger_type=trigger_type,
         operation_id=operation_id,
         args=args,
         idempotency_key=idempotency_key or job_id,
@@ -190,8 +186,8 @@ def enqueue_integrity_sweep(
             operation_id,
             payload={"shadow": shadow},
             idempotency_key=f"{operation_id}-{key}",
-            trigger_type="schedule",
             schedule_id=key,
+            provenance={"surface": "worker-schedule"},
         )
         for operation_id in INTEGRITY_SWEEP_OPERATIONS
     ]
@@ -1069,7 +1065,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--operation-id", default=None)
     parser.add_argument("--payload", default="{}")
     parser.add_argument("--idempotency-key", default=None)
-    parser.add_argument("--trigger-type", default="command")
     parser.add_argument("--schedule-id", default=None)
     args = parser.parse_args(argv)
 
@@ -1087,7 +1082,6 @@ def main(argv: list[str] | None = None) -> int:
                     args.operation_id,
                     payload=payload,
                     idempotency_key=args.idempotency_key,
-                    trigger_type=args.trigger_type,
                 ),
                 ensure_ascii=False,
                 sort_keys=True,
@@ -1099,7 +1093,6 @@ def main(argv: list[str] | None = None) -> int:
             vault,
             "observe-pi-edits",
             idempotency_key=args.idempotency_key or f"scan-{now_iso()}",
-            trigger_type="file_change",
             provenance={"surface": "worker-scan"},
         )
         run_pending_jobs(vault, machine=args.machine, limit=1)
@@ -1115,7 +1108,6 @@ def main(argv: list[str] | None = None) -> int:
             args.operation_id,
             payload=payload,
             idempotency_key=args.idempotency_key or f"{args.operation_id}-{args.schedule_id}",
-            trigger_type="schedule",
             schedule_id=args.schedule_id,
             provenance={"surface": "worker-schedule"},
         )
