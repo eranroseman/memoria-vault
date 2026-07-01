@@ -704,6 +704,395 @@ def test_cli_request_list_show_and_resume_pending_request(
     assert row["status"] == "done"
 
 
+def test_cli_attention_list_show_worklist_and_resolve_projection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    attention = workspace / "inbox/flag-alpha.md"
+    attention.parent.mkdir(parents=True, exist_ok=True)
+    attention.write_text(
+        "---\n"
+        "title: Alpha flag\n"
+        "projection: attention\n"
+        "attention_kind: flag\n"
+        "attention_status: open\n"
+        "target: knowledge/notes/alpha.md\n"
+        "---\n"
+        "# Finding\n\nCheck this.\n",
+        encoding="utf-8",
+    )
+    work_prompt = workspace / "inbox/work-alpha.md"
+    work_prompt.write_text(
+        "---\n"
+        "title: Alpha work\n"
+        "projection: attention\n"
+        "attention_kind: work-prompt\n"
+        "attention_status: open\n"
+        "target: knowledge/projects/alpha.md\n"
+        "---\n"
+        "# Action\n\nWork this.\n",
+        encoding="utf-8",
+    )
+
+    assert main(["attention", "list", "--workspace", str(workspace), "--json"]) == 0
+    listed = json.loads(capsys.readouterr().out)
+    assert [row["path"] for row in listed["attention"]] == [
+        "inbox/flag-alpha.md",
+        "inbox/work-alpha.md",
+    ]
+
+    assert main(["attention", "worklist", "--workspace", str(workspace), "--json"]) == 0
+    worklist = json.loads(capsys.readouterr().out)
+    assert [row["path"] for row in worklist["attention"]] == ["inbox/work-alpha.md"]
+
+    assert (
+        main(
+            [
+                "attention",
+                "show",
+                "--workspace",
+                str(workspace),
+                "inbox/flag-alpha.md",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    shown = json.loads(capsys.readouterr().out)
+    assert shown["attention"]["frontmatter"]["title"] == "Alpha flag"
+    assert "# Finding" in shown["attention"]["body"]
+
+    rc = main(
+        [
+            "attention",
+            "resolve",
+            "--workspace",
+            str(workspace),
+            "inbox/flag-alpha.md",
+            "--reason",
+            "PI resolved",
+            "--json",
+            "--idempotency-key",
+            "attention-resolve",
+        ]
+    )
+    resolved = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert resolved["result"]["resolution"]["target_id"] == "inbox/flag-alpha.md"
+    assert resolved["result"]["resolution"]["reason"] == "PI resolved"
+    fm = read_frontmatter(attention)
+    assert fm["attention_status"] == "resolved"
+    assert "resolved_at" in fm
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("attention-resolve",),
+        ).fetchone()
+    assert row["operation_id"] == "resolve-attention"
+    assert json.loads(row["args_json"]) == {
+        "target_id": "inbox/flag-alpha.md",
+        "reason": "PI resolved",
+    }
+
+
+def test_cli_wires_alpha14_maintenance_and_pi_commands(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    zotero = tmp_path / "zotero.json"
+    export_path = tmp_path / "workspace-export.json"
+    zotero.write_text(
+        json.dumps(
+            {
+                "items": [
+                    {
+                        "key": "ZOT1",
+                        "itemType": "journalArticle",
+                        "title": "Zotero Exported Work",
+                        "DOI": "10.1000/zotero",
+                        "creators": [{"firstName": "Ada", "lastName": "River"}],
+                        "abstractNote": "Portable Zotero JSON.",
+                        "date": "2026",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    assert (workspace / "steering.md").is_file()
+    assert (workspace / "system/vocabulary.md").is_file()
+    assert (workspace / "index.md").is_file()
+    assert (workspace / "references.bib").is_file()
+
+    assert main(["doctor", "self-test", "--workspace", str(workspace), "--json"]) == 0
+    self_test = json.loads(capsys.readouterr().out)
+    assert self_test["checks"]["operation_catalog"] is True
+
+    assert main(["doctor", "bundle", "--workspace", str(workspace), "--redacted", "--json"]) == 0
+    bundle = json.loads(capsys.readouterr().out)
+    assert bundle["redacted"] is True
+
+    assert (
+        main(
+            [
+                "work",
+                "import",
+                "--workspace",
+                str(workspace),
+                "--format",
+                "zotero-export",
+                "--file",
+                str(zotero),
+                "--json",
+                "--idempotency-key",
+                "import-zotero",
+            ]
+        )
+        == 0
+    )
+    imported = json.loads(capsys.readouterr().out)
+    assert imported["result"]["source_id"] == "ZOT1"
+
+    assert (
+        main(
+            [
+                "work",
+                "update",
+                "--workspace",
+                str(workspace),
+                "--work-id",
+                "ZOT1",
+                "--title",
+                "Updated Zotero Work",
+                "--standing",
+                "archived",
+                "--research-area",
+                "personal-informatics",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    updated = json.loads(capsys.readouterr().out)
+    assert updated["work"]["title"] == "Updated Zotero Work"
+    assert updated["work"]["csl_json"]["memoria"]["standing"] == "archived"
+
+    assert (
+        main(
+            [
+                "note",
+                "capture",
+                "--workspace",
+                str(workspace),
+                "--title",
+                "Captured PI note",
+                "--body",
+                "The PI captured this.",
+                "--tag",
+                "personal-informatics",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    captured = json.loads(capsys.readouterr().out)
+    assert read_frontmatter(workspace / captured["note_path"])["check_status"] == "unchecked"
+
+    digest = workspace / "knowledge/digests/hub-seed.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Hub seed\n"
+        "description: Hub seed\n"
+        "source_id: catalog/sources/ZOT1\n"
+        "tags: [personal-informatics]\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "project",
+                "suggest-hubs",
+                "--workspace",
+                str(workspace),
+                "--min-count",
+                "1",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    hubs = json.loads(capsys.readouterr().out)
+    assert hubs["suggestions"] == [{"count": 1, "topic": "personal-informatics"}]
+
+    enqueue_operation(
+        workspace,
+        "answer-query",
+        payload={"query": "status", "k": 1},
+        idempotency_key="recoverable-request",
+    )
+    assert (
+        main(
+            [
+                "request",
+                "answer",
+                "--workspace",
+                str(workspace),
+                "recoverable-request",
+                "note=ready",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    answered = json.loads(capsys.readouterr().out)
+    assert answered["request"]["args"]["answers"] == {"note": "ready"}
+
+    assert (
+        main(
+            [
+                "request",
+                "amend",
+                "--workspace",
+                str(workspace),
+                "recoverable-request",
+                "k=3",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    amended = json.loads(capsys.readouterr().out)
+    assert amended["request"]["args"]["k"] == 3
+
+    assert (
+        main(
+            [
+                "request",
+                "cancel",
+                "--workspace",
+                str(workspace),
+                "recoverable-request",
+                "--reason",
+                "not needed",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    cancelled = json.loads(capsys.readouterr().out)
+    assert cancelled["request"]["status"] == "failed"
+
+    assert (
+        main(["request", "retry", "--workspace", str(workspace), "recoverable-request", "--json"])
+        == 0
+    )
+    retried = json.loads(capsys.readouterr().out)
+    assert retried["request"]["status"] == "pending"
+
+    assert main(["steering", "show", "--workspace", str(workspace), "--json"]) == 0
+    steering = json.loads(capsys.readouterr().out)
+    assert steering["path"] == "steering.md"
+
+    assert (
+        main(
+            [
+                "steering",
+                "edit",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "# Steering\n\nUpdated.",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    assert "Updated." in (workspace / "steering.md").read_text(encoding="utf-8")
+
+    assert main(["vocabulary", "list", "--workspace", str(workspace), "--json"]) == 0
+    vocabulary = json.loads(capsys.readouterr().out)
+    assert "research_area" in vocabulary["vocabulary"]
+
+    assert (
+        main(
+            [
+                "vocabulary",
+                "add",
+                "--workspace",
+                str(workspace),
+                "research_area",
+                "alpha-topic",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    assert (
+        main(
+            [
+                "vocabulary",
+                "rename",
+                "--workspace",
+                str(workspace),
+                "research_area",
+                "alpha-topic",
+                "beta-topic",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    capsys.readouterr()
+    assert "beta-topic" in (workspace / "system/vocabulary.md").read_text(encoding="utf-8")
+
+    assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
+    scan = json.loads(capsys.readouterr().out)
+    assert scan["result"]["observed_count"] == 1
+    assert scan["result"]["paths"] == ["knowledge/digests/hub-seed.md"]
+
+    assert main(["workspace", "check", "--workspace", str(workspace), "--json"]) == 0
+    check = json.loads(capsys.readouterr().out)
+    assert check["ok"] is True
+
+    assert (
+        main(
+            [
+                "workspace",
+                "export",
+                "--workspace",
+                str(workspace),
+                "--output",
+                str(export_path),
+                "--json",
+            ]
+        )
+        == 0
+    )
+    exported = json.loads(capsys.readouterr().out)
+    assert exported["export"]["output"] == str(export_path)
+    assert export_path.is_file()
+
+    assert main(["journal", "list", "--workspace", str(workspace), "--limit", "5", "--json"]) == 0
+    journal = json.loads(capsys.readouterr().out)
+    event_id = journal["events"][0]["event_id"]
+    assert main(["journal", "show", "--workspace", str(workspace), str(event_id), "--json"]) == 0
+    shown = json.loads(capsys.readouterr().out)
+    assert shown["event"]["event_id"] == event_id
+
+
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -749,6 +1138,23 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
         ).fetchone()
     assert row["operation_id"] == "run-seeded-error-verdict"
     assert json.loads(row["args_json"]) == {}
+
+    assert (
+        main(
+            [
+                "eval",
+                "run",
+                "--workspace",
+                str(workspace),
+                "--json",
+                "--idempotency-key",
+                "eval-run",
+            ]
+        )
+        == 0
+    )
+    alias = json.loads(capsys.readouterr().out)
+    assert alias["ok"] is True
 
 
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(

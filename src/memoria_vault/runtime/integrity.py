@@ -12,6 +12,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_CHECK_FIRED,
     EVENT_DERIVED,
@@ -538,10 +539,19 @@ def resolve_attention(
         "source": "attention",
     }
     row = append_journal_event(vault, event, machine=machine)
+    touched: list[str] = []
+    target_path = vault / target
+    if resolution == "resolved" and target_path.is_file():
+        frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
+        if frontmatter.get("projection") == "attention":
+            frontmatter["attention_status"] = "resolved"
+            frontmatter["resolved_at"] = now_iso()
+            write_frontmatter_doc(target_path, frontmatter, body)
+            touched.append(target)
     commit = commit_writer_changes(
         vault,
         f"{resolution} attention {Path(target).stem}",
-        [],
+        touched,
         machine=machine,
     )
     return {"event": row, "commit": commit}
