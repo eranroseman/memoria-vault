@@ -27,17 +27,22 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 ```
 
 ```powershell
-# Windows adapter path (PowerShell): native Hermes + native vault
+# Windows:
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The Linux/WSL installer scaffolds your runtime vault (default `~/Memoria`), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, stages the golden copy, and wires local hooks when the vault is already a git repo. Add `--with-hermes` only when you want the Hermes/Obsidian adapter.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, stages the golden copy, and wires local hooks. Add `--with-hermes` / `-WithHermes` only when you want the Hermes/Obsidian adapter.
 
 **2. Verify the CLI runtime.**
 
 ```bash
 ~/Memoria/.memoria/.venv/bin/memoria doctor bundle --workspace ~/Memoria
 ~/Memoria/.memoria/.venv/bin/memoria workspace rebuild --workspace ~/Memoria --search
+```
+
+```powershell
+& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\python.exe" -m memoria_vault.cli doctor bundle --workspace "$env:USERPROFILE\Memoria"
+& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\python.exe" -m memoria_vault.cli workspace rebuild --workspace "$env:USERPROFILE\Memoria" --search
 ```
 
 **3. Fill optional adapter secrets.** For the Hermes/Obsidian adapter, copy the Local REST API `apiKey`, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2). At minimum that adapter needs `KILOCODE_API_KEY`, the `OBSIDIAN_*` keys, and `OPENALEX_API_KEY` — the full annotated list is in [Set up Hermes](set-up-hermes.md).

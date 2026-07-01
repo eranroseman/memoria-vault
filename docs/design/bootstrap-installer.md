@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. The alpha.14 direction is the standalone CLI/runtime path: [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) scaffolds and populates the vault from `vault-template/`, stages the golden copy, installs the `memoria` package into the vault-local venv, registers qmd search, and wires local integrity hooks. Hermes profiles, Hermes crons, and Obsidian guidance are an explicit adapter path, not the default runtime.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. The alpha.14 direction is the standalone CLI/runtime path: [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, stage the golden copy, install the `memoria` package into the vault-local venv, register qmd search, and wire local integrity hooks. Hermes profiles, Hermes crons, and Obsidian guidance are an explicit adapter path, not the default runtime.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -28,7 +28,7 @@ The distribution mechanism is `vault-template/` plus the hashed `<vault>/.memori
 
 Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profile-capabilities.md).
 
-One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial. Hermes likewise moved behind `--with-hermes` for Linux/WSL because the core runtime is the standalone CLI and engine.
+One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial. Hermes likewise moved behind `--with-hermes` / `-WithHermes` because the core runtime is the standalone CLI and engine.
 
 The install contract is narrow: fresh install by default, idempotent adapter
 redeploy for source/secret changes, detect-then-install, no clobbering user
@@ -48,17 +48,15 @@ The primary path is inspect-first: download, read, then run. The one-liner is co
 
 ## Standalone default and adapter path
 
-The Linux/WSL shell installer now treats the standalone CLI/runtime as the
-normal path. Adding `--with-hermes` layers on the current Hermes/Obsidian adapter:
-Hermes install, profile rendering, profile skills, Hermes crons, Obsidian CSS
-snippet reconciliation, and Obsidian guidance.
-
-Per [ADR-64](../adr/64-native-windows-support.md), the current PowerShell
-installer still carries the native Windows Hermes path:
+Both installers treat the standalone CLI/runtime as the normal path. Adding
+`--with-hermes` / `-WithHermes` layers on the Hermes/Obsidian adapter: Hermes
+install, profile rendering, profile skills, Hermes crons, Obsidian CSS snippet
+reconciliation, and Obsidian guidance.
 
 - **Linux/WSL default:** `scripts/install.sh` installs the standalone CLI/runtime workspace.
+- **Windows default:** `scripts/install.ps1` installs the standalone CLI/runtime workspace.
 - **Linux/WSL adapter:** `scripts/install.sh --with-hermes` also provisions Hermes profiles, skills, crons, and Obsidian guidance.
-- **Windows adapter:** `scripts/install.ps1` remains the native Windows Hermes installer until the standalone Windows path is cut over.
+- **Windows adapter:** `scripts/install.ps1 -WithHermes` does the native Windows Hermes/profile/cron setup.
 
 The production path has no `/mnt/c` vault path, no WSL2 gate in the PowerShell
 installer, and no `windowsWslMode` requirement for the Agent Client pane on production

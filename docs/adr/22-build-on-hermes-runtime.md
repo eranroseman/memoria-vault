@@ -3,19 +3,21 @@ topic: decisions
 id: 22
 title: Build on the Hermes Agent runtime rather than a bespoke one
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [64]
 ---
 
 # ADR-22: Build on the Hermes Agent runtime rather than a bespoke one
 
 ## Context
 
-> *Note (0.1.0-alpha.2): the "seven specialist `SOUL.md`s" below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** profiles; likewise the early three-layer framing was superseded by the seven-layer model ([ADR-46](46-seven-layer-architecture.md)). The build-on-Hermes decision itself is unchanged.*
+> *Note (0.1.0-alpha.2): the "seven specialist `SOUL.md`s" below predates [ADR-48](48-copi-and-agent-consolidation.md), which consolidated the fleet to **five** profiles; likewise the early three-layer framing was superseded by the seven-layer model ([ADR-46](46-seven-layer-architecture.md)).*
+
+> *Note (0.1.0-alpha.14): the standalone CLI/engine supersedes Hermes as the core runtime dependency. This ADR remains as the rationale for the optional Hermes adapter only; [ADR-64](64-native-windows-support.md) records the native standalone installer and optional adapter split.*
 
 Memoria's entire execution layer — the Kanban board, the worker profiles, the dispatcher, the programmatic API — is supplied by an external runtime, [Hermes Agent](https://hermes-agent.nousresearch.com/) (Nous Research). This is a foundational, hard-to-reverse dependency: it determines what the board *is*, how profiles claim work, and where integrations connect. The choice was explained at length in [Why Hermes](../design/why-hermes.md) but never recorded as a decision, so the alternatives that were weighed — and the precise Memoria/Hermes boundary — had no fixed anchor. An ADR matters here specifically to preserve *what was rejected and why*, which is the part most likely to be re-litigated when a shinier runtime appears.
 

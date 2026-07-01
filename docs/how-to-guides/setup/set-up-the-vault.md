@@ -13,7 +13,7 @@ Run the bootstrap installer to provision the standalone CLI/runtime workspace an
 ## Prerequisites
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
-- Windows PowerShell 5.1+ for the current Windows adapter path, or Ubuntu/Debian/WSL for the standalone Linux/WSL path — macOS is not supported.
+- Windows PowerShell 5.1+ on Windows, or Ubuntu/Debian/WSL for the Linux path — macOS is not supported.
 - Hermes and Obsidian are optional adapter dependencies, not prerequisites for the standalone CLI/runtime.
 
 ## Steps
@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 ```
 
 ```powershell
-# Windows adapter path (PowerShell): native Hermes, native profiles, native vault
+# Windows:
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
@@ -38,9 +38,9 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the Linux/WSL installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria`; keep it off OneDrive), stages the golden copy, installs runtime dependencies and the Memoria package into `.memoria/.venv`, registers qmd search, and prints the vault-local CLI commands.
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), stages the golden copy, installs runtime dependencies and the Memoria package into `.memoria/.venv`, registers qmd search, and prints the vault-local CLI commands.
 
-Add `--with-hermes` when you want the Linux/WSL Hermes/Obsidian adapter. That adapter path also:
+Add `--with-hermes` / `-WithHermes` when you want the Hermes/Obsidian adapter. That adapter path also:
 
 - Installs Hermes and verifies ACP.
 - Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`.

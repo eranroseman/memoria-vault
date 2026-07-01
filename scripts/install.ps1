@@ -1,35 +1,41 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Memoria bootstrap -- native Windows production installer.
+    Memoria bootstrap -- native Windows installer.
 
 .DESCRIPTION
-    Production Windows installs run Hermes natively on Windows. The Linux
-    installer (scripts/install.sh) remains the testing/WSL path.
+    Sets up a standalone Memoria CLI/runtime workspace. Hermes and Obsidian are
+    an optional adapter path behind -WithHermes.
 
     This script:
-      1. Guides Windows GUI app installation with winget.
-      2. Runs the official native Hermes installer.
-      3. Copies vault-template/ into the runtime vault.
-      4. Creates the vault-local MCP venv.
-      5. Installs the five Hermes profiles with native Windows paths.
-      6. Deploys the fail-closed policy-gate plugin per profile.
-      7. Wires the deterministic Hermes cron wrappers.
+      1. Copies vault-template/ into the runtime vault.
+      2. Creates the vault-local runtime venv.
+      3. Installs the Memoria package.
+      4. Stages the golden copy and wires Git hooks.
+      5. Registers the workspace-local qmd search collection.
+      6. With -WithHermes, installs Hermes profiles and deterministic crons.
 
 .PARAMETER Vault
     Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
     (deliberately outside OneDrive).
 
 .PARAMETER ProfilesOnly
-    Skip repo/vault/bootstrap work; reinstall MCP deps, then redeploy profile
-    config, profile .env values, the policy plugin, and cron wrappers from an
-    existing vault.
+    Skip fresh vault creation; reinstall runtime deps, then redeploy Hermes
+    profile config, profile .env values, the policy plugin, and cron wrappers
+    from an existing vault.
 
 .PARAMETER Only
     Restrict the profile step to these profiles. Pairs with -ProfilesOnly.
 
 .PARAMETER NoApps
-    Skip Obsidian/Zotero/Git winget guidance.
+    Skip Obsidian/Git winget guidance in the -WithHermes adapter path.
+
+.PARAMETER WithHermes
+    Also install Hermes, deploy the five profiles, wire Hermes crons, and guide
+    Obsidian setup.
+
+.PARAMETER WithCluster
+    Install the optional clustering stack.
 
 .PARAMETER DryRun
     Print commands without changing the machine where practical.
@@ -46,6 +52,8 @@ param(
     [string[]]$Only,
     [switch]$ProfilesOnly,
     [switch]$NoApps,
+    [switch]$WithHermes,
+    [switch]$WithCluster,
     [switch]$DryRun,
     [switch]$Yes
 )
@@ -54,7 +62,8 @@ $ErrorActionPreference = 'Stop'
 
 $RepoUrl = 'https://github.com/eranroseman/memoria-vault.git'
 $RawHermesInstall = 'https://hermes-agent.nousresearch.com/install.ps1'
-$HermesHome = if ($env:HERMES_HOME) { $env:HERMES_HOME } else { Join-Path $env:LOCALAPPDATA 'hermes' }
+$DefaultHermesRoot = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } elseif ($env:HOME) { $env:HOME } else { '.' }
+$HermesHome = if ($env:HERMES_HOME) { $env:HERMES_HOME } else { Join-Path $DefaultHermesRoot 'hermes' }
 $HermesProfilesDir = Join-Path $HermesHome 'profiles'
 $HermesScriptsDir = Join-Path $HermesHome 'scripts'
 $HermesExe = $null
@@ -217,7 +226,7 @@ function Get-PythonForVenv {
 
     $python = Get-CommandPath @('py.exe', 'python.exe', 'python3.exe')
     if (-not $python) {
-        Stop-Install 'No uv or Python launcher found. Rerun the Hermes installer or install Python 3.11+, then retry.'
+        Stop-Install 'No uv or Python launcher found. Install uv or Python 3.11+, then retry.'
     }
     if ((Split-Path -Leaf $python) -ieq 'py.exe') {
         return [pscustomobject]@{ Exe = $python; Prefix = @('-3.11') }
@@ -243,6 +252,37 @@ function Copy-VaultSource {
     New-Item -ItemType Directory -Path $Vault -Force | Out-Null
     Invoke-Robocopy -Source $src -Destination $Vault -ExtraArgs @('/XD', '.git', '/XF', '.env', 'data.json', 'appearance.json')
     Write-Ok "Vault populated at $Vault"
+}
+
+function Initialize-VaultGit {
+    Write-Header 'Vault Git repo'
+    $gitDir = Join-Path $Vault '.git'
+    if (Test-Path $gitDir) {
+        Write-Ok "Git repo already present at $Vault"
+        return
+    }
+    Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'init', '-q')
+    Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'branch', '-M', 'main')
+    Write-Ok 'Git repo initialized for checkpoints and hooks'
+}
+
+function Install-VaultHooks {
+    Write-Header 'Vault Git hooks'
+    $gitDir = Join-Path $Vault '.git'
+    $hooksDir = Join-Path $gitDir 'hooks'
+    $preCommit = Join-Path $Vault '.memoria/operations/integrity/linter/pre-commit'
+    $postCommit = Join-Path $Vault '.githooks/post-commit'
+    if (-not $DryRun) {
+        if (-not (Test-Path $gitDir)) { Stop-Install "Vault is not a Git repo: $Vault" }
+        if (-not (Test-Path $preCommit)) { Stop-Install "Missing pre-commit hook at $preCommit" }
+        if (-not (Test-Path $postCommit)) { Stop-Install "Missing post-commit hook at $postCommit" }
+        New-Item -ItemType Directory -Path $hooksDir -Force | Out-Null
+        Copy-Item $preCommit (Join-Path $hooksDir 'pre-commit') -Force
+        Copy-Item $postCommit (Join-Path $hooksDir 'post-commit') -Force
+    }
+    Write-Line "  + copy $preCommit -> $hooksDir\pre-commit"
+    Write-Line "  + copy $postCommit -> $hooksDir\post-commit"
+    Write-Ok 'Vault hooks wired'
 }
 
 function Enable-MemoriaCssSnippets {
@@ -293,12 +333,14 @@ function Enable-MemoriaCssSnippets {
 
 function Install-McpDeps {
     param([string]$RepoRoot)
-    Write-Header 'MCP server dependencies'
+    Write-Header 'Runtime dependencies'
     $reqs = Join-Path $Vault '.memoria/mcp/requirements.txt'
+    $clusterReqs = Join-Path $Vault '.memoria/mcp/requirements-cluster.txt'
     $venv = Join-Path $Vault '.memoria/.venv'
     $script:VenvPython = Join-Path $venv 'Scripts/python.exe'
     if ($DryRun) {
         Write-Line "  + would create venv $venv and install $reqs plus Memoria from $RepoRoot"
+        if ($WithCluster) { Write-Line "  + would install optional cluster deps from $clusterReqs" }
         return
     }
     if (-not (Test-Path $reqs)) { Write-Warn "No requirements file at $reqs"; return }
@@ -308,8 +350,91 @@ function Install-McpDeps {
     }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip')
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $reqs)
+    if ($WithCluster) {
+        if (-not (Test-Path $clusterReqs)) { Stop-Install "Missing optional cluster requirements at $clusterReqs" }
+        Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $clusterReqs)
+    }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', $RepoRoot)
-    Write-Ok "MCP deps installed in $venv"
+    Write-Ok "Runtime deps installed in $venv"
+}
+
+function Install-RuntimeScaffold {
+    Write-Header 'Runtime scaffold'
+    $script:VenvPython = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
+    $schema = Join-Path $Vault '.memoria/schemas/folders.yaml'
+    $golden = Join-Path $Vault '.memoria/operations/integrity/linter/golden_restore.py'
+    if ($DryRun) {
+        Write-Line "  + ensure skeleton directories from $schema"
+        Write-Line "  + $script:VenvPython $golden --vault $Vault stage"
+        return
+    }
+    if (-not (Test-Path $script:VenvPython)) { Stop-Install "Missing venv Python at $script:VenvPython" }
+    if (-not (Test-Path $schema)) { Stop-Install "Missing folders schema at $schema" }
+    $code = "import sys,yaml; from pathlib import Path; " +
+        "v=Path(sys.argv[1]); " +
+        "data=yaml.safe_load((v/'.memoria/schemas/folders.yaml').read_text(encoding='utf-8')) or {}; " +
+        "[(v/d).mkdir(parents=True, exist_ok=True) for d in (data.get('skeleton') or [])]"
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-c', $code, $Vault)
+    Write-Ok 'Folder skeleton ensured from folders.yaml'
+    if (-not (Test-Path $golden)) { Stop-Install "Missing golden restore script at $golden" }
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @($golden, '--vault', $Vault, 'stage')
+    Write-Ok 'Golden copy staged (.memoria/golden/)'
+}
+
+function Resolve-Qmd {
+    $qmd = Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')
+    if ($qmd) { return $qmd }
+    $npm = Get-CommandPath @('npm.cmd', 'npm.exe', 'npm')
+    if (-not $npm -or $DryRun) { return $null }
+    $prefix = (& $npm prefix -g 2>$null | Select-Object -First 1)
+    if (-not $prefix) { return $null }
+    return Get-CommandPath @(
+        (Join-Path $prefix 'qmd.cmd'),
+        (Join-Path $prefix 'qmd.exe'),
+        (Join-Path $prefix 'bin/qmd')
+    )
+}
+
+function Install-Qmd {
+    Write-Header 'qmd search engine'
+    $qmd = Resolve-Qmd
+    if ($qmd) {
+        Write-Ok "qmd present: $qmd"
+    } else {
+        $npm = Get-CommandPath @('npm.cmd', 'npm.exe', 'npm')
+        $node = Get-CommandPath @('node.exe', 'node')
+        $nodeVersion = if ($node -and -not $DryRun) { (& $node --version 2>$null | Select-Object -First 1) } else { '' }
+        if ($npm -and ($DryRun -or $nodeVersion -match '^v(2[2-9]|[3-9][0-9])')) {
+            Invoke-Logged -FilePath $npm -ArgumentList @('install', '-g', '@tobilu/qmd')
+            $qmd = Resolve-Qmd
+        }
+        if (-not $qmd) {
+            Write-Warn 'qmd not installed and Node >=22 unavailable -- search will not be ready until you run: npm install -g @tobilu/qmd'
+            return
+        }
+    }
+
+    $checked = Join-Path $Vault '.memoria/index/qmd/checked'
+    $config = Join-Path $Vault '.memoria/index/qmd/config'
+    $index = Join-Path $Vault '.memoria/index/qmd/index.sqlite'
+    Write-Line "  + QMD_CONFIG_DIR=$config INDEX_PATH=$index $qmd collection add $checked --name memoria-checked --mask **/*.md"
+    if ($DryRun) { return }
+    New-Item -ItemType Directory -Path $checked -Force | Out-Null
+    New-Item -ItemType Directory -Path $config -Force | Out-Null
+    $oldConfig = $env:QMD_CONFIG_DIR
+    $oldIndex = $env:INDEX_PATH
+    try {
+        $env:QMD_CONFIG_DIR = $config
+        $env:INDEX_PATH = $index
+        & $qmd collection add $checked --name memoria-checked --mask '**/*.md'
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warn "qmd collection add failed -- run: memoria workspace rebuild --workspace `"$Vault`" --search"
+        }
+    } finally {
+        if ($null -eq $oldConfig) { Remove-Item Env:QMD_CONFIG_DIR -ErrorAction SilentlyContinue } else { $env:QMD_CONFIG_DIR = $oldConfig }
+        if ($null -eq $oldIndex) { Remove-Item Env:INDEX_PATH -ErrorAction SilentlyContinue } else { $env:INDEX_PATH = $oldIndex }
+    }
+    Write-Line '  (registered checked-only qmd input; the worker rebuilds it from checked Concepts)'
 }
 
 function ConvertTo-ForwardPath {
@@ -601,16 +726,60 @@ function Write-SecretsGuidance {
     Write-Line '  OPENALEX_API_KEY=...'
 }
 
+function Write-CliNextSteps {
+    Write-Header 'Next steps'
+    $py = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
+    Write-Line "  Workspace: $Vault"
+    Write-Line "  1. Check the bundle:  `"$py`" -m memoria_vault.cli doctor bundle --workspace `"$Vault`""
+    Write-Line "  2. Rebuild search:    `"$py`" -m memoria_vault.cli workspace rebuild --workspace `"$Vault`" --search"
+    Write-Line "  3. Ask from CLI:      `"$py`" -m memoria_vault.cli ask --workspace `"$Vault`" --question `"What needs attention?`""
+    Write-Line "  4. First checkpoint:  cd `"$Vault`"; git add -A; git commit -m `"Initial Memoria vault`""
+    if ($DryRun) { Write-Warn 'This was a DRY RUN -- nothing above was actually changed.' }
+}
+
 function Invoke-Main {
     Write-Header 'Memoria Windows installer'
-    Write-Line 'Production Windows path: native Hermes, native Obsidian, native vault.'
-    Write-Line 'Linux/WSL install.sh remains the testing path.'
+    Write-Line 'Default path: standalone CLI/runtime workspace. Use -WithHermes for the Hermes/Obsidian adapter.'
 
-    if (-not $ProfilesOnly) {
+    if ($ProfilesOnly -and $WithHermes) {
+        Stop-Install '-ProfilesOnly already targets the Hermes adapter; do not combine it with -WithHermes.'
+    }
+
+    if ($ProfilesOnly) {
+        Assert-RequiredCommands
+        $repoRoot = Get-LocalRepoRoot
+        if (-not $repoRoot) { Stop-Install 'Run -ProfilesOnly from a memoria-vault checkout so the Memoria package can be reinstalled.' }
+        Install-McpDeps -RepoRoot $repoRoot
+        Install-RuntimeScaffold
+        Enable-MemoriaCssSnippets -RepoRoot $repoRoot
+        Install-Qmd
+        Install-Profiles
+        Install-Crons
+        Install-VaultHooks
+        Write-SecretsGuidance
+        Write-Header 'Done'
+        Write-Line "Hermes adapter refreshed for vault: $Vault"
+        return
+    }
+
+    if (-not $WithHermes) {
+        Assert-RequiredCommands
+        $repoRoot = Get-RepoRoot
+        Copy-VaultSource -RepoRoot $repoRoot
+        Install-McpDeps -RepoRoot $repoRoot
+        Install-RuntimeScaffold
+        Initialize-VaultGit
+        Install-VaultHooks
+        Install-Qmd
+        Write-CliNextSteps
+        Write-Header 'Done'
+        return
+    }
+
+    if ($WithHermes) {
         if (-not $NoApps) {
             Write-Header 'Windows apps'
             Install-WingetApp -Id 'Obsidian.Obsidian' -Name 'Obsidian' -Fallback 'https://obsidian.md/download'
-            Install-WingetApp -Id 'Zotero.Zotero' -Name 'Zotero' -Fallback 'https://www.zotero.org/download/'
             Install-WingetApp -Id 'Git.Git' -Name 'Git for Windows' -Fallback 'https://git-scm.com/download/win'
         }
         Assert-RequiredCommands
@@ -619,21 +788,18 @@ function Invoke-Main {
         Copy-VaultSource -RepoRoot $repoRoot
         Enable-MemoriaCssSnippets -RepoRoot $repoRoot
         Install-McpDeps -RepoRoot $repoRoot
-    } else {
-        Assert-RequiredCommands
-        $repoRoot = Get-LocalRepoRoot
-        if (-not $repoRoot) { Stop-Install 'Run -ProfilesOnly from a memoria-vault checkout so the Memoria package can be reinstalled.' }
-        Enable-MemoriaCssSnippets -RepoRoot $repoRoot
-        Install-McpDeps -RepoRoot $repoRoot
+        Install-RuntimeScaffold
+        Initialize-VaultGit
+        Install-VaultHooks
+        Install-Qmd
+        Install-Profiles
+        Install-Crons
+        Write-SecretsGuidance
+        Write-Header 'Done'
+        Write-Line "Open this folder in Obsidian as your adapter vault: $Vault"
+        Write-Line 'Then enable community plugins and configure the Local REST API HTTPS cert path.'
+        return
     }
-
-    Install-Profiles
-    Install-Crons
-    Write-SecretsGuidance
-
-    Write-Header 'Done'
-    Write-Line "Open this folder in Obsidian as your production vault: $Vault"
-    Write-Line 'Then enable community plugins and configure the Local REST API HTTPS cert path.'
 }
 
 Invoke-Main
