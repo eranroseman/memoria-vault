@@ -10,6 +10,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.worker import enqueue_operation
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -411,6 +412,61 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
         "seed_terms": ["new area"],
         "dense_threshold": 1,
     }
+
+
+def test_cli_request_list_show_and_resume_pending_request(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha digest\n"
+        "tags: [sleep]\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    enqueue_operation(
+        workspace,
+        "analyze-gaps",
+        payload={"seed_terms": ["new area"], "dense_threshold": 1},
+        idempotency_key="resume-gaps",
+        provenance={"surface": "test"},
+    )
+
+    assert (
+        main(["request", "list", "--workspace", str(workspace), "--status", "pending", "--json"])
+        == 0
+    )
+    listed = json.loads(capsys.readouterr().out)
+    assert [row["request_id"] for row in listed["requests"]] == ["resume-gaps"]
+
+    assert main(["request", "show", "--workspace", str(workspace), "resume-gaps", "--json"]) == 0
+    shown = json.loads(capsys.readouterr().out)
+    assert shown["request"]["operation_id"] == "analyze-gaps"
+    assert shown["request"]["args"] == {"seed_terms": ["new area"], "dense_threshold": 1}
+    assert shown["request"]["provenance"] == {"surface": "test"}
+
+    rc = main(["request", "resume", "--workspace", str(workspace), "resume-gaps", "--json"])
+    resumed = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert resumed["result"]["status"] == "done"
+    gaps = {gap["topic"]: gap for gap in resumed["result"]["gaps"]}
+    assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["new area"]["gap_type"] == "new-topic"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT status FROM operation_requests WHERE request_id = ?",
+            ("resume-gaps",),
+        ).fetchone()
+    assert row["status"] == "done"
 
 
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
