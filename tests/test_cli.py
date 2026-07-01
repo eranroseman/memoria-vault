@@ -1350,6 +1350,40 @@ def test_cli_workspace_scan_fixture_quarantines_generated_projection(
     assert consumable is None
 
 
+def test_cli_workspace_recover_fixture_replays_pending_materialization(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "workspace",
+                "recover",
+                "--workspace",
+                str(workspace),
+                "--fixture",
+                "crash-before-materialization",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    recovered = json.loads(capsys.readouterr().out)
+
+    target = "knowledge/notes/crash-before-materialization.md"
+    assert recovered["fixture"] == {"name": "crash-before-materialization", "path": target}
+    assert recovered["restored"] == [target]
+    assert read_frontmatter(workspace / target)["check_status"] == "checked"
+    with state.connect(workspace) as conn:
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = ?", (target,)
+        ).fetchone()
+    assert consumable["output_id"] == target
+
+
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

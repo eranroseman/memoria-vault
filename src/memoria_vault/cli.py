@@ -989,8 +989,13 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
-    restored = state.recover_pending_materializations(_workspace(args))
-    return _emit({"ok": True, "restored": restored}, args)
+    workspace = _workspace(args)
+    fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
+    restored = state.recover_pending_materializations(workspace)
+    payload = {"ok": True, "restored": restored}
+    if fixture is not None:
+        payload["fixture"] = fixture
+    return _emit(payload, args)
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
@@ -1260,6 +1265,35 @@ def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
     text = path.read_text(encoding="utf-8")
     if marker.strip() not in text:
         path.write_text(text.rstrip() + marker, encoding="utf-8")
+    return {"name": fixture, "path": rel}
+
+
+def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
+    if fixture != "crash-before-materialization":
+        raise ValueError(f"unknown workspace recover fixture: {fixture}")
+    from memoria_vault.runtime.trusted_writer import promote_checked, stage_concept
+
+    rel = "knowledge/notes/crash-before-materialization.md"
+    content = (
+        "---\n"
+        "type: note\n"
+        "check_status: unchecked\n"
+        "title: Crash-before-materialization fixture\n"
+        "---\n\n"
+        "This note exists to prove pending file materializations replay from SQLite.\n"
+    )
+    stage_concept(
+        workspace,
+        rel,
+        content,
+        operation="recover-fixture",
+        run_id="fixture:crash-before-materialization",
+        machine="memoria-cli",
+    )
+    promote_checked(workspace, rel, machine="memoria-cli")
+    path = workspace / rel
+    if path.is_file():
+        path.unlink()
     return {"name": fixture, "path": rel}
 
 
