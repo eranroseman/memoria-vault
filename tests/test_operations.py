@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -233,39 +232,39 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     )
     seen = {}
 
-    class Response:
-        def __enter__(self):
-            return self
+    class FakeProvider:
+        def __init__(self, **kwargs):
+            seen["provider_kwargs"] = kwargs
 
-        def __exit__(self, *_args):
-            return False
+    class FakeModel:
+        def __init__(self, model_name, *, provider):
+            seen["model_name"] = model_name
+            seen["provider"] = provider
 
-        def read(self):
-            return json.dumps(
+    class FakeAgent:
+        def __init__(self, model):
+            seen["model"] = model
+
+        def run_sync(self, prompt, *, model_settings):
+            seen["prompt"] = prompt
+            seen["model_settings"] = model_settings
+            return type(
+                "Result",
+                (),
                 {
-                    "choices": [
-                        {
-                            "message": {
-                                "content": (
-                                    "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
-                                    "## Hub suggestions\n\n- Framing\n"
-                                )
-                            }
-                        }
-                    ]
-                }
-            ).encode()
+                    "output": (
+                        "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
+                        "## Hub suggestions\n\n- Framing\n"
+                    )
+                },
+            )()
 
-    def fake_urlopen(req, timeout):
-        seen["url"] = req.full_url
-        seen["timeout"] = timeout
-        seen["auth"] = req.get_header("Authorization")
-        seen["payload"] = json.loads(req.data.decode())
-        return Response()
+    def fake_loader():
+        return FakeAgent, FakeModel, FakeProvider
 
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
     monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "test-key")
-    monkeypatch.setattr("memoria_vault.runtime.operations.request.urlopen", fake_urlopen)
+    monkeypatch.setattr("memoria_vault.runtime.operations._load_pydantic_ai_openai", fake_loader)
 
     result = compile_source_digest(
         vault,
@@ -274,11 +273,14 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
         machine="op-machine",
     )
 
-    assert seen["url"] == "http://model.test/v1/chat/completions"
-    assert seen["auth"] == "Bearer test-key"
-    assert seen["payload"]["model"] == "memoria-test-model"
-    assert "Alpha content" in seen["payload"]["messages"][0]["content"]
-    assert "## Synthesis" in seen["payload"]["messages"][0]["content"]
+    assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1", "api_key": "test-key"}
+    assert seen["model_name"] == "memoria-test-model"
+    assert seen["model"] is not None
+    assert seen["model_settings"]["temperature"] == 0
+    assert seen["model_settings"]["max_tokens"] == 2048
+    assert seen["model_settings"]["timeout"] == 90.0
+    assert "Alpha content" in seen["prompt"]
+    assert "## Synthesis" in seen["prompt"]
     assert "Model-written Alpha framing outcomes." in (vault / result["digest_path"]).read_text(
         encoding="utf-8"
     )
@@ -319,24 +321,26 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
         machine="capture-machine",
     )
 
-    class Response:
-        def __enter__(self):
-            return self
+    class FakeAgent:
+        def __init__(self, _model):
+            pass
 
-        def __exit__(self, *_args):
-            return False
+        def run_sync(self, _prompt, *, model_settings):
+            return type("Result", (), {"output": "Loose summary only."})()
 
-        def read(self):
-            return json.dumps(
-                {"choices": [{"message": {"content": "Loose summary only."}}]}
-            ).encode()
+    class FakeModel:
+        def __init__(self, _model_name, *, provider):
+            pass
+
+    class FakeProvider:
+        def __init__(self, **_kwargs):
+            pass
 
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
-
-    def fake_urlopen(_req, timeout):
-        return Response()
-
-    monkeypatch.setattr("memoria_vault.runtime.operations.request.urlopen", fake_urlopen)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
 
     with pytest.raises(ValueError, match="digest output must include ## Synthesis"):
         compile_source_digest(
@@ -369,34 +373,35 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
         machine="capture-machine",
     )
 
-    class Response:
-        def __enter__(self):
-            return self
+    class FakeAgent:
+        def __init__(self, _model):
+            pass
 
-        def __exit__(self, *_args):
-            return False
-
-        def read(self):
-            return json.dumps(
+        def run_sync(self, _prompt, *, model_settings):
+            return type(
+                "Result",
+                (),
                 {
-                    "choices": [
-                        {
-                            "message": {
-                                "content": (
-                                    "## Synthesis\n\nCompletely unrelated banana prose.\n\n"
-                                    "## Hub suggestions\n\n- unrelated\n"
-                                )
-                            }
-                        }
-                    ]
-                }
-            ).encode()
+                    "output": (
+                        "## Synthesis\n\nCompletely unrelated banana prose.\n\n"
+                        "## Hub suggestions\n\n- unrelated\n"
+                    )
+                },
+            )()
 
-    def fake_urlopen(_req, timeout):
-        return Response()
+    class FakeModel:
+        def __init__(self, _model_name, *, provider):
+            pass
+
+    class FakeProvider:
+        def __init__(self, **_kwargs):
+            pass
 
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
-    monkeypatch.setattr("memoria_vault.runtime.operations.request.urlopen", fake_urlopen)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
 
     with pytest.raises(ValueError, match="source-grounding smoke check"):
         compile_source_digest(

@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 authors = [{ name = "Eran Roseman" }]
+dependencies = ["pydantic-ai-slim[openai]>=1.0"]
 
 [project.scripts]
 memoria = "memoria_vault.cli:main"
