@@ -95,7 +95,7 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
         "check-fired",
         "run",
     ]
-    assert events[1]["runner"] == "direct_api"
+    assert events[1]["runner"] == "pydantic-ai"
     assert events[-1]["outputs"] == [note_rel]
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {"journal/note-machine.jsonl", note_rel}

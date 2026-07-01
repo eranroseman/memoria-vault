@@ -11,7 +11,7 @@ allowed_paths:
   - knowledge/digests/
   - knowledge/notes/
 allowed_network: []
-runner: direct_api
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: propose-note-candidates.v1
 io_schema:

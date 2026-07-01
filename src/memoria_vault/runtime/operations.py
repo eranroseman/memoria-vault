@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 import re
-import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -38,6 +37,7 @@ REQUIRED_POLICY_FIELDS = {
     "risk_class",
     "required_checks",
 }
+SUPPORTED_OPERATION_RUNNERS = frozenset({"local", "pydantic-ai"})
 
 
 def record_copi_interview_turn(
@@ -98,6 +98,9 @@ def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     missing = sorted(field for field in REQUIRED_POLICY_FIELDS if field not in policy)
     if missing:
         raise ValueError(f"{operation_id} missing operation policy fields: {', '.join(missing)}")
+    runner = policy["runner"]
+    if runner not in SUPPORTED_OPERATION_RUNNERS:
+        raise ValueError(f"{operation_id} unsupported operation runner: {runner}")
     io_schema = policy["io_schema"]
     if not isinstance(io_schema, dict):
         raise ValueError(f"{operation_id} io_schema must be a map")
@@ -423,10 +426,8 @@ def _run_digest_model(
         text = _digest_body(source_fm, content, topics, interviews)
     else:
         prompt = _digest_prompt(source_fm, content, topics, interviews)
-        if policy["runner"] == "direct_api":
-            text = _direct_api_chat(policy, prompt)
-        elif policy["runner"] == "hermes":
-            text = _hermes_chat(policy, prompt)
+        if policy["runner"] == "pydantic-ai":
+            text = _pydantic_ai_chat(policy, prompt)
         else:
             raise ValueError(f"unsupported operation runner: {policy['runner']}")
     return _validate_digest_output(text, content, topics, interviews)
@@ -453,7 +454,7 @@ def _digest_prompt(
     )
 
 
-def _direct_api_chat(policy: dict[str, Any], prompt: str) -> str:
+def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
     base_url = (
         os.environ.get("MEMORIA_MODEL_BASE_URL")
         or os.environ.get("OPENAI_BASE_URL")
@@ -486,89 +487,12 @@ def _direct_api_chat(policy: dict[str, Any], prompt: str) -> str:
         ) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
-        raise RuntimeError(f"direct_api model request failed: {exc}") from exc
+        raise RuntimeError(f"pydantic-ai model request failed: {exc}") from exc
     content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content")
     text = str(content or "").strip()
     if not text:
-        raise RuntimeError("direct_api model returned no message content")
+        raise RuntimeError("pydantic-ai model returned no message content")
     return text
-
-
-def _hermes_chat(policy: dict[str, Any], prompt: str) -> str:
-    base_url = os.environ.get("MEMORIA_HERMES_BASE_URL") or str(policy.get("base_url") or "")
-    if base_url:
-        _require_network(policy, base_url)
-    else:
-        _require_network_label(policy, "hermes-config")
-
-    agent_cls = _hermes_agent_class()
-    agent = agent_cls(
-        model=policy["model"],
-        provider=policy.get("provider") or os.environ.get("MEMORIA_HERMES_PROVIDER") or None,
-        base_url=base_url or None,
-        api_key=os.environ.get("MEMORIA_HERMES_API_KEY") or None,
-        enabled_toolsets=_hermes_enabled_toolsets(policy),
-        quiet_mode=True,
-        skip_context_files=True,
-        skip_memory=True,
-        max_iterations=int(
-            os.environ.get("MEMORIA_HERMES_MAX_ITERATIONS") or policy.get("max_iterations") or 10
-        ),
-    )
-    text = str(agent.chat(prompt) or "").strip()
-    if not text:
-        raise RuntimeError("hermes model returned no message content")
-    return text
-
-
-def _hermes_agent_class():
-    try:
-        from run_agent import AIAgent
-
-        return AIAgent
-    except ModuleNotFoundError:
-        hermes_path = Path(
-            os.environ.get("MEMORIA_HERMES_AGENT_PATH", "~/.hermes/hermes-agent")
-        ).expanduser()
-        if hermes_path.is_dir() and str(hermes_path) not in sys.path:
-            sys.path.insert(0, str(hermes_path))
-        try:
-            from run_agent import AIAgent
-
-            return AIAgent
-        except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                "hermes operation runner requires the Hermes Python library "
-                "or MEMORIA_HERMES_AGENT_PATH"
-            ) from exc
-
-
-def _hermes_enabled_toolsets(policy: dict[str, Any]) -> list[str]:
-    value = policy.get("hermes_enabled_toolsets", [])
-    if value is None:
-        return []
-    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
-        raise ValueError("hermes_enabled_toolsets must be a list of toolset names")
-    forbidden = {
-        "all",
-        "browser",
-        "computer_use",
-        "development",
-        "file",
-        "full_stack",
-        "hermes-cli",
-        "terminal",
-    }
-    selected = [item.strip() for item in value if item.strip()]
-    unsafe = sorted(
-        item for item in selected if item in forbidden or item.startswith(("hermes-", "mcp-"))
-    )
-    if unsafe:
-        raise PermissionError(
-            "hermes operation runner cannot enable write-capable or external toolsets: "
-            + ", ".join(unsafe)
-        )
-    return selected
 
 
 def _validate_digest_output(

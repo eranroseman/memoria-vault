@@ -10,7 +10,7 @@ allowed_paths:
   - catalog/
   - knowledge/
 allowed_network: []
-runner: direct_api
+runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: extract-claim-stubs.v1
 io_schema:

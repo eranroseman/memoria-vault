@@ -254,6 +254,7 @@ proposable
 PubMed
 pushback
 pyalex
+pydantic
 pymupdf
 pypandoc
 PyPI

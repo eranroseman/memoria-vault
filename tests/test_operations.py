@@ -125,7 +125,7 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         "check-fired",
         "run",
     ]
-    assert events[1]["runner"] == "direct_api"
+    assert events[1]["runner"] == "pydantic-ai"
     assert events[1]["model"] == "deterministic-fixture"
     assert events[-1]["suggestions"] == result["hub_suggestions"]
     assert events[-1]["outputs"] == ["knowledge/digests/source-alpha.md", *result["hub_paths"]]
@@ -214,7 +214,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
     assert committed == {"journal/copi-machine.jsonl"}
 
 
-def test_compile_source_digest_can_use_direct_api_runner(tmp_path: Path, monkeypatch) -> None:
+def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
     policy = vault / "capabilities/operations/compile-source-digest.md"
     policy.write_text(
@@ -286,113 +286,20 @@ def test_compile_source_digest_can_use_direct_api_runner(tmp_path: Path, monkeyp
     assert events[1]["model"] == "memoria-test-model"
 
 
-def test_compile_source_digest_can_use_hermes_runner(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize("runner", ["direct_api", "hermes"])
+def test_operation_policy_rejects_removed_runner_values(tmp_path: Path, runner: str) -> None:
     vault = workspace(tmp_path)
     policy = vault / "capabilities/operations/compile-source-digest.md"
     policy.write_text(
-        policy.read_text(encoding="utf-8")
-        .replace("allowed_network: []", "allowed_network:\n  - hermes-config")
-        .replace("runner: direct_api", "runner: hermes")
-        .replace("model: deterministic-fixture", "model: memoria-hermes-model"),
+        policy.read_text(encoding="utf-8").replace("runner: pydantic-ai", f"runner: {runner}"),
         encoding="utf-8",
     )
-    capture_source(
-        vault,
-        "source-alpha",
-        "Alpha Source",
-        "A fixture source.",
-        "Alpha content about framing, methods, outcomes, gaps, and impact.",
-        machine="capture-machine",
-    )
-    seen = {}
 
-    class FakeHermesAgent:
-        def __init__(self, **kwargs):
-            seen["kwargs"] = kwargs
-
-        def chat(self, prompt):
-            seen["prompt"] = prompt
-            return (
-                "## Synthesis\n\nHermes-written Alpha framing outcomes.\n\n"
-                "## Hub suggestions\n\n- Framing\n"
-            )
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._hermes_agent_class",
-        lambda: FakeHermesAgent,
-    )
-
-    result = compile_source_digest(
-        vault,
-        "source-alpha",
-        ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-        machine="op-machine",
-    )
-
-    assert seen["kwargs"]["model"] == "memoria-hermes-model"
-    assert seen["kwargs"]["enabled_toolsets"] == []
-    assert seen["kwargs"]["quiet_mode"] is True
-    assert seen["kwargs"]["skip_context_files"] is True
-    assert seen["kwargs"]["skip_memory"] is True
-    assert seen["kwargs"]["max_iterations"] == 10
-    assert "Alpha content" in seen["prompt"]
-    assert "Hermes-written Alpha framing outcomes." in (vault / result["digest_path"]).read_text(
-        encoding="utf-8"
-    )
-    events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
-    assert events[1]["runner"] == "hermes"
-    assert events[1]["model"] == "memoria-hermes-model"
+    with pytest.raises(ValueError, match=f"unsupported operation runner: {runner}"):
+        load_operation_policy(vault, "compile-source-digest")
 
 
-def test_hermes_runner_rejects_write_capable_toolsets(tmp_path: Path, monkeypatch) -> None:
-    vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8")
-        .replace("allowed_network: []", "allowed_network:\n  - hermes-config")
-        .replace("runner: direct_api", "runner: hermes")
-        .replace("model: deterministic-fixture", "model: memoria-hermes-model")
-        .replace(
-            "prompt_version: compile-source-digest.v1",
-            (
-                "prompt_version: compile-source-digest.v1\n"
-                "hermes_enabled_toolsets:\n"
-                "  - file\n"
-                "  - hermes-cli"
-            ),
-        ),
-        encoding="utf-8",
-    )
-    capture_source(
-        vault,
-        "source-alpha",
-        "Alpha Source",
-        "A fixture source.",
-        "Alpha content about framing, methods, outcomes, gaps, and impact.",
-        machine="capture-machine",
-    )
-
-    class FakeHermesAgent:
-        def __init__(self, **_kwargs):
-            raise AssertionError("unsafe policy should fail before AIAgent construction")
-
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._hermes_agent_class",
-        lambda: FakeHermesAgent,
-    )
-
-    with pytest.raises(PermissionError, match="write-capable or external toolsets"):
-        compile_source_digest(
-            vault,
-            "source-alpha",
-            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
-            machine="op-machine",
-        )
-
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
-
-
-def test_compile_source_digest_rejects_nonconforming_direct_api_output(
+def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
@@ -442,7 +349,7 @@ def test_compile_source_digest_rejects_nonconforming_direct_api_output(
     assert not (vault / "knowledge/digests/source-alpha.md").exists()
 
 
-def test_compile_source_digest_rejects_ungrounded_direct_api_output(
+def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
