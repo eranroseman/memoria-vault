@@ -340,6 +340,62 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
     assert tuple(row) == ("checked", "full-text", done["content_path"])
 
 
+def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypatch) -> None:
+    vault = workspace(tmp_path)
+    policy = vault / "capabilities/operations/enrich-source.md"
+    policy.write_text(
+        policy.read_text(encoding="utf-8").replace(
+            "  - https://api.unpaywall.org/",
+            "  - https://api.unpaywall.org/\n  - https://example.test/",
+        ),
+        encoding="utf-8",
+    )
+    payload = {
+        **doi_payload(),
+        "content_text": "Only the abstract.",
+        "text_status": "abstract-only",
+    }
+    enqueue_operation(vault, "capture-source", payload=payload, idempotency_key="capture-alpha")
+    run_next_job(vault, machine="test-machine")
+    html = (
+        "<html><body><article>Fetched open access full text about framing, "
+        "methods, outcomes, gaps, and impact.</article></body></html>"
+    )
+
+    class Response:
+        def __init__(self):
+            self.headers = {"Content-Type": "text/html; charset=utf-8"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return html.encode()
+
+    def fake_urlopen(req, timeout):
+        assert req.full_url == "https://example.test/alpha.pdf"
+        assert timeout == 20
+        return Response()
+
+    monkeypatch.setattr("memoria_vault.runtime.enrichment.request.urlopen", fake_urlopen)
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["enrichment_status"] == "enriched"
+    content = (vault / done["content_path"]).read_text(encoding="utf-8")
+    assert "Fetched open access full text" in content
+
+
 def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_operation(
