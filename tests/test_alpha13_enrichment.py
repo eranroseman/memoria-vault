@@ -58,7 +58,9 @@ def doi_payload() -> dict:
     }
 
 
-def provider_payloads(*, title: str = "Alpha Source", retracted: bool = False) -> dict:
+def provider_payloads(
+    *, title: str = "Alpha Source", retracted: bool = False, full_text: str = ""
+) -> dict:
     return {
         "crossref": {
             "message": {
@@ -115,6 +117,7 @@ def provider_payloads(*, title: str = "Alpha Source", retracted: bool = False) -
             "best_oa_location": {
                 "url_for_pdf": "https://example.test/alpha.pdf",
                 "license": "cc-by",
+                **({"full_text": full_text} if full_text else {}),
             },
         },
     }
@@ -272,7 +275,9 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert committed == {"journal/test-machine.jsonl", "references.bib"}
 
 
-def test_digest_blocks_enriched_abstract_only_source(tmp_path: Path) -> None:
+def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
+    tmp_path: Path,
+) -> None:
     vault = workspace(tmp_path)
     payload = {
         **doi_payload(),
@@ -287,23 +292,52 @@ def test_digest_blocks_enriched_abstract_only_source(tmp_path: Path) -> None:
         payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
     )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done["enrichment_status"] == "needs_human"
+    assert "source-full-text" in done["attention_path"]
+    assert "full-text acquisition failed" in done["finding"]["reason"]
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status, text_status FROM catalog_sources WHERE source_id = 'source-alpha'"
+        ).fetchone()
+    assert tuple(row) == ("unchecked", "abstract-only")
+    assert not (vault / "references.bib").exists()
+    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+
+
+def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    payload = {
+        **doi_payload(),
+        "content_text": "Only the abstract.",
+        "text_status": "abstract-only",
+    }
+    enqueue_operation(vault, "capture-source", payload=payload, idempotency_key="capture-alpha")
     run_next_job(vault, machine="test-machine")
+    full_text = "Acquired alpha full text about framing, methods, outcomes, gaps, and impact."
 
     enqueue_operation(
         vault,
-        "compile-source-digest",
+        "enrich-source",
         payload={
             "source_id": "source-alpha",
-            "hub_topics": ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            "provider_payloads": provider_payloads(full_text=full_text),
         },
-        idempotency_key="digest-alpha",
+        idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
 
     assert done is not None
-    assert done["status"] == "failed"
-    assert "text_status is abstract-only" in done["error"]
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert done["enrichment_status"] == "enriched"
+    assert done["text_status"] == "full-text"
+    assert (vault / done["content_path"]).read_text(encoding="utf-8") == full_text + "\n"
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status, text_status, content_path FROM catalog_sources "
+            "WHERE source_id = 'source-alpha'"
+        ).fetchone()
+    assert tuple(row) == ("checked", "full-text", done["content_path"])
 
 
 def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
