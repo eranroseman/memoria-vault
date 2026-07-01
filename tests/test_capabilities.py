@@ -6,6 +6,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime.capabilities import (
     check_capability_index,
     import_capability,
@@ -112,6 +114,35 @@ def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) 
         "capabilities/_generated/capability-index.json",
         "journal/test-machine.jsonl",
     }
+
+
+def test_directory_only_capability_manifest_fails_runtime_loader(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    asset_dir = vault / "capabilities/operations/directory-only"
+    asset_dir.mkdir()
+    (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
+    message = (
+        "directory-only capability manifest is invalid: "
+        "capabilities/operations/directory-only; "
+        "expected sibling capabilities/operations/directory-only.md"
+    )
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        render_capability_index(vault)
+    with pytest.raises(ValueError, match=re.escape(message)):
+        load_operation_policy(vault, "directory-only")
+
+
+def test_same_stem_capability_asset_folder_is_allowed(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    asset_dir = vault / "capabilities/operations/analyze-gaps"
+    asset_dir.mkdir()
+    (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
+
+    rows = {row["id"] for row in json.loads(render_capability_index(vault))["capabilities"]}
+
+    assert "analyze-gaps" in rows
+    assert load_operation_policy(vault, "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
 def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: Path) -> None:

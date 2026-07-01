@@ -12,6 +12,7 @@ from typing import Any
 from urllib import error, request
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.capabilities import capability_manifest_path
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -87,7 +88,7 @@ def record_copi_interview_turn(
 def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     """Load a checked operation Concept and require the WP5 policy contract."""
     vault = Path(vault)
-    op_path = vault / "capabilities" / "operations" / f"{safe_filename(operation_id)}.md"
+    op_path = capability_manifest_path(vault, "operation", operation_id)
     if not op_path.is_file():
         raise FileNotFoundError(op_path)
     policy = read_frontmatter(op_path)
