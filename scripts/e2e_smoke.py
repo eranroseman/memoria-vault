@@ -78,8 +78,8 @@ def add_repo_paths(root: Path) -> None:
 def assert_offline_ingest(root: Path, vault: Path) -> None:
     add_repo_paths(root)
 
+    from memoria_vault.runtime import state
     from memoria_vault.runtime.capture import capture_bibtex_source, write_references_bib
-    from memoria_vault.runtime.vaultio import read_frontmatter
 
     bib = (
         "@article{x2024demo,\n"
@@ -96,11 +96,12 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
         content_text="Demo Work package-gate source.",
         machine="e2e",
     )
-    source = vault / result["source_path"]
-    frontmatter = read_frontmatter(source)
-    assert frontmatter["type"] == "source"
-    assert frontmatter["check_status"] == "checked"
-    assert frontmatter["source_id"] == "demo-work"
+    source = state.catalog_source(vault, result["source_id"])
+    assert result["source_path"] == "catalog/sources/demo-work"
+    assert source is not None
+    assert source["check_status"] == "checked"
+    assert source["source_id"] == "demo-work"
+    assert not (vault / "catalog/sources/demo-work/source.md").exists()
     assert (vault / result["content_path"]).is_file()
     assert (vault / result["raw_path"]).is_file()
     write_references_bib(vault)

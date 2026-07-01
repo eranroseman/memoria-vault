@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_source, check_references_bib
+from memoria_vault.runtime.capture import capture_source, check_references_bib, write_references_bib
 from memoria_vault.runtime.integrity import check_citation_survival
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
@@ -228,10 +228,12 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
     with state.connect(vault) as conn:
         row = conn.execute("SELECT title, doi, check_status FROM catalog_sources").fetchone()
     assert tuple(row) == ("Alpha Source", "10.1000/alpha", "checked")
+    assert not (vault / "references.bib").exists()
+    write_references_bib(vault)
     assert "@article{alpha2026," in (vault / "references.bib").read_text(encoding="utf-8")
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert "references.bib" in committed
+    assert committed == {"journal/capture.jsonl"}
 
 
 def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:

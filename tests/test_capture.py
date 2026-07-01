@@ -21,8 +21,6 @@ from memoria_vault.runtime.capture import (
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit
-from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -48,7 +46,7 @@ def git(vault: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def test_capture_source_writes_catalog_files_and_trace(tmp_path: Path) -> None:
+def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
     result = capture_source(
@@ -68,39 +66,38 @@ def test_capture_source_writes_catalog_files_and_trace(tmp_path: Path) -> None:
         run_id="capture-alpha",
     )
 
-    source = vault / "catalog/sources/source-alpha/source.md"
-    content = vault / "catalog/sources/source-alpha/content.md"
-    raw = vault / "catalog/sources/source-alpha/raw/alpha.txt"
-    fm = read_frontmatter(source)
+    content = vault / ".memoria/blobs/source-content/source-alpha/content.txt"
+    raw = vault / ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
+    source = state.catalog_source(vault, "source-alpha")
 
-    assert fm["check_status"] == "checked"
-    assert fm["source_id"] == "source-alpha"
-    assert fm["raw_copy_path"] == "catalog/sources/source-alpha/raw/alpha.txt"
-    assert fm["content_path"] == "catalog/sources/source-alpha/content.md"
-    assert fm["raw_text_sha256"] == sha256_file(raw)
-    assert fm["normalized_text_sha256"] == sha256_file(content)
+    assert result["source_path"] == "catalog/sources/source-alpha"
+    assert result["check_status"] == "checked"
+    assert source is not None
+    assert source["check_status"] == "checked"
+    assert source["source_id"] == "source-alpha"
+    assert source["raw_path"] == ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
+    assert source["content_path"] == ".memoria/blobs/source-content/source-alpha/content.txt"
+    assert source["raw_text_sha256"] == sha256_file(raw)
+    assert source["normalized_text_sha256"] == sha256_file(content)
     assert content.read_text(encoding="utf-8") == "Extracted alpha text.\n"
     assert raw.read_bytes() == b"raw alpha bytes"
+    assert not (vault / "catalog/sources/source-alpha/source.md").exists()
+    assert not (vault / "references.bib").exists()
 
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
-    assert [event["event"] for event in events] == ["run", "derived", "check-fired", "run"]
+    assert [event["event"] for event in events] == ["run", "run"]
     assert events[0]["status"] == "started"
     assert events[-1]["status"] == "done"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {
-        "catalog/sources/source-alpha/content.md",
-        "catalog/sources/source-alpha/source.md",
-        "journal/test-machine.jsonl",
-        "references.bib",
-    }
+    assert committed == {"journal/test-machine.jsonl"}
 
 
-def test_capture_source_rejects_unsupported_required_check_before_writes(
+def test_capture_source_rejects_legacy_required_check_argument(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
 
-    with pytest.raises(ValueError, match="unsupported promotion checks: later-integrity"):
+    with pytest.raises(TypeError, match="required_checks"):
         capture_source(
             vault,
             "source-alpha",
@@ -143,7 +140,7 @@ def test_capture_source_refuses_to_replace_existing_raw(tmp_path: Path) -> None:
         raise AssertionError("capture should not replace an existing raw blob")
 
     assert (
-        vault / "catalog/sources/source-alpha/raw/source.txt"
+        vault / ".memoria/blobs/source-content/source-alpha/raw/source.txt"
     ).read_bytes() == b"raw alpha bytes"
 
 
@@ -170,15 +167,17 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
         machine="test-machine",
     )
 
-    assert result["content_path"] == "catalog/sources/pdf-source/content.md"
+    assert result["content_path"] == ".memoria/blobs/source-content/pdf-source/content.txt"
     assert result["text_status"] == "full-text"
     assert "## Page 3" in (vault / result["content_path"]).read_text(encoding="utf-8")
-    fm = read_frontmatter(vault / result["source_path"])
-    assert fm["text_status"] == "full-text"
-    assert fm["raw_copy_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
+    source = state.catalog_source(vault, result["source_id"])
+    assert source is not None
+    assert source["text_status"] == "full-text"
+    assert source["raw_path"] == ".memoria/blobs/source-content/pdf-source/raw/paper.pdf"
+    assert not (vault / "catalog/sources/pdf-source/source.md").exists()
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
-    assert events[1]["operation"] == "capture_pdf_source"
+    assert events[-1]["workflow"] == "capture_pdf_source"
 
 
 def test_capture_pdf_source_rejects_incoherent_parser_text(tmp_path: Path, monkeypatch) -> None:
@@ -234,48 +233,33 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
 
     result = capture_bibtex_source(vault, bibtex, machine="test-machine")
 
-    source = vault / "catalog/sources/doi-10.1000_harness.2026/source.md"
-    raw = vault / "catalog/sources/doi-10.1000_harness.2026/raw/harness2026.bib"
-    fm = read_frontmatter(source)
+    raw = vault / ".memoria/blobs/source-content/doi-10.1000_harness.2026/raw/harness2026.bib"
+    source = state.catalog_source(vault, "doi-10.1000_harness.2026")
 
-    assert result["source_path"] == "catalog/sources/doi-10.1000_harness.2026/source.md"
-    assert fm["check_status"] == "checked"
-    assert fm["title"] == "Harnessed Workflows for Durable Research"
-    assert fm["citekey"] == "harness2026"
-    assert fm["text_status"] == "abstract-only"
-    assert fm["resource"] == "https://doi.org/10.1000/harness.2026"
-    assert fm["identifiers"] == {"doi": "10.1000/harness.2026"}
-    assert fm["csl_json"]["author"] == [
+    assert result["source_path"] == "catalog/sources/doi-10.1000_harness.2026"
+    assert result["check_status"] == "checked"
+    assert source is not None
+    assert source["check_status"] == "checked"
+    assert source["title"] == "Harnessed Workflows for Durable Research"
+    assert source["citekey"] == "harness2026"
+    assert source["text_status"] == "abstract-only"
+    assert source["resource"] == "https://doi.org/10.1000/harness.2026"
+    assert source["identifiers"] == {"doi": "10.1000/harness.2026"}
+    assert source["csl_json"]["author"] == [
         {"family": "Ada", "given": "River"},
         {"family": "Lin", "given": "Morgan"},
     ]
-    assert result["entity_paths"] == [
-        "catalog/entities/person-river-ada.md",
-        "catalog/entities/person-morgan-lin.md",
-        "catalog/entities/venue-journal-of-testable-systems.md",
-    ]
-    assert fm["links"]["authors"] == [
-        "catalog/entities/person-river-ada.md",
-        "catalog/entities/person-morgan-lin.md",
-    ]
-    assert fm["links"]["venues"] == ["catalog/entities/venue-journal-of-testable-systems.md"]
-    assert (
-        read_frontmatter(vault / "catalog/entities/person-morgan-lin.md")["canonical_name"]
-        == "Morgan Lin"
-    )
-    assert (
-        read_frontmatter(vault / "catalog/entities/venue-journal-of-testable-systems.md")["type"]
-        == "venue"
-    )
     assert raw.read_text(encoding="utf-8").startswith("@article{harness2026,")
+    assert not (vault / "catalog/sources/doi-10.1000_harness.2026/source.md").exists()
+    assert not (vault / "catalog/entities").exists()
+    assert not (vault / "references.bib").exists()
 
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_bibtex_source"
-    assert events[1]["operation"] == "capture_bibtex_source"
     assert events[-1]["workflow"] == "capture_bibtex_source"
 
 
-def test_capture_bibtex_source_merges_existing_entity_source_links(tmp_path: Path) -> None:
+def test_capture_bibtex_source_does_not_create_legacy_entity_links(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_bibtex_source(
         vault,
@@ -301,16 +285,13 @@ def test_capture_bibtex_source_merges_existing_entity_source_links(tmp_path: Pat
         machine="test-machine",
     )
 
-    person = read_frontmatter(vault / "catalog/entities/person-morgan-lin.md")
-    venue = read_frontmatter(vault / "catalog/entities/venue-journal-of-shared-metadata.md")
-    assert person["links"]["sources"] == [
-        "catalog/sources/doi-10.1000_shared.one/source.md",
-        "catalog/sources/doi-10.1000_shared.two/source.md",
-    ]
-    assert venue["links"]["sources"] == person["links"]["sources"]
+    assert state.catalog_source(vault, "doi-10.1000_shared.one") is not None
+    assert state.catalog_source(vault, "doi-10.1000_shared.two") is not None
+    assert not (vault / "catalog/entities/person-morgan-lin.md").exists()
+    assert not (vault / "catalog/entities/venue-journal-of-shared-metadata.md").exists()
 
 
-def test_capture_source_marks_conflicting_entity_external_ids_as_ambiguous(
+def test_capture_source_does_not_materialize_legacy_entity_records(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -355,22 +336,9 @@ def test_capture_source_marks_conflicting_entity_external_ids_as_ambiguous(
         machine="test-machine",
     )
 
-    entity = read_frontmatter(vault / "catalog/entities/person-ada-river.md")
-
-    assert entity["check_status"] == "checked"
-    assert entity["external_ids"] == {"orcid": "0000-0001-0000-0001"}
-    assert entity["metadata"]["identity_status"] == "ambiguous"
-    assert entity["metadata"]["identity_conflicts"] == [
-        {
-            "field": "orcid",
-            "existing": "0000-0001-0000-0001",
-            "incoming": "0000-0002-0000-0002",
-        }
-    ]
-    assert entity["links"]["sources"] == [
-        "catalog/sources/source-one/source.md",
-        "catalog/sources/source-two/source.md",
-    ]
+    assert state.catalog_source(vault, "source-one") is not None
+    assert state.catalog_source(vault, "source-two") is not None
+    assert not (vault / "catalog/entities/person-ada-river.md").exists()
 
 
 def test_recapturing_source_merges_existing_metadata(tmp_path: Path) -> None:
@@ -414,13 +382,14 @@ def test_recapturing_source_merges_existing_metadata(tmp_path: Path) -> None:
         machine="test-machine",
     )
 
-    fm = read_frontmatter(vault / "catalog/sources/source-alpha/source.md")
-    assert fm["metadata_status"] == "verified"
-    assert fm["identifiers"] == {"pmid": "12345", "doi": "10.1000/alpha"}
-    assert fm["csl_json"]["author"] == [{"family": "Lin", "given": "Morgan"}]
-    assert fm["csl_json"]["DOI"] == "10.1000/alpha"
-    assert fm["csl_json"]["issued"] == {"date-parts": [[2026]]}
-    assert fm["links"]["authors"] == ["catalog/entities/person-morgan-lin.md"]
+    source = state.catalog_source(vault, "source-alpha")
+    assert source is not None
+    assert source["metadata_status"] == "verified"
+    assert source["identifiers"] == {"pmid": "12345", "doi": "10.1000/alpha"}
+    assert source["csl_json"]["author"] == [{"family": "Lin", "given": "Morgan"}]
+    assert source["csl_json"]["DOI"] == "10.1000/alpha"
+    assert source["csl_json"]["issued"] == {"date-parts": [[2026]]}
+    assert not (vault / "catalog/sources/source-alpha/source.md").exists()
 
 
 def test_capture_bibtex_source_accepts_explicit_stable_source_id(tmp_path: Path) -> None:
@@ -439,11 +408,12 @@ def test_capture_bibtex_source_accepts_explicit_stable_source_id(tmp_path: Path)
         source_id="source-stable-identity",
         machine="test-machine",
     )
-    fm = read_frontmatter(vault / result["source_path"])
+    source = state.catalog_source(vault, result["source_id"])
 
-    assert result["source_path"] == "catalog/sources/source-stable-identity/source.md"
-    assert fm["source_id"] == "source-stable-identity"
-    assert fm["citekey"] == "temporary2026"
+    assert result["source_path"] == "catalog/sources/source-stable-identity"
+    assert source is not None
+    assert source["source_id"] == "source-stable-identity"
+    assert source["citekey"] == "temporary2026"
 
 
 def test_capture_zotero_source_stages_exported_item_snapshot(tmp_path: Path) -> None:
@@ -545,13 +515,15 @@ def test_capture_url_source_snapshots_html_text(tmp_path: Path, monkeypatch) -> 
     )
 
     assert calls == [("https://example.test/path/page", 1.0)]
-    assert result["source_path"] == "catalog/sources/url-example.test-path-page/source.md"
-    fm = read_frontmatter(vault / result["source_path"])
-    assert fm["title"] == "Harness URL"
-    assert fm["resource"] == "https://example.test/path/page"
-    assert fm["item_type"] == "webpage"
+    assert result["source_path"] == "catalog/sources/url-example.test-path-page"
+    source = state.catalog_source(vault, result["source_id"])
+    assert source is not None
+    assert source["title"] == "Harness URL"
+    assert source["resource"] == "https://example.test/path/page"
+    assert source["csl_json"]["type"] == "webpage"
     assert "Captured page text." in (vault / result["content_path"]).read_text(encoding="utf-8")
     assert b"<script>ignore()</script>" in (vault / result["raw_path"]).read_bytes()
+    assert not (vault / "catalog/sources/url-example.test-path-page/source.md").exists()
 
 
 def test_capture_url_source_fetches_from_loopback_http_server(tmp_path: Path) -> None:
@@ -586,11 +558,12 @@ def test_capture_url_source_fetches_from_loopback_http_server(tmp_path: Path) ->
         server.server_close()
         thread.join(timeout=5)
 
-    fm = read_frontmatter(vault / result["source_path"])
-    assert fm["check_status"] == "checked"
-    assert fm["title"] == "Loopback URL"
-    assert fm["resource"].startswith("http://127.0.0.1:")
-    assert fm["resource"].endswith("/source")
+    source = state.catalog_source(vault, result["source_id"])
+    assert source is not None
+    assert source["check_status"] == "checked"
+    assert source["title"] == "Loopback URL"
+    assert source["resource"].startswith("http://127.0.0.1:")
+    assert source["resource"].endswith("/source")
     assert "Live local fetch text." in (vault / result["content_path"]).read_text(encoding="utf-8")
     assert b"Live local fetch text." in (vault / result["raw_path"]).read_bytes()
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
@@ -623,10 +596,10 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
 
     result = write_references_bib(vault, commit=True, machine="test-machine")
 
-    assert result["changed"] is False
+    assert result["changed"] is True
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {"journal/test-machine.jsonl", "references.bib"}
 
     (vault / "references.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)
@@ -646,26 +619,24 @@ def test_source_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
         source_id="source-stable-identity",
         machine="test-machine",
     )
-    source = vault / "catalog/sources/source-stable-identity/source.md"
-    before = sha256_file(source)
-    text = source.read_text(encoding="utf-8")
-
-    source.write_text(
-        text.replace("citekey: draftkey2026", "citekey: corrected2026"), encoding="utf-8"
-    )
-    event = observe_pi_edit(
+    capture_bibtex_source(
         vault,
-        "catalog/sources/source-stable-identity/source.md",
-        before,
+        """@article{corrected2026,
+          title = {Stable Source Identity},
+          author = {Ada, River},
+          year = {2026},
+          journal = {Journal of Testable Systems},
+          doi = {10.1000/stable.2026}
+        }""",
+        source_id="source-stable-identity",
         machine="test-machine",
     )
-    mark_checked(vault, "catalog/sources/source-stable-identity/source.md", machine="test-machine")
 
-    fm = read_frontmatter(source)
+    source = state.catalog_source(vault, "source-stable-identity")
     rendered = render_references_bib(vault)
 
-    assert event["actor"] == "pi"
-    assert fm["source_id"] == "source-stable-identity"
-    assert fm["citekey"] == "corrected2026"
+    assert source is not None
+    assert source["source_id"] == "source-stable-identity"
+    assert source["citekey"] == "corrected2026"
     assert "@article{corrected2026," in rendered
     assert "@article{draftkey2026," not in rendered
