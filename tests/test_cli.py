@@ -252,6 +252,17 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
     workspace = tmp_path / "workspace"
     replay = tmp_path / "providers.json"
     replay.write_text(json.dumps(_doi_provider_payloads()), encoding="utf-8")
+    interview_fixture = tmp_path / "interview.json"
+    interview_fixture.write_text(
+        json.dumps(
+            {
+                "prompt": "What matters?",
+                "response": "The PI cares about the methods caveat.",
+                "project_id": "knowledge/projects/project-alpha.md",
+            }
+        ),
+        encoding="utf-8",
+    )
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
 
@@ -304,12 +315,8 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
                 str(workspace),
                 "--work-id",
                 "doi-10.1000_alpha",
-                "--prompt",
-                "What matters?",
-                "--response",
-                "The PI cares about the methods caveat.",
-                "--project-id",
-                "knowledge/projects/project-alpha.md",
+                "--fixture",
+                str(interview_fixture),
                 "--json",
                 "--idempotency-key",
                 "interview-alpha",
