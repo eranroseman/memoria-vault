@@ -1341,8 +1341,12 @@ def test_cli_workspace_scan_fixture_quarantines_generated_projection(
     }
     assert scan["quarantine"]["finding_count"] == 1
     assert scan["quarantine"]["findings"][0]["target_id"] == "knowledge/index.md"
+    assert "knowledge/index.md" in scan["regeneration"]["changed"]
     assert scan["result"]["observed_count"] == 0
-    assert not (workspace / "knowledge/index.md").exists()
+    assert (workspace / "knowledge/index.md").is_file()
+    assert "direct-write-generated-projection fixture" not in (
+        workspace / "knowledge/index.md"
+    ).read_text(encoding="utf-8")
     assert (workspace / ".memoria/quarantine/knowledge/index.md").is_file()
     with state.connect(workspace) as conn:
         consumable = conn.execute(
