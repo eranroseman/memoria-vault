@@ -436,6 +436,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 "workspace": str(workspace),
                 "checks": checks,
                 "qmd_path": status["qmd_path"],
+                "qmd_source": status["qmd_source"],
+                "qmd_error": status["qmd_error"],
                 "node_version": status["node_version"],
                 "qmd_doctor_output": status["qmd_doctor_output"],
             },
@@ -1919,14 +1921,17 @@ def _zotero_csl_type(item_type: str) -> str:
 
 
 def _qmd_status(workspace: Path) -> dict[str, Any]:
-    qmd = shutil.which("qmd")
+    from memoria_vault.runtime.search_index import resolve_qmd_executable
+
+    qmd_info = resolve_qmd_executable()
+    qmd = qmd_info["path"]
     node = shutil.which("node")
     node_version = _node_version(node) if node else ""
-    doctor = _qmd_doctor_status(workspace, str(Path(qmd).resolve())) if qmd else {}
+    doctor = _qmd_doctor_status(workspace, qmd) if qmd else {}
     checks = {
         "node": node is not None,
         "node_22": _node_major(node_version) >= 22,
-        "qmd": qmd is not None,
+        "qmd": bool(qmd),
         "qmd_absolute": bool(qmd and Path(qmd).is_absolute()),
         "qmd_checked_root": (workspace / ".memoria/index/qmd/checked").is_dir(),
         "qmd_config_dir": (workspace / ".memoria/index/qmd/config").is_dir(),
@@ -1936,7 +1941,9 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
     }
     return {
         "checks": checks,
-        "qmd_path": str(Path(qmd).resolve()) if qmd else "",
+        "qmd_path": qmd,
+        "qmd_source": qmd_info["source"],
+        "qmd_error": qmd_info["error"],
         "node_version": node_version,
         "qmd_doctor_output": doctor.get("qmd_doctor_output", ""),
     }

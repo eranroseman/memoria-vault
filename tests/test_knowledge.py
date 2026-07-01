@@ -54,7 +54,12 @@ def git(vault: Path, *args: str) -> str:
 def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    qmd = bin_dir / "qmd"
+    npm_root = tmp_path / "npm-global"
+    npm_bin = npm_root / "bin"
+    npm_bin.mkdir(parents=True)
+    npm = bin_dir / "npm"
+    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
+    qmd = npm_bin / "qmd"
     qmd.write_text(
         f"#!{sys.executable}\n"
         "import json\n"
@@ -63,6 +68,7 @@ def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         "]))\n",
         encoding="utf-8",
     )
+    npm.chmod(0o755)
     qmd.chmod(0o755)
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
 

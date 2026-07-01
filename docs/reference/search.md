@@ -35,6 +35,7 @@ profiles, Obsidian, and Hermes are not required for alpha.14 search.
 | Debug mode | Raw `qmd ...` commands for index checks |
 | Access | **Read-only** — qmd never writes Concepts, catalog rows, or journal rows |
 | Baseline | qmd lexical/vector query when ready; deterministic Python BM25 fallback and eval harness in `memoria_vault.runtime.search_index` |
+| Executable | npm-global `@tobilu/qmd` by default, or an absolute `MEMORIA_QMD_BIN` override for a bundled/local qmd |
 | Required gate | `memoria doctor --check qmd` reports Node, qmd, checked-root, config, and model-cache readiness |
 
 Memoria filters qmd JSON rows back through the workspace before returning them.

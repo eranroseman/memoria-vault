@@ -1638,6 +1638,7 @@ def test_cli_doctor_qmd_checks_workspace_local_state(
     assert output["ok"] is True
     assert output["checks"]["node_22"] is True
     assert output["checks"]["qmd_absolute"] is True
+    assert output["qmd_source"] == "npm-global"
     assert output["qmd_path"].startswith(str(tmp_path))
 
 
@@ -1816,6 +1817,30 @@ def test_cli_doctor_qmd_requires_embedding_models_for_required_qmd(
     assert "model cache: missing" in output["qmd_doctor_output"]
 
 
+def test_cli_doctor_qmd_rejects_ambiguous_path_binary(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "node").write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
+    (bin_dir / "qmd").write_text(f"#!{sys.executable}\nprint('wrong qmd')\n", encoding="utf-8")
+    (bin_dir / "node").chmod(0o755)
+    (bin_dir / "qmd").chmod(0o755)
+    monkeypatch.setenv("PATH", str(bin_dir))
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert output["ok"] is False
+    assert output["checks"]["qmd"] is False
+    assert output["qmd_source"] == "path"
+    assert "MEMORIA_QMD_BIN" in output["qmd_error"]
+
+
 def test_cli_workspace_rebuild_ignores_missing_qmd_collection(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1841,10 +1866,15 @@ def test_cli_workspace_rebuild_ignores_missing_qmd_collection(
 def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    npm_root = tmp_path / "npm-global"
+    npm_bin = npm_root / "bin"
+    npm_bin.mkdir(parents=True)
     qmd_log = tmp_path / "qmd.log"
     node = bin_dir / "node"
     node.write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
-    qmd = bin_dir / "qmd"
+    npm = bin_dir / "npm"
+    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
+    qmd = npm_bin / "qmd"
     qmd.write_text(
         f"#!{sys.executable}\n"
         "import os, pathlib, sys\n"
@@ -1861,6 +1891,7 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         encoding="utf-8",
     )
     node.chmod(0o755)
+    npm.chmod(0o755)
     qmd.chmod(0o755)
     monkeypatch.setenv("QMD_LOG", str(qmd_log))
     monkeypatch.delenv("XDG_CACHE_HOME", raising=False)

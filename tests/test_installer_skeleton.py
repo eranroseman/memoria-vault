@@ -293,6 +293,15 @@ def test_installer_registers_qmd_with_workspace_local_state():
     assert "--name memoria-checked --mask '**/*.md'" in ps
 
 
+def test_installer_qmd_resolution_avoids_ambiguous_path_binary():
+    text = RUNTIME_TOOLS.read_text(encoding="utf-8")
+    assert "MEMORIA_QMD_BIN" in text
+    assert "command -v qmd" not in text
+    ps = INSTALL_PS.read_text(encoding="utf-8")
+    assert "MEMORIA_QMD_BIN" in ps
+    assert "Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')" not in ps
+
+
 def test_zotero_left_the_installer():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ensure_zotero" not in text and "zotero_plugins" not in text

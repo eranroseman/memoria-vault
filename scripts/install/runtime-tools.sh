@@ -5,9 +5,12 @@
 # Prefer the npm-global qmd binary: an unrelated conda package also installs qmd.
 resolve_qmd() {
   local npm_qmd=""
+  if [ -n "${MEMORIA_QMD_BIN:-}" ]; then
+    if [ -x "$MEMORIA_QMD_BIN" ]; then printf '%s' "$MEMORIA_QMD_BIN"; fi
+    return
+  fi
   if have npm; then npm_qmd="$(npm prefix -g 2>/dev/null)/bin/qmd"; fi
   if [ -n "$npm_qmd" ] && [ -x "$npm_qmd" ]; then printf '%s' "$npm_qmd"; return; fi
-  command -v qmd 2>/dev/null || printf 'qmd'
 }
 
 ensure_qmd() {

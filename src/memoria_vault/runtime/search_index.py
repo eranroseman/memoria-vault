@@ -21,6 +21,70 @@ from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe
 
 QMD_INPUT_ROOT = ".memoria/index/qmd/checked"
 QMD_MANIFEST = ".memoria/index/qmd/manifest.json"
+QMD_BIN_ENV = "MEMORIA_QMD_BIN"
+
+
+def resolve_qmd_executable() -> dict[str, str]:
+    explicit = os.environ.get(QMD_BIN_ENV, "").strip()
+    if explicit:
+        path = Path(explicit).expanduser()
+        if not path.is_absolute():
+            return {"path": "", "source": QMD_BIN_ENV, "error": f"{QMD_BIN_ENV} must be absolute"}
+        if not _is_executable(path):
+            return {
+                "path": "",
+                "source": QMD_BIN_ENV,
+                "error": f"{QMD_BIN_ENV} is not executable: {path}",
+            }
+        return {"path": str(path.resolve()), "source": QMD_BIN_ENV, "error": ""}
+
+    npm_qmd = _npm_global_qmd()
+    if npm_qmd and _is_executable(npm_qmd):
+        return {"path": str(npm_qmd.resolve()), "source": "npm-global", "error": ""}
+
+    path_qmd = shutil.which("qmd")
+    if path_qmd:
+        resolved = Path(path_qmd).resolve()
+        return {
+            "path": "",
+            "source": "path",
+            "error": (
+                f"qmd found at {resolved}; set {QMD_BIN_ENV} to an absolute qmd path "
+                "or install @tobilu/qmd globally with npm"
+            ),
+        }
+    return {"path": "", "source": "", "error": "qmd not found"}
+
+
+def _npm_global_qmd() -> Path | None:
+    npm = shutil.which("npm")
+    if not npm:
+        return None
+    try:
+        proc = subprocess.run(
+            [npm, "prefix", "-g"],
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    prefix = proc.stdout.strip().splitlines()
+    if proc.returncode != 0 or not prefix:
+        return None
+    root = Path(prefix[0]).expanduser()
+    candidates = (
+        root / "qmd.cmd",
+        root / "qmd.exe",
+        root / "bin" / "qmd",
+        root / "qmd",
+    )
+    return next((path for path in candidates if _is_executable(path)), None)
+
+
+def _is_executable(path: Path) -> bool:
+    return path.is_file() and os.access(path, os.X_OK)
 
 
 def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -> dict[str, Any]:
@@ -202,7 +266,7 @@ def _answer_from_hits(
 def _qmd_query_hits(
     vault: Path, query: str, *, k: int, include_stale: bool
 ) -> list[tuple[str, float]] | None:
-    qmd = shutil.which("qmd")
+    qmd = resolve_qmd_executable()["path"]
     if not qmd or include_stale or not (vault / QMD_MANIFEST).is_file():
         return None
     text = " ".join(query.split())
@@ -211,7 +275,7 @@ def _qmd_query_hits(
     try:
         proc = subprocess.run(
             [
-                str(Path(qmd).resolve()),
+                qmd,
                 "query",
                 f"lex: {text}\nvec: {text}",
                 "--no-rerank",
