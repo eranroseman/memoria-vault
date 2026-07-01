@@ -117,6 +117,51 @@ def test_alpha14_cli_command_surface_is_exact() -> None:
     }
 
 
+def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = main(["init", "--workspace", str(workspace), "--dry-run", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["dry_run"] is True
+    assert output["workspace"] == str(workspace)
+    assert output["workspace_exists"] is False
+    assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
+    assert "capabilities" in output["skeleton"]["directories"]
+    assert ".memoria/index/qmd/checked" in output["skeleton"]["missing"]
+    assert output["package"]["seed_files"] == ["steering.md", "system/vocabulary.md"]
+    assert "capabilities" in output["package"]["seed_trees"]
+    assert {
+        "index.md",
+        "catalog/index.md",
+        "knowledge/index.md",
+        "capabilities/index.md",
+        "references.bib",
+        "capabilities/_generated/capability-index.json",
+    } <= set(output["generated_targets"])
+    assert output["concepts"] == {
+        "steering": "steering.md",
+        "vocabulary": "system/vocabulary.md",
+    }
+    assert output["qmd"] == {
+        "collection": "memoria-checked",
+        "checked_root": ".memoria/index/qmd/checked",
+        "config_dir": ".memoria/index/qmd/config",
+        "index_path": ".memoria/index/qmd/index.sqlite",
+        "mask": "**/*.md",
+    }
+    assert output["provider_config"] == {
+        "path": ".memoria/config/providers.yaml",
+        "seeded": True,
+        "exists": False,
+    }
+    assert not workspace.exists()
+
+
 def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

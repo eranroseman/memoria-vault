@@ -398,7 +398,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     workspace = Path(args.workspace or ".").resolve()
     created = _workspace_plan(workspace)
     if args.dry_run:
-        return _emit({"workspace": str(workspace), "would_create": created}, args)
+        return _emit(_init_dry_run_report(workspace, created), args)
     if not args.yes and workspace.exists() and any(workspace.iterdir()):
         return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
     workspace.mkdir(parents=True, exist_ok=True)
@@ -1431,6 +1431,52 @@ def _workspace_plan(workspace: Path) -> list[str]:
         ".memoria/index/qmd/checked",
         ".memoria/index/qmd/config",
     ]
+
+
+def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, Any]:
+    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+
+    seed_trees = [target for _, target in SEED_TREES]
+    seed_files = [target for _, target in SEED_FILES]
+    qmd = {
+        "collection": "memoria-checked",
+        "checked_root": ".memoria/index/qmd/checked",
+        "config_dir": ".memoria/index/qmd/config",
+        "index_path": ".memoria/index/qmd/index.sqlite",
+        "mask": "**/*.md",
+    }
+    return {
+        "ok": True,
+        "dry_run": True,
+        "workspace": str(workspace),
+        "workspace_exists": workspace.exists(),
+        "would_create": planned_dirs,
+        "skeleton": {
+            "directories": planned_dirs,
+            "existing": [rel for rel in planned_dirs if (workspace / rel).is_dir()],
+            "missing": [rel for rel in planned_dirs if not (workspace / rel).is_dir()],
+        },
+        "db": {
+            "path": state.db_path(workspace).relative_to(workspace).as_posix(),
+            "exists": state.db_path(workspace).is_file(),
+        },
+        "package": {
+            "seed_trees": seed_trees,
+            "seed_files": seed_files,
+            "version": _package_version(),
+        },
+        "generated_targets": list(TRACKED_PROJECTION_PATHS),
+        "concepts": {
+            "steering": "steering.md",
+            "vocabulary": "system/vocabulary.md",
+        },
+        "qmd": qmd,
+        "provider_config": {
+            "path": ".memoria/config/providers.yaml",
+            "seeded": ".memoria/config" in seed_trees,
+            "exists": (workspace / ".memoria/config/providers.yaml").is_file(),
+        },
+    }
 
 
 def _seed_workspace(workspace: Path, *, overwrite: bool) -> None:
