@@ -123,4 +123,4 @@ Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live f
 
 - Routes, states, and failure modes: [Export routes and formats](../../reference/export.md)
 - The generated `.bib` behind the bibliography: [Set up Zotero](../setup/set-up-zotero.md)
-- The works-cited backbone: [Bibliography](../../reference/bibliography.md)
+- The works-cited projection: [Bibliography](../../reference/bibliography.md)

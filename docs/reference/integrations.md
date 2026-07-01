@@ -13,7 +13,7 @@ source of truth.
 
 ---
 
-## Bibliographic backbone
+## Bibliographic inputs and projections
 
 | Integration | Role | Notes |
 |---|---|---|

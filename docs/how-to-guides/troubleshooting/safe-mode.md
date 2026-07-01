@@ -29,8 +29,8 @@ hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
 Inspector or rerun the worker operation that writes `references.bib` from
 checked SQLite catalog rows.
 
-**Never run automatically:** a schema reshape. Alpha.11 has no runtime migration
-path; schema changes are release work against the fresh template.
+**Never run automatically:** a schema reshape. Schema changes are release work
+against the fresh template.
 
 ---
 

@@ -28,7 +28,11 @@ The distribution mechanism is `vault-template/` plus the hashed `<vault>/.memori
 
 Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profile-capabilities.md).
 
-One installer-specific sequencing choice worth calling out: Zotero deliberately *left* the installer — it is the PI's bibliographic-backbone choice, not core provisioning, so its setup moved to the tutorial. Hermes likewise moved behind `--with-hermes` / `-WithHermes` because the core runtime is the standalone CLI and engine.
+One installer-specific sequencing choice worth calling out: Zotero deliberately
+*left* the installer — it is an optional import/export adapter, not core
+provisioning, so its setup moved to the tutorial. Hermes likewise moved behind
+`--with-hermes` / `-WithHermes` because the core runtime is the standalone CLI
+and engine.
 
 The install contract is narrow: fresh install by default, idempotent adapter
 redeploy for source/secret changes, detect-then-install, no clobbering user
