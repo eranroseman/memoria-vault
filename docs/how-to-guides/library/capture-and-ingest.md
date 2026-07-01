@@ -6,10 +6,11 @@ grand_parent: How-to guides
 
 # Capture and ingest a source
 
-Alpha.11 capture creates a checked source Concept under
-`catalog/sources/<source_id>/` through the worker/trusted-writer path. The
-CLI ships URL and PDF capture controls; the same backend also supports direct
-BibTeX, CSL JSON, Zotero export, and raw-content helpers.
+Capture always enters through a SQLite worker request. DOI/ISBN, BibTeX, CSL
+JSON, and Zotero exported-item imports stage unchecked catalog Work rows under
+`.memoria/memoria.sqlite` plus durable blobs under `.memoria/blobs/source-content/`.
+URL, PDF, and already-supplied non-enrichment text can still produce checked
+source Concepts after the worker checks them.
 
 **1. Capture a URL from the CLI.**
 
@@ -20,17 +21,16 @@ memoria work capture --workspace <vault> --url https://example.test/source
 The CLI writes one SQLite request for `capture-url-source`; the worker fetches,
 normalizes, checks, commits, and journals the source.
 
-**2. Use backend capture helpers for non-URL inputs.**
+**2. Import portable bibliographic files.**
 
-For scripts or tests, call the capture operation with a stable `source_id`,
-title, description, raw bytes or raw text, and extracted markdown text. The
-direct helper is `memoria_vault.runtime.capture.capture_source()`. Adapters
-exist for one BibTeX entry, one Zotero Local API item JSON snapshot, one Zotero
-local item key, one URL snapshot, and raw PDF bytes.
+Use `memoria work import --format bibtex|csl|zotero-export --file <path>` for
+portable metadata. Imports write unchecked Work rows and queue DOI enrichment
+when a DOI is present. They do not fetch from Zotero, create source/entity
+Markdown, or update `references.bib` at import time.
 
-**3. Confirm the catalog files.**
+**3. Confirm checked source files, when the route creates them.**
 
-The capture writes:
+Checked non-enrichment captures write:
 
 - `catalog/sources/<source_id>/source.md`
 - `catalog/sources/<source_id>/content.md`
@@ -38,6 +38,9 @@ The capture writes:
 
 The `source.md` frontmatter includes `raw_copy_path`, `content_path`,
 `raw_text_sha256`, and `normalized_text_sha256`.
+
+For staged Work imports, confirm the row in `.memoria/memoria.sqlite` and the
+blob paths under `.memoria/blobs/source-content/<source_id>/`.
 
 **4. Confirm the trace.**
 
@@ -47,8 +50,8 @@ gitignored and synced out of band.
 
 ## Deferred UI
 
-Live Zotero selection capture in Obsidian remains follow-on work. Alpha.11
-assumes Zotero is used for imports only; annotation import is deferred.
+Live Zotero selection capture and annotation import are not part of the
+standalone alpha.14 runtime.
 
 ## Related
 

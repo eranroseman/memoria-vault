@@ -1,4 +1,4 @@
-"""Minimal alpha.11 source capture pipeline."""
+"""Source capture and catalog staging helpers."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote, urlparse
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from memoria_vault.runtime import state
@@ -437,17 +437,16 @@ def capture_zotero_source(
     raw_filename: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
-    required_checks: Iterable[str] | None = None,
 ) -> dict[str, Any]:
-    """Capture one Zotero Local API item snapshot."""
-    data = item.get("data")
+    """Stage one Zotero exported item snapshot as an unchecked catalog row."""
+    data = item.get("data") if isinstance(item.get("data"), dict) else item
     if not isinstance(data, dict):
-        raise ValueError("Zotero item must include a data object")
+        raise ValueError("Zotero export item must be an object")
     key = str(item.get("key") or data.get("key") or "").strip()
     if not key:
-        raise ValueError("Zotero item key is required")
+        raise ValueError("Zotero export item key is required")
     if str(data.get("itemType") or "").lower() == "annotation":
-        raise ValueError("Zotero annotation import is out of alpha.11 scope")
+        raise ValueError("Zotero annotation import is not supported")
 
     title = str(data.get("title") or key).strip()
     item_type = _zotero_item_type(str(data.get("itemType") or ""))
@@ -460,7 +459,7 @@ def capture_zotero_source(
     )
     identifiers = _zotero_identifiers(data)
     csl_json = _zotero_csl_json(key, data)
-    return capture_source(
+    return stage_catalog_source(
         vault,
         stable_id,
         title,
@@ -478,7 +477,6 @@ def capture_zotero_source(
         machine=machine,
         run_id=run_id or f"capture-zotero:{key}",
         workflow="capture_zotero_source",
-        required_checks=required_checks,
     )
 
 
@@ -490,38 +488,6 @@ def _zotero_metadata_snapshot(item: dict[str, Any]) -> dict[str, Any]:
             key: value for key, value in data.items() if not key.lower().startswith("annotation")
         }
     return snapshot
-
-
-def capture_zotero_local_source(
-    vault: Path,
-    item_key: str,
-    *,
-    local_api_base: str = "http://localhost:23119/api/users/0",
-    timeout: float = 5.0,
-    content_text: str | None = None,
-    source_id: str | None = None,
-    description: str | None = None,
-    raw_filename: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
-    required_checks: Iterable[str] | None = None,
-) -> dict[str, Any]:
-    """Fetch one Zotero Local API item by key, then capture its JSON snapshot."""
-    key = item_key.strip()
-    if not key:
-        raise ValueError("Zotero item key is required")
-    item = _zotero_local_item(key, local_api_base=local_api_base, timeout=timeout)
-    return capture_zotero_source(
-        vault,
-        item,
-        content_text=content_text,
-        source_id=source_id,
-        description=description,
-        raw_filename=raw_filename,
-        machine=machine,
-        run_id=run_id,
-        required_checks=required_checks,
-    )
 
 
 def capture_url_source(
@@ -1268,27 +1234,6 @@ def _zotero_citekey(data: dict[str, Any]) -> str:
     extra = str(data.get("extra") or "")
     match = re.search(r"(?im)^\s*(?:citation key|citekey|bibtex)\s*:\s*(\S+)", extra)
     return match.group(1) if match else ""
-
-
-def _zotero_local_item(
-    item_key: str,
-    *,
-    local_api_base: str,
-    timeout: float,
-) -> dict[str, Any]:
-    url = f"{local_api_base.rstrip('/')}/items/{quote(item_key, safe='')}"
-    try:
-        item = _read_zotero_json(url, timeout)
-    except OSError as exc:
-        raise RuntimeError(f"Zotero Local API fetch failed for item {item_key}") from exc
-    if not isinstance(item, dict):
-        raise ValueError("Zotero Local API item response must be an object")
-    return item
-
-
-def _read_zotero_json(url: str, timeout: float) -> Any:
-    with urlopen(url, timeout=timeout) as response:
-        return json.load(response)
 
 
 def _read_url_bytes(url: str, timeout: float) -> bytes:

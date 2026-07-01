@@ -284,20 +284,16 @@
       "type": "operation"
     },
     {
-      "allowed_network": [
-        "http://localhost:23119/",
-        "http://127.0.0.1:23119/"
-      ],
+      "allowed_network": [],
       "allowed_paths": [
-        "catalog/",
-        "journal/",
-        "references.bib"
+        ".memoria/blobs/source-content/",
+        "journal/"
       ],
       "allowed_tools": [
         "trusted_writer"
       ],
       "check_status": "checked",
-      "description": "Capture a Zotero item or Zotero Local API item key as a checked source.",
+      "description": "Stage one exported Zotero item as an unchecked catalog Work seed.",
       "id": "capture-zotero-source",
       "model": "deterministic-fixture",
       "operation_id": "capture-zotero-source",
@@ -309,13 +305,13 @@
       "risk_class": "medium",
       "runner": "local",
       "tags": [
-        "alpha11",
+        "alpha14",
         "capture",
         "zotero"
       ],
       "title": "Capture Zotero source",
       "trust": {
-        "sha256": "sha256:2306fce4f92c3a5e92b793e27eb28837f511951a8d37287d484189cc7b1fe8ff",
+        "sha256": "sha256:406d5284537060486fd40ede45f5a594e008b266c037d5c9e29695bdbb2e379c",
         "source": "local"
       },
       "type": "operation"
