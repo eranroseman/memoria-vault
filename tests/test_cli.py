@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.cli import main
+from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import append_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -27,6 +27,26 @@ def _assert_alpha14_request_columns(columns: set[str]) -> None:
     assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
 
 
+def _cli_command_surface() -> set[str]:
+    parser = _build_parser()
+    command_action = next(
+        action for action in parser._actions if getattr(action, "dest", None) == "command"
+    )
+    commands: set[str] = set()
+    for name, subparser in command_action.choices.items():
+        child_action = next(
+            (action for action in subparser._actions if getattr(action, "choices", None)),
+            None,
+        )
+        if child_action is None:
+            commands.add(f"memoria {name}")
+            continue
+        if not getattr(child_action, "required", False):
+            commands.add(f"memoria {name}")
+        commands.update(f"memoria {name} {child}" for child in child_action.choices)
+    return commands
+
+
 def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as exc:
         main(["--help"])
@@ -39,6 +59,62 @@ def test_pyproject_exposes_memoria_console_script() -> None:
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
     assert data["project"]["scripts"]["memoria"] == "memoria_vault.cli:main"
+
+
+def test_alpha14_cli_command_surface_is_exact() -> None:
+    assert _cli_command_surface() == {
+        "memoria init",
+        "memoria status",
+        "memoria doctor",
+        "memoria doctor bundle",
+        "memoria doctor self-test",
+        "memoria ask",
+        "memoria work capture",
+        "memoria work import",
+        "memoria work enrich",
+        "memoria work digest",
+        "memoria work interview",
+        "memoria work update",
+        "memoria note capture",
+        "memoria note propose",
+        "memoria note accept",
+        "memoria note reject",
+        "memoria note link",
+        "memoria project ask",
+        "memoria project trace",
+        "memoria project gaps",
+        "memoria project suggest-hubs",
+        "memoria project export",
+        "memoria request answer",
+        "memoria request amend",
+        "memoria request cancel",
+        "memoria request retry",
+        "memoria request resume",
+        "memoria request list",
+        "memoria request show",
+        "memoria attention list",
+        "memoria attention show",
+        "memoria attention resolve",
+        "memoria attention worklist",
+        "memoria operation list",
+        "memoria operation run",
+        "memoria steering show",
+        "memoria steering edit",
+        "memoria vocabulary list",
+        "memoria vocabulary add",
+        "memoria vocabulary rename",
+        "memoria journal list",
+        "memoria journal show",
+        "memoria workspace scan",
+        "memoria workspace run",
+        "memoria workspace recover",
+        "memoria workspace rollback",
+        "memoria workspace check",
+        "memoria workspace rebuild",
+        "memoria workspace export",
+        "memoria eval run",
+        "memoria eval seeded-error-verdict",
+    }
 
 
 def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
@@ -495,59 +571,6 @@ def test_cli_project_trace_and_export_markdown(
         ("project-export", "export-project"),
         ("project-trace", "analyze-project-argument"),
     ]
-
-
-def test_cli_project_create_makes_exportable_checked_project(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    workspace = tmp_path / "workspace"
-    export_path = tmp_path / "project.md"
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-
-    assert (
-        main(
-            [
-                "project",
-                "create",
-                "--workspace",
-                str(workspace),
-                "p1",
-                "--title",
-                "Project One",
-                "--description",
-                "Seed project.",
-                "--json",
-            ]
-        )
-        == 0
-    )
-    created = json.loads(capsys.readouterr().out)
-    assert created["project_path"] == "knowledge/projects/p1.md"
-    project_fm = read_frontmatter(workspace / "knowledge/projects/p1.md")
-    assert project_fm["check_status"] == "checked"
-    assert project_fm["standing"] == "current"
-
-    assert (
-        main(
-            [
-                "project",
-                "export",
-                "--workspace",
-                str(workspace),
-                "p1",
-                "--format",
-                "markdown",
-                "--output",
-                str(export_path),
-                "--json",
-            ]
-        )
-        == 0
-    )
-    exported = json.loads(capsys.readouterr().out)
-    assert exported["result"]["project_path"] == "knowledge/projects/p1.md"
-    assert "# Project One" in export_path.read_text(encoding="utf-8")
 
 
 def test_cli_note_candidate_accept_and_link_flow(

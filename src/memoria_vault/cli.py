@@ -188,12 +188,6 @@ def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     project = sub.add_parser("project")
     project_sub = project.add_subparsers(dest="project_command", required=True)
-    create = project_sub.add_parser("create")
-    _common(create)
-    create.add_argument("project_id")
-    create.add_argument("--title", default="")
-    create.add_argument("--description", default="")
-    create.set_defaults(handler=_cmd_project_create)
     ask = project_sub.add_parser("ask")
     _common(ask)
     ask.add_argument("project_id")
@@ -635,52 +629,6 @@ def _cmd_project_ask(args: argparse.Namespace) -> int:
         ),
         args,
     )
-
-
-def _cmd_project_create(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.policy.paths import normalize_path
-    from memoria_vault.runtime.time import now_iso
-    from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-    from memoria_vault.runtime.vaultio import write_frontmatter_doc
-
-    workspace = _workspace(args)
-    rel = normalize_path(args.project_id)
-    if "/" not in rel:
-        rel = f"knowledge/projects/{safe_filename(rel).strip('._-') or 'project'}.md"
-    elif not rel.endswith(".md"):
-        rel += ".md"
-    if not rel.startswith("knowledge/projects/"):
-        return _fail(f"project must live under knowledge/projects: {rel}", json_output=args.json)
-    target = workspace / rel
-    if target.exists():
-        return _fail(f"project already exists: {rel}", json_output=args.json)
-    title = args.title.strip() or Path(rel).stem.replace("-", " ").title()
-    description = args.description.strip() or title
-    frontmatter = {
-        "id": rel.removesuffix(".md"),
-        "type": "project",
-        "title": title,
-        "check_status": "checked",
-        "standing": "current",
-        "description": description,
-        "created": now_iso(),
-    }
-    write_frontmatter_doc(workspace / rel, frontmatter, description, create_parent=True)
-    event = append_journal_event(
-        workspace,
-        {
-            "event": "project_created",
-            "operation": "project-create",
-            "output_id": rel,
-            "actor": "pi",
-        },
-        machine="memoria-cli",
-    )
-    commit = commit_writer_changes(
-        workspace, f"create project {Path(rel).stem}", [rel], machine="memoria-cli"
-    )
-    return _emit({"ok": True, "project_path": rel, "event": event, "commit": commit}, args)
 
 
 def _cmd_project_gaps(args: argparse.Namespace) -> int:
