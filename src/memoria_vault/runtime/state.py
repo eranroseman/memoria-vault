@@ -473,6 +473,7 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
         citekey=str(frontmatter.get("citekey") or csl_json.get("id") or ""),
         csl_json=csl_json,
         metadata_status=str(frontmatter.get("metadata_status") or "partial"),
+        text_status=str(frontmatter.get("text_status") or "metadata-only"),
         check_status=str(frontmatter.get("check_status") or "unchecked"),
         content_hash=str(frontmatter.get("normalized_text_sha256") or ""),
         raw_hash=str(frontmatter.get("raw_text_sha256") or ""),
@@ -494,6 +495,7 @@ def upsert_catalog_record(
     citekey: str = "",
     csl_json: dict[str, Any] | None = None,
     metadata_status: str = "partial",
+    text_status: str = "metadata-only",
     check_status: str = "unchecked",
     content_hash: str = "",
     raw_hash: str = "",
@@ -518,13 +520,14 @@ def upsert_catalog_record(
                 citekey,
                 csl_json,
                 metadata_status,
+                text_status,
                 check_status,
                 content_hash,
                 raw_hash,
                 content_path,
                 raw_path
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(source_id) DO UPDATE SET
                 concept_path = excluded.concept_path,
                 doi = excluded.doi,
@@ -535,6 +538,7 @@ def upsert_catalog_record(
                 citekey = excluded.citekey,
                 csl_json = excluded.csl_json,
                 metadata_status = excluded.metadata_status,
+                text_status = excluded.text_status,
                 check_status = excluded.check_status,
                 content_hash = excluded.content_hash,
                 raw_hash = excluded.raw_hash,
@@ -554,6 +558,7 @@ def upsert_catalog_record(
                 citekey,
                 _json(csl_json),
                 metadata_status,
+                text_status,
                 check_status,
                 content_hash,
                 raw_hash,
@@ -928,6 +933,8 @@ def _init(conn: sqlite3.Connection) -> None:
             csl_json TEXT NOT NULL DEFAULT '{}',
             metadata_status TEXT NOT NULL
                 CHECK (metadata_status IN ('verified', 'partial', 'unverified', 'not-indexed')),
+            text_status TEXT NOT NULL
+                CHECK (text_status IN ('full-text', 'abstract-only', 'metadata-only')),
             check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
             content_hash TEXT NOT NULL DEFAULT '',
             raw_hash TEXT NOT NULL DEFAULT '',
@@ -1047,6 +1054,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "citekey": row["citekey"],
         "csl_json": json.loads(row["csl_json"] or "{}"),
         "metadata_status": row["metadata_status"],
+        "text_status": row["text_status"],
         "check_status": row["check_status"],
         "normalized_text_sha256": row["content_hash"],
         "raw_text_sha256": row["raw_hash"],

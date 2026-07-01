@@ -146,6 +146,7 @@ def compile_source_digest(
 
     source_rel = f"catalog/sources/{source_id}/source.md"
     source_fm = _checked_source(vault, source_rel)
+    _require_digestable_text(source_fm)
     if (vault / source_rel).is_file():
         state.upsert_catalog_source(vault, source_rel, source_fm)
     citation = state.compact_citation(vault, source_rel)
@@ -331,9 +332,18 @@ def _checked_source(vault: Path, source_rel: str) -> dict[str, Any]:
         "citekey": row.get("citekey") or "",
         "csl_json": row.get("csl_json") or {},
         "metadata_status": row.get("metadata_status") or "partial",
+        "text_status": row.get("text_status") or "metadata-only",
         "normalized_text_sha256": row.get("normalized_text_sha256") or "",
         "raw_text_sha256": row.get("raw_text_sha256") or "",
     }
+
+
+def _require_digestable_text(source_fm: dict[str, Any]) -> None:
+    text_status = str(source_fm.get("text_status") or "metadata-only")
+    if text_status != "full-text":
+        raise ValueError(
+            f"checked digest requires full-text source content; text_status is {text_status}"
+        )
 
 
 def _source_input_sha(vault: Path, source_rel: str, source_fm: dict[str, Any]) -> str:

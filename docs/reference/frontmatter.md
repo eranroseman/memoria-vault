@@ -81,6 +81,7 @@ Generated from `vault-template/.memoria/schemas/types`.
 | `source` | `item_type` | `article` · `book` · `webpage` · `dataset` · `repository` · `software` · `audio` · `video` · `note` · `report` |
 | `source` | `lifecycle` | `current` · `retracted` · `archived` |
 | `source` | `metadata_status` | `verified` · `partial` · `unverified` · `not-indexed` |
+| `source` | `text_status` | `full-text` · `abstract-only` · `metadata-only` |
 | `venue` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `digest` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `digest` | `confidence` | `high` · `medium` · `low` |
@@ -101,7 +102,7 @@ Generated from `vault-template/.memoria/schemas/types`.
 | --- | --- | --- | --- |
 | `organization` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
 | `person` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `source` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `links` · `tags` |
+| `source` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `text_status` · `links` · `tags` |
 | `venue` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
 | `digest` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
 | `hub` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `citations` · `tags` |

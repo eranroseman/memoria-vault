@@ -132,14 +132,21 @@ def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) 
     assert done["status"] == "done"
     assert done["check_status"] == "unchecked"
     assert done["source_id"] == "source-alpha"
+    assert done["text_status"] == "full-text"
     assert done["content_path"].startswith(".memoria/blobs/source-content/source-alpha/")
     assert not (vault / "catalog/sources/source-alpha/source.md").exists()
     assert not (vault / "references.bib").exists()
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT title, doi, check_status, content_path FROM catalog_sources"
+            "SELECT title, doi, check_status, text_status, content_path FROM catalog_sources"
         ).fetchone()
-    assert tuple(row) == ("Alpha Source", "10.1000/alpha", "unchecked", done["content_path"])
+    assert tuple(row) == (
+        "Alpha Source",
+        "10.1000/alpha",
+        "unchecked",
+        "full-text",
+        done["content_path"],
+    )
 
 
 def test_enrich_source_manifest_and_provider_allowlist_agree() -> None:
@@ -263,6 +270,40 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert materialization["materialization_status"] == "materialized"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl", "references.bib"}
+
+
+def test_digest_blocks_enriched_abstract_only_source(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    payload = {
+        **doi_payload(),
+        "content_text": "Only the abstract.",
+        "text_status": "abstract-only",
+    }
+    enqueue_operation(vault, "capture-source", payload=payload, idempotency_key="capture-alpha")
+    run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        idempotency_key="enrich-alpha",
+    )
+    run_next_job(vault, machine="test-machine")
+
+    enqueue_operation(
+        vault,
+        "compile-source-digest",
+        payload={
+            "source_id": "source-alpha",
+            "hub_topics": ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+        },
+        idempotency_key="digest-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "failed"
+    assert "text_status is abstract-only" in done["error"]
+    assert not (vault / "knowledge/digests/source-alpha.md").exists()
 
 
 def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:

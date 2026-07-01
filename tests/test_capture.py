@@ -171,8 +171,10 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     )
 
     assert result["content_path"] == "catalog/sources/pdf-source/content.md"
+    assert result["text_status"] == "full-text"
     assert "## Page 3" in (vault / result["content_path"]).read_text(encoding="utf-8")
     fm = read_frontmatter(vault / result["source_path"])
+    assert fm["text_status"] == "full-text"
     assert fm["raw_copy_path"] == "catalog/sources/pdf-source/raw/paper.pdf"
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
@@ -240,6 +242,7 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
     assert fm["check_status"] == "checked"
     assert fm["title"] == "Harnessed Workflows for Durable Research"
     assert fm["citekey"] == "harness2026"
+    assert fm["text_status"] == "abstract-only"
     assert fm["resource"] == "https://doi.org/10.1000/harness.2026"
     assert fm["identifiers"] == {"doi": "10.1000/harness.2026"}
     assert fm["csl_json"]["author"] == [

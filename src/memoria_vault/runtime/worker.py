@@ -742,6 +742,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "identifiers": identifiers,
             "csl_json": csl_json,
             "metadata_status": str(payload.get("metadata_status") or "partial"),
+            "text_status": str(payload.get("text_status") or "full-text"),
             "citekey": str(payload.get("citekey") or ""),
             "machine": machine,
             "run_id": str(payload.get("run_id") or "") or None,
@@ -762,6 +763,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 "source_id": result["source_id"],
                 "content_path": result["content_path"],
                 "raw_path": result["raw_path"],
+                "text_status": result["text_status"],
                 "check_status": result["check_status"],
             }
         result = capture_source(
@@ -778,6 +780,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "source_path": result["source_path"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
+            "text_status": result["text_status"],
             "entity_paths": result["entity_paths"],
         }
     if operation_id == "enrich-source":
@@ -833,6 +836,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "source_path": result["source_path"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
+            "text_status": result["text_status"],
             "entity_paths": result["entity_paths"],
         }
     if operation_id == "capture-zotero-source":
@@ -890,6 +894,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "source_path": result["source_path"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
+            "text_status": result["text_status"],
             "entity_paths": result["entity_paths"],
         }
     if operation_id == "capture-url-source":
@@ -921,6 +926,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "commit": result["commit"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
+            "text_status": result["text_status"],
         }
         if "source_path" in result:
             output["source_path"] = result["source_path"]
@@ -975,6 +981,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "commit": result["commit"],
             "content_path": result["content_path"],
             "raw_path": result["raw_path"],
+            "text_status": result["text_status"],
         }
         if "source_path" in result:
             output["source_path"] = result["source_path"]

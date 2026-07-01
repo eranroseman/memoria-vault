@@ -503,6 +503,7 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
     title = args.title or args.doi or args.url or Path(args.file or args.pdf).stem
     description = args.description or f"Captured work: {title}"
     text = args.text or ""
+    text_status = "full-text" if args.text else "metadata-only"
     raw_text = None
     raw_filename = "source.txt"
     resource = args.url or (f"https://doi.org/{args.doi}" if args.doi else "")
@@ -511,6 +512,7 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
     if args.file:
         path = Path(args.file)
         text = path.read_text(encoding="utf-8")
+        text_status = "full-text"
         raw_text = text
         raw_filename = path.name
     if not text:
@@ -530,6 +532,7 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
                 "identifiers": identifiers,
                 "csl_json": _csl_json(source_id, title, args.doi, resource),
                 "stage_only": bool(args.file),
+                "text_status": text_status,
             },
         ),
         args,
@@ -622,6 +625,7 @@ def _cmd_work_update(args: argparse.Namespace) -> int:
         citekey=args.citekey if args.citekey is not None else source["citekey"],
         csl_json=csl_json,
         metadata_status=args.metadata_status or source["metadata_status"],
+        text_status=source["text_status"],
         check_status=args.check_status or source["check_status"],
         content_hash=source["normalized_text_sha256"],
         raw_hash=source["raw_text_sha256"],

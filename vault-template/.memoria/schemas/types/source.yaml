@@ -7,6 +7,7 @@ enums:
   lifecycle: [current, retracted, archived]
   item_type: [article, book, webpage, dataset, repository, software, audio, video, note, report]
   metadata_status: [verified, partial, unverified, not-indexed]
+  text_status: [full-text, abstract-only, metadata-only]
 required:
   type: literal:source
   check_status: enum:check_status
@@ -25,5 +26,6 @@ optional:
   raw_text_sha256: str
   normalized_text_sha256: str
   metadata_status: enum:metadata_status
+  text_status: enum:text_status
   links: map
   tags: list

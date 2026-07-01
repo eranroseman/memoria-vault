@@ -259,6 +259,8 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
                 "10.1000/alpha",
                 "--title",
                 "Alpha Source",
+                "--text",
+                "Alpha full text about framing, methods, outcomes, gaps, and impact.",
                 "--json",
                 "--idempotency-key",
                 "capture-alpha",

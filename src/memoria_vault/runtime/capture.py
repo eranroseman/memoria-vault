@@ -37,6 +37,21 @@ def source_requires_enrichment(
     )
 
 
+def _normalize_text_status(value: str) -> str:
+    status = str(value or "full-text").strip().lower()
+    if status not in {"full-text", "abstract-only", "metadata-only"}:
+        raise ValueError("text_status must be full-text, abstract-only, or metadata-only")
+    return status
+
+
+def _fallback_text_status(content_text: str | None, abstract: str | None) -> str:
+    if content_text and content_text.strip():
+        return "full-text"
+    if abstract and abstract.strip():
+        return "abstract-only"
+    return "metadata-only"
+
+
 def stage_catalog_source(
     vault: Path,
     source_id: str,
@@ -51,6 +66,7 @@ def stage_catalog_source(
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
     metadata_status: str = "partial",
+    text_status: str = "full-text",
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
@@ -63,6 +79,7 @@ def stage_catalog_source(
         raise ValueError("title and description are required")
     if not content_text.strip():
         raise ValueError("content_text is required")
+    text_status = _normalize_text_status(text_status)
     run_id = run_id or f"capture:{source_id}"
 
     started = append_journal_event(
@@ -91,6 +108,7 @@ def stage_catalog_source(
         citekey=citekey,
         csl_json=csl_json,
         metadata_status=metadata_status,
+        text_status=text_status,
         check_status="unchecked",
         content_hash=content_sha,
         raw_hash=raw_sha,
@@ -118,6 +136,7 @@ def stage_catalog_source(
         "raw_path": raw_rel,
         "raw_sha256": raw_sha,
         "content_sha256": content_sha,
+        "text_status": text_status,
         "check_status": "unchecked",
         "started": started,
         "finished": finished,
@@ -139,6 +158,7 @@ def capture_source(
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
     metadata_status: str = "partial",
+    text_status: str = "full-text",
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
@@ -153,6 +173,7 @@ def capture_source(
         raise ValueError("title and description are required")
     if not content_text.strip():
         raise ValueError("content_text is required")
+    text_status = _normalize_text_status(text_status)
     run_id = run_id or f"capture:{source_id}"
 
     started = append_journal_event(
@@ -192,6 +213,7 @@ def capture_source(
         "raw_text_sha256": raw_sha,
         "normalized_text_sha256": content_sha,
         "metadata_status": metadata_status,
+        "text_status": text_status,
     }
     if resource:
         frontmatter["resource"] = resource
@@ -272,6 +294,7 @@ def capture_source(
         "raw_path": raw_rel,
         "raw_sha256": raw_sha,
         "content_sha256": content_sha,
+        "text_status": text_status,
         "started": started,
         "derived": stage,
         "entity_derived": entity_stages,
@@ -301,7 +324,8 @@ def capture_bibtex_source(
     title = fields.get("title") or citekey
     doi = fields.get("doi", "")
     resource = fields.get("url") or (f"https://doi.org/{doi}" if doi else "")
-    text = content_text or fields.get("abstract") or title
+    abstract = fields.get("abstract") or ""
+    text = content_text or abstract or title
     identifiers = {
         key: value
         for key in ("doi", "isbn", "issn", "pmid", "pmcid", "arxiv")
@@ -320,6 +344,7 @@ def capture_bibtex_source(
         identifiers=identifiers or None,
         csl_json=_csl_json(entry),
         metadata_status="partial",
+        text_status=_fallback_text_status(content_text, abstract),
         citekey=citekey,
         machine=machine,
         run_id=run_id or f"capture-bibtex:{citekey}",
@@ -342,6 +367,7 @@ def bibtex_capture_payload(
     title = fields.get("title") or citekey
     doi = fields.get("doi", "")
     resource = fields.get("url") or (f"https://doi.org/{doi}" if doi else "")
+    abstract = fields.get("abstract") or ""
     identifiers = {
         key: value
         for key in ("doi", "isbn", "issn", "pmid", "pmcid", "arxiv")
@@ -350,10 +376,8 @@ def bibtex_capture_payload(
     return {
         "source_id": source_id or _bibtex_default_source_id(fields, citekey),
         "title": title,
-        "description": description
-        or fields.get("abstract")
-        or f"BibTeX {entry['entry_type']} source.",
-        "content_text": content_text or fields.get("abstract") or title,
+        "description": description or abstract or f"BibTeX {entry['entry_type']} source.",
+        "content_text": content_text or abstract or title,
         "raw_text": bibtex.strip() + "\n",
         "raw_filename": f"{safe_filename(citekey)}.bib",
         "resource": resource,
@@ -361,6 +385,7 @@ def bibtex_capture_payload(
         "identifiers": identifiers,
         "csl_json": _csl_json(entry),
         "metadata_status": "partial",
+        "text_status": _fallback_text_status(content_text, abstract),
         "citekey": citekey,
         "stage_only": True,
     }
@@ -381,13 +406,14 @@ def csl_capture_payload(
     doi = str(csl_json.get("DOI") or "").strip()
     isbn = str(csl_json.get("ISBN") or "").strip()
     url = str(csl_json.get("URL") or "").strip()
+    abstract = str(csl_json.get("abstract") or "")
     identifiers = {key: value for key, value in {"doi": doi, "isbn": isbn}.items() if value}
     stable_id = source_id or str(csl_json.get("id") or doi or isbn or url or title)
     return {
         "source_id": stable_id,
         "title": title,
-        "description": description or str(csl_json.get("abstract") or f"CSL {title} source."),
-        "content_text": content_text or str(csl_json.get("abstract") or title),
+        "description": description or abstract or f"CSL {title} source.",
+        "content_text": content_text or abstract or title,
         "raw_text": raw_text.strip() + "\n",
         "raw_filename": f"{safe_filename(stable_id)}.csl.json",
         "resource": url or (f"https://doi.org/{doi}" if doi else ""),
@@ -395,6 +421,7 @@ def csl_capture_payload(
         "identifiers": identifiers,
         "csl_json": csl_json,
         "metadata_status": "partial",
+        "text_status": _fallback_text_status(content_text, abstract),
         "citekey": str(csl_json.get("id") or ""),
         "stage_only": True,
     }
@@ -446,6 +473,7 @@ def capture_zotero_source(
         identifiers=identifiers or None,
         csl_json=csl_json,
         metadata_status="partial",
+        text_status=_fallback_text_status(content_text, abstract),
         citekey=citekey,
         machine=machine,
         run_id=run_id or f"capture-zotero:{key}",
@@ -531,6 +559,7 @@ def capture_url_source(
             "URL": resource,
         },
         metadata_status="partial",
+        text_status="full-text",
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
@@ -573,6 +602,7 @@ def stage_url_source(
             "URL": resource,
         },
         metadata_status="partial",
+        text_status="full-text",
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
@@ -616,6 +646,7 @@ def capture_pdf_source(
         identifiers=identifiers,
         csl_json=csl_json,
         metadata_status=metadata_status,
+        text_status="full-text",
         citekey=citekey,
         machine=machine,
         run_id=run_id or f"capture-pdf:{_source_id(source_id)}",
@@ -660,6 +691,7 @@ def stage_pdf_source(
         identifiers=identifiers,
         csl_json=csl_json,
         metadata_status=metadata_status,
+        text_status="full-text",
         citekey=citekey,
         machine=machine,
         run_id=run_id or f"capture-pdf:{stable_source_id}",
