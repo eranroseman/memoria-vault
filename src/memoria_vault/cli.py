@@ -440,6 +440,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 "qmd_error": status["qmd_error"],
                 "node_version": status["node_version"],
                 "qmd_doctor_output": status["qmd_doctor_output"],
+                "qmd_collection_output": status["qmd_collection_output"],
             },
             args,
         )
@@ -1920,7 +1921,7 @@ def _zotero_csl_type(item_type: str) -> str:
     }.get(item_type, "article")
 
 
-def _qmd_status(workspace: Path) -> dict[str, Any]:
+def _qmd_status(workspace: Path, *, include_collection: bool = True) -> dict[str, Any]:
     from memoria_vault.runtime.search_index import resolve_qmd_executable
 
     qmd_info = resolve_qmd_executable()
@@ -1928,6 +1929,7 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
     node = shutil.which("node")
     node_version = _node_version(node) if node else ""
     doctor = _qmd_doctor_status(workspace, qmd) if qmd else {}
+    collection = _qmd_collection_status(workspace, qmd) if qmd and include_collection else {}
     checks = {
         "node": node is not None,
         "node_22": _node_major(node_version) >= 22,
@@ -1939,6 +1941,7 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
         "qmd_doctor": bool(doctor.get("qmd_doctor", False)),
         "qmd_embedding_models": bool(doctor.get("qmd_embedding_models", False)),
     }
+    checks.update(collection.get("checks", {}))
     return {
         "checks": checks,
         "qmd_path": qmd,
@@ -1946,6 +1949,7 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
         "qmd_error": qmd_info["error"],
         "node_version": node_version,
         "qmd_doctor_output": doctor.get("qmd_doctor_output", ""),
+        "qmd_collection_output": collection.get("qmd_collection_output", ""),
     }
 
 
@@ -1987,7 +1991,7 @@ def _runner_status(provider: str | None) -> dict[str, Any]:
 
 
 def _run_qmd_rebuild(workspace: Path, *, embeddings: bool) -> dict[str, Any]:
-    status = _qmd_status(workspace)
+    status = _qmd_status(workspace, include_collection=False)
     checks = dict(status["checks"])
     if not embeddings:
         checks.pop("qmd_embedding_models", None)
@@ -2058,6 +2062,56 @@ def _qmd_doctor_status(
         "qmd_embedding_models": proc.returncode == 0 and "model cache: missing" not in output,
         "qmd_doctor_output": output[-4000:],
     }
+
+
+def _qmd_collection_status(workspace: Path, qmd: str) -> dict[str, Any]:
+    expected_root = (workspace / ".memoria/index/qmd/checked").resolve()
+    try:
+        proc = subprocess.run(
+            [qmd, "collection", "show", "memoria-checked"],
+            cwd=workspace,
+            env=_qmd_env(workspace),
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        output = "qmd collection show memoria-checked timed out"
+        return {
+            "checks": {
+                "qmd_collection": False,
+                "qmd_collection_root": False,
+                "qmd_collection_mask": False,
+            },
+            "qmd_collection_output": output,
+        }
+    output = "\n".join(value for value in (proc.stdout, proc.stderr) if value).strip()
+    root, mask = _parse_qmd_collection_show(output)
+    root_ok = bool(root) and Path(root).expanduser().resolve() == expected_root
+    mask_ok = mask == "**/*.md"
+    return {
+        "checks": {
+            "qmd_collection": proc.returncode == 0,
+            "qmd_collection_root": proc.returncode == 0 and root_ok,
+            "qmd_collection_mask": proc.returncode == 0 and mask_ok,
+        },
+        "qmd_collection_output": output[-4000:],
+    }
+
+
+def _parse_qmd_collection_show(output: str) -> tuple[str, str]:
+    root = ""
+    mask = ""
+    for line in output.splitlines():
+        key, sep, value = line.strip().partition(":")
+        if not sep:
+            continue
+        if key == "Path":
+            root = value.strip()
+        elif key in {"Pattern", "Mask"}:
+            mask = value.strip()
+    return root, mask
 
 
 def _node_version(node: str) -> str:

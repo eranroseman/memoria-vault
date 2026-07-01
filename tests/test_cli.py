@@ -1638,6 +1638,9 @@ def test_cli_doctor_qmd_checks_workspace_local_state(
     assert output["ok"] is True
     assert output["checks"]["node_22"] is True
     assert output["checks"]["qmd_absolute"] is True
+    assert output["checks"]["qmd_collection"] is True
+    assert output["checks"]["qmd_collection_root"] is True
+    assert output["checks"]["qmd_collection_mask"] is True
     assert output["qmd_source"] == "npm-global"
     assert output["qmd_path"].startswith(str(tmp_path))
 
@@ -1817,6 +1820,27 @@ def test_cli_doctor_qmd_requires_embedding_models_for_required_qmd(
     assert "model cache: missing" in output["qmd_doctor_output"]
 
 
+def test_cli_doctor_qmd_rejects_wrong_collection_registration(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    _fake_qmd_toolchain(tmp_path, monkeypatch)
+    monkeypatch.setenv("QMD_COLLECTION_PATH", str(tmp_path / "wrong"))
+    monkeypatch.setenv("QMD_COLLECTION_MASK", "*.txt")
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert output["ok"] is False
+    assert output["checks"]["qmd_collection"] is True
+    assert output["checks"]["qmd_collection_root"] is False
+    assert output["checks"]["qmd_collection_mask"] is False
+    assert "Pattern:  *.txt" in output["qmd_collection_output"]
+
+
 def test_cli_doctor_qmd_rejects_ambiguous_path_binary(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1886,6 +1910,14 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         "if sys.argv[1:3] == ['collection', 'remove'] and os.environ.get('QMD_REMOVE_MISSING'):\n"
         "    print('Collection not found: memoria-checked', file=sys.stderr)\n"
         "    sys.exit(1)\n"
+        "if sys.argv[1:] == ['collection', 'show', 'memoria-checked']:\n"
+        "    root = pathlib.Path(os.environ['QMD_CONFIG_DIR']).parent / 'checked'\n"
+        "    path = os.environ.get('QMD_COLLECTION_PATH', str(root))\n"
+        "    mask = os.environ.get('QMD_COLLECTION_MASK', '**/*.md')\n"
+        "    print('Collection: memoria-checked')\n"
+        "    print(f'  Path:     {path}')\n"
+        "    print(f'  Pattern:  {mask}')\n"
+        "    sys.exit(0)\n"
         "if sys.argv[1:] == ['doctor']:\n"
         "    print(os.environ.get('QMD_DOCTOR_OUTPUT', 'model cache: ready'))\n",
         encoding="utf-8",
