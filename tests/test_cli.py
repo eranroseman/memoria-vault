@@ -1615,6 +1615,61 @@ def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
     assert seen["model"] is not None
 
 
+def test_cli_doctor_runner_uses_local_default_base_url(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    seen = {}
+
+    class FakeProvider:
+        def __init__(self, **kwargs):
+            seen["provider_kwargs"] = kwargs
+
+    class FakeModel:
+        def __init__(self, model_name, *, provider):
+            seen["model_name"] = model_name
+
+    class FakeAgent:
+        def __init__(self, model):
+            seen["model"] = model
+
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    for name in (
+        "MEMORIA_MODEL_BASE_URL",
+        "OPENAI_BASE_URL",
+        "MEMORIA_MODEL_API_KEY",
+        "OPENAI_API_KEY",
+        "KILOCODE_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "local",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["base_url"] == "http://127.0.0.1:11434/v1"
+    assert output["checks"]["runner_base_url"] is True
+    assert seen["provider_kwargs"] == {"base_url": "http://127.0.0.1:11434/v1"}
+    assert seen["model_name"] == "doctor"
+
+
 def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

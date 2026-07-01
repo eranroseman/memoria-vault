@@ -1930,13 +1930,10 @@ def _qmd_status(workspace: Path) -> dict[str, Any]:
 
 
 def _runner_status(provider: str | None) -> dict[str, Any]:
-    from memoria_vault.runtime.operations import _load_pydantic_ai_openai
+    from memoria_vault.runtime.operations import _load_pydantic_ai_openai, model_base_url
 
     provider_name = (provider or "default").strip() or "default"
-    configured_base_url = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get(
-        "OPENAI_BASE_URL"
-    )
-    base_url = (configured_base_url or "https://api.openai.com/v1").rstrip("/")
+    base_url = model_base_url(provider_name)
     api_key = (
         os.environ.get("MEMORIA_MODEL_API_KEY")
         or os.environ.get("OPENAI_API_KEY")
@@ -1945,7 +1942,7 @@ def _runner_status(provider: str | None) -> dict[str, Any]:
     model_name = os.environ.get("MEMORIA_MODEL") or os.environ.get("OPENAI_MODEL") or "doctor"
     checks = {
         "runner_dependency": False,
-        "runner_base_url": provider_name != "local" or bool(configured_base_url),
+        "runner_base_url": bool(base_url),
         "runner_agent_constructed": False,
     }
     error = ""
