@@ -155,8 +155,21 @@ def enrich_source(
     canonical = _merge_doi_source(source, payloads)
     state.replace_external_ids(vault, canonical["external_ids"])
     state.replace_field_provenance(vault, source["source_id"], canonical["provenance"])
+    text_status = str(source.get("text_status") or "metadata-only")
+    content_hash = str(source.get("normalized_text_sha256") or "")
+    content_path = str(source.get("content_path") or "")
+    if text_status != "full-text":
+        acquired_text = _fixture_full_text(payloads, fixture_payloads)
+        if acquired_text:
+            content_hash, content_path = _write_acquired_text_blob(
+                vault, source["source_id"], acquired_text
+            )
+            text_status = "full-text"
     blocked_status = _blocked_status(canonical)
+    full_text_block = "" if text_status == "full-text" else "full-text acquisition failed"
     check_status = "unchecked" if blocked_status else "checked"
+    if full_text_block:
+        check_status = "unchecked"
     metadata_status = "unverified" if blocked_status else "verified"
     state.upsert_catalog_record(
         vault,
@@ -170,11 +183,11 @@ def enrich_source(
         citekey=source.get("citekey") or canonical["csl_json"].get("id") or "",
         csl_json=canonical["csl_json"],
         metadata_status=metadata_status,
-        text_status=source.get("text_status", "metadata-only"),
+        text_status=text_status,
         check_status=check_status,
-        content_hash=source.get("normalized_text_sha256", ""),
+        content_hash=content_hash,
         raw_hash=source.get("raw_text_sha256", ""),
-        content_path=source.get("content_path", ""),
+        content_path=content_path,
         raw_path=source.get("raw_path", ""),
     )
 
@@ -211,6 +224,38 @@ def enrich_source(
             "commit": commit,
         }
 
+    if full_text_block:
+        state.finish_enrichment_run(vault, run_id, "needs_human")
+        finding = record_integrity_check(
+            vault,
+            f"catalog/sources/{source['source_id']}",
+            check="source-full-text",
+            status="failed",
+            reason=full_text_block,
+            shadow=False,
+            machine=machine,
+        )
+        attention_path = _write_attention_flag(
+            vault,
+            source,
+            check="source-full-text",
+            finding=full_text_block,
+            evidence="Required provider metadata resolved, but no digestible full text was acquired.",
+        )
+        commit = commit_writer_changes(
+            vault,
+            f"flag source full text {source['source_id']}",
+            [attention_path],
+            machine=machine,
+        )
+        return {
+            "run_id": run_id,
+            "enrichment_status": "needs_human",
+            "finding": finding,
+            "attention_path": attention_path,
+            "commit": commit,
+        }
+
     references_path = "references.bib"
     references_text = render_references_bib(vault)
     (vault / references_path).write_text(references_text, encoding="utf-8")
@@ -239,6 +284,8 @@ def enrich_source(
         "run_id": run_id,
         "enrichment_status": "enriched",
         "references_path": references_path,
+        "content_path": content_path,
+        "text_status": text_status,
         "commit": commit,
     }
 
@@ -376,6 +423,43 @@ def _write_provider_blob(vault: Path, provider: str, payload: dict[str, Any]) ->
     if not path.exists():
         path.write_text(text, encoding="utf-8")
     return raw_hash, rel
+
+
+def _fixture_full_text(
+    payloads: dict[str, dict[str, Any]], fixture_payloads: dict[str, Any]
+) -> str:
+    for candidate in (
+        fixture_payloads.get("full_text"),
+        payloads.get("unpaywall", {}).get("full_text"),
+        _location_value(payloads.get("unpaywall", {}), "full_text"),
+        _location_value(payloads.get("unpaywall", {}), "text"),
+    ):
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+        if isinstance(candidate, dict):
+            text = str(candidate.get("text") or candidate.get("content") or "").strip()
+            if text:
+                return text
+    return ""
+
+
+def _location_value(payload: dict[str, Any], key: str) -> Any:
+    location = payload.get("best_oa_location")
+    return location.get(key) if isinstance(location, dict) else None
+
+
+def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[str, str]:
+    normalized = text.strip() + "\n"
+    content_hash = _hash_text(normalized)
+    rel = normalize_path(
+        ".memoria/blobs/source-content/"
+        f"{safe_filename(source_id)}/full-text/{content_hash.removeprefix('sha256:')}.txt"
+    )
+    path = vault / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_text(normalized, encoding="utf-8")
+    return content_hash, rel
 
 
 def _merge_doi_source(
