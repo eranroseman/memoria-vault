@@ -127,7 +127,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, AI catalog, indexes, and checked-only qmd inputs from worker-readable state. |
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
-| Resolve attention | `memoria attention resolve` | Runs the attention-disposition request and records the PI disposition as a committed journal `resolved` row. |
+| Resolve attention | `memoria attention resolve [--outcome resolved\|dismissed]` | Runs the attention-disposition request, closes the attention projection, and records the PI outcome in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
 | Inspect operational state | Memoria Inspector (`memoria-inspector`) | Reads board snapshots, recent audit rows, failed integrity flags, lint verdicts, lane metrics, and checked graph data; it does not write worker requests or Concept state. |
 | Browse checked graph | Memoria Inspector (`memoria-inspector`) | Reads checked `catalog/` and `knowledge/` Concepts plus their declared references, previews recent nodes and edges, then opens existing Concept notes, normalized edge targets, or `knowledge/views/knowledge.base`; it does not write graph state. |

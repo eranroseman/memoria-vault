@@ -651,6 +651,10 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             target_id,
             resolution="acknowledged" if operation_id == "acknowledge-attention" else "resolved",
+            outcome=str(
+                payload.get("outcome")
+                or ("acknowledged" if operation_id == "acknowledge-attention" else "resolved")
+            ),
             reason=str(payload.get("reason") or operation_id),
             machine=machine,
         )

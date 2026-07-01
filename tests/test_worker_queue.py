@@ -1148,6 +1148,7 @@ def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None
     assert done["status"] == "done"
     assert done["resolution"]["event"] == "resolved"
     assert done["resolution"]["resolution"] == "acknowledged"
+    assert done["resolution"]["outcome"] == "acknowledged"
     assert done["resolution"]["target_id"] == "knowledge/notes/attention.md"
     assert done["resolution"]["actor"] == "pi"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())

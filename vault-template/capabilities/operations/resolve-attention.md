@@ -2,7 +2,7 @@
 title: "Resolve attention"
 type: operation
 check_status: checked
-description: "Record that the PI resolved a generated attention item."
+description: "Record that the PI resolved or dismissed a generated attention item."
 operation_id: resolve-attention
 allowed_tools:
   - trusted_writer
@@ -23,4 +23,4 @@ tags: [alpha11, attention]
 
 # Operation
 
-Resolve a generated attention item through the worker journal.
+Resolve or dismiss a generated attention item through the worker journal.

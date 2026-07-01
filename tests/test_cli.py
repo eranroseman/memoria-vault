@@ -799,6 +799,7 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
     assert rc == 0
     assert resolved["result"]["resolution"]["target_id"] == "inbox/flag-alpha.md"
     assert resolved["result"]["resolution"]["reason"] == "PI resolved"
+    assert resolved["result"]["resolution"]["outcome"] == "resolved"
     fm = read_frontmatter(attention)
     assert fm["attention_status"] == "resolved"
     assert "resolved_at" in fm
@@ -811,6 +812,43 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
     assert json.loads(row["args_json"]) == {
         "target_id": "inbox/flag-alpha.md",
         "reason": "PI resolved",
+        "outcome": "resolved",
+    }
+
+    rc = main(
+        [
+            "attention",
+            "resolve",
+            "--workspace",
+            str(workspace),
+            "inbox/work-alpha.md",
+            "--outcome",
+            "dismissed",
+            "--json",
+            "--idempotency-key",
+            "attention-dismiss",
+        ]
+    )
+    dismissed = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert dismissed["result"]["resolution"]["target_id"] == "inbox/work-alpha.md"
+    assert dismissed["result"]["resolution"]["resolution"] == "resolved"
+    assert dismissed["result"]["resolution"]["outcome"] == "dismissed"
+    assert dismissed["result"]["resolution"]["reason"] == "PI dismissed attention"
+    fm = read_frontmatter(work_prompt)
+    assert fm["attention_status"] == "resolved"
+    assert "resolved_at" in fm
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("attention-dismiss",),
+        ).fetchone()
+    assert row["operation_id"] == "resolve-attention"
+    assert json.loads(row["args_json"]) == {
+        "target_id": "inbox/work-alpha.md",
+        "reason": "PI dismissed attention",
+        "outcome": "dismissed",
     }
 
 
