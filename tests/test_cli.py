@@ -10,6 +10,7 @@ import pytest
 
 from memoria_vault.cli import main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -354,6 +355,139 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     assert json.loads(row["args_json"]) == {
         "seed_terms": ["new area"],
         "dense_threshold": 1,
+    }
+
+
+def test_cli_note_candidate_accept_and_link_flow(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha digest\n"
+        "description: Alpha\n"
+        "source_id: catalog/sources/source-alpha\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "note",
+            "propose",
+            "--workspace",
+            str(workspace),
+            "--digest-path",
+            "knowledge/digests/source-alpha.md",
+            "--candidate-json",
+            json.dumps(
+                {
+                    "title": "Framing changes the question",
+                    "body": "The source reframes the problem before measuring outcomes.",
+                    "claim_text": "Framing changes which outcomes matter.",
+                    "tags": ["Framing"],
+                }
+            ),
+            "--candidate-json",
+            json.dumps(
+                {
+                    "title": "Rejected framing aside",
+                    "body": "This weaker candidate should be rejected.",
+                }
+            ),
+            "--json",
+            "--idempotency-key",
+            "note-propose",
+        ]
+    )
+    proposed = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    note_path, rejected_note_path = proposed["result"]["note_paths"]
+    note_fm = read_frontmatter(workspace / note_path)
+    assert note_fm["check_status"] == "checked"
+    assert note_fm["status"] == "candidate"
+
+    assert (
+        main(
+            [
+                "note",
+                "accept",
+                "--workspace",
+                str(workspace),
+                note_path,
+                "--reason",
+                "PI approved",
+                "--json",
+                "--idempotency-key",
+                "note-accept",
+            ]
+        )
+        == 0
+    )
+    accepted = json.loads(capsys.readouterr().out)
+    assert accepted["result"]["curation_status"] == "accepted"
+    assert read_frontmatter(workspace / note_path)["status"] == "accepted"
+
+    assert (
+        main(
+            [
+                "note",
+                "reject",
+                "--workspace",
+                str(workspace),
+                rejected_note_path,
+                "--reason",
+                "PI rejected",
+                "--json",
+                "--idempotency-key",
+                "note-reject",
+            ]
+        )
+        == 0
+    )
+    rejected = json.loads(capsys.readouterr().out)
+    assert rejected["result"]["curation_status"] == "rejected"
+    assert read_frontmatter(workspace / rejected_note_path)["status"] == "rejected"
+
+    target = workspace / "knowledge/notes/target.md"
+    target.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Target\n---\nTarget body.\n",
+        encoding="utf-8",
+    )
+    assert (
+        main(
+            [
+                "note",
+                "link",
+                "--workspace",
+                str(workspace),
+                note_path,
+                "--type",
+                "supports",
+                "--target",
+                "knowledge/notes/target.md",
+                "--reason",
+                "PI linked notes",
+                "--json",
+                "--idempotency-key",
+                "note-link",
+            ]
+        )
+        == 0
+    )
+    linked = json.loads(capsys.readouterr().out)
+
+    assert linked["result"]["link_type"] == "supports"
+    assert read_frontmatter(workspace / note_path)["links"] == {
+        "supports": ["knowledge/notes/target.md"]
     }
 
 
