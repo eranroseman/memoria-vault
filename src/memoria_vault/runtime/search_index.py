@@ -1,4 +1,4 @@
-"""Checked-only search-index helpers for alpha.11."""
+"""Checked-only search-index helpers."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime import state
+from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
@@ -28,18 +30,20 @@ def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -
     out.mkdir(parents=True, exist_ok=True)
 
     docs = []
-    for source in checked_concepts(vault):
-        rel = source.relative_to(vault).as_posix()
-        target = out / rel
+    for document in checked_search_documents(vault):
+        target = out / document["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
-        fm = parse_frontmatter(safe_read(source))
+        source = document.get("source")
+        if isinstance(source, Path):
+            shutil.copyfile(source, target)
+        else:
+            target.write_text(str(document["text"]), encoding="utf-8")
         docs.append(
             {
-                "path": rel,
-                "type": fm.get("type"),
-                "title": fm.get("title"),
-                "sha256": sha256_file(source),
+                "path": document["path"],
+                "type": document["frontmatter"].get("type"),
+                "title": document["frontmatter"].get("title"),
+                "sha256": sha256_file(target),
             }
         )
     manifest = {
@@ -56,6 +60,24 @@ def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     return manifest
+
+
+def checked_search_documents(vault: Path, *, include_stale: bool = False) -> list[dict[str, Any]]:
+    vault = Path(vault)
+    docs: list[dict[str, Any]] = []
+    for path in checked_concepts(vault, include_stale=include_stale):
+        text = safe_read(path)
+        docs.append(
+            {
+                "path": path.relative_to(vault).as_posix(),
+                "text": text,
+                "frontmatter": parse_frontmatter(text),
+                "source": path,
+            }
+        )
+    if not include_stale:
+        docs.extend(_checked_work_documents(vault))
+    return sorted(docs, key=lambda row: str(row["path"]))
 
 
 def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
@@ -104,7 +126,10 @@ def qmd_result_path(ref: object, vault: Path) -> str:
 def is_checked_concept(vault: Path, relpath: str) -> bool:
     rel = normalize_path(relpath)
     path = Path(vault) / rel
-    return path.is_file() and _is_searchable_frontmatter(parse_frontmatter(safe_read(path)))
+    if path.is_file() and _is_searchable_frontmatter(parse_frontmatter(safe_read(path))):
+        return True
+    qmd_path = Path(vault) / QMD_INPUT_ROOT / rel
+    return qmd_path.is_file() and _is_searchable_frontmatter(parse_frontmatter(safe_read(qmd_path)))
 
 
 def answer_query(
@@ -117,8 +142,8 @@ def answer_query(
     """Return a deterministic Ask/Query contract over checked BM25 hits."""
     vault = Path(vault)
     docs = [
-        (path.relative_to(vault).as_posix(), safe_read(path), parse_frontmatter(safe_read(path)))
-        for path in checked_concepts(vault, include_stale=include_stale)
+        (document["path"], document["text"], document["frontmatter"])
+        for document in checked_search_documents(vault, include_stale=include_stale)
     ]
     tokenized = [(path, _tokens(text)) for path, text, _frontmatter in docs]
     frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
@@ -158,9 +183,7 @@ def evaluate_bm25(
     k: int = 5,
 ) -> dict[str, Any]:
     """Run a tiny BM25 baseline over checked Concepts for later retrieval evals."""
-    docs = [
-        (path.relative_to(vault).as_posix(), safe_read(path)) for path in checked_concepts(vault)
-    ]
+    docs = [(document["path"], document["text"]) for document in checked_search_documents(vault)]
     tokenized = [(path, _tokens(text)) for path, text in docs]
     results = []
     for case in cases:
@@ -218,6 +241,116 @@ def _bundle_roots(vault: Path) -> list[str]:
         for root in folders.get("bundle_roots") or []
         if normalize_path(root) in {"catalog", "knowledge"}
     ]
+
+
+def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
+    docs = []
+    for source in state.catalog_sources(vault):
+        source_id = str(source["source_id"])
+        if source.get("text_status") != "full-text":
+            continue
+        content_path = Path(vault) / normalize_path(str(source.get("content_path") or ""))
+        if not content_path.is_file():
+            continue
+        work_frontmatter = {
+            "type": "work",
+            "check_status": "checked",
+            "title": source["title"],
+            "source_id": source_id,
+        }
+        docs.append(
+            _generated_doc(
+                f"works/{safe_filename(source_id)}.md",
+                work_frontmatter,
+                [
+                    f"# {source['title']}",
+                    "",
+                    "## Compact Citation",
+                    "",
+                    "```json",
+                    json.dumps(
+                        state.compact_citation(vault, source_id),
+                        ensure_ascii=False,
+                        sort_keys=True,
+                        indent=2,
+                    ),
+                    "```",
+                    "",
+                    "## Full Text",
+                    "",
+                    safe_read(content_path),
+                ],
+            )
+        )
+        edges = _work_graph_edges(vault, source_id)
+        if edges:
+            docs.append(
+                _generated_doc(
+                    f"graph-neighborhoods/{safe_filename(source_id)}.md",
+                    {
+                        "type": "graph-neighborhood",
+                        "check_status": "checked",
+                        "title": f"Graph neighborhood: {source['title']}",
+                        "source_id": source_id,
+                    },
+                    _graph_neighborhood_body(source, edges),
+                )
+            )
+    return docs
+
+
+def _work_graph_edges(vault: Path, work_id: str) -> list[dict[str, Any]]:
+    if not state.db_path(vault).is_file():
+        return []
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT relation_type, target_id, target_title, target_doi, source_provider
+            FROM work_graph_edges
+            WHERE work_id = ?
+            ORDER BY relation_type, target_id
+            """,
+            (work_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _graph_neighborhood_body(source: dict[str, Any], edges: list[dict[str, Any]]) -> list[str]:
+    lines = [
+        f"# Graph neighborhood: {source['title']}",
+        "",
+        "## Edges",
+        "",
+    ]
+    for edge in edges:
+        title = edge.get("target_title") or edge["target_id"]
+        lines.append(
+            "- "
+            f"{edge['relation_type']}: {title} "
+            f"({edge['target_id']}; provider: {edge['source_provider']})"
+        )
+    return lines
+
+
+def _generated_doc(path: str, frontmatter: dict[str, Any], body: list[str]) -> dict[str, Any]:
+    text = "\n".join(
+        [
+            "---",
+            *[
+                f"{key}: {json.dumps(value, ensure_ascii=False)}"
+                for key, value in frontmatter.items()
+            ],
+            "---",
+            "",
+            *body,
+            "",
+        ]
+    )
+    return {
+        "path": normalize_path(path),
+        "text": text,
+        "frontmatter": dict(frontmatter),
+    }
 
 
 def _tokens(text: str) -> list[str]:

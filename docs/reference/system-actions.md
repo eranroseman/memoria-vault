@@ -42,7 +42,7 @@ This page is a guarded mirror, not the source of truth. Action implementation li
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Rebuild checked qmd source | worker operation `rebuild-checked-qmd-source` + runtime helper (`rebuild_checked_qmd_source`) | Rebuilds `.memoria/index/qmd/checked/` from checked, current Concepts only and writes the disposable qmd manifest. |
+| Rebuild checked qmd source | worker operation `rebuild-checked-qmd-source` + runtime helper (`rebuild_checked_qmd_source`) | Rebuilds `.memoria/index/qmd/checked/` from checked, current Concepts plus generated checked Work text and graph neighborhoods, then writes the disposable qmd manifest. |
 | Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the deterministic BM25 Ask/Query contract over checked current Concepts: sources, unknowns, staleness, and contradictions. |
 
 ### Knowledge construction (`memoria_vault.runtime.knowledge`)
@@ -137,7 +137,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Vault read / gated write | obsidian native MCP (all lanes) | File reads, search, and writes into the vault over the Local REST API plugin's MCP — every write passing the policy gate. |
-| Vault search | filtered qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Checked-only qmd search over the Concept corpus, local and read-only; unchecked and quarantined Concepts are hidden by the read barrier, and BM25 is the current eval baseline. |
+| Vault search | filtered qmd MCP (Librarian, Writer, Co-PI, Peer-reviewer) | Checked-only qmd search over retrieval documents, local and read-only; unchecked and quarantined rows are hidden by the read barrier, and BM25 is the current eval baseline. |
 | Literature discovery | paper_search MCP (Librarian) | Searches arXiv, PubMed, Semantic Scholar, Google Scholar, and bioRxiv (Unpaywall email for OA lookups). |
 | Zotero reads | pyzotero MCP (Librarian, Peer-reviewer) | Read-only citekey resolution, metadata, and citation context from the local Zotero library — no write-back. |
 

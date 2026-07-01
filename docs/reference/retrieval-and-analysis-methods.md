@@ -26,13 +26,14 @@ For the rationale â€” why deterministic over LLM, cost, and audit implications â
 
 ### Checked qmd BM25 retrieval
 
-**For:** finding checked Concepts by exact terms, citekeys, rare tokens, and short query text.
+**For:** finding checked retrieval documents by exact terms, citekeys, rare tokens, and short query text.
 
 **Used by:** qmd-backed Co-PI and lane retrieval, Librarian comparative reads, Ask/Query, and Peer-reviewer duplicate/citation sub-check candidate pulls. No QuickAdd pre-file similarity telemetry, standalone `similarity-check`, or `find-duplicates` command ships today.
 
 **Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_qmd_source()`
-copies checked Concepts into `.memoria/index/qmd/checked/`; the qmd MCP wrapper filters
-results back through `check_status: checked`. `answer_query()` and
+writes checked Concepts plus generated checked Work text and graph neighborhoods into
+`.memoria/index/qmd/checked/`; the qmd MCP wrapper filters results back through
+`check_status: checked`. `answer_query()` and
 `run_bm25_eval()` provide the deterministic Python baseline and eval harness. Vector,
 hybrid, query expansion, and rerank modes are later Ask/retrieval eval work; they count
 only after they beat the BM25 or long-context baseline.
