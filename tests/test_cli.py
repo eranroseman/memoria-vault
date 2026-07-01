@@ -1311,6 +1311,45 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert shown["event"]["event_id"] == event_id
 
 
+def test_cli_workspace_scan_fixture_quarantines_generated_projection(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "workspace",
+                "scan",
+                "--workspace",
+                str(workspace),
+                "--fixture",
+                "direct-write-generated-projection",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    scan = json.loads(capsys.readouterr().out)
+
+    assert scan["fixture"] == {
+        "name": "direct-write-generated-projection",
+        "path": "knowledge/index.md",
+    }
+    assert scan["quarantine"]["finding_count"] == 1
+    assert scan["quarantine"]["findings"][0]["target_id"] == "knowledge/index.md"
+    assert scan["result"]["observed_count"] == 0
+    assert not (workspace / "knowledge/index.md").exists()
+    assert (workspace / ".memoria/quarantine/knowledge/index.md").is_file()
+    with state.connect(workspace) as conn:
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/index.md'"
+        ).fetchone()
+    assert consumable is None
+
+
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

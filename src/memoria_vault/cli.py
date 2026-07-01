@@ -306,6 +306,7 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
             cmd.add_argument("--embeddings", action="store_true")
             cmd.set_defaults(handler=_cmd_workspace_rebuild)
         elif name == "scan":
+            cmd.add_argument("--fixture")
             cmd.set_defaults(handler=_cmd_workspace_scan)
         elif name == "rollback":
             cmd.add_argument("target_id")
@@ -993,7 +994,31 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
-    return _emit(_enqueue_and_run(args, "observe-pi-edits", {}), args)
+    workspace = _workspace(args)
+    fixture = _workspace_scan_fixture(workspace, args.fixture) if args.fixture else None
+    projection_paths = _changed_generated_projection_paths(workspace)
+    quarantine = None
+    if projection_paths:
+        quarantine = _enqueue_and_run(
+            args,
+            "trace-integrity-scan",
+            {
+                "paths": projection_paths,
+                "reason": "workspace-scan-generated-projection",
+            },
+        )
+    observed = _enqueue_and_run(args, "observe-pi-edits", {})
+    payload = {
+        "ok": observed["ok"] and (quarantine is None or quarantine["ok"]),
+        "job": observed["job"],
+        "result": observed["result"],
+    }
+    if quarantine is not None:
+        payload["quarantine"] = quarantine["result"]
+        payload["quarantine_job"] = quarantine["job"]
+    if fixture is not None:
+        payload["fixture"] = fixture
+    return _emit(payload, args)
 
 
 def _cmd_workspace_rollback(args: argparse.Namespace) -> int:
@@ -1222,6 +1247,42 @@ def _payload_doi(payload: dict[str, Any]) -> str:
 
 def _workspace(args: argparse.Namespace) -> Path:
     return Path(args.workspace).resolve()
+
+
+def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
+    if fixture != "direct-write-generated-projection":
+        raise ValueError(f"unknown workspace scan fixture: {fixture}")
+    rel = "knowledge/index.md"
+    path = workspace / rel
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    marker = "\n<!-- direct-write-generated-projection fixture -->\n"
+    text = path.read_text(encoding="utf-8")
+    if marker.strip() not in text:
+        path.write_text(text.rstrip() + marker, encoding="utf-8")
+    return {"name": fixture, "path": rel}
+
+
+def _changed_generated_projection_paths(workspace: Path) -> list[str]:
+    paths = ("catalog/index.md", "knowledge/index.md", "capabilities/index.md")
+    proc = _git(
+        workspace,
+        "status",
+        "--porcelain",
+        "--untracked-files=all",
+        "--",
+        *paths,
+    )
+    changed: list[str] = []
+    for line in proc.stdout.splitlines():
+        if len(line) < 4 or "D" in line[:2]:
+            continue
+        path = line[3:]
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        if path in paths:
+            changed.append(path)
+    return sorted(set(changed))
 
 
 def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
