@@ -365,7 +365,13 @@ def _write_attention_flag(
     return rel
 
 
-def _write_discovery_candidate(vault: Path, source: dict[str, Any], edge: dict[str, Any]) -> str:
+def _write_discovery_candidate(
+    vault: Path,
+    source: dict[str, Any],
+    edge: dict[str, Any],
+    *,
+    raised_by: str = "enrich-source",
+) -> str:
     target_id = str(edge["target_id"])
     target_title = str(edge.get("target_title") or target_id)
     rel = normalize_path(
@@ -388,7 +394,7 @@ def _write_discovery_candidate(vault: Path, source: dict[str, Any], edge: dict[s
             f'target: "catalog/sources/{_yaml_str(str(source["source_id"]))}"',
             f'discovered_work_id: "{_yaml_str(target_id)}"',
             f'relation_type: "{_yaml_str(str(edge["relation_type"]))}"',
-            "raised_by: enrich-source",
+            f"raised_by: {_yaml_str(raised_by)}",
             "loudness: normal",
             f"created: {date.today().isoformat()}",
             "---",

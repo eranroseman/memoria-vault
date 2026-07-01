@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.knowledge import (
@@ -19,6 +22,7 @@ from memoria_vault.runtime.knowledge import (
     write_project_export,
 )
 from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -45,6 +49,22 @@ def git(vault: Path, *args: str) -> str:
     if proc.returncode:
         raise AssertionError(proc.stderr or proc.stdout)
     return proc.stdout.strip()
+
+
+def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    qmd = bin_dir / "qmd"
+    qmd.write_text(
+        f"#!{sys.executable}\n"
+        "import json\n"
+        "print(json.dumps([\n"
+        "    {'file': 'qmd://memoria-checked/works/source-alpha.md', 'score': 8}\n"
+        "]))\n",
+        encoding="utf-8",
+    )
+    qmd.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
 
 
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
@@ -358,6 +378,79 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     assert gaps["warrant"]["note_count"] == 2
     assert gaps["new area"]["gap_type"] == "new-topic"
     assert result["checked_topics"] == 5
+
+
+def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path / "vault")
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "rare alpha full text for qmd-backed gap analysis",
+        machine="capture-machine",
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Beta Work",
+                "target_doi": "10.1000/beta",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+    rebuild_checked_qmd_source(vault)
+    _fake_qmd_query(tmp_path, monkeypatch)
+
+    result = analyze_gaps(
+        vault,
+        seed_terms=["rare alpha"],
+        dense_threshold=1,
+        machine="gap-machine",
+    )
+
+    gap = {row["topic"]: row for row in result["gaps"]}["rare alpha"]
+    assert gap["gap_type"] == "undigested"
+    assert gap["retrieval_engine"] == "qmd"
+    assert gap["retrieval_sources"][0]["path"] == "works/source-alpha.md"
+    assert result["discovery_candidate_paths"] == [
+        "inbox/candidate-work-source-alpha-references-https___openalex.org_W999.md"
+    ]
+    candidate = vault / result["discovery_candidate_paths"][0]
+    fm = read_frontmatter(candidate)
+    assert fm["attention_kind"] == "candidate"
+    assert fm["raised_by"] == "analyze-gaps"
+    assert fm["discovered_work_id"] == "https://openalex.org/W999"
+    committed = set(
+        git(vault, "show", "--name-only", "--format=", result["discovery_commit"]).splitlines()
+    )
+    assert committed == {
+        "inbox/candidate-work-source-alpha-references-https___openalex.org_W999.md",
+        "journal/gap-machine.jsonl",
+    }
+
+
+def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="metadata-only",
+        title="Metadata Only",
+        text_status="metadata-only",
+        check_status="unchecked",
+    )
+
+    result = analyze_gaps(tmp_path)
+
+    assert result["full_text_gap_count"] == 1
+    gap = result["gaps"][0]
+    assert gap["gap_type"] == "missing-full-text"
+    assert gap["source_id"] == "metadata-only"
 
 
 def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> None:

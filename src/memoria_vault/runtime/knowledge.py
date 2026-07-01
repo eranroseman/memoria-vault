@@ -12,6 +12,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.operations import load_operation_policy, required_promotion_checks
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -266,25 +267,36 @@ def analyze_gaps(
     *,
     seed_terms: Iterable[str] = (),
     dense_threshold: int = 2,
+    machine: str | None = None,
 ) -> dict[str, Any]:
-    """Classify simple source/note topic mismatches over checked Concepts."""
+    """Classify source/note topic mismatches over checked Concepts and qmd hits."""
+    vault = Path(vault)
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sources": 0, "digests": 0, "notes": 0}
     )
+    seen: dict[str, dict[str, set[str]]] = defaultdict(
+        lambda: {"sources": set(), "digests": set(), "notes": set()}
+    )
     labels: dict[str, str] = {}
-    for rel, frontmatter in _checked_concepts(Path(vault)):
+    retrieval: dict[str, dict[str, Any]] = {}
+    for rel, frontmatter in _checked_concepts(vault):
         bucket = _bucket(rel, frontmatter)
         if not bucket:
             continue
         for term in _terms(frontmatter):
             key = term.lower()
-            counts[key][bucket] += 1
+            identity = _gap_identity(rel, bucket)
+            if identity not in seen[key][bucket]:
+                seen[key][bucket].add(identity)
+                counts[key][bucket] += 1
             labels.setdefault(key, term)
     for term in seed_terms:
         label = " ".join(str(term).split())
         if label:
             labels.setdefault(label.lower(), label)
             counts[label.lower()]
+
+    _add_qmd_gap_hits(vault, counts, seen, labels, retrieval)
 
     gaps = []
     for key in sorted(counts):
@@ -301,21 +313,252 @@ def analyze_gaps(
             seed = "capture or link supporting sources"
         else:
             continue
-        gaps.append(
-            {
-                "topic": labels[key],
-                "gap_type": gap_type,
-                "source_count": counts[key]["sources"],
-                "digest_count": counts[key]["digests"],
-                "note_count": note_count,
-                "proposed_seed": seed,
-            }
-        )
+        gap = {
+            "topic": labels[key],
+            "gap_type": gap_type,
+            "source_count": counts[key]["sources"],
+            "digest_count": counts[key]["digests"],
+            "note_count": note_count,
+            "proposed_seed": seed,
+        }
+        if key in retrieval:
+            gap["retrieval_engine"] = retrieval[key]["engine"]
+            gap["retrieval_sources"] = retrieval[key]["sources"]
+        gaps.append(gap)
+    full_text_gaps = _missing_full_text_gaps(vault)
+    gaps.extend(full_text_gaps)
+    candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, machine=machine)
     return {
         "checked_topics": len(counts),
         "dense_threshold": dense_threshold,
+        "full_text_gap_count": len(full_text_gaps),
+        "discovery_candidate_paths": candidate_paths,
+        "discovery_commit": commit,
         "gaps": gaps,
     }
+
+
+def _add_qmd_gap_hits(
+    vault: Path,
+    counts: dict[str, dict[str, int]],
+    seen: dict[str, dict[str, set[str]]],
+    labels: dict[str, str],
+    retrieval: dict[str, dict[str, Any]],
+) -> None:
+    from memoria_vault.runtime.search_index import QMD_MANIFEST, answer_query
+
+    if not (vault / QMD_MANIFEST).is_file():
+        return
+
+    for key, label in sorted(labels.items()):
+        answer = answer_query(vault, label, k=5)
+        if answer["engine"] != "qmd":
+            continue
+        retrieval[key] = {
+            "engine": answer["engine"],
+            "sources": answer["sources"],
+        }
+        for source in answer["sources"]:
+            bucket = _retrieval_bucket(source)
+            if not bucket:
+                continue
+            identity = _gap_identity(str(source["path"]), bucket)
+            if identity in seen[key][bucket]:
+                continue
+            seen[key][bucket].add(identity)
+            counts[key][bucket] += 1
+
+
+def _missing_full_text_gaps(vault: Path) -> list[dict[str, Any]]:
+    gaps = []
+    for source in state.catalog_sources(vault, checked_only=False):
+        if source["text_status"] == "full-text" or source["check_status"] == "quarantined":
+            continue
+        gaps.append(
+            {
+                "topic": source["title"],
+                "gap_type": "missing-full-text",
+                "source_count": 1,
+                "digest_count": 0,
+                "note_count": 0,
+                "proposed_seed": "acquire full text or attach user-supplied text",
+                "source_id": source["source_id"],
+                "text_status": source["text_status"],
+            }
+        )
+    return gaps
+
+
+def _write_gap_discovery_candidates(
+    vault: Path,
+    gaps: list[dict[str, Any]],
+    *,
+    machine: str | None,
+) -> tuple[list[str], str]:
+    if machine is None:
+        return [], ""
+    source_ids = {
+        source_id
+        for gap in gaps
+        for source_id in _gap_source_ids(gap)
+        if state.catalog_source(vault, source_id)
+    }
+    edges_by_source = _candidate_edges(vault, source_ids)
+    if not edges_by_source:
+        return [], ""
+    from memoria_vault.runtime.enrichment import _write_discovery_candidate
+
+    captured = _captured_work_ids(vault)
+    new_paths = []
+    for source_id in sorted(edges_by_source):
+        source = state.catalog_source(vault, source_id)
+        if source is None:
+            continue
+        for edge in edges_by_source[source_id]:
+            if _edge_is_captured(edge, captured):
+                continue
+            rel = _discovery_candidate_rel(source_id, edge)
+            existed = (vault / rel).exists()
+            path = _write_discovery_candidate(
+                vault,
+                source,
+                edge,
+                raised_by="analyze-gaps",
+            )
+            if not existed:
+                new_paths.append(path)
+    if not new_paths:
+        return [], ""
+    append_journal_event(
+        vault,
+        {
+            "event": "derived",
+            "operation": "analyze-gaps",
+            "outputs": new_paths,
+        },
+        machine=machine,
+    )
+    commit = commit_writer_changes(
+        vault,
+        "propose gap discovery candidates",
+        new_paths,
+        machine=machine,
+    )
+    for gap in gaps:
+        related = sorted(set(new_paths) & set(_candidate_paths_for_gap(gap, edges_by_source)))
+        if related:
+            gap["discovery_candidate_paths"] = related
+    return sorted(new_paths), commit
+
+
+def _candidate_edges(vault: Path, source_ids: Iterable[str]) -> dict[str, list[dict[str, Any]]]:
+    ids = sorted(set(source_ids))
+    if not ids or not state.db_path(vault).is_file():
+        return {}
+    rows = []
+    with state.connect(vault) as conn:
+        for source_id in ids:
+            rows.extend(
+                conn.execute(
+                    """
+                    SELECT work_id, relation_type, target_id, target_title, target_doi,
+                           source_provider
+                    FROM work_graph_edges
+                    WHERE work_id = ?
+                      AND relation_type IN ('references', 'related')
+                    ORDER BY work_id, relation_type, target_id
+                    """,
+                    (source_id,),
+                ).fetchall()
+            )
+    edges: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        edges[row["work_id"]].append(dict(row))
+    return edges
+
+
+def _gap_source_ids(gap: dict[str, Any]) -> list[str]:
+    ids = []
+    if isinstance(gap.get("source_id"), str):
+        ids.append(str(gap["source_id"]))
+    for source in gap.get("retrieval_sources") or []:
+        source_id = _source_id_from_path(str(source.get("path") or ""))
+        if source_id:
+            ids.append(source_id)
+    return ids
+
+
+def _candidate_paths_for_gap(
+    gap: dict[str, Any],
+    edges_by_source: dict[str, list[dict[str, Any]]],
+) -> list[str]:
+    return [
+        _discovery_candidate_rel(source_id, edge)
+        for source_id in _gap_source_ids(gap)
+        for edge in edges_by_source.get(source_id, [])
+    ]
+
+
+def _captured_work_ids(vault: Path) -> set[str]:
+    captured = set()
+    for source in state.catalog_sources(vault, checked_only=False):
+        captured.add(str(source["source_id"]).casefold())
+        if source.get("doi"):
+            captured.add(str(source["doi"]).casefold())
+        identifiers = source.get("identifiers") or {}
+        if isinstance(identifiers, dict):
+            captured.update(str(value).casefold() for value in identifiers.values() if value)
+    return captured
+
+
+def _edge_is_captured(edge: dict[str, Any], captured: set[str]) -> bool:
+    return any(
+        str(value).casefold() in captured
+        for value in (edge.get("target_id"), edge.get("target_doi"))
+        if value
+    )
+
+
+def _discovery_candidate_rel(source_id: str, edge: dict[str, Any]) -> str:
+    return normalize_path(
+        "inbox/candidate-work-"
+        f"{safe_filename(source_id)}-"
+        f"{safe_filename(str(edge['relation_type']))}-"
+        f"{safe_filename(str(edge['target_id']))}.md"
+    )
+
+
+def _retrieval_bucket(source: dict[str, Any]) -> str:
+    path = str(source.get("path") or "")
+    source_type = source.get("type")
+    if path.startswith(("works/", "graph-neighborhoods/", "catalog/sources/")):
+        return "sources"
+    if path.startswith("knowledge/digests/") or source_type == "digest":
+        return "digests"
+    if path.startswith("knowledge/notes/") or source_type == "note":
+        return "notes"
+    return ""
+
+
+def _gap_identity(path: str, bucket: str) -> str:
+    if bucket == "sources":
+        source_id = _source_id_from_path(path)
+        if source_id:
+            return f"sources:{source_id}"
+    return f"{bucket}:{path}"
+
+
+def _source_id_from_path(path: str) -> str:
+    rel = normalize_path(path)
+    if rel.startswith("works/") and rel.endswith(".md"):
+        return Path(rel).stem
+    if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
+        return Path(rel).stem
+    if rel.startswith("catalog/sources/"):
+        parts = rel.split("/")
+        if len(parts) >= 3:
+            return parts[2]
+    return ""
 
 
 def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
