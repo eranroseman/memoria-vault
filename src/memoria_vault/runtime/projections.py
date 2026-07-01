@@ -12,7 +12,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 
 BUNDLE_ROOTS = ("catalog", "knowledge", "capabilities")
 INDEX_PATHS = ("index.md", "catalog/index.md", "knowledge/index.md", "capabilities/index.md")
-TRACKED_PROJECTION_PATHS = (*INDEX_PATHS, "references.bib", "capabilities/ai-catalog.json")
+CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"
+TRACKED_PROJECTION_PATHS = (*INDEX_PATHS, "references.bib", CAPABILITY_INDEX_PATH)
 
 
 def render_workspace_index(vault: Path, index_path: str) -> str:
@@ -35,10 +36,10 @@ def render_tracked_projection(vault: Path, projection_path: str) -> str:
         from memoria_vault.runtime.capture import render_references_bib
 
         return render_references_bib(vault)
-    if rel == "capabilities/ai-catalog.json":
-        from memoria_vault.runtime.capabilities import render_ai_catalog
+    if rel == CAPABILITY_INDEX_PATH:
+        from memoria_vault.runtime.capabilities import render_capability_index
 
-        return render_ai_catalog(vault)
+        return render_capability_index(vault)
     raise ValueError(f"unsupported tracked projection: {projection_path}")
 
 
@@ -73,17 +74,17 @@ def write_tracked_projections(
     machine: str | None = None,
 ) -> dict[str, Any]:
     """Write all tracked generated projections."""
-    from memoria_vault.runtime.capabilities import write_ai_catalog
+    from memoria_vault.runtime.capabilities import write_capability_index
     from memoria_vault.runtime.capture import write_references_bib
 
     vault = Path(vault)
     index_result = write_workspace_indexes(vault)
     references_result = write_references_bib(vault)
-    catalog_result = write_ai_catalog(vault)
+    capability_index_result = write_capability_index(vault)
     changed = [
         *index_result["changed"],
         *([references_result["path"]] if references_result["changed"] else []),
-        *([catalog_result["path"]] if catalog_result["changed"] else []),
+        *([capability_index_result["path"]] if capability_index_result["changed"] else []),
     ]
     event = None
     commit_id = ""

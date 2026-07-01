@@ -1080,12 +1080,12 @@
         "projection_writer"
       ],
       "check_status": "checked",
-      "description": "Regenerate the tracked capability catalog projection.",
-      "id": "regenerate-ai-catalog",
+      "description": "Regenerate the tracked capability index projection.",
+      "id": "regenerate-capability-index",
       "model": "deterministic-fixture",
-      "operation_id": "regenerate-ai-catalog",
-      "path": "capabilities/operations/regenerate-ai-catalog.md",
-      "prompt_version": "regenerate-ai-catalog.v1",
+      "operation_id": "regenerate-capability-index",
+      "path": "capabilities/operations/regenerate-capability-index.md",
+      "prompt_version": "regenerate-capability-index.v1",
       "required_checks": [
         "projection-drift"
       ],
@@ -1095,9 +1095,9 @@
         "alpha11",
         "projection"
       ],
-      "title": "Regenerate ai-catalog",
+      "title": "Regenerate capability index",
       "trust": {
-        "sha256": "sha256:eac223620ed3764d6884654bd3844818f5ff7238b6ffdbe760a923027715e698",
+        "sha256": "sha256:d349fae8418792093afd1e7d0fd70e68e57684f6ddd907a844dcb3c38187bc7e",
         "source": "local"
       },
       "type": "operation"
@@ -1392,6 +1392,6 @@
       "type": "operation"
     }
   ],
-  "generated_by": "memoria_vault.runtime.capabilities.render_ai_catalog",
+  "generated_by": "memoria_vault.runtime.capabilities.render_capability_index",
   "schema_version": 1
 }

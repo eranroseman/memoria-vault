@@ -37,7 +37,7 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Rebuild checked qmd source](operations/rebuild-checked-qmd-source.md) `operation` — Rebuild qmd's disposable input tree from checked current Concepts.
 - [Record Co-PI interview](operations/record-copi-interview.md) `operation` — Record one PI interview takeaway for a checked source.
 - [Red-team an argument](operations/red-team-argument.md) `operation` — Make the strongest grounded counter-case against an argument.
-- [Regenerate ai-catalog](operations/regenerate-ai-catalog.md) `operation` — Regenerate the tracked capability catalog projection.
+- [Regenerate capability index](operations/regenerate-capability-index.md) `operation` — Regenerate the tracked capability index projection.
 - [Regenerate indexes](operations/regenerate-indexes.md) `operation` — Regenerate tracked workspace and bundle index projections.
 - [Regenerate references.bib](operations/regenerate-references-bib.md) `operation` — Regenerate the tracked BibTeX projection from checked SQLite catalog rows.
 - [Regenerate tracked projections](operations/regenerate-tracked-projections.md) `operation` — Regenerate all tracked generated workspace projections.
