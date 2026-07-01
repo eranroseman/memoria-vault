@@ -161,6 +161,8 @@ def enrich_source(
     canonical = _merge_doi_source(source, payloads)
     state.replace_external_ids(vault, canonical["external_ids"])
     state.replace_field_provenance(vault, source["source_id"], canonical["provenance"])
+    graph_edges = _first_order_work_graph(source["source_id"], payloads)
+    state.replace_work_graph_edges(vault, source["source_id"], graph_edges)
     text_status = str(source.get("text_status") or "metadata-only")
     content_hash = str(source.get("normalized_text_sha256") or "")
     content_path = str(source.get("content_path") or "")
@@ -264,6 +266,11 @@ def enrich_source(
             "commit": commit,
         }
 
+    candidate_paths = [
+        _write_discovery_candidate(vault, source, edge)
+        for edge in graph_edges
+        if edge["relation_type"] in {"references", "related"}
+    ]
     references_path = "references.bib"
     references_text = render_references_bib(vault)
     (vault / references_path).write_text(references_text, encoding="utf-8")
@@ -280,12 +287,15 @@ def enrich_source(
             "run_id": run_id,
             "workflow": "enrich-source",
             "status": "done",
-            "outputs": [references_path],
+            "outputs": [references_path, *candidate_paths],
         },
         machine=machine,
     )
     commit = commit_writer_changes(
-        vault, f"enrich source {source['source_id']}", [references_path], machine=machine
+        vault,
+        f"enrich source {source['source_id']}",
+        [references_path, *candidate_paths],
+        machine=machine,
     )
     state.finish_enrichment_run(vault, run_id, "enriched")
     return {
@@ -293,6 +303,7 @@ def enrich_source(
         "enrichment_status": "enriched",
         "references_path": references_path,
         "content_path": content_path,
+        "discovery_candidate_paths": candidate_paths,
         "text_status": text_status,
         "commit": commit,
     }
@@ -347,6 +358,48 @@ def _write_attention_flag(
             "# Evidence",
             "",
             evidence,
+            "",
+        ]
+    )
+    path.write_text(text, encoding="utf-8")
+    return rel
+
+
+def _write_discovery_candidate(vault: Path, source: dict[str, Any], edge: dict[str, Any]) -> str:
+    target_id = str(edge["target_id"])
+    target_title = str(edge.get("target_title") or target_id)
+    rel = normalize_path(
+        "inbox/candidate-work-"
+        f"{safe_filename(str(source['source_id']))}-"
+        f"{safe_filename(str(edge['relation_type']))}-"
+        f"{safe_filename(target_id)}.md"
+    )
+    path = vault / rel
+    if path.exists():
+        return rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "\n".join(
+        [
+            "---",
+            f'title: "Review discovered Work: {_yaml_str(target_title)}"',
+            "projection: attention",
+            "attention_kind: candidate",
+            "attention_status: open",
+            f'target: "catalog/sources/{_yaml_str(str(source["source_id"]))}"',
+            f'discovered_work_id: "{_yaml_str(target_id)}"',
+            f'relation_type: "{_yaml_str(str(edge["relation_type"]))}"',
+            "raised_by: enrich-source",
+            "loudness: normal",
+            f"created: {date.today().isoformat()}",
+            "---",
+            "",
+            "# Candidate Work",
+            "",
+            target_title,
+            "",
+            "# Evidence",
+            "",
+            f"{source['source_id']} {edge['relation_type']} this Work in provider metadata.",
             "",
         ]
     )
@@ -579,6 +632,88 @@ def _merge_doi_source(
         "external_ids": external_ids,
         "block_reason": block_reason,
     }
+
+
+def _first_order_work_graph(
+    source_id: str, payloads: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    rows: dict[tuple[str, str], dict[str, Any]] = {}
+    crossref = _crossref_message(payloads.get("crossref", {}))
+    references = crossref.get("reference")
+    if isinstance(references, list):
+        for reference_row in references:
+            if not isinstance(reference_row, dict):
+                continue
+            doi = str(reference_row.get("DOI") or reference_row.get("doi") or "").strip()
+            target = f"doi:{doi.casefold()}" if doi else str(reference_row.get("key") or "").strip()
+            if not target:
+                continue
+            title = str(
+                reference_row.get("article-title")
+                or reference_row.get("volume-title")
+                or reference_row.get("unstructured")
+                or target
+            ).strip()
+            _add_graph_row(
+                rows,
+                "references",
+                target,
+                title,
+                doi,
+                "crossref",
+                reference_row,
+            )
+
+    openalex = payloads.get("openalex", {})
+    for relation_type, field in (("references", "referenced_works"), ("related", "related_works")):
+        values = openalex.get(field)
+        if not isinstance(values, list):
+            continue
+        for target in values:
+            target_id = str(target or "").strip()
+            if target_id:
+                _add_graph_row(
+                    rows,
+                    relation_type,
+                    target_id,
+                    target_id.rsplit("/", 1)[-1],
+                    "",
+                    "openalex",
+                    {"id": target_id, "source_work": source_id},
+                )
+
+    topics = openalex.get("topics")
+    if isinstance(topics, list):
+        for topic in topics:
+            if not isinstance(topic, dict):
+                continue
+            title = str(topic.get("display_name") or topic.get("name") or "").strip()
+            target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
+            if target_id:
+                _add_graph_row(rows, "topic", target_id, title, "", "openalex", topic)
+    return list(rows.values())
+
+
+def _add_graph_row(
+    rows: dict[tuple[str, str], dict[str, Any]],
+    relation_type: str,
+    target_id: str,
+    target_title: str,
+    target_doi: str,
+    source_provider: str,
+    raw: dict[str, Any],
+) -> None:
+    rows.setdefault(
+        (relation_type, target_id),
+        {
+            "relation_type": relation_type,
+            "target_id": target_id,
+            "target_title": target_title,
+            "target_doi": target_doi,
+            "source_provider": source_provider,
+            "raw": raw,
+        },
+    )
 
 
 def _normalize_provider(provider: str, payload: dict[str, Any]) -> dict[str, Any]:

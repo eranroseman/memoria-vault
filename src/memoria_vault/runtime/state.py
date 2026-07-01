@@ -792,6 +792,38 @@ def replace_external_ids(vault: Path, rows: Iterable[dict[str, Any]]) -> None:
             )
 
 
+def replace_work_graph_edges(vault: Path, work_id: str, rows: Iterable[dict[str, Any]]) -> None:
+    stable_work_id = _source_id(work_id)
+    with connect(vault) as conn:
+        conn.execute("DELETE FROM work_graph_edges WHERE work_id = ?", (stable_work_id,))
+        for row in rows:
+            conn.execute(
+                """
+                INSERT INTO work_graph_edges(
+                    work_id,
+                    relation_type,
+                    target_id,
+                    target_title,
+                    target_doi,
+                    source_provider,
+                    raw_json,
+                    discovered_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    stable_work_id,
+                    str(row["relation_type"]),
+                    str(row["target_id"]),
+                    str(row.get("target_title") or ""),
+                    str(row.get("target_doi") or ""),
+                    str(row.get("source_provider") or ""),
+                    _json(row.get("raw") or {}),
+                    now_iso(),
+                ),
+            )
+
+
 def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     if not db_path(vault).is_file():
         return {}
@@ -993,6 +1025,19 @@ def _init(conn: sqlite3.Connection) -> None:
             confidence TEXT NOT NULL DEFAULT 'high',
             conflict_status TEXT NOT NULL DEFAULT 'none',
             PRIMARY KEY (source_id, field_path)
+        );
+        CREATE TABLE IF NOT EXISTS work_graph_edges (
+            work_id TEXT NOT NULL,
+            relation_type TEXT NOT NULL CHECK (
+                relation_type IN ('references', 'related', 'topic')
+            ),
+            target_id TEXT NOT NULL,
+            target_title TEXT NOT NULL DEFAULT '',
+            target_doi TEXT NOT NULL DEFAULT '',
+            source_provider TEXT NOT NULL DEFAULT '',
+            raw_json TEXT NOT NULL DEFAULT '{}',
+            discovered_at TEXT NOT NULL,
+            PRIMARY KEY (work_id, relation_type, target_id)
         );
         CREATE TABLE IF NOT EXISTS derivations (
             input_id TEXT NOT NULL,
