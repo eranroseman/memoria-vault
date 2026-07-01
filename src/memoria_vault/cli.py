@@ -327,6 +327,13 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
             cmd.set_defaults(handler=_cmd_workspace_rollback)
         elif name == "check":
             cmd.add_argument("--shadow", action="store_true", default=True)
+            cmd.add_argument(
+                "--assert",
+                dest="assertions",
+                action="append",
+                choices=("no-legacy-work-markdown",),
+                default=[],
+            )
             cmd.set_defaults(handler=_cmd_workspace_check)
         elif name == "export":
             cmd.add_argument("--output")
@@ -1083,12 +1090,14 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.projections import check_tracked_projections
     from memoria_vault.runtime.worker import INTEGRITY_SWEEP_OPERATIONS
 
-    projections = check_tracked_projections(_workspace(args))
+    workspace = _workspace(args)
+    projections = check_tracked_projections(workspace)
+    assertions = _workspace_assertions(workspace, args.assertions)
     if args.schedule_id:
         from memoria_vault.runtime.worker import run_integrity_sweep
 
         sweep = run_integrity_sweep(
-            _workspace(args),
+            workspace,
             shadow=bool(args.shadow),
             sweep_id=args.schedule_id,
             machine="memoria-cli",
@@ -1098,11 +1107,16 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
         ]
         return _emit(
             {
-                "ok": all(result["ok"] for result in results) and projections["ok"],
+                "ok": (
+                    all(result["ok"] for result in results)
+                    and projections["ok"]
+                    and assertions["ok"]
+                ),
                 "schedule_id": args.schedule_id,
                 "jobs": sweep["jobs"],
                 "checks": results,
                 "projections": projections,
+                "assertions": assertions["checks"],
             },
             args,
         )
@@ -1112,9 +1126,12 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
     ]
     return _emit(
         {
-            "ok": all(result["ok"] for result in results) and projections["ok"],
+            "ok": (
+                all(result["ok"] for result in results) and projections["ok"] and assertions["ok"]
+            ),
             "checks": results,
             "projections": projections,
+            "assertions": assertions["checks"],
         },
         args,
     )
@@ -1672,6 +1689,18 @@ def _doctor_checks(workspace: Path) -> dict[str, Any]:
         "state_db": state.db_path(workspace).is_file(),
         "git": shutil.which("git") is not None,
     }
+
+
+def _workspace_assertions(workspace: Path, assertions: list[str]) -> dict[str, Any]:
+    checks = []
+    for assertion in assertions:
+        if assertion == "no-legacy-work-markdown":
+            findings = [
+                path.relative_to(workspace).as_posix()
+                for path in sorted((workspace / "catalog/sources").glob("*/source.md"))
+            ]
+            checks.append({"assertion": assertion, "ok": not findings, "findings": findings})
+    return {"ok": all(check["ok"] for check in checks), "checks": checks}
 
 
 def _request_row(workspace: Path, request_id: str) -> Any | None:
