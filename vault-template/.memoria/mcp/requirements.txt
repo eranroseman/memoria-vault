@@ -16,7 +16,7 @@ PyYAML>=6.0.3
 # (PMC / pre-extracted tiers); installing it enables the local Zotero-PDF
 # fallback for papers not in an open-access full-text source.
 # (pymupdf4llm realigned its versioning to track PyMuPDF: 0.3.x -> 1.27.x.x.)
-pymupdf4llm>=1.27.2.3
+pymupdf4llm>=1.28.0
 
 # tasks_mcp.py (fronts the Hermes Kanban) needs no extra dependencies: it uses
 # mcp + PyYAML above and shells out to the hermes CLI.
