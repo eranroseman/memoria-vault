@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Installer (bootstrap)
 
-The bootstrap installers (`scripts/install.ps1` for native Windows production; `scripts/install.sh` for Linux/WSL testing): what each step does, the flags, and the crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `vault-template/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `vault-template/`, and stages a restorable golden copy of every system file.
+The bootstrap installers (`scripts/install.sh` for the standalone Linux/WSL CLI/runtime path; `scripts/install.ps1` for the current native Windows Hermes adapter path): what each step does, the flags, and the optional crons they wire. The install model is **scaffold → populate → golden copy** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the vault under `vault-template/`, the installer creates the schema-checked folder skeleton in your runtime vault, fills it from `vault-template/`, and stages a restorable golden copy of every system file.
 
 Safety features: no silent privilege escalation, `--dry-run` echoes commands and touches nothing, and `--yes` is the only non-interactive path.
 
@@ -17,7 +17,9 @@ Safety features: no silent privilege escalation, `--dry-run` echoes commands and
 | Flag | Effect |
 | --- | --- |
 | `--vault DIR` | Install the runtime vault here (default `~/Memoria`; prompted otherwise). Pick a folder outside any cloud-synced tree. |
-| `--profiles-only` | Skip fresh vault creation; just deploy MCP deps, the five profiles, and crons from an existing vault after editing profile source or adding keys to `~/.hermes/.env`. |
+| `--with-hermes` | Linux/WSL adapter path: also install Hermes, deploy the five profiles, wire Hermes crons, install profile skills, and guide Obsidian setup. |
+| `--with-cluster` | Install the optional clustering stack (`bertopic` → `torch`, about 2 GB). Without this flag, graph tools still work and topic modeling errors cleanly. |
+| `--profiles-only` | Skip fresh vault creation; just deploy runtime deps, the five profiles, and crons from an existing vault after editing profile source or adding keys to `~/.hermes/.env`. |
 | `--only NAMES` | Restrict the profile step to a comma-separated subset (e.g. `--only memoria-librarian`); pairs with `--profiles-only`. |
 | `--no-apps` / `-NoApps` | Skip the Obsidian guidance (headless / server installs). |
 | `--dry-run` | Print every command that would run; change nothing. |
@@ -34,8 +36,7 @@ bash scripts/install-test-vault-local-llm.sh
 The harness treats `~/Memoria-test` as disposable and installs the real vault at
 `~/Memoria-test/vault` so tool-managed files at the root do not collide with the
 vault's own `.git`. Every run wipes that child vault, initializes Git before the
-installer so commit hooks are wired, runs `scripts/install.sh --vault ... --no-apps
---yes` with `MEMORIA_ENV=test` and the custom model overlay, creates the baseline
+installer so commit hooks are wired, runs `scripts/install.sh --with-hermes --vault ... --no-apps --yes` with `MEMORIA_ENV=test` and the custom model overlay, creates the baseline
 commit, then checks package import, golden-copy drift, detectors, Hermes profile
 and cron registration, and the real-model L2 smoke.
 
@@ -64,7 +65,7 @@ when validating installer mechanics without a running local model.
 | `MEMORIA_MODEL_NAME` | Overrides the test overlay model name. |
 | `MEMORIA_MODEL_CONTEXT_LENGTH` | Adds rendered `context_length` and `ollama_num_ctx` when `MEMORIA_ENV=test` and `MEMORIA_MODEL_PROVIDER=custom`. |
 
-The model overlay changes only the Hermes model block. The Obsidian MCP remains verified loopback HTTPS and still requires `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OBSIDIAN_API_KEY` in each profile's `.env`.
+The model overlay changes only the Hermes model block in the `--with-hermes` adapter path. The standalone runtime reads provider configuration from the workspace/runtime configuration instead of Hermes profile `.env` files. When the Hermes adapter is used, the Obsidian MCP remains verified loopback HTTPS and still requires `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OBSIDIAN_API_KEY` in each profile's `.env`.
 
 ---
 
@@ -72,25 +73,31 @@ The model overlay changes only the Hermes model block. The Obsidian MCP remains 
 
 | Step | What happens |
 | --- | --- |
-| 1. Prerequisites | Ensures `git` and `pandoc` (Hermes provisions uv-Python, Node, ripgrep, ffmpeg itself). |
+| 1. Prerequisites | Ensures `git` and Python 3 with venv support. `pandoc` is optional and only needed for DOCX/PDF exports. |
 | 2. Fetch the repo | Clones `memoria-vault` to a temp staging dir (or uses a local checkout). |
-| 3. Hermes | Runs the official Hermes installer for the host OS. On Windows this is Hermes's native PowerShell installer; on Linux/WSL this is the shell installer. |
-| 4. Scaffold + populate | Copies `vault-template/` into a new vault, then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). A full install refuses an existing Memoria vault; use a fresh target for a new release. |
-| 4a. Golden copy | Stages the shipped system files and SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden_restore.py stage`). |
-| 4b. Git hooks | If the vault is a git repo, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue Peer-reviewer verification. (The vault is _your_ repo; the installer never `git init`s for you.) |
-| 4c. Obsidian CSS snippets | Preserves `.obsidian/appearance.json` but reconciles `enabledCssSnippets` so the Memoria link-color and property-badge snippets are on by default. Missing shipped snippet files are copied back; other appearance settings are left alone. |
-| 5. MCP dependencies + package | Creates the vault-local venv at `.memoria/.venv`, pip-installs `mcp/requirements.txt`, and installs the Memoria package from the release root (`pip install <release_root>`). The **clustering stack is opt-in**: a confirm prompt offers `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
-| 5b. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing, registers `.memoria/index/qmd/checked` as the checked-only qmd collection, and leaves vector embedding unbuilt. Resolves the absolute binary path into each profile's `{{QMD}}` slot — a conda package also ships a `qmd`, so PATH lookup is unsafe. |
-| 6. Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, reconciles the source-owned `skills/` directory (including clearing stale bundled skills from profiles that opt out), bootstraps `.env` from `.env.EXAMPLE`, propagates shared secrets from `~/.hermes/.env` (profile runs read only their own `.env`), and deploys the `memoria-policy-gate` write-gate plugin per lane. |
-| 7. Skills | Clones the K-Dense bundle, verifies bundled official Hermes skills, installs the official optional `research/qmd` skill, and installs the `obsidian-markdown` hub skill. |
-| 8. Obsidian | Guided, not silent: Windows offers `winget`; Linux offers the Flatpak/AppImage path. **Zotero is no longer provisioned by the Linux test installer** — Windows production still offers winget guidance because Zotero is the expected production bibliography surface. |
-| 9. Secrets + next steps | Prints where keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist (use the left-pane rail to open Library, then open the Agent Client pane when you want conversational help). |
+| 3. Scaffold + populate | Copies `vault-template/` into a new vault, then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). A full install refuses an existing Memoria vault; use a fresh target for a new release. |
+| 3a. Golden copy | Stages the shipped system files and SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden_restore.py stage`). |
+| 3b. Git repo + hooks | Initializes Git when needed, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue verification. The vault is _your_ repo: the installer never commits, sets identity, or adds a remote. |
+| 4. Runtime dependencies + package | Creates the vault-local venv at `.memoria/.venv`, pip-installs `mcp/requirements.txt`, and installs the Memoria package from the release root (`pip install <release_root>`). The **clustering stack is opt-in**: add `--with-cluster` to install `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
+| 5. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing and registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index paths. |
+| 6. CLI next steps | Prints the exact vault-local Python commands for `memoria doctor bundle --workspace ...`, `memoria workspace rebuild --search`, and `memoria ask`. |
+
+With `--with-hermes`, the Linux/WSL installer adds the adapter steps after the standalone runtime is installed:
+
+| Adapter step | What happens |
+| --- | --- |
+| Hermes | Runs the official Hermes installer and verifies ACP. |
+| Obsidian CSS and agent-client seed | Reconciles the Memoria CSS snippets and seeds `agent-client/data.json` for the WSL test path. |
+| Profiles | Deploys the **five** profiles (`memoria-copi`, `-librarian`, `-writer`, `-peer-reviewer`, `-engineer`): substitutes `{{PYTHON}}` (the venv interpreter), `{{VAULT_PATH}}`, `{{QMD}}`, and the `{{MODEL_*}}` slots into each `config.yaml`, verifies the generated Obsidian MCP config still uses `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` with `ssl_verify: ${OBSIDIAN_MCP_SSL_VERIFY}`, runs `hermes profile install`, refreshes the rendered deployed `config.yaml`, reconciles profile-owned skills, bootstraps `.env`, propagates shared secrets from `~/.hermes/.env`, and deploys the `memoria-policy-gate` write-gate plugin per lane. |
+| Skills | Clones the K-Dense bundle, verifies bundled official Hermes skills, installs the official optional `research/qmd` skill, and installs the `obsidian-markdown` hub skill. |
+| Obsidian | Guided, not silent: Linux offers the Flatpak/AppImage path. Zotero is not provisioned. |
+| Secrets + next steps | Prints where Hermes profile keys go (`~/.hermes/.env` -> re-run `--profiles-only` to propagate) and the first-session checklist. |
 
 ---
 
 ## The crons it wires
 
-All six are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappers are substituted into `~/.hermes/scripts/` and the job creation is idempotent.
+With `--with-hermes`, all six are deterministic, no-LLM `hermes cron … --no-agent` jobs; the wrappers are substituted into `~/.hermes/scripts/` and the job creation is idempotent. The standalone CLI/runtime path does not wire Hermes crons.
 
 | Cron | Schedule | Runs | Effect |
 | --- | --- | --- | --- |
@@ -109,9 +116,10 @@ A further wrapper ships for the monthly Retraction Watch refresh (`vault-templat
 
 | Item | Where |
 | --- | --- |
-| `KILOCODE_API_KEY` (production model access; not used by the `MEMORIA_ENV=test` local model block), `OBSIDIAN_API_KEY` + `OBSIDIAN_MCP_PORT` + `OBSIDIAN_MCP_SSL_VERIFY` (Local REST API HTTPS/native MCP), `OPENALEX_API_KEY` (required since 2026-02) | `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate |
-| Obsidian first launch | Open the vault folder and allow the bundled community plugins to load |
-| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; manual Obsidian Git checkpoints, hooks, rollback, and history need the runtime vault to be a repo. |
+| Runtime provider keys | Shell environment or workspace runtime configuration consumed by the standalone CLI. |
+| Hermes/Obsidian keys, only when using the adapter | `KILOCODE_API_KEY`, `OBSIDIAN_API_KEY`, `OBSIDIAN_MCP_PORT`, `OBSIDIAN_MCP_SSL_VERIFY`, and `OPENALEX_API_KEY` in `$env:LOCALAPPDATA\hermes\.env` on Windows or `~/.hermes/.env` on Linux/WSL, then rerun the matching installer with `-ProfilesOnly` / `--profiles-only` to propagate. |
+| Obsidian first launch, only when using the UI adapter | Open the vault folder and allow the bundled community plugins to load. |
+| git binary + git in the vault | The host or sandbox must have `git` on `PATH`; checkpoints, hooks, rollback, and history need the runtime vault to be a repo. |
 | Zotero (optional) | The bring-in-a-paper tutorial on the docs site |
 
 ---

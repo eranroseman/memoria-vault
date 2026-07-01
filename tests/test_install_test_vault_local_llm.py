@@ -33,7 +33,7 @@ def test_harness_runs_real_installer_with_local_model_overlay() -> None:
         'MEMORIA_MODEL_BASE_URL="$BASE_URL"',
         'MEMORIA_MODEL_NAME="$MODEL"',
         'MEMORIA_MODEL_CONTEXT_LENGTH="$CONTEXT"',
-        'bash "$ROOT/scripts/install.sh" --vault "$VAULT" --no-apps --yes',
+        'bash "$ROOT/scripts/install.sh" --with-hermes --vault "$VAULT" --no-apps --yes',
     ):
         assert marker in text
 
