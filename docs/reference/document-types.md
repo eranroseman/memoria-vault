@@ -29,7 +29,7 @@ Total types: **12** (Catalog Concepts: 4, Knowledge Concepts: 4, Capability Conc
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `organization` | `catalog/entities` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
 | `person` | `catalog/entities` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `source` | `catalog/sources` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `links` · `tags` |
+| `source` | `catalog/sources` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `text_status` · `links` · `tags` |
 | `venue` | `catalog/entities` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
 
 ## Knowledge Concepts (4)

@@ -170,6 +170,7 @@ def enrich_source(
         citekey=source.get("citekey") or canonical["csl_json"].get("id") or "",
         csl_json=canonical["csl_json"],
         metadata_status=metadata_status,
+        text_status=source.get("text_status", "metadata-only"),
         check_status=check_status,
         content_hash=source.get("normalized_text_sha256", ""),
         raw_hash=source.get("raw_text_sha256", ""),

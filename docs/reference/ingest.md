@@ -71,6 +71,7 @@ selection, and richer coherence gates remain follow-on work.
 | --- | --- |
 | `type`, `check_status`, `title`, `description`, `source_id` | Required source schema fields. |
 | `resource`, `citekey`, `item_type`, `identifiers`, `csl_json`, `metadata_status` | Optional metadata supplied by the capture caller. |
+| `text_status` | `full-text`, `abstract-only`, or `metadata-only`; only `full-text` can produce a checked digest. |
 | `raw_copy_path`, `content_path` | Relative paths to the raw blob and extracted markdown. |
 | `raw_text_sha256`, `normalized_text_sha256` | Content hashes used by trace and later integrity checks. |
 
