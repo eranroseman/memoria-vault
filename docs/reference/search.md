@@ -25,7 +25,7 @@ the *typed graph* (not text similarity) is documented separately in
 ## The retrieval surface
 
 Memoria runs a stdio MCP named `qmd` beside the obsidian native MCP, exposing
-read-only qmd search over the checked Concept corpus through the filtered
+read-only qmd search over checked retrieval documents through the filtered
 wrapper. It is wired into the four reading-active profiles — **Librarian,
 Writer, Co-PI, Peer-reviewer** — and the `ask-*` / `explore-*` skills use it
 for reads.
@@ -42,7 +42,7 @@ The qmd executable is resolved to an absolute path at deploy (`{{QMD}}`) because
 a conda package also ships a `qmd` binary and bare `PATH` is ambiguous.
 
 The MCP wrapper filters qmd JSON rows back through the vault before returning
-them. `unchecked`, `quarantined`, stale, missing, or non-Concept paths are
+them. `unchecked`, `quarantined`, stale, missing, or non-retrieval paths are
 hidden by default. This is the retrieval side of the same read barrier that
 keeps machine writes in staging until worker checks pass.
 
@@ -50,7 +50,7 @@ keeps machine writes in staging until worker checks pass.
 
 ## Current baseline
 
-The implemented alpha.11 baseline is checked-only BM25 over Concepts copied
+The implemented baseline is checked-only BM25 over retrieval documents written
 into `.memoria/index/qmd/checked/` by
 `memoria_vault.runtime.search_index.rebuild_checked_qmd_source()`.
 `answer_query()` exposes the deterministic Ask/Query contract over that BM25
@@ -81,8 +81,9 @@ work. They count only after they beat the BM25 or long-context baseline.
 ## The index
 
 The disposable qmd input tree lives inside the vault and is gitignored. It is
-rebuilt from checked Concepts when results go stale. The rebuild procedure is
-owned by [Rebuild the search index](../how-to-guides/operate/rebuild-the-search-index.md).
+rebuilt from checked Concepts plus generated checked Work text and graph
+neighborhood documents when results go stale. The rebuild procedure is owned by
+[Rebuild the search index](../how-to-guides/operate/rebuild-the-search-index.md).
 
 ---
 
@@ -102,10 +103,10 @@ owned by [Rebuild the search index](../how-to-guides/operate/rebuild-the-search-
 | Limit | Meaning | User symptom |
 | --- | --- | --- |
 | Read-only and local | Search never mutates the vault or calls a network service. | It cannot cause a denied write or leaked note. |
-| Checked-current by default | Only current `check_status: checked` Concepts are returned; raw CLI checks bypass this wrapper. | CLI and agent results may differ. |
-| Index can lag | A new Concept is not searchable until the checked-only input tree and qmd index are rebuilt. | "The Co-PI misses Concepts I know exist" ([Failure modes](failure-modes.md)). |
+| Checked-current by default | Only current `check_status: checked` retrieval documents are returned; raw CLI checks bypass this wrapper. | CLI and agent results may differ. |
+| Index can lag | A new Concept, checked Work text, or graph neighborhood is not searchable until the checked-only input tree and qmd index are rebuilt. | "The Co-PI misses Concepts I know exist" ([Failure modes](failure-modes.md)). |
 | No standalone duplicate sweep | Retrospective duplicate detection is still skill/sub-check work. | The shipped search surface is retrieval, not dedupe. |
-| Text, not graph | `qmd` ranks by text similarity. | Relationship-aware retrieval belongs to [Clustering](clustering.md). |
+| Text-ranked graph context | `qmd` ranks textual Work, Concept, and graph-neighborhood documents; it does not run graph algorithms. | Relationship-aware retrieval beyond first-order neighborhoods belongs to [Clustering](clustering.md). |
 
 ---
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.search_index import (
     answer_query,
     evaluate_bm25,
@@ -58,6 +59,60 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
     assert manifest["qmd_commands"][-1] == "qmd update"
+
+
+def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    content = vault / ".memoria/blobs/source-content/source-alpha/full-text/alpha.txt"
+    content.parent.mkdir(parents=True)
+    content.write_text("full text rarealpha retrieval token", encoding="utf-8")
+    state.upsert_catalog_record(
+        vault,
+        source_id="source-alpha",
+        title="Alpha Work",
+        doi="10.1000/alpha",
+        identifiers={"doi": "10.1000/alpha"},
+        citekey="alpha2026",
+        csl_json={"id": "alpha2026", "title": "Alpha Work", "DOI": "10.1000/alpha"},
+        metadata_status="verified",
+        text_status="full-text",
+        check_status="checked",
+        content_path=content.relative_to(vault).as_posix(),
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Beta Work",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+
+    manifest = rebuild_checked_qmd_source(vault)
+
+    assert [row["path"] for row in manifest["documents"]] == [
+        "graph-neighborhoods/source-alpha.md",
+        "works/source-alpha.md",
+    ]
+    work = vault / ".memoria/index/qmd/checked/works/source-alpha.md"
+    graph = vault / ".memoria/index/qmd/checked/graph-neighborhoods/source-alpha.md"
+    assert "full text rarealpha" in work.read_text(encoding="utf-8")
+    assert '"doi": "10.1000/alpha"' in work.read_text(encoding="utf-8")
+    assert "Beta Work" in graph.read_text(encoding="utf-8")
+    assert filter_checked_results(vault, [{"file": graph.as_posix()}]) == [
+        {"file": graph.as_posix()}
+    ]
+    assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "works/source-alpha.md"
+    assert (
+        answer_query(vault, "Beta Work")["sources"][0]["path"]
+        == "graph-neighborhoods/source-alpha.md"
+    )
 
 
 def test_filter_checked_results_applies_read_barrier_to_qmd_rows(tmp_path: Path) -> None:
