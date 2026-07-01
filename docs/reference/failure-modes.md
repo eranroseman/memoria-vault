@@ -40,7 +40,7 @@ Sorted by severity, then topic.
 | Cron job didn't fire overnight | MEDIUM | Sleep-prone host, stale `.env`, or missing Hermes cron registration | Check `hermes cron list`, the latest board/metrics outputs under `system/`, and rerun the installer profiles-only path if wrappers are missing. |
 | Retry count climbing on same card | MEDIUM | Brittle prompt or broken tool | After `max_retries` (default 3) the card auto-moves to `blocked`. Revise the handoff `metadata` or archive as infeasible. |
 | Card not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-claim, unresolved `assignee`, or human decision owed on `blocked` card | See full recipe in [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md). |
-| Citekey not found at ingest | LOW | `.bib` not updated or not pulled | Refresh the Zotero export and runtime bibliography. |
+| Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL/Zotero-export file or capture the source by DOI/file path. |
 | `_enrichment` fields not queryable | LOW | `_enrichment` is a nested frontmatter namespace; Dataview can't query nested keys directly | Promote specific fields (e.g., `enriched_date`) to main frontmatter, or query the parent key. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
 | Profile install drift after edit | LOW | Vault source changed but profiles not re-deployed | Re-run `bash scripts/install.sh --profiles-only` (`.\scripts/install.ps1 -ProfilesOnly` on Windows). |

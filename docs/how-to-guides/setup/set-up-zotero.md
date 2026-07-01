@@ -8,14 +8,14 @@ nav_order: 4
 
 # Set up Zotero
 
-Configure Zotero with Better BibTeX stable citekeys and local API access.
-Memoria generates `references.bib` from checked SQLite catalog rows; Zotero does
-not write a live bibliography file into the vault.
+Optional setup for users who keep references in Zotero. Memoria generates
+`references.bib` from checked SQLite catalog rows; Zotero does not write a live
+bibliography file into the vault and is not required for the standalone runtime.
 
 ## Prerequisites
 
 - Zotero 9 installed ([zotero.org](https://www.zotero.org/download/))
-- Better BibTeX plugin installed in Zotero ([retorque.re/zotero-better-bibtex/](https://retorque.re/zotero-better-bibtex/))
+- Better BibTeX plugin installed in Zotero if you want Zotero-generated citekeys ([retorque.re/zotero-better-bibtex/](https://retorque.re/zotero-better-bibtex/))
 - The vault cloned ([Set up the vault](set-up-the-vault.md))
 
 ## Steps
@@ -60,15 +60,12 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 - The citekey matches the `mamykina2010sense` shape.
 - The key is pinned (shown with a lock icon in Zotero's item list, and `extra: bibtex: mamykina2010sense` in the item's Extra field).
 
-## Enable the local API
+## Export an item snapshot
 
-Capture and citation checks resolve item metadata through Zotero's **local
-desktop API** — no Web API key, no cloud, no write access. Zotero exposes this
-at `http://localhost:23119` while it's running (Zotero 9; if it isn't already
-on, enable local API access under **Settings → Advanced**).
-
-- Zotero must be **running** for the MCP to reach it.
-- It is **read-only** — Memoria reads from Zotero but never writes back to it.
+Alpha.14 capture reads portable files. Export a Zotero item to CSL JSON or copy
+BibTeX for the item, then import it with `memoria work import --format csl` or
+`memoria work import --format bibtex`. Live Zotero Local API capture is not part
+of the standalone runtime.
 
 ## MarkDB-Connect
 
@@ -80,14 +77,14 @@ files, while Memoria source Concepts live under
 
 DOI enrichment calls Crossref, OpenAlex, and Unpaywall. OpenAlex requires
 `OPENALEX_API_KEY`; Crossref and Unpaywall use the contact email from
-`NCBI_EMAIL`. Add them to the Librarian's `.env` in [Set up Hermes](set-up-hermes.md).
-Semantic Scholar and PubMed enrichment are deferred beyond the DOI MVP.
+`NCBI_EMAIL`. Configure them in the workspace runtime environment or, when using
+the Hermes adapter, in [Set up Hermes](set-up-hermes.md). Semantic Scholar and
+PubMed enrichment are deferred beyond the DOI MVP.
 
 For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 
 ## Related
 
-- Next step: [Set up Hermes](set-up-hermes.md)
 - What capture does with Zotero metadata: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Generated bibliography behavior: [System actions](../../reference/system-actions.md)
 - Citekey naming convention: [ADR-6](../../adr/06-citekey-naming-convention.md)

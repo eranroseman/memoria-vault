@@ -33,15 +33,15 @@ ADR trail rather than living only in a release scratch note.
 ## Decision
 
 The all-Linux test environment is a **version-controlled golden image** (a
-peer-reviewed `Dockerfile`) holding the full real stack — headless Obsidian
-(`xvfb-run --no-sandbox`) with all plugins, Zotero (headless) or a fixture
-`memoria.bib`, Git, Hermes, the five `memoria-*` profiles + MCP, the Local REST
-API + native MCP, and `qmd` — with the local model as a `--gpus all` sibling
-container. `docker compose` brings it up clean per run; a fresh vault volume is
-seeded from checksummed, idempotent fixtures; nothing persists across runs except
-the cached model weights. The image MUST include a real `git` binary and
-initialize the throwaway vault as a repository before any git-backed assertions
-run; a sandbox without Git is unsupported, because manual Obsidian Git checkpoints,
+peer-reviewed `Dockerfile`) holding the real standalone stack — the Memoria
+CLI/runtime, Git, qmd, fixture portable import files, and the local model as a
+`--gpus all` sibling container. Adapter-specific suites may add headless
+Obsidian (`xvfb-run --no-sandbox`) with plugins, Hermes profiles + MCP, and the
+Local REST API + native MCP. `docker compose` brings it up clean per run; a
+fresh vault volume is seeded from checksummed, idempotent fixtures; nothing
+persists across runs except the cached model weights. The image MUST include a
+real `git` binary and initialize the throwaway vault as a repository before any
+git-backed assertions run; a sandbox without Git is unsupported, because manual Obsidian Git checkpoints,
 the pre-commit schema gate, post-commit verification, rollback, and history are part
 of the system under test. A **pytest orchestrator** drives the Obsidian CLI over the
 command-palette surface (one trigger per palette command), asserting artifact

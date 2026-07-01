@@ -33,7 +33,7 @@ status.
 | # | Decision | Status |
 |---|---|---|
 | [03](03-structural-review-gate.md) | Review gate is structural, enforced by the policy MCP | accepted |
-| [05](05-zotero-as-bibliographic-backbone.md) | Zotero + Better BibTeX as the bibliographic backbone | accepted |
+| [05](05-zotero-as-bibliographic-backbone.md) | Superseded Zotero bibliography authority | superseded → ADR-124 |
 | [06](06-citekey-naming-convention.md) | Citekey naming convention | accepted |
 | [07](07-delegate-coding-to-external-agents.md) | Code agent attachment | accepted |
 | [09](09-contradictions-dashboard.md) | Contradictions / tensions dashboard | accepted |
@@ -115,6 +115,7 @@ status.
 | [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | superseded → ADR-122 |
 | [122](122-sqlite-working-state-boundary.md) | SQLite working state and catalog records sit behind the checked Concept boundary | accepted |
 | [123](123-doi-catalog-enrichment-gate.md) | DOI catalog enrichment gates checked source promotion | accepted |
+| [124](124-standalone-catalog-citation-authority.md) | Standalone catalog is the citation authority | accepted |
 
 <!-- ADR-INDEX:END -->
 
