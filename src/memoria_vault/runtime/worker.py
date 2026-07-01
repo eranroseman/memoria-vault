@@ -525,10 +525,14 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             seed_terms=seed_terms,
             dense_threshold=dense_threshold,
+            machine=machine,
         )
         return {
             "checked_topics": result["checked_topics"],
             "dense_threshold": result["dense_threshold"],
+            "full_text_gap_count": result["full_text_gap_count"],
+            "discovery_candidate_paths": result["discovery_candidate_paths"],
+            "discovery_commit": result["discovery_commit"],
             "gap_count": len(result["gaps"]),
             "gaps": result["gaps"],
         }
