@@ -301,6 +301,61 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
 
 
+def test_cli_project_gaps_runs_gap_analysis_request(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha digest\n"
+        "tags: [sleep]\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "project",
+            "gaps",
+            "--workspace",
+            str(workspace),
+            "--seed-term",
+            "new area",
+            "--dense-threshold",
+            "1",
+            "--json",
+            "--idempotency-key",
+            "project-gaps",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
+    assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["new area"]["gap_type"] == "new-topic"
+    with state.connect(workspace) as conn:
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(operation_requests)")}
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("project-gaps",),
+        ).fetchone()
+    assert "trigger_type" not in columns
+    assert row["operation_id"] == "analyze-gaps"
+    assert json.loads(row["args_json"]) == {
+        "seed_terms": ["new area"],
+        "dense_threshold": 1,
+    }
+
+
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

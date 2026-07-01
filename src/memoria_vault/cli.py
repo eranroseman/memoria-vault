@@ -136,7 +136,12 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     ask.add_argument("project_id")
     ask.add_argument("--question", required=True)
     ask.set_defaults(handler=_cmd_project_ask)
-    for name in ("trace", "gaps", "suggest-hubs", "export"):
+    gaps = project_sub.add_parser("gaps")
+    _common(gaps)
+    gaps.add_argument("--seed-term", action="append", default=[])
+    gaps.add_argument("--dense-threshold", type=int, default=2)
+    gaps.set_defaults(handler=_cmd_project_gaps)
+    for name in ("trace", "suggest-hubs", "export"):
         cmd = project_sub.add_parser(name)
         _common(cmd)
         cmd.set_defaults(handler=_not_implemented(f"project {name}"))
@@ -385,6 +390,17 @@ def _cmd_project_ask(args: argparse.Namespace) -> int:
             args,
             "answer-query",
             {"query": args.question, "project_id": args.project_id, "k": 5},
+        ),
+        args,
+    )
+
+
+def _cmd_project_gaps(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "analyze-gaps",
+            {"seed_terms": args.seed_term, "dense_threshold": args.dense_threshold},
         ),
         args,
     )
