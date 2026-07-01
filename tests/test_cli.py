@@ -356,6 +356,63 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     }
 
 
+def test_cli_operation_list_and_run_use_workspace_operation_concepts(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest.parent.mkdir(parents=True, exist_ok=True)
+    digest.write_text(
+        "---\n"
+        "type: digest\n"
+        "check_status: checked\n"
+        "title: Alpha digest\n"
+        "tags: [sleep]\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+
+    assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
+    listed = json.loads(capsys.readouterr().out)
+    operation_ids = {row["operation_id"] for row in listed["operations"]}
+    assert {"analyze-gaps", "enrich-source", "integrity-citation-survival-check"} <= operation_ids
+
+    rc = main(
+        [
+            "operation",
+            "run",
+            "--workspace",
+            str(workspace),
+            "analyze-gaps",
+            "--payload-json",
+            json.dumps({"seed_terms": ["new area"], "dense_threshold": 1}),
+            "--json",
+            "--idempotency-key",
+            "operation-run-gaps",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
+    assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["new area"]["gap_type"] == "new-topic"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
+            ("operation-run-gaps",),
+        ).fetchone()
+    assert row["operation_id"] == "analyze-gaps"
+    assert json.loads(row["args_json"]) == {
+        "seed_terms": ["new area"],
+        "dense_threshold": 1,
+    }
+
+
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

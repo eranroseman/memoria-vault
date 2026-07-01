@@ -168,10 +168,16 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
 def _operation_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     operation = sub.add_parser("operation")
     operation_sub = operation.add_subparsers(dest="operation_command", required=True)
-    for name in ("list", "run"):
-        cmd = operation_sub.add_parser(name)
-        _common(cmd)
-        cmd.set_defaults(handler=_not_implemented(f"operation {name}"))
+    list_cmd = operation_sub.add_parser("list")
+    _common(list_cmd)
+    list_cmd.set_defaults(handler=_cmd_operation_list)
+    run = operation_sub.add_parser("run")
+    _common(run)
+    run.add_argument("operation_id")
+    payload = run.add_mutually_exclusive_group()
+    payload.add_argument("--payload-json", default="{}")
+    payload.add_argument("--payload-file")
+    run.set_defaults(handler=_cmd_operation_run)
 
 
 def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -406,6 +412,33 @@ def _cmd_project_gaps(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_operation_list(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.vaultio import read_frontmatter
+
+    operations = []
+    for path in sorted((_workspace(args) / "capabilities/operations").glob("*.md")):
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("type") != "operation":
+            continue
+        operations.append(
+            {
+                "operation_id": frontmatter.get("operation_id") or path.stem,
+                "title": frontmatter.get("title") or path.stem,
+                "check_status": frontmatter.get("check_status") or "",
+                "risk_class": frontmatter.get("risk_class") or "",
+                "runner": frontmatter.get("runner") or "",
+            }
+        )
+    return _emit({"ok": True, "operations": operations}, args)
+
+
+def _cmd_operation_run(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(args, args.operation_id, _operation_payload(args)),
+        args,
+    )
+
+
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
     results = run_pending_jobs(_workspace(args), limit=args.limit, machine="memoria-cli")
     return _emit({"ok": True, "ran": len(results), "results": results}, args)
@@ -547,6 +580,18 @@ def _read_provider_replay(path: Path) -> dict[str, Any]:
     for child in sorted(path.glob("*.json")):
         payloads[child.stem] = json.loads(child.read_text(encoding="utf-8"))
     return payloads
+
+
+def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
+    raw = (
+        Path(args.payload_file).read_text(encoding="utf-8")
+        if args.payload_file
+        else args.payload_json
+    )
+    payload = json.loads(raw)
+    if not isinstance(payload, dict):
+        raise ValueError("operation payload must be a JSON object")
+    return payload
 
 
 def _read_csl_item(text: str) -> dict[str, Any]:
