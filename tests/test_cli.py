@@ -448,7 +448,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
         == 0
     )
     interview = json.loads(capsys.readouterr().out)
-    assert interview["result"]["source_id"] == "catalog/sources/doi-10.1000_alpha/source.md"
+    assert interview["result"]["source_id"] == "doi-10.1000_alpha"
     assert interview["result"]["turn_id"].startswith("journal:copi-interview:")
 
     rc = main(

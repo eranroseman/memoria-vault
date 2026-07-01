@@ -919,10 +919,11 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "catalog/sources/source-alpha/source.md"
+    assert done["source_id"] == "source-alpha"
     assert done["turn_id"].startswith("journal:copi-interview:")
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[-1]["event"] == "copi-interview"
+    assert events[-1]["source_id"] == "source-alpha"
     assert events[-1]["response"] == "The PI cares about the methods caveat."
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl"}
