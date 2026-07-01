@@ -373,6 +373,9 @@ def _simple_resource(
         elif name == "journal" and action == "list":
             cmd.add_argument("--operation")
             cmd.add_argument("--request-id")
+            cmd.add_argument("--path")
+            cmd.add_argument("--decision")
+            cmd.add_argument("--date")
             cmd.add_argument("--limit", type=int, default=50)
             cmd.set_defaults(handler=_cmd_journal_list)
         elif name == "journal" and action == "show":
@@ -1218,6 +1221,20 @@ def _cmd_journal_list(args: argparse.Namespace) -> int:
     if args.request_id:
         clauses.append("json_extract(payload_json, '$.request_id') = ?")
         params.append(args.request_id)
+    if args.path:
+        path_fields = ("output_id", "target_id", "target_path", "linked_id", "quarantined_id")
+        clauses.append(
+            "("
+            + " OR ".join(f"json_extract(payload_json, '$.{field}') = ?" for field in path_fields)
+            + ")"
+        )
+        params.extend([args.path] * len(path_fields))
+    if args.decision:
+        clauses.append("json_extract(payload_json, '$.decision') = ?")
+        params.append(args.decision)
+    if args.date:
+        clauses.append("timestamp LIKE ?")
+        params.append(f"{args.date}%")
     if clauses:
         sql += " WHERE " + " AND ".join(clauses)
     sql += " ORDER BY event_id DESC LIMIT ?"

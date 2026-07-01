@@ -1531,6 +1531,62 @@ def test_cli_journal_list_operation_alias_includes_digest_workflow(
     ]
 
 
+def test_cli_journal_list_filters_by_request_path_decision_and_date(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    alpha = append_journal_event(
+        workspace,
+        {
+            "event": "policy",
+            "operation": "check-source-metadata",
+            "request_id": "req-alpha",
+            "target_id": "knowledge/notes/alpha.md",
+            "decision": "deny",
+        },
+        machine="memoria-cli",
+    )
+    append_journal_event(
+        workspace,
+        {
+            "event": "policy",
+            "operation": "check-source-metadata",
+            "request_id": "req-beta",
+            "target_id": "knowledge/notes/beta.md",
+            "decision": "allow",
+        },
+        machine="memoria-cli",
+    )
+
+    assert (
+        main(
+            [
+                "journal",
+                "list",
+                "--workspace",
+                str(workspace),
+                "--operation",
+                "check-source-metadata",
+                "--request-id",
+                "req-alpha",
+                "--path",
+                "knowledge/notes/alpha.md",
+                "--decision",
+                "deny",
+                "--date",
+                alpha["timestamp"][:10],
+                "--json",
+            ]
+        )
+        == 0
+    )
+    journal = json.loads(capsys.readouterr().out)
+
+    assert [event["payload"]["request_id"] for event in journal["events"]] == ["req-alpha"]
+
+
 def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
