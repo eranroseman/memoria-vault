@@ -222,10 +222,12 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
 def _eval_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     eval_cmd = sub.add_parser("eval")
     eval_sub = eval_cmd.add_subparsers(dest="eval_command", required=True)
-    for name in ("run", "seeded-error-verdict"):
-        cmd = eval_sub.add_parser(name)
-        _common(cmd)
-        cmd.set_defaults(handler=_not_implemented(f"eval {name}"))
+    seeded = eval_sub.add_parser("seeded-error-verdict")
+    _common(seeded)
+    seeded.set_defaults(handler=_cmd_eval_seeded_error_verdict)
+    run = eval_sub.add_parser("run")
+    _common(run)
+    run.set_defaults(handler=_not_implemented("eval run"))
 
 
 def _simple_resource(
@@ -261,6 +263,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
     _copy_seed_tree("vault-template/.memoria/schemas", workspace / ".memoria/schemas")
     _copy_seed_tree("vault-template/capabilities", workspace / "capabilities")
     _copy_seed_tree("vault-template/.memoria/enrichment", workspace / ".memoria/enrichment")
+    _copy_seed_tree("vault-template/system/eval", workspace / "system/eval")
     _seed_provider_config(workspace)
     state.connect(workspace).close()
     _ensure_git(workspace)
@@ -491,6 +494,10 @@ def _cmd_request_resume(args: argparse.Namespace) -> int:
     return _emit({"ok": result.get("status") == "done", "result": result}, args)
 
 
+def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
+    return _emit(_enqueue_and_run(args, "run-seeded-error-verdict", {}), args)
+
+
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
     results = run_pending_jobs(_workspace(args), limit=args.limit, machine="memoria-cli")
     return _emit({"ok": True, "ran": len(results), "results": results}, args)
@@ -553,6 +560,7 @@ def _workspace_plan(workspace: Path) -> list[str]:
     return [
         "knowledge",
         "capabilities",
+        "system/eval",
         ".memoria/blobs",
         ".memoria/config",
         ".memoria/index/qmd/checked",
