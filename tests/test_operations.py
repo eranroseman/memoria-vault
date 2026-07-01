@@ -215,6 +215,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
     )
 
     digest = vault / result["digest_path"]
+    assert interview["event"]["source_id"] == "source-alpha"
     assert result["interview_count"] == 1
     assert "The PI cares about the methods caveat." in digest.read_text(encoding="utf-8")
     assert interview["event"]["turn_sha256"] in {

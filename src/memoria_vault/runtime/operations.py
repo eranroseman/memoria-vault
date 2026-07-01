@@ -58,20 +58,21 @@ def record_copi_interview_turn(
 ) -> dict[str, Any]:
     """Record one PI interview turn for later source synthesis."""
     vault = Path(vault)
-    source_rel = f"catalog/sources/{_source_id(source_id)}/source.md"
+    source_id = _source_id(source_id)
+    source_rel = f"catalog/sources/{source_id}/source.md"
     _checked_source(vault, source_rel)
     answer = response.strip()
     if not answer:
         raise ValueError("response is required")
     question = prompt.strip() or "What matters about this source?"
-    body = f"{source_rel}\n{project_id.strip()}\n{question}\n{answer}"
+    body = f"{source_id}\n{project_id.strip()}\n{question}\n{answer}"
     turn_sha = _sha256_text(body)
     event = append_journal_event(
         vault,
         {
             "event": "copi-interview",
-            "run_id": run_id or f"copi-interview:{Path(source_rel).parent.name}",
-            "source_id": source_rel,
+            "run_id": run_id or f"copi-interview:{source_id}",
+            "source_id": source_id,
             "project_id": project_id.strip(),
             "prompt": question,
             "response": answer,
@@ -83,7 +84,7 @@ def record_copi_interview_turn(
     )
     commit = commit_writer_changes(
         vault,
-        f"record copi interview {Path(source_rel).parent.name}",
+        f"record copi interview {source_id}",
         [],
         machine=machine,
     )
@@ -284,7 +285,7 @@ def compile_source_digest(
     )
 
     content = safe_read(content_path)
-    interviews = _source_interviews(vault, source_rel)
+    interviews = _source_interviews(vault, source_id)
     digest_text = _run_digest_model(policy, source_fm, content, topics, interviews)
     model_call = append_journal_event(
         vault,
@@ -564,11 +565,19 @@ def _topic_slug(value: str) -> str:
     return safe_filename(value.lower().replace(" ", "-")).strip("._-")
 
 
-def _source_interviews(vault: Path, source_rel: str) -> list[dict[str, Any]]:
+def _source_interviews(vault: Path, source_ref: str) -> list[dict[str, Any]]:
+    source_id = _source_id(source_ref)
     rows: list[dict[str, Any]] = []
     for path in sorted((vault / "journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
-            if event.get("event") != "copi-interview" or event.get("source_id") != source_rel:
+            event_source = event.get("source_id")
+            if event.get("event") != "copi-interview" or not isinstance(event_source, str):
+                continue
+            try:
+                matches_source = _source_id(event_source) == source_id
+            except ValueError:
+                matches_source = False
+            if not matches_source:
                 continue
             if isinstance(event.get("turn_id"), str) and isinstance(event.get("turn_sha256"), str):
                 rows.append(event)
