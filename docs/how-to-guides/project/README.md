@@ -10,9 +10,9 @@ permalink: /how-to-guides/project/
 
 Steer an inquiry to output. Alpha.11 project Concepts live under
 `knowledge/projects/`; project analysis and Canvas rendering run through the
-Inspector worker queue.
+`memoria project` CLI commands.
 
 | Guide | What it covers |
 | --- | --- |
-| [Analyze a project argument](analyze-a-project-argument.md) | Inspector project analysis and generated argument Canvas |
+| [Analyze a project argument](analyze-a-project-argument.md) | CLI project analysis and generated argument Canvas |
 | [Export a draft](export-a-draft.md) | Manual Pandoc export to Word, PDF, or plain Markdown |

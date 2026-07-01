@@ -1,4 +1,4 @@
-"""Alpha.12 local worker queue with SQLite request state."""
+"""Local worker for SQLite-backed operation requests."""
 
 from __future__ import annotations
 
@@ -20,8 +20,6 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept,
 )
 
-QUEUE_ROOT = ".memoria/queue"
-QUEUE_STATES = ("pending", "running", "done", "failed")
 INTEGRITY_SWEEP_OPERATIONS = (
     "trace-integrity-scan",
     "check-source-metadata",
@@ -49,9 +47,6 @@ def enqueue_trusted_write(
     """Queue one machine Concept write request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or uuid.uuid4().hex)
-    existing = _find_job(vault, job_id)
-    if existing:
-        return _read_json(existing)
     if existing_job := state.request_job(vault, job_id):
         return existing_job
 
@@ -82,9 +77,7 @@ def enqueue_trusted_write(
         actor="operation",
         provenance={"surface": "worker"},
     )
-    job = state.save_request(vault, envelope, job)
-    _write_json(_job_path(vault, "pending", job_id), job)
-    return job
+    return state.save_request(vault, envelope, job)
 
 
 def enqueue_operation(
@@ -105,9 +98,6 @@ def enqueue_operation(
     """Queue one operation request for the local worker."""
     vault = Path(vault)
     job_id = safe_filename(idempotency_key or f"{operation_id}-{uuid.uuid4().hex}")
-    existing = _find_job(vault, job_id)
-    if existing:
-        return _read_json(existing)
     if existing_job := state.request_job(vault, job_id):
         return existing_job
 
@@ -134,22 +124,16 @@ def enqueue_operation(
         provenance=provenance or {"surface": "worker"},
         schedule_id=schedule_id,
     )
-    job = state.save_request(vault, envelope, job)
-    _write_json(_job_path(vault, "pending", job_id), job)
-    return job
+    return state.save_request(vault, envelope, job)
 
 
 def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] | None:
-    """Claim and run the oldest pending worker job."""
+    """Claim and run the oldest pending worker request."""
     vault = Path(vault)
     sqlite_job = state.next_pending_job(vault)
-    if sqlite_job is not None:
-        running = _claim_sqlite_job(vault, sqlite_job)
-    else:
-        pending = sorted(_queue_dir(vault, "pending").glob("*.json"))
-        if not pending:
-            return None
-        running = _claim_job(vault, pending[0])
+    if sqlite_job is None:
+        return None
+    running = _claim_sqlite_job(vault, sqlite_job)
     return _run_claimed_job(vault, running, machine)
 
 
@@ -165,16 +149,15 @@ def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> 
     return _run_claimed_job(vault, running, machine)
 
 
-def _run_claimed_job(vault: Path, running: Path, machine: str | None) -> dict[str, Any]:
-    job = _read_json(running)
+def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
     try:
         result = _run_job(vault, job, machine)
     except Exception as exc:  # noqa: BLE001 -- worker records failed jobs instead of losing them.
         job.update({"status": "failed", "failed_at": now_iso(), "error": str(exc)})
-        _finish_job(vault, running, "failed", job)
+        _finish_job(vault, "failed", job)
         return job
     job.update({"status": "done", "completed_at": now_iso(), **result})
-    _finish_job(vault, running, "done", job)
+    _finish_job(vault, "done", job)
     return job
 
 
@@ -1014,54 +997,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     raise ValueError(f"unsupported operation: {operation_id!r}")
 
 
-def _claim_job(vault: Path, path: Path) -> Path:
-    job = _read_json(path)
-    job["status"] = "running"
-    job["started_at"] = now_iso()
-    running = _job_path(vault, "running", str(job["job_id"]))
-    _write_json(path, job)
-    running.parent.mkdir(parents=True, exist_ok=True)
-    path.replace(running)
-    state.set_request_running(vault, str(job["job_id"]), job)
-    return running
-
-
-def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> Path:
+def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any]:
     job_id = str(job["job_id"])
-    pending = _job_path(vault, "pending", job_id)
-    if pending.exists():
-        return _claim_job(vault, pending)
     job = {**job, "status": "running", "started_at": now_iso()}
-    running = _job_path(vault, "running", job_id)
-    _write_json(running, job)
     state.set_request_running(vault, job_id, job)
-    return running
+    return job
 
 
-def _finish_job(vault: Path, running: Path, status: str, job: dict[str, Any]) -> None:
-    target = _job_path(vault, status, str(job["job_id"]))
-    _write_json(running, job)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    running.replace(target)
+def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:
     state.finish_request(vault, str(job["job_id"]), status, job)
-
-
-def _find_job(vault: Path, job_id: str) -> Path | None:
-    for queue_state in QUEUE_STATES:
-        path = _job_path(vault, queue_state, job_id)
-        if path.exists():
-            return path
-    return None
-
-
-def _job_path(vault: Path, state: str, job_id: str) -> Path:
-    return _queue_dir(vault, state) / f"{safe_filename(job_id)}.json"
-
-
-def _queue_dir(vault: Path, state: str) -> Path:
-    if state not in QUEUE_STATES:
-        raise ValueError(f"unknown queue state: {state}")
-    return vault / QUEUE_ROOT / state
 
 
 def _git_path_tracked(vault: Path, relpath: str) -> bool:
@@ -1075,20 +1019,8 @@ def _git_path_tracked(vault: Path, relpath: str) -> bool:
     return proc.returncode == 0
 
 
-def _read_json(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError(f"worker job is not an object: {path}")
-    return data
-
-
-def _write_json(path: Path, data: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
-
-
 def main(argv: list[str] | None = None) -> int:
-    parser = ArgumentParser(description="Run alpha.12 local worker jobs.")
+    parser = ArgumentParser(description="Run SQLite-backed worker requests.")
     parser.add_argument(
         "command",
         choices=(

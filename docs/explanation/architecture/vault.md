@@ -27,7 +27,7 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 ├── capabilities/   ← operations, skills, MCPs, workflows
 ├── system/         ← visible infrastructure: templates, dashboards, eval, logs
 ├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
-└── .memoria/       ← hidden runtime: schemas, worker queue, staging, quarantine
+└── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
 ```
 
 The type to folder-home map is machine-read

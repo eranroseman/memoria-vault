@@ -9,11 +9,6 @@ SKELETON_DIRS=(
   .memoria/index/qmd
   .memoria/audit
   .memoria/quarantine
-  .memoria/queue
-  .memoria/queue/pending
-  .memoria/queue/running
-  .memoria/queue/done
-  .memoria/queue/failed
   .memoria/blobs
   .memoria/blobs/provider-payloads
   .memoria/blobs/source-content

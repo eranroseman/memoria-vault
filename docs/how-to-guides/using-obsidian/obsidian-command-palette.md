@@ -9,7 +9,7 @@ nav_order: 4
 
 The command palette is Obsidian's keyboard launcher. In alpha.11, Memoria keeps
 the `Memoria:` palette deliberately small: PI conveniences stay in QuickAdd,
-and worker actions are enqueued from the Memoria Inspector control panel.
+and worker actions run from the `memoria` CLI.
 
 Open it with `Cmd-P` (`Ctrl-P` on Windows), then type `Memoria:`.
 
@@ -30,11 +30,11 @@ The visible commands are:
 The startup macro `Memoria: restore shell on startup` is hidden from the
 palette.
 
-**2. Use Inspector for worker jobs.**
+**2. Use the CLI for worker jobs.**
 
 Source processing, integrity checks, rollback, and attention acknowledgement
-are worker jobs. Use the Memoria Inspector pane instead of looking for palette
-commands.
+are worker jobs. Use `memoria work`, `memoria operation`, `memoria workspace`,
+and `memoria attention` instead of looking for palette commands.
 
 **3. Use the rail for navigation.**
 
@@ -46,10 +46,10 @@ Maintenance.
 
 - `Cmd-P` -> `Memoria:` shows the five visible commands above.
 - The left ribbon exposes capture/open-inbox/resolve controls.
-- Source and integrity jobs are available from Memoria Inspector, not QuickAdd.
+- Source and integrity jobs are available from the `memoria` CLI, not QuickAdd.
 
 ## Related
 
 - Exact command catalog: [Obsidian command palette](../../reference/obsidian-command-palette.md)
-- Worker control panel: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
+- Operational Inspector: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
 - Conversational route: [Agent Client pane](use-the-agent-client-pane.md)

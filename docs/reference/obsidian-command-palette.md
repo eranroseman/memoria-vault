@@ -7,9 +7,9 @@ grand_parent: Reference
 # Obsidian command palette
 
 The `Memoria:` command-palette surface is deliberately small in alpha.11.
-QuickAdd handles direct PI conveniences; the Memoria Inspector plugin owns
-worker-enqueue actions for capture, checks, rollback, and source processing.
-The command palette is not the canonical worker API.
+QuickAdd handles direct PI conveniences; the `memoria` CLI owns worker actions
+for capture, checks, rollback, and source processing. The command palette is not
+the canonical worker API.
 
 ---
 
@@ -31,6 +31,6 @@ saved Memoria shell only when the pinned rail is missing.
 
 ## Related
 
-- The plugin control-panel boundary: [Obsidian plugin settings](obsidian-plugin-settings.md)
+- The read-only Inspector boundary: [Obsidian plugin settings](obsidian-plugin-settings.md)
 - The generated forms: [Frontmatter fields](frontmatter.md)
 - Current Concept types: [Document types](document-types.md)

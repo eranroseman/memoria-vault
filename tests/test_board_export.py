@@ -548,7 +548,7 @@ def test_blocked_map_task_creates_one_source_gap(tmp_path):
     assert "Map corpus needs `10` non-empty source notes" in body
     assert "The current source corpus has `8`." in body
     assert "partial corpus map" in body
-    assert "Inspector control panel or Co-PI" in body
+    assert "`memoria work capture` or `memoria work import`" in body
     assert "If you already have a source in hand:" in body
     assert "checked `source` Concept under `catalog/sources/`" in body
     assert "name Dismiss" in body
@@ -678,8 +678,7 @@ def test_blocked_map_task_with_enough_sources_creates_blocked_prompt(tmp_path):
     assert "Corpus is too small to generate a cluster map" not in body
     assert "Current source corpus: `10` non-empty source notes" in body
     assert "The corpus now meets the source-count floor" in body
-    assert "Enqueue Map corpus again from the Inspector or Co-PI" in body
-    assert "Inspector control panel to enqueue Map corpus again" in body
+    assert "Retry Map corpus from the board workflow" in body
     assert "name Dismiss" in body
     assert "QuickAdd: Memoria: dismiss inbox card" in body
     assert "name Back to Inbox" in body

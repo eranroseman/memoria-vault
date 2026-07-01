@@ -92,7 +92,7 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 ├── tool-registry.yaml       authoritative per-profile tool allowlist
 ├── state/                   SQLite working-state DB (`memoria.sqlite`)
 ├── audit/                   git-trackable audit anchors
-├── index/ · queue/ · staging/ · quarantine/   disposable worker mirrors/holding areas
+├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ├── design-system.md · project-hints.yaml.example
 ```
 

@@ -227,9 +227,8 @@ A field with no data for the period renders as `null` (never omitted) so downstr
 The Memoria Inspector pane reads the latest board-state snapshot, recent audit
 rows, failed `check-fired` rows from `journal/*.jsonl`, latest `lint-verdict`
 note, and latest lane-metric notes to show the same operational health signals
-inside Obsidian. Its only mutation path is
-enqueueing worker jobs under `.memoria/queue/pending/` ([ADR-121](../adr/121-enqueue-only-obsidian-control-panel.md));
-it does not emit telemetry or mutate any source log.
+inside Obsidian. It has no mutation path and does not emit telemetry or mutate
+any source log.
 
 ## What is *not* captured
 

@@ -463,11 +463,11 @@ def _map_corpus_gap_body(card: dict, source_count: int, required_count: int) -> 
             "",
             "# Next actions",
             "",
-            "Use the Inspector control panel or Co-PI to enqueue source discovery/capture.",
+            "Use `memoria work capture` or `memoria work import` to add source material.",
             "",
             "If you already have a source in hand:",
             "",
-            "Capture it through the worker so it lands as a checked `source` Concept under `catalog/sources/`.",
+            "Capture it through `memoria work capture` so it lands as a checked `source` Concept under `catalog/sources/`.",
             "",
             "```button",
             "name Dismiss",
@@ -591,9 +591,9 @@ def _map_corpus_blocked_body(card: dict, source_count: int, required_count: int)
                 "",
             ]
         corpus_status = (
-            "The corpus now meets the source-count floor. Enqueue Map corpus again from the "
-            "Inspector or Co-PI. If it blocks again, leave the new ticket open and inspect "
-            "the board/log details."
+            "The corpus now meets the source-count floor. Retry Map corpus from the board "
+            "workflow. If it blocks again, leave the new ticket open and inspect the "
+            "board/log details."
         )
     else:
         reason_lines = [f"Recorded block reason: {reason or 'No block reason was recorded.'}", ""]
@@ -617,7 +617,7 @@ def _map_corpus_blocked_body(card: dict, source_count: int, required_count: int)
             "",
             "# Next actions",
             "",
-            "Use the Inspector control panel to enqueue Map corpus again after resolving the blocker.",
+            "Retry Map corpus from the board workflow after resolving the blocker.",
             "",
             "```button",
             "name Dismiss",

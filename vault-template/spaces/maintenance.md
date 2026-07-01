@@ -18,7 +18,7 @@ Unchecked Concepts are visible in the bundle Bases until promoted.
 
 ## Board
 
-Worker queue state lives under `.memoria/queue/`.
+Worker request state lives in `.memoria/state/memoria.sqlite`.
 
 ## New this week — catalog
 

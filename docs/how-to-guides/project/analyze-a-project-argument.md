@@ -18,10 +18,10 @@ argument Canvas projection beside the project.
 
 ## Steps
 
-**1. Open Memoria Inspector.**
+**1. Run the analysis from the CLI.**
 
-Use the Inspector control panel. Worker actions enqueue jobs only; the plugin
-does not edit Concepts or generated projections directly.
+Worker actions start from SQLite requests owned by the `memoria` CLI. The
+Inspector only shows operational state inside Obsidian.
 
 **2. Enter the project path.**
 
@@ -36,16 +36,25 @@ knowledge/projects/my-project/project.md
 A bare slug resolves to `knowledge/projects/<slug>/project.md` when that nested
 project note exists, otherwise to `knowledge/projects/<slug>.md`.
 
-**3. Queue the analysis.**
+**3. Run the analysis.**
 
-Click **Analyze project**. The worker returns the argument-health payload:
+```bash
+memoria project trace --workspace <vault> knowledge/projects/my-project/project.md
+```
+
+The worker returns the argument-health payload:
 relation counts, current stage, saturation, gaps or advisories, and the checked
 nodes and edges it followed.
 
 **4. Render the Canvas when useful.**
 
-Click **Render canvas** with the same project path. The worker writes a generated
-projection at:
+Run export with the same project path when a generated output is useful:
+
+```bash
+memoria project export --workspace <vault> knowledge/projects/my-project/project.md
+```
+
+The worker writes generated project output beside the project, including:
 
 ```text
 knowledge/projects/<project>/argument.canvas

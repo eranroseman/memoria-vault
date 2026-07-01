@@ -123,7 +123,7 @@ chrome only; primary navigation stays in spaces and Bases views.
 | --- | --- | --- |
 | View type | `memoria-inspector-view` | Opens as a right-sidebar pane through the plugin command or ribbon icon. |
 | Data sources | `system/logs/board-state.jsonl`, `system/logs/audit.jsonl`, `journal/*.jsonl` failed checks, checked `catalog/`/`knowledge/` Concepts, latest `system/metrics/lint-verdict-*.md`, latest `system/metrics/lane-*.md` | Read-only operational snapshots and checked graph browse data; no network request path or shell path. |
-| Worker enqueue | `.memoria/queue/pending/*.json` operation jobs only | The plugin may enqueue `kind: operation` worker jobs for integrity checks, provenance checkpoints, source metadata checks, URL capture, digest compilation, note proposal, project argument analysis/Canvas rendering, projection regeneration, cascade rollback, `acknowledge-attention`, and `resolve-attention`; it never writes Concepts, journal files, projections, or `check_status` directly ([ADR-121](../adr/121-enqueue-only-obsidian-control-panel.md)). |
+| Mutation | None | The plugin is read-only: no queue writes, SQLite writes, Concept writes, network request path, or shell path. Run worker requests through the `memoria` CLI instead ([ADR-122](../adr/122-sqlite-working-state-boundary.md)). |
 | Deep links | Board state, audit log, Knowledge graph, Maintenance drift watch, fleet health, and individual checked Concepts. | Uses native Obsidian note links for read navigation. |
 | Refresh cadence | Manual refresh plus 60 s refresh while open | Keeps the inspector current without owning worker execution. |
 

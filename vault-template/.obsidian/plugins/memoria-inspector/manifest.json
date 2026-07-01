@@ -3,7 +3,7 @@
   "name": "Memoria Inspector",
   "version": "0.1.0-alpha.11",
   "minAppVersion": "1.8.0",
-  "description": "Operational inspector and enqueue-only control panel for Memoria.",
+  "description": "Operational inspector for Memoria.",
   "author": "Memoria",
   "isDesktopOnly": false
 }

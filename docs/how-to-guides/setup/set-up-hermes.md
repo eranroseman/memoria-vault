@@ -84,12 +84,17 @@ hermes -p memoria-copi chat
 
 Ask it "explain how this vault is organized". It should answer from the vault. For the in-Obsidian pane, the same profile runs as an ACP server (`hermes -p memoria-copi acp`) — the bundled `agent-client` config launches it for you; the pane runs one agent, the Co-PI ([Agent Client pane](../using-obsidian/use-the-agent-client-pane.md)).
 
-**5. Test worker enqueue from Obsidian.**
+**5. Test worker execution from the CLI.**
 
-Open the Memoria Inspector pane and enqueue a source-processing or integrity job
-against a disposable note. The plugin writes only a pending worker job under
-`.memoria/queue/pending/`; the worker/check loop owns the later Concept write or
-attention projection.
+Run a harmless request against the test vault:
+
+```bash
+memoria workspace check --workspace <vault> --shadow
+```
+
+The CLI creates the SQLite request envelope and the worker/check loop owns the
+later Concept write or attention projection. The Memoria Inspector pane is
+read-only operational visibility inside Obsidian.
 
 The installer owns the upstream MCP dependency inventory and the Retraction Watch refresh wrapper; see [Installer](../../reference/installer.md) and [Run a retraction sweep](../operate/run-a-retraction-sweep.md) when you need those operator details.
 

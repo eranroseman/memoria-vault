@@ -20,8 +20,8 @@ It is retired in alpha.11: the starter vault ships no sample corpus and no
 | Tutorial dependency | Retired with the alpha.10 tutorial arc |
 
 Alpha.11 starts from an empty working vault. Capture source work through the
-Memoria Inspector control panel or write PI-owned notes directly, then let the
-worker/check loop backfill checked Concepts.
+`memoria work` CLI or write PI-owned notes directly, then let the worker/check
+loop backfill checked Concepts.
 
 ## Historical context
 

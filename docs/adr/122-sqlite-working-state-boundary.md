@@ -6,8 +6,8 @@ nav_exclude: true
 status: accepted
 date_proposed: 2026-06-30
 date_resolved: 2026-06-30
-assumes: [28, 55, 119, 121]
-supersedes: [49]
+assumes: [28, 55, 119]
+supersedes: [49, 121]
 superseded_by: []
 ---
 
@@ -41,17 +41,17 @@ remain the PI-facing vault surface. Catalog rows are records behind that surface
 `references.bib`, digests, source citations, and any catalog UI read from them, but
 markdown catalog frontmatter does not overrule them.
 
-PI catalog mutation follows [ADR-121](121-enqueue-only-obsidian-control-panel.md):
-an Obsidian control-panel UI may enqueue worker jobs, but it must not write catalog
-rows, Concepts, journal files, projections, or `check_status` directly. CLI commands
-may inspect, verify, or administer the engine; they are not a PI action surface.
-`.memoria/queue/` stays as an Obsidian-compatible mirror for pending/running/done/failed
-jobs, not the state owner.
+PI and operator mutation follows the CLI request path: commands insert SQLite
+request envelopes, the worker claims pending requests from SQLite, and every
+mutation still passes through the trusted-writer/check boundary. The Memoria
+Inspector remains read-only and may not write catalog rows, Concepts, journal
+files, projections, `check_status`, SQLite requests, or queue files. There is no
+`.memoria/queue/` mirror; SQLite request state is the worker authority.
 
 ## Consequences
 
-- Worker jobs can recover from missing queue mirror files because the request envelope
-  lives in SQLite.
+- Worker jobs recover from SQLite request state; there are no queue mirror files
+  to recover from or keep in sync.
 - Checked machine outputs have durable payloads for replay, with hash mismatch or
   missing payload failures recorded fail-closed.
 - `references.bib` renders from checked SQLite catalog rows, with checked source
@@ -84,11 +84,11 @@ JSONL remains the audit and replay projection.
 
 ## Related
 
-- **Supersedes:** [ADR-49](49-catalog-in-bases-linter-monitor.md)
+- **Supersedes:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
+  [ADR-121](121-enqueue-only-obsidian-control-panel.md)
 - **Depends on:** [ADR-28](28-write-gate-as-plugin.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md),
-  [ADR-119](119-schema-driven-document-creation.md),
-  [ADR-121](121-enqueue-only-obsidian-control-panel.md)
+  [ADR-119](119-schema-driven-document-creation.md)
 - **Implementation:** `src/memoria_vault/runtime/state.py`,
   `src/memoria_vault/runtime/worker.py`,
   `src/memoria_vault/runtime/trusted_writer.py`,
