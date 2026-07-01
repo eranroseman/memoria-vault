@@ -1004,6 +1004,7 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
     fixture = _workspace_scan_fixture(workspace, args.fixture) if args.fixture else None
     projection_paths = _changed_generated_projection_paths(workspace)
     quarantine = None
+    regeneration = None
     if projection_paths:
         quarantine = _enqueue_and_run(
             args,
@@ -1013,15 +1014,23 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
                 "reason": "workspace-scan-generated-projection",
             },
         )
+        regeneration = _enqueue_and_run(args, "regenerate-tracked-projections", {})
     observed = _enqueue_and_run(args, "observe-pi-edits", {})
     payload = {
-        "ok": observed["ok"] and (quarantine is None or quarantine["ok"]),
+        "ok": (
+            observed["ok"]
+            and (quarantine is None or quarantine["ok"])
+            and (regeneration is None or regeneration["ok"])
+        ),
         "job": observed["job"],
         "result": observed["result"],
     }
     if quarantine is not None:
         payload["quarantine"] = quarantine["result"]
         payload["quarantine_job"] = quarantine["job"]
+    if regeneration is not None:
+        payload["regeneration"] = regeneration["result"]
+        payload["regeneration_job"] = regeneration["job"]
     if fixture is not None:
         payload["fixture"] = fixture
     return _emit(payload, args)
