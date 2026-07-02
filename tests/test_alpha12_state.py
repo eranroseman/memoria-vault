@@ -8,9 +8,11 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source, check_references_bib, write_references_bib
 from memoria_vault.runtime.integrity import check_citation_survival
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     promote_checked,
+    rebuild_concept_mirror_from_files,
     stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -55,6 +57,16 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
 
 def note_text(title: str = "Alpha note") -> str:
     return f"---\ntype: note\ncheck_status: unchecked\ntitle: {title}\n---\n# {title}\n\nBody.\n"
+
+
+def mark_file_verdict(vault: Path, rel: str, concept_type: str, status: str) -> None:
+    state.record_observed_file_edit(
+        vault,
+        output_id=rel,
+        concept_type=concept_type,
+        output_sha256=sha256_file(vault / rel),
+    )
+    state.set_concept_verdict(vault, rel, status)
 
 
 def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> None:
@@ -160,6 +172,54 @@ def test_file_output_read_barrier_requires_checked_and_materialized(tmp_path: Pa
     assert row["output_id"] == "knowledge/notes/barrier.md"
 
 
+def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    target = vault / "knowledge/notes/forged.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "---\n"
+        "type: note\n"
+        "id: notes/forged\n"
+        "standing: current\n"
+        "links: {}\n"
+        "check_status: checked\n"
+        "title: Forged\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+
+    rebuilt = rebuild_concept_mirror_from_files(vault)
+
+    assert rebuilt["deleted"] == 0
+    assert rebuilt["inserted"] >= 1
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM concept_status WHERE concept_id = ?",
+            ("knowledge/notes/forged.md",),
+        ).fetchone()
+        verdict = conn.execute(
+            "SELECT check_status FROM concept_verdicts WHERE concept_id = ?",
+            ("knowledge/notes/forged.md",),
+        ).fetchone()
+    assert row["check_status"] == "unchecked"
+    assert verdict is None
+
+    state.set_concept_verdict(vault, "knowledge/notes/forged.md", "checked")
+    rebuilt = rebuild_concept_mirror_from_files(vault)
+
+    assert rebuilt["deleted"] >= 1
+    assert rebuilt["inserted"] >= 1
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM concept_status WHERE concept_id = ?",
+            ("knowledge/notes/forged.md",),
+        ).fetchone()
+    assert row["check_status"] == "checked"
+
+
 def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     stage_concept(vault, "knowledge/notes/replay.md", note_text("Replay"), machine="writer")
@@ -263,6 +323,7 @@ def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> N
         "# Missing citation\n",
         encoding="utf-8",
     )
+    mark_file_verdict(vault, "knowledge/digests/missing-citation.md", "digest", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
@@ -286,6 +347,7 @@ def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> Non
         "# Source linked\n",
         encoding="utf-8",
     )
+    mark_file_verdict(vault, "knowledge/hubs/source-linked.md", "hub", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 

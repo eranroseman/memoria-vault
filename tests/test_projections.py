@@ -6,6 +6,7 @@ from pathlib import Path
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import render_references_bib
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.projections import (
     TRACKED_PROJECTION_PATHS,
     check_tracked_projections,
@@ -156,6 +157,13 @@ def test_tracked_projections_render_knowledge_views(tmp_path: Path) -> None:
         "---\ntype: note\ncheck_status: checked\ntitle: Alpha note\n---\n# Alpha note\n",
         encoding="utf-8",
     )
+    state.record_observed_file_edit(
+        vault,
+        output_id="knowledge/notes/alpha.md",
+        concept_type="note",
+        output_sha256=sha256_file(note),
+    )
+    state.set_concept_verdict(vault, "knowledge/notes/alpha.md", "checked")
 
     result = write_tracked_projections(vault, commit=True, machine="test-machine")
 

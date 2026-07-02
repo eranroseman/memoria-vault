@@ -1256,6 +1256,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
+    assert done["override_log"] == ".memoria/overrides.jsonl"
     assert done["work"]["title"] == "Updated"
     assert done["work"]["csl_json"]["memoria"]["standing"] == "archived"
     assert done["work"]["csl_json"]["memoria"]["research_area"] == ["personal-informatics"]
@@ -1272,6 +1273,11 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     event = json.loads(row["payload_json"])
     assert event["operation"] == "update-work"
     assert event["updates"]["title"] == "Updated"
+    assert event["override_log"] == ".memoria/overrides.jsonl"
+    [override] = list(iter_jsonl(vault / ".memoria/overrides.jsonl"))
+    assert override["operation"] == "update-work"
+    assert override["source_id"] == "alpha"
+    assert override["updates"]["standing"] == "archived"
 
 
 def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) -> None:

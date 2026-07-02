@@ -52,9 +52,20 @@ CREATE TABLE IF NOT EXISTS concepts (
             'operation', 'skill', 'adapter', 'workflow', 'person',
             'organization', 'venue', 'project'
         )),
-    store TEXT NOT NULL CHECK (store IN ('db', 'file')),
+    store TEXT NOT NULL CHECK (store IN ('db', 'file'))
+);
+CREATE TABLE IF NOT EXISTS concept_verdicts (
+    concept_id TEXT PRIMARY KEY,
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
 );
+CREATE VIEW IF NOT EXISTS concept_status AS
+SELECT
+    c.concept_id,
+    c.concept_type,
+    c.store,
+    COALESCE(v.check_status, 'unchecked') AS check_status
+FROM concepts c
+LEFT JOIN concept_verdicts v ON v.concept_id = c.concept_id;
 CREATE TABLE IF NOT EXISTS outputs (
     output_id TEXT PRIMARY KEY,
     concept_type TEXT NOT NULL,
@@ -176,4 +187,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 1;
+PRAGMA user_version = 2;

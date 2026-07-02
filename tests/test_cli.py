@@ -11,6 +11,7 @@ import pytest
 from memoria_vault import typer_cli
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import append_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
@@ -26,6 +27,16 @@ def _assert_alpha14_request_columns(columns: set[str]) -> None:
         "precondition_hashes_json",
     } <= columns
     assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
+
+
+def mark_file_status(workspace: Path, rel: str, concept_type: str, status: str = "checked") -> None:
+    state.record_observed_file_edit(
+        workspace,
+        output_id=rel,
+        concept_type=concept_type,
+        output_sha256=sha256_file(workspace / rel),
+    )
+    state.set_concept_verdict(workspace, rel, status)
 
 
 def _cli_command_surface() -> set[str]:
@@ -749,6 +760,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
     state.upsert_catalog_record(
         workspace,
         source_id="db-alpha",
@@ -898,6 +910,7 @@ def test_cli_note_candidate_accept_and_link_flow(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
 
     rc = main(
         [
@@ -983,6 +996,7 @@ def test_cli_note_candidate_accept_and_link_flow(
         "---\ntype: note\ncheck_status: checked\ntitle: Target\n---\nTarget body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/notes/target.md", "note")
     assert (
         main(
             [
@@ -1029,6 +1043,7 @@ def test_cli_note_propose_can_derive_candidate_from_work_digest(
         "## Synthesis\n\nFraming changes which outcomes matter.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
 
     rc = main(
         [
@@ -1073,6 +1088,7 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
 
     assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
@@ -1152,6 +1168,7 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1325,6 +1342,7 @@ def test_cli_request_list_show_and_resume_pending_request(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1657,6 +1675,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/digests/hub-seed.md", "digest")
     assert (
         main(
             [
@@ -2535,6 +2554,7 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
         "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
         encoding="utf-8",
     )
+    state.set_concept_verdict(workspace, "knowledge/notes/qmd.md", "checked")
 
     rc = main(
         [
@@ -2649,6 +2669,7 @@ def test_cli_workspace_rebuild_ignores_missing_qmd_collection(
         "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
         encoding="utf-8",
     )
+    state.set_concept_verdict(workspace, "knowledge/notes/qmd.md", "checked")
 
     rc = main(["workspace", "rebuild", "--workspace", str(workspace), "--search", "--json"])
     output = json.loads(capsys.readouterr().out)
@@ -2714,6 +2735,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/projects/project-alpha.md", "project")
     notes = {
         "thesis": "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
         "support": (
@@ -2729,6 +2751,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         note = workspace / f"knowledge/notes/{name}.md"
         note.parent.mkdir(parents=True, exist_ok=True)
         note.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
+        mark_file_status(workspace, f"knowledge/notes/{name}.md", "note")
 
 
 def _doi_provider_payloads() -> dict[str, object]:

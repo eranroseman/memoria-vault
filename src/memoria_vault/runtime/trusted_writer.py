@@ -18,6 +18,7 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
+    iter_markdown,
     split_frontmatter,
     universal_concept_frontmatter_errors,
     write_frontmatter_doc,
@@ -190,6 +191,31 @@ def observe_pi_edits_from_status(
     if observed:
         commit = commit_writer_changes(vault, "observe PI edits", targets, machine=machine)
     return {"paths": targets, "observed": observed, "commit": commit}
+
+
+def rebuild_concept_mirror_from_files(
+    vault: Path,
+    *,
+    schemas_dir: Path | None = None,
+) -> dict[str, int]:
+    """Rebuild file Concept mirror rows without trusting file verdict fields."""
+    vault = Path(vault)
+    contract = _load_contract(vault, schemas_dir)
+    rows: list[dict[str, str]] = []
+    for root in contract["folders"].get("bundle_roots") or ():
+        base = vault / str(root).strip("/")
+        if not base.exists():
+            continue
+        for path in iter_markdown(base, skip_dirs=frozenset()):
+            target = path.relative_to(vault).as_posix()
+            frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
+            frontmatter["check_status"] = "unchecked"
+            try:
+                _validate_concept(contract, target, frontmatter)
+            except ValueError:
+                continue
+            rows.append({"concept_id": target, "concept_type": str(frontmatter["type"])})
+    return state.rebuild_file_concept_mirror(vault, rows)
 
 
 def mark_checked(

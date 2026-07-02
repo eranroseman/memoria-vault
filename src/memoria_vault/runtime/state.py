@@ -16,8 +16,9 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 
 DB_REL = ".memoria/memoria.sqlite"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
+CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 
 
 def db_path(vault: Path) -> Path:
@@ -197,6 +198,43 @@ def journal_head(vault: Path) -> str:
     return "" if row is None else str(row["row_hash"])
 
 
+def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None:
+    target = normalize_path(concept_id)
+    status = _check_status(check_status)
+    with connect(vault) as conn:
+        _set_concept_verdict_conn(conn, target, status)
+        conn.execute(
+            "UPDATE outputs SET check_status = ? WHERE output_id = ?",
+            (status, target),
+        )
+
+
+def concept_check_status(vault: Path, concept_id: str) -> str:
+    target = normalize_path(concept_id)
+    if not db_path(vault).is_file():
+        return "unchecked"
+    with connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM concept_status WHERE concept_id = ?",
+            (target,),
+        ).fetchone()
+    return "unchecked" if row is None else str(row["check_status"])
+
+
+def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> dict[str, int]:
+    rows = list(rows)
+    with connect(vault) as conn:
+        deleted = conn.execute("DELETE FROM concepts WHERE store = 'file'").rowcount
+        for row in rows:
+            _upsert_concept_mirror_conn(
+                conn,
+                normalize_path(row["concept_id"]),
+                str(row["concept_type"]),
+                "file",
+            )
+    return {"deleted": int(deleted), "inserted": len(rows)}
+
+
 def record_file_output(
     vault: Path,
     *,
@@ -215,17 +253,8 @@ def record_file_output(
     if _sha256_text(payload_text) != output_sha256:
         raise ValueError(f"materialization payload hash mismatch for {target}")
     with connect(vault) as conn:
-        conn.execute(
-            """
-            INSERT INTO concepts(concept_id, concept_type, store, check_status)
-            VALUES (?, ?, 'file', ?)
-            ON CONFLICT(concept_id) DO UPDATE SET
-                concept_type = excluded.concept_type,
-                store = excluded.store,
-                check_status = excluded.check_status
-            """,
-            (target, concept_type, check_status),
-        )
+        _upsert_concept_mirror_conn(conn, target, concept_type, "file")
+        _set_concept_verdict_conn(conn, target, _check_status(check_status))
         conn.execute(
             """
             INSERT INTO outputs(
@@ -280,10 +309,7 @@ def mark_checked(vault: Path, output_id: str, output_sha256: str, payload_text: 
             "UPDATE outputs SET check_status = 'checked', output_sha256 = ? WHERE output_id = ?",
             (output_sha256, target),
         )
-        conn.execute(
-            "UPDATE concepts SET check_status = 'checked' WHERE concept_id = ?",
-            (target,),
-        )
+        _set_concept_verdict_conn(conn, target, "checked")
         if payload_text:
             if _sha256_text(payload_text) != output_sha256:
                 raise ValueError(f"checked payload hash mismatch for {target}")
@@ -306,17 +332,8 @@ def record_observed_file_edit(
 ) -> None:
     target = normalize_path(output_id)
     with connect(vault) as conn:
-        conn.execute(
-            """
-            INSERT INTO concepts(concept_id, concept_type, store, check_status)
-            VALUES (?, ?, 'file', 'unchecked')
-            ON CONFLICT(concept_id) DO UPDATE SET
-                concept_type = excluded.concept_type,
-                store = excluded.store,
-                check_status = 'unchecked'
-            """,
-            (target, concept_type),
-        )
+        _upsert_concept_mirror_conn(conn, target, concept_type, "file")
+        _set_concept_verdict_conn(conn, target, "unchecked")
         conn.execute(
             """
             INSERT INTO outputs(
@@ -481,7 +498,7 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
         csl_json=csl_json,
         metadata_status=str(frontmatter.get("metadata_status") or "partial"),
         text_status=str(frontmatter.get("text_status") or "metadata-only"),
-        check_status=str(frontmatter.get("check_status") or "unchecked"),
+        check_status=concept_check_status(vault, source_rel),
         content_hash=str(frontmatter.get("normalized_text_sha256") or ""),
         raw_hash=str(frontmatter.get("raw_text_sha256") or ""),
         content_path=str(frontmatter.get("content_path") or ""),
@@ -574,16 +591,8 @@ def upsert_catalog_record(
             ),
         )
         concept_id = f"catalog/sources/{stable_source_id}"
-        conn.execute(
-            """
-            INSERT INTO concepts(concept_id, concept_type, store, check_status)
-            VALUES (?, 'source', 'db', ?)
-            ON CONFLICT(concept_id) DO UPDATE SET
-                store = excluded.store,
-                check_status = excluded.check_status
-            """,
-            (concept_id, check_status),
-        )
+        _upsert_concept_mirror_conn(conn, concept_id, "source", "db")
+        _set_concept_verdict_conn(conn, concept_id, _check_status(check_status))
 
 
 def catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None:
@@ -885,7 +894,7 @@ def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    if current > SCHEMA_VERSION:
+    if current not in {0, SCHEMA_VERSION}:
         raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
@@ -942,6 +951,47 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "content_path": row["content_path"],
         "raw_path": row["raw_path"],
     }
+
+
+def _upsert_concept_mirror_conn(
+    conn: sqlite3.Connection,
+    concept_id: str,
+    concept_type: str,
+    store: str,
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO concepts(concept_id, concept_type, store)
+        VALUES (?, ?, ?)
+        ON CONFLICT(concept_id) DO UPDATE SET
+            concept_type = excluded.concept_type,
+            store = excluded.store
+        """,
+        (concept_id, concept_type, store),
+    )
+
+
+def _set_concept_verdict_conn(
+    conn: sqlite3.Connection,
+    concept_id: str,
+    check_status: str,
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO concept_verdicts(concept_id, check_status)
+        VALUES (?, ?)
+        ON CONFLICT(concept_id) DO UPDATE SET
+            check_status = excluded.check_status
+        """,
+        (concept_id, _check_status(check_status)),
+    )
+
+
+def _check_status(check_status: str) -> str:
+    status = check_status.strip()
+    if status not in CHECK_STATUSES:
+        raise ValueError(f"invalid check_status: {check_status!r}")
+    return status
 
 
 def _source_id(value: str) -> str:

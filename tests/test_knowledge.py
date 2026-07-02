@@ -22,6 +22,7 @@ from memoria_vault.runtime.knowledge import (
     write_project_export,
 )
 from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -323,6 +324,25 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
 def _md(path: Path, frontmatter: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
+    fm = read_frontmatter(path)
+    status = fm.get("check_status")
+    if status in state.CHECK_STATUSES:
+        vault = _vault_root(path)
+        rel = path.relative_to(vault).as_posix()
+        state.record_observed_file_edit(
+            vault,
+            output_id=rel,
+            concept_type=str(fm.get("type") or "note"),
+            output_sha256=sha256_file(path),
+        )
+        state.set_concept_verdict(vault, rel, str(status))
+
+
+def _vault_root(path: Path) -> Path:
+    for parent in path.parents:
+        if parent.name in {"catalog", "knowledge", "capabilities"}:
+            return parent.parent
+    return path.parent
 
 
 def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:

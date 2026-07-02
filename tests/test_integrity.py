@@ -65,6 +65,26 @@ def note_text(title: str, *, status: str = "checked") -> str:
     )
 
 
+def sync_file_verdicts(vault: Path) -> None:
+    for root in ("catalog", "knowledge"):
+        base = vault / root
+        if not base.exists():
+            continue
+        for path in base.rglob("*.md"):
+            fm = read_frontmatter(path)
+            status = fm.get("check_status")
+            if status not in state.CHECK_STATUSES:
+                continue
+            rel = path.relative_to(vault).as_posix()
+            state.record_observed_file_edit(
+                vault,
+                output_id=rel,
+                concept_type=str(fm.get("type") or "note"),
+                output_sha256=sha256_file(path),
+            )
+            state.set_concept_verdict(vault, rel, str(status))
+
+
 def catalog_db_source(vault: Path, source_id: str, content_text: str) -> str:
     content_rel = f".memoria/blobs/source-content/{source_id}/content.txt"
     content_path = vault / content_rel
@@ -133,6 +153,7 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -173,6 +194,7 @@ def test_evidence_integrity_rejects_legacy_source_markdown_without_catalog_row(
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -199,6 +221,7 @@ def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) ->
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
 
     assert result["findings"] == []
@@ -235,6 +258,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -273,6 +297,7 @@ def test_claim_quote_support_flags_unwarranted_claim(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_claim_quote_support(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -307,6 +332,7 @@ def test_prompt_injection_marker_flags_checked_concept_text(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_prompt_injection_markers(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -352,6 +378,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_provenance_checkpoint(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -399,6 +426,7 @@ def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_quote_anchor_support(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -440,6 +468,7 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_quote_anchor_support(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -467,6 +496,7 @@ def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -
         check_status="checked",
     )
 
+    sync_file_verdicts(vault)
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -497,6 +527,7 @@ def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
         check_status="checked",
     )
 
+    sync_file_verdicts(vault)
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -564,6 +595,7 @@ def test_db_capture_does_not_create_legacy_entity_identity_findings(
         machine="capture-machine",
     )
 
+    sync_file_verdicts(vault)
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
     assert result["findings"] == []
@@ -616,6 +648,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_contradiction_links(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
@@ -646,6 +679,7 @@ def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
+    sync_file_verdicts(vault)
     result = check_link_targets(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]

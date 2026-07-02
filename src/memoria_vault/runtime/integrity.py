@@ -70,6 +70,10 @@ def route_check(status: str, *, shadow: bool = True, auto_revert: bool = False) 
     return "ask"
 
 
+def _is_checked_concept(vault: Path, relpath: str) -> bool:
+    return state.concept_check_status(vault, relpath) == "checked"
+
+
 def check_evidence_integrity(
     vault: Path,
     *,
@@ -83,7 +87,7 @@ def check_evidence_integrity(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        if not _is_checked_concept(vault, rel):
             continue
         if frontmatter.get("type") not in {"digest", "note"}:
             continue
@@ -132,7 +136,7 @@ def check_claim_quote_support(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
+        if frontmatter.get("type") != "note" or not _is_checked_concept(vault, rel):
             continue
         claim_terms = _support_terms(str(frontmatter.get("claim_text") or ""))
         quote_terms = _support_terms(str(frontmatter.get("quote") or ""))
@@ -183,7 +187,7 @@ def check_prompt_injection_markers(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        if not _is_checked_concept(vault, rel):
             continue
         if frontmatter.get("type") not in {"source", "digest", "note"}:
             continue
@@ -221,7 +225,7 @@ def check_quote_anchor_support(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
+        if frontmatter.get("type") != "note" or not _is_checked_concept(vault, rel):
             continue
         quote = str(frontmatter.get("quote") or "").strip()
         if not quote:
@@ -280,7 +284,7 @@ def check_source_metadata(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+        if frontmatter.get("type") != "source" or not _is_checked_concept(vault, rel):
             continue
         if _source_ref(rel):
             continue
@@ -318,7 +322,7 @@ def check_citation_survival(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        if not _is_checked_concept(vault, rel):
             continue
         if frontmatter.get("type") not in {"digest", "note", "hub"}:
             continue
@@ -355,7 +359,7 @@ def check_provenance_checkpoint(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        if not _is_checked_concept(vault, rel):
             continue
         if frontmatter.get("type") not in {"digest", "note"}:
             continue
@@ -395,7 +399,7 @@ def check_contradiction_links(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "digest" or frontmatter.get("check_status") != "checked":
+        if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):
             continue
         contradictions = frontmatter.get("contradictions")
         if not isinstance(contradictions, list):
@@ -439,7 +443,7 @@ def check_link_targets(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        if not _is_checked_concept(vault, rel):
             continue
         for target in _link_refs(frontmatter):
             status = _concept_status(vault, target)
@@ -693,7 +697,11 @@ def _quarantine_catalog_source(
             (source_id,),
         )
         conn.execute(
-            "UPDATE concepts SET check_status = 'quarantined' WHERE concept_id = ?",
+            """
+            INSERT INTO concept_verdicts(concept_id, check_status)
+            VALUES (?, 'quarantined')
+            ON CONFLICT(concept_id) DO UPDATE SET check_status = 'quarantined'
+            """,
             (source_ref,),
         )
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / source_ref)
@@ -833,12 +841,12 @@ def _concept_status(vault: Path, rel: str) -> dict[str, str]:
     path = vault / rel
     if not path.is_file():
         return {"status": "missing"}
+    if not _is_checked_concept(vault, rel):
+        return {"status": "unchecked"}
     return _frontmatter_status(read_frontmatter(path))
 
 
 def _frontmatter_status(frontmatter: dict[str, Any]) -> dict[str, str]:
-    if frontmatter.get("check_status") != "checked":
-        return {"status": "unchecked"}
     lifecycle = str(frontmatter.get("lifecycle") or "")
     if lifecycle in {"retracted", "archived"}:
         return {"status": "stale", "lifecycle": lifecycle}
@@ -870,7 +878,7 @@ def _checked_source_texts(vault: Path, frontmatter: dict[str, Any]) -> list[str]
             continue
         path = vault / evidence_rel
         evidence_fm = read_frontmatter(path)
-        if evidence_fm.get("type") != "source" or evidence_fm.get("check_status") != "checked":
+        if evidence_fm.get("type") != "source" or not _is_checked_concept(vault, evidence_rel):
             continue
         _append_content_path_text(vault, texts, str(evidence_fm.get("content_path") or ""))
         if path.is_file():

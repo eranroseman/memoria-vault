@@ -26,8 +26,10 @@ for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import load_json
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 DEFAULT_CASSETTE = Path("tests/fixtures/test-env/cassettes/package-gate-golden-path.json")
@@ -219,6 +221,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         path = vault / args["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(args["content"], encoding="utf-8")
+        mark_file_status(vault, args["path"])
         artifacts.append(args["path"])
     elif tool == "inbox.write_proposal":
         path = inbox.write_proposal(vault, **args)
@@ -240,6 +243,21 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
         raise HarnessError(f"unknown cassette tool: {tool}")
     assert_expectations(vault, step.get("expect", {}), artifacts)
     return artifacts
+
+
+def mark_file_status(vault: Path, rel: str) -> None:
+    path = vault / rel
+    frontmatter = read_frontmatter(path)
+    status = frontmatter.get("check_status")
+    if status not in state.CHECK_STATUSES:
+        return
+    state.record_observed_file_edit(
+        vault,
+        output_id=rel,
+        concept_type=str(frontmatter.get("type") or "note"),
+        output_sha256=sha256_file(path),
+    )
+    state.set_concept_verdict(vault, rel, str(status))
 
 
 def assert_final(vault: Path, final: dict[str, Any]) -> None:

@@ -152,7 +152,7 @@ def checked_search_documents(vault: Path, *, include_stale: bool = False) -> lis
 
 
 def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
-    """Return searchable bundle markdown files with ``check_status: checked``."""
+    """Return searchable bundle markdown files with a DB ``checked`` verdict."""
     vault = Path(vault)
     roots = _bundle_roots(vault)
     docs = []
@@ -161,6 +161,9 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
         if not base.exists():
             continue
         for path in iter_markdown(base, skip_dirs=frozenset()):
+            rel = path.relative_to(vault).as_posix()
+            if state.concept_check_status(vault, rel) != "checked":
+                continue
             frontmatter = parse_frontmatter(safe_read(path))
             if _is_searchable_frontmatter(frontmatter, include_stale=include_stale):
                 docs.append(path)
@@ -196,11 +199,30 @@ def qmd_result_path(ref: object, vault: Path) -> str:
 
 def is_checked_concept(vault: Path, relpath: str) -> bool:
     rel = normalize_path(relpath)
+    if rel.startswith(f"{QMD_INPUT_ROOT}/"):
+        rel = rel.removeprefix(f"{QMD_INPUT_ROOT}/")
+    if _is_checked_generated_work_document(vault, rel):
+        return True
     path = Path(vault) / rel
-    if path.is_file() and _is_searchable_frontmatter(parse_frontmatter(safe_read(path))):
+    if (
+        path.is_file()
+        and state.concept_check_status(vault, rel) == "checked"
+        and _is_searchable_frontmatter(parse_frontmatter(safe_read(path)))
+    ):
         return True
     qmd_path = Path(vault) / QMD_INPUT_ROOT / rel
-    return qmd_path.is_file() and _is_searchable_frontmatter(parse_frontmatter(safe_read(qmd_path)))
+    return (
+        qmd_path.is_file()
+        and state.concept_check_status(vault, rel) == "checked"
+        and _is_searchable_frontmatter(parse_frontmatter(safe_read(qmd_path)))
+    )
+
+
+def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
+    if not rel.startswith(("works/", "graph-neighborhoods/")):
+        return False
+    source = state.catalog_source(vault, Path(rel).stem)
+    return bool(source and source.get("check_status") == "checked")
 
 
 def answer_query(
@@ -464,7 +486,7 @@ def evaluate_bm25(
 
 
 def _is_searchable_frontmatter(frontmatter: dict[str, Any], *, include_stale: bool = False) -> bool:
-    if frontmatter.get("check_status") != "checked":
+    if frontmatter.get("type") not in {"digest", "note", "hub", "project"}:
         return False
     return include_stale or not _staleness("", frontmatter)
 
