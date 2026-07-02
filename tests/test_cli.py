@@ -12,7 +12,7 @@ from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import append_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
-from memoria_vault.runtime.worker import enqueue_operation
+from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -1237,6 +1237,39 @@ def test_cli_request_list_show_and_resume_pending_request(
     assert row["status"] == "done"
 
 
+def test_cli_request_cancel_preserves_trusted_write_envelope_args(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    enqueue_trusted_write(
+        workspace,
+        "knowledge/notes/queued.md",
+        "---\ntype: note\ncheck_status: unchecked\ntitle: Queued\n---\nBody.\n",
+        idempotency_key="trusted-request",
+    )
+
+    assert (
+        main(
+            [
+                "request",
+                "cancel",
+                "--workspace",
+                str(workspace),
+                "trusted-request",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    cancelled = json.loads(capsys.readouterr().out)
+
+    assert cancelled["request"]["status"] == "cancelled"
+    assert cancelled["request"]["args"]["target_path"] == "knowledge/notes/queued.md"
+    assert cancelled["request"]["job"]["request_envelope"]["args"] == cancelled["request"]["args"]
+
+
 def test_cli_attention_list_show_worklist_and_resolve_projection(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -1532,6 +1565,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     )
     answered = json.loads(capsys.readouterr().out)
     assert answered["request"]["args"]["answers"] == {"note": "ready"}
+    assert answered["request"]["job"]["request_envelope"]["args"] == answered["request"]["args"]
 
     assert (
         main(
@@ -1549,6 +1583,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     )
     amended = json.loads(capsys.readouterr().out)
     assert amended["request"]["args"]["k"] == 3
+    assert amended["request"]["job"]["request_envelope"]["args"] == amended["request"]["args"]
 
     assert (
         main(
@@ -1567,6 +1602,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     )
     cancelled = json.loads(capsys.readouterr().out)
     assert cancelled["request"]["status"] == "cancelled"
+    assert cancelled["request"]["job"]["request_envelope"]["args"] == cancelled["request"]["args"]
 
     assert (
         main(
@@ -1591,6 +1627,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     )
     retried = json.loads(capsys.readouterr().out)
     assert retried["request"]["status"] == "pending"
+    assert retried["request"]["job"]["request_envelope"]["args"] == retried["request"]["args"]
 
     assert (
         main(["request", "retry", "--workspace", str(workspace), "recoverable-request", "--json"])

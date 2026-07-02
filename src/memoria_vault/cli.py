@@ -1715,6 +1715,7 @@ def _request_row(workspace: Path, request_id: str) -> Any | None:
 
 
 def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
+    args = _request_job_args(job)
     with state.connect(workspace) as conn:
         conn.execute(
             """
@@ -1731,13 +1732,27 @@ def _write_request_job(workspace: Path, request_id: str, status: str, job: dict[
             """,
             (
                 status,
-                json.dumps(job.get("payload") or {}, ensure_ascii=False, sort_keys=True),
+                json.dumps(args, ensure_ascii=False, sort_keys=True),
                 json.dumps(job, ensure_ascii=False, sort_keys=True),
                 str(job.get("error") or ""),
                 status,
                 request_id,
             ),
         )
+
+
+def _request_job_args(job: dict[str, Any]) -> dict[str, Any]:
+    payload = job.get("payload")
+    envelope = job.get("request_envelope")
+    if isinstance(payload, dict):
+        args = payload
+    elif isinstance(envelope, dict) and isinstance(envelope.get("args"), dict):
+        args = envelope["args"]
+    else:
+        args = {}
+    if isinstance(envelope, dict):
+        envelope["args"] = args
+    return args
 
 
 def _key_values(values: list[str]) -> dict[str, Any]:
