@@ -133,6 +133,21 @@ def provider_payloads(
                 }
             ],
             "keywords": [{"id": "https://openalex.org/K123", "display_name": "research workflow"}],
+            "mesh": [
+                {
+                    "descriptor_ui": "D012345",
+                    "descriptor_name": "Bibliometrics",
+                    "qualifier_name": "methods",
+                    "is_major_topic": True,
+                }
+            ],
+            "sustainable_development_goals": [
+                {
+                    "id": "https://metadata.un.org/sdg/4",
+                    "display_name": "Quality Education",
+                    "score": 0.71,
+                }
+            ],
         },
         "unpaywall": {
             "doi": "10.1000/alpha",
@@ -303,6 +318,14 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         graph_edges = conn.execute(
             "SELECT relation_type, target_id FROM work_graph_edges ORDER BY relation_type, target_id"
         ).fetchall()
+        mesh_sdg_edges = conn.execute(
+            """
+            SELECT target_id, target_title
+            FROM work_graph_edges
+            WHERE target_id IN ('mesh:D012345', 'https://metadata.un.org/sdg/4')
+            ORDER BY target_id
+            """
+        ).fetchall()
         discovered = conn.execute(
             "SELECT check_status FROM catalog_sources WHERE source_id IN ('W888', 'W999')"
         ).fetchall()
@@ -329,9 +352,15 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         ("related", "doi:10.1000/preprint"),
         ("related", "https://openalex.org/W888"),
         ("source", "1234-5678"),
+        ("topic", "https://metadata.un.org/sdg/4"),
         ("topic", "https://openalex.org/C123"),
         ("topic", "https://openalex.org/T123"),
         ("topic", "https://openalex.org/T321"),
+        ("topic", "mesh:D012345"),
+    ]
+    assert [tuple(row) for row in mesh_sdg_edges] == [
+        ("https://metadata.un.org/sdg/4", "Quality Education"),
+        ("mesh:D012345", "Bibliometrics / methods"),
     ]
     assert discovered == []
     assert len(done["discovery_candidate_paths"]) == 4
