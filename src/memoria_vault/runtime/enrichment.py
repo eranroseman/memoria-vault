@@ -718,6 +718,20 @@ def _first_order_work_graph(
         target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
         if target_id:
             _add_graph_row(rows, "topic", target_id, title, "", "openalex", topic)
+
+    keywords = openalex.get("keywords")
+    if isinstance(keywords, list):
+        for keyword in keywords:
+            if not isinstance(keyword, dict):
+                continue
+            title = str(
+                keyword.get("display_name") or keyword.get("name") or keyword.get("keyword") or ""
+            ).strip()
+            target_id = str(keyword.get("id") or "").strip() or (
+                f"keyword:{title}" if title else ""
+            )
+            if target_id:
+                _add_graph_row(rows, "keyword", target_id, title, "", "openalex", keyword)
     return list(rows.values())
 
 
