@@ -55,15 +55,19 @@ not runnable or the manifest has not been built, `answer_query()` falls back to
 the deterministic Python BM25 path so the CLI still returns a stable Ask/Query
 contract: `sources`, `unknowns`, `staleness`, and `contradictions`.
 `memoria project ask` uses the same contract and includes `project_context` when
-the project resolves to a checked project Concept.
+the project resolves to a checked project Concept. Project-scoped queries expand
+the text sent to qmd with checked project scope/facet terms and checked linked
+thesis terms, so `scope_topics`, `tags`, `keywords`, `research_area`,
+`methodology`, `topics`, and `facets` help retrieve the same checked index
+without bypassing the read barrier.
 
 | Signal | Catches |
 | --- | --- |
 | **BM25** (lexical) | Exact terms, citekeys, rare tokens a vector model blurs. |
 | **qmd query** (lexical + vector text) | Ranked checked retrieval documents from qmd's local index when the collection is ready. |
 
-Rerank and broader query expansion are later Ask/retrieval eval work. They count
-only after they beat the qmd or deterministic BM25 baseline.
+Rerank and broader global query expansion are later Ask/retrieval eval work. They
+count only after they beat the qmd or deterministic BM25 baseline.
 
 ---
 
@@ -75,7 +79,7 @@ than maintaining their own.
 | Consumer | Uses search for |
 | --- | --- |
 | `memoria ask` | Grounded checked retrieval behind a user question ([Query the vault](../how-to-guides/knowledge/query-the-vault.md)). |
-| `memoria project ask` | The same checked retrieval contract with checked project context included in the response. |
+| `memoria project ask` | The same checked retrieval contract, expanded with checked project and thesis terms and with checked project context included in the response. |
 | `memoria project gaps <project-path>` | qmd-backed gap discovery over checked Work text, graph neighborhoods, and checked project argument health. |
 | Prompt and integrity operations | Candidate evidence pulls without writing through qmd. |
 | Debug sessions | Raw qmd search to distinguish index staleness from query/answer behavior. |

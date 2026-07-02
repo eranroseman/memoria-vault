@@ -280,6 +280,47 @@ def test_answer_query_uses_qmd_after_rebuild(
     )
 
 
+def test_project_answer_expands_qmd_query_with_project_and_thesis_terms(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path / "vault")
+    qmd_log = _fake_qmd_query(tmp_path, monkeypatch)
+    project = vault / "knowledge/projects/project-alpha.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Framing project\n"
+        "thesis: knowledge/notes/thesis.md\n"
+        "scope_topics: [sensemaking]\n"
+        "facets:\n"
+        "  methodology: [qualitative]\n"
+        "---\n"
+        "Project body.\n",
+        encoding="utf-8",
+    )
+    note(
+        vault,
+        "thesis",
+        "checked",
+        "Thesis body.",
+        "topics: [patient-generated-data]\n",
+    )
+    rebuild_checked_qmd_source(vault)
+
+    answer = answer_query(vault, "status", project_id="project-alpha")
+
+    assert answer["engine"] == "qmd"
+    assert answer["project_context"]["retrieval_terms"] == [
+        "patient-generated-data",
+        "qualitative",
+        "sensemaking",
+    ]
+    assert "status Framing project project-alpha thesis" in qmd_log.read_text(encoding="utf-8")
+    assert "patient-generated-data qualitative sensemaking" in qmd_log.read_text(encoding="utf-8")
+
+
 def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()

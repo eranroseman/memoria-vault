@@ -40,6 +40,10 @@ memoria project ask project-alpha --workspace . --question "What matters for thi
 The answer is read-only. It should name the checked sources it used and state
 unknowns when the checked corpus does not support an answer.
 
+`memoria project ask` also uses the checked project's scope/facet terms and
+checked linked thesis terms as retrieval context. Keep project frontmatter
+current when project-scoped answers feel too broad or too narrow.
+
 **3. Keep durable insights deliberately.**
 
 If an answer is worth keeping, write or curate it through the normal workspace
