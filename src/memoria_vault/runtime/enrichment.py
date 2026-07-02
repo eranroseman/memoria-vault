@@ -717,6 +717,28 @@ def _first_order_work_graph(
                 "crossref",
                 reference_row,
             )
+    relations = crossref.get("relation")
+    if isinstance(relations, dict):
+        for relation_key, relation_rows in sorted(relations.items()):
+            rows_for_relation = relation_rows if isinstance(relation_rows, list) else []
+            for relation_row in rows_for_relation:
+                if not isinstance(relation_row, dict):
+                    continue
+                relation_id = str(relation_row.get("id") or "").strip()
+                if not relation_id:
+                    continue
+                id_type = str(relation_row.get("id-type") or "").strip().casefold()
+                target_doi = relation_id if id_type == "doi" else ""
+                target = f"doi:{target_doi.casefold()}" if target_doi else relation_id
+                _add_graph_row(
+                    rows,
+                    "related",
+                    target,
+                    relation_id,
+                    target_doi,
+                    "crossref",
+                    {"relation": relation_key, **relation_row},
+                )
 
     openalex = payloads.get("openalex", {})
     for relation_type, field in (("references", "referenced_works"), ("related", "related_works")):

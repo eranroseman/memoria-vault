@@ -77,9 +77,9 @@ def provider_payloads(
                     }
                 ],
                 "issued": {"date-parts": [[2026]]},
-                "relation": {"is-retracted-by": [{"id": "10.1000/retraction"}]}
+                "relation": {"is-retracted-by": [{"id": "10.1000/retraction", "id-type": "doi"}]}
                 if retracted
-                else {},
+                else {"is-preprint-of": [{"id": "10.1000/preprint", "id-type": "doi"}]},
                 "reference": [
                     {
                         "DOI": "10.1000/beta",
@@ -324,13 +324,14 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         ("keyword", "https://openalex.org/K123"),
         ("references", "doi:10.1000/beta"),
         ("references", "https://openalex.org/W999"),
+        ("related", "doi:10.1000/preprint"),
         ("related", "https://openalex.org/W888"),
         ("topic", "https://openalex.org/C123"),
         ("topic", "https://openalex.org/T123"),
         ("topic", "https://openalex.org/T321"),
     ]
     assert discovered == []
-    assert len(done["discovery_candidate_paths"]) == 3
+    assert len(done["discovery_candidate_paths"]) == 4
     for rel in done["discovery_candidate_paths"]:
         text = (vault / rel).read_text(encoding="utf-8")
         assert "projection: attention" in text

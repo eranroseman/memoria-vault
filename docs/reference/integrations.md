@@ -31,7 +31,7 @@ catalog source metadata and entities.
 |---|---|---|
 | **OpenAlex** | Citation graph, concept tags, institutional affiliations, open-access links | `cited_by_count`, `concepts`, `oa_url`, `institutions` |
 | **Semantic Scholar** | Semantic citation context, paper recommendations | `tldr`, `citation_contexts`, `recommendations` |
-| **Crossref** | DOI resolution, reference metadata, publication venue | `doi`, `journal`, `volume`, `issue`, `pages` |
+| **Crossref** | DOI resolution, reference and relation metadata, publication venue | `doi`, `journal`, `volume`, `issue`, `pages`, `relation` |
 | **PubMed** | Biomedical coverage, MeSH terms, abstract | `mesh_terms`, `pmid`, `abstract` |
 | **Unpaywall** | Open-access PDF discovery | `pdf_uri` (OA version) |
 | **Scite** | Supporting / contrasting / mentioning citation signals | `scite_supporting`, `scite_contrasting`, `scite_mentioning` |
