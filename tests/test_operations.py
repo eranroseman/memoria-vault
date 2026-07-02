@@ -193,6 +193,45 @@ def test_compile_source_digest_rejects_legacy_source_markdown_without_catalog_ro
         )
 
 
+@pytest.mark.parametrize("text_status", ["metadata-only", "abstract-only"])
+def test_compile_source_digest_blocks_checked_sources_without_full_text(
+    tmp_path: Path, text_status: str
+) -> None:
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Title or abstract fallback only.",
+        text_status=text_status,
+        machine="capture-machine",
+    )
+
+    with pytest.raises(ValueError, match="checked digest requires full-text source content") as exc:
+        compile_source_digest(
+            vault,
+            "source-alpha",
+            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            machine="op-machine",
+            run_id="compile-alpha",
+        )
+
+    assert f"text_status is {text_status}" in str(exc.value)
+    assert "attention_path is inbox/flag-digest-full-text-source-alpha.md" in str(exc.value)
+    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    attention = vault / "inbox/flag-digest-full-text-source-alpha.md"
+    attention_fm = read_frontmatter(attention)
+    assert attention_fm["projection"] == "attention"
+    assert attention_fm["attention_kind"] == "flag"
+    assert attention_fm["attention_status"] == "open"
+    assert attention_fm["target"] == "catalog/sources/source-alpha"
+    assert attention_fm["raised_by"] == "compile-source-digest"
+    events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
+    assert events[-1]["check"] == "source-full-text"
+    assert events[-1]["attention_path"] == "inbox/flag-digest-full-text-source-alpha.md"
+
+
 def test_compile_source_digest_rejects_unsupported_required_promotion_check(
     tmp_path: Path,
 ) -> None:
