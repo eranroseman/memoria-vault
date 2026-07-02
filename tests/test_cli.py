@@ -1176,6 +1176,98 @@ def test_cli_workspace_scan_reports_schedule_id_for_file_watch(
     assert tuple(row) == ("observe-pi-edits", "file-watch")
 
 
+def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    note = "---\ntype: note\ncheck_status: unchecked\ntitle: PI scan note\n---\nOriginal.\n"
+    enqueue_trusted_write(
+        workspace,
+        "knowledge/notes/pi-scan.md",
+        note,
+        idempotency_key="write-pi-scan",
+    )
+    main(["workspace", "run", "--workspace", str(workspace), "--limit", "1", "--json"])
+    capsys.readouterr()
+    path = workspace / "knowledge/notes/pi-scan.md"
+    assert read_frontmatter(path)["check_status"] == "checked"
+
+    path.write_text(path.read_text(encoding="utf-8") + "\nPI edit.\n", encoding="utf-8")
+
+    assert (
+        main(
+            [
+                "workspace",
+                "scan",
+                "--workspace",
+                str(workspace),
+                "--idempotency-key",
+                "scan-pi-edit",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    scanned = json.loads(capsys.readouterr().out)
+
+    assert scanned["needs_check_count"] == 1
+    assert scanned["needs_check_paths"] == ["knowledge/notes/pi-scan.md"]
+    assert scanned["result"]["observed_count"] == 1
+    assert read_frontmatter(path)["check_status"] == "unchecked"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT check_status FROM outputs WHERE output_id = ?",
+            ("knowledge/notes/pi-scan.md",),
+        ).fetchone()
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = ?",
+            ("knowledge/notes/pi-scan.md",),
+        ).fetchone()
+        event = conn.execute(
+            """
+            SELECT event_type
+            FROM journal_events
+            WHERE event_type = 'observed_external_edit'
+            ORDER BY event_id DESC
+            LIMIT 1
+            """
+        ).fetchone()
+    assert row["check_status"] == "unchecked"
+    assert consumable is None
+    assert event["event_type"] == "observed_external_edit"
+
+    assert (
+        main(
+            [
+                "operation",
+                "run",
+                "--workspace",
+                str(workspace),
+                "mark-checked",
+                "--payload-json",
+                '{"target_path": "knowledge/notes/pi-scan.md"}',
+                "--idempotency-key",
+                "mark-pi-scan",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    promoted = json.loads(capsys.readouterr().out)
+
+    assert promoted["ok"] is True
+    assert promoted["result"]["check"]["status"] == "passed"
+    assert read_frontmatter(path)["check_status"] == "checked"
+    with state.connect(workspace) as conn:
+        consumable = conn.execute(
+            "SELECT output_id FROM consumable_outputs WHERE output_id = ?",
+            ("knowledge/notes/pi-scan.md",),
+        ).fetchone()
+    assert consumable["output_id"] == "knowledge/notes/pi-scan.md"
+
+
 def test_cli_request_list_show_and_resume_pending_request(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
