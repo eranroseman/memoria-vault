@@ -3,8 +3,8 @@
 # cspell:words pathlib
 #
 # This updates source-owned vault files from vault-template/ without doing a fresh install.
-# It preserves runtime state (.git, venv, logs, exports, local Obsidian plugin
-# secrets) and refreshes the golden copy so drift checks match the new source.
+# It preserves runtime state (.git, venv, logs, exports) and refreshes the golden
+# copy so drift checks match the new source.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -100,7 +100,6 @@ for rel in \
   system/dashboards \
   system/eval \
   system/patterns \
-  system/scripts \
   system/templates \
   capabilities
 do
@@ -127,14 +126,8 @@ do
   sync_file "$rel"
 done
 
-run mkdir -p "$VAULT/.obsidian"
-run rsync -a --delete \
-  --exclude '/plugins/agent-client/data.json' \
-  --exclude '/plugins/obsidian-local-rest-api/data.json' \
-  --exclude '/plugins/obsidian-local-rest-api/*.crt' \
-  --exclude '/plugins/obsidian-local-rest-api/*.key' \
-  --exclude '/plugins/obsidian-local-rest-api/*.pem' \
-  "$SRC/.obsidian"/ "$VAULT/.obsidian"/
+hdr "Remove dropped standalone baseline payloads"
+run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts"
 
 hdr "Ensure empty-folder skeleton"
 python_cmd="python3"

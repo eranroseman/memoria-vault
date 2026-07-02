@@ -8,13 +8,13 @@ grand_parent: Reference
 
 Every action the system can perform, with its performer. Three performer kinds:
 **operations** (CLI/engine work, deterministic or runner-backed), **optional
-adapters** (external surfaces that call the same engine), and the **PI** (palette
-actions and review decisions). Where a topic has its own reference page, that
+adapters** (external surfaces that call the same engine), and the **PI** (CLI
+commands and review decisions). Where a topic has its own reference page, that
 page is authoritative for the details — this catalog is the map.
 
 This page is a guarded mirror, not the source of truth. Action implementation
-lives in the referenced Python modules, QuickAdd scripts, capability manifests,
-and linked reference pages; docs checks keep the mirror linked.
+lives in the referenced Python modules, capability manifests, and linked
+reference pages; docs checks keep the mirror linked.
 
 ## Deterministic operations
 
@@ -90,7 +90,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | --- | --- | --- |
 | Run detectors | Linter (`detectors.py`, daily cron) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
-| Golden stage | Linter (`golden_restore.py stage`) | Snapshots every system file (templates, dashboards, patterns, eval set, scripts, shipped Obsidian config) into a SHA-256 manifest. |
+| Golden stage | Linter (`golden_restore.py stage`) | Snapshots every shipped system file (templates, dashboards, patterns, eval set, and root guidance files) into a SHA-256 manifest. |
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
@@ -118,7 +118,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked prompt operations from `capabilities/operations/`, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
 
-## CLI requests and read-only Inspector
+## CLI requests
 
 | Action | Performer | What it does |
 | --- | --- | --- |
@@ -133,8 +133,6 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
 | Resolve attention | `memoria attention resolve [--outcome resolved\|dismissed]` | Runs the attention-disposition request, closes the attention projection, and records the PI outcome in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
-| Inspect operational state | Memoria Inspector (`memoria-inspector`) | Reads request/journal state, recent audit rows, failed integrity flags, lint verdicts, eval metrics, and checked graph data; it does not write worker requests or Concept state. |
-| Browse checked graph | Memoria Inspector (`memoria-inspector`) | Reads checked `catalog/` and `knowledge/` Concepts plus their declared references, previews recent nodes and edges, then opens existing Concept notes, normalized edge targets, or `knowledge/views/knowledge.base`; it does not write graph state. |
 
 ## Optional external adapters
 
@@ -163,15 +161,6 @@ adapters may expose their own skills later, but those adapters are not current
 product authority.
 
 ## PI actions
-
-### Palette (QuickAdd scripts, `system/scripts/`)
-
-| Action | What it does |
-| --- | --- |
-| Capture note | Creates an unchecked `note` Concept in `knowledge/notes/` from the bundled note template. |
-| Open Inbox | Opens the Inbox projection at `spaces/inbox.md` without mutating the active note. |
-| Record exploration trace | Captures a rejected direction/dead end beside a map or gap report under `knowledge/notes/maps/`; it stays project-local and unchecked until reviewed. |
-| Resolve inbox card | Resolves the active attention projection by setting `attention_status: resolved` and appending attention/triage telemetry. |
 
 ### Review decisions
 

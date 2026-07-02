@@ -35,20 +35,6 @@ SYSTEM_PREFIXES = (
 )
 SYSTEM_FILES = ("home.md", "_nav.md", "system/vocabulary.md", "AGENTS.md")
 
-# Memoria-shipped Obsidian config the installer deploys (plugin-config drift,
-# ADR-67): the per-plugin settings files plus the plugin/snippet rosters. Only
-# shipped config enters the manifest — never per-machine or runtime-generated
-# state: agent-client/data.json is seeded per machine from its .example,
-# obsidian-local-rest-api regenerates data.json (apiKey + TLS) on first launch,
-# and workspace/appearance/graph state is the user's to mutate.
-OBSIDIAN_FILES = (
-    ".obsidian/community-plugins.json",
-    ".obsidian/core-plugins.json",
-    ".obsidian/snippets/memoria-link-colors.css",
-    ".obsidian/snippets/memoria-property-badges.css",
-)
-OBSIDIAN_PLUGIN_DATA_SKIP = ("agent-client", "obsidian-local-rest-api")
-
 
 def _sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -62,17 +48,6 @@ def _iter_system_files(vault: Path):
                 if p.is_file() and p.name != ".gitkeep":
                     yield p.relative_to(vault).as_posix()
     for f in SYSTEM_FILES:
-        if (vault / f).is_file():
-            yield f
-    plugdir = vault / ".obsidian" / "plugins"
-    if plugdir.is_dir():
-        for plug in sorted(p for p in plugdir.iterdir() if p.is_dir()):
-            if plug.name in OBSIDIAN_PLUGIN_DATA_SKIP:
-                continue
-            f = plug / "data.json"
-            if f.is_file():
-                yield f.relative_to(vault).as_posix()
-    for f in OBSIDIAN_FILES:
         if (vault / f).is_file():
             yield f
 

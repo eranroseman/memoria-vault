@@ -13,7 +13,9 @@ FORBIDDEN_PATHS = (
     "vault-template/.memoria/profiles",
     "vault-template/.memoria/lane-overrides",
     "vault-template/.memoria/tool-registry.yaml",
+    "vault-template/.obsidian",
     "vault-template/system/dashboards/fleet-health.md",
+    "vault-template/system/scripts",
     "vault-template/capabilities/operations/capture-zotero-source.md",
 )
 FORBIDDEN_TEXT = (
@@ -21,6 +23,13 @@ FORBIDDEN_TEXT = (
     ".memoria/operations/",
     "vault-template/.memoria/mcp",
     ".memoria/mcp/",
+    "vault-template/.obsidian",
+    "QuickAdd: Memoria",
+    "system/scripts/capture-note.js",
+    "system/scripts/open-inbox.js",
+    "system/scripts/record-exploration-trace.js",
+    "system/scripts/resolve-inbox-card.js",
+    "system/scripts/restore-memoria-shell.js",
     "system/dashboards/fleet-health",
     "system/metrics/lane-",
     'type = "lane-metric"',
@@ -48,7 +57,11 @@ SKIP_PARTS = {
     "__pycache__",
 }
 SKIP_SUFFIXES = {".pyc", ".sqlite", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf"}
-ALLOW_TEXT_FILES = {"scripts/alpha14_negative_gate.py"}
+ALLOW_TEXT_FILES = {
+    "scripts/alpha14_negative_gate.py",
+    "scripts/plugin_provenance_doctor.py",
+    "tests/test_plugin_provenance.py",
+}
 
 
 def iter_files(root: Path):

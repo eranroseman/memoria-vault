@@ -7,17 +7,18 @@ cssclasses:
 
 # Welcome to Memoria
 
-This is your research workspace. Everyday navigation lives in the **left-pane
-rail** — *Now* shows what's waiting on you, *Places* are the three rooms you work in.
+This is your research workspace. The `memoria` CLI is the control surface; these
+Markdown files are the keep-set you can read and edit with any editor.
 
 ## Start here
 
-- **Jot a loose thought** — **Memoria: capture note**. It lands in
-  `knowledge/notes/` as an unchecked note Concept.
-- **Ask the Co-PI** — the chat pane on the right can suggest what to do next.
-- **Capture a source** — use `memoria work capture`; checked sources land in
-  [[spaces/library|Library]].
-- **Follow the setup path** — [Quickstart](https://eranroseman.github.io/memoria-vault/how-to-guides/setup/quickstart.html).
+- **Capture a source** - `memoria work capture --workspace . --doi <doi>`; checked sources
+  land in [[spaces/library|Library]] after acquisition and checks.
+- **Import a bibliography** - `memoria work import --workspace . --format bibtex --file <file>`
+  or `--format csl`.
+- **Ask the workspace** - `memoria ask --workspace . --question "<question>"`.
+- **Check or repair** - `memoria workspace check --workspace .` and
+  `memoria doctor --workspace . --repair bundle`.
 
 ## The three places
 
@@ -25,8 +26,5 @@ rail** — *Now* shows what's waiting on you, *Places* are the three rooms you w
 - [[spaces/knowledge|Knowledge]] — build and connect notes, digests, and hubs.
 - [[spaces/project|Project]] — steer a project to an output.
 
-Anything waiting on a decision collects in the [[spaces/inbox|queue]] — clearing it
+Anything waiting on a decision collects in the [[spaces/inbox|queue]]; clearing it
 to empty is the goal.
-
-> [!brief] Launch screen. Obsidian restores this shell on startup — use the rail
-> for everyday movement.

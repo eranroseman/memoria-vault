@@ -7,48 +7,27 @@ nav_order: 2
 
 # Reset workspace
 
-Memoria's daily navigation is the left-pane rail, not saved workspace switching.
-Use the saved **Memoria** workspace manually only when you want to reset a rearranged window.
-Startup preserves your previous session when the pinned rail is present; it loads the
-saved workspace only when the rail is missing.
-
-## Prerequisites
-
-- The vault open in Obsidian
-- The Workspaces core plugin enabled (it ships enabled)
+Alpha.14 ships no saved Obsidian workspace. If you use Obsidian, open the
+workspace folder and navigate with ordinary Markdown links.
 
 ## Steps
 
-**1. Switch surfaces from the left-pane rail.**
-
-The pinned **Navigator** (`_nav.md`) owns switching. Its *Now* opens the Inbox queue and Maintenance collection; its *Places* open the three spaces:
-
-- `spaces/inbox.md` — the queue: triage what needs the PI now
-- `spaces/maintenance.md` — weekly structural debt and board state
-- `spaces/library.md` — collect and organize sources
-- `spaces/knowledge.md` — build and test claims
-- `spaces/project.md` — steer bounded inquiry to output
-
-**2. Reset the shell only when needed.**
-
-If panes are disarranged, use Obsidian's command palette:
-`Cmd/Ctrl-P` → **Workspaces: Manage workspaces** → load **Memoria**.
-
-The reset layout opens `home.md` in the main pane, keeps file navigation on the left, and
-keeps the Agent Client pane on the right.
+1. Open `home.md` for the welcome note.
+2. Open `_nav.md` for the space links.
+3. Open the relevant space:
+   - `spaces/inbox.md`
+   - `spaces/library.md`
+   - `spaces/knowledge.md`
+   - `spaces/project.md`
+   - `spaces/maintenance.md`
+4. Run Memoria actions from the terminal.
 
 ## Verify
 
-- On normal launch, Obsidian reopens your previous note and the pinned rail remains.
-- If the rail is missing, startup restores the saved **Memoria** shell with `home.md`
-  and the pinned rail.
-- The left-pane rail switches among the three spaces, the Inbox queue, and Maintenance.
-- Loading the **Memoria** workspace restores the shared shell without changing the
-  space model.
+- `memoria doctor --workspace . bundle` passes.
+- Direct Markdown edits are followed by `memoria workspace scan --workspace .`.
 
 ## Related
 
 - Workspace reference: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- Conversation surface: [Agent Client pane](use-the-agent-client-pane.md)
 - Opening surfaces: [Navigate Memoria surfaces](navigate-memoria-surfaces.md)
-- The surface architecture decision: [ADR-116](../../adr/116-obsidian-surface-architecture.md)

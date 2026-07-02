@@ -16,15 +16,18 @@ schemas, and command flags, see [Reference](../reference).
 
 ---
 
-## Two operating modes
+## Operating mode
 
-Memoria has two distinct modes of use, each with its own tooling:
+Memoria alpha.14 is CLI-first.
 
-**Day-to-day use — Obsidian is the UI.**
-Reading, classifying, discussing, distilling, drafting, and reviewing all happen inside Obsidian — the command palette, the Agent Client pane, and the Inbox are your primary controls. The guides in the [Inbox]({{ site.baseurl }}/how-to-guides/inbox/), [Library]({{ site.baseurl }}/how-to-guides/library/), [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/), and [Project]({{ site.baseurl }}/how-to-guides/project/) spaces are written for this mode.
+**Day-to-day use - terminal plus editor.**
+Capture, enrichment, ask, digest, project gaps, export, recovery, and checks run
+through the `memoria` CLI. The Markdown workspace is the keep-set and can be
+opened in any editor.
 
-**Setup and maintenance — terminal (Linux/Ubuntu, WSL2, or PowerShell).**
-Installing the standalone workspace, configuring environments, rebuilding indexes, and recovering from failures happen in the terminal. The guides in [Setup]({{ site.baseurl }}/how-to-guides/setup/), [Operate]({{ site.baseurl }}/how-to-guides/operate/), and [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) are written for this mode.
+**Optional editor use.**
+Obsidian may be used as a plain Markdown editor, but it is not the product
+surface, scheduler, model runner, operation API, or write-policy boundary.
 
 ---
 
@@ -33,13 +36,13 @@ Installing the standalone workspace, configuring environments, rebuilding indexe
 | Section | Use it for |
 | --- | --- |
 | [Setup]({{ site.baseurl }}/how-to-guides/setup/) | One-time machine, workspace, optional app adapter, Zotero export, and second-workspace setup |
-| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Day-to-day Obsidian controls: home, surfaces, reset workspace, ACP, and the command palette |
+| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Optional plain-editor guidance and adapter boundary notes |
 | [Using Hermes Agent]({{ site.baseurl }}/how-to-guides/hermes-agent/) | Optional external adapter boundary notes |
 | [Inbox]({{ site.baseurl }}/how-to-guides/inbox/) | Triage, action queue, weekly review, and returning to work |
 | [Library]({{ site.baseurl }}/how-to-guides/library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
 | [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, and exporting |
-| [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, profile redeploy, search, eval, and logs |
+| [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, search, eval, and logs |
 | [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) | Detect-fix-verify recipes for operational failures |
 
 Each section README owns its guide table. This index stays intentionally shallow so guide titles and descriptions have one home.

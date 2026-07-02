@@ -8,11 +8,12 @@ cssclasses: memoria-space
 
 # Library
 
-> [!brief] Nothing here yet? Enqueue source capture from the Inspector control
-> panel. Checked sources appear here after the worker promotes them.
+> [!brief] Nothing here yet? Capture or import a work with the CLI. Checked
+> sources appear here after acquisition and promotion.
 
 > [!suggestions] First actions
-> - Use **Memoria: open Inbox** to see capture or check work needing attention.
+> - `memoria work capture --workspace . --doi <doi>`
+> - `memoria work import --workspace . --format bibtex --file <file>`
 
 ## Sources
 

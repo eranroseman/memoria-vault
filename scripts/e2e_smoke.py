@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
 from pathlib import Path
@@ -44,19 +43,10 @@ def assert_vault_skeleton(root: Path, vault: Path) -> None:
     print(f"   skeleton ensured ({len(folders['skeleton'])} dirs); tree matches folders.yaml")
 
 
-def assert_plugin_bundle(vault: Path) -> None:
-    appearance = json.loads((vault / ".obsidian/appearance.json").read_text(encoding="utf-8"))
-    enabled = set(appearance.get("enabledCssSnippets", []))
-    expected = {"memoria-link-colors", "memoria-property-badges"}
-    missing = sorted(expected - enabled)
-    assert not missing, f"CSS snippets not default-on: {missing}"
-    plugins = json.loads((vault / ".obsidian/community-plugins.json").read_text(encoding="utf-8"))
-    for plugin in ["dataview", "obsidian-git", "obsidian-local-rest-api", "portals", "quickadd"]:
-        assert plugin in plugins, f"bundled plugin not enabled: {plugin}"
-        assert (vault / ".obsidian/plugins" / plugin / "manifest.json").is_file(), (
-            f"missing plugin manifest: {plugin}"
-        )
-    print("   git repo, hooks, CSS snippets, and plugin bundle asserted")
+def assert_no_obsidian_bundle(vault: Path) -> None:
+    assert not (vault / ".obsidian").exists(), "standalone vault shipped .obsidian payload"
+    assert not (vault / "system/scripts").exists(), "standalone vault shipped QuickAdd scripts"
+    print("   git repo, hooks, and standalone no-Obsidian baseline asserted")
 
 
 def assert_executable(path: Path, label: str) -> None:
@@ -170,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
         choices=[
             "stage-label",
             "vault-skeleton",
-            "plugin-bundle",
+            "no-obsidian-bundle",
             "executable",
             "offline-ingest",
             "typed-graph",
@@ -185,8 +175,8 @@ def main(argv: list[str] | None = None) -> int:
         print_stage_label(ns.args[0])
     elif ns.command == "vault-skeleton":
         assert_vault_skeleton(Path(ns.args[0]), Path(ns.args[1]))
-    elif ns.command == "plugin-bundle":
-        assert_plugin_bundle(Path(ns.args[0]))
+    elif ns.command == "no-obsidian-bundle":
+        assert_no_obsidian_bundle(Path(ns.args[0]))
     elif ns.command == "executable":
         assert_executable(Path(ns.args[0]), ns.args[1])
     elif ns.command == "offline-ingest":

@@ -6,11 +6,9 @@ grand_parent: Reference
 
 # Obsidian callouts
 
-Memoria registers three custom callout styles through Callout Manager:
-`[!brief]`, `[!suggestions]`, and `[!verification]`.
-
-In alpha.11 these are presentation styles for shipped notes and workspace
-orientation. They are not evidence that QuickAdd link/verify producers exist.
+Alpha.14 does not ship Obsidian or Callout Manager. The template still uses plain
+Markdown callout syntax for readable orientation blocks; unsupported editors show
+them as quoted text.
 
 ## Registered styles
 
@@ -24,12 +22,11 @@ orientation. They are not evidence that QuickAdd link/verify producers exist.
 
 | Property | Value |
 | --- | --- |
-| Source of truth | `vault-template/.obsidian/plugins/callout-manager/data.json` |
+| Source of truth | Markdown note content in `vault-template/` |
 | Custom IDs | `brief`, `suggestions`, `verification` |
 | Drift check | `design-system-drift` reports ad-hoc/rainbow callouts in shipped vault notes |
 
 ## Related
 
-- Callout Manager plugin: [Obsidian plugins](obsidian-plugins.md)
-- Plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
+- Optional editor adapters: [Obsidian plugins](obsidian-plugins.md)
 - Callout explanation: [Callouts](../explanation/obsidian/callouts.md)

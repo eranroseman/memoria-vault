@@ -7,9 +7,9 @@ nav_order: 1
 
 # The vault
 
-The vault is where durable knowledge lives. Everything else in Memoria — the
-worker, operations, dashboards, plugin, and agents — exists to serve it. This
-page explains the alpha.11 workspace shape, Concept homes, and write boundary.
+The vault is where durable knowledge lives. Everything else in Memoria - the
+CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
+This page explains the alpha.14 workspace shape, Concept homes, and write boundary.
 
 ---
 
@@ -24,9 +24,8 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 ├── steering.md     ← PI-authored program memory
 ├── catalog/        ← sources and entities
 ├── knowledge/      ← digests, notes, hubs, projects
-├── capabilities/   ← operations, skills, MCPs, workflows
+├── capabilities/   ← operations, skills, adapters, workflows
 ├── system/         ← visible infrastructure: templates, dashboards, eval, logs
-├── .obsidian/      ← hidden Obsidian app config (Bases definitions, layouts)
 └── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
 ```
 
@@ -61,10 +60,10 @@ checked index and Ask path.
 
 The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-52](../../adr/52-links-vs-relationships.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
-## Bases is the view layer; the Linter keeps it sound
+## Generated views; the Linter keeps them sound
 
-Catalog, knowledge, and capability Concepts surface through **Obsidian Bases**
-and generated indexes. Bases are views; Concept frontmatter is governed by
+Catalog, knowledge, and capability Concepts surface through generated indexes
+and optional editor views. Views are projections; Concept frontmatter is governed by
 [ADR-119](../../adr/119-schema-driven-document-creation.md), and catalog rows that
 feed bibliography/materialization are governed by
 [ADR-122](../../adr/122-sqlite-working-state-boundary.md).

@@ -11,20 +11,18 @@ cssclasses: memoria-space
 > raw captures follow when they need you.
 
 > [!suggestions] First actions
-> - Capture a loose thought with **Memoria: capture note**.
-> - Ask the Co-PI in the Agent Client pane what to do next.
+> - Ask what needs attention: `memoria ask --workspace . --question "What needs my attention?"`
+> - List pending requests: `memoria request list --workspace . --json`.
 
 ## Activity
 
 Recent background tasks. Only queued or running work appears here.
 
-Runtime request state lives in `.memoria/memoria.sqlite`; the Obsidian activity panel is
-WP8 plugin work.
+Runtime request state lives in `.memoria/memoria.sqlite`.
 
 ## Needs me
 
-Attention projections are generated from journal/check/request state; the plugin
-panel is WP8 work.
+Attention projections are generated from journal, check, and request state.
 
 ## Notes to check
 
@@ -32,7 +30,7 @@ Unchecked note Concepts waiting for the worker/check loop or PI review.
 
 ![[knowledge.base#Notes]]
 
-Capture and global actions live in the ribbon; navigate spaces from the left-pane rail.
+Use the CLI for actions; use these Markdown pages as readable workspace views.
 
 ## Guides
 

@@ -43,7 +43,7 @@ vault_assembly() {
   cp "$V/.githooks/post-commit" "$V/.git/hooks/post-commit" && chmod +x "$V/.git/hooks/post-commit"
   assert_executable "$V/.git/hooks/pre-commit" "pre-commit hook"
   assert_executable "$V/.git/hooks/post-commit" "post-commit hook"
-  "$PY" "$HELPER" plugin-bundle "$V"
+  "$PY" "$HELPER" no-obsidian-bundle "$V"
 
   echo "== $(stage vault-assembly-3) =="
   "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"

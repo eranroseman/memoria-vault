@@ -5,8 +5,7 @@ name: lint-config
 #                   templates (a bad indent / duplicate key breaks the agent or CI)
 #   actionlint    — the GitHub workflows specifically (bad action refs, ${{ }}
 #                   expression typos, shell bugs inside run: blocks)
-#   json-validate — the authored .json (.obsidian/*.json, markdownlint configs):
-#                   a malformed config silently breaks Obsidian / tooling
+#   json-validate — authored JSON config; malformed config silently breaks tooling
 #
 # All run unconditionally (no `paths:` filter) so they can back required checks —
 # same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
@@ -34,8 +33,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --quiet -r requirements-dev.txt
-      - name: yamllint tracked YAML (excludes vault-template/.obsidian, uses .yamllint)
-        run: git ls-files '*.yaml' '*.yml' | grep -v 'src/\.obsidian/' | xargs -r yamllint
+      - name: yamllint tracked YAML (uses .yamllint)
+        run: git ls-files '*.yaml' '*.yml' | xargs -r yamllint
 
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.7
@@ -45,7 +44,7 @@ jobs:
       - name: validate authored JSON
         run: |
           rc=0
-          for f in $(git ls-files '*.json' | grep -v '.obsidian/plugins/'); do
+          for f in $(git ls-files '*.json'); do
             python -m json.tool "$f" >/dev/null || { echo "invalid JSON: $f"; rc=1; }
           done
           [ "$rc" -eq 0 ] && echo "all authored JSON valid"

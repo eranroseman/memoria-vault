@@ -35,10 +35,8 @@ One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 from __future__ import annotations
 
 import argparse
-import json
 import re
 import sys
-from collections import Counter
 from pathlib import Path
 
 DROPPED_KEYS = (
@@ -639,32 +637,6 @@ def check_vocabulary_reference_mirror(repo: Path, errors: list[str]) -> None:
             )
 
 
-def check_quickadd_command_reference_mirror(repo: Path, errors: list[str]) -> None:
-    data = repo / "src" / ".obsidian" / "plugins" / "quickadd" / "data.json"
-    doc = repo / "docs" / "reference" / "obsidian-command-palette.md"
-    if not data.is_file() or not doc.is_file():
-        return
-    payload = json.loads(data.read_text(encoding="utf-8"))
-    commands = {choice["name"] for choice in payload.get("choices", []) if choice.get("command")}
-    doc_command_list = []
-    for line in read(doc).splitlines():
-        match = re.match(r"\|\s*`(Memoria:[^`]+)`\s*\|", line)
-        if match:
-            doc_command_list.append(match.group(1))
-    duplicates = sorted(name for name, count in Counter(doc_command_list).items() if count > 1)
-    if duplicates:
-        errors.append(
-            f"{doc}: command palette mirror duplicates command row(s): {', '.join(duplicates)}"
-        )
-    doc_commands = set(doc_command_list)
-    if commands != doc_commands:
-        errors.append(
-            f"{doc}: command palette mirror differs from QuickAdd data "
-            f"(missing: {sorted(commands - doc_commands) or 'none'}; "
-            f"extra: {sorted(doc_commands - commands) or 'none'})"
-        )
-
-
 def check_reference_readme_index(repo: Path, errors: list[str]) -> None:
     index = repo / "docs" / "reference" / "README.md"
     reference_dir = index.parent
@@ -678,29 +650,6 @@ def check_reference_readme_index(repo: Path, errors: list[str]) -> None:
     missing = [name for name in expected if name not in linked]
     if missing:
         errors.append(f"{index}: reference index omits page(s): {', '.join(missing)}")
-
-
-def check_plugin_count_mirrors(repo: Path, errors: list[str]) -> None:
-    community = repo / "src" / ".obsidian" / "community-plugins.json"
-    if not community.is_file():
-        return
-    count = len(json.loads(community.read_text(encoding="utf-8")))
-    for doc in (
-        repo / "docs" / "reference" / "obsidian-plugins.md",
-        repo / "docs" / "testing" / "plans" / "manual-gui-checks.md",
-    ):
-        if not doc.is_file():
-            continue
-        text = read(doc)
-        for line_no, line in enumerate(text.splitlines(), start=1):
-            lower = line.lower()
-            if "plugin" not in lower or not ("required" in lower or "bundled" in lower):
-                continue
-            for value in COUNT_RE.findall(line):
-                if int(value) != count:
-                    errors.append(
-                        f"{doc}:{line_no}: Obsidian plugin count mirror says {value} but community-plugins.json lists {count}"
-                    )
 
 
 def check_profile_skill_count_mirror(repo: Path, errors: list[str]) -> None:
@@ -831,8 +780,6 @@ def check_hermes_cli_skill_mirror(repo: Path, errors: list[str]) -> None:
 def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
     check_document_type_reference_mirror(repo, errors)
     check_vocabulary_reference_mirror(repo, errors)
-    check_quickadd_command_reference_mirror(repo, errors)
-    check_plugin_count_mirrors(repo, errors)
     check_profile_skill_count_mirror(repo, errors)
     check_system_actions_skill_mirror(repo, errors)
     check_hermes_cli_skill_mirror(repo, errors)

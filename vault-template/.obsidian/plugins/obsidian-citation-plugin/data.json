@@ -1,9 +1,0 @@
-{
-  "citationExportFormat": "biblatex",
-  "citationExportPath": "references.bib",
-  "literatureNoteTitleTemplate": "@{{citekey}}",
-  "literatureNoteFolder": ".memoria/staging/catalog",
-  "literatureNoteContentTemplate": "This file is citation-plugin scratch, not a Memoria Concept.\n\nUse the Memoria worker capture operation to create a checked source Concept for {{citekey}}.\n",
-  "markdownCitationTemplate": "[@{{citekey}}]",
-  "alternativeMarkdownCitationTemplate": "@{{citekey}}"
-}

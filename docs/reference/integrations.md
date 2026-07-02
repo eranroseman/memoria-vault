@@ -6,9 +6,9 @@ grand_parent: Reference
 
 # External integrations
 
-APIs and tools Memoria reaches during capture, enrichment, metadata checks, retrieval, and
-local UI work. External calls are allowed only through declared operation/profile
-tool policy; captured Concepts and worker-owned projections remain Memoria's
+APIs and tools Memoria reaches during capture, enrichment, metadata checks, and
+retrieval. External calls are allowed only through declared operation policy;
+captured Concepts, SQLite state, and worker-owned projections remain Memoria's
 source of truth.
 
 ---
@@ -63,15 +63,15 @@ venue Concepts.
 
 ---
 
-## Vault access and agent interface
+## Workspace access and search
 
 | Integration | Role |
 |---|---|
-| **Obsidian Local REST API** (native MCP, verified loopback HTTPS port 27124 by default) | Lets profiles read the Obsidian-opened workspace through verified loopback HTTPS. Canonical writes route through the worker/trusted-writer path, not profile-owned direct file writes. |
-| **Agent Client pane (ACP)** | Interactive Obsidian sidebar pane for synchronous human-driven sessions (the Co-PI, ad-hoc queries). Separate from queue-dispatched card work. |
-| **qmd** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the degraded fallback when qmd is not ready. No QuickAdd pre-file similarity telemetry or standalone duplicate-sweep command ships today. |
+| **`memoria` CLI** | Required workspace control surface. All mutating work enters through request envelopes and the engine lifecycle. |
+| **qmd** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the degraded fallback when qmd is not ready. |
+| **Optional editor adapters** | Future presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
 | **MarkDB-Connect** (Zotero add-on) | Recommended, optional. Tags Zotero items that have a vault note and adds a right-click jump-to-note. Convenience layer over the Librarian's BBT-citekey linking, not a dependency. Setup: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
-| **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` during [Set up Hermes](../how-to-guides/setup/set-up-hermes.md). |
+| **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` in the local runtime environment if the push adapter is installed. |
 
 ---
 
@@ -92,7 +92,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Kilo Code gateway** | Optional model provider for the standalone runner, configured through workspace provider config/environment. No Hermes profile defaults ship in alpha.14. |
-| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for the deferred Engineer/code lane. It is not invoked by alpha.11 task routing. When reintroduced, the Engineer remains MCP-only — no terminal or file toolset ([ADR-21](../adr/21-l3-autonomy-ceiling.md)) — and handoff artifacts stay review-gated. |
+| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the alpha.14 baseline. |
 
 ---
 
@@ -110,5 +110,4 @@ Tools evaluated and not in the current design:
 
 - Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
 - Profile permissions (which profiles can call which integrations): [Profile capabilities](profile-capabilities.md)
-- Where the API keys are configured: [Set up Hermes](../how-to-guides/setup/set-up-hermes.md)
-- Librarian design (the profile that calls most of these): [The Librarian](../explanation/profiles/librarian.md)
+- Where API keys are configured: [Memoria configuration](configuration.md)

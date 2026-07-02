@@ -48,8 +48,6 @@ TEST_LEVELS = {
     "test_link.py": "unit",
     "test_live_docs_links.py": "static",
     "test_loudness.py": "unit",
-    "test_memoria_inspector.py": "contract",
-    "test_modalforms.py": "contract",
     "test_node_tooling.py": "static",
     "test_operations.py": "contract",
     "test_package_spine.py": "package",
@@ -65,7 +63,6 @@ TEST_LEVELS = {
     "test_project_hints.py": "contract",
     "test_project_structural_impact.py": "contract",
     "test_projections.py": "contract",
-    "test_quickadd.py": "contract",
     "test_reference_generators.py": "static",
     "test_refresh_test_vault.py": "package",
     "test_resolve_merge.py": "contract",
@@ -88,7 +85,6 @@ TEST_LEVELS = {
     "test_verify_script.py": "package",
     "test_worker_queue.py": "runtime",
     "test_worklists.py": "contract",
-    "test_workspaces.py": "contract",
 }
 
 

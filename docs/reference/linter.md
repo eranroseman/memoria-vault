@@ -27,7 +27,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
-| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · capabilities · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.obsidian`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
+| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · capabilities · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Checked only in installed vaults (golden manifest present); the repo's `vault-template/` ships no empty dirs. |
@@ -60,7 +60,7 @@ The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): 
 
 ## The golden copy
 
-`memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+`memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file - `system/templates|dashboards|patterns|eval/` plus `home.md`, `system/vocabulary.md`, and `AGENTS.md` - at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
 This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy gate](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
@@ -71,7 +71,8 @@ This is the human-facing half of template protection (#179): agents are already 
 | `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
 | `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
 
-The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` and `memoria-property-badges.css` snippets. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
+Alpha.14 ships no editor plugin bundle, so editor app state is not part of the
+golden manifest.
 
 ---
 
@@ -93,15 +94,14 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --v
 
 ---
 
-## The daily cron
+## Scheduled checks
 
-The installer wires `memoria-worker` every minute for PI-edit observation and
-pending queue drain, plus `memoria-lint`
-(`hermes cron create '0 6 * * *' --script memoria-lint.sh --no-agent`) for the
-daily detector sweep. The lint wrapper runs the detectors, `golden_restore.py
-check`, the per-session digests, and the worker `integrity-sweep` over the
-vault. Findings surface in Maintenance's Drift watch and Loose ends views — see
-[Dashboards](dashboards.md).
+The standalone baseline can run linter checks on demand through
+`memoria workspace check`. Operators may wire the same check through cron,
+systemd timers, launchd, Task Scheduler, or another local scheduler. The lint
+wrapper runs the detectors, `golden_restore.py check`, the per-session digests,
+and the worker `integrity-sweep` over the vault. Findings surface in Maintenance
+views and CLI output; no Hermes scheduler is required.
 
 ---
 

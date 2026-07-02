@@ -88,7 +88,9 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
     )
     adr_decision, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)
     mixed_decision, _ = decide(
-        ["docs/reference/glossary.md", "vault-template/.obsidian/app.json"], "eranroseman", False
+        ["docs/reference/glossary.md", "vault-template/.memoria/schemas/types/note.yaml"],
+        "eranroseman",
+        False,
     )
     root_decision, _ = decide(["README.md"], "eranroseman", False)
 
