@@ -126,6 +126,24 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
                     "score": 0.82,
                 },
             },
+            {
+                "relation_type": "authorship",
+                "target_id": "https://openalex.org/A123",
+                "target_title": "Ada River",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "institution",
+                "target_id": "https://ror.org/03yrm5c26",
+                "target_title": "Example University",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "source",
+                "target_id": "1234-5678",
+                "target_title": "Journal of Testable Systems",
+                "source_provider": "openalex",
+            },
         ],
     )
 
@@ -141,7 +159,10 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
     assert '"doi": "10.1000/alpha"' in work.read_text(encoding="utf-8")
     graph_text = graph.read_text(encoding="utf-8")
+    assert "Ada River" in graph_text
     assert "Beta Work" in graph_text
+    assert "Example University" in graph_text
+    assert "Journal of Testable Systems" in graph_text
     assert "Artificial Intelligence" in graph_text
     assert "field: Computer Science" in graph_text
     assert "domain: Physical Sciences" in graph_text
@@ -162,6 +183,9 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     assert (
         answer_query(vault, "Artificial Intelligence")["sources"][0]["path"]
         == "graph-neighborhoods/source-alpha.md"
+    )
+    assert answer_query(vault, "Ada River")["sources"][0]["path"] == (
+        "graph-neighborhoods/source-alpha.md"
     )
 
 
