@@ -69,6 +69,7 @@ TEST_LEVELS = {
     "test_reference_generators.py": "static",
     "test_refresh_test_vault.py": "package",
     "test_resolve_merge.py": "contract",
+    "test_retrieval_substrate.py": "contract",
     "test_ruleset_doctor.py": "static",
     "test_runtime_helpers.py": "unit",
     "test_runtime_policy.py": "contract",

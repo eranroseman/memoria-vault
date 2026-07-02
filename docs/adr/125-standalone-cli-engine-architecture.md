@@ -39,7 +39,12 @@ Memoria is a **standalone local CLI + engine**, single-user, no daemon.
   `pip install -e .` contributor fallback); Typer CLI; stdlib `sqlite3` with
   WAL and FK, **no ORM**; `.sql` DDL gated by `PRAGMA user_version`;
   pydantic-ai as the sole typed LLM runner over OpenAI-compatible endpoints;
-  retrieval via SQLite FTS5 + sqlite-vec pending the baseline-gated spike vs qmd (design §10 — the checked-only filter becomes a `WHERE` clause and Node leaves the baseline if the spike clears);
+  retrieval via qmd for alpha.15 after the baseline-gated spike: SQLite FTS5
+  covers lexical cases, but the packaged product does not yet carry sqlite-vec
+  plus a local embedding pipeline, so the semantic/hybrid replacement bar did
+  not clear; the committed fixture/verdict lives in
+  `tests/fixtures/retrieval-substrate-spike.json` and
+  `src/memoria_vault/runtime/retrieval_substrate.py`;
   git CLI for file materialization and journal anchoring.
 - **State**: SQLite is the authority for records, operations, queue, journal,
   and verdicts; markdown files are the human corpus; content-addressed blobs
