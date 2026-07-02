@@ -266,21 +266,20 @@ def test_worker_runs_claim_quote_integrity_operation_jobs(tmp_path: Path) -> Non
 
 def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    source = vault / "catalog/sources/anchor/source.md"
-    content = vault / "catalog/sources/anchor/content.md"
-    source.parent.mkdir(parents=True, exist_ok=True)
+    content = vault / ".memoria/blobs/source-content/anchor/content.txt"
+    content.parent.mkdir(parents=True, exist_ok=True)
     content.write_text("The study measured survey response rates.\n", encoding="utf-8")
-    source.write_text(
-        "---\n"
-        "type: source\n"
-        "check_status: checked\n"
-        "title: Anchor source\n"
-        "description: Source text.\n"
-        "source_id: anchor\n"
-        "content_path: catalog/sources/anchor/content.md\n"
-        "---\n"
-        "# Anchor source\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        vault,
+        source_id="anchor",
+        title="Anchor source",
+        description="Source text.",
+        citekey="anchor2026",
+        csl_json={"id": "anchor2026", "title": "Anchor source"},
+        metadata_status="verified",
+        text_status="full-text",
+        check_status="checked",
+        content_path=content.relative_to(vault).as_posix(),
     )
     bad = vault / "knowledge/notes/bad-anchor.md"
     bad.parent.mkdir(parents=True, exist_ok=True)
@@ -348,29 +347,21 @@ def test_worker_runs_prompt_injection_integrity_operation_jobs(tmp_path: Path) -
 
 def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    source = vault / "catalog/sources/bad/source.md"
-    source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text(
-        "---\n"
-        "type: source\n"
-        "check_status: checked\n"
-        "title: Bad Metadata\n"
-        "description: Missing citekey.\n"
-        "source_id: bad\n"
-        "item_type: article\n"
-        "metadata_status: partial\n"
-        "resource: https://example.test/bad\n"
-        "csl_json:\n"
-        "  title: Bad Metadata\n"
-        "  author:\n"
-        "    - family: Ada\n"
-        "      given: River\n"
-        "  issued:\n"
-        "    date-parts:\n"
-        "      - [2026]\n"
-        "---\n"
-        "# Bad Metadata\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        vault,
+        source_id="bad",
+        title="Bad Metadata",
+        description="Missing citekey.",
+        resource="https://example.test/bad",
+        citekey="",
+        csl_json={
+            "title": "Bad Metadata",
+            "author": [{"family": "Ada", "given": "River"}],
+            "issued": {"date-parts": [[2026]]},
+        },
+        metadata_status="partial",
+        text_status="full-text",
+        check_status="checked",
     )
 
     queued = enqueue_operation(

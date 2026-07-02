@@ -179,7 +179,7 @@ def _bundle_index(vault: Path, bundle: str) -> str:
     concept_paths = _concept_paths(bundle_root)
     if bundle == "catalog":
         concept_paths = [
-            path for path in concept_paths if not _legacy_source_markdown(bundle_root, path)
+            path for path in concept_paths if not _catalog_source_markdown(bundle_root, path)
         ]
     rows = [_concept_row(bundle_root, path) for path in concept_paths]
     if bundle == "catalog":
@@ -212,9 +212,9 @@ def _concept_row(bundle_root: Path, path: Path) -> str:
     return f"- [{title}]({rel}) `{concept_type}`{suffix}"
 
 
-def _legacy_source_markdown(bundle_root: Path, path: Path) -> bool:
+def _catalog_source_markdown(bundle_root: Path, path: Path) -> bool:
     rel = path.relative_to(bundle_root).as_posix()
-    return rel.startswith("sources/") and rel.endswith("/source.md")
+    return rel.startswith("sources/")
 
 
 def _catalog_source_rows(vault: Path) -> list[str]:

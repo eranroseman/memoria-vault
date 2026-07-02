@@ -262,9 +262,6 @@ def compile_source_digest(
     source_ref = _source_ref(source_id)
     source_fm = _checked_source(vault, source_ref)
     _require_digestable_text(source_fm)
-    legacy_source_rel = f"{source_ref}/source.md"
-    if (vault / legacy_source_rel).is_file():
-        state.upsert_catalog_source(vault, legacy_source_rel, source_fm)
     citation = state.compact_citation(vault, source_ref)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
@@ -427,21 +424,9 @@ def compile_source_digest(
 
 def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
     source_ref = _source_ref(source_ref)
-    source_path = vault / source_ref
-    if source_path.is_file():
-        frontmatter = read_frontmatter(source_path)
-        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
-            raise ValueError(f"{source_ref} is not a checked source")
-        return frontmatter
-    legacy_path = vault / source_ref / "source.md"
-    if legacy_path.is_file():
-        frontmatter = read_frontmatter(legacy_path)
-        if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
-            raise ValueError(f"{source_ref} is not a checked source")
-        return frontmatter
     row = state.catalog_source(vault, source_ref)
     if row is None:
-        raise FileNotFoundError(source_path)
+        raise FileNotFoundError(source_ref)
     if row.get("check_status") != "checked":
         raise ValueError(f"{source_ref} is not a checked source")
     return {
@@ -471,12 +456,6 @@ def _require_digestable_text(source_fm: dict[str, Any]) -> None:
 
 def _source_input_sha(vault: Path, source_ref: str, source_fm: dict[str, Any]) -> str:
     source_ref = _source_ref(source_ref)
-    path = vault / source_ref
-    if path.is_file():
-        return sha256_file(path)
-    legacy_path = path / "source.md"
-    if legacy_path.is_file():
-        return sha256_file(legacy_path)
     return str(
         source_fm.get("normalized_text_sha256")
         or source_fm.get("raw_text_sha256")

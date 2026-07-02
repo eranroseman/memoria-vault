@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
+from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.integrity import (
     cascade_rollback,
     check_claim_quote_support,
@@ -127,7 +127,7 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
         "title: Bad evidence\n"
         "source_id: catalog/sources/missing\n"
         "evidence_set:\n"
-        "  - catalog/sources/missing/source.md\n"
+        "  - catalog/sources/missing\n"
         "---\n"
         "# Bad evidence\n",
         encoding="utf-8",
@@ -141,6 +141,44 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
     assert finding["target_id"] == target
     assert finding["route"] == "ask"
     assert "catalog/sources/missing" in finding["reason"]
+
+
+def test_evidence_integrity_rejects_legacy_source_markdown_without_catalog_row(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    legacy = vault / "catalog/sources/legacy/source.md"
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text(
+        "---\n"
+        "type: source\n"
+        "check_status: checked\n"
+        "title: Legacy Source\n"
+        "source_id: legacy\n"
+        "---\n"
+        "# Legacy Source\n",
+        encoding="utf-8",
+    )
+    target = "knowledge/notes/legacy-evidence.md"
+    (vault / target).parent.mkdir(parents=True, exist_ok=True)
+    (vault / target).write_text(
+        "---\n"
+        "type: note\n"
+        "check_status: checked\n"
+        "title: Legacy evidence\n"
+        "evidence_set:\n"
+        "  - catalog/sources/legacy/source.md\n"
+        "---\n"
+        "# Legacy evidence\n",
+        encoding="utf-8",
+    )
+
+    result = check_evidence_integrity(vault, shadow=False, machine="integrity-machine")
+
+    [finding] = result["findings"]
+    assert finding["check"] == "evidence-resolves"
+    assert finding["target_id"] == target
+    assert "catalog/sources/legacy" in finding["reason"]
 
 
 def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) -> None:
@@ -169,19 +207,20 @@ def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) ->
 
 def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    source = vault / "catalog/sources/retracted/source.md"
-    source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text(
-        "---\n"
-        "type: source\n"
-        "check_status: checked\n"
-        "title: Retracted\n"
-        "description: Retracted source.\n"
-        "source_id: retracted\n"
-        "lifecycle: retracted\n"
-        "---\n"
-        "# Retracted\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        vault,
+        source_id="retracted",
+        title="Retracted",
+        description="Retracted source.",
+        citekey="retracted2026",
+        csl_json={
+            "id": "retracted2026",
+            "title": "Retracted",
+            "memoria": {"standing": "retracted"},
+        },
+        metadata_status="verified",
+        text_status="full-text",
+        check_status="checked",
     )
     target = "knowledge/notes/stale.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
@@ -203,6 +242,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
     assert finding["target_id"] == target
     assert finding["route"] == "ask"
     assert "retracted" in finding["reason"]
+    assert not (vault / "catalog/sources/retracted/source.md").exists()
 
 
 def test_claim_quote_support_flags_unwarranted_claim(tmp_path: Path) -> None:
@@ -306,7 +346,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
         "title: Partial source note\n"
         "source_id: catalog/sources/partial-source\n"
         "evidence_set:\n"
-        "  - catalog/sources/partial-source/source.md\n"
+        "  - catalog/sources/partial-source\n"
         "---\n"
         "# Partial source note\n",
         encoding="utf-8",
@@ -410,88 +450,61 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
 
 def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    capture_bibtex_source(
+    state.upsert_catalog_record(
         vault,
-        """@article{good2026,
-          title = {Good Metadata},
-          author = {Ada, River},
-          year = {2026},
-          journal = {Journal of Fixtures},
-          doi = {10.1000/good.2026}
-        }""",
-        machine="capture-machine",
-    )
-    bad = vault / "catalog/sources/bad/source.md"
-    bad.parent.mkdir(parents=True, exist_ok=True)
-    bad.write_text(
-        "---\n"
-        "type: source\n"
-        "check_status: checked\n"
-        "title: Bad Metadata\n"
-        "description: Missing citekey.\n"
-        "source_id: bad\n"
-        "item_type: article\n"
-        "metadata_status: partial\n"
-        "resource: https://example.test/bad\n"
-        "csl_json:\n"
-        "  title: Bad Metadata\n"
-        "  author:\n"
-        "    - family: Ada\n"
-        "      given: River\n"
-        "  issued:\n"
-        "    date-parts:\n"
-        "      - [2026]\n"
-        "---\n"
-        "# Bad Metadata\n",
-        encoding="utf-8",
+        source_id="bad",
+        title="Bad Metadata",
+        description="Missing citekey.",
+        resource="https://example.test/bad",
+        citekey="",
+        csl_json={
+            "title": "Bad Metadata",
+            "author": [{"family": "Ada", "given": "River"}],
+            "issued": {"date-parts": [[2026]]},
+        },
+        metadata_status="partial",
+        text_status="full-text",
+        check_status="checked",
     )
 
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
     assert finding["check"] == "source-metadata"
-    assert finding["target_id"] == "catalog/sources/bad/source.md"
+    assert finding["target_id"] == "catalog/sources/bad"
     assert finding["reason"] == "missing citekey alias"
     assert finding["route"] == "ask"
+    assert not (vault / "catalog/sources/bad/source.md").exists()
 
 
 def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    source = vault / "catalog/sources/conflict/source.md"
-    source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text(
-        "---\n"
-        "type: source\n"
-        "check_status: checked\n"
-        "title: Conflicting DOI\n"
-        "description: Mismatched identifier metadata.\n"
-        "source_id: conflict\n"
-        "citekey: conflict2026\n"
-        "item_type: article\n"
-        "metadata_status: partial\n"
-        "identifiers:\n"
-        "  doi: 10.1000/top-level\n"
-        "csl_json:\n"
-        "  title: Conflicting DOI\n"
-        "  DOI: https://doi.org/10.1000/csl\n"
-        "  author:\n"
-        "    - family: Ada\n"
-        "      given: River\n"
-        "  issued:\n"
-        "    date-parts:\n"
-        "      - [2026]\n"
-        "---\n"
-        "# Conflicting DOI\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        vault,
+        source_id="conflict",
+        title="Conflicting DOI",
+        description="Mismatched identifier metadata.",
+        citekey="conflict2026",
+        identifiers={"doi": "10.1000/top-level"},
+        csl_json={
+            "title": "Conflicting DOI",
+            "DOI": "https://doi.org/10.1000/csl",
+            "author": [{"family": "Ada", "given": "River"}],
+            "issued": {"date-parts": [[2026]]},
+        },
+        metadata_status="partial",
+        text_status="full-text",
+        check_status="checked",
     )
 
     result = check_source_metadata(vault, shadow=False, machine="integrity-machine")
 
     [finding] = result["findings"]
     assert finding["check"] == "source-metadata"
-    assert finding["target_id"] == "catalog/sources/conflict/source.md"
+    assert finding["target_id"] == "catalog/sources/conflict"
     assert finding["reason"] == "conflicting DOI metadata"
     assert finding["route"] == "ask"
+    assert not (vault / "catalog/sources/conflict/source.md").exists()
 
 
 def test_db_capture_does_not_create_legacy_entity_identity_findings(
