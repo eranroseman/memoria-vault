@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Delegate ADR-19 hub-threshold findings to the Librarian map lane.
+"""Turn ADR-19 hub-threshold findings into map-proposal requests.
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those
-findings and creates a review-gated map-lane handoff: the agent may draft a hub
-proposal in staging, but the canonical hub home (knowledge/hubs/) remains PI-owned.
+findings and creates a review-gated proposal handoff: an operation may draft a
+hub proposal in staging, but the canonical hub home (knowledge/hubs/) remains
+PI-owned.
 
     python hub_handoff.py --vault <path> [--threshold 15] [--json]
 """
@@ -53,7 +54,8 @@ def _context(finding: detectors.Finding, topic: str, count: int, threshold: int)
             f"Finding: {finding.message}",
             f"Topic: {topic}",
             f"Count: {count}; threshold: {threshold}",
-            "The Linter is report-only. The map lane may stage a proposal, but knowledge/hubs/ is PI-curated.",
+            "The Linter is report-only. A map-proposal operation may stage a "
+            "proposal, but knowledge/hubs/ is PI-curated.",
         ]
     )
 
@@ -62,7 +64,7 @@ def handoff_hub_thresholds(
     vault: Path,
     threshold: int = 15,
 ) -> list[dict]:
-    """Return one map-lane handoff payload per current hub-threshold finding."""
+    """Return one map-proposal handoff payload per current hub-threshold finding."""
     out: list[dict] = []
     for finding in detectors.hub_threshold(vault, threshold=threshold):
         parsed = _parse_hub_threshold(finding)
@@ -79,7 +81,8 @@ def handoff_hub_thresholds(
                 "topic": topic,
                 "count": count,
                 "finding": finding.__dict__,
-                "lane": "map",
+                "operation_id": "suggest-hubs",
+                "posture": "mapping",
                 "goal": f"Draft hub proposal: {topic}",
                 "context": _context(finding, topic, count, threshold),
                 "allowed_paths": list(_ALLOWED_PATHS),

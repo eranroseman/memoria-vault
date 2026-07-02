@@ -11,12 +11,12 @@ import sys
 import traceback
 from pathlib import Path
 
-PROFILE = "{{PROFILE}}"
-VAULT = Path("{{VAULT_PATH}}")
+ACTOR = "{{ACTOR}}"
+WORKSPACE = Path("{{WORKSPACE_PATH}}")
 
 
 def _vault_site_packages() -> list[Path]:
-    venv = VAULT / ".memoria" / ".venv"
+    venv = WORKSPACE / ".memoria" / ".venv"
     return [venv / "Lib" / "site-packages", *sorted((venv / "lib").glob("python*/site-packages"))]
 
 
@@ -34,22 +34,22 @@ def _bootstrap_vault_runtime_package() -> None:
 _bootstrap_vault_runtime_package()
 
 
-def _payload(tool_name, args, task_id):
-    tid = task_id or ""
+def _payload(tool_name, args, request_id):
+    rid = request_id or ""
     return {
         "tool_name": tool_name,
         "tool_input": args or {},
-        "session_id": tid,
-        "extra": {"task_id": tid},
+        "session_id": rid,
+        "extra": {"request_id": rid},
     }
 
 
-def _gate(tool_name, args, task_id, **kwargs):
-    """pre_tool_call: block deny/dry_run vault writes. Fail-closed."""
+def _gate(tool_name, args, request_id, **kwargs):
+    """pre_tool_call: block deny/dry_run workspace writes. Fail-closed."""
     try:
         from memoria_vault.runtime.policy import hook as policy_hook
 
-        result = policy_hook.evaluate_pre(_payload(tool_name, args, task_id), PROFILE, VAULT)
+        result = policy_hook.evaluate_pre(_payload(tool_name, args, request_id), ACTOR, WORKSPACE)
         if result.get("decision") == "block":
             return {"action": "block", "message": result.get("reason", "policy gate: blocked")}
         return None
@@ -57,12 +57,12 @@ def _gate(tool_name, args, task_id, **kwargs):
         return {"action": "block", "message": f"policy gate failed-closed (plugin error): {exc}"}
 
 
-def _complete(tool_name, args, task_id, **kwargs):
+def _complete(tool_name, args, request_id, **kwargs):
     """post_tool_call: finish the audit record (after_hash). Never blocks."""
     try:
         from memoria_vault.runtime.policy import hook as policy_hook
 
-        policy_hook.evaluate_post(_payload(tool_name, args, task_id), PROFILE, VAULT)
+        policy_hook.evaluate_post(_payload(tool_name, args, request_id), ACTOR, WORKSPACE)
     except Exception:  # noqa: BLE001 -- never block the agent on audit-completion failures
         # Never block the agent on audit-completion failures, but log so the
         # operator can diagnose missing audit records.

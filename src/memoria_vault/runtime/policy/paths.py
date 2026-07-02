@@ -27,7 +27,7 @@ def normalize_path(path: str) -> str:
 
 
 def glob_to_regex(pattern: str) -> str:
-    """Translate Memoria's lane glob syntax to an anchored regular expression."""
+    """Translate Memoria policy glob syntax to an anchored regular expression."""
     index, length, output = 0, len(pattern), ["^"]
     while index < length:
         char = pattern[index]
@@ -53,7 +53,7 @@ def glob_to_regex(pattern: str) -> str:
 
 
 def path_matches(path: str, patterns: list[str]) -> bool:
-    """Return whether a path matches any lane glob."""
+    """Return whether a path matches any policy glob."""
     return any(re.match(glob_to_regex(pattern), path) for pattern in patterns or [])
 
 

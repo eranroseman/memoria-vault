@@ -1,8 +1,8 @@
-"""Pure policy decisions with no filesystem or MCP dependency."""
+"""Pure policy decisions with no filesystem or adapter dependency."""
 
 from __future__ import annotations
 
-from .model import Decision, LanePolicy
+from .model import ActorPolicy, Decision
 from .paths import (
     ACTIONS,
     MUTATING_ACTIONS,
@@ -34,18 +34,18 @@ def is_review_gated(path: str) -> bool:
 
 
 def decide(
-    profile: str,
+    actor: str,
     action: str,
     path: str,
-    lane: LanePolicy,
+    policy: ActorPolicy,
     flags: dict | None = None,
     skill_deny_write: list[str] | None = None,
 ) -> Decision:
     """Return the policy decision for one request. Pure: no I/O, no logging."""
     flags = flags or {}
     npath = normalize_path(path)
-    rule = lane.short
-    require_log = "audit_log" in lane.require
+    rule = policy.short
+    require_log = "audit_log" in policy.require
 
     if action not in ACTIONS:
         return Decision("deny", f"{rule}.invalid-action", f"unknown action '{action}'")
@@ -61,8 +61,8 @@ def decide(
         return Decision("allow", f"{rule}.report", log_required=require_log)
 
     if action == "read":
-        if path_matches(npath, lane.deny_read):
-            return Decision("deny", f"{rule}.deny.read", "read denied by lane policy")
+        if path_matches(npath, policy.deny_read):
+            return Decision("deny", f"{rule}.deny.read", "read denied by workspace policy")
         if is_review_gated(npath):
             return Decision(
                 "allow_with_log",
@@ -86,28 +86,30 @@ def decide(
                 f"{rule}.auto_fix.{cls}",
                 f"auto_fix class '{cls}' degrades to dry_run -- needs schema-migrate",
             )
-        if cls in lane.deny_auto_fix_classes:
+        if cls in policy.deny_auto_fix_classes:
             return Decision(
-                "deny", f"{rule}.auto_fix.{cls}", f"auto_fix class '{cls}' denied by lane policy"
+                "deny",
+                f"{rule}.auto_fix.{cls}",
+                f"auto_fix class '{cls}' denied by workspace policy",
             )
-        if cls in AUTO_FIX_ALLOWED_CLASSES and cls in lane.allow_auto_fix_classes:
-            if not path_matches(npath, lane.allow_write):
+        if cls in AUTO_FIX_ALLOWED_CLASSES and cls in policy.allow_auto_fix_classes:
+            if not path_matches(npath, policy.allow_write):
                 return Decision(
                     "deny",
                     f"{rule}.auto_fix.out-of-scope",
-                    f"auto_fix path '{npath}' outside the lane's write scope",
+                    f"auto_fix path '{npath}' outside the actor's write scope",
                 )
             if is_review_gated(npath):
                 return Decision(
                     "dry_run",
                     "review_gated.dry_run",
-                    "review-gated zone -- surface as board comment",
+                    "review-gated zone -- surface as an attention item",
                 )
             return Decision("allow_with_log", f"{rule}.auto_fix.{cls}", log_required=True)
         return Decision(
             "deny",
             f"{rule}.auto_fix.class-not-allowed",
-            f"auto_fix class '{cls}' not permitted for {profile}",
+            f"auto_fix class '{cls}' not permitted for {actor}",
         )
 
     if action == "delete":
@@ -117,11 +119,11 @@ def decide(
                 f"{rule}.delete.default-deny",
                 "delete requires flags.explicit_authorization",
             )
-        if not path_matches(npath, lane.allow_write):
+        if not path_matches(npath, policy.allow_write):
             return Decision(
                 "deny",
                 f"{rule}.delete.out-of-scope",
-                f"delete path '{npath}' outside the lane's write scope",
+                f"delete path '{npath}' outside the actor's write scope",
             )
         if is_review_gated(npath):
             return Decision(
@@ -132,31 +134,31 @@ def decide(
         return Decision("allow_with_log", f"{rule}.delete", log_required=True)
 
     if action == "mkdir":
-        if not within_scope(npath, lane.write_scope):
+        if not within_scope(npath, policy.write_scope):
             return Decision(
-                "deny", f"{rule}.mkdir.out-of-scope", f"mkdir '{npath}' outside routing.write_scope"
+                "deny", f"{rule}.mkdir.out-of-scope", f"mkdir '{npath}' outside write_scope"
             )
         if is_review_gated(npath):
             return Decision("dry_run", "review_gated.dry_run", "review-gated zone")
         return Decision("allow", f"{rule}.mkdir", log_required=require_log)
 
-    if path_matches(npath, lane.deny_write):
-        return Decision("deny", f"{rule}.deny.write", f"{profile} is denied write to '{npath}'")
-    if not path_matches(npath, lane.allow_write):
+    if path_matches(npath, policy.deny_write):
+        return Decision("deny", f"{rule}.deny.write", f"{actor} is denied write to '{npath}'")
+    if not path_matches(npath, policy.allow_write):
         return Decision(
-            "deny", f"{rule}.default-deny", f"no allow rule matches '{npath}' for {profile}"
+            "deny", f"{rule}.default-deny", f"no allow rule matches '{npath}' for {actor}"
         )
     if is_review_gated(npath):
         return Decision(
             "dry_run",
             "review_gated.dry_run",
-            "review-gated zone write requires approval -- surface as board comment",
+            "review-gated zone write requires approval -- surface as an attention item",
         )
     return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
 
 
-def compose_skill_deny(lane: LanePolicy, skill_policy: dict | None) -> list[str]:
-    """Compose a loaded skill's ``policy.deny.write`` onto the lane."""
+def compose_skill_deny(policy: ActorPolicy, skill_policy: dict | None) -> list[str]:
+    """Compose a loaded skill's ``policy.deny.write`` onto the actor policy."""
     if not skill_policy:
         return []
     deny = (skill_policy.get("deny") or {}).get("write") or []

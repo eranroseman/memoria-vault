@@ -62,7 +62,10 @@ The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): 
 
 `memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file - `system/templates|dashboards|patterns|eval/` plus `home.md`, `system/vocabulary.md`, and `AGENTS.md` - at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
-This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy gate](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
+This is the human-facing half of template protection (#179): machine writes are
+already routed through request checks and the policy gate (see
+[Policy gate](policy-mcp.md)), so the golden copy exists to catch and repair an
+*accidental human* edit or deletion of a system file.
 
 | Command | Effect |
 | --- | --- |
@@ -76,17 +79,17 @@ golden manifest.
 
 ---
 
-## Per-session digests
+## Per-request digests
 
 `memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |
-| Input | `audit.jsonl`, grouped by `task_id`. |
+| Input | `audit.jsonl`, grouped by `request_id`. |
 | Output | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl`. |
 | Records | One header plus one row per touched path. |
-| Idempotency | An already-digested `task_id` is never rewritten. |
-| Quiet window | Sessions active within the last **24 h** (`--quiet-hours`) wait for a later run. |
+| Idempotency | An already-digested `request_id` is never rewritten. |
+| Quiet window | Requests active within the last **24 h** (`--quiet-hours`) wait for a later run. |
 
 ```bash
 python3 -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault <vault> [--quiet-hours H]

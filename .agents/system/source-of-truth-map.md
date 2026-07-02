@@ -15,10 +15,10 @@ find the owning file, then fix the stale consumer rather than the source.
 | Installed profile absence | `tests/test_profiles.py` + `scripts/alpha14_negative_gate.py` | Installer tests, profile reference page |
 | Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Runtime policy tests and optional adapter policy hooks |
 | Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | Runtime subsystems, operations, test harnesses |
-| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,lanes,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional policy gate plugin, audit log |
+| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,workspace,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional policy gate plugin, audit log |
 | Write interception for optional adapters | `src/memoria_vault/runtime/policy/hook.py` and `vault-template/.memoria/plugins/memoria-policy-gate/` | Optional adapter plugin tests |
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
-| Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
+| Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations that raise attention items; Home/Telegram push; request and policy block checks |
 | Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
 | Dropped Obsidian baseline payload | `scripts/alpha14_negative_gate.py` + `scripts/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
@@ -58,9 +58,9 @@ owned source. Treat a mirror as a cache, never as a second authority:
 ## Mirrored constants
 
 The packaged policy layer and schema loader carry a dependency-free fallback for
-legacy review-gated prefixes. Alpha.11 does not declare these in `folders.yaml`;
-tests prove the legacy fallback constants agree with each other and stay
-separate from the worker-owned staging/promote/quarantine boundary.
+review-gated prefixes. `folders.yaml` does not declare these prefixes; tests
+prove the fallback constants agree with each other and stay separate from the
+worker-owned staging/promote/quarantine boundary.
 
 ## Decision rule
 

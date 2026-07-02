@@ -1,4 +1,4 @@
-"""L1 component test for session_summary — ADR-25's per-session digests."""
+"""L1 component test for session_summary per-request digests."""
 
 import json
 from datetime import UTC, datetime
@@ -8,13 +8,13 @@ from memoria_vault.runtime.subsystems.integrity.linter import session_summary as
 NOW = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
 
 
-def _entry(ts, task, path, action="write", decision="allow_with_log", **kw):
+def _entry(ts, request, path, action="write", decision="allow_with_log", **kw):
     e = {
         "timestamp": ts,
-        "profile": "memoria-writer",
+        "actor": "adapter",
         "action": action,
         "path": path,
-        "task_id": task,
+        "request_id": request,
         "decision": decision,
     }
     e |= kw
@@ -32,27 +32,27 @@ def test_grouping_naming_and_content(tmp_path):
     _write_audit(
         v,
         [
-            _entry("2026-06-01T09:05:00Z", "T-A", "projects/a.md"),
+            _entry("2026-06-01T09:05:00Z", "REQ-A", "projects/a.md"),
             _entry(
                 "2026-06-01T09:06:00Z",
-                "T-A",
+                "REQ-A",
                 "projects/a.md",
                 decision="write_complete",
                 after_hash="sha256:" + "a" * 64,
             ),
             _entry(
                 "2026-06-01T09:07:00Z",
-                "T-A",
+                "REQ-A",
                 "notes/claims/c.md",
                 action="write",
                 decision="dry_run",
             ),
-            _entry("2026-06-02T14:30:00Z", "T-B", "inbox/x.md", action="append"),
+            _entry("2026-06-02T14:30:00Z", "REQ-B", "inbox/x.md", action="append"),
         ],
         extra_lines=[
             "{garbage",
-            json.dumps({"timestamp": "bad", "task_id": "T-X"}),
-            json.dumps({"path": "no-task.md"}),
+            json.dumps({"timestamp": "bad", "request_id": "REQ-X"}),
+            json.dumps({"path": "no-request.md"}),
         ],
     )
     written = ss.write_summaries(v, now=NOW)
@@ -66,8 +66,8 @@ def test_grouping_naming_and_content(tmp_path):
         .splitlines()
     ]
     header, paths = lines[0], lines[1:]
-    assert header["record"] == "session" and header["task_id"] == "T-A"
-    assert header["profiles"] == ["memoria-writer"]
+    assert header["record"] == "session" and header["request_id"] == "REQ-A"
+    assert header["actors"] == ["adapter"]
     assert header["started"] == "2026-06-01T09:05:00Z"
     assert header["ended"] == "2026-06-01T09:07:00Z"
     assert header["entries"] == 3
@@ -78,13 +78,13 @@ def test_grouping_naming_and_content(tmp_path):
     assert by_path["projects/a.md"]["final_decision"] == "allow_with_log"
     assert by_path["notes/claims/c.md"]["final_decision"] == "dry_run"
     assert by_path["notes/claims/c.md"]["after_hash"] is None
-    # the malformed / task-less lines never produced a digest
+    # the malformed / request-less lines never produced a digest
     assert len(list((v / "system/logs/sessions").glob("*.jsonl"))) == 2
 
 
 def test_idempotent_rerun_writes_nothing(tmp_path):
     v = tmp_path
-    _write_audit(v, [_entry("2026-06-01T09:05:00Z", "T-A", "projects/a.md")])
+    _write_audit(v, [_entry("2026-06-01T09:05:00Z", "REQ-A", "projects/a.md")])
     first = ss.write_summaries(v, now=NOW)
     assert len(first) == 1
     again = ss.write_summaries(v, now=NOW)
@@ -96,7 +96,7 @@ def test_idempotent_rerun_writes_nothing(tmp_path):
 def test_quiet_window_skips_in_flight_sessions(tmp_path):
     v = tmp_path
     recent = (NOW.replace(hour=2)).strftime("%Y-%m-%dT%H:%M:%SZ")  # 10h before NOW
-    _write_audit(v, [_entry(recent, "T-LIVE", "projects/a.md")])
+    _write_audit(v, [_entry(recent, "REQ-LIVE", "projects/a.md")])
     assert ss.write_summaries(v, now=NOW) == []  # inside the 24h window
     later = NOW.replace(day=14)
     assert len(ss.write_summaries(v, now=later)) == 1  # quiet long enough
@@ -107,19 +107,19 @@ def test_shared_start_minute_gets_deterministic_suffix(tmp_path):
     _write_audit(
         v,
         [
-            _entry("2026-06-01T09:05:10Z", "T-A", "projects/a.md"),
-            _entry("2026-06-01T09:05:50Z", "T-B", "projects/b.md"),
+            _entry("2026-06-01T09:05:10Z", "REQ-A", "projects/a.md"),
+            _entry("2026-06-01T09:05:50Z", "REQ-B", "projects/b.md"),
         ],
     )
     written = sorted(p.name for p in ss.write_summaries(v, now=NOW))
     assert written == ["2026-06-01-0905-2.jsonl", "2026-06-01-0905.jsonl"]
-    # ordering is deterministic: T-A (earlier first timestamp) took the base name
+    # ordering is deterministic: REQ-A (earlier first timestamp) took the base name
     head = json.loads(
         (v / "system/logs/sessions/2026-06-01-0905.jsonl")
         .read_text(encoding="utf-8")
         .splitlines()[0]
     )
-    assert head["task_id"] == "T-A"
+    assert head["request_id"] == "REQ-A"
 
 
 def test_no_audit_log_is_a_noop(tmp_path):

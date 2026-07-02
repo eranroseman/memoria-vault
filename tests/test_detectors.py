@@ -118,29 +118,29 @@ def test_detectors():
                         # unpaired, 2h old -> fires
                         {
                             "timestamp": _ts(2),
-                            "profile": "memoria-writer",
+                            "actor": "adapter",
                             "action": "write",
                             "path": "knowledge/projects/x/lost.md",
-                            "task_id": "T-LOST",
+                            "request_id": "REQ-LOST",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "a" * 64,
                         },
-                        # paired (same path+task_id completed) -> silent
+                        # paired (same path+request_id completed) -> silent
                         {
                             "timestamp": _ts(2),
-                            "profile": "memoria-writer",
+                            "actor": "adapter",
                             "action": "write",
                             "path": "knowledge/projects/x/ok.md",
-                            "task_id": "T-OK",
+                            "request_id": "REQ-OK",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "b" * 64,
                         },
                         {
                             "timestamp": _ts(2),
-                            "profile": "memoria-writer",
+                            "actor": "adapter",
                             "action": "write",
                             "path": "knowledge/projects/x/ok.md",
-                            "task_id": "T-OK",
+                            "request_id": "REQ-OK",
                             "decision": "write_complete",
                             "before_hash": "sha256:" + "b" * 64,
                             "after_hash": _ok_hash,
@@ -148,10 +148,10 @@ def test_detectors():
                         # unpaired but fresh (10 min) -> still within the grace window
                         {
                             "timestamp": _ts(0.17),
-                            "profile": "memoria-writer",
+                            "actor": "adapter",
                             "action": "write",
                             "path": "knowledge/projects/x/fresh.md",
-                            "task_id": "T-FRESH",
+                            "request_id": "REQ-FRESH",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "d" * 64,
                         },
@@ -259,7 +259,7 @@ def test_detectors():
             check(
                 "audit-unpaired-writes flags the stale unpaired allow",
                 any(
-                    x.path == "knowledge/projects/x/lost.md" and "T-LOST" in x.message
+                    x.path == "knowledge/projects/x/lost.md" and "REQ-LOST" in x.message
                     for x in by("audit-unpaired-writes")
                 ),
             )
@@ -326,13 +326,13 @@ def _sha(b: bytes) -> str:
     return "sha256:" + hashlib.sha256(b).hexdigest()
 
 
-def _wc(path, after, action="write", task="T1", ts="2026-01-01T10:00:00Z"):
+def _wc(path, after, action="write", request="REQ1", ts="2026-01-01T10:00:00Z"):
     return {
         "timestamp": ts,
-        "profile": "memoria-writer",
+        "actor": "adapter",
         "action": action,
         "path": path,
-        "task_id": task,
+        "request_id": request,
         "decision": "write_complete",
         "before_hash": _EMPTY,
         "after_hash": after,

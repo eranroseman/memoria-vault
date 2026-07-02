@@ -20,14 +20,14 @@ const filtered = events
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   .slice(0, 30);
 dv.table(
-  ["When", "Profile", "Action", "Path", "Decision", "Rule", "Task"],
-  filtered.map(e => [e.timestamp, e.profile, e.action, e.path, e.decision, e.policy_rule, e.task_id ?? ""])
+  ["When", "Actor", "Action", "Path", "Decision", "Rule", "Request"],
+  filtered.map(e => [e.timestamp, e.actor, e.action, e.path, e.decision, e.policy_rule, e.request_id ?? ""])
 );
 ```
 
 ## Writes to review-gated zones
 
-Should be near zero. Each row is an approved promotion (`allow_with_log` + `task_id`) or an attempted bypass (`deny` / `dry_run`). A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
+Should be near zero. Each row is an approved promotion (`allow_with_log` + `request_id`) or an attempted bypass (`deny` / `dry_run`). A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {
@@ -46,15 +46,15 @@ const canonical = events
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   .slice(0, 20);
 dv.table(
-  ["When", "Profile", "Decision", "Path", "Task"],
-  canonical.map(e => [e.timestamp, e.profile, e.decision, e.path, e.task_id ?? ""])
+  ["When", "Actor", "Decision", "Path", "Request"],
+  canonical.map(e => [e.timestamp, e.actor, e.decision, e.path, e.request_id ?? ""])
 );
 ```
 
 ## Adapter activity (last 24h)
 
-If optional adapters write through the policy shim, their `profile` field appears
-here. Alpha.14 does not install any profiles by default.
+If optional adapters write through the policy shim, their `actor` field appears
+here.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {
@@ -69,13 +69,13 @@ const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 const recent = events.filter(e => e.timestamp >= cutoff);
 const counts = {};
 for (const e of recent) {
-  const key = `${e.profile}|${e.action}|${e.decision}`;
+  const key = `${e.actor}|${e.action}|${e.decision}`;
   counts[key] = (counts[key] ?? 0) + 1;
 }
 const rows = Object.entries(counts)
-  .map(([k, n]) => { const [profile, action, decision] = k.split("|"); return [profile, action, decision, n]; })
+  .map(([k, n]) => { const [actor, action, decision] = k.split("|"); return [actor, action, decision, n]; })
   .sort((a, b) => b[3] - a[3]);
-dv.table(["Profile", "Action", "Decision", "Count (24h)"], rows);
+dv.table(["Actor", "Action", "Decision", "Count (24h)"], rows);
 ```
 
 ## Hash drift (tamper detection)
@@ -93,8 +93,8 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const lastWriteFor = {};
 for (const e of events) {
-  if (e.after_hash && (e.decision === "allow" || e.decision === "allow_with_log")) {
-    lastWriteFor[e.path] = { ts: e.timestamp, hash: e.after_hash, profile: e.profile };
+  if (e.after_hash && e.decision === "write_complete") {
+    lastWriteFor[e.path] = { ts: e.timestamp, hash: e.after_hash, actor: e.actor };
   }
 }
 // Drift detection requires a current-hash sidecar produced by the Linter's scheduled scan.
@@ -102,15 +102,15 @@ for (const e of events) {
 const rows = Object.entries(lastWriteFor)
   .sort((a, b) => b[1].ts.localeCompare(a[1].ts))
   .slice(0, 30)
-  .map(([path, info]) => [info.ts, info.profile, path, info.hash.slice(0, 16) + "…"]);
-dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
+  .map(([path, info]) => [info.ts, info.actor, path, info.hash.slice(0, 16) + "…"]);
+dv.table(["Last write", "Actor", "Path", "Recorded after_hash"], rows);
 ```
 
 ## Anomalies
 
 Patterns the query flags — each is a configuration bug; see [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
-- Any allowed adapter write missing `before_hash` / `after_hash`.
+- Any allowed adapter write missing `before_hash`, or completion row missing `after_hash`.
 - Any adapter write allowed under `.memoria/`.
 - Any adapter write allowed under `system/`.
 
@@ -128,13 +128,14 @@ const writeAction = (a) => a === "write" || a === "append";
 const hiddenRuntime = (p) => /^\.memoria\//.test(p ?? "");
 const systemPath = (p) => /^system\//.test(p ?? "");
 const anomalies = events.filter(e =>
-  (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash)) ||
+  (isAllowed(e.decision) && writeAction(e.action) && !e.before_hash) ||
+  (e.decision === "write_complete" && !e.after_hash) ||
   (isAllowed(e.decision) && writeAction(e.action) && hiddenRuntime(e.path)) ||
   (isAllowed(e.decision) && writeAction(e.action) && systemPath(e.path))
 );
 dv.table(
-  ["When", "Profile", "Action", "Path", "Decision", "Rule"],
-  anomalies.map(e => [e.timestamp, e.profile, e.action, e.path, e.decision, e.policy_rule])
+  ["When", "Actor", "Action", "Path", "Decision", "Rule"],
+  anomalies.map(e => [e.timestamp, e.actor, e.action, e.path, e.decision, e.policy_rule])
 );
 ```
 

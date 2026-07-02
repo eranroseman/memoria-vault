@@ -13,7 +13,8 @@ mutations. Optional adapters may call
 reuse the same fail-closed policy and audit behavior.
 
 The baseline workspace does not ship adapter servers, lane override packages, or
-installed profiles. If an optional adapter supplies its own policy configuration,
+installed profiles. If an optional adapter supplies
+`.memoria/config/policy.yaml`,
 missing or invalid policy still fails closed.
 
 ## Request Flow
@@ -28,10 +29,33 @@ optional adapter tool call
      -> post-tool hook records before/after hashes
 ```
 
-Every request carries complete identity and task metadata. `task_id` is required
-for mutating adapter calls. A missing `task_id`, a path-traversal attempt, direct
+Every request carries complete identity metadata. `request_id` is required for
+mutating adapter calls. A missing `request_id`, a path-traversal attempt, direct
 file/terminal/code/browser/egress tool use, or an invalid policy configuration is
-denied and audited.
+denied and audited. Audit rows identify the policy subject with `actor`, never
+with an installed profile.
+
+## Actor Policy
+
+Optional adapters provide one config file:
+
+```yaml
+version: 1
+actors:
+  adapter:
+    allow:
+      tools: [obsidian.get_file_contents, qmd.search]
+      write: ["inbox/**"]
+    deny:
+      tools: [web_search, execute_code]
+      write: ["knowledge/**", "catalog/**", "system/**"]
+    require: [audit_log]
+    write_scope: ["inbox/"]
+```
+
+`allow.tools` is the hard ceiling for non-direct adapter tools. Direct file,
+terminal, code, browser, web, message, and delegation tools are hard-denied
+before actor policy is evaluated.
 
 ## Action Vocabulary
 

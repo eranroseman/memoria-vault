@@ -187,13 +187,13 @@ def test_okf_core_empty_workspace_validates(tmp_path):
     assert schema.validate_okf_core_workspace(_empty_workspace(tmp_path)) == []
 
 
-def test_memoria_profile_rejects_malformed_concept(tmp_path):
+def test_memoria_workspace_rejects_malformed_concept(tmp_path):
     root = _empty_workspace(tmp_path)
     _md(
         root / "catalog/sources/bad/source.md",
         {"type": "source", "check_status": "checked", "title": "Bad"},
     )
-    errors = schema.validate_memoria_profile_workspace(root)
+    errors = schema.validate_memoria_workspace(root)
     assert any("description" in err for err in errors)
     assert any("source_id" in err for err in errors)
 
@@ -201,7 +201,7 @@ def test_memoria_profile_rejects_malformed_concept(tmp_path):
 def test_m0_schema_reset_fixture_passes(tmp_path):
     root = _m0_schema_reset_fixture(tmp_path)
     assert schema.validate_okf_core_workspace(root) == []
-    assert schema.validate_memoria_profile_workspace(root) == []
+    assert schema.validate_memoria_workspace(root) == []
 
 
 def test_round_trip_holds(tmp_path):
@@ -212,7 +212,7 @@ def test_round_trip_holds(tmp_path):
     shutil.copytree(exported, imported)
     for workspace in (root, exported, imported):
         assert schema.validate_okf_core_workspace(workspace) == []
-        assert schema.validate_memoria_profile_workspace(workspace) == []
+        assert schema.validate_memoria_workspace(workspace) == []
     original = {
         p.relative_to(root).as_posix(): p.read_text(encoding="utf-8")
         for p in sorted(root.rglob("*.md"))
@@ -224,7 +224,7 @@ def test_round_trip_holds(tmp_path):
     assert round_trip == original
 
 
-def test_alpha11_schema_has_no_gated_prefixes_while_legacy_policy_keeps_fallback():
+def test_schema_has_no_gated_prefixes_while_review_gate_keeps_fallback():
     from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
     assert schema.gated_prefixes(schema.load_folders()) == []

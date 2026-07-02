@@ -15,7 +15,7 @@ areas:
       - vault-template/.memoria/schemas/folders.yaml
     inspect:
       - Type schemas and templates
-      - Legacy policy and pattern fallback constants
+      - Review-gate and pattern fallback constants
       - Installer scaffold and golden-copy behavior
       - Dashboards and links
     checks:
@@ -37,7 +37,8 @@ areas:
       - vault-template/.memoria/plugins/memoria-policy-gate/**
       - src/memoria_vault/runtime/policy/**
     inspect:
-      - Legacy gated-prefix fallback
+      - Actor policy config loading
+      - Review-gated prefix fallback
       - Audit contract
       - Optional adapter tool mappings
       - Fail-closed direct tool denial
@@ -65,7 +66,7 @@ areas:
       - Calibration and schemas
       - Inbox card contract and shared writers
       - Extract store and source/entity linking
-      - Cron wrappers and dashboard fields
+      - Scheduled-task wrappers and dashboard fields
     checks:
       - python -m pytest tests/test_pipeline.py tests/test_inbox_cards.py tests/test_detectors.py
   - area: Installer
@@ -76,7 +77,7 @@ areas:
     inspect:
       - Installer reference docs
       - No installed-profile deployment modes
-      - Disposable-vault behavior
+      - Disposable-workspace behavior
       - PowerShell bridge
     checks:
       - bash -n scripts/install.sh
