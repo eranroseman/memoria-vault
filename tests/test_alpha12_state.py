@@ -41,6 +41,18 @@ def git(vault: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
+def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
+        assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+        assert conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'operation_requests'"
+        ).fetchone()
+
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
+
+
 def note_text(title: str = "Alpha note") -> str:
     return f"---\ntype: note\ncheck_status: unchecked\ntitle: {title}\n---\n# {title}\n\nBody.\n"
 

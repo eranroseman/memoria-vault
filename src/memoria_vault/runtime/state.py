@@ -6,6 +6,7 @@ import hashlib
 import json
 import sqlite3
 from collections.abc import Iterable
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 
 DB_REL = ".memoria/memoria.sqlite"
+SCHEMA_VERSION = 1
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 
 
@@ -28,8 +30,13 @@ def connect(vault: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
     _init(conn)
     return conn
+
+
+def _schema_sql() -> str:
+    return files("memoria_vault.runtime").joinpath("schema_v1.sql").read_text(encoding="utf-8")
 
 
 def request_envelope(
@@ -877,187 +884,13 @@ def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
 
 
 def _init(conn: sqlite3.Connection) -> None:
-    conn.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS operation_requests (
-            request_id TEXT PRIMARY KEY,
-            operation_id TEXT NOT NULL,
-            args_json TEXT NOT NULL DEFAULT '{}',
-            idempotency_key TEXT UNIQUE,
-            input_refs_json TEXT NOT NULL DEFAULT '[]',
-            output_intents_json TEXT NOT NULL DEFAULT '[]',
-            primary_target TEXT NOT NULL DEFAULT '',
-            precondition_hashes_json TEXT NOT NULL DEFAULT '{}',
-            causal_refs_json TEXT NOT NULL DEFAULT '[]',
-            actor TEXT NOT NULL DEFAULT 'pi',
-            provenance_json TEXT NOT NULL DEFAULT '{}',
-            schedule_id TEXT,
-            status TEXT NOT NULL
-                CHECK (status IN ('pending', 'running', 'done', 'failed', 'cancelled')),
-            created_at TEXT NOT NULL,
-            started_at TEXT,
-            completed_at TEXT,
-            kind TEXT NOT NULL DEFAULT 'operation',
-            job_json TEXT NOT NULL,
-            error TEXT NOT NULL DEFAULT ''
-        );
-        CREATE INDEX IF NOT EXISTS idx_operation_requests_status
-            ON operation_requests(status, created_at);
-
-        CREATE TABLE IF NOT EXISTS journal_events (
-            event_id INTEGER PRIMARY KEY,
-            timestamp TEXT NOT NULL,
-            event_type TEXT NOT NULL,
-            machine TEXT NOT NULL,
-            payload_json TEXT NOT NULL,
-            prev_hash TEXT NOT NULL,
-            row_hash TEXT NOT NULL UNIQUE
-        );
-        CREATE TRIGGER IF NOT EXISTS journal_events_no_update
-        BEFORE UPDATE ON journal_events
-        BEGIN
-            SELECT RAISE(ABORT, 'journal is append-only');
-        END;
-        CREATE TRIGGER IF NOT EXISTS journal_events_no_delete
-        BEFORE DELETE ON journal_events
-        BEGIN
-            SELECT RAISE(ABORT, 'journal is append-only');
-        END;
-
-        CREATE TABLE IF NOT EXISTS concepts (
-            concept_id TEXT PRIMARY KEY,
-            concept_type TEXT NOT NULL
-                CHECK (concept_type IN (
-                    'source', 'digest', 'note', 'hub', 'capability',
-                    'operation', 'skill', 'adapter', 'workflow', 'person',
-                    'organization', 'venue', 'project'
-                )),
-            store TEXT NOT NULL CHECK (store IN ('db', 'file')),
-            check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
-        );
-        CREATE TABLE IF NOT EXISTS outputs (
-            output_id TEXT PRIMARY KEY,
-            concept_type TEXT NOT NULL,
-            store TEXT NOT NULL CHECK (store IN ('db', 'file')),
-            target_path TEXT NOT NULL,
-            staging_path TEXT NOT NULL DEFAULT '',
-            check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
-            materialization_status TEXT NOT NULL
-                CHECK (materialization_status IN ('none', 'pending', 'materialized', 'failed')),
-            output_sha256 TEXT NOT NULL DEFAULT '',
-            materialized_commit TEXT NOT NULL DEFAULT '',
-            failure_reason TEXT
-        );
-        CREATE TABLE IF NOT EXISTS materialization_payloads (
-            output_id TEXT PRIMARY KEY REFERENCES outputs(output_id) ON DELETE CASCADE,
-            expected_sha256 TEXT NOT NULL,
-            payload_text TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS catalog_sources (
-            source_id TEXT PRIMARY KEY,
-            concept_path TEXT NOT NULL,
-            doi TEXT UNIQUE,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL DEFAULT '',
-            resource TEXT NOT NULL DEFAULT '',
-            identifiers_json TEXT NOT NULL DEFAULT '{}',
-            citekey TEXT NOT NULL DEFAULT '',
-            csl_json TEXT NOT NULL DEFAULT '{}',
-            metadata_status TEXT NOT NULL
-                CHECK (metadata_status IN ('verified', 'partial', 'unverified', 'not-indexed')),
-            text_status TEXT NOT NULL
-                CHECK (text_status IN ('full-text', 'abstract-only', 'metadata-only')),
-            check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
-            content_hash TEXT NOT NULL DEFAULT '',
-            raw_hash TEXT NOT NULL DEFAULT '',
-            content_path TEXT NOT NULL DEFAULT '',
-            raw_path TEXT NOT NULL DEFAULT ''
-        );
-        CREATE TABLE IF NOT EXISTS external_ids (
-            owner_type TEXT NOT NULL,
-            owner_id TEXT NOT NULL,
-            namespace TEXT NOT NULL,
-            value TEXT NOT NULL,
-            source_provider TEXT NOT NULL DEFAULT '',
-            confidence TEXT NOT NULL DEFAULT 'high',
-            verified_at TEXT NOT NULL,
-            PRIMARY KEY (owner_type, owner_id, namespace, value)
-        );
-        CREATE TABLE IF NOT EXISTS enrichment_runs (
-            run_id TEXT PRIMARY KEY,
-            source_id TEXT NOT NULL,
-            enrichment_status TEXT NOT NULL
-                CHECK (
-                    enrichment_status IN (
-                        'pending', 'enriched', 'partial', 'failed', 'needs_human', 'contested'
-                    )
-                ),
-            required_provider_policy_json TEXT NOT NULL DEFAULT '{}',
-            started_at TEXT NOT NULL,
-            finished_at TEXT,
-            request_id TEXT NOT NULL DEFAULT '',
-            journal_id TEXT NOT NULL DEFAULT ''
-        );
-        CREATE TABLE IF NOT EXISTS provider_payloads (
-            payload_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            run_id TEXT NOT NULL,
-            provider TEXT NOT NULL,
-            request_key TEXT NOT NULL,
-            request_params_hash TEXT NOT NULL,
-            status TEXT NOT NULL,
-            fetched_at TEXT NOT NULL,
-            raw_hash TEXT NOT NULL,
-            raw_path TEXT NOT NULL,
-            normalized_json TEXT NOT NULL DEFAULT '{}',
-            error TEXT NOT NULL DEFAULT '',
-            latency_ms INTEGER NOT NULL DEFAULT 0,
-            retry_count INTEGER NOT NULL DEFAULT 0,
-            ttl_until TEXT NOT NULL DEFAULT '',
-            UNIQUE(run_id, provider, request_key, request_params_hash)
-        );
-        CREATE TABLE IF NOT EXISTS field_provenance (
-            source_id TEXT NOT NULL,
-            field_path TEXT NOT NULL,
-            value_hash TEXT NOT NULL,
-            winning_provider TEXT NOT NULL,
-            evidence_payload_id TEXT NOT NULL DEFAULT '',
-            alternatives_json TEXT NOT NULL DEFAULT '[]',
-            confidence TEXT NOT NULL DEFAULT 'high',
-            conflict_status TEXT NOT NULL DEFAULT 'none',
-            PRIMARY KEY (source_id, field_path)
-        );
-        CREATE TABLE IF NOT EXISTS work_graph_edges (
-            work_id TEXT NOT NULL,
-            relation_type TEXT NOT NULL CHECK (
-                relation_type IN (
-                    'references', 'related', 'topic', 'keyword',
-                    'authorship', 'institution', 'source'
-                )
-            ),
-            target_id TEXT NOT NULL,
-            target_title TEXT NOT NULL DEFAULT '',
-            target_doi TEXT NOT NULL DEFAULT '',
-            source_provider TEXT NOT NULL DEFAULT '',
-            raw_json TEXT NOT NULL DEFAULT '{}',
-            discovered_at TEXT NOT NULL,
-            PRIMARY KEY (work_id, relation_type, target_id)
-        );
-        CREATE TABLE IF NOT EXISTS derivations (
-            input_id TEXT NOT NULL,
-            output_id TEXT NOT NULL,
-            actor TEXT NOT NULL CHECK (actor IN ('pi', 'operation', 'integrity')),
-            PRIMARY KEY (input_id, output_id)
-        );
-        CREATE VIEW IF NOT EXISTS consumable_outputs AS
-        SELECT output_id, concept_type, store, target_path, output_sha256
-        FROM outputs
-        WHERE check_status = 'checked'
-          AND (
-            store = 'db'
-            OR (store = 'file' AND materialization_status = 'materialized')
-          );
-        """
-    )
+    current = int(conn.execute("PRAGMA user_version").fetchone()[0])
+    if current > SCHEMA_VERSION:
+        raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
+    conn.executescript(_schema_sql())
+    applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
+    if applied != SCHEMA_VERSION:
+        raise RuntimeError(f"Memoria DB schema initialization failed: {applied}")
 
 
 def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:

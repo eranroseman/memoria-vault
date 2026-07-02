@@ -19,6 +19,9 @@ memoria = "memoria_vault.cli:main"
 where = ["src"]
 include = ["memoria_vault*"]
 
+[tool.setuptools.package-data]
+memoria_vault = ["runtime/*.sql"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = [
