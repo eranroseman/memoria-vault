@@ -87,7 +87,9 @@ def _is_executable(path: Path) -> bool:
     return path.is_file() and os.access(path, os.X_OK)
 
 
-def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -> dict[str, Any]:
+def rebuild_checked_qmd_source(
+    vault: Path, output_root: str = QMD_INPUT_ROOT, *, embeddings: bool = False
+) -> dict[str, Any]:
     """Rebuild qmd's disposable input tree from checked retrieval documents."""
     vault = Path(vault)
     out = vault / normalize_path(output_root)
@@ -114,7 +116,8 @@ def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -
         )
     manifest = {
         "backend": "qmd",
-        "mode": "bm25",
+        "mode": "hybrid" if embeddings else "bm25",
+        "embeddings": embeddings,
         "input_root": normalize_path(output_root),
         "documents": docs,
         "qmd_commands": [
@@ -122,6 +125,8 @@ def rebuild_checked_qmd_source(vault: Path, output_root: str = QMD_INPUT_ROOT) -
             "qmd update",
         ],
     }
+    if embeddings:
+        manifest["qmd_commands"].append("qmd embed --chunk-strategy auto")
     manifest_path = vault / QMD_MANIFEST
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
