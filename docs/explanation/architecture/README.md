@@ -56,7 +56,7 @@ trusted worker plus staging, read barrier, quarantine, journal, and git history.
 | Page | What it covers |
 | --- | --- |
 | [The vault](vault.md) | The vault's bundle roots, Concept homes, write boundary, and how Bases and the Linter keep it sound. |
-| [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why the Co-PI is the sole memory carrier. |
+| [The memory model](memory-model.md) | The memory substrates — their scope, owner, and lifespan — and why durable memory lives in checked workspace state. |
 | [Interaction channels](interaction-channels.md) | The interaction surfaces and how the Inbox's graded loudness routes signals. |
 | [Session logging](session-logging.md) | What each agent session records, and why the audit log and session summaries stay separate. |
 | [Telemetry architecture](telemetry-architecture.md) | Why audit, analytics, and diagnostics are separate planes with different retention and content rules. |
@@ -64,5 +64,5 @@ trusted worker plus staging, read barrier, quarantine, journal, and git history.
 ## Where to go next
 
 - **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-layered-architecture.md)
-- **The agent postures** -> [Profiles](../profiles/README.md)
+- **The operation postures** -> [Operation postures](../profiles/README.md)
 - **The deterministic operations** -> [Operations](../operations.md)

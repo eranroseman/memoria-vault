@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local runtime-tool phases sourced by install.sh after the repository is resolved.
-# shellcheck disable=SC2034  # QMD_BIN is consumed by install_profiles in install.sh
+# shellcheck disable=SC2034  # QMD_BIN is consumed by the qmd install phase in install.sh
 
 # Prefer the npm-global qmd binary: an unrelated conda package also installs qmd.
 resolve_qmd() {

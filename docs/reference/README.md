@@ -21,11 +21,11 @@ manual mirrors.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter fields: type, allowed values, owner, namespace | Generated |
-| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.11 has no durable Inbox-card Concept schemas | Generated |
+| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.14 has no durable Inbox-card Concept schemas | Generated |
 | [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map | Generated |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
-| [Kanban board reference](kanban-board.md) | Kanban state machine, card schema, review overlay, WIP limits | Manual |
+| [Kanban board reference](kanban-board.md) | No-Hermes-board contract and current request-control commands | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |
 
 ## [Agents and control](agents-and-control.md)

@@ -9,7 +9,6 @@ and asserts artifact shape without a live model, GPU, Obsidian GUI, or screensho
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import json
 import os
 import shutil
@@ -185,45 +184,6 @@ def apply_classification(vault: Path, args: dict[str, Any]) -> str:
     return rel
 
 
-def run_policy_deny_assertion(root: Path, vault: Path, args: dict[str, Any]) -> None:
-    lane_dir = vault / ".memoria/lane-overrides"
-    lane_dir.mkdir(parents=True, exist_ok=True)
-    profile = str(args["profile"]).removeprefix("memoria-")
-    (lane_dir / f"{profile}.yaml").write_text(
-        f"profile: {args['profile']}\n"
-        "policy:\n"
-        "  allow:\n"
-        "    write:\n"
-        '      - "inbox/**"\n'
-        "  deny:\n"
-        "    write:\n"
-        '      - "knowledge/notes/**"\n'
-        "  require:\n"
-        "    - audit_log\n"
-        "routing:\n"
-        "  write_scope:\n"
-        '    - "inbox/"\n',
-        encoding="utf-8",
-    )
-    plugin = root / "vault-template/.memoria/plugins/memoria-policy-gate/__init__.py"
-    spec = importlib.util.spec_from_file_location("memoria_policy_gate_harness", plugin)
-    if spec is None or spec.loader is None:
-        raise HarnessError("cannot load memoria-policy-gate plugin")
-    gate = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(gate)
-    gate.PROFILE = args["profile"]
-    gate.VAULT = vault
-    result = gate._gate(
-        args["tool_name"],
-        {"filepath": args["path"], "content": args["content"]},
-        args["task_id"],
-    )
-    if result.get("action") != "block":
-        raise HarnessError(f"deny assertion did not block: {result}")
-    if "failed-closed" in result.get("message", ""):
-        raise HarnessError(f"deny assertion failed closed instead of policy-denying: {result}")
-
-
 def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
     from memoria_vault.runtime.subsystems.lib import inbox
@@ -276,8 +236,6 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     elif tool == "project.argument_canvas":
         result = write_project_argument_canvas(vault, args["project"])
         artifacts.append(result["canvas_path"])
-    elif tool == "policy.deny_assertion":
-        run_policy_deny_assertion(root, vault, args)
     else:
         raise HarnessError(f"unknown cassette tool: {tool}")
     assert_expectations(vault, step.get("expect", {}), artifacts)

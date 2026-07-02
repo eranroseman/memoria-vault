@@ -40,7 +40,7 @@ profile packages or lane assignments.
 
 **Profile** — historical Hermes role configuration from earlier designs.
 Alpha.14 does not ship installed profiles; the current boundary is in
-[Profile capabilities](profile-capabilities.md).
+[Installed profiles](profile-capabilities.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
@@ -181,5 +181,5 @@ are promoted into `catalog/`, `knowledge/`, or `capabilities/`.
 
 - Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
 - The document types referenced throughout: [Document types](document-types.md)
-- Lane and profile terms: [Profile capabilities](profile-capabilities.md)
-- Board and delegation terms: [Kanban board reference](kanban-board.md)
+- Lane and profile terms: [Installed profiles](profile-capabilities.md)
+- Request-control terms: [Kanban board reference](kanban-board.md)

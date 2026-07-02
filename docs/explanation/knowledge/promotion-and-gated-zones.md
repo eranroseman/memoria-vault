@@ -8,7 +8,7 @@ nav_order: 4
 # Promotion and the write boundary
 
 Promotion is the act of making content readable as checked knowledge. In
-alpha.11, that means a worker-owned transition into `check_status: checked`
+alpha.14, that means a worker-owned transition into `check_status: checked`
 with a journal row. The PI still decides what claims, links, and hub curation
 mean; the worker owns the mechanical write boundary.
 
@@ -57,7 +57,7 @@ by evidence, links, and hub/project context.
 
 - The types involved: [Document types and epistemic roles](document-types.md)
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
-- The card fields in detail: [The honesty card](../kanban-board/honesty-card.md)
+- The attention prompt in detail: [The honesty prompt](../kanban-board/honesty-card.md)
 - Approval gates vs work prompts: [Decision points](../kanban-board/decision-points.md)
 - The operations behind the boundary: [Operations](../operations.md)
 

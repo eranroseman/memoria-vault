@@ -116,5 +116,8 @@ Training characteristics:
 
 ## Related
 
-- Profiles that call these methods: [Librarian](../explanation/profiles/librarian.md) (catalog · extract · link · map lanes), [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and [Operations — the deterministic layer](../explanation/operations.md) (Linter, Clustering, Sweeps)
+- Operation postures that use these methods: [Librarian](../explanation/profiles/librarian.md),
+  [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and
+  [Operations - the deterministic layer](../explanation/operations.md)
+  (Linter, clustering, sweeps)
 - Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)

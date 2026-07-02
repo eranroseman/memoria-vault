@@ -1,11 +1,11 @@
 name: Feature Request
-description: Propose a new profile, workflow, or capability for Memoria
+description: Propose a new workflow, capability, CLI behavior, or optional adapter for Memoria
 assignees: []
 body:
   - type: markdown
     attributes:
       value: |
-        Use this form for new features, new profiles, documentation improvements,
+        Use this form for new features, CLI/engine improvements, documentation improvements,
         or any change that goes beyond fixing a bug.
 
   - type: dropdown
@@ -13,11 +13,12 @@ body:
     attributes:
       label: Area
       options:
-        - New profile or agent role
-        - Existing profile improvement
+        - CLI / engine behavior
+        - Optional adapter
+        - Operation or capability
         - Install / setup experience
         - Vault templates or structure
-        - Hermes / AGENTS.md / .agents integration
+        - AGENTS.md / .agents guidance
         - Documentation (docs/)
         - Tooling / scripts
         - Other
@@ -30,8 +31,8 @@ body:
       label: Problem or motivation
       description: What gap or friction does this address?
       placeholder: |
-        There is no agent role for legal/contract work. When I try to use the existing
-        profiles for contracts they lack citation-free SOUL directives.
+        There is no CLI workflow for reviewing legal/contract sources with the
+        same citation checks as research papers.
     validations:
       required: true
 

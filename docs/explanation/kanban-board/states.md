@@ -1,42 +1,49 @@
 ---
-title: Board states and the review gate
-parent: Kanban board
+title: Request states and the review gate
+parent: Request control plane
 grand_parent: Explanation
 nav_order: 1
 ---
 
-# Board states and the review gate
+# Request states and the review gate
 
-This page explains why the board's state machine is shaped the way it is: why
-the execution chain is hidden, why the PI sees only action state, and why
-rejection spawns a new card. For lookup tables — the `status` enum, lane
-assignments, WIP caps, and dispatch settings — see the
+This page explains why the control-plane state machine is shaped the way it is:
+why execution state stays separate from PI attention, and why rejected work
+creates a new request instead of rewriting the old one. For the current command
+lookup and the no-Hermes-board alpha.14 contract, see the
 [Kanban board reference](../../reference/kanban-board.md).
 
 ---
 
-## What a card carries
+## What a request carries
 
-A card is not just a task title. It carries execution state (`status`), review
-state (`review_status`), an optional `agent_recommendation`, a handoff payload
-(`summary`, `metadata.allowed_paths`, `metadata.expected_outputs`,
-`metadata.promote_target`), and retry/blocking history. Those fields make the
-card persistent, queryable, and safe to hand to another profile.
+A request is not just a task title. It carries execution state, input refs,
+output intents, precondition hashes, optional machine recommendations, journal
+events, and retry/blocking history. Those fields make work persistent,
+queryable, recoverable, and safe to resume without sharing profile memory.
 
-The key invariant: **a card never closes on a worker's say-so**. The worker can
+The key invariant: **a request never closes on a worker's say-so**. The worker can
 finish execution; the human still decides whether the result becomes trusted.
 
 ## The execution chain is the hidden mechanic
 
-Hermes runs every card through its native execution `status`: `triage → todo → ready → running → done → blocked → archived`. This chain is real and load-bearing — it is what the dispatcher schedules on — but the **PI never sees it**. It is plumbing, and its design serves the workers:
+The runtime moves each request through machine-facing states such as queued,
+running, done, blocked, canceled, or recovered. This chain is load-bearing for
+the worker and recovery code, but the **PI does not treat it as approval**. It is
+plumbing, and its design serves execution:
 
-**`triage → todo → ready` exists so work is never dispatched before it's specified.** The dispatcher ignores `triage` cards. A card will never be accidentally claimed by a worker; only a deliberate release moves it to `ready`.
+**Queued work exists so dispatch never starts before scope is explicit.** A
+request carries input refs, output intents, and checks before execution. A file
+change observed by `workspace scan` is first recorded and checked; it is not
+machine-consumable merely because it appeared on disk.
 
-**Retries are not a distinct state.** A recoverable run failure returns the card to `ready` for re-dispatch on the same card. Only unrecoverable failures — those that require human judgment before work can continue — move the card to `blocked`, with a reason, for a human to clear.
+**Retries are explicit request operations.** A recoverable run failure can be
+retried against the same durable request payload. Failures that need human
+judgment become attention, with a reason, for the PI to clear or amend.
 
 ## The PI sees only action state
 
-The human-facing card state is an attention projection over the worker board, not
+The human-facing state is an attention projection over request/journal state, not
 a durable Concept lifecycle. Concept read state is `check_status`, defined in
 [Frontmatter fields](../../reference/frontmatter.md) and
 [ADR-119](../../adr/119-schema-driven-document-creation.md). For an action prompt
@@ -51,47 +58,54 @@ attention query, not a checked-knowledge query.
 
 ## Three orthogonal dimensions
 
-A card carries three independent signals, and keeping them separate is what prevents an agent verdict from rubber-stamping a human decision:
+A request or attention prompt carries three independent signals, and keeping
+them separate is what prevents a machine verdict from rubber-stamping a human
+decision:
 
-- **`status`** — execution (hidden): did the worker run, finish, or get stuck?
+- **execution status** — did the worker run, finish, or get stuck?
 - **attention state** — the PI's decision: has the human acted on this?
-- **`agent_recommendation`** — the soft verdict (`inconclusive → issues-found → clean`), agent-set, never a gate.
+- **machine recommendation** — a soft verdict such as inconclusive, issues-found,
+  or clean; never a gate.
 
-A worker finishing implies nothing about acceptance; a `clean` recommendation never
-substitutes for the PI acting. The review gate is enforced, not advisory: approval
-flows through the state machine and policy gate — a worker cannot declare its own
-output approved.
+A worker finishing implies nothing about acceptance; a clean recommendation
+never substitutes for the PI acting. The review gate is enforced, not advisory:
+approval flows through explicit accept/update actions and checked materialization
+- a worker cannot declare its own output approved.
 
-**Rejection creates a new card, not a revision of the old one.** A rejected card is archived; rework begins on a fresh card that records what it `supersedes` — mirroring claim supersession. Each card is one attempt with one stated outcome, so the history of attempts stays traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.
+**Rejection creates a new request, not a revision of the old one.** A rejected
+attempt is closed; rework begins on a fresh request or amended request that
+records what it supersedes. Each attempt has one stated outcome, so the history
+of attempts stays traceable. A system where rejected work is silently reopened is
+a system where the audit trail lies.
 
-## Cards and notes are different things
+## Requests and notes are different things
 
-A card is **work**: transient, scheduled on the board, and archived when the
+A request is **work**: transient, queued in the engine, and closed when the
 attempt is over. A note is **knowledge**: durable, linkable, and preserved in the
-vault. A card can reference or produce a note, but it never *is* a note. Mixing
-card fields (`status`, `review_status`, `assignee`) with note fields
-(`check_status`, `type`, `citekey`) confuses what has been done with
-what has been established.
+workspace. A request can reference or produce a note, but it never *is* a note.
+Mixing request fields (`status`, `request_id`, output intents) with note fields
+(`check_status`, `type`, `citekey`) confuses what has been done with what has
+been established.
 
-That split is why the board can retry and block work without polluting the
-knowledge graph, and why the vault can preserve provenance without becoming a
-task tracker.
+That split is why the engine can retry and block work without polluting the
+knowledge graph, and why the workspace can preserve provenance without becoming
+a task tracker.
 
 ## Related
 
 **Explanation**
 
-- Conceptual overview: [Kanban board](README.md)
-- The card the PI reads: [The honesty card](honesty-card.md)
+- Conceptual overview: [Request control plane](README.md)
+- The prompt the PI reads: [The honesty prompt](honesty-card.md)
 - Why WIP limits exist: [WIP limits and back-pressure](wip-limits.md)
-- Why the Co-PI is not a lane: [Profiles](../profiles/README.md)
+- Why the Co-PI is not a lane: [Operation postures](../profiles/README.md)
 - Why operations are not lanes: [Operations](../operations.md)
 - Why review is human-only: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
 - The decision-kind model the gate implements: [Decision points](decision-points.md)
 
 **How-to**
 
-- Troubleshooting for stuck cards: [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md)
+- Troubleshooting for stuck work: [Fix a stuck card](../../how-to-guides/troubleshooting/fix-stuck-card.md)
 
 **Reference**
 

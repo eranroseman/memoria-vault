@@ -14,24 +14,24 @@ grand_parent: Reference
 
 Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They retain
 `type: eval-task` frontmatter for dispatcher compatibility, but `eval-task` is
-not an alpha.11 Concept type and has no schema under
+not an alpha.14 Concept type and has no schema under
 `vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
 `## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
-lane can run and score it with nothing but the file.
+runtime eval operation can run and score it with nothing but the file.
 
 | Field | Kind | Meaning |
 | --- | --- | --- |
 | `type` | `literal:eval-task` | Diagnostic fixture marker; not a Concept schema. |
-| `title` | str | The card title fragment. |
+| `title` | str | The request title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `lane` | enum | The eval role bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). Draft and code eval roles remain deferred. |
+| `lane` | enum | Legacy eval role bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
 The shipped set (nine tasks) references well-known papers — the Transformer, BERT, ResNet, Adam, Dropout — so it works on any vault once those papers are ingested:
 
-| Workflow | Lane | Gold tasks |
+| Workflow | Eval role | Gold tasks |
 | --- | --- | --- |
 | `find` | `catalog` | locate the Transformer paper; resolve a paraphrase to the ResNet paper |
 | `extract` | `extract` | claim stubs from the Transformer paper; Adam's exact default hyperparameters |
@@ -50,7 +50,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 `memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
 - One local eval task plan per `lifecycle: current` gold task.
-- **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
+- **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
 - The task body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported as JSON — a run never mutates the vault.
 - The dispatch record is written to `system/eval/last-run.md` (plain markdown, overwritten each run).
 
@@ -85,7 +85,8 @@ memoria eval run --workspace <vault> --dry-run --json  # print, create nothing
 | `support_rate` | Fraction of `cited` citekeys resolving to a real catalog record (note stem or `citekey:` frontmatter under `catalog/`). | `cited` reported, non-empty. |
 | `fama_clean` | 1.0 if no note in `claims` is a superseded/archived claim, else 0.0 — the same superseded-reuse check the Linter's detector enforces (a test guards the parity, see [Linter: detectors and auto-fix](linter.md#the-detectors)); offenders are named in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
 
-The lane's rubric `self_score` is recorded per task for comparison but never aggregated — only the machine metrics trend.
+The task rubric's `self_score` is recorded per task for comparison but never
+aggregated - only the machine metrics trend.
 
 **The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
 
@@ -104,7 +105,7 @@ The installer wires the scheduled `memoria-eval` wrapper (schedule and wrapper o
 ## Related
 
 - The decision: [ADR-11](../adr/11-vault-eval-maintenance.md)
-- The lanes the cards route to: [Profile capabilities](profile-capabilities.md)
+- The operation/posture boundary: [Installed profiles](profile-capabilities.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - The other scheduled jobs: [Installer (bootstrap)](installer.md)

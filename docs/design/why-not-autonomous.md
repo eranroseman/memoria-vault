@@ -58,9 +58,9 @@ Code is the one domain where the three preconditions could hold:
 
 So a bounded code experiment loop could be admissible in principle.
 
-**But no autonomy exception exists anywhere in the current system** ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)). The Engineer is **MCP-only with no terminal, file, or execution capability**. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and owns the per-task commit/revert checkpoint while the substantive coding happens in an external agent the PI reviews. No lane carries an autonomous keep/revert loop.
+**But no autonomy exception exists anywhere in the current system** ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
 
-The synthesis gate remains structurally untouched. The policy gate's review-gated-zone deny rule still blocks writes to `notes/claims/` and `notes/hubs/`. Whether to admit a bounded code-experiment loop will be revisited only when the code lane / external-coding-agent path is defined beyond the current Project gate handoff — and reopening it requires a superseding decision, not an incremental relaxation.
+The synthesis gate remains structurally untouched. The policy gate's review-gated-zone deny rule still blocks checked synthesis writes. Whether to admit a bounded code-experiment loop will be revisited only when the external-coding-agent path is defined beyond the current project handoff — and reopening it requires a superseding decision, not an incremental relaxation.
 
 ---
 
@@ -68,8 +68,8 @@ The synthesis gate remains structurally untouched. The policy gate's review-gate
 
 The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
-- Agents propose, classify, draft, and verify — but do not canonize.
-- Scheduled and overnight operations write to `inbox/` only. Promotion is always synchronous with human attention.
+- Operations propose, classify, draft, and verify — but do not canonize.
+- Scheduled and overnight operations create requests and attention only. Promotion is always synchronous with human attention.
 - The discovery loop can run autonomously (finding and ingesting candidates) because the human reviews candidates before they enter the canonical vault.
 - The cost discipline ("$1–3/day API budget for the nightly loop") matters because there's no scalar payoff to optimize against. Budget discipline replaces metric discipline.
 
@@ -79,7 +79,11 @@ The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
 [Chen 2026](../reference/bibliography.md#chen2026copilots)'s (*From Copilots to Colleagues*) five-level taxonomy: L1 (autocomplete) → L2 (multi-step, human approval per step) → L3 (multi-step autonomous, human-set strategy, per-batch review) → L4 (self-directed within a domain) → L5 (fully self-directed).
 
-Memoria is L3. The background lanes execute multi-step work unattended within a card. The human sets the strategy (`steering.md`, `screening-protocol.md`) and the review gate blocks every promotion. L4 requires autonomous keep/revert on synthesis; L5 requires self-directed agenda-setting. Both fail the preconditions test for knowledge work.
+Memoria is L3. Operations execute multi-step work unattended within request and
+manifest ceilings. The human sets the strategy (`steering.md`,
+`screening-protocol.md`) and the review gate blocks every promotion. L4 requires
+autonomous keep/revert on synthesis; L5 requires self-directed agenda-setting.
+Both fail the preconditions test for knowledge work.
 
 ---
 

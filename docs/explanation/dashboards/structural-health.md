@@ -50,4 +50,4 @@ review](../../how-to-guides/inbox/run-the-weekly-review.md).
 
 - Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
 - Detector severity reference: [Linter: detectors and auto-fix](../../reference/linter.md)
-- The card format behind `flag` and `alert`: [The honesty card](../kanban-board/honesty-card.md)
+- The attention prompt format behind `flag` and `alert`: [The honesty prompt](../kanban-board/honesty-card.md)

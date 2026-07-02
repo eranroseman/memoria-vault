@@ -1,11 +1,11 @@
 ---
-title: How the board surfaces
-parent: Kanban board
+title: Optional board projections
+parent: Request control plane
 grand_parent: Explanation
 nav_order: 4
 ---
 
-# How the board surfaces
+# Optional board projections
 
 Alpha.14 does not ship an Obsidian board projection. Operational state lives in
 SQLite request tables, the journal, and generated attention/worklist views.

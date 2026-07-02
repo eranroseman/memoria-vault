@@ -1,25 +1,28 @@
 ---
 title: The Engineer
-parent: Profiles
+parent: Operation postures
 grand_parent: Explanation
 nav_order: 5
 ---
 
 # The Engineer
 
-The Engineer/code lane is deferred in alpha.11. Its planned posture is
-**delegating**: Memoria prepares and records a handoff, but the external coding
-agent does the coding ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
+The Engineer is not an installed alpha.14 profile or code runner. It is the
+handoff posture for external coding work: Memoria can prepare and record a
+handoff, but the external coding agent does the coding
+([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
 
 ## What it does
 
-- Scaffolds the `code` handoff when the deferred code lane is reintroduced.
+- Scaffolds a code handoff when the PI chooses to use an external coding agent.
 - Records provenance and the commit/revert checkpoint.
-- Routes all writes through the gated Obsidian MCP.
+- Keeps Memoria's workspace writes inside the CLI/engine and trusted-writer
+  boundary.
 
 ## Boundary
 
-- The Engineer is **MCP-only**: no terminal, file access, or code execution ([ADR-46](../../adr/46-seven-layer-architecture.md)).
+- The Engineer posture does **not** grant Memoria terminal, file, or code
+  execution authority ([ADR-46](../../adr/46-seven-layer-architecture.md)).
 - The external coding agent is an opaque peer, not a subprocess Memoria drives.
 - The autonomous code-experiment loop remains deferred.
 
@@ -27,7 +30,8 @@ agent does the coding ([ADR-07](../../adr/07-delegate-coding-to-external-agents.
 
 ## What the Engineer is not
 
-**Not the agent that writes code.** The external agent does. The Engineer scaffolds, records, commits.
+**Not the agent that writes code.** The external agent does. The Engineer
+posture scaffolds and records the handoff.
 
 **Not orchestration infrastructure.** It does not spawn the external agent as a
 subprocess, parse its output, or drive it through an API. Coordination is
@@ -40,6 +44,6 @@ through documented handoff artifacts, not an agent-control plane.
 ## Related
 
 - Where the handoff lives: [The vault](../architecture/vault.md)
-- How far each agent may delegate: [Profiles](README.md#delegation-posture)
-- Why the profile boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
+- How far each posture may delegate: [Operation postures](README.md#delegation-posture)
+- Why the posture boundaries are strict: [Why specialist profiles, not a generalist agent](../../design/why-specialist-profiles.md)
 - The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

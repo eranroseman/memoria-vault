@@ -7,15 +7,17 @@ permalink: /explanation/
 
 # Explanation
 
-This section is Memoria's operational overview: architecture, knowledge, profiles,
-operations, board coordination, dashboards, deployment, and the Obsidian surface.
+This section is Memoria's operational overview: architecture, knowledge,
+operation postures, operations, dashboards, deployment, and optional editor
+surfaces.
 It explains how the system is shaped so you can use and evaluate it without
 reading the full design argument.
 
 Memoria is a vault-first research system. The vault holds durable knowledge, the
-board holds transient work, Hermes runs the specialist profiles that propose
-changes back to the human, and the Inbox shows the decisions that need attention
-now.
+SQLite engine holds request and graph state, the CLI is the required product
+surface, and the Inbox shows the decisions that need attention now. Optional
+adapters may present chat, board, or editor views, but they do not replace the
+CLI/engine authority.
 
 Start with [Home](../README.md) if the basic vocabulary is unfamiliar. If you
 need to *do* something, see [How-to guides](../how-to-guides). If you need exact
@@ -27,10 +29,10 @@ history, see [Developers](../developers.md).
 
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
-3. **[Profiles](profiles/README.md)** — the Co-PI and specialist background profiles.
+3. **[Operation postures](profiles/README.md)** — how old profile language maps to alpha.14 requests and operations.
 4. **[Operations](operations.md)** — the deterministic layer below the agents.
-5. **[Kanban board](kanban-board/README.md)** — the board as the coordination layer.
-6. **[Obsidian](obsidian/README.md)** — how the human works in the vault.
+5. **[Request control plane](kanban-board/README.md)** — request state, attention, and the old board boundary.
+6. **[Obsidian](obsidian/README.md)** — optional editor integration boundaries.
 7. **[Surfaces and dashboards](dashboards/README.md)** — how health, queues, and maintenance surface.
 8. **[Deployment](deployment.md)** — how Memoria is packaged and installed.
 
@@ -40,13 +42,13 @@ history, see [Developers](../developers.md).
 
 **New to Memoria:** Read [Home](../README.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
-[Kanban board](kanban-board/README.md). The Design Book explains why those choices
+[Request control plane](kanban-board/README.md). The Design Book explains why those choices
 were made.
 
-**Coming from another agent system:** The key differences are specialist lanes,
-a structural human gate, and no reasoning orchestrator. Start with
-[Profiles](profiles/README.md), [Kanban board](kanban-board/README.md),
-then the Design Book pages on [specialist profiles](../design/why-specialist-profiles.md)
+**Coming from another agent system:** The key differences are checked request
+rows, operation ceilings, a structural human gate, and no reasoning orchestrator.
+Start with [Operation postures](profiles/README.md), [Request control plane](kanban-board/README.md),
+then the Design Book pages on [operation postures](../design/why-specialist-profiles.md)
 and [the review gate](../design/why-review-gate-is-structural.md).
 
 ## For decisions and direction
