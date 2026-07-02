@@ -733,6 +733,14 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         "Body.\n",
         encoding="utf-8",
     )
+    state.upsert_catalog_record(
+        workspace,
+        source_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["catalog-only"]}},
+    )
     _write_project_argument_fixture(workspace)
 
     rc = main(
@@ -756,6 +764,8 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     assert rc == 0
     assert output["ok"] is True
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
+    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["source_count"] == 1
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
     assert output["result"]["project_path"] == "knowledge/projects/project-alpha.md"
