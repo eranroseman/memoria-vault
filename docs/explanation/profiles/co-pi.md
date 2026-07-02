@@ -13,7 +13,11 @@ The Co-PI is the one agent the PI converses with — the permanent presence in t
 
 ## The hard write-wall
 
-The Co-PI is **read-only**. It runs the PI's read-only skills directly — searching, reading, questioning, explaining — but **every write leaves as a delegated task**: the `route-task` skill creates a card on the board via the tasks MCP, assigned to the lane whose posture fits. The policy MCP enforces the wall; it is structural, not prompt discipline.
+The Co-PI is **read-only**. It runs the PI's read-only interactions directly —
+searching, reading, questioning, explaining — but every write leaves as an
+explicit CLI/worker request or attention proposal. The policy gate enforces the
+wall for optional adapters; the worker/trusted-writer boundary enforces it for
+runtime operations.
 
 The wall is what makes a permanent, memory-carrying conversational agent safe. A conversation drifts, accumulates context, and gets persuaded; a card does not. By the time delegated work touches the vault it has passed through a lane's scoped permissions, the propose-not-dispose process, and the PI's gate — none of which a chat message can shortcut.
 

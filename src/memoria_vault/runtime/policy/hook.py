@@ -1,24 +1,8 @@
-#!/usr/bin/env python3
-"""Hermes pre_tool_call hook -- route vault writes through the policy gate.
+"""Adapter hook helpers that route workspace writes through the policy gate.
 
-The policy MCP (policy_mcp.py) can *decide* whether a write is allowed, but the
-write tools don't call it. This hook closes that gap: it runs *before* every
-matched tool, maps the tool to a policy action, asks the same tested decision
-core, and BLOCKS denied / review-gated writes by printing
-``{"decision": "block", "reason": ...}``. Allowed actions print ``{}`` (proceed).
-
-The sandbox model is policy-via-MCP, MCP-only (D40/ADR-46): agents reach the
-vault, operations, and external APIs ONLY through MCP servers. Accordingly:
-  - the `obsidian` MCP write tools (every profile's one vault-write path) are
-    PATH-GATED -- mapped to a policy action and decided by the lane policy; and
-  - every direct-capability tool (`file`, `terminal`, code-exec families plus
-    unaudited egress / messaging / browser / computer-use / media families --
-    DENY_DIRECT_TOOLS) is HARD-DENIED for every lane. No Memoria profile ships
-    those toolsets in `platform_toolsets` (and `agent.disabled_toolsets` strips
-    known direct-world fallbacks); a call reaching us anyway means config drift
-    or prompt injection, so the gate fails closed rather than trusting the
-    capability layer.
-The capability layer is the first wall; this hook is the second, in-process one.
+The standalone alpha.14 runtime does not require MCP or Hermes. Optional adapters
+can still call these helpers before and after tool invocations so adapter writes
+reuse the same fail-closed policy and audit behavior as the runtime package.
 
 This one script handles BOTH the gate and the audit completion, branching on
 `hook_event_name`:
@@ -26,33 +10,9 @@ This one script handles BOTH the gate and the audit completion, branching on
   - post_tool_call -> read the stash, compute after_hash, append the paired
                       reversibility record (before+after) to audit.jsonl, clean up.
 
-Registered PER PROFILE (the stdin payload carries no profile name) in each
-profile's config.yaml -- {{VAULT_PATH}} is substituted by install.ps1, same
-command for both events:
-
-    hooks:
-      pre_tool_call:
-        - matcher: "obsidian.*"        # Hermes matches via re.fullmatch -> need .* to catch obsidian_* writes
-          command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
-          timeout: 10
-      post_tool_call:
-        - matcher: "obsidian.*"
-          command: "python {{VAULT_PATH}}/.memoria/mcp/policy_hook.py --profile memoria-<name>"
-          timeout: 10
-
-Wire protocol: hermes-agent.nousresearch.com/docs/user-guide/features/hooks
+Wire protocol used by Hermes-style adapters:
   stdin  : {"tool_name","tool_input","session_id","cwd","extra":{"task_id",...}}
   stdout : {} to allow; {"decision":"block","reason":"..."} to block.
-
-LIMITATION (documented): Hermes fails *open* on hook errors (non-zero exit /
-malformed JSON are logged but never abort the loop), so this policy gate cannot be
-truly fail-closed at the Hermes layer. It fails closed on its own decisions --
-an unresolvable write (missing profile/path/task_id, or policy import failure)
-is blocked -- which is the strongest guarantee a hook can give. For hard
-enforcement, front the writes with a custom obsidian bridge that calls policy
-internally.
-
-    python policy_hook.py --profile memoria-writer    # reads one JSON event on stdin
 """
 
 from __future__ import annotations
@@ -60,37 +20,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import site
 import sys
 import time
 from pathlib import Path
 
-
-def _vault_site_packages() -> list[Path]:
-    memoria_dir = Path(__file__).resolve().parents[1]
-    venv = memoria_dir / ".venv"
-    return [venv / "Lib" / "site-packages", *sorted((venv / "lib").glob("python*/site-packages"))]
-
-
-def _bootstrap_vault_runtime_package() -> None:
-    # The policy plugin runs in Hermes's Python, not the vault venv.
-    for path in _vault_site_packages():
-        if not path.is_dir():
-            continue
-        site.addsitedir(str(path))
-        path_text = str(path)
-        if path_text in sys.path:
-            sys.path.remove(path_text)
-        sys.path.insert(0, path_text)
-
-
-_bootstrap_vault_runtime_package()
-
 from memoria_vault.runtime.diagnostics import record_event
 from memoria_vault.runtime.paths import load_json, safe_filename
 
-# obsidian (mcp-obsidian) tool-name keyword -> policy action. Matched by substring
-# so it survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools
+# Obsidian adapter tool-name keyword -> policy action. Matched by substring so it
+# survives server prefixing (e.g. mcp__obsidian__patch_content). Read tools
 # (get / list / search) contain none of these keywords -> not gated (return {}).
 WRITE_KEYWORDS = {
     "append": "append",
@@ -102,15 +40,13 @@ WRITE_KEYWORDS = {
     "rename": "move",
     "move": "move",
 }
-# Direct-capability and unaudited-egress tools hard-denied for EVERY lane
-# (D40/ADR-46: agents reach the vault, operations, and APIs ONLY through MCP —
-# no exceptions). No Memoria profile ships these toolsets, so any such call is
-# config drift or prompt-injection bypassing schema-hiding — fail closed.
+# Direct-capability and unaudited-egress tools hard-denied for EVERY adapter lane.
+# The standalone runtime owns writes through requests and trusted_writer; any
+# adapter call reaching these tools is config drift or prompt-injection bypassing
+# schema-hiding, so fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
-# is never caught. This list MUST cover every tool in Hermes's file/terminal/
-# code_execution plus egress/side-effect toolsets; `hermes_contract_doctor.py`
-# fails the build if the installed Hermes ships a covered tool this set is
-# missing (drift), which is how `process` (terminal toolset) was caught.
+# is never caught. This list covers the known file/terminal/code_execution plus
+# egress/side-effect toolsets exposed by historical adapters.
 DENY_DIRECT_TOOLS = frozenset(
     {
         "write_file",
@@ -324,11 +260,6 @@ def _audit_registry_block(vault: Path, profile: str, tool_name: str, payload: di
         return
 
 
-def vault_root() -> Path:
-    # <vault>/.memoria/mcp/policy_hook.py -> parents[2] == <vault>
-    return Path(__file__).resolve().parents[2]
-
-
 # --- pending-write stash (correlates the pre/post pair by tool_call_id) ------ #
 def _stash_key(payload: dict) -> str:
     extra = payload.get("extra") or {}
@@ -380,10 +311,10 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
     base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]  # strip server/toolset prefix
     if base in DENY_DIRECT_TOOLS:
         return {
-            "decision": "block",  # MCP-only sandbox (D40) -> fail closed
+            "decision": "block",  # direct tool escape -> fail closed
             "reason": f"policy gate: '{tool_name}' is direct or unaudited external access -- "
-            f"agents reach the vault only through MCP (D40/ADR-46); no lane "
-            f"is permitted this toolset.",
+            f"adapter agents must use approved workspace tools; no lane is "
+            f"permitted this toolset.",
         }
     registry_block = _registry_block(tool_name, profile, vault)
     if registry_block is not None:
@@ -479,7 +410,7 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         )
         try:
             record_event(
-                component="mcp.policy_hook",
+                component="adapter.policy_hook",
                 level="error",
                 code="audit_completion_failed",
                 details={
@@ -508,7 +439,16 @@ def main() -> None:
         default=os.environ.get("HERMES_PROFILE", ""),
         help="profile whose lane to enforce (e.g. memoria-writer)",
     )
+    ap.add_argument(
+        "--vault",
+        default=os.environ.get("MEMORIA_VAULT", ""),
+        help="workspace root; required unless MEMORIA_VAULT is set",
+    )
     args = ap.parse_args()
+    if not args.vault:
+        print("[policy_hook] --vault or MEMORIA_VAULT is required", file=sys.stderr)
+        print(json.dumps({"decision": "block", "reason": "policy gate: missing workspace"}))
+        return
 
     try:
         payload = json.load(sys.stdin)
@@ -518,7 +458,7 @@ def main() -> None:
         return
     event = payload.get("hook_event_name", "pre_tool_call")
     handler = evaluate_post if event == "post_tool_call" else evaluate_pre
-    print(json.dumps(handler(payload, args.profile, vault_root())))
+    print(json.dumps(handler(payload, args.profile, Path(args.vault))))
 
 
 # --------------------------------------------------------------------------- #

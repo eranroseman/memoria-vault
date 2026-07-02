@@ -32,7 +32,7 @@ manual mirrors.
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, skills, PI palette — with performer and purpose | Guarded mirror |
+| [System actions](system-actions.md) | Every action the system performs — operations, scheduled tasks, optional adapters, and PI actions — with performer and purpose | Guarded mirror |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
 | [CLI](cli.md) | Alpha.14 `memoria` command surface | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
@@ -42,14 +42,14 @@ manual mirrors.
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries | Guarded mirror |
 | [Hermes CLI](hermes-cli.md) | Alpha.14 boundary for the optional future Hermes adapter | Manual |
-| [Policy MCP](policy-mcp.md) | Optional adapter policy shim, request/response contract, tools, and fail-closed behavior | Manual |
+| [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, classifiers, clustering, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
-| [Clustering](clustering.md) | Cluster MCP graph build, claim-debate Canvas, BERTopic topics, parameters, outputs, and opt-in stack | Manual |
+| [Clustering](clustering.md) | Alpha.14 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)
 
@@ -57,13 +57,13 @@ manual mirrors.
 | --- | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest | Manual |
 | [Sweeps](sweeps.md) | Re-ingest and retraction maintenance passes | Manual |
-| [Search](search.md) | qmd retrieval surface: checked-only BM25 baseline, MCP wrapper, consumers, index, and limits | Manual |
+| [Search](search.md) | qmd retrieval surface: checked-only BM25 baseline, consumers, index, and limits | Manual |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
-| [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas and derived metric-note contracts | Manual |
-| [Board export](board-export.md) | Hermes Kanban projection command, generated board files, event logs, and cost-join failure modes | Manual |
-| [Fleet metrics](fleet-metrics.md) | Weekly lane metrics, trust-score formula, inputs, bands, and low-confidence behavior | Manual |
+| [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs plus historical log boundaries | Manual |
+| [Board export](board-export.md) | Alpha.14 no-board-export boundary and replacement request/journal surfaces | Manual |
+| [Fleet metrics](fleet-metrics.md) | Alpha.14 no-fleet-runtime boundary and replacement runtime signals | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 
 ## [System and infrastructure](system-and-infrastructure.md)

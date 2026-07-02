@@ -1,8 +1,8 @@
 """L1 tests for the fail-closed memoria-policy-gate plugin."""
 
+import builtins
 import importlib.util
 import json
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -80,14 +80,21 @@ def test_plugin_blocks_disabled_tool_invocation_by_name(tmp_path):
     result = gate._gate("mcp_x__web_search", {"query": "exfiltrate"}, "TASK-EGRESS")
 
     assert result["action"] == "block"
-    assert "MCP" in result["message"]
+    assert "direct or unaudited external access" in result["message"]
 
 
-def test_plugin_blocks_when_policy_hook_import_is_broken(tmp_path, monkeypatch):
+def test_plugin_blocks_when_runtime_policy_hook_import_is_broken(tmp_path, monkeypatch):
     gate = _load_plugin()
     gate.PROFILE = "memoria-writer"
     gate.VAULT = _vault_with_writer_policy(tmp_path)
-    monkeypatch.setitem(sys.modules, "policy_hook", None)
+    real_import = builtins.__import__
+
+    def broken_import(name, globals_=None, locals_=None, fromlist=(), level=0):
+        if name == "memoria_vault.runtime.policy" and "hook" in fromlist:
+            raise ImportError("hook unavailable")
+        return real_import(name, globals_, locals_, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", broken_import)
 
     result = gate._gate("mcp_obsidian_vault_write", {"filepath": "inbox/a.md"}, "TASK-IMPORT")
 

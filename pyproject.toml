@@ -24,7 +24,6 @@ testpaths = ["tests"]
 pythonpath = [
   "src",
   "vault-template/.memoria",
-  "vault-template/.memoria/mcp",
   "scripts",
   ".github/scripts",
 ]

@@ -309,19 +309,23 @@ the manual security review and is a first line against the "never commit
 
 ## Platform & runtime facts
 
-- **Hermes config:** consult the local docs at `~/.hermes/hermes-agent/website/docs/`, `cli-config.yaml.example`, and the skills catalogs (`skills-catalog.md`, `optional-skills-catalog.md`) before any Hermes decision. Do not infer from Memoria's existing files — the docs are the source of truth.
-- **Build on the installed version; upgrade by verifying, not by reading.** `hermes --version` + the on-box docs/source are the truth for what the system does *now* — never assert or depend on a feature you haven't run. A newer tag's release notes are an **upgrade hypothesis, not a fact**: to adopt one, upgrade in the **test vault** (Memoria-test), verify the feature on-box, then build against it — the [ADR-106](docs/adr/106-cost-and-disposition-capture.md) order (upgrade → verify the join → re-enable). Tag claims by evidence strength — `on-box ✓` (verified against installed source/docs), `claim-only` (a newer tag's note, unverified), `untested`. The rule blocks shipping on marketing; it does not block upgrading.
+- **Standalone baseline:** alpha.14 is a local `memoria` CLI/runtime workspace.
+  Hermes, Obsidian, Zotero live APIs, installed profiles, and external adapter
+  APIs are optional edges, not required product dependencies.
+- **Hermes adapter decisions:** if a future optional Hermes adapter is discussed,
+  consult the local docs at `~/.hermes/hermes-agent/website/docs/`,
+  `cli-config.yaml.example`, and the skills catalogs before making claims. Do
+  not infer Hermes behavior from Memoria's old files.
 - **Line endings:** `.gitattributes` pins `*.sh`/`*.py`/`*.yaml`/`*.json` to LF. Working on ext4 avoids CRLF churn.
-- **MCP deps:** install into `<vault>/.memoria/.venv`; `mcp_servers` and hooks are wired in `config.yaml` per profile. Hermes never reads a standalone `mcp.json` (ADR-120).
-- **Profiles:** `vault-template/.memoria/profiles/memoria-*/` — every profile has
-  `SOUL.md`, `config.yaml`, and `distribution.yaml`; optional `skills/` holds
-  profile-owned skills. `.no-bundled-skills` records that Memoria owns deployed
-  profile skills: the installer refreshes source `skills/` when present and
-  clears stale deployed skills when they are absent.
-  These are distinct from Hermes-global bundled skills under `~/.hermes/skills`.
-  Cron wrappers are shared under `vault-template/.memoria/scripts/`, not stored per profile.
-  Keep shared profile contracts in sync. No per-profile `mcp.json`.
-- **Secrets:** `~/.hermes/profiles/<profile>/.env` and gitignored vault files (shipped as `.example`). Never commit a real key.
+- **Runtime deps:** install into `<workspace>/.memoria/.venv` from
+  `pyproject.toml`; the runtime package owns policy hooks, worker operations, and
+  deterministic subsystems.
+- **Scheduled wrappers:** shared wrappers live under
+  `vault-template/.memoria/scripts/` and call the CLI/runtime package. A local
+  scheduler may invoke them, but no scheduler is required for one-shot CLI use.
+- **Secrets:** provider keys live in operator-owned local config or environment
+  files and gitignored workspace files shipped only as `.example`. Never commit a
+  real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.

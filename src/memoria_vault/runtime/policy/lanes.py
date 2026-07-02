@@ -62,9 +62,7 @@ def parse_lane(doc: dict) -> LanePolicy:
 def load_lane(vault: Path, profile: str) -> LanePolicy:
     """Read and parse the lane override for ``profile``."""
     if yaml is None:
-        raise RuntimeError(
-            "PyYAML not installed -- run `pip install -r .memoria/mcp/requirements.txt`."
-        )
+        raise RuntimeError("PyYAML not installed; reinstall the Memoria runtime package.")
     lane = profile[len("memoria-") :] if profile.startswith("memoria-") else profile
     path = vault / LANE_OVERRIDE_RELDIR / f"{lane}.yaml"
     if not path.is_file():

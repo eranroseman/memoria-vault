@@ -76,7 +76,7 @@ def _profile_rows() -> list[tuple[str, str, str, str]]:
         lane_file = overrides / f"{directory.name.removeprefix('memoria-')}.yaml"
         lane = yaml.safe_load(lane_file.read_text(encoding="utf-8")) if lane_file.is_file() else {}
         scope = ((lane or {}).get("routing") or {}).get("write_scope") or []
-        servers = sorted((config.get("mcp_servers") or {}).keys())
+        servers = sorted((config.get("adapter_servers") or config.get("mcp_servers") or {}).keys())
         rows.append(
             (
                 directory.name,
@@ -95,7 +95,7 @@ def _render_profiles() -> str:
         "",
         "Alpha.14 ships no installed Hermes profile packages or lane overrides.",
         "",
-        "| Profile | Purpose | MCP servers | Write scope |",
+        "| Profile | Purpose | Adapter servers | Write scope |",
         "|---|---|---|---|",
     ]
     for profile, purpose, servers, scope in _profile_rows():

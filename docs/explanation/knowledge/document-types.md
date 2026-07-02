@@ -58,7 +58,7 @@ checked notes. `new-topic` means no checked material exists for a seed term;
 need checked knowledge filter to `check_status: checked`; repair surfaces can
 show `unchecked` and `quarantined` records explicitly.
 
-**Capability audit.** Prompt operations, MCP servers, skills, and workflows are
+**Capability audit.** Prompt operations, optional adapter servers, skills, and workflows are
 Concepts too. That makes runnable capability metadata visible, typed, and subject
 to the same checked/quarantine discipline as knowledge records.
 

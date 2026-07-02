@@ -9,11 +9,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FORBIDDEN_PATHS = (
     "vault-template/.memoria/operations",
+    "vault-template/.memoria/mcp",
     "vault-template/.memoria/profiles",
     "vault-template/.memoria/lane-overrides",
     "vault-template/.memoria/tool-registry.yaml",
 )
-FORBIDDEN_TEXT = ("vault-template/.memoria/operations", ".memoria/operations/")
+FORBIDDEN_TEXT = (
+    "vault-template/.memoria/operations",
+    ".memoria/operations/",
+    "vault-template/.memoria/mcp",
+    ".memoria/mcp/",
+)
 SEARCH_ROOTS = (
     ".agents",
     ".github",

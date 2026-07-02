@@ -19,8 +19,8 @@ scripts/test.sh all
 
 If the environment lacks pytest or another required dependency, report that
 explicitly; do not describe an unrun check as passing.
-Install contributor Python tooling from `requirements-dev.txt`; runtime MCP
-dependencies remain in `vault-template/.memoria/mcp/requirements.txt`.
+Install contributor Python tooling from `requirements-dev.txt`; runtime package
+dependencies come from `pyproject.toml` and are installed into the workspace venv.
 
 ## Focused checks
 

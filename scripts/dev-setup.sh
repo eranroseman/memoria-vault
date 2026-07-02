@@ -18,7 +18,7 @@ note() { printf '  %s\n' "$1"; }
 WITH_HOOKS=0
 [ "${1:-}" = "--with-hooks" ] && WITH_HOOKS=1
 
-echo "==> Installing Python dev tooling + MCP self-test deps"
+echo "==> Installing Python dev tooling"
 PY=$(command -v python3 || command -v python || true)
 if [ -n "$PY" ]; then
   if "$PY" -m pip install --quiet -r requirements-dev.txt; then
@@ -30,13 +30,6 @@ if [ -n "$PY" ]; then
     note "Memoria package installed editable"
   else
     note "editable install failed — run manually: $PY -m pip install -e ."
-  fi
-  if [ -f vault-template/.memoria/mcp/requirements.txt ]; then
-    if "$PY" -m pip install --quiet -r vault-template/.memoria/mcp/requirements.txt; then
-      note "MCP deps installed (self-tests will run)"
-    else
-      note "MCP requirements not installed — the .py --self-tests may skip deps"
-    fi
   fi
 else
   note "python not found — install Python 3 first"

@@ -13,7 +13,7 @@ Dashboards that track how the agent fleet is performing and what it decided.
 | Dashboard | Question it answers |
 |---|---|
 | Fleet health | Are the agents performing well over time? Is cost trending up? |
-| Audit log | What did the policy MCP decide, and why? |
+| Audit log | What did the policy gate decide, and why? |
 | Eval trend | Is the deployed system still finding, extracting, linking, and verifying correctly on this vault? |
 | Skill state | Which skills are active in which lane? Do lane policy and shipped skills agree? |
 
@@ -46,7 +46,7 @@ scheduled run needs forensic review.
 
 It is not editable. The audit log records before/after hash pairs for gated
 writes; editing the log would defeat the tamper signal. The field schema and
-hash-pairing contract live in [Policy MCP](../../reference/policy-mcp.md).
+hash-pairing contract live in [Policy gate](../../reference/policy-mcp.md).
 
 ## Eval trend
 
@@ -66,5 +66,5 @@ boundary.
 ## Related
 
 - Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
-- Policy log schema: [Policy MCP](../../reference/policy-mcp.md)
+- Policy log schema: [Policy gate](../../reference/policy-mcp.md)
 - Installed profile boundary: [Installed profiles](../../reference/profile-capabilities.md)

@@ -17,7 +17,7 @@ A generalist agent that does everything — discovers sources, synthesizes claim
 
 **Unclear responsibility.** When quality fails, it's not possible to say "this was a discovery error" vs "this was a verification failure." The same agent made every decision in sequence.
 
-**Ambiguous permissions.** The most permissive access required by any task becomes the baseline for all tasks. The policy MCP can't distinguish "this agent is discovering" from "this agent is synthesizing."
+**Ambiguous permissions.** The most permissive access required by any task becomes the baseline for all tasks. The policy gate can't distinguish "this agent is discovering" from "this agent is synthesizing."
 
 **No separation of stances.** Discovery should be generous; verification should be skeptical. An agent that does both must switch stances internally, with no structural guarantee that it does.
 
@@ -66,7 +66,7 @@ Memoria omits two roles that comparable multi-agent systems include:
 
 ## The cost: capability duplication
 
-Dividing by posture still has its price: the same *technique* can live in several agents. Embedding similarity drives the Librarian's mapping, the Peer-reviewer's duplicate adjudication, and the intake brief. Memoria takes the duplication on purpose — a shared capability-agent would need the union of every caller's access, dissolving the per-lane write boundaries the split exists to make legible. The reconciliation is layering: capability lives in **operations and shared MCP servers** every lane reaches through the policy gate; the **agents stay posture-pure** — identity, write zone, and stance, not tools.
+Dividing by posture still has its price: the same *technique* can live in several agents. Embedding similarity drives the Librarian's mapping, the Peer-reviewer's duplicate adjudication, and the intake brief. Memoria takes the duplication on purpose — a shared capability-agent would need the union of every caller's access, dissolving the per-lane write boundaries the split exists to make legible. The reconciliation is layering: capability lives in **operations and shared optional adapter servers** every lane reaches through the policy gate; the **agents stay posture-pure** — identity, write zone, and stance, not tools.
 
 ---
 

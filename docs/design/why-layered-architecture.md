@@ -74,7 +74,7 @@ The separation is maintained by rules that cannot be violated without breaking t
 
 **The vault never schedules work.** It is the destination, not the orchestrator. A vault note does not trigger agent action; a board card does.
 
-**The boundary is enforced, not promised.** The policy MCP intercepts every agent write; the gated zones degrade to proposals for every lane. The boundary isn't "an agent should not write here" — it's "an agent cannot write here."
+**The boundary is enforced, not promised.** The policy gate intercepts every agent write; the gated zones degrade to proposals for every lane. The boundary isn't "an agent should not write here" — it's "an agent cannot write here."
 
 ---
 
@@ -88,5 +88,5 @@ The separation is maintained by rules that cannot be violated without breaking t
 
 **Reference**
 
-- The guard layer in detail: [Policy MCP](../reference/policy-mcp.md)
+- The guard layer in detail: [Policy gate](../reference/policy-mcp.md)
 - The thick-state substrate: [Memory substrates](../reference/memory-substrates.md)

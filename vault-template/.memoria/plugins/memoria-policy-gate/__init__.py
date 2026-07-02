@@ -1,25 +1,12 @@
-"""Memoria policy gate — Hermes Python plugin (the vault write gate).
+"""Memoria policy gate plugin for optional external adapters.
 
-This is the PRIMARY enforcement point for the structural review gate (ADR-03):
-every vault write the agent attempts is routed through the lane policy BEFORE it
-executes, and blocked on `deny`/`dry_run`.
-
-Why a plugin and not the `hooks:` shell hook it replaces (ADR-28):
-  * Hermes registers MCP tools as `mcp_<server>_<tool>` — the obsidian write is
-    `mcp_obsidian_obsidian_append_content`. The shell-hook matcher uses
-    `re.fullmatch`, so `obsidian.*` never matched it and the gate never fired.
-  * Shell hooks are consent-gated (skipped on non-TTY runs unless allowlisted)
-    AND fail-OPEN (errors/timeouts proceed). Neither is acceptable for a gate.
-  * A Python plugin runs in-process in EVERY mode (-z / gateway / cron / ACP),
-    needs no consent, does its own matching (so the real `mcp_obsidian_*` name is
-    caught), receives the `task_id`, and can be made fail-CLOSED.
-
-It reuses the tested decision core verbatim — `policy_hook.evaluate_pre` /
-`evaluate_post` and `memoria_vault.runtime.policy.PolicyEngine` — so no policy logic lives here.
-
-The installer substitutes {{PROFILE}} and {{VAULT_PATH}} per lane at deploy time.
+The standalone CLI/runtime is the baseline write path. If an operator wires an
+external adapter, its vault writes should pass through this plugin before the
+tool executes and through audit completion after it returns. The plugin reuses
+the tested runtime policy core; no policy decision logic lives here.
 """
 
+import site
 import sys
 import traceback
 from pathlib import Path
@@ -27,9 +14,24 @@ from pathlib import Path
 PROFILE = "{{PROFILE}}"
 VAULT = Path("{{VAULT_PATH}}")
 
-_MCP_DIR = VAULT / ".memoria" / "mcp"
-if str(_MCP_DIR) not in sys.path:
-    sys.path.insert(0, str(_MCP_DIR))
+
+def _vault_site_packages() -> list[Path]:
+    venv = VAULT / ".memoria" / ".venv"
+    return [venv / "Lib" / "site-packages", *sorted((venv / "lib").glob("python*/site-packages"))]
+
+
+def _bootstrap_vault_runtime_package() -> None:
+    for path in _vault_site_packages():
+        if not path.is_dir():
+            continue
+        site.addsitedir(str(path))
+        path_text = str(path)
+        if path_text in sys.path:
+            sys.path.remove(path_text)
+        sys.path.insert(0, path_text)
+
+
+_bootstrap_vault_runtime_package()
 
 
 def _payload(tool_name, args, task_id):
@@ -45,7 +47,7 @@ def _payload(tool_name, args, task_id):
 def _gate(tool_name, args, task_id, **kwargs):
     """pre_tool_call: block deny/dry_run vault writes. Fail-closed."""
     try:
-        import policy_hook
+        from memoria_vault.runtime.policy import hook as policy_hook
 
         result = policy_hook.evaluate_pre(_payload(tool_name, args, task_id), PROFILE, VAULT)
         if result.get("decision") == "block":
@@ -58,7 +60,7 @@ def _gate(tool_name, args, task_id, **kwargs):
 def _complete(tool_name, args, task_id, **kwargs):
     """post_tool_call: finish the audit record (after_hash). Never blocks."""
     try:
-        import policy_hook
+        from memoria_vault.runtime.policy import hook as policy_hook
 
         policy_hook.evaluate_post(_payload(tool_name, args, task_id), PROFILE, VAULT)
     except Exception:  # noqa: BLE001 -- never block the agent on audit-completion failures

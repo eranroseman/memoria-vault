@@ -23,7 +23,7 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
     assert not is_safe("docs/_data/nav.yml")
     assert not is_safe("scripts/install.py")
     assert not is_safe(".github/workflows/ci.yml")
-    assert not is_safe("vault-template/.memoria/mcp/policy_mcp.py")
+    assert not is_safe("src/memoria_vault/runtime/policy/hook.py")
     assert not is_safe("scripts/README.md")
     assert not is_safe("scratch/releases/0.1.0-alpha.12/design.md")
     assert not is_safe("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
@@ -52,7 +52,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         "scripts/install.sh",
         "scripts/README.md",
         "vault-template/.memoria/profiles/memoria-linter/detectors.py",
-        "vault-template/.memoria/mcp/policy_mcp.py",
+        "src/memoria_vault/runtime/policy/hook.py",
         "vault-template/.memoria/lane-overrides/coder.yaml",
         "src/memoria_vault/runtime/subsystems/processing/ingest/runner.py",
         "vault-template/.memoria/schemas/folders.yaml",

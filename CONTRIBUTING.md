@@ -1,9 +1,7 @@
 # Contributing to Memoria
 
-Memoria is a research operating system built on
-[Hermes Agent](https://hermes-agent.nousresearch.com) and
-[Obsidian](https://obsidian.md). Contributions to the installer, agent profiles,
-vault templates, and docs are welcome.
+Memoria is a standalone local research CLI and runtime. Contributions to the
+installer, runtime package, workspace template, and docs are welcome.
 
 ## Before you start
 
@@ -14,9 +12,8 @@ vault templates, and docs are welcome.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 or Linux, and the product keys needed for the flow you
-are testing. The normal install path needs `KILOCODE_API_KEY`; full source ingest
-also needs `OPENALEX_API_KEY`.
+**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for qmd
+search, and any provider keys needed for the flow you are testing.
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
@@ -31,7 +28,8 @@ bash scripts/install.sh --dry-run
 ```
 
 `dev-setup.sh` sets up the contributor toolchain only; it does not install or run
-Memoria. Runtime vault dependencies stay under `vault-template/.memoria/mcp/requirements.txt`.
+Memoria. Runtime package dependencies come from `pyproject.toml` and install into
+the workspace-local `.memoria/.venv`.
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).
 
 See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install walkthrough.

@@ -16,10 +16,7 @@ verdict = _m.verdict
 
 def test_detectors():
     def _run():
-        __file__ = _m.__file__
         import tempfile
-
-        sys.path.insert(0, str(Path(__file__).resolve().parents[5] / "mcp"))
 
         def check(name: str, cond: bool) -> None:
             assert cond, name

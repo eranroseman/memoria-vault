@@ -93,7 +93,6 @@ hdr "Refresh source-owned vault files"
 # system/exports, notes, project content, catalog records, or inbox cards.
 for rel in \
   .githooks \
-  .memoria/mcp \
   .memoria/plugins \
   .memoria/schemas \
   .memoria/scripts \

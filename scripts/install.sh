@@ -16,7 +16,6 @@
 #
 # Flags:
 #   --vault DIR       install the runtime vault here (default: ~/Memoria; prompted otherwise)
-#   --with-cluster    install the optional clustering stack (bertopic -> torch, ~2GB)
 #   --dry-run         print every command that WOULD run; change nothing
 #   --yes             non-interactive: accept all defaults, no prompts (CI)
 #   -h | --help       this help
@@ -37,14 +36,13 @@ MEMORIA_ENV="${MEMORIA_ENV:-prod}"
 # --- flags -------------------------------------------------------------------
 DRY_RUN=0
 ASSUME_YES=0
-WITH_CLUSTER=0
 VAULT_OVERRIDE=""
 
 # Resolved during run.
 REPO_DIR=""
 VAULT_PATH=""
 PYTHON=""
-VENV_PYTHON=""    # interpreter the MCP deps land in; wired into config.yaml at deploy
+VENV_PYTHON=""    # interpreter the Memoria runtime package lands in
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
 INSTALL_MODULES_LOADED=0
 
@@ -95,7 +93,7 @@ ensure_git_available() {
 }
 
 python_install_guidance() {
-  say "Python 3 is required for Memoria's deterministic tools and MCP servers."
+  say "Python 3 is required for Memoria's standalone CLI and deterministic tools."
   say "Ubuntu/WSL fix:"
   say "    sudo apt-get update && sudo apt-get install -y python3 python3-venv"
   say "Then re-run this installer."
@@ -139,7 +137,6 @@ parse_args() {
     case "$1" in
       --vault) VAULT_OVERRIDE="${2:-}"; shift 2 ;;
       --vault=*) VAULT_OVERRIDE="${1#*=}"; shift ;;
-      --with-cluster) WITH_CLUSTER=1; shift ;;
       --dry-run) DRY_RUN=1; shift ;;
       --yes|-y) ASSUME_YES=1; shift ;;
       -h|--help) awk 'NR>=2 && /^#/{sub(/^# ?/,"");print;next} NR>=2{exit}' "${BASH_SOURCE[0]:-$0}" 2>/dev/null; exit 0 ;;
@@ -171,7 +168,7 @@ ensure_prereqs() {
   hdr "Prerequisites"
   local missing=""
   have git    || missing="$missing git"
-  # We install MCP deps into a venv (Step 5). Debian/Ubuntu ship the `venv` module
+  # We install the runtime package into a venv (Step 5). Debian/Ubuntu ship the `venv` module
   # but withhold `ensurepip` until python3-venv is installed, so a venv created
   # without it has no pip. Probe ensurepip (not just venv) and add the package if
   # apt is available — far cleaner than the --break-system-packages fallback.
@@ -289,21 +286,17 @@ copy_vault() {
 # =============================================================================
 # Step 5 — runtime dependencies
 # =============================================================================
-# Deps go into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
+# The package goes into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
 # modern Ubuntu/Debian's PEP-668 "externally-managed-environment" pip block, keeps
-# Memoria's deps off the system site-packages, and gives a stable interpreter path
-install_mcp_deps() {
+# Memoria's deps off the system site-packages, and gives a stable interpreter path.
+install_runtime_deps() {
   hdr "Runtime dependencies"
   detect_python
-  local reqs="$VAULT_PATH/.memoria/mcp/requirements.txt"
-  # In --dry-run the vault was not actually copied, so reqs won't exist yet —
-  # report what WOULD happen rather than a misleading "missing file" skip.
   if [ "$DRY_RUN" -eq 1 ]; then
     VENV_PYTHON="$VAULT_PATH/.memoria/.venv/bin/python"
-    warn "(dry-run) would create venv at $VAULT_PATH/.memoria/.venv, pip install from $reqs, and install Memoria from $REPO_DIR"
+    warn "(dry-run) would create venv at $VAULT_PATH/.memoria/.venv and install Memoria from $REPO_DIR"
     return
   fi
-  if [ ! -f "$reqs" ]; then warn "No $reqs — skipping."; return; fi
   if [ -z "$PYTHON" ]; then
     python_install_guidance
     die "No Python found. Install python3 (for Ubuntu/WSL: sudo apt-get install -y python3 python3-venv), then re-run the installer."
@@ -328,8 +321,6 @@ install_mcp_deps() {
       rm -rf "$venv"
       warn "Could not create a working venv (missing ensurepip / python3-venv)."
       warn "Falling back to: $PYTHON -m pip install --user --break-system-packages"
-      run "$PYTHON" -m pip install --user --break-system-packages --quiet -r "$reqs" \
-        || die "pip fallback failed. Install python3-venv (apt install python3-venv), then re-run."
       run "$PYTHON" -m pip install --user --break-system-packages --quiet "$REPO_DIR" \
         || die "Memoria package install failed. Re-run from a clean checkout or install python3-venv."
       VENV_PYTHON="$PYTHON"   # runtime uses the same interpreter the deps landed in
@@ -339,20 +330,8 @@ install_mcp_deps() {
   fi
   VENV_PYTHON="$venv/bin/python"
   run "$VENV_PYTHON" -m pip install --quiet --upgrade pip
-  run "$VENV_PYTHON" -m pip install --quiet -r "$reqs" || die "pip install of MCP deps into the venv failed."
   run "$VENV_PYTHON" -m pip install --quiet "$REPO_DIR" || die "Memoria package install into the venv failed."
   ok "Runtime dependencies installed into $venv"
-
-  # Optional heavy stack (ADR-33): the cluster MCP's topic modeling needs
-  # bertopic (-> torch). Graph tools work without it; require an explicit flag.
-  if [ -f "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" ]; then
-    if [ "$WITH_CLUSTER" -eq 1 ]; then
-      run "$VENV_PYTHON" -m pip install --quiet -r "$VAULT_PATH/.memoria/mcp/requirements-cluster.txt" \
-        || warn "cluster deps failed — install later: $VENV_PYTHON -m pip install -r .memoria/mcp/requirements-cluster.txt"
-    else
-      say "  (skipped optional clustering stack — rerun with --with-cluster if topic modeling needs bertopic/torch)"
-    fi
-  fi
 }
 
 stage_golden_copy() {
@@ -387,7 +366,7 @@ main() {
   resolve_repo
   load_install_modules
   copy_vault
-  install_mcp_deps
+  install_runtime_deps
   stage_golden_copy
   ensure_qmd
   print_cli_next_steps

@@ -1,12 +1,9 @@
 """L1 component tests for policy_hook (ADR-44)."""
 
 import os
-import shutil
-import subprocess
-import sys
 import time as _time
 
-import policy_hook as _m
+from memoria_vault.runtime.policy import hook as _m
 
 Path = _m.Path
 _pending_file = _m._pending_file
@@ -34,52 +31,6 @@ profiles:
   memoria-engineer:
     allow: [vault_read, skills, kanban]
 """
-
-
-def test_policy_hook_bootstraps_vault_venv_runtime_package(tmp_path):
-    vault = tmp_path / "vault"
-    mcp = vault / ".memoria" / "mcp"
-    mcp.mkdir(parents=True)
-    mcp_src = Path(_m.__file__).resolve().parent
-    shutil.copy(mcp_src / "policy_hook.py", mcp / "policy_hook.py")
-
-    runtime = vault / ".memoria" / ".venv" / "lib" / "python9.9" / "site-packages"
-    package = runtime / "memoria_vault"
-    runtime_pkg = package / "runtime"
-    runtime_pkg.mkdir(parents=True)
-    (package / "__init__.py").write_text("", encoding="utf-8")
-    (runtime_pkg / "__init__.py").write_text("", encoding="utf-8")
-    (runtime_pkg / "jsonl.py").write_text(
-        "def append_jsonl(*args, **kwargs):\n    return None\n\n"
-        "def iter_jsonl(*args, **kwargs):\n    return iter(())\n",
-        encoding="utf-8",
-    )
-    (runtime_pkg / "paths.py").write_text(
-        "def load_json(*args, **kwargs):\n    return {}\n\n"
-        "def resolve_vault(*args, **kwargs):\n    return None\n\n"
-        "def safe_filename(value):\n    return str(value)\n",
-        encoding="utf-8",
-    )
-    (runtime_pkg / "time.py").write_text(
-        "def now_iso():\n    return '2026-01-01T00:00:00Z'\n\n"
-        "def parse_iso(value):\n    return value\n",
-        encoding="utf-8",
-    )
-    (runtime_pkg / "diagnostics.py").write_text(
-        "def record_event(*args, **kwargs):\n    return None\n",
-        encoding="utf-8",
-    )
-
-    code = f"import sys; sys.path.insert(0, {str(mcp)!r}); import policy_hook"
-    result = subprocess.run(
-        [sys.executable, "-I", "-c", code],
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert result.returncode == 0, result.stderr
 
 
 def test_classify_maps_write_tools_and_ignores_read_or_direct_tools():
@@ -131,7 +82,7 @@ def test_direct_capability_tools_are_hard_denied():
             Path("/nonexistent"),
         )
         assert blocked.get("decision") == "block"
-        assert "MCP" in blocked.get("reason", "")
+        assert "direct or unaudited external access" in blocked.get("reason", "")
 
 
 def test_extract_path_accepts_both_filepath_spellings():
@@ -145,11 +96,7 @@ def _vault_with_policy(tmp_path):
     vault = tmp_path
     lanes = vault / ".memoria" / "lane-overrides"
     lanes.mkdir(parents=True)
-    (vault / ".memoria" / "mcp").mkdir(parents=True)
     (vault / ".memoria" / "tool-registry.yaml").write_text(TOOL_REGISTRY, encoding="utf-8")
-    mcp_src = Path(_m.__file__).resolve().parent
-    shutil.copy(mcp_src / "policy_mcp.py", vault / ".memoria" / "mcp" / "policy_mcp.py")
-    shutil.copy(mcp_src / "policy_server.py", vault / ".memoria" / "mcp" / "policy_server.py")
     (lanes / "writer.yaml").write_text(
         "profile: memoria-writer\npolicy:\n  allow:\n    write:\n"
         '      - "inbox/**"\n      - "knowledge/hubs/**"\n'

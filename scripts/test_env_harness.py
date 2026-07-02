@@ -95,10 +95,7 @@ def write_recorded_cassette(cassette: dict[str, Any], path: Path) -> None:
 
 
 def add_operation_paths(root: Path) -> None:
-    for rel in (
-        "vault-template/.memoria",
-        "vault-template/.memoria/mcp",
-    ):
+    for rel in ("vault-template/.memoria",):
         path = str(root / rel)
         if path not in sys.path:
             sys.path.insert(0, path)

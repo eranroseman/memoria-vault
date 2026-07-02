@@ -13,11 +13,10 @@ find the owning file, then fix the stale consumer rather than the source.
 | Type homes, staging/quarantine roots, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Installer, linter, templates, dashboards, worker promotion tests |
 | Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
 | Installed profile absence | `tests/test_profiles.py` + `scripts/alpha14_negative_gate.py` | Installer tests, profile reference page |
-| Task lane to profile routing | `vault-template/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
-| Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
-| Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | MCP modules, operations, test harnesses |
-| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,lanes,audit,engine}.py` | `vault-template/.memoria/mcp/policy_mcp.py`, `vault-template/.memoria/mcp/policy_server.py`, policy hook/plugin, lane overrides, audit log |
-| Write interception | `vault-template/.memoria/plugins/memoria-policy-gate/` and `vault-template/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
+| Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Runtime policy tests and optional adapter policy hooks |
+| Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | Runtime subsystems, operations, test harnesses |
+| Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,lanes,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional policy gate plugin, audit log |
+| Write interception for optional adapters | `src/memoria_vault/runtime/policy/hook.py` and `vault-template/.memoria/plugins/memoria-policy-gate/` | Optional adapter plugin tests |
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
 | Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
 | Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |

@@ -54,20 +54,24 @@ cd memoria-vault
 bash scripts/install.sh            # or  .\scripts/install.ps1  on Windows
 ```
 
-For the full flag list (`--dry-run`, `--no-apps`, `--profiles-only`, and more), see [Installer (bootstrap)](docs/reference/installer.md).
+For the full flag list, see [Installer (bootstrap)](docs/reference/installer.md).
 
 ### Requirements
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
-- A **`KILOCODE_API_KEY`** — get one at [kilo.ai](https://kilo.ai). The shipped model provider is `kilocode`; other providers can be swapped in the profile configs.
-- An **`OPENALEX_API_KEY`** — required for source ingest metadata since 2026-02.
-- The installer provisions **Hermes** (+ the ACP extra) and guides the Obsidian install — you don't need them beforehand. Zotero is optional and comes later when you need bibliography imports.
+- **Python 3 with venv support** for the workspace-local runtime package.
+- **Node 22** for required qmd search.
+- Provider keys only for the flows you use; replay fixtures and local files cover
+  offline development.
 
 ---
 
 ## After install
 
-The installer prints a **Next steps** checklist: open the runtime folder in Obsidian (turn off **Restricted mode** so the bundled plugins load), make the vault your own git repo (the installer deliberately doesn't `git init` for you), and fill the per-profile API-key secrets. For the exact commands and key names, follow [Set up the vault](docs/how-to-guides/setup/set-up-the-vault.md) and [Set up Hermes](docs/how-to-guides/setup/set-up-hermes.md).
+The installer prints a **Next steps** checklist with vault-local Python commands
+for `memoria doctor bundle`, `memoria workspace rebuild --search`, and
+`memoria ask`. For the exact flow, follow
+[Quickstart](docs/how-to-guides/setup/quickstart.md).
 
 ---
 
@@ -77,7 +81,7 @@ The installer prints a **Next steps** checklist: open the runtime folder in Obsi
 | --- | --- |
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/memoria_vault/` | The installable Python package |
-| `vault-template/` | The vault source tree — the installer copies it out as your Obsidian vault |
+| `vault-template/` | The workspace source tree — the installer copies it out as a standalone Memoria workspace |
 | `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), and maintained design arguments (`design/`) |
 
 ## Documentation

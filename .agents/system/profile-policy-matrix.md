@@ -3,5 +3,5 @@
 
 Alpha.14 ships no installed Hermes profile packages or lane overrides.
 
-| Profile | Purpose | MCP servers | Write scope |
+| Profile | Purpose | Adapter servers | Write scope |
 |---|---|---|---|

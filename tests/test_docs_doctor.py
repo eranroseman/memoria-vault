@@ -156,7 +156,7 @@ def test_check_link_text_flags_filename_or_stem_as_link_text(tmp_path):
     stem_text = tmp_path / "stem.md"
     stem_text.write_text("[policy-mcp](policy-mcp.md)\n")
     proper = tmp_path / "proper.md"
-    proper.write_text("[Policy MCP reference](policy-mcp.md)\n")
+    proper.write_text("[Policy gate reference](policy-mcp.md)\n")
     external = tmp_path / "external.md"
     external.write_text("[policy-mcp](https://example.com/policy-mcp.md)\n")
 

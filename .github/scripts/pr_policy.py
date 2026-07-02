@@ -54,6 +54,7 @@ SENSITIVE_PREFIXES = (
     ".codex/",
     ".kilo/",
     "scripts/",
+    "src/memoria_vault/runtime/policy/",
     "src/memoria_vault/runtime/subsystems/",
     "vault-template/.memoria/",
     "docs/adr/",

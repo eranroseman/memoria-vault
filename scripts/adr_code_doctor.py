@@ -44,17 +44,17 @@ CHECKS = (
         required_text=("src/memoria_vault/runtime/policy/decision.py", "hard stop is at the write"),
         forbidden_text=(
             "dispatch refuses to advance a card",
-            "vault-template/.memoria/mcp/decision.py",
+            "legacy policy decision shim",
         ),
     ),
     Check(
         name="ADR-10 supersession default query filter is implemented",
         adr="docs/adr/10-claim-supersession.md",
         required_paths=(
-            "vault-template/.memoria/mcp/qmd_filter_mcp.py",
-            "tests/test_qmd_filter_mcp.py",
+            "src/memoria_vault/runtime/search_index.py",
+            "tests/test_search_index.py",
         ),
-        required_text=("qmd_filter_mcp.py", "include_superseded: true"),
+        required_text=("memoria_vault.runtime.search_index", "include_stale=True"),
     ),
 )
 

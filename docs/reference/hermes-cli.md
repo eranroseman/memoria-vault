@@ -27,7 +27,7 @@ Use these references for the current shipped surfaces:
 
 - CLI command list: [CLI](cli.md)
 - Operation manifests: [Operations](operations.md)
-- Write policy: [Policy MCP](policy-mcp.md)
+- Write policy: [Policy gate](policy-mcp.md)
 - Install flow: [Installer (bootstrap)](installer.md)
 
 ## API Server
