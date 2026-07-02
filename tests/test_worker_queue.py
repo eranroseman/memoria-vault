@@ -860,6 +860,14 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
+    state.upsert_catalog_record(
+        vault,
+        source_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["catalog-only"]}},
+    )
     (vault / "knowledge/digests").mkdir(parents=True)
     (vault / "knowledge/digests/source-alpha.md").write_text(
         "---\n"
@@ -877,7 +885,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     queued = enqueue_operation(
         vault,
         "analyze-gaps",
-        payload={"seed_terms": ["new area"], "dense_threshold": 2},
+        payload={"seed_terms": ["new area"], "dense_threshold": 1},
         idempotency_key="gap-analysis",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -886,7 +894,9 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert done is not None
     assert done["status"] == "done"
     gaps = {gap["topic"]: gap for gap in done["gaps"]}
-    assert done["gap_count"] == 2
+    assert done["gap_count"] == 3
+    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["source_count"] == 1
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
 

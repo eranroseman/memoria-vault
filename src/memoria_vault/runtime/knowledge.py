@@ -286,6 +286,7 @@ def analyze_gaps(
     )
     labels: dict[str, str] = {}
     retrieval: dict[str, dict[str, Any]] = {}
+    _add_catalog_source_gap_terms(vault, counts, seen, labels)
     for rel, frontmatter in _checked_concepts(vault):
         bucket = _bucket(rel, frontmatter)
         if not bucket:
@@ -356,6 +357,44 @@ def analyze_gaps(
             }
         )
     return result
+
+
+def _add_catalog_source_gap_terms(
+    vault: Path,
+    counts: dict[str, dict[str, int]],
+    seen: dict[str, dict[str, set[str]]],
+    labels: dict[str, str],
+) -> None:
+    for source in state.catalog_sources(vault):
+        if not _is_current_catalog_source(source):
+            continue
+        identity = _gap_identity(f"catalog/sources/{source['source_id']}", "sources")
+        for term in _catalog_source_terms(source):
+            key = term.lower()
+            if identity not in seen[key]["sources"]:
+                seen[key]["sources"].add(identity)
+                counts[key]["sources"] += 1
+            labels.setdefault(key, term)
+
+
+def _catalog_source_terms(source: dict[str, Any]) -> list[str]:
+    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    out = []
+    for field in ("tags", "topics", "research_area"):
+        value = memoria.get(field)
+        if isinstance(value, list):
+            out.extend(item for item in value if isinstance(item, str) and item.strip())
+        elif isinstance(value, str) and value.strip():
+            out.append(value)
+    return sorted(set(out))
+
+
+def _is_current_catalog_source(source: dict[str, Any]) -> bool:
+    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    standing = str(memoria.get("standing") or "")
+    return standing not in {"archived", "retracted", "superseded"}
 
 
 def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:

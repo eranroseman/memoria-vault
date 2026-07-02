@@ -384,6 +384,42 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     assert result["checked_topics"] == 5
 
 
+def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path) -> None:
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["catalog-only"]}},
+    )
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="db-archived",
+        title="DB Archived",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["archived-only"], "standing": "archived"}},
+    )
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="db-unchecked",
+        title="DB Unchecked",
+        text_status="full-text",
+        check_status="unchecked",
+        csl_json={"memoria": {"topics": ["unchecked-only"]}},
+    )
+
+    result = analyze_gaps(tmp_path, dense_threshold=1)
+
+    gaps = {gap["topic"]: gap for gap in result["gaps"]}
+    assert set(gaps) == {"catalog-only"}
+    assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["source_count"] == 1
+    assert gaps["catalog-only"]["digest_count"] == 0
+    assert gaps["catalog-only"]["note_count"] == 0
+
+
 def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
