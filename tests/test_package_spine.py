@@ -25,6 +25,17 @@ def test_pyproject_declares_installable_memoria_package():
     assert data["tool"]["setuptools"]["package-data"]["memoria_vault"] == ["runtime/*.sql"]
 
 
+def test_alpha15_stack_dependencies_use_typer_and_no_orm():
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    dependencies = {
+        dependency.split("[", 1)[0].split(">=", 1)[0]
+        for dependency in data["project"]["dependencies"]
+    }
+
+    assert {"click", "typer"} <= dependencies
+    assert dependencies.isdisjoint({"alembic", "django", "peewee", "sqlalchemy"})
+
+
 def test_runtime_sqlite_schema_is_packaged_resource():
     schema = files("memoria_vault.runtime").joinpath("schema_v1.sql").read_text(encoding="utf-8")
     source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
