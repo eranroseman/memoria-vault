@@ -1029,7 +1029,10 @@ def _init(conn: sqlite3.Connection) -> None:
         CREATE TABLE IF NOT EXISTS work_graph_edges (
             work_id TEXT NOT NULL,
             relation_type TEXT NOT NULL CHECK (
-                relation_type IN ('references', 'related', 'topic', 'keyword')
+                relation_type IN (
+                    'references', 'related', 'topic', 'keyword',
+                    'authorship', 'institution', 'source'
+                )
             ),
             target_id TEXT NOT NULL,
             target_title TEXT NOT NULL DEFAULT '',

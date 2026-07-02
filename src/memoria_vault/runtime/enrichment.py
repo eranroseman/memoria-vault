@@ -592,6 +592,20 @@ def _openalex_open_access_locations(payload: dict[str, Any]) -> list[dict[str, A
     return locations
 
 
+def _openalex_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    locations = []
+    for key in ("primary_location", "best_oa_location"):
+        location = payload.get(key)
+        if isinstance(location, dict):
+            locations.append(location)
+    all_locations = payload.get("locations")
+    if isinstance(all_locations, list):
+        for location in all_locations:
+            if isinstance(location, dict) and location not in locations:
+                locations.append(location)
+    return locations
+
+
 def _response_content_type(resp: Any) -> str:
     headers = getattr(resp, "headers", None)
     if hasattr(headers, "get"):
@@ -746,6 +760,65 @@ def _first_order_work_graph(
                 )
 
     openalex = payloads.get("openalex", {})
+    authorships = openalex.get("authorships")
+    if isinstance(authorships, list):
+        for authorship in authorships:
+            if not isinstance(authorship, dict):
+                continue
+            author = authorship.get("author")
+            author_id = ""
+            author_title = ""
+            if isinstance(author, dict):
+                author_title = str(author.get("display_name") or "").strip()
+                author_id = str(
+                    author.get("id") or author.get("orcid") or author_title or ""
+                ).strip()
+            if author_id:
+                _add_graph_row(
+                    rows,
+                    "authorship",
+                    author_id,
+                    author_title or author_id,
+                    "",
+                    "openalex",
+                    authorship,
+                )
+            institutions = authorship.get("institutions")
+            if isinstance(institutions, list):
+                for institution in institutions:
+                    if not isinstance(institution, dict):
+                        continue
+                    title = str(institution.get("display_name") or "").strip()
+                    target_id = str(
+                        institution.get("id") or institution.get("ror") or title or ""
+                    ).strip()
+                    if not target_id:
+                        continue
+                    raw = dict(institution)
+                    if author_id:
+                        raw["author_id"] = author_id
+                    if author_title:
+                        raw["author_display_name"] = author_title
+                    _add_graph_row(rows, "institution", target_id, title, "", "openalex", raw)
+
+    for location in _openalex_locations(openalex):
+        location_source = location.get("source")
+        if not isinstance(location_source, dict):
+            continue
+        title = str(location_source.get("display_name") or "").strip()
+        target_id = str(
+            location_source.get("id")
+            or location_source.get("issn_l")
+            or _first(location_source.get("issn"))
+            or title
+            or ""
+        ).strip()
+        if not target_id:
+            continue
+        raw = dict(location_source)
+        raw["location"] = {key: value for key, value in location.items() if key != "source"}
+        _add_graph_row(rows, "source", target_id, title or target_id, "", "openalex", raw)
+
     for relation_type, field in (("references", "referenced_works"), ("related", "related_works")):
         values = openalex.get(field)
         if not isinstance(values, list):

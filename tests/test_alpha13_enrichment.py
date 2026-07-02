@@ -321,11 +321,14 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert ("doi", "10.1000/alpha") in [tuple(row) for row in external_ids]
     assert materialization["materialization_status"] == "materialized"
     assert [tuple(row) for row in graph_edges] == [
+        ("authorship", "https://openalex.org/A123"),
+        ("institution", "https://ror.org/03yrm5c26"),
         ("keyword", "https://openalex.org/K123"),
         ("references", "doi:10.1000/beta"),
         ("references", "https://openalex.org/W999"),
         ("related", "doi:10.1000/preprint"),
         ("related", "https://openalex.org/W888"),
+        ("source", "1234-5678"),
         ("topic", "https://openalex.org/C123"),
         ("topic", "https://openalex.org/T123"),
         ("topic", "https://openalex.org/T321"),
