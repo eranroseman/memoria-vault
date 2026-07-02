@@ -1,0 +1,54 @@
+{
+  "bar": "A replacement must match or beat qmd on every slice before qmd leaves the alpha.15 baseline.",
+  "expected_qmd_recall_by_slice": {
+    "hybrid": 1.0,
+    "keyword": 1.0,
+    "semantic": 1.0
+  },
+  "documents": [
+    {
+      "path": "knowledge/works/mobile-adherence-rct.md",
+      "body": "Randomized trial of mobile reminders improved medication adherence in chronic care."
+    },
+    {
+      "path": "knowledge/works/interview-alarm-fatigue.md",
+      "body": "Interview study: patients described alarm fatigue, patient burden, and notification overload."
+    },
+    {
+      "path": "knowledge/notes/citation-neighborhood.md",
+      "body": "Citation neighborhood links adherence interventions to implementation barriers and follow-up attrition."
+    }
+  ],
+  "cases": [
+    {
+      "slice": "keyword",
+      "query": "alarm fatigue",
+      "relevant": ["knowledge/works/interview-alarm-fatigue.md"]
+    },
+    {
+      "slice": "keyword",
+      "query": "randomized trial adherence",
+      "relevant": ["knowledge/works/mobile-adherence-rct.md"]
+    },
+    {
+      "slice": "semantic",
+      "query": "participant workload",
+      "relevant": ["knowledge/works/interview-alarm-fatigue.md"]
+    },
+    {
+      "slice": "semantic",
+      "query": "dropout during follow up",
+      "relevant": ["knowledge/notes/citation-neighborhood.md"]
+    },
+    {
+      "slice": "hybrid",
+      "query": "adherence inconvenience",
+      "relevant": ["knowledge/works/interview-alarm-fatigue.md"]
+    }
+  ],
+  "verdict": {
+    "selected": "qmd",
+    "cleared_replacement_bar": false,
+    "reason": "FTS5 covers lexical cases, but without a packaged sqlite-vec plus local embedding pipeline it misses synonym/semantic cases. Keep qmd as the alpha.15 baseline retrieval substrate."
+  }
+}
