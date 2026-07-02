@@ -1,14 +1,14 @@
 ---
-title: "Render project argument canvas"
+title: Render project argument canvas
 type: operation
 check_status: checked
-description: "Render a checked project argument graph as an Obsidian Canvas projection."
+description: Render a checked project argument graph as an Obsidian Canvas projection.
 operation_id: render-project-argument-canvas
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - knowledge/
-  - journal/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,8 +18,13 @@ io_schema:
   output: argument_canvas
 risk_class: low
 required_checks:
-  - projection-drift
-tags: [alpha11, canvas]
+- projection-drift
+tags:
+- alpha11
+- canvas
+id: operations/render-project-argument-canvas
+standing: current
+links: {}
 ---
 
 # Operation

@@ -36,19 +36,19 @@ Total types: **12** (Catalog Concepts: 4, Knowledge Concepts: 4, Capability Conc
 
 | Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `digest` | `knowledge/digests` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
-| `hub` | `knowledge/hubs` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `citations` · `tags` |
-| `note` | `knowledge/notes` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
-| `project` | `knowledge/projects` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `thesis` · `scope` · `links` · `tags` |
+| `digest` | `knowledge/digests` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` · `source_id` | - | `resource` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
+| `hub` | `knowledge/hubs` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `citations` · `tags` |
+| `note` | `knowledge/notes` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` | - | `description` · `resource` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
+| `project` | `knowledge/projects` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `thesis` · `scope` · `tags` |
 
 ## Capability Concepts (4)
 
 | Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `adapter` | `capabilities/adapters` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
-| `operation` | `capabilities/operations` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
-| `skill` | `capabilities/skills` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
-| `workflow` | `capabilities/workflows` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
+| `adapter` | `capabilities/adapters` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
+| `operation` | `capabilities/operations` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
+| `skill` | `capabilities/skills` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
+| `workflow` | `capabilities/workflows` | `false` | `unchecked` | `unchecked` · `checked` · `quarantined` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
 
 
 <!-- REFERENCE:END -->

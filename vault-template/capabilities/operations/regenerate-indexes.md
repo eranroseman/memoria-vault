@@ -1,17 +1,17 @@
 ---
-title: "Regenerate indexes"
+title: Regenerate indexes
 type: operation
 check_status: checked
-description: "Regenerate tracked workspace and bundle index projections."
+description: Regenerate tracked workspace and bundle index projections.
 operation_id: regenerate-indexes
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - index.md
-  - catalog/
-  - knowledge/
-  - capabilities/
-  - journal/
+- index.md
+- catalog/
+- knowledge/
+- capabilities/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -21,8 +21,13 @@ io_schema:
   output: index_projections
 risk_class: low
 required_checks:
-  - projection-drift
-tags: [alpha11, projection]
+- projection-drift
+tags:
+- alpha11
+- projection
+id: operations/regenerate-indexes
+standing: current
+links: {}
 ---
 
 # Operation

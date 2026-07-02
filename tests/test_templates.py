@@ -9,7 +9,7 @@ from memoria_vault.runtime.subsystems.lib import schema
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "vault-template" / "system" / "templates"
 
-_PLACEHOLDER = re.compile(r'"?\{\{[^}]*\}\}"?')
+_PLACEHOLDER = re.compile(r"\{\{[^}]*\}\}")
 PI_CREATED_TYPES = {"note", "hub", "project"}
 
 
@@ -47,7 +47,7 @@ def test_templates_surface_identity_type_check_status_first():
             for line in _frontmatter_text(tpl).splitlines()
             if line and not line.startswith(" ")
         ]
-        assert keys[:3] == ["title", "type", "check_status"], tpl.name
+        assert keys[:5] == ["title", "type", "id", "check_status", "standing"], tpl.name
 
 
 def test_templates_have_a_body_heading():

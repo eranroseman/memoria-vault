@@ -1,15 +1,15 @@
 ---
-title: "Integrity evidence check"
+title: Integrity evidence check
 type: operation
 check_status: checked
-description: "Check that note evidence references resolve to checked source Concepts."
+description: Check that note evidence references resolve to checked source Concepts.
 operation_id: integrity-evidence-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: integrity_findings
 risk_class: low
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-evidence-check
+standing: current
+links: {}
 ---
 
 # Operation

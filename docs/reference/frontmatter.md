@@ -85,16 +85,24 @@ Generated from `vault-template/.memoria/schemas/types`.
 | `venue` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `digest` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `digest` | `confidence` | `high` · `medium` · `low` |
+| `digest` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `hub` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `hub` | `confidence` | `high` · `medium` · `low` |
+| `hub` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `note` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `note` | `note_status` | `candidate` · `accepted` · `rejected` · `superseded` · `needs_review` |
+| `note` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `project` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `project` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `adapter` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `adapter` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `operation` | `check_status` | `unchecked` · `checked` · `quarantined` |
 | `operation` | `risk_class` | `low` · `medium` · `high` |
+| `operation` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `skill` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `skill` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 | `workflow` | `check_status` | `unchecked` · `checked` · `quarantined` |
+| `workflow` | `standing` | `current` · `superseded` · `retracted` · `archived` |
 
 ## Per-type fields
 
@@ -104,23 +112,23 @@ Generated from `vault-template/.memoria/schemas/types`.
 | `person` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
 | `source` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `text_status` · `links` · `tags` |
 | `venue` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `digest` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `links` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
-| `hub` | `type` · `check_status` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `links` · `citations` · `tags` |
-| `note` | `type` · `check_status` · `title` | - | `description` · `resource` · `links` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
-| `project` | `type` · `check_status` · `title` · `description` | - | `resource` · `thesis` · `scope` · `links` · `tags` |
-| `adapter` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
-| `operation` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
-| `skill` | `type` · `check_status` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
-| `workflow` | `type` · `check_status` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
+| `digest` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` · `source_id` | - | `resource` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
+| `hub` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `citations` · `tags` |
+| `note` | `type` · `id` · `check_status` · `standing` · `links` · `title` | - | `description` · `resource` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
+| `project` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `thesis` · `scope` · `tags` |
+| `adapter` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
+| `operation` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
+| `skill` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
+| `workflow` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
 
 <!-- REFERENCE:END -->
 
 ## Creation forms
 
-Obsidian Modal Forms are committed as plugin `data.json`. They are UI entry
-points, not schema authority; the Concept schemas above remain the validator
-contract. Forms may collect values that are not frontmatter fields. The writer
-maps those values into the body or structured frontmatter before validation.
+Templates and optional form adapters are entry points, not schema authority. The
+Concept schemas above remain the validator contract. Forms may collect values
+that are not frontmatter fields. The writer maps those values into the body or
+structured frontmatter before validation.
 
 ## Display order and grouping
 
@@ -128,13 +136,11 @@ The schema validates field presence and kind; display order is a shipped-vault
 convention. Templates and deterministic emitters put fields in this order:
 
 1. Human identity: `title` or `name`.
-2. Schema identity and read state: `type`, then `check_status`.
-3. Human summary and pointer fields: `description`, `resource`, `source_id`.
-4. Type-specific state and references.
-5. Relations and classification: `links`, `tags`, and type-specific maps.
-
-Obsidian does not have a global property-order schema file, so the shipped
-templates, emitters, and Bases carry this convention directly.
+2. Schema identity: `type`, then `id` where the bundle requires it.
+3. Read state: `check_status`, then `standing` where the bundle requires it.
+4. Human summary and pointer fields: `description`, `resource`, `source_id`.
+5. Type-specific state and references.
+6. Relations and classification: `links`, `tags`, and type-specific maps.
 
 ## `check_status`
 
@@ -152,16 +158,20 @@ normal read surfaces until repaired.
 ## Links and resources
 
 Concepts use `resource` for the backing source pointer when one exists. `links`
-is type-specific: some schemas use a list, others a map. The generated field
-inventory above owns the exact current shape.
+is the required map-shaped relation field for `knowledge/` and `capabilities/`
+Concepts. Catalog records may define their own optional link shape. The
+generated field inventory above owns the exact current contract.
 
 ## Other universal fields
 
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
+| `id` | `str` | Required for `knowledge/` and `capabilities/`; equals the bundle-relative Markdown path without `.md`. |
 | `title` | `str` | Human-readable Concept title. |
 | `check_status` | `enum` | Read-state gate: `unchecked`, `checked`, or `quarantined`. |
+| `standing` | `enum` | Required for `knowledge/` and `capabilities/`: `current`, `superseded`, `retracted`, or `archived`. |
+| `links` | `map` | Required for `knowledge/` and `capabilities/`, even when empty. |
 | `description` | `str` | Required on all shipped Concept types except `note`, where it is optional. |
 | `resource` | `str` | Optional backing-resource pointer. |
 | `tags` | `list` | Optional local classification where the type supports it. |

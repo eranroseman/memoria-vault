@@ -1,18 +1,18 @@
 ---
-title: "Regenerate tracked projections"
+title: Regenerate tracked projections
 type: operation
 check_status: checked
-description: "Regenerate all tracked generated workspace projections."
+description: Regenerate all tracked generated workspace projections.
 operation_id: regenerate-tracked-projections
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - index.md
-  - catalog/
-  - knowledge/
-  - capabilities/
-  - references.bib
-  - journal/
+- index.md
+- catalog/
+- knowledge/
+- capabilities/
+- references.bib
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -22,8 +22,13 @@ io_schema:
   output: tracked_projections
 risk_class: low
 required_checks:
-  - projection-drift
-tags: [alpha11, projection]
+- projection-drift
+tags:
+- alpha11
+- projection
+id: operations/regenerate-tracked-projections
+standing: current
+links: {}
 ---
 
 # Operation

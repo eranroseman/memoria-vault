@@ -1,14 +1,14 @@
 ---
-title: "Summarize for recall"
+title: Summarize for recall
 type: operation
 check_status: checked
-description: "Summarize selected input for later recall and connection-making."
+description: Summarize selected input for later recall and connection-making.
 operation_id: summarize-for-recall
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: recall_summary
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: librarian
 mode: both
 action: summarize
 input: selection-or-note
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/summarize"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/summarize
 created: 2026-06-10
+id: operations/summarize-for-recall
+standing: current
+links: {}
 ---
 
 # Pattern

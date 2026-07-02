@@ -1,16 +1,17 @@
 ---
-title: "Capture source"
+title: Capture source
 type: operation
 check_status: checked
-description: "Capture supplied source metadata and text; DOI/ISBN records stage for enrichment."
+description: Capture supplied source metadata and text; DOI/ISBN records stage for
+  enrichment.
 operation_id: capture-source
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - .memoria/blobs/source-content/
-  - catalog/
-  - journal/
-  - references.bib
+- .memoria/blobs/source-content/
+- catalog/
+- journal/
+- references.bib
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -20,8 +21,13 @@ io_schema:
   output: checked_source
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, capture]
+- memoria-runtime
+tags:
+- alpha11
+- capture
+id: operations/capture-source
+standing: current
+links: {}
 ---
 
 # Operation

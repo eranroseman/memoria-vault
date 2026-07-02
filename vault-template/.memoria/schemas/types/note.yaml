@@ -3,16 +3,31 @@ category: knowledge
 gated: false
 initial_check_status: unchecked
 enums:
-  check_status: [unchecked, checked, quarantined]
-  note_status: [candidate, accepted, rejected, superseded, needs_review]
+  check_status:
+  - unchecked
+  - checked
+  - quarantined
+  note_status:
+  - candidate
+  - accepted
+  - rejected
+  - superseded
+  - needs_review
+  standing:
+  - current
+  - superseded
+  - retracted
+  - archived
 required:
   type: literal:note
+  id: str
   check_status: enum:check_status
+  standing: enum:standing
+  links: map
   title: str
 optional:
   description: str
   resource: str
-  links: map
   quote: str
   text_sha256: str
   source_id: str

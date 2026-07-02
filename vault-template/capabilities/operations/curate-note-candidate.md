@@ -1,14 +1,14 @@
 ---
-title: "Curate note candidate"
+title: Curate note candidate
 type: operation
 check_status: checked
-description: "Record PI acceptance or rejection of a checked candidate note."
+description: Record PI acceptance or rejection of a checked candidate note.
 operation_id: curate-note-candidate
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - knowledge/notes/
-  - journal/
+- knowledge/notes/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,8 +18,13 @@ io_schema:
   output: resolved_event
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, notes]
+- memoria-runtime
+tags:
+- alpha11
+- notes
+id: operations/curate-note-candidate
+standing: current
+links: {}
 ---
 
 # Operation

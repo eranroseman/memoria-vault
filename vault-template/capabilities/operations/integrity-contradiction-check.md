@@ -1,14 +1,14 @@
 ---
-title: "Integrity contradiction check"
+title: Integrity contradiction check
 type: operation
 check_status: checked
-description: "Surface explicit contradiction markers as integrity findings."
+description: Surface explicit contradiction markers as integrity findings.
 operation_id: integrity-contradiction-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - knowledge/
-  - journal/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +18,12 @@ io_schema:
   output: contradiction_findings
 risk_class: low
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-contradiction-check
+standing: current
+links: {}
 ---
 
 # Operation

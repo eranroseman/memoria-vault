@@ -1,16 +1,16 @@
 ---
-title: "Cascade rollback"
+title: Cascade rollback
 type: operation
 check_status: checked
-description: "Rollback traced machine descendants and flag PI-directed descendants."
+description: Rollback traced machine descendants and flag PI-directed descendants.
 operation_id: cascade-rollback
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
-  - .memoria/quarantine/
+- catalog/
+- knowledge/
+- journal/
+- .memoria/quarantine/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -20,8 +20,13 @@ io_schema:
   output: rollback_result
 risk_class: high
 required_checks:
-  - trace-integrity
-tags: [alpha11, rollback]
+- trace-integrity
+tags:
+- alpha11
+- rollback
+id: operations/cascade-rollback
+standing: current
+links: {}
 ---
 
 # Operation

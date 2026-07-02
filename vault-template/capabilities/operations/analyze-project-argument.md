@@ -1,13 +1,13 @@
 ---
-title: "Analyze project argument"
+title: Analyze project argument
 type: operation
 check_status: checked
-description: "Report argument health for a checked project thesis graph."
+description: Report argument health for a checked project thesis graph.
 operation_id: analyze-project-argument
 allowed_tools:
-  - read_checked_concepts
+- read_checked_concepts
 allowed_paths:
-  - knowledge/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -17,7 +17,12 @@ io_schema:
   output: argument_health_report
 risk_class: low
 required_checks: []
-tags: [alpha11, argument]
+tags:
+- alpha11
+- argument
+id: operations/analyze-project-argument
+standing: current
+links: {}
 ---
 
 # Operation

@@ -1,14 +1,14 @@
 ---
-title: "Regenerate capability index"
+title: Regenerate capability index
 type: operation
 check_status: checked
-description: "Regenerate the tracked capability index projection."
+description: Regenerate the tracked capability index projection.
 operation_id: regenerate-capability-index
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - capabilities/
-  - journal/
+- capabilities/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,8 +18,13 @@ io_schema:
   output: capability_index_projection
 risk_class: low
 required_checks:
-  - projection-drift
-tags: [alpha11, projection]
+- projection-drift
+tags:
+- alpha11
+- projection
+id: operations/regenerate-capability-index
+standing: current
+links: {}
 ---
 
 # Operation

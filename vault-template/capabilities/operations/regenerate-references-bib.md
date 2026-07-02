@@ -1,15 +1,16 @@
 ---
-title: "Regenerate references.bib"
+title: Regenerate references.bib
 type: operation
 check_status: checked
-description: "Regenerate the tracked BibTeX projection from checked SQLite catalog rows."
+description: Regenerate the tracked BibTeX projection from checked SQLite catalog
+  rows.
 operation_id: regenerate-references-bib
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - catalog/
-  - references.bib
-  - journal/
+- catalog/
+- references.bib
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,8 +20,13 @@ io_schema:
   output: references_bib_projection
 risk_class: low
 required_checks:
-  - projection-drift
-tags: [alpha12, projection]
+- projection-drift
+tags:
+- alpha12
+- projection
+id: operations/regenerate-references-bib
+standing: current
+links: {}
 ---
 
 # Operation

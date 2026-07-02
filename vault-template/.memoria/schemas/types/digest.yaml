@@ -3,17 +3,30 @@ category: knowledge
 gated: false
 initial_check_status: unchecked
 enums:
-  check_status: [unchecked, checked, quarantined]
-  confidence: [high, medium, low]
+  check_status:
+  - unchecked
+  - checked
+  - quarantined
+  confidence:
+  - high
+  - medium
+  - low
+  standing:
+  - current
+  - superseded
+  - retracted
+  - archived
 required:
   type: literal:digest
+  id: str
   check_status: enum:check_status
+  standing: enum:standing
+  links: map
   title: str
   description: str
   source_id: str
 optional:
   resource: str
-  links: list
   confidence: enum:confidence
   contested: bool
   contradictions: list

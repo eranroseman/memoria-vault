@@ -1,14 +1,14 @@
 ---
-title: "Integrity prompt injection check"
+title: Integrity prompt injection check
 type: operation
 check_status: checked
-description: "Detect fixture prompt-injection markers in checked source text."
+description: Detect fixture prompt-injection markers in checked source text.
 operation_id: integrity-prompt-injection-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - journal/
+- catalog/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +18,12 @@ io_schema:
   output: injection_findings
 risk_class: medium
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-prompt-injection-check
+standing: current
+links: {}
 ---
 
 # Operation

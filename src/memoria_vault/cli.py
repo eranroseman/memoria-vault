@@ -742,21 +742,23 @@ def _cmd_note_capture(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.paths import safe_filename
     from memoria_vault.runtime.time import now_iso
     from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-    from memoria_vault.runtime.vaultio import write_frontmatter_doc
+    from memoria_vault.runtime.vaultio import (
+        apply_universal_concept_frontmatter,
+        write_frontmatter_doc,
+    )
 
     workspace = _workspace(args)
     body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
     slug = safe_filename(args.title.lower()).strip("._-") or "note"
     rel = _unique_rel(workspace, f"knowledge/notes/{slug}.md")
     frontmatter = {
-        "id": rel.removesuffix(".md"),
         "type": "note",
         "title": args.title,
         "check_status": "unchecked",
-        "standing": "current",
         "tags": args.tag,
         "created": now_iso(),
     }
+    apply_universal_concept_frontmatter(frontmatter, rel)
     write_frontmatter_doc(workspace / rel, frontmatter, body, create_parent=True)
     event = append_journal_event(
         workspace,

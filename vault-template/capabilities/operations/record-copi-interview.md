@@ -1,15 +1,15 @@
 ---
-title: "Record Co-PI interview"
+title: Record Co-PI interview
 type: operation
 check_status: checked
-description: "Record one PI interview takeaway for a checked source."
+description: Record one PI interview takeaway for a checked source.
 operation_id: record-copi-interview
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/sources/
-  - knowledge/projects/
-  - journal/
+- catalog/sources/
+- knowledge/projects/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: copi_interview_event
 risk_class: low
 required_checks: []
-tags: [alpha11, copi]
+tags:
+- alpha11
+- copi
+id: operations/record-copi-interview
+standing: current
+links: {}
 ---
 
 # Operation

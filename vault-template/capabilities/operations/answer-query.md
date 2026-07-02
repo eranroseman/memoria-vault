@@ -1,15 +1,15 @@
 ---
-title: "Answer query"
+title: Answer query
 type: operation
 check_status: checked
-description: "Answer an Ask query over checked retrieval documents with BM25 sources."
+description: Answer an Ask query over checked retrieval documents with BM25 sources.
 operation_id: answer-query
 allowed_tools:
-  - read_checked_index
+- read_checked_index
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - .memoria/index/
+- catalog/
+- knowledge/
+- .memoria/index/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: sourced_answer_contract
 risk_class: low
 required_checks: []
-tags: [alpha11, ask]
+tags:
+- alpha11
+- ask
+id: operations/answer-query
+standing: current
+links: {}
 ---
 
 # Operation

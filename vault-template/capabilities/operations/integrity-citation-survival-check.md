@@ -1,15 +1,16 @@
 ---
-title: "Integrity citation survival check"
+title: Integrity citation survival check
 type: operation
 check_status: checked
-description: "Verify checked keep-set Concepts embed compact citation payloads for catalog source references."
+description: Verify checked keep-set Concepts embed compact citation payloads for
+  catalog source references.
 operation_id: integrity-citation-survival-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,8 +20,13 @@ io_schema:
   output: citation_survival_findings
 risk_class: medium
 required_checks:
-  - citation-survival
-tags: [alpha12, integrity]
+- citation-survival
+tags:
+- alpha12
+- integrity
+id: operations/integrity-citation-survival-check
+standing: current
+links: {}
 ---
 
 # Operation

@@ -24,6 +24,16 @@ ALPHA11_TYPES = {
 
 
 def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
+    parts = path.parts
+    for bundle in ("knowledge", "capabilities"):
+        if bundle not in parts:
+            continue
+        bundle_index = parts.index(bundle)
+        concept_id = Path(*parts[bundle_index + 1 :]).as_posix().removesuffix(".md")
+        frontmatter.setdefault("id", concept_id)
+        frontmatter.setdefault("standing", "current")
+        frontmatter.setdefault("links", {})
+        break
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n" + body,
@@ -129,6 +139,11 @@ def test_alpha11_portable_fields_declared():
         assert required["title"] == "str", name
         assert required["check_status"] == "enum:check_status", name
         assert optional.get("resource") == "str", name
+        if sc["category"] in {"knowledge", "capabilities"}:
+            assert required["id"] == "str", name
+            assert required["standing"] == "enum:standing", name
+            assert required["links"] == "map", name
+            assert optional.get("links") is None, name
         if name == "note":
             assert optional.get("description") == "str"
         else:
@@ -174,8 +189,10 @@ def test_validate_frontmatter_round_trip():
 def test_note_links_are_typed_maps():
     note = schema.load_types()["note"]
     good = {
+        "id": "notes/t",
         "type": "note",
         "check_status": "checked",
+        "standing": "current",
         "title": "T",
         "links": {"supports": ["knowledge/notes/other.md"]},
     }
@@ -185,6 +202,22 @@ def test_note_links_are_typed_maps():
 
 def test_okf_core_empty_workspace_validates(tmp_path):
     assert schema.validate_okf_core_workspace(_empty_workspace(tmp_path)) == []
+
+
+def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
+    root = _empty_workspace(tmp_path)
+    bad = root / "knowledge/notes/bad.md"
+    bad.parent.mkdir(parents=True, exist_ok=True)
+    bad.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Bad\nlinks: []\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    errors = schema.validate_okf_core_workspace(root)
+
+    assert any("id must be 'notes/bad'" in err for err in errors)
+    assert any("standing must be one of" in err for err in errors)
+    assert any("links must be a map" in err for err in errors)
 
 
 def test_memoria_workspace_rejects_malformed_concept(tmp_path):

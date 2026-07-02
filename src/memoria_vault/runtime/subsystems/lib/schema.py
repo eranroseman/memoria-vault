@@ -20,6 +20,8 @@ from pathlib import Path
 
 import yaml
 
+from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+
 
 def _default_schemas_dir() -> Path:
     for parent in Path(__file__).resolve().parents:
@@ -250,6 +252,7 @@ def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> 
             continue
         if fm.get("type") in (None, ""):
             errors.append(f"{rel}: missing required field: type")
+        errors.extend(f"{rel}: {error}" for error in universal_concept_frontmatter_errors(fm, rel))
     return errors
 
 

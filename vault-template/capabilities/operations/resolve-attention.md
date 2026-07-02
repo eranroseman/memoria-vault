@@ -1,14 +1,14 @@
 ---
-title: "Resolve attention"
+title: Resolve attention
 type: operation
 check_status: checked
-description: "Record that the PI resolved or dismissed a generated attention item."
+description: Record that the PI resolved or dismissed a generated attention item.
 operation_id: resolve-attention
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - journal/
-  - .memoria/index/
+- journal/
+- .memoria/index/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +18,12 @@ io_schema:
   output: resolved_event
 risk_class: low
 required_checks: []
-tags: [alpha11, attention]
+tags:
+- alpha11
+- attention
+id: operations/resolve-attention
+standing: current
+links: {}
 ---
 
 # Operation

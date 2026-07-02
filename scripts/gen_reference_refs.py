@@ -292,10 +292,10 @@ optional:
 
 ## Creation forms
 
-Obsidian Modal Forms are committed as plugin `data.json`. They are UI entry
-points, not schema authority; the Concept schemas above remain the validator
-contract. Forms may collect values that are not frontmatter fields. The writer
-maps those values into the body or structured frontmatter before validation.
+Templates and optional form adapters are entry points, not schema authority. The
+Concept schemas above remain the validator contract. Forms may collect values
+that are not frontmatter fields. The writer maps those values into the body or
+structured frontmatter before validation.
 
 ## Display order and grouping
 
@@ -303,13 +303,11 @@ The schema validates field presence and kind; display order is a shipped-vault
 convention. Templates and deterministic emitters put fields in this order:
 
 1. Human identity: `title` or `name`.
-2. Schema identity and read state: `type`, then `check_status`.
-3. Human summary and pointer fields: `description`, `resource`, `source_id`.
-4. Type-specific state and references.
-5. Relations and classification: `links`, `tags`, and type-specific maps.
-
-Obsidian does not have a global property-order schema file, so the shipped
-templates, emitters, and Bases carry this convention directly.
+2. Schema identity: `type`, then `id` where the bundle requires it.
+3. Read state: `check_status`, then `standing` where the bundle requires it.
+4. Human summary and pointer fields: `description`, `resource`, `source_id`.
+5. Type-specific state and references.
+6. Relations and classification: `links`, `tags`, and type-specific maps.
 
 ## `check_status`
 
@@ -327,16 +325,20 @@ normal read surfaces until repaired.
 ## Links and resources
 
 Concepts use `resource` for the backing source pointer when one exists. `links`
-is type-specific: some schemas use a list, others a map. The generated field
-inventory above owns the exact current shape.
+is the required map-shaped relation field for `knowledge/` and `capabilities/`
+Concepts. Catalog records may define their own optional link shape. The
+generated field inventory above owns the exact current contract.
 
 ## Other universal fields
 
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
+| `id` | `str` | Required for `knowledge/` and `capabilities/`; equals the bundle-relative Markdown path without `.md`. |
 | `title` | `str` | Human-readable Concept title. |
 | `check_status` | `enum` | Read-state gate: `unchecked`, `checked`, or `quarantined`. |
+| `standing` | `enum` | Required for `knowledge/` and `capabilities/`: `current`, `superseded`, `retracted`, or `archived`. |
+| `links` | `map` | Required for `knowledge/` and `capabilities/`, even when empty. |
 | `description` | `str` | Required on all shipped Concept types except `note`, where it is optional. |
 | `resource` | `str` | Optional backing-resource pointer. |
 | `tags` | `list` | Optional local classification where the type supports it. |

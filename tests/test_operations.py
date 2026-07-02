@@ -14,7 +14,7 @@ from memoria_vault.runtime.operations import (
     record_copi_interview_turn,
     require_allowed_network,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter, write_frontmatter_doc
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -237,13 +237,9 @@ def test_compile_source_digest_rejects_unsupported_required_promotion_check(
 ) -> None:
     vault = workspace(tmp_path)
     policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "  - memoria-runtime",
-            "  - later-integrity",
-        ),
-        encoding="utf-8",
-    )
+    frontmatter, body = split_frontmatter(policy.read_text(encoding="utf-8"))
+    frontmatter["required_checks"] = ["later-integrity"]
+    write_frontmatter_doc(policy, frontmatter, body)
     capture_source(
         vault,
         "source-alpha",

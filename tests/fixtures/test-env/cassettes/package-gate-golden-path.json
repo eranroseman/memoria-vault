@@ -67,7 +67,7 @@
       },
       "args": {
         "path": "knowledge/projects/harness.md",
-        "content": "---\ntype: project\ncheck_status: checked\ntitle: Harness project\ndescription: Package-gate alpha.11 project.\nthesis: knowledge/notes/harness-thesis.md\n---\n\n# Harness project\n"
+        "content": "---\ntype: project\nid: projects/harness\ncheck_status: checked\nstanding: current\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.11 project.\nthesis: knowledge/notes/harness-thesis.md\n---\n\n# Harness project\n"
       },
       "expect": {
         "writes": ["knowledge/projects/harness.md"]
@@ -82,7 +82,7 @@
       },
       "args": {
         "path": "knowledge/notes/harness-thesis.md",
-        "content": "---\ntype: note\ncheck_status: checked\ntitle: Harness thesis\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\n---\n\nHarnessed workflows make durable research systems testable.\n"
+        "content": "---\ntype: note\nid: notes/harness-thesis\ncheck_status: checked\nstanding: current\nlinks: {}\ntitle: Harness thesis\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\n---\n\nHarnessed workflows make durable research systems testable.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-thesis.md"]
@@ -97,7 +97,7 @@
       },
       "args": {
         "path": "knowledge/notes/harness-support.md",
-        "content": "---\ntype: note\ncheck_status: checked\ntitle: Harness support\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
+        "content": "---\ntype: note\nid: notes/harness-support\ncheck_status: checked\nstanding: current\ntitle: Harness support\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-support.md"]
@@ -112,7 +112,7 @@
       },
       "args": {
         "path": "knowledge/notes/harness-refutation.md",
-        "content": "---\ntype: note\ncheck_status: checked\ntitle: Harness refutation\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
+        "content": "---\ntype: note\nid: notes/harness-refutation\ncheck_status: checked\nstanding: current\ntitle: Harness refutation\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-refutation.md"]

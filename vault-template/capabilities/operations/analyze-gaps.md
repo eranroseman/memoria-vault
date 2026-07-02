@@ -1,14 +1,15 @@
 ---
-title: "Analyze gaps"
+title: Analyze gaps
 type: operation
 check_status: checked
-description: "Classify checked catalog/knowledge topic mismatches and optional project argument-health gaps."
+description: Classify checked catalog/knowledge topic mismatches and optional project
+  argument-health gaps.
 operation_id: analyze-gaps
 allowed_tools:
-  - read_checked_concepts
+- read_checked_concepts
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +19,12 @@ io_schema:
   output: gap_report
 risk_class: low
 required_checks: []
-tags: [alpha11, gaps]
+tags:
+- alpha11
+- gaps
+id: operations/analyze-gaps
+standing: current
+links: {}
 ---
 
 # Operation

@@ -1,16 +1,16 @@
 ---
-title: "Observe PI edits"
+title: Observe PI edits
 type: operation
 check_status: checked
-description: "Backfill journal events for PI edits detected in git status."
+description: Backfill journal events for PI edits detected in git status.
 operation_id: observe-pi-edits
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - capabilities/
-  - journal/
+- catalog/
+- knowledge/
+- capabilities/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -20,8 +20,13 @@ io_schema:
   output: backfilled_events
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, trace]
+- memoria-runtime
+tags:
+- alpha11
+- trace
+id: operations/observe-pi-edits
+standing: current
+links: {}
 ---
 
 # Operation

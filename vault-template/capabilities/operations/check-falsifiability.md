@@ -1,14 +1,14 @@
 ---
-title: "Check falsifiability"
+title: Check falsifiability
 type: operation
 check_status: checked
-description: "Check whether input claims are empirically falsifiable."
+description: Check whether input claims are empirically falsifiable.
 operation_id: check-falsifiability
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: falsifiability_report
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: peer-reviewer
 mode: both
 action: check
 input: selection-or-note
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/check_falsifiability"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/check_falsifiability
 created: 2026-06-10
+id: operations/check-falsifiability
+standing: current
+links: {}
 ---
 
 # Pattern

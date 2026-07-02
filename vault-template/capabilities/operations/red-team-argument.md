@@ -1,14 +1,14 @@
 ---
-title: "Red-team an argument"
+title: Red-team an argument
 type: operation
 check_status: checked
-description: "Make the strongest grounded counter-case against an argument."
+description: Make the strongest grounded counter-case against an argument.
 operation_id: red-team-argument
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: counter_case
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: peer-reviewer
 mode: project
 action: check
 input: draft-or-claim
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/analyze_argument"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/analyze_argument
 created: 2026-06-10
+id: operations/red-team-argument
+standing: current
+links: {}
 ---
 
 # Pattern

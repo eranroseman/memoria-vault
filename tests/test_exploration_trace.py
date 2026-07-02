@@ -2,20 +2,20 @@
 
 from pathlib import Path
 
+from memoria_vault.runtime.vaultio import read_frontmatter
+
 ROOT = Path(__file__).resolve().parent.parent
 OPERATIONS = ROOT / "vault-template" / "capabilities" / "operations"
 
 
 def test_gap_and_project_argument_operations_are_read_only_checked_capabilities() -> None:
     for operation in ("analyze-gaps", "analyze-project-argument"):
-        text = (OPERATIONS / f"{operation}.md").read_text(encoding="utf-8")
-        for marker in (
-            "type: operation",
-            "check_status: checked",
-            f"operation_id: {operation}",
-            "allowed_tools:",
-            "  - read_checked_concepts",
-            "runner: pydantic-ai",
-        ):
-            assert marker in text, f"{operation} missing {marker!r}"
+        path = OPERATIONS / f"{operation}.md"
+        text = path.read_text(encoding="utf-8")
+        fm = read_frontmatter(path)
+        assert fm["type"] == "operation"
+        assert fm["check_status"] == "checked"
+        assert fm["operation_id"] == operation
+        assert fm["allowed_tools"] == ["read_checked_concepts"]
+        assert fm["runner"] == "pydantic-ai"
         assert "write" not in text.lower()

@@ -1,14 +1,14 @@
 ---
-title: "Check source metadata"
+title: Check source metadata
 type: operation
 check_status: checked
-description: "Run bibliographic metadata checks over checked sources."
+description: Run bibliographic metadata checks over checked sources.
 operation_id: check-source-metadata
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - journal/
+- catalog/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +18,12 @@ io_schema:
   output: metadata_findings
 risk_class: low
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/check-source-metadata
+standing: current
+links: {}
 ---
 
 # Operation
