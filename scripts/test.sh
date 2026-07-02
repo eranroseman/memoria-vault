@@ -82,7 +82,6 @@ l0() {
   run ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
   run python3 scripts/alpha14_negative_gate.py
-  run python3 scripts/render_profile_configs.py reference --check
   run python3 scripts/gen_reference_refs.py --check
   run python3 scripts/docs_doctor.py --vault-links
   run python3 scripts/status_doctor.py
@@ -100,9 +99,8 @@ l0() {
   fi
   mapfile -t runtime_py < <(find src/memoria_vault -name '*.py' | sort)
   run python3 -m py_compile scripts/verify scripts/test_env_harness.py "${runtime_py[@]}"
-  run python3 -m py_compile scripts/l2_smoke.py
   run python3 -m py_compile "$P"/mcp/*.py
-  run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/test-l2.sh
+  run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/install-test-vault-local-llm.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh vault-template/.githooks/pre-commit vault-template/.githooks/post-commit "$P"/scripts/*.sh
   else echo "→ shellcheck         (absent — installer lint skipped; CI enforces it)"; fi

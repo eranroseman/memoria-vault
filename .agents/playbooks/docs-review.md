@@ -54,9 +54,8 @@ Distinguish blocking failures from known advisory warnings.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
-  matching generator check (`gen_reference_refs.py --check`,
-  `render_profile_configs.py reference --check`) or route the change to the
-  source/generator.
+  matching generator check (`gen_reference_refs.py --check`) or route the change
+  to the source/generator.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.

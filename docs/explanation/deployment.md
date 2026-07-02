@@ -8,7 +8,7 @@ permalink: /explanation/deployment/
 # Deployment
 
 How Memoria is packaged, installed, and deployed. The supported operating model is
-**local-only**: one workstation owns the vault and the Hermes dispatcher. Git
+**local-only**: one workstation owns the workspace and standalone CLI/engine. Git
 provides history and recovery; it is not treated as a live sync bus.
 
 For operational steps see the [setup how-to guides](../how-to-guides/setup/README.md),
@@ -19,18 +19,18 @@ and for maintained rationale see the Design Book links below.
 
 | Piece | Current posture |
 | --- | --- |
-| Vault | Local Obsidian folder populated from `src/` by the installer. |
-| Runtime | Hermes profiles on the same host as the production vault. |
+| Workspace | Local folder populated from `vault-template/` by the installer. |
+| Runtime | Standalone `memoria` CLI/engine plus workspace-local `.memoria/memoria.sqlite`. |
 | Bibliography | Memoria generates tracked `references.bib` from checked SQLite catalog rows, with checked source Concepts as the empty-DB fallback. |
-| Dispatch | One Hermes dispatcher per vault. |
-| Secrets | Per-machine `.env` files, never committed or synced. |
+| Dispatch | CLI commands, file-change observers, and operator-managed scheduled tasks call the same engine. |
+| Secrets | Per-machine environment/provider config, never committed or synced. |
 
 Multi-machine patterns are not the current operating model. A future second-device
 or always-on topology needs a new deployment decision before support.
 
 Any future sync pattern keeps the same boundaries: the vault is the knowledge
-store, Hermes state remains machine-local unless explicitly promoted, and only one
-dispatcher writes task state for a vault at a time.
+store, runtime state remains workspace-local unless explicitly promoted, and only
+one engine instance writes task state for a workspace at a time.
 
 ---
 

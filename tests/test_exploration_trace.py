@@ -1,61 +1,50 @@
-"""ADR-100 exploration-trace capture contracts."""
+"""Exploration-trace capture contracts."""
 
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILLS = ROOT / "vault-template" / ".memoria" / "profiles" / "memoria-librarian" / "skills"
-METHODS = SKILLS / "map-cluster-corpus" / "references" / "methods.md"
+OPERATIONS = ROOT / "vault-template" / "capabilities" / "operations"
+TRACE_SCRIPT = ROOT / "vault-template" / "system" / "scripts" / "record-exploration-trace.js"
 
 
-def test_scope_and_gap_reports_define_companion_trace_artifact():
-    for skill in ("map-scope-project", "map-report-coverage"):
-        text = (SKILLS / skill / "SKILL.md").read_text(encoding="utf-8")
+def test_gap_and_project_argument_operations_are_read_only_checked_capabilities() -> None:
+    for operation in ("analyze-gaps", "analyze-project-argument"):
+        text = (OPERATIONS / f"{operation}.md").read_text(encoding="utf-8")
         for marker in (
-            "exploration-trace",
-            "knowledge/notes/maps/",
-            "type: note",
-            "check_status: unchecked",
-            "direction",
-            "why_rejected",
-            "evidence_checked",
-            "retry_only_if",
-            "never auto-promoted",
+            "type: operation",
+            "check_status: checked",
+            f"operation_id: {operation}",
+            "allowed_tools:",
+            "  - read_checked_concepts",
+            "runner: pydantic-ai",
         ):
-            assert marker in text, f"{skill} missing {marker!r}"
-        assert "notes/claims/" not in text
-        assert "notes/hubs/" not in text
+            assert marker in text, f"{operation} missing {marker!r}"
+        assert "write" not in text.lower()
 
 
-def test_map_methods_keep_exploration_trace_project_local():
-    text = METHODS.read_text(encoding="utf-8")
+def test_record_exploration_trace_creates_unchecked_project_local_note() -> None:
+    text = TRACE_SCRIPT.read_text(encoding="utf-8")
     for marker in (
-        "Exploration trace companion",
-        "*-exploration-trace.md",
         "knowledge/notes/maps/",
-        "project-local map context",
-        "not canonical knowledge",
-        "never auto-promoted into sources, digests, hubs, or project state",
+        "-exploration-trace-",
+        "type: note",
+        "check_status: unchecked",
+        "Rejected direction",
+        "Why rejected",
+        "Evidence checked",
+        "Retry only if",
+        "project-local exploration context",
+        "never adopted automatically into curated knowledge",
     ):
         assert marker in text
 
 
-def test_cluster_map_candidate_surfaces_in_inbox():
-    text = (SKILLS / "map-cluster-corpus" / "SKILL.md").read_text(encoding="utf-8")
+def test_record_exploration_trace_only_attaches_to_map_reports() -> None:
+    text = TRACE_SCRIPT.read_text(encoding="utf-8")
     for marker in (
-        "type: candidate",
-        "lifecycle: proposed",
-        '`action` = "read this cluster',
-    ):
-        assert marker in text
-
-
-def test_too_small_cluster_map_blocks_for_board_export_gap():
-    text = (SKILLS / "map-cluster-corpus" / "SKILL.md").read_text(encoding="utf-8")
-    for marker in (
-        "too few documents",
-        "kanban_block",
-        "current and required source counts",
-        "`board_export.py` owns the `gap` card",
-        "Do not `kanban_complete`",
+        "corpus-map-",
+        "gap-report-",
+        "cluster-map-",
+        "Choose a report under",
     ):
         assert marker in text

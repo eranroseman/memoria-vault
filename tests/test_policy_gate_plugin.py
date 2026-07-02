@@ -7,6 +7,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PLUGIN = ROOT / "vault-template" / ".memoria" / "plugins" / "memoria-policy-gate" / "__init__.py"
+TOOL_REGISTRY = """
+version: 1
+groups: {}
+profiles:
+  memoria-writer:
+    allow: [skills]
+"""
 
 
 def _load_plugin():
@@ -20,10 +27,7 @@ def _load_plugin():
 def _vault_with_writer_policy(tmp_path):
     lane_dir = tmp_path / ".memoria" / "lane-overrides"
     lane_dir.mkdir(parents=True)
-    (tmp_path / ".memoria" / "tool-registry.yaml").write_text(
-        (ROOT / "vault-template/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
+    (tmp_path / ".memoria" / "tool-registry.yaml").write_text(TOOL_REGISTRY, encoding="utf-8")
     (lane_dir / "writer.yaml").write_text(
         "profile: memoria-writer\n"
         "policy:\n"

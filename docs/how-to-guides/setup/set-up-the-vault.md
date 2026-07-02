@@ -38,18 +38,10 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), stages the golden copy, installs runtime dependencies and the Memoria package into `.memoria/.venv`, registers qmd search, and prints the vault-local CLI commands.
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), stages the golden copy, installs runtime dependencies and the Memoria package into `.memoria/.venv`, registers qmd search, wires local hooks, and prints the vault-local CLI commands.
 
-Add `--with-hermes` / `-WithHermes` when you want the Hermes/Obsidian adapter. That adapter path also:
-
-- Installs Hermes and verifies ACP.
-- Stages the profile files from `<vault>/.memoria/profiles/memoria-<name>/`.
-- Substitutes `{{VAULT_PATH}}`, `{{PYTHON}}`, `{{QMD}}`, and model values in `config.yaml`.
-- Calls `hermes profile install` to register the five profiles.
-- Copies `.env.EXAMPLE` to `.env` for each profile on first install.
-- Wires the Hermes cron wrappers.
-
-It is idempotent. To re-deploy only the profiles after editing the vault source, run `bash scripts/install.sh --profiles-only` on Linux/WSL2 (`.\scripts\install.ps1 -ProfilesOnly` on Windows) — what that flag re-deploys is in [Redeploy profiles](../operate/redeploy-profiles.md).
+The installer is standalone-only. It does not install Hermes, profiles, lane
+overrides, profile skills, Hermes crons, Obsidian setup, or Zotero integration.
 
 **3. Make your first git checkpoint** (recommended).
 
@@ -70,24 +62,7 @@ The remote (your own, not the starter repo) enables backup, multi-machine sync, 
 ~/Memoria/.memoria/.venv/bin/memoria status --workspace ~/Memoria
 ```
 
-With the Hermes adapter, also verify:
-
-```bash
-hermes profile list
-```
-
-All five `memoria-*` profiles should appear. If a profile is missing, the script reported that its required files weren't present — re-run with `--with-hermes` and read its output.
-
-With the Hermes adapter, check that `{{VAULT_PATH}}` was substituted:
-
-```powershell
-Get-Content "$env:LOCALAPPDATA\hermes\profiles\memoria-librarian\config.yaml"
-```
-
-The `policy` server path should show an absolute vault path, not the `{{VAULT_PATH}}` placeholder. If the placeholder is still there, re-run `.\scripts\install.ps1 -ProfilesOnly` on Windows or `bash scripts/install.sh --profiles-only` on Linux/WSL2.
-
 ## Related
 
 - Optional UI adapter: [Set up Obsidian](set-up-obsidian.md)
-- Optional profile secrets: [Set up Hermes](set-up-hermes.md)
-- Redeploying profile configuration: [Redeploy profiles](../operate/redeploy-profiles.md)
+- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)

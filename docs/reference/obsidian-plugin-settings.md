@@ -77,9 +77,11 @@ deployment decision.
 
 ### agent-client
 
+Optional adapter settings; alpha.14 does not require the Agent Client pane.
+
 | Setting | Required value | Constraint |
 | --- | --- | --- |
-| `defaultAgentId` | `memoria-copi` | The Co-PI is the only Agent Client chat partner (`test_agent_client_pane_is_copi_only`). |
+| `defaultAgentId` | adapter-defined | No installed `memoria-copi` profile ships in alpha.14. |
 | `customAgents[0].displayName` | `Memoria Co-PI` | The pane label uses the product-facing agent name, not the internal profile id. |
 | `autoMentionActiveNote` | `true` | Active note is passed as a readable reference; selected text and explicit attachments carry bounded body context. |
 | `exportSettings.defaultFolder` | `system/exports` | Session exports are visible PI review material; never point them at hidden `.memoria/` internals. |

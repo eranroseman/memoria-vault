@@ -6,7 +6,8 @@ grand_parent: Reference
 
 # Memory substrates
 
-Where each type of state lives across the Memoria + Hermes stack: substrate, provider, scope, lifespan, backing store, and contents. The Co-PI is the only profile with Hermes memory enabled; the specialist lanes get task context from the board payload and vault.
+Where each type of state lives in the standalone Memoria workspace: substrate,
+provider, scope, lifespan, backing store, and contents.
 
 ---
 
@@ -16,13 +17,10 @@ Where each type of state lives across the Memoria + Hermes stack: substrate, pro
 | --- | --- | --- | --- | --- | --- |
 | **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`steering.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
 | **Project memory** | Memoria — vault files | One project, across lanes | Project-bound; archives with the project | `knowledge/projects/<project>.md` | Open questions, decisions, framing for one project. |
-| **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, capture-intake anchors, pattern provenance, board projections, fleet metrics. |
-| **Handoff memory** (payload) | Memoria — Kanban | One card; travels across lanes | Card-bound | Card `metadata` | The handoff payload — schema owned by the [Kanban board reference](kanban-board.md). |
-| **Agent memory** (`MEMORY.md` + `USER.md`) | Hermes native | **The Co-PI only** | Durable; frozen snapshot at session start | `~/.hermes/profiles/memoria-copi/memories/` | `MEMORY.md` (~800 tokens): environment facts, conventions, learned preferences. `USER.md` (~500 tokens): the PI's working style. Disabled on the four specialist lanes. |
-| **Session history** | Hermes native | One profile, all past sessions | Indefinite | SQLite at `~/.hermes/state.db` (full-text) | Searchable history of prior conversations; costs no tokens until queried. |
-| **Working memory** | Hermes native | One session | Session-bound; cleared on `/clear` | In-context | Current goal, recent tool results, in-flight reasoning. |
-
-Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream [Hermes docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory).
+| **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, capture-intake anchors, pattern provenance, request projections, and metrics. |
+| **Request memory** (payload) | Memoria — SQLite | One operation request | Request-bound | `.memoria/memoria.sqlite` | Input refs, output intents, precondition hashes, status, error, and provenance. |
+| **Working memory** | Runner/session | One operation run | Session-bound | In-context/runtime process | Current goal, recent tool results, and in-flight reasoning. |
+| **Adapter memory** | Optional external adapter | Adapter-defined | Adapter-defined | Outside the core workspace | Not authoritative in alpha.14; adapters must call the CLI/engine and may not replace workspace state. |
 
 ---
 
@@ -30,13 +28,12 @@ Token caps on `MEMORY.md` / `USER.md` are approximate — verify in the upstream
 
 | Rule | Details |
 | --- | --- |
-| Program memory is the PI's steering | The PI authors `steering.md`; every profile reads it; it never archives. |
-| Project memory is the per-project cross-lane channel | Anything that must survive across lanes within one project. Archives with the project. |
+| Program memory is the PI's steering | The PI authors `steering.md`; every operation can read it; it never archives. |
+| Project memory is the per-project channel | Anything that must survive across operations within one project. Archives with the project. |
 | Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own logs (`capture-intake.jsonl`, `patterns.jsonl`). |
-| Handoff memory is per-card, not per-profile | When work moves Librarian → Writer, the payload travels with the card; the Writer does not inherit the Librarian's working memory. |
-| Agent memory is the Co-PI's alone | Frozen at session start; mid-session writes show up next session. Keep it small and stable — not in-flight task state. Specialists have it disabled. |
-| Session history is read-only history | Never gates anything; never authoritative over the vault. |
-| Working memory is not shared | One lane's in-session reasoning never bleeds into another's. |
+| Request memory is per-request, not global | When work resumes, the request row and journal provide the durable handoff. |
+| Adapter memory is never authoritative | External chat/session history can inform a human but cannot replace checked workspace state. |
+| Working memory is not shared | One operation's in-session reasoning never bleeds into another's. |
 
 ---
 

@@ -32,6 +32,11 @@ __pycache__/
 # (.memoria/.venv). Per-machine, regenerable, never committed.
 .memoria/.venv/
 
+# Runtime SQLite state is local working state. Durable machine-readable outputs
+# are replayable from requests, journals, blobs, and checked Concepts.
+.memoria/memoria.sqlite
+.memoria/memoria.sqlite-*
+
 # Alpha.12 worker holding areas: runtime content is disposable, the skeleton
 # .gitkeep files are tracked so fresh installs create the directories.
 .memoria/index/**

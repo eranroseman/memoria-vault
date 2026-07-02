@@ -1,76 +1,63 @@
 ---
 created: 2026-06-02
-updated: 2026-06-02
+updated: 2026-07-01
 ---
 
 # Troubleshooting
 
-The one help note kept in-vault — for when you're offline or something's broken. Verify the system is up, fall back to manual workflows, recover. Step-by-step recipes for the common failures: [troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/). The full catalog of every known failure (symptom · severity · cause · fix): [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+The one help note kept in-vault for offline recovery. Full recipes live in the
+[troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/);
+the complete failure catalog is [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
 
-## Verify the plumbing
+## Verify the Runtime
 
-Quick checks that the system itself is up (run from a terminal):
+Run from a terminal:
 
 | Check | Command | Healthy when |
 | --- | --- | --- |
-| Hermes + profiles | `hermes profile list` | all 5 `memoria-*` profiles respond |
-| Gateway / API | `hermes gateway status` | running on `:8642` |
-| Policy + obsidian MCP | trigger a write, watch `system/logs/audit.jsonl` | new `allow_with_log` or `dry_run` rows appear |
-| Cron scheduler | [[board-state\|Board State]] § Live worker cards | the six standard tasks show recent runs |
-| Zotero local API | open a citekey link / re-ingest | resolves (port 23119) |
+| CLI package | `.memoria/.venv/bin/python -m memoria_vault.cli --help` | prints `memoria` help |
+| Bundle | `.memoria/.venv/bin/python -m memoria_vault.cli doctor bundle --workspace .` | reports `ok: true` or actionable failed checks |
+| Search | `.memoria/.venv/bin/python -m memoria_vault.cli workspace rebuild --workspace . --search` | rebuild completes or reports the missing qmd dependency |
+| Integrity | `.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .` | final verdict is `PASS` or gives concrete findings |
+| Git | `git status --short` | only expected local edits appear |
 
-Profiles: `memoria-{copi, librarian, writer, peer-reviewer, engineer}`.
+Alpha.14 does not require Hermes, Obsidian, Zotero, or installed profiles. If an
+optional adapter is broken, keep working through the `memoria` CLI and repair the
+adapter separately.
 
-Command details: [Hermes CLI reference](https://eranroseman.github.io/memoria-vault/reference/hermes-cli). After a reboot or a break, run the fuller [return-to-work checklist](https://eranroseman.github.io/memoria-vault/how-to-guides/inbox/return-to-work).
-
-## Symptoms → diagnosis
-
-A quick lookup; the complete catalog (symptom · severity · cause · fix) is [failure modes](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+## Symptoms To Check First
 
 | Symptom | Likely cause | First check |
 | --- | --- | --- |
-| Agent Client pane doesn't open or shows error | Hermes process not reachable | `hermes profile list` from terminal |
-| Cards don't move forward | Hermes not processing the board | `hermes profile list`; check [[board-state\|Board State]] |
-| New captures don't appear in inbox | Watcher / QuickAdd not firing | Check QuickAdd config in Obsidian Settings |
-| Linter findings stale | Cron not running | freshness in [[spaces/maintenance#Drift watch\|Drift Watch]] |
-| Dashboards show errors | Dataview not loaded | Reload plugins in Obsidian Settings |
+| Command fails before running | venv missing or package not installed | `.memoria/.venv/bin/python -m memoria_vault.cli --help` |
+| New captures do not become checked | enrichment/full-text/provider data missing | `memoria request list` and `.memoria/config/providers.yaml` |
+| Search returns stale results | qmd checked-only index needs rebuild | `memoria workspace rebuild --search` |
+| Linter findings stale | scheduled task not running | run the same `memoria` command manually |
+| Dashboards show errors | Obsidian plugin/view issue | reload Obsidian plugins; CLI/runtime can still work |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |
 
-Step-by-step recipes for the common ones: [stuck card](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-stuck-card) · [broken frontmatter](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-broken-frontmatter) · [profile drift](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/fix-profile-drift) · [denied write](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/diagnose-a-denied-write).
+## Safe Mode
 
-## Working in safe mode
-
-The full walkthrough is the [safe-mode how-to](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/safe-mode); the essentials:
-
-**Ingest (Librarian down):** Quick-Copy BibTeX from Zotero → create `catalog/sources/<source_id>/source.md` with `type: source`, `source_id`, `title`, `description`, and `check_status: unchecked`. The worker observes and checks it when the runtime is healthy. (Normal path: [capture & ingest](https://eranroseman.github.io/memoria-vault/how-to-guides/library/capture-and-ingest).)
-
-**Review ([policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) down):** fail-closed writes will block. Work manually in Obsidian, commit often, and redeploy profiles when the gate is healthy.
-
-**Export (Peer-reviewer/Writer down):** verify citekeys resolve manually, then run Pandoc directly — skip cite-check / similarity-check, rely on human review (Pandoc/CSL details: [export reference](https://eranroseman.github.io/memoria-vault/reference/export)):
+Use the CLI and Git directly:
 
 ```bash
-pandoc draft.md --bibliography references.bib --csl .memoria/csl/apa.csl -o output.docx
+.memoria/.venv/bin/python -m memoria_vault.cli doctor bundle --workspace .
+.memoria/.venv/bin/python -m memoria_vault.cli request list --workspace .
+git status --short
 ```
+
+If provider-backed work is blocked, capture source metadata and full text as
+unchecked work, commit the checkpoint, and rerun enrichment when provider inputs
+are available.
 
 ## Recover
 
-- [ ] Restart Obsidian
-- [ ] Restart Hermes (`hermes profile list` should respond)
-- [ ] Restart the policy MCP (`policy_mcp.py`)
-- [ ] Check `.memoria/` is intact (`profiles/`, `mcp/`, `lane-overrides/`)
-- [ ] Check `system/logs/` for recent error entries
-- [ ] `git status` — has anything unexpectedly changed?
+- [ ] Run `memoria doctor bundle`.
+- [ ] Check `.memoria/` has `schemas/`, `config/`, `mcp/`, `index/`, `staging/`, and `state/`.
+- [ ] Check `system/logs/` for recent error entries.
+- [ ] Run `git status --short`.
+- [ ] Rebuild search with `memoria workspace rebuild --search`.
 
-**Last resort — [re-install](https://eranroseman.github.io/memoria-vault/reference/installer)** from a fresh repo checkout or the downloaded installer:
-
-```bash
-cd <repo-root>
-bash scripts/install.sh --profiles-only --vault <vault-root>
-```
-
-```powershell
-cd <repo-root>
-.\scripts\install.ps1 -ProfilesOnly -Vault <vault-root>
-```
-
-Still broken? → the [troubleshooting how-tos](https://eranroseman.github.io/memoria-vault/how-to-guides/troubleshooting/) (symptom → diagnosis → fix per failure), or the full [failure-modes catalog](https://eranroseman.github.io/memoria-vault/reference/failure-modes).
+Last resort: create a fresh workspace with the bootstrap installer and copy only
+user-authored content across intentionally. There is no profile-only redeploy or
+in-place migration path in alpha.14.

@@ -12,9 +12,9 @@ Every signal Memoria records about its own operation, with log inventory and sha
 ## Conventions (apply to every log)
 
 - **Format.** One JSON object per line (JSONL). No top-level array, no trailing comma; a partial last line is the only acceptable corruption and is dropped on read.
-- **Append-only.** Writers only ever `open(..., "a")`. Rows are immutable events; nothing is rewritten in place. Rotation (truncate-after-archive) is the *only* sanctioned mutation, and only the owning profile may do it (see the `authorized-targeted` auto-fix class in [Policy MCP](policy-mcp.md)).
+- **Append-only.** Writers only ever `open(..., "a")`. Rows are immutable events; nothing is rewritten in place. Rotation (truncate-after-archive) is the *only* sanctioned mutation and must be an explicit authorized operation.
 - **Time.** Every row carries a timestamp in ISO-8601 **UTC** with a trailing `Z` (`2026-06-01T14:23:01Z`). The key is `timestamp` in every log. Never local time — cross-log joins depend on a single clock.
-- **Identity.** Card-scoped rows carry `task_id` (board card ID) and `lane` (the assignee profile, e.g. `memoria-writer`). `task_id` is the join key across `board-transitions`, `disposition`, and `cost`.
+- **Identity.** Request-scoped rows carry `task_id`/`request_id` and, for legacy imports, may carry a `lane`. Request ids are the join key for new alpha.14 work.
 - **Encoding.** UTF-8, `ensure_ascii=false` — em-dashes and accented author names survive verbatim.
 
 ## Log inventory

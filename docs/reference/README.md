@@ -34,14 +34,15 @@ manual mirrors.
 | --- | --- | --- |
 | [System actions](system-actions.md) | Every action the system performs — operations, MCP servers, crons, skills, PI palette — with performer and purpose | Guarded mirror |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
+| [CLI](cli.md) | Alpha.14 `memoria` command surface | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Profile capabilities](profile-capabilities.md) | Lane identifiers, capability table, invocation levels, folder permissions | Generated |
+| [Installed profiles](profile-capabilities.md) | Alpha.14 no-installed-profile contract | Manual |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
 | [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries | Guarded mirror |
-| [Hermes CLI](hermes-cli.md) | All `hermes …` CLI commands for research, board management, profile, skills, and cron admin | Guarded mirror |
-| [Policy MCP](policy-mcp.md) | Policy MCP decision values, request/response contract, tools, lane overrides, and enforcement | Manual |
+| [Hermes CLI](hermes-cli.md) | Alpha.14 boundary for the optional future Hermes adapter | Manual |
+| [Policy MCP](policy-mcp.md) | Optional adapter policy shim, request/response contract, tools, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, classifiers, clustering, API calls, and graph algorithms | Manual |

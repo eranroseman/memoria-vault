@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail when dropped alpha.14 operation homes reappear."""
+"""Fail when dropped alpha.14 runtime package homes reappear."""
 
 from __future__ import annotations
 
@@ -7,7 +7,12 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-FORBIDDEN_PATHS = ("vault-template/.memoria/operations",)
+FORBIDDEN_PATHS = (
+    "vault-template/.memoria/operations",
+    "vault-template/.memoria/profiles",
+    "vault-template/.memoria/lane-overrides",
+    "vault-template/.memoria/tool-registry.yaml",
+)
 FORBIDDEN_TEXT = ("vault-template/.memoria/operations", ".memoria/operations/")
 SEARCH_ROOTS = (
     ".agents",

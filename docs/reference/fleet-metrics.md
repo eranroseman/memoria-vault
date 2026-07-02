@@ -30,7 +30,9 @@ python vault-template/.memoria/mcp/metrics_aggregate.py --vault <vault> --from-j
 | `system/logs/attention.jsonl` | Obsidian-side PI card-open-to-resolve timing. |
 | `system/logs/blind-review-samples.jsonl` | Blind re-review sample counts. |
 
-The aggregator covers the four background lanes only: `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, and `memoria-engineer`. Co-PI and deterministic operations are not lane-metric subjects.
+The aggregator covers legacy lane-named rows when historical board logs contain
+them. New alpha.14 work is request/operation based; lane metrics are
+compatibility telemetry, not proof that installed profiles ship.
 
 ## Trust score
 

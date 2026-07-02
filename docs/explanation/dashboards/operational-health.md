@@ -59,15 +59,12 @@ The scoring contract is in [Vault eval](../../reference/vault-eval.md).
 
 ## Skill state
 
-Skill state renders lane policy and shipped skills from `.memoria/lane-overrides/`
-and `.memoria/profiles/*/skills/`. It answers "which lane can do what?" without
-opening the YAML and profile directories by hand.
-
-It is visibility, not enforcement. The policy gate and profile configs enforce;
-the dashboard only renders mismatches for review.
+The old skill-state dashboard was removed with installed profile packages. Use
+[Installed profiles](../../reference/profile-capabilities.md) for the alpha.14
+boundary.
 
 ## Related
 
 - Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
 - Policy log schema: [Policy MCP](../../reference/policy-mcp.md)
-- Profile capability matrix: [Profile capabilities](../../reference/profile-capabilities.md)
+- Installed profile boundary: [Installed profiles](../../reference/profile-capabilities.md)

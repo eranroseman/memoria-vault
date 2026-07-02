@@ -9,7 +9,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VAULT="$HOME/Memoria-test"
-PROFILES="auto"
 DRY_RUN=0
 
 say() { printf '%s\n' "$*"; }
@@ -18,15 +17,12 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage: scripts/refresh-test-vault.sh [--vault DIR] [--profiles auto|always|never] [--dry-run]
+Usage: scripts/refresh-test-vault.sh [--vault DIR] [--dry-run]
 
 Fast-refresh an existing disposable Memoria test vault from vault-template/.
 
 Options:
   --vault DIR                 Target vault (default: ~/Memoria-test)
-  --profiles auto|always|never
-                              Redeploy Hermes profiles only when profile-owned
-                              source changed, always, or never (default: auto)
   --dry-run                   Print the actions without writing
   -h, --help                  Show this help
 
@@ -50,17 +46,6 @@ run() {
   [ "$DRY_RUN" -eq 1 ] || "$@"
 }
 
-run_env() {
-  local assignment="$1"
-  shift
-  printf '  + %s' "$assignment"
-  printf ' %q' "$@"
-  printf '\n'
-  if [ "$DRY_RUN" -eq 0 ]; then
-    env "$assignment" "$@"
-  fi
-}
-
 need() {
   command -v "$1" >/dev/null 2>&1 || die "$1 is required on PATH"
 }
@@ -70,11 +55,6 @@ while [ "$#" -gt 0 ]; do
     --vault)
       [ "$#" -ge 2 ] || die "--vault needs a directory"
       VAULT="$(expand_path "$2")"
-      shift 2
-      ;;
-    --profiles)
-      [ "$#" -ge 2 ] || die "--profiles needs auto, always, or never"
-      PROFILES="$2"
       shift 2
       ;;
     --dry-run)
@@ -91,27 +71,10 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-case "$PROFILES" in
-  auto|always|never) ;;
-  *) die "--profiles must be auto, always, or never" ;;
-esac
-
 SRC="$ROOT/vault-template"
 [ -d "$SRC/.memoria" ] || die "cannot find vault-template/.memoria under $ROOT"
 [ -d "$VAULT/.memoria" ] || die "$VAULT is not an existing Memoria vault; run scripts/install.sh first"
 need rsync
-
-profiles_need_refresh=0
-if [ "$PROFILES" = "always" ]; then
-  profiles_need_refresh=1
-elif [ "$PROFILES" = "auto" ]; then
-  for rel in .memoria/profiles .memoria/lane-overrides .memoria/plugins .memoria/scripts; do
-    if [ ! -e "$VAULT/$rel" ] || ! diff -qr "$SRC/$rel" "$VAULT/$rel" >/dev/null 2>&1; then
-      profiles_need_refresh=1
-      break
-    fi
-  done
-fi
 
 sync_dir() {
   local rel="$1"
@@ -130,10 +93,8 @@ hdr "Refresh source-owned vault files"
 # system/exports, notes, project content, catalog records, or inbox cards.
 for rel in \
   .githooks \
-  .memoria/lane-overrides \
   .memoria/mcp \
   .memoria/plugins \
-  .memoria/profiles \
   .memoria/schemas \
   .memoria/scripts \
   spaces \
@@ -150,7 +111,6 @@ done
 for rel in \
   .memoria/design-system.md \
   .memoria/project-hints.yaml.example \
-  .memoria/tool-registry.yaml \
   .gitignore \
   AGENTS.md \
   home.md \
@@ -196,24 +156,6 @@ PY
 
 hdr "Restage golden copy"
 run "$python_cmd" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" stage
-
-case "$PROFILES" in
-  always)
-    hdr "Redeploy profiles"
-    run_env "MEMORIA_ENV=${MEMORIA_ENV:-test}" bash "$ROOT/scripts/install.sh" --profiles-only --yes --vault "$VAULT"
-    ;;
-  auto)
-    if [ "$profiles_need_refresh" -eq 1 ]; then
-      hdr "Redeploy profiles"
-      run_env "MEMORIA_ENV=${MEMORIA_ENV:-test}" bash "$ROOT/scripts/install.sh" --profiles-only --yes --vault "$VAULT"
-    else
-      say "Profiles unchanged; skipping profiles-only redeploy."
-    fi
-    ;;
-  never)
-    say "Profile redeploy skipped by --profiles never."
-    ;;
-esac
 
 hdr "Done"
 say "Refreshed $VAULT from $SRC"

@@ -23,7 +23,7 @@ only when you need the extra detail.
 | Guide | What it covers |
 | --- | --- |
 | [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian and install adapter plugins |
-| [Set up Hermes](set-up-hermes.md) | Install optional Hermes profiles and fill adapter `.env` secrets |
+| [Set up Hermes](set-up-hermes.md) | Alpha.14 boundary for external Hermes adapter experiments |
 | [Set up Zotero](set-up-zotero.md) | Better BibTeX citekey shape and portable export imports |
 | [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 
@@ -31,4 +31,4 @@ only when you need the extra detail.
 
 | Guide | What it covers |
 | --- | --- |
-| [Add a second vault](add-a-second-vault.md) | Fork the starter for a separate project |
+| [Add a second vault](add-a-second-vault.md) | Create a second standalone workspace |

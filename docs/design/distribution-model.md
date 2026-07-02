@@ -11,8 +11,8 @@ Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit
 
 | Path | Contents | Audience |
 | --- | --- | --- |
-| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows production via PowerShell, Linux/WSL testing via bash. Both derive the vault from `vault-template/` and deploy the same profile/runtime source. | End users (run once). |
-| `vault-template/` | **Source files only — never a live vault**: templates, profiles, skills, schemas, dashboards, patterns, and `.obsidian` config. The installer *scaffolds* the vault tree and *populates* it from here. | The installer (and contributors). |
+| `scripts/install.ps1` / `scripts/install.sh` (repo root) | The **bootstrap installers**: native Windows via PowerShell and Linux/WSL via bash. Both derive the workspace from `vault-template/` and install the standalone CLI/runtime package. | End users (run once). |
+| `vault-template/` | **Source files only — never a live vault**: templates, OKF knowledge bundles, capability manifests, schemas, dashboards, patterns, and optional app config. The installer *scaffolds* the vault tree and *populates* it from here. | The installer (and contributors). |
 | `src/memoria_vault/` | The installable Python package for shared runtime helpers and policy logic. | Memoria operations, MCP servers, tests, and contributors. |
 | `docs/` | Architecture, workflow, and decision documents. Not needed at runtime. | Developers and contributors. |
 
@@ -32,24 +32,31 @@ At install time, every system file is also staged at `<vault>/.memoria/golden/` 
 
 ---
 
-## The five profiles: one shared layer, four profile files
+## Capabilities, Not Installed Profiles
 
-The agents ship as five hand-authored profile directories under `vault-template/.memoria/profiles/` — `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer`. Each agent is a **shared layer + a unique layer** ([ADR-48](../adr/48-copi-and-agent-consolidation.md)):
+Alpha.14 ships capability manifests under `vault-template/capabilities/`, with
+one checked Markdown file per operation. Those manifests are the runtime
+allowlist: they describe the operation id, input/output schema, allowed tools,
+allowed paths, network ceiling, runner, model policy, and required checks.
 
-- **Shared:** `AGENTS.md` — the one "how we work in this vault" instruction set every agent reads, living in the vault root so there is exactly one copy of the house rules.
-- **Unique per agent:** `SOUL.md` (its posture — the stable stance, like *faithful* or *skeptical*), `config.yaml` (model, tools, and MCP connections), optional `skills/` (assigned per lane), and `distribution.yaml` (packaging metadata).
+The repo deliberately does not ship `vault-template/.memoria/profiles/`,
+`vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The
+standalone `memoria` CLI and engine are the product surface. Optional future
+adapters may call the same CLI/engine, but they are not the source of truth for
+capabilities and they do not belong in the bootstrap installer.
 
-So the agents share the house rules but each brings its own stance and toolset. Narrow capability blocks in `config.yaml` are materialized from `vault-template/.memoria/tool-registry.yaml` by `scripts/render_profile_configs.py`: one allowlist owner, plain Hermes profile files at runtime.
-
-## Why the profile install is idempotent
-
-The profile-install step is safe to re-run with `--profiles-only`: it refreshes author-owned profile files and leaves human-owned secrets (`.env`, local overrides) untouched. That is what makes profile drift actionable: the Linter can detect it, and a profile redeploy can fix it.
+The absence is test-pinned by [Installed profiles](../reference/profile-capabilities.md) and
+`scripts/alpha14_negative_gate.py`.
 
 ---
 
 ## Running more than one vault
 
-Nothing in the distribution model is single-vault by design. The rule is simple: give each vault its own Obsidian REST port and its own `HERMES_HOME`, so profiles, crons, and Kanban state cannot cross. The step-by-step procedure is [Add a second vault](../how-to-guides/setup/add-a-second-vault.md).
+Nothing in the distribution model is single-vault by design. The rule is simple:
+give each workspace its own directory, `.memoria/memoria.sqlite`, qmd index
+state, Git history, and provider config. If an optional app adapter is added
+later, it must attach to one workspace at a time and preserve the CLI/engine as
+the write path.
 
 ---
 
@@ -57,6 +64,5 @@ Nothing in the distribution model is single-vault by design. The rule is simple:
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)
 - The decisions: [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md), [ADR-26](../adr/26-repo-as-install-unit.md)
-- Profile structure: [Profiles](../explanation/profiles/README.md)
-- Operationalizes idempotent deployment: [Redeploy profiles](../how-to-guides/operate/redeploy-profiles.md)
+- Capability reference: [Operations](../reference/operations.md)
 - On-disk layout reference: [On-disk layout](../reference/on-disk-layout.md)

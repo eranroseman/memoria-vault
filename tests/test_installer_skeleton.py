@@ -116,8 +116,6 @@ def test_alpha11_template_has_no_legacy_alpha10_root_files():
 
 def test_alpha11_template_has_no_legacy_alpha10_path_literals():
     roots = [
-        ROOT / "vault-template/.memoria/lane-overrides",
-        ROOT / "vault-template/.memoria/profiles",
         ROOT / "vault-template/system",
         ROOT / "vault-template/AGENTS.md",
     ]
@@ -133,6 +131,8 @@ def test_alpha11_template_has_no_legacy_alpha10_path_literals():
     )
     offenders = []
     for root in roots:
+        if not root.exists():
+            continue
         paths = (
             [root] if root.is_file() else sorted(path for path in root.rglob("*") if path.is_file())
         )
@@ -144,12 +144,12 @@ def test_alpha11_template_has_no_legacy_alpha10_path_literals():
     assert not offenders
 
 
-def test_installer_deploys_exactly_the_shipped_profiles():
+def test_alpha14_installer_does_not_ship_installed_profiles():
     text = INSTALL.read_text(encoding="utf-8")
-    m = re.search(r'ALL_PROFILES="([^"]+)"', text)
-    listed = set(m.group(1).split())
-    shipped = {p.name for p in (ROOT / "vault-template/.memoria/profiles").iterdir() if p.is_dir()}
-    assert listed == shipped, f"ALL_PROFILES {listed ^ shipped} out of sync with src profiles"
+    assert "ALL_PROFILES" not in text
+    assert "--profiles-only" not in text
+    assert not (ROOT / "vault-template/.memoria/profiles").exists()
+    assert not (ROOT / "vault-template/.memoria/lane-overrides").exists()
 
 
 def test_cron_wrappers_exist_for_wired_jobs():
@@ -158,13 +158,9 @@ def test_cron_wrappers_exist_for_wired_jobs():
         assert (ROOT / "vault-template/.memoria/scripts" / wrapper).is_file(), f"missing {wrapper}"
 
 
-def test_installer_cron_helper_keeps_all_job_schedules():
-    helper = RUNTIME_TOOLS.read_text(encoding="utf-8")
+def test_standalone_installer_does_not_wire_hermes_cron_jobs():
     text = INSTALL.read_text(encoding="utf-8")
 
-    assert "install_hermes_cron()" in helper
-    assert "hermes cron list --all" in helper
-    assert 'hermes cron create "$schedule" --script "$dest_name" --no-agent' in helper
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
         ("sweeps-cron.sh", "memoria-sweeps.sh", "*/15 * * * *", "memoria-sweeps"),
@@ -173,25 +169,19 @@ def test_installer_cron_helper_keeps_all_job_schedules():
         ("metrics-cron.sh", "memoria-metrics.sh", "30 6 * * 1", "memoria-metrics"),
         ("eval-cron.sh", "memoria-eval.sh", "0 7 1 */3 *", "memoria-eval"),
     ):
-        assert source in text
-        assert dest in text
-        assert schedule in text
-        assert job in text
+        assert source not in text
+        assert dest not in text
+        assert schedule not in text
+        assert job not in text
 
 
 def test_linux_installer_defaults_to_standalone_cli_runtime():
     text = INSTALL.read_text(encoding="utf-8")
-    default_branch = re.search(
-        r'if \[ "\$WITH_HERMES" -eq 0 \]; then(?P<body>.*?)\n  fi\n\n  print_hermes_plan',
-        text,
-        re.S,
-    ).group("body")
 
-    assert "WITH_HERMES=0" in text
     assert "WITH_CLUSTER=0" in text
-    assert "--with-hermes" in text
+    assert "--with-hermes" not in text
     assert "--with-cluster" in text
-    assert "Proceed with the standalone Memoria install?" in default_branch
+    assert "Proceed with the standalone Memoria install?" in text
     assert "memoria_vault.cli doctor bundle --workspace" in text
     for required in (
         "ensure_prereqs",
@@ -202,7 +192,7 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
         "ensure_qmd",
         "print_cli_next_steps",
     ):
-        assert required in default_branch
+        assert required in text
     for adapter_only in (
         "ensure_hermes",
         "install_profiles",
@@ -216,18 +206,13 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
         "ensure_obsidian",
         "print_secrets_guidance",
     ):
-        assert adapter_only not in default_branch
+        assert adapter_only not in text
 
 
 def test_windows_installer_defaults_to_standalone_cli_runtime():
     text = INSTALL_PS.read_text(encoding="utf-8")
-    default_branch = re.search(
-        r"if \(-not \$WithHermes\) \{(?P<body>.*?)\n    \}\n\n    if \(\$WithHermes\)",
-        text,
-        re.S,
-    ).group("body")
 
-    assert "[switch]$WithHermes" in text
+    assert "[switch]$WithHermes" not in text
     assert "[switch]$WithCluster" in text
     assert "Default path: standalone CLI/runtime workspace" in text
     assert "memoria_vault.cli doctor bundle --workspace" in text
@@ -243,7 +228,7 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
         "Install-Qmd",
         "Write-CliNextSteps",
     ):
-        assert required in default_branch
+        assert required in text
     for adapter_only in (
         "Install-Hermes",
         "Enable-MemoriaCssSnippets",
@@ -252,7 +237,7 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
         "Write-SecretsGuidance",
         "Install-WingetApp",
     ):
-        assert adapter_only not in default_branch
+        assert adapter_only not in text
 
 
 def test_lint_cron_writes_lint_findings_telemetry():
@@ -308,52 +293,15 @@ def test_zotero_left_the_installer():
     assert "Zotero.Zotero" not in INSTALL_PS.read_text(encoding="utf-8")
 
 
-def test_installer_escapes_template_replacements():
-    text = INSTALL.read_text(encoding="utf-8")
-    assert "sed_repl()" in text
-    assert "s|{{VAULT_PATH}}|$VAULT_PATH|g" not in text
-    assert "s|{{PYTHON}}|$pybin|g" not in text
-    assert "s|{{QMD}}|${QMD_BIN:-qmd}|g" not in text
-
-
-def test_installers_verify_generated_profiles_use_https_ssl_verify():
+def test_installer_has_no_profile_template_replacement_layer():
     sh = INSTALL.read_text(encoding="utf-8")
     ps = INSTALL_PS.read_text(encoding="utf-8")
-    for text, function_name in (
-        (sh, "verify_profile_obsidian_mcp"),
-        (ps, "Assert-ProfileObsidianMcpHttps"),
-    ):
-        assert function_name in text
-        assert "https://127.0.0.1:" in text
-        assert "OBSIDIAN_MCP_PORT" in text
-        assert "/mcp" in text
-        assert "OBSIDIAN_MCP_SSL_VERIFY" in text
-        assert 'url: "http://127' not in text
-    assert 'url:[[:space:]]*"?https://127\\.0\\.0\\.1:' in sh
-    assert 'ssl_verify:[[:space:]]*"?\\$\\{OBSIDIAN_MCP_SSL_VERIFY\\}' in sh
-
-
-def test_installers_render_profile_model_placeholders():
-    sh = INSTALL.read_text(encoding="utf-8")
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-    for placeholder in ("{{MODEL_PROVIDER}}", "{{MODEL_BASE_URL}}", "{{MODEL_DEFAULT}}"):
-        assert placeholder in sh
-        assert placeholder in ps
-    assert "MODEL_LOCAL_CONTEXT" in sh
-    assert "{{MODEL_LOCAL_CONTEXT}}" in ps
-    assert "MEMORIA_ENV" in sh
-    assert "MEMORIA_ENV" in ps
-    assert "meta-llama/llama-4-scout" in sh
-    assert "meta-llama/llama-4-scout" in ps
-    assert "MEMORIA_MODEL_PROVIDER" in sh
-    assert "MEMORIA_MODEL_PROVIDER" in ps
-
-
-def test_installer_removes_legacy_profile_mcp_json():
-    text = INSTALL.read_text(encoding="utf-8")
-    assert "remove_legacy_profile_mcp_json()" in text
-    assert 'run rm -f "$profile_dir/mcp.json"' in text
-    assert 'remove_legacy_profile_mcp_json "$HERMES_PROFILES_DIR/$p"' in text
+    for text in (sh, ps):
+        assert "{{VAULT_PATH}}" not in text
+        assert "{{PYTHON}}" not in text
+        assert "{{QMD}}" not in text
+        assert "sed_repl()" not in text
+        assert "Set-TemplateValues" not in text
 
 
 def test_installer_treats_python_as_a_hard_prerequisite():
@@ -378,11 +326,6 @@ def test_installers_treat_git_as_a_hard_prerequisite():
     ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "ensure_git_available()" in sh
     assert "Git is required on PATH" in sh
-    assert "ensure_git_available" in re.search(
-        r'if \[ "\$PROFILES_ONLY" -eq 1 \]; then(?P<body>.*?)\n  fi',
-        sh,
-        re.S,
-    ).group("body")
     assert "function Assert-RequiredCommands" in ps
     assert "Git is required on PATH" in ps
     assert "Assert-RequiredCommands" in ps
@@ -453,71 +396,8 @@ def test_fresh_installer_copies_the_runtime_src_tree():
     assert "Install-VaultHooks" in ps
 
 
-def test_installers_refuse_profile_deploy_without_policy_gate():
-    sh = (ROOT / "scripts/install.sh").read_text(encoding="utf-8")
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-
-    assert "refusing to deploy $prof without the write gate" in sh
-    assert "refusing to deploy $ProfileName without the write gate" in ps
-
-
-def test_installers_reconcile_memoria_css_snippets_without_clobbering_appearance():
-    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-    for text, function_name in (
-        (sh, "ensure_memoria_css_snippets"),
-        (ps, "Enable-MemoriaCssSnippets"),
-    ):
-        assert function_name in text
-        assert "memoria-link-colors" in text
-        assert "memoria-property-badges" in text
-        assert "enabledCssSnippets" in text
-    assert "ensure_memoria_css_snippets" in re.search(
-        r'if \[ "\$PROFILES_ONLY" -eq 1 \]; then(?P<body>.*?)\n  fi',
-        sh,
-        re.S,
-    ).group("body")
-    assert "Enable-MemoriaCssSnippets -RepoRoot $repoRoot" in ps
-
-
-def test_installers_reconcile_profile_skills_on_profile_deploy():
-    sh = (ROOT / "scripts" / "install.sh").read_text(encoding="utf-8")
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-
-    for text, function_name in (
-        (sh, "sync_profile_skills"),
-        (ps, "Update-DeployedProfileSkills"),
-    ):
-        assert function_name in text
-        assert ".no-bundled-skills" in text
-        assert "Refusing to reconcile skills outside" in text
-        assert "cleared profile skills" in text
-        assert "refreshed profile skills" in text
-
-
-def test_windows_profiles_only_reinstalls_mcp_deps_from_checkout():
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-    body = re.search(
-        r"if \(\$ProfilesOnly\) \{\n        Assert-RequiredCommands(?P<body>.*?)\n        return\n    \}",
-        ps,
-        re.S,
-    ).group("body")
-
-    assert "Get-LocalRepoRoot" in body
-    assert "Run -ProfilesOnly from a memoria-vault checkout" in body
-    assert "Install-McpDeps -RepoRoot $repoRoot" in body
-
-
-def test_windows_installer_uv_fallback_enables_mcp_extra():
+def test_windows_installer_uv_fallback_is_standalone():
     text = INSTALL_PS.read_text(encoding="utf-8")
-    assert "'--extra', 'mcp', 'hermes'" in text
-
-
-def test_windows_installer_fails_on_placeholder_obsidian_mcp_env():
-    text = INSTALL_PS.read_text(encoding="utf-8")
-    assert "function Assert-ObsidianMcpEnv" in text
-    assert "OBSIDIAN_MCP_PORT" in text
-    assert "OBSIDIAN_MCP_SSL_VERIFY" in text
-    assert "OBSIDIAN_API_KEY', 'OBSIDIAN_MCP_PORT', 'OBSIDIAN_MCP_SSL_VERIFY" in text
-    assert "Test-PlaceholderValue" in text
-    assert "rerun -ProfilesOnly" in text
+    assert "Get-CommandPath @('uv.exe', 'uv')" in text
+    assert "'--extra', 'mcp', 'hermes'" not in text
+    assert "HermesHome" not in text

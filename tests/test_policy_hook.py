@@ -17,6 +17,23 @@ evaluate_pre = _m.evaluate_pre
 extract_path = _m.extract_path
 json = _m.json
 to_vault_relative = _m.to_vault_relative
+TOOL_REGISTRY = """
+version: 1
+groups:
+  vault_read: [obsidian.get_file_contents]
+  qmd_read: [qmd.search]
+profiles:
+  memoria-copi:
+    allow: [skills]
+  memoria-librarian:
+    allow: [vault_read, skills, kanban, qmd_read]
+  memoria-writer:
+    allow: [vault_read, skills, kanban, qmd_read]
+  memoria-peer-reviewer:
+    allow: [vault_read, skills, kanban, qmd_read]
+  memoria-engineer:
+    allow: [vault_read, skills, kanban]
+"""
 
 
 def test_policy_hook_bootstraps_vault_venv_runtime_package(tmp_path):
@@ -129,12 +146,7 @@ def _vault_with_policy(tmp_path):
     lanes = vault / ".memoria" / "lane-overrides"
     lanes.mkdir(parents=True)
     (vault / ".memoria" / "mcp").mkdir(parents=True)
-    (vault / ".memoria" / "tool-registry.yaml").write_text(
-        (
-            Path(__file__).resolve().parents[1] / "vault-template/.memoria/tool-registry.yaml"
-        ).read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
+    (vault / ".memoria" / "tool-registry.yaml").write_text(TOOL_REGISTRY, encoding="utf-8")
     mcp_src = Path(_m.__file__).resolve().parent
     shutil.copy(mcp_src / "policy_mcp.py", vault / ".memoria" / "mcp" / "policy_mcp.py")
     shutil.copy(mcp_src / "policy_server.py", vault / ".memoria" / "mcp" / "policy_server.py")

@@ -7,62 +7,62 @@ nav_order: 5
 
 # Return to work
 
-Three checks before starting any research session after being away — a day, a week, or longer. Takes under two minutes. Catches the most common resumption failures before they cost time mid-session.
+Three checks before starting a research session after being away. They catch the
+common standalone runtime failures before they cost time mid-session.
 
 ## Steps
 
-**1. Confirm Hermes and the profiles are healthy.**
+**1. Confirm the CLI runtime is healthy.**
 
 ```bash
-hermes --version
-hermes profile list
+memoria doctor bundle --workspace <workspace>
+memoria status --workspace <workspace>
 ```
 
-`hermes profile list` shows the five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`). If any is missing, re-deploy with the `--profiles-only` redeploy from the repo clone ([Set up Hermes](../setup/set-up-hermes.md)).
-
-**2. Confirm the secrets are in place.**
+If `memoria` is not on `PATH`, run the workspace-local command:
 
 ```bash
-grep -c '=' ~/.hermes/.env
-cat ~/.hermes/profiles/memoria-librarian/.env | grep -E 'KILOCODE|OPENALEX|OBSIDIAN' | sed 's/=.*/=set/'
+<workspace>/.memoria/.venv/bin/python -m memoria_vault.cli doctor bundle --workspace <workspace>
 ```
 
-```powershell
-(Get-Content "$env:LOCALAPPDATA\hermes\.env" | Where-Object { $_ -match '=' }).Count
-Get-Content "$env:LOCALAPPDATA\hermes\profiles\memoria-librarian\.env" |
-  Where-Object { $_ -match '^(KILOCODE|OPENALEX|OBSIDIAN)' } |
-  ForEach-Object { $_ -replace '=.*', '=set' }
-```
-
-The five keys checked here should all show as set — see [Set up Hermes](../setup/set-up-hermes.md) for what each one is and where it comes from. A blank key or placeholder certificate path fails mid-task. If you rotated keys in the shared Hermes env file, propagate them with the `--profiles-only` redeploy above.
-
-**3. Confirm the vault is synced.**
+**2. Confirm provider config and search are ready.**
 
 ```bash
-cd <vault-path>
+memoria workspace rebuild --workspace <workspace> --search
+memoria request list --workspace <workspace>
+```
+
+Provider settings live under `<workspace>/.memoria/config/providers.yaml` and
+environment variables consumed by the standalone CLI/engine. There is no
+profile `.env` propagation step in alpha.14.
+
+**3. Confirm the workspace is synced and clean.**
+
+```bash
+cd <workspace>
 git pull --ff-only
-git status
+git status --short
 ```
 
-Expected: "Already up to date" or a clean fast-forward. A diverged branch means another machine pushed while this one was offline — resolve before starting work.
+Expected: a clean fast-forward or no remote changes. A diverged branch means
+another machine pushed while this one was offline; resolve before starting work.
 
-Then open the Inbox queue for **Needs me**. If the rail health band is non-zero, open Maintenance for **Drift watch**, **Loose ends**, and **Board** (the crons kept running — sweeps every 15 minutes, lint daily).
+Then open the Inbox queue for **Needs me**. If the rail health band is non-zero,
+open Maintenance for **Drift watch**, **Loose ends**, and **Board**.
 
-## What's fragile
+## What's Fragile
 
-**Agent Client pane not responding** — the Co-PI also runs in a terminal: `hermes -p memoria-copi acp` to test the server, and every delegation has a CLI equivalent (`hermes kanban create`). The pane is a convenience layer; see [Safe mode](../troubleshooting/safe-mode.md).
+**Optional UI adapter not responding** — keep working through the `memoria` CLI
+and repair the adapter separately.
 
-**qmd search index stale** — if notes changed outside a session, vault search may lag. Rebuild: [Rebuild the search index](../operate/rebuild-the-search-index.md).
+**qmd search index stale** — rebuild it with [Rebuild the search index](../operate/rebuild-the-search-index.md).
 
-**Sync (Syncthing/multi-device) incomplete** — notes created on another device won't be queryable until sync completes; check before blaming retrieval.
-
-## If something is broken
-
-See [Safe mode](../troubleshooting/safe-mode.md) — the minimal working paths when optional tooling is down.
+**Sync incomplete** — notes created on another device are not queryable until
+sync completes; check Git/sync status before blaming retrieval.
 
 ## Related
 
-- Safe mode (when tools are broken): [Safe mode](../troubleshooting/safe-mode.md)
+- Safe mode: [Safe mode](../troubleshooting/safe-mode.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- Reinstall missing profiles: [Set up Hermes](../setup/set-up-hermes.md)
-- The comprehensive failure catalog: [Failure modes](../../reference/failure-modes.md)
+- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)
+- Failure catalog: [Failure modes](../../reference/failure-modes.md)

@@ -73,7 +73,7 @@ def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
         "capabilities/index.md",
         "references.bib",
         ".obsidian",
-        "golden_restore.py",
+        "golden_restore",
         "stage",
     ):
         assert marker in text
@@ -91,10 +91,7 @@ def test_refresh_helper_deploys_every_workspace_referenced_file():
     assert not missing, f"workspace file refs missing from refresh deploy set: {sorted(missing)}"
 
 
-def test_refresh_helper_redeploys_profiles_only_when_needed_by_default():
+def test_refresh_helper_has_no_profile_redeploy_mode():
     text = _script()
-    assert "--profiles auto|always|never" in text
-    assert 'PROFILES="auto"' in text
-    assert "diff -qr" in text
-    assert "--profiles-only --yes --vault" in text
-    assert "Profiles unchanged; skipping profiles-only redeploy." in text
+    assert "--profiles" not in text
+    assert "--profiles-only" not in text

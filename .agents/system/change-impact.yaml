@@ -20,18 +20,18 @@ areas:
       - Dashboards and links
     checks:
       - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_policy_mcp.py tests/test_patterns.py tests/test_detectors.py
-  - area: Profile capability or path policy
+  - area: Dropped installed profile package
     paths:
-      - vault-template/.memoria/tool-registry.yaml
-      - vault-template/.memoria/lane-overrides/**
-      - vault-template/.memoria/profiles/**
+      - scripts/alpha14_negative_gate.py
+      - tests/test_profiles.py
+      - tests/test_installer_skeleton.py
     inspect:
-      - Tool registry and matching profile config
-      - Lane override and delegation ceiling
-      - MCP availability and direct-world prohibitions
-      - Profile posture and profile-owned skills
+      - Alpha.14 no-profile negative tests
+      - Installer/profile-mode text
+      - Current docs that still describe shipped installed profiles
+      - Optional adapter follow-up scope
     checks:
-      - python -m pytest tests/test_profiles.py tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_skill_state_dashboard.py
+      - python -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
   - area: Runtime policy
     paths:
       - vault-template/.memoria/mcp/policy_mcp.py
@@ -40,7 +40,7 @@ areas:
       - vault-template/.memoria/plugins/memoria-policy-gate/**
       - src/memoria_vault/runtime/policy/**
     inspect:
-      - Lane overrides and legacy gated-prefix fallback
+      - Legacy gated-prefix fallback
       - Audit contract
       - Mutating Obsidian tool mappings
       - Tasks delegation semantics
@@ -79,7 +79,7 @@ areas:
       - scripts/install.ps1
     inspect:
       - Installer reference docs
-      - Profile deployment and substitutions
+      - No installed-profile deployment modes
       - Disposable-vault behavior
       - PowerShell bridge
     checks:
@@ -114,26 +114,22 @@ areas:
     checks:
       - python -m pytest tests/test_e2e_smoke_helpers.py tests/test_test_env_harness.py
       - bash scripts/e2e-smoke.sh
-  - area: Live Hermes L2 smoke
+  - area: Standalone disposable install harness
     paths:
-      - scripts/test-l2.sh
-      - scripts/l2_smoke.py
+      - scripts/install-test-vault-local-llm.sh
     inspect:
-      - Hermes profile/config assumptions from upstream docs
-      - Disposable vault isolation and temporary HERMES_HOME behavior
-      - Deterministic OpenAI-compatible smoke backend
-      - Filesystem-backed Obsidian MCP shim tool names
-      - Policy-gate plugin deployment and audit assertions
+      - Disposable workspace isolation and guarded wipe checks
+      - Standalone installer invocation and package import checks
+      - Optional OpenAI-compatible endpoint preflight wording
+      - Golden-copy, detector, and CLI doctor assertions
     checks:
-      - bash scripts/test-l2.sh --help
-      - python -m pytest tests/test_l2_smoke.py
-      - bash scripts/test-l2.sh --preflight-only
+      - bash scripts/install-test-vault-local-llm.sh --help
+      - python -m pytest tests/test_install_test_vault_local_llm.py
   - area: Testing gate mechanism
     paths:
       - scripts/verify
       - scripts/test.sh
       - scripts/e2e-smoke.sh
-      - scripts/test-l2.sh
       - .github/workflows/**
       - .github/ruleset-contract.yaml
       - .agents/playbooks/release.md
