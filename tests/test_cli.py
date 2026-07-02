@@ -921,6 +921,40 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
     assert output["results"][0]["status"] == "done"
 
 
+def test_cli_workspace_scan_reports_schedule_id_for_file_watch(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "workspace",
+            "scan",
+            "--workspace",
+            str(workspace),
+            "--schedule-id",
+            "file-watch",
+            "--idempotency-key",
+            "scheduled-scan",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["schedule_id"] == "file-watch"
+    assert output["job"]["request_envelope"]["schedule_id"] == "file-watch"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, schedule_id FROM operation_requests WHERE request_id = ?",
+            ("scheduled-scan",),
+        ).fetchone()
+    assert tuple(row) == ("observe-pi-edits", "file-watch")
+
+
 def test_cli_request_list_show_and_resume_pending_request(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

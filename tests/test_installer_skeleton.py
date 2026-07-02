@@ -160,6 +160,7 @@ def test_cron_wrappers_exist_for_wired_jobs():
 
 def test_standalone_installer_does_not_wire_hermes_cron_jobs():
     text = INSTALL.read_text(encoding="utf-8")
+    runtime_tools = RUNTIME_TOOLS.read_text(encoding="utf-8")
 
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
@@ -169,6 +170,8 @@ def test_standalone_installer_does_not_wire_hermes_cron_jobs():
         assert dest not in text
         assert schedule not in text
         assert job not in text
+    for deleted in ("install_hermes_cron", "hermes cron", "cron create", "HERMES_HOME/scripts"):
+        assert deleted not in runtime_tools
 
 
 def test_linux_installer_defaults_to_standalone_cli_runtime():
@@ -240,13 +243,28 @@ def test_lint_cron_writes_lint_findings_telemetry():
     assert 'PYTHONPATH="$vault/.memoria:${PYTHONPATH:-}"' in text
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
-    assert '-m memoria_vault.runtime.worker --vault "$vault" integrity-sweep' in text
+    assert (
+        '-m memoria_vault.cli workspace check --workspace "$vault" '
+        "--schedule-id lint-integrity --json"
+    ) in text
 
 
 def test_worker_cron_runs_pi_observer_and_pending_queue():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
-    assert '-m memoria_vault.runtime.worker --vault "$vault" observe-pi-edits' in text
-    assert '-m memoria_vault.runtime.worker --vault "$vault" run-pending --limit 10' in text
+    assert (
+        '-m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
+    ) in text
+    assert (
+        '-m memoria_vault.cli workspace run --workspace "$vault" '
+        "--schedule-id worker-drain --limit 10 --json"
+    ) in text
+
+
+def test_eval_cron_dispatches_through_cli_with_schedule_id():
+    text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
+    assert (
+        '-m memoria_vault.cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
+    ) in text
 
 
 def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):

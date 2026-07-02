@@ -1065,6 +1065,8 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
         payload["regeneration_job"] = regeneration["job"]
     if fixture is not None:
         payload["fixture"] = fixture
+    if args.schedule_id:
+        payload["schedule_id"] = args.schedule_id
     return _emit(payload, args)
 
 

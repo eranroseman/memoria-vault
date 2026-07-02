@@ -56,11 +56,11 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --va
 
 Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit hook re-validates what you staged.
 
-**5. Confirm the cron is alive** (occasionally):
+**5. Confirm scheduled wiring is alive** (occasionally):
 
 ```bash
-hermes cron list        # memoria-lint should show with a next-run time
-hermes cron run memoria-lint   # force a pass now
+.memoria/scripts/lint-cron.sh
+memoria workspace check --workspace . --schedule-id lint-manual --json
 ```
 
 ## Verify
