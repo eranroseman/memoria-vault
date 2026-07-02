@@ -24,7 +24,7 @@ The distribution mechanism is `vault-template/` plus the hashed `<vault>/.memori
 | Scaffold | Create the folder tree from `.memoria/schemas/folders.yaml`. |
 | Populate | Copy system files from `vault-template/`. |
 | Stage golden copy | Save the restore baseline. |
-| Wire runtime | Initialize Git, add the pre-commit hook, add the verify-on-commit hook, create the vault-local venv, install the Memoria package, register qmd search, and install the optional cluster stack only when `--with-cluster` is passed. |
+| Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, install the Memoria package, register qmd search, and install the optional cluster stack only when `--with-cluster` is passed. |
 
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md); the no-installed-profile contract is [Installed profiles](../reference/profile-capabilities.md).
 

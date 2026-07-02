@@ -25,7 +25,7 @@ runtime eval operation can run and score it with nothing but the file.
 | `title` | str | The request title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `lane` | enum | Legacy eval role bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
+| `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 

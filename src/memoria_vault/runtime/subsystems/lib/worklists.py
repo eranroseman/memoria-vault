@@ -127,7 +127,6 @@ def emit_worklist(
         ),
         raised_by="worklists",
         target=target,
-        lane="copi",
         loudness="notice",
         dedupe_slug=f"worklist-{slug}",
     )

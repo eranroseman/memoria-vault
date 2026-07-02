@@ -81,7 +81,6 @@ TEST_LEVELS = {
     "test_test_env_harness.py": "package",
     "test_testing_levels.py": "static",
     "test_trusted_writer.py": "runtime",
-    "test_verify_on_commit.py": "runtime",
     "test_verify_script.py": "package",
     "test_worker_queue.py": "runtime",
     "test_worklists.py": "contract",

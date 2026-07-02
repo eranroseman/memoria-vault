@@ -40,9 +40,7 @@ vault_assembly() {
   git -C "$V" config user.name "Memoria E2E Smoke"
   git -C "$V" rev-parse --is-inside-work-tree >/dev/null || fail "disposable vault is not a git repository"
   cp "$V/.githooks/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
-  cp "$V/.githooks/post-commit" "$V/.git/hooks/post-commit" && chmod +x "$V/.git/hooks/post-commit"
   assert_executable "$V/.git/hooks/pre-commit" "pre-commit hook"
-  assert_executable "$V/.git/hooks/post-commit" "post-commit hook"
   "$PY" "$HELPER" no-obsidian-bundle "$V"
 
   echo "== $(stage vault-assembly-3) =="
@@ -54,7 +52,6 @@ commit_gate() {
   echo "== $(stage commit-gate) =="
   git -C "$V" rev-parse --is-inside-work-tree >/dev/null || fail "commit-gate requires a git repository"
   assert_executable "$V/.git/hooks/pre-commit" "pre-commit hook"
-  assert_executable "$V/.git/hooks/post-commit" "post-commit hook"
   git -C "$V" add -A
   git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm init || fail "baseline commit blocked"
   printf -- '---\ntype: note\ntitle: "Bad"\n---\nx\n' > "$V/knowledge/notes/bad.md"

@@ -3,7 +3,7 @@ type: eval-task
 title: "Link BERT to the Transformer it builds on"
 lifecycle: current
 workflow: link
-lane: link
+eval_role: link
 created: 2026-06-10
 references:
   - devlin2019bert

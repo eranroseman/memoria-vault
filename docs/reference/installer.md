@@ -35,7 +35,7 @@ and stages a golden copy of system files.
 | Workspace copy | Copies `vault-template/` into a fresh target. The installer refuses an existing Memoria workspace. |
 | Skeleton | Recreates schema-owned empty folders from `folders.yaml`. |
 | Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
-| Git hooks | Initializes Git when needed and wires `.githooks/pre-commit` and `.githooks/post-commit`. The installer never commits, sets identity, or adds a remote. |
+| Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. The installer never commits, sets identity, or adds a remote. File-change work is observed with `memoria workspace scan`. |
 | Golden copy | Stages `.memoria/golden/` using `memoria_vault.runtime.subsystems.integrity.linter.golden_restore`. |
 | qmd | Registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index state. |
 | Next steps | Prints vault-local Python commands for `memoria doctor bundle`, `memoria workspace rebuild --search`, and `memoria ask`. |

@@ -22,13 +22,13 @@ def _vault(tmp_path: Path) -> Path:
     ev.mkdir(parents=True)
     (ev / "find-x.md").write_text(
         "---\ntype: eval-task\ntitle: Find X\nlifecycle: current\n"
-        "workflow: find\nlane: catalog\nreferences:\n  - vaswani2017attention\n---\n"
+        "workflow: find\neval_role: catalog\nreferences:\n  - vaswani2017attention\n---\n"
         "## Input\nQ\n## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
     (ev / "verify-y.md").write_text(
         "---\ntype: eval-task\ntitle: Verify Y\nlifecycle: current\n"
-        "workflow: verify\nlane: verify\nreferences:\n  - devlin2019bert\n---\n"
+        "workflow: verify\neval_role: verify\nreferences:\n  - devlin2019bert\n---\n"
         "## Input\nQ\n## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
@@ -70,7 +70,7 @@ def _vault(tmp_path: Path) -> Path:
 def _result_card(task: str, quarter: str, **fields) -> dict:
     block = json.dumps({"vault_eval": "result", "task": task, "quarter": quarter, **fields})
     return {
-        "task_id": f"card-{task}",
+        "request_id": f"card-{task}",
         "status": "done",
         "runs": [{"summary": f"Report.\n\n```json\n{block}\n```\n"}],
     }
@@ -92,7 +92,7 @@ def test_superseded_claims_classification(tmp_path):
 
 def test_superseded_classification_matches_the_linter_detector(tmp_path):
     """eval_score mirrors fama_exposure's superseded test — parity guarded here
-    (same pattern as the LANE_PROFILE mirror in test_eval.py)."""
+    (same pattern as the eval-role assignee mirror in test_eval.py)."""
     from memoria_vault.runtime.subsystems.integrity.linter import detectors
 
     v = _vault(tmp_path)
@@ -179,8 +179,8 @@ def test_extract_results_filters_by_quarter_and_marker():
     cards = [
         _result_card("find-x", "2026-Q2", retrieved=["a"]),
         _result_card("find-x", "2026-Q1", retrieved=["stale"]),  # other quarter
-        {"task_id": "noise", "runs": [{"summary": '```json\n{"foo": 1}\n```'}]},
-        {"task_id": "broken", "runs": [{"summary": "```json\n{not json\n```"}]},
+        {"request_id": "noise", "runs": [{"summary": '```json\n{"foo": 1}\n```'}]},
+        {"request_id": "broken", "runs": [{"summary": "```json\n{not json\n```"}]},
     ]
     out = eval_score.extract_results(cards, "2026-Q2")
     assert set(out) == {"find-x"} and out["find-x"]["retrieved"] == ["a"]
@@ -188,7 +188,7 @@ def test_extract_results_filters_by_quarter_and_marker():
 
 def test_extract_results_newest_block_wins_and_reads_all_summary_fields():
     card = {
-        "task_id": "c1",
+        "request_id": "c1",
         "runs": [
             {
                 "summary": "```json\n"
@@ -350,7 +350,7 @@ def test_resolve_quarter():
 
 
 def test_card_body_instructs_the_result_block(tmp_path):
-    """The dispatcher tells the lane exactly what the scorer will read."""
+    """The dispatcher tells the eval role exactly what the scorer will read."""
     v = _vault(tmp_path)
     task = eval_dispatch.load_gold_tasks(v)[0]
     card = eval_dispatch.card_for(task, "2026-Q2")

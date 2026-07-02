@@ -125,21 +125,21 @@ def write_work_prompt(
     what_happened: str,
     raised_by: str,
     target: str = "",
-    task_id: str = "",
-    lane: str = "",
+    request_id: str = "",
+    posture: str = "",
     loudness: str = "notice",
     dedupe_slug: str = "",
     prompt_kind: str = "",
 ) -> Path | None:
     """Write a `work-prompt` card (ADR-51 honesty rules: action + what happened +
     where to look — never a verdict). A prompt must point somewhere: `target`
-    (output path) and/or `task_id` (board card). With `dedupe_slug` the filename
+    (output path) and/or `request_id`. With `dedupe_slug` the filename
     is stable (`work-prompt-<slug>.md`) and an already-present card is left
     untouched — returns None instead of a path (idempotent emit)."""
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
-    if not (target or task_id):
-        raise ValueError("a work-prompt must point at a target or task_id")
+    if not (target or request_id):
+        raise ValueError("a work-prompt must point at a target or request_id")
     today = datetime.date.today().isoformat()
     lines = [
         "---",
@@ -152,15 +152,15 @@ def write_work_prompt(
     ]
     if target:
         lines.append(f"target: {_yaml_str(target)}")
-    if task_id:
-        lines.append(f"task_id: {_yaml_str(task_id)}")
-    if lane:
-        lines.append(f"lane: {_yaml_str(lane)}")
+    if request_id:
+        lines.append(f"request_id: {_yaml_str(request_id)}")
+    if posture:
+        lines.append(f"posture: {_yaml_str(posture)}")
     if prompt_kind:
         lines.append(f"prompt_kind: {prompt_kind}")
     lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
     body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
-    where = " · ".join(filter(None, (target, task_id and f"board card `{task_id}`")))
+    where = " · ".join(filter(None, (target, request_id and f"request `{request_id}`")))
     if where:
         body += f"\n# Where to look\n\n{where}\n"
     content = "\n".join(lines) + "\n" + body

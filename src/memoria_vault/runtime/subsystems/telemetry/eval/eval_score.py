@@ -22,7 +22,7 @@ The result contract (non-committing, ADR-11): an eval run never writes the vault
     }
     ```
 
-``retrieved`` / ``cited`` / ``claims`` are each optional — a lane reports the
+``retrieved`` / ``cited`` / ``claims`` are each optional — an eval role reports the
 fields its workflow produces and omits the rest. The scorer reads a local JSON
 export passed with ``--from-json`` and computes, per task, only what its result
 makes computable — **no fake scores**; a task with no result block is reported
@@ -199,13 +199,17 @@ def score_run(vault: Path, cards: list[dict], quarter: str, k: int = DEFAULT_K) 
                 {
                     "task": task["id"],
                     "workflow": task["workflow"],
-                    "lane": task["lane"],
+                    "eval_role": task["eval_role"],
                     "status": "unscored",
                 }
             )
             continue
         metrics = score_task(task, result, catalog, superseded, k=k)
-        row: dict = {"task": task["id"], "workflow": task["workflow"], "lane": task["lane"]}
+        row: dict = {
+            "task": task["id"],
+            "workflow": task["workflow"],
+            "eval_role": task["eval_role"],
+        }
         numeric = {m: v for m, v in metrics.items() if isinstance(v, (int, float))}
         if numeric:
             counts["scored"] += 1

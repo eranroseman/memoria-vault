@@ -49,17 +49,6 @@ wire_commit_gate() {
   fi
 }
 
-wire_verify_on_commit_hook() {
-  if [ -d "$VAULT_PATH/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
-    run mkdir -p "$VAULT_PATH/.git/hooks"
-    run cp "$VAULT_PATH/.githooks/post-commit" "$VAULT_PATH/.git/hooks/post-commit"
-    run chmod +x "$VAULT_PATH/.git/hooks/post-commit"
-    ok "post-commit verify trigger wired (.git/hooks/post-commit)"
-  else
-    say "  (vault is not a git repo yet — initialize git, then copy .githooks/post-commit into .git/hooks/post-commit)"
-  fi
-}
-
 install_hermes_cron() {
   local header="$1" skip_label="$2" source_name="$3" dest_name="$4" schedule="$5" job_name="$6"
   local present_label="$7" missing_label="$8" missing_job_label="$9" manual_hint="${10}"

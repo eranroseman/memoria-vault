@@ -17,4 +17,4 @@ Terminal-side system upkeep — operational checks and maintenance tasks run fro
 | [Redeploy profiles](redeploy-profiles.md) | Alpha.14 no-profile redeploy boundary |
 | [Rebuild the search index](rebuild-the-search-index.md) | Refresh the checked-only qmd input tree and BM25 index |
 | [Run the vault eval](run-the-vault-eval.md) | Dispatch and score the gold-set evaluation on demand |
-| [Inspect session logs](inspect-session-logs.md) | Read the audit and per-session logs ad-hoc — filter by lane, date, or decision |
+| [Inspect session logs](inspect-session-logs.md) | Read the audit and per-request logs ad hoc — filter by request, actor, date, or decision |

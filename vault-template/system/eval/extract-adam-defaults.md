@@ -3,7 +3,7 @@ type: eval-task
 title: "Extract the Adam optimizer's default hyperparameters"
 lifecycle: current
 workflow: extract
-lane: extract
+eval_role: extract
 created: 2026-06-10
 references:
   - kingma2015adam

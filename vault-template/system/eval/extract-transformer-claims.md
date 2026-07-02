@@ -3,7 +3,7 @@ type: eval-task
 title: "Extract claim stubs from the Transformer paper"
 lifecycle: current
 workflow: extract
-lane: extract
+eval_role: extract
 created: 2026-06-10
 references:
   - vaswani2017attention

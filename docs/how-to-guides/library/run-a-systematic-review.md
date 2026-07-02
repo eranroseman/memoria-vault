@@ -15,10 +15,11 @@ for ordinary exploratory work, capture sources one at a time.
 
 ## Prerequisites
 
-- Memoria installed and the Librarian lane running
+- Memoria installed with a working CLI/runtime workspace
 - A defined, written research question
 - Access to at least two literature databases (PubMed, ACM DL, Scopus, arXiv, …)
-- Zotero + Better BibTeX — stable citekeys and source metadata keep batch capture reproducible
+- Exportable BibTeX or CSL files from your literature databases or reference
+  manager — stable citekeys and source metadata keep batch capture reproducible
 - [ASReview](https://asreview.nl/) installed if the title/abstract pool exceeds ~200 records
 
 ## Steps
@@ -51,7 +52,10 @@ Run your search string in each database. Record in a protocol table: database, s
 asreview oracle combined_export.ris
 ```
 
-Label records in the ASReview interface; when the active-learning curve flattens, export the labeled dataset and map decisions back to the protocol log. Either way, tag each record's screening outcome in Zotero before ingest so the provenance survives.
+Label records in the ASReview interface; when the active-learning curve
+flattens, export the labeled dataset and map decisions back to the protocol log.
+Either way, preserve each record's screening outcome in the protocol before
+import so the provenance survives.
 
 **5. Full-text assess included records.**
 
@@ -63,7 +67,12 @@ Complete the protocol's flow table: identified → duplicates removed → screen
 
 **7. Capture the included sources.**
 
-Add each included paper to Zotero, then capture it one per paper through the standard intake path ([Capture and ingest a source](capture-and-ingest.md)). The ingest operation builds the Catalog entity and raises the candidate card — for a protocol-screened paper, the keep decision is already made, so resolve each card to `current` and move on.
+Export each included paper to BibTeX or CSL, then import it through the standard
+portable intake path ([Capture and ingest a source](capture-and-ingest.md)). The
+capture/enrichment flow creates an unchecked SQLite Work row and raises attention
+when provider evidence or full text is missing. For a protocol-screened paper,
+the keep decision is already made; finish enrichment/full-text acquisition,
+record the protocol outcome, and resolve the resulting attention item.
 
 ## Verify
 

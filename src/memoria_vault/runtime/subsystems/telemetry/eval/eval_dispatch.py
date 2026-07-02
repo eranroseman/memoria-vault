@@ -2,7 +2,7 @@
 """eval_dispatch.py — the vault-eval dispatcher (ADR-11: diagnostic, never gating).
 
 Fans the hand-curated gold set in ``system/eval/`` into one local eval payload
-per ``lifecycle: current`` gold task, routed to the lane named in frontmatter.
+per ``lifecycle: current`` gold task, routed to the eval role named in frontmatter.
 It lives with the sweeps operations because it has exactly their shape — a
 deterministic, no-LLM detector-over-the-vault that creates idempotent work
 intents for the local engine.
@@ -26,9 +26,9 @@ from pathlib import Path
 
 from memoria_vault.runtime.subsystems.lib.markdown import parse_frontmatter, strip_frontmatter
 
-# task lane -> the local eval role that owns it (ADR-48 §4.1).
+# eval role -> the local role label that owns it (ADR-48 §4.1).
 # Kept local so vault-eval can run without importing adapter or profile code.
-LANE_PROFILE = {
+EVAL_ROLE_ASSIGNEE = {
     "catalog": "memoria-librarian",
     "extract": "memoria-librarian",
     "link": "memoria-librarian",
@@ -58,7 +58,7 @@ fill the fields your workflow produces and omit the rest:
 ```json
 {{
   "vault_eval": "result",
-  "task": "{task_id}",
+  "task": "{task}",
   "quarter": "{quarter}",
   "retrieved": ["<citekey>", "..."],
   "cited": ["<citekey>", "..."],
@@ -97,16 +97,16 @@ def load_gold_tasks(vault: Path) -> list[dict]:
             continue
         if fm.get("lifecycle") != "current":
             continue
-        lane = fm.get("lane")
-        if lane not in LANE_PROFILE:
-            print(f"[eval] {p.name}: unknown lane {lane!r} — skipped", file=sys.stderr)
+        eval_role = fm.get("eval_role")
+        if eval_role not in EVAL_ROLE_ASSIGNEE:
+            print(f"[eval] {p.name}: unknown eval_role {eval_role!r} — skipped", file=sys.stderr)
             continue
         out.append(
             {
                 "id": p.stem,
                 "title": str(fm.get("title") or p.stem),
                 "workflow": str(fm.get("workflow") or ""),
-                "lane": lane,
+                "eval_role": eval_role,
                 "references": [str(c) for c in (fm.get("references") or [])],
                 "body": strip_frontmatter(text).strip(),
                 "path": p,
@@ -118,12 +118,12 @@ def load_gold_tasks(vault: Path) -> list[dict]:
 def card_for(task: dict, quarter: str) -> dict:
     """The card payload for one gold task in one quarter (pure; easy to test)."""
     goal = f"vault-eval {quarter}: {task['title']} [{task['workflow']}]"
-    result_block = RESULT_BLOCK_TEMPLATE.format(task_id=task["id"], quarter=quarter)
+    result_block = RESULT_BLOCK_TEMPLATE.format(task=task["id"], quarter=quarter)
     body = f"{EVAL_PREAMBLE}\n\n{result_block}\n\n---\n\n{task['body']}"
     return {
         "goal": goal,
-        "assignee": LANE_PROFILE[task["lane"]],
-        "lane": task["lane"],
+        "assignee": EVAL_ROLE_ASSIGNEE[task["eval_role"]],
+        "eval_role": task["eval_role"],
         "body": body,
         "idempotency_key": f"eval:{task['id']}:{quarter}",
     }
@@ -148,11 +148,11 @@ def write_last_run(vault: Path, quarter: str, rows: list[dict]) -> Path:
         f"- **Quarter (idempotency window):** {quarter}",
         f"- **Cards:** {len(rows)}",
         "",
-        "| Gold task | Workflow | Lane | Assignee | Card |",
+        "| Gold task | Workflow | Eval role | Assignee | Card |",
         "| --- | --- | --- | --- | --- |",
     ]
     lines += [
-        f"| {r['task']} | {r['workflow']} | {r['lane']} | {r['assignee']} | {r['card_id']} |"
+        f"| {r['task']} | {r['workflow']} | {r['eval_role']} | {r['assignee']} | {r['card_id']} |"
         for r in rows
     ]
     out = vault / EVAL_DIR / LAST_RUN
@@ -176,7 +176,7 @@ def dispatch(vault: Path, dry_run: bool = False, today: datetime.date | None = N
             {
                 "task": t["id"],
                 "workflow": t["workflow"],
-                "lane": t["lane"],
+                "eval_role": t["eval_role"],
                 "assignee": card["assignee"],
                 "card_id": card_id,
                 "idempotency_key": card["idempotency_key"],

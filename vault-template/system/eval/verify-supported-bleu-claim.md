@@ -3,7 +3,7 @@ type: eval-task
 title: "Verify a supported numerical claim (positive control)"
 lifecycle: current
 workflow: verify
-lane: verify
+eval_role: verify
 created: 2026-06-10
 references:
   - vaswani2017attention

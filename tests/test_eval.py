@@ -38,7 +38,7 @@ def test_shipped_gold_tasks_have_valid_dispatch_shape():
     for p in files:
         fm = _frontmatter(p)
         assert fm["type"] == "eval-task", p.name
-        assert fm["lane"] in eval_dispatch.LANE_PROFILE, p.name
+        assert fm["eval_role"] in eval_dispatch.EVAL_ROLE_ASSIGNEE, p.name
         assert fm["lifecycle"] in {"current", "archived"}, p.name
 
 
@@ -59,13 +59,19 @@ def test_gold_set_covers_the_four_minimum_workflows():
         assert by_workflow.get(wf, 0) >= 2, f"workflow {wf} needs ≥ 2 gold tasks"
 
 
-def test_lane_profile_keeps_supported_eval_lanes():
-    assert set(eval_dispatch.LANE_PROFILE) == {"catalog", "extract", "link", "map", "verify"}
+def test_eval_role_assignees_cover_supported_roles():
+    assert set(eval_dispatch.EVAL_ROLE_ASSIGNEE) == {
+        "catalog",
+        "extract",
+        "link",
+        "map",
+        "verify",
+    }
 
 
-def test_gold_task_lanes_match_the_routed_lanes():
-    lanes = {_frontmatter(path)["lane"] for path in _gold_files()}
-    assert lanes <= set(eval_dispatch.LANE_PROFILE)
+def test_gold_task_roles_match_the_routed_roles():
+    roles = {_frontmatter(path)["eval_role"] for path in _gold_files()}
+    assert roles <= set(eval_dispatch.EVAL_ROLE_ASSIGNEE)
 
 
 # --------------------------------------------------------------------------- #
@@ -77,19 +83,19 @@ def _fixture_vault(tmp_path: Path) -> Path:
     (d / "README.md").write_text("# not a task\n", encoding="utf-8")
     (d / "find-x.md").write_text(
         "---\ntype: eval-task\ntitle: Find X\nlifecycle: current\n"
-        "workflow: find\nlane: catalog\n---\n## Input\nQ\n"
+        "workflow: find\neval_role: catalog\n---\n## Input\nQ\n"
         "## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
     (d / "verify-y.md").write_text(
         "---\ntype: eval-task\ntitle: Verify Y\nlifecycle: current\n"
-        "workflow: verify\nlane: verify\n---\n## Input\nQ\n"
+        "workflow: verify\neval_role: verify\n---\n## Input\nQ\n"
         "## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
     (d / "retired.md").write_text(
         "---\ntype: eval-task\ntitle: Old\nlifecycle: archived\n"
-        "workflow: find\nlane: catalog\n---\nbody\n",
+        "workflow: find\neval_role: catalog\n---\nbody\n",
         encoding="utf-8",
     )
     (d / "notes.md").write_text("---\ntopic: scratch\n---\nuntyped\n", encoding="utf-8")

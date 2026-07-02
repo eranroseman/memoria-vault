@@ -3,7 +3,7 @@ type: eval-task
 title: "Find the residual-learning paper from a paraphrase"
 lifecycle: current
 workflow: find
-lane: catalog
+eval_role: catalog
 created: 2026-06-10
 references:
   - he2016deep

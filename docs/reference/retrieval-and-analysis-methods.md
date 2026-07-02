@@ -52,7 +52,8 @@ read barrier.
 
 **For:** corpus density analysis, identifying conceptual clusters in a project scope, gap detection.
 
-**Used by:** the Librarian's map lane — `map-cluster-corpus`, `map-scope-project`, `map-report-coverage`.
+**Used by:** map and gap-analysis operations such as corpus clustering, project
+scope mapping, and coverage reports.
 
 **Implementation:** HDBSCAN over note vectors when the optional stack is installed (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
 
@@ -64,7 +65,7 @@ read barrier.
 
 **For:** identifying underrepresented topics, comparing topic distributions across projects, surfacing methodological themes.
 
-**Used by:** `map-report-coverage` thin-coverage detection and map-lane gap reports.
+**Used by:** coverage reports and project gap analysis.
 
 **Implementation:** BERTopic is the modern default (combines embeddings + clustering + class-based TF-IDF for topic labels). Classical LDA over TF-IDF works for smaller corpora.
 

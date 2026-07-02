@@ -16,6 +16,7 @@ FORBIDDEN_PATHS = (
     "vault-template/.obsidian",
     "vault-template/system/dashboards/fleet-health.md",
     "vault-template/system/scripts",
+    "vault-template/.githooks/post-commit",
     "vault-template/capabilities/operations/capture-zotero-source.md",
 )
 FORBIDDEN_TEXT = (
@@ -41,6 +42,12 @@ FORBIDDEN_TEXT = (
     "load_lane(",
     "parse_lane(",
     "tool-registry allowlist",
+    ".githooks/post-commit",
+    "hermes kanban create",
+    "--lane verify",
+    '"task_id": "HARNESS-PACKAGE"',
+    '"lane": "memoria-writer"',
+    'fm.get("lane")',
 )
 SEARCH_ROOTS = (
     ".agents",

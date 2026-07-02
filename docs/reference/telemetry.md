@@ -20,8 +20,9 @@ Rationale: [ADR-20](../adr/20-publication-path.md),
 - **Append-only.** Writers append rows; rotation is an explicit authorized
   operation.
 - **Time.** Every row carries `timestamp` in ISO-8601 UTC with a trailing `Z`.
-- **Identity.** Request-scoped rows carry `request_id`; adapter imports may also
-  preserve legacy `task_id` or `lane` fields as data.
+- **Identity.** Request-scoped rows carry `request_id`; eval rows use
+  `eval_role` for diagnostic role grouping. Adapter imports normalize legacy
+  identifiers before writing current logs.
 - **Encoding.** UTF-8, `ensure_ascii=false`.
 
 ## Log Inventory

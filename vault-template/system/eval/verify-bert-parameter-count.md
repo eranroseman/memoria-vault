@@ -3,7 +3,7 @@ type: eval-task
 title: "Verify a near-miss numerical citation"
 lifecycle: current
 workflow: verify
-lane: verify
+eval_role: verify
 created: 2026-06-10
 references:
   - devlin2019bert
