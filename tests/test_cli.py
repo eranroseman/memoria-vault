@@ -2018,6 +2018,63 @@ def test_cli_journal_list_operation_alias_includes_digest_workflow(
     ]
 
 
+def test_cli_work_digest_blocks_checked_metadata_only_source(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert (
+        main(
+            [
+                "work",
+                "capture",
+                "--workspace",
+                str(workspace),
+                "--doi",
+                "10.1000/metadata",
+                "--title",
+                "Metadata only",
+                "--json",
+            ]
+        )
+        == 0
+    )
+    captured = json.loads(capsys.readouterr().out)
+    source_id = captured["result"]["source_id"]
+    assert captured["result"]["text_status"] == "metadata-only"
+    with state.connect(workspace) as conn:
+        conn.execute(
+            "UPDATE catalog_sources SET check_status = 'checked' WHERE source_id = ?",
+            (source_id,),
+        )
+
+    assert (
+        main(
+            [
+                "work",
+                "digest",
+                "--workspace",
+                str(workspace),
+                "--work-id",
+                source_id,
+                "--json",
+            ]
+        )
+        == 1
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert output["ok"] is False
+    assert output["result"]["status"] == "failed"
+    assert "checked digest requires full-text source content" in output["result"]["error"]
+    assert "attention_path is inbox/flag-digest-full-text-" in output["result"]["error"]
+    assert not (workspace / f"knowledge/digests/{source_id}.md").exists()
+    attention = workspace / f"inbox/flag-digest-full-text-{source_id}.md"
+    assert read_frontmatter(attention)["target"] == f"catalog/sources/{source_id}"
+
+
 def test_cli_journal_list_filters_by_request_path_decision_and_date(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

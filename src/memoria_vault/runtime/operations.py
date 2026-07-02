@@ -7,6 +7,7 @@ import json
 import os
 import re
 from collections.abc import Iterable
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -261,7 +262,7 @@ def compile_source_digest(
 
     source_ref = _source_ref(source_id)
     source_fm = _checked_source(vault, source_ref)
-    _require_digestable_text(source_fm)
+    _require_digestable_text(vault, source_fm, machine=machine)
     citation = state.compact_citation(vault, source_ref)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
@@ -446,12 +447,82 @@ def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
     }
 
 
-def _require_digestable_text(source_fm: dict[str, Any]) -> None:
+def _require_digestable_text(
+    vault: Path, source_fm: dict[str, Any], *, machine: str | None = None
+) -> None:
     text_status = str(source_fm.get("text_status") or "metadata-only")
-    if text_status != "full-text":
-        raise ValueError(
-            f"checked digest requires full-text source content; text_status is {text_status}"
-        )
+    if text_status == "full-text":
+        return
+    attention_path = _write_digest_text_attention(vault, source_fm, text_status, machine=machine)
+    raise ValueError(
+        "checked digest requires full-text source content; "
+        f"text_status is {text_status}; attention_path is {attention_path}"
+    )
+
+
+def _write_digest_text_attention(
+    vault: Path, source_fm: dict[str, Any], text_status: str, *, machine: str | None
+) -> str:
+    source_ref = _source_ref(str(source_fm["source_id"]))
+    source_id = _source_id(source_ref)
+    rel = f"inbox/flag-digest-full-text-{safe_filename(source_id)}.md"
+    path = vault / rel
+    if path.exists():
+        return rel
+    title = f"Digest needs full text for {source_id}"
+    finding = (
+        "Digest compilation is blocked because the source has "
+        f"`text_status: {text_status}` instead of `full-text`."
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(
+            [
+                "---",
+                f'title: "{_yaml_str(title)}"',
+                "projection: attention",
+                "attention_kind: flag",
+                "attention_status: open",
+                f'finding: "{_yaml_str(finding)}"',
+                "agent_recommendation: issues-found",
+                f'target: "{_yaml_str(source_ref)}"',
+                "raised_by: compile-source-digest",
+                "loudness: alert",
+                f"created: {date.today().isoformat()}",
+                "---",
+                "",
+                "# Finding",
+                "",
+                finding,
+                "",
+                "# Evidence",
+                "",
+                f"`{source_ref}` must acquire full text before digest compilation.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    append_journal_event(
+        vault,
+        {
+            "event": "check-fired",
+            "check": "source-full-text",
+            "status": "failed",
+            "reason": finding,
+            "target_id": source_ref,
+            "attention_path": rel,
+            "shadow": False,
+            "route": "ask",
+        },
+        machine=machine,
+    )
+    commit_writer_changes(vault, f"flag digest full text {source_id}", [rel], machine=machine)
+    return rel
+
+
+def _yaml_str(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _source_input_sha(vault: Path, source_ref: str, source_fm: dict[str, Any]) -> str:
