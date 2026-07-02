@@ -26,7 +26,11 @@ Emoji in note *titles* break filename portability across operating systems — a
 
 ## Why chrome is hidden by default
 
-Earlier designs reserved a standalone status line for a one-second ambient answer to "is everything roughly fine?" That widget is not part of the current Obsidian surface. The current answer lives in the rail's **Now**: the Inbox action count and Maintenance/Fleet health band stay visible without adding a separate always-on indicator.
+Earlier designs reserved a standalone status line for a one-second ambient answer
+to "is everything roughly fine?" That widget is not part of the current Obsidian
+surface. The current answer lives in the rail's **Now**: the Inbox action count
+and Maintenance drift band stay visible without adding a separate always-on
+indicator.
 
 One Obsidian window per vault is a technical constraint as much as a discipline. The agent layer assumes a single active vault; multiple windows updating the same card through the policy gate produce race conditions in the audit log and board state.
 

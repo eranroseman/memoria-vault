@@ -7,7 +7,11 @@ nav_order: 9
 
 # Inspect session logs
 
-Read the audit trail and the per-session summaries from the terminal — filter by lane, date, decision, or card — when you need to answer "what did the system actually do?" without waiting for a dashboard. This is the ad-hoc path beneath the audit-log and fleet-health dashboards ([Dashboards](../../reference/dashboards.md)); they render the same data — this is for one-off questions and scripting.
+Read the audit trail and the per-session summaries from the terminal — filter by
+adapter/profile, date, decision, or task — when you need to answer "what did the
+system actually do?" without waiting for a dashboard. This is the ad-hoc path
+beneath the audit-log dashboard ([Dashboards](../../reference/dashboards.md));
+it renders the same data — this is for one-off questions and scripting.
 
 Both logs are append-only JSONL and **read-only** — never edit them; an
 out-of-band edit is exactly what the Linter's tamper detectors exist to catch.
@@ -24,13 +28,13 @@ schema is owned by [Policy gate](../../reference/policy-mcp.md).
 
 The audit fields you'll filter on: `timestamp` (UTC, `…Z`), `profile` (`memoria-<name>`), `action` (`read` / `write` / `append` / `move` / `delete` / `mkdir` / `auto_fix` / `report`), `path`, `task_id`, `decision`, and `policy_rule`.
 
-**Recent denials across all lanes** — the first thing to check when a write didn't land:
+**Recent denials** — the first thing to check when a write didn't land:
 
 ```bash
 jq -c 'select(.decision == "deny")' system/logs/audit.jsonl | tail -20
 ```
 
-**One lane's activity on a given day:**
+**One adapter/profile's activity on a given day:**
 
 ```bash
 jq -c 'select(.profile == "memoria-writer" and (.timestamp >= "2026-06-18"))' system/logs/audit.jsonl
@@ -48,7 +52,7 @@ jq -c 'select(.task_id == "TASK-2026-06-18-003") | {timestamp, action, path, dec
 jq -c 'select(.decision == "dry_run") | {path, policy_rule}' system/logs/audit.jsonl
 ```
 
-**Decision tally for a lane** — a quick health read without the dashboard:
+**Decision tally for one adapter/profile** — a quick policy read without the dashboard:
 
 ```bash
 jq -r 'select(.profile == "memoria-librarian") | .decision' system/logs/audit.jsonl | sort | uniq -c
@@ -72,7 +76,7 @@ The digest's header carries the task, profiles, start/end, and counts by action 
 ## Verify
 
 - Your filter returns rows (an empty result usually means the field value or date didn't match — check `profile` is the full `memoria-<name>` and the date is `YYYY-MM-DD`)
-- Counts you compute by hand match what the audit-log / fleet-health dashboards show for the same window
+- Counts you compute by hand match what the audit-log dashboard shows for the same window
 
 ## Notes and limits
 

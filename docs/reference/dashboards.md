@@ -20,9 +20,8 @@ Dashboard and Bases inventory for the shipped Obsidian surface. Dashboards are c
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: checked note status, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
-| Agent-ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
-| Agent-ops | Fleet health | `system/dashboards/fleet-health.md` | Per-lane trust score / operational rollup from `system/metrics/`. |
-| Agent-ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
+| Runtime ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
+| Runtime ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
 
 The **Surface** column names the space, queue, maintenance collection, or support context where a dashboard is reached.
 The explanation site groups the support dashboards by the *kind of attention* they
@@ -50,11 +49,6 @@ Maintenance's Drift watch view rolls the Linter operation's detector findings up
 a `PASS` / `REVIEW` / `FAIL` band; the rollup rule and the severity scale it reads
 are owned by [Linter: detectors and auto-fix](linter.md#the-detectors).
 
-## Trust score (fleet-health)
-
-A 0–100 composite per lane, computed into `system/metrics/`. The formula and
-bands are owned by [Fleet metrics](fleet-metrics.md).
-
 ## Eval metrics (eval-trend)
 
 Per-quarter capability scores, computed into `system/metrics/eval/runs.jsonl`.
@@ -63,7 +57,7 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 ## Related
 
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
-- The audit-log schema fleet-health and audit-log read: [Memory substrates](memory-substrates.md)
+- The audit-log schema the audit-log dashboard reads: [Memory substrates](memory-substrates.md)
 - Current Concept types: [Document types](document-types.md)
 - Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)
 - Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)

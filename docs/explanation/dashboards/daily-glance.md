@@ -10,13 +10,12 @@ permalink: /explanation/dashboards/daily-glance/
 
 What you check at the start of a session to answer "is anything running, and
 what needs me today?" The glance starts in the rail's **Now**: the Inbox action
-count opens the daily queue, while the health band opens Maintenance and Fleet
-health.
+count opens the daily queue, while the health band opens Maintenance.
 
 ## Rail Now
 
 The rail is the always-visible 30-second check. It shows the daily action count,
-structural drift count, fleet-health count, and place counts. Empty is success:
+structural drift count, and place counts. Empty is success:
 zeroed badges mean there is no daily interruption.
 
 The rail is not a task list and not a vault audit. Click through only when a
@@ -43,7 +42,7 @@ maintenance/debugging view over `inbox.base` and `system/board/` worker
 projections. Use it when the compact Inbox Activity strip is not enough and you
 need the whole board layer.
 
-It is read-only. Editing worker projections does not change Hermes board state.
+It is read-only. Editing worker projections does not change runtime queue state.
 
 ## Related
 

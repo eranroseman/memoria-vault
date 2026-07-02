@@ -50,9 +50,11 @@ rewriting history.
 
 The board caps `done` cards awaiting you at 5 — when the action queue fills, the dispatcher slows new work on that lane. That's the system protecting your review capacity, not a malfunction. If a lane stalls, clear the queue rather than wishing the cap away.
 
-**6. Watch your own accept rate.**
+**6. Watch your own accept/reject pattern.**
 
-The fleet-health dashboard tracks accept/reject ratios per proposing lane — very high acceptance reads as rubber-stamping, very low means candidate scoring needs tuning ([Dashboards](../../reference/dashboards.md)). Both are signals to act on.
+Very high acceptance reads as rubber-stamping; very low acceptance means
+candidate scoring needs tuning. Use the audit log and action-queue history as
+evidence until a standalone runtime summary exists ([Dashboards](../../reference/dashboards.md)).
 
 ## Verify
 

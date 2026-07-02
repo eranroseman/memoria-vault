@@ -31,7 +31,9 @@ N candidates → deterministic ranking → K candidates (K ≪ N) → LLM compos
 
 This matters beyond cost:
 
-- **Auditability:** the deterministic step shows which candidates were selected, by what score, and why. The LLM prose is visible but opaque; selection is what the audit trail and fleet-health ratios measure.
+- **Auditability:** the deterministic step shows which candidates were selected,
+  by what score, and why. The LLM prose is visible but opaque; selection is what
+  the audit trail and eval fixtures measure.
 - **Testability:** the deterministic layer has a single answer you can assert in tests. The LLM composition layer does not.
 
 Concrete examples:

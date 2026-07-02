@@ -51,11 +51,9 @@ def test_memoria_inspector_reads_operational_sources_without_queue_writes():
         "system/logs/audit.jsonl",
         "journal/",
         "system/metrics/lint-verdict-",
-        "system/metrics/lane-",
         "system/dashboards/board-state",
         "system/dashboards/audit-log",
         "spaces/maintenance#Drift watch",
-        "system/dashboards/fleet-health",
         "knowledge/views/knowledge.base",
         "GRAPH_PREFIXES",
         "knowledgeGraphSummary",
@@ -121,15 +119,6 @@ def test_memoria_inspector_renders_populated_operational_panels(tmp_path: Path):
             "high_count: 0\n"
             "medium_count: 1\n"
             "low_count: 0\n"
-            "---\n"
-        ),
-        "system/metrics/lane-knowledge-2026-06-29.md": (
-            "---\n"
-            "lane: knowledge\n"
-            "period: 2026-06-29\n"
-            "trust_score: 97\n"
-            "band: pass\n"
-            "samples: 4\n"
             "---\n"
         ),
         "catalog/sources/source-alpha/source.md": (
@@ -275,9 +264,13 @@ const app = {
         "deny",
         "direct-write",
         "task-1",
-        "Fleet trust",
-        "knowledge",
-        "97/100 (pass)",
-        "4 samples",
     ):
         assert expected in text
+
+    for forbidden in (
+        "Fleet trust",
+        "97/100",
+        "lane metric",
+        "system/dashboards/" + "fleet-health",
+    ):
+        assert forbidden not in text

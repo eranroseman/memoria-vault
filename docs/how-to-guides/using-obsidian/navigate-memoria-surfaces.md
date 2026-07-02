@@ -9,7 +9,11 @@ nav_order: 5
 
 Memoria has a few different surfaces, and it is easy to lose track of which one answers which question. This guide maps everyday situations to the exact place to look.
 
-You move around Memoria from the **navigator rail** on the left: **Now** for the daily action queue and health links, **Places** for Library, Knowledge, and Project. The full dashboard inventory is [Dashboards](../../reference/dashboards.md); this page only tells you where to go for common situations.
+You move around Memoria from the **navigator rail** on the left: **Now** for the
+daily action queue and Maintenance drift link, **Places** for Library,
+Knowledge, and Project. The full dashboard inventory is
+[Dashboards](../../reference/dashboards.md); this page only tells you where to
+go for common situations.
 
 Startup preserves Obsidian's previous session when the rail is present, and uses the saved **Memoria** shell only to repair a missing rail; see [Use the reset workspace](reset-workspace.md). You still navigate through the left rail, not by switching saved workspaces. `home.md` is a reset/welcome screen, not a navigation hub.
 
@@ -69,12 +73,6 @@ Drift watch flags integrity problems — the kind of thing that makes agents
 behave oddly or queries return wrong results. It shows a `PASS` / `REVIEW` /
 `FAIL` band. A `FAIL` blocks new delegation or worker promotion until the
 blocking finding is acknowledged or resolved ([Run the Linter](../operate/run-the-linter.md)).
-
-### "Are my workers performing well? Is API cost increasing?"
-
-Open **Fleet health** (`system/dashboards/fleet-health.md`), reachable from *Now → Fleet*.
-
-This dashboard scores each lane (background worker) on trust and cost. Check it monthly, or when a lane seems slow or degraded. It is not a daily surface — the numbers only mean something after a week or more of accumulated data.
 
 ### "What did the policy gate allow or deny?"
 

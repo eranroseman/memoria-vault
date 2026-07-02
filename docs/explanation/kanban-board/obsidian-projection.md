@@ -40,4 +40,3 @@ Editing a projected file in `system/board/` does nothing to the board — the ex
 - Conceptual overview: [Kanban board](README.md)
 - The dashboard built on `inbox.base`: [The board-state dashboard](../dashboards/daily-glance.md#board-state-support)
 - Export file schemas (`board-state.jsonl`, frontmatter fields): [Telemetry log schemas](../../reference/telemetry-logs.md)
-- The separate fleet-health metrics roll-up: [fleet-health dashboard](../dashboards/operational-health.md#fleet-health)
