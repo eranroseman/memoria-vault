@@ -287,6 +287,7 @@ def analyze_gaps(
     labels: dict[str, str] = {}
     retrieval: dict[str, dict[str, Any]] = {}
     _add_catalog_source_gap_terms(vault, counts, seen, labels)
+    _add_graph_topic_gap_terms(vault, counts, seen, labels)
     for rel, frontmatter in _checked_concepts(vault):
         bucket = _bucket(rel, frontmatter)
         if not bucket:
@@ -395,6 +396,66 @@ def _is_current_catalog_source(source: dict[str, Any]) -> bool:
     memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
     standing = str(memoria.get("standing") or "")
     return standing not in {"archived", "retracted", "superseded"}
+
+
+def _add_graph_topic_gap_terms(
+    vault: Path,
+    counts: dict[str, dict[str, int]],
+    seen: dict[str, dict[str, set[str]]],
+    labels: dict[str, str],
+) -> None:
+    source_ids = [
+        str(source["source_id"])
+        for source in state.catalog_sources(vault)
+        if _is_current_catalog_source(source)
+    ]
+    if not source_ids:
+        return
+    with state.connect(vault) as conn:
+        for source_id in source_ids:
+            rows = conn.execute(
+                """
+                SELECT target_title, raw_json
+                FROM work_graph_edges
+                WHERE work_id = ?
+                  AND relation_type = 'topic'
+                ORDER BY target_id
+                """,
+                (source_id,),
+            ).fetchall()
+            identity = _gap_identity(f"catalog/sources/{source_id}", "sources")
+            for row in rows:
+                for term in _graph_topic_terms(dict(row)):
+                    key = term.lower()
+                    if identity not in seen[key]["sources"]:
+                        seen[key]["sources"].add(identity)
+                        counts[key]["sources"] += 1
+                    labels.setdefault(key, term)
+
+
+def _graph_topic_terms(row: dict[str, Any]) -> list[str]:
+    terms = []
+    if title := str(row.get("target_title") or "").strip():
+        terms.append(title)
+    try:
+        raw = json.loads(str(row.get("raw_json") or "{}"))
+    except json.JSONDecodeError:
+        raw = {}
+    if isinstance(raw, dict):
+        if display := _raw_display_name(raw):
+            terms.append(display)
+        for field in ("subfield", "field", "domain"):
+            if display := _raw_display_name(raw.get(field)):
+                terms.append(display)
+    return sorted(set(terms))
+
+
+def _raw_display_name(value: object) -> str:
+    if isinstance(value, dict):
+        return str(value.get("display_name") or value.get("name") or "").strip()
+    if isinstance(value, str):
+        return value.strip()
+    return ""
 
 
 def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
