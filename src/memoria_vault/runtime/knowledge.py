@@ -288,6 +288,8 @@ def analyze_gaps(
     retrieval: dict[str, dict[str, Any]] = {}
     _add_catalog_source_gap_terms(vault, counts, seen, labels)
     _add_graph_topic_gap_terms(vault, counts, seen, labels)
+    if project_argument is not None:
+        _add_project_gap_terms(vault, project_argument, counts, seen, labels)
     for rel, frontmatter in _checked_concepts(vault):
         bucket = _bucket(rel, frontmatter)
         if not bucket:
@@ -1135,17 +1137,50 @@ def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
 
 
 def _terms(frontmatter: dict[str, Any]) -> list[str]:
+    return _frontmatter_gap_terms(frontmatter)
+
+
+def _frontmatter_gap_terms(frontmatter: dict[str, Any]) -> list[str]:
     out = []
-    for field in ("tags", "topics", "research_area"):
-        value = frontmatter.get(field)
-        if isinstance(value, list):
-            out.extend(item for item in value if isinstance(item, str) and item.strip())
-        elif isinstance(value, str) and value.strip():
-            out.append(value)
+    for field in ("scope_topics", "topics", "tags", "keywords", "research_area", "methodology"):
+        out.extend(_string_list(frontmatter.get(field)))
+    facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
+    for field in ("research_area", "methodology", "topics"):
+        out.extend(_string_list(facets.get(field)))
     massw = frontmatter.get("massw")
     if isinstance(massw, dict):
         out.extend(str(value) for value in massw.values() if str(value).strip())
     return sorted(set(out))
+
+
+def _add_project_gap_terms(
+    vault: Path,
+    argument: dict[str, Any],
+    counts: dict[str, dict[str, int]],
+    seen: dict[str, dict[str, set[str]]],
+    labels: dict[str, str],
+) -> None:
+    project_rel = str(argument.get("project_path") or "").strip()
+    if project_rel:
+        for term in _frontmatter_gap_terms(_checked_frontmatter(vault, project_rel, "project")):
+            key = term.lower()
+            labels.setdefault(key, term)
+            counts[key]
+
+    thesis_rel = str(argument.get("thesis_path") or "").strip()
+    if not thesis_rel:
+        return
+    try:
+        thesis = _checked_frontmatter(vault, thesis_rel, "note")
+    except (FileNotFoundError, ValueError):
+        return
+    identity = _gap_identity(thesis_rel, "notes")
+    for term in _frontmatter_gap_terms(thesis):
+        key = term.lower()
+        if identity not in seen[key]["notes"]:
+            seen[key]["notes"].add(identity)
+            counts[key]["notes"] += 1
+        labels.setdefault(key, term)
 
 
 def _project_argument_empty(project_rel: str, thesis_rel: str, finding: str) -> dict[str, Any]:

@@ -657,6 +657,33 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     assert gaps["conflict"]["advice"] == "resolve or preserve the contradiction"
 
 
+def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> None:
+    _md(
+        tmp_path / "knowledge/projects/project-alpha.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: knowledge/notes/thesis.md\n"
+        "scope_topics: [sensemaking]\n"
+        "facets:\n"
+        "  methodology: [qualitative]\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n"
+        "keywords: [patient-generated-data]\n"
+        "facets:\n"
+        "  topics: [care coordination]\n",
+    )
+
+    result = analyze_gaps(tmp_path, project_path="project-alpha", dense_threshold=1)
+
+    gaps = {gap["topic"]: gap for gap in result["gaps"]}
+    assert gaps["sensemaking"]["gap_type"] == "new-topic"
+    assert gaps["qualitative"]["gap_type"] == "new-topic"
+    assert gaps["patient-generated-data"]["gap_type"] == "under-warranted"
+    assert gaps["patient-generated-data"]["note_count"] == 1
+    assert gaps["care coordination"]["gap_type"] == "under-warranted"
+
+
 def test_write_project_argument_canvas_projects_checked_note_links(tmp_path: Path) -> None:
     _md(
         tmp_path / "knowledge/projects/project-alpha.md",
