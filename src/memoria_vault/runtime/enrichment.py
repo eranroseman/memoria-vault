@@ -536,15 +536,26 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
 
 
 def _open_access_text_urls(payload: dict[str, Any]) -> list[str]:
-    location = payload.get("best_oa_location")
-    if not isinstance(location, dict):
-        return []
     urls = []
-    for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
-        url = str(location.get(key) or "").strip()
-        if url and url not in urls:
-            urls.append(url)
+    for location in _open_access_locations(payload):
+        for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
+            url = str(location.get(key) or "").strip()
+            if url and url not in urls:
+                urls.append(url)
     return urls
+
+
+def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    locations = []
+    best = payload.get("best_oa_location")
+    if isinstance(best, dict):
+        locations.append(best)
+    oa_locations = payload.get("oa_locations")
+    if isinstance(oa_locations, list):
+        for location in oa_locations:
+            if isinstance(location, dict) and location not in locations:
+                locations.append(location)
+    return locations
 
 
 def _response_content_type(resp: Any) -> str:
@@ -571,8 +582,10 @@ def _extract_full_text(url: str, raw: bytes, content_type: str) -> str:
 
 
 def _location_value(payload: dict[str, Any], key: str) -> Any:
-    location = payload.get("best_oa_location")
-    return location.get(key) if isinstance(location, dict) else None
+    for location in _open_access_locations(payload):
+        if key in location:
+            return location.get(key)
+    return None
 
 
 def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[str, str]:
@@ -838,8 +851,7 @@ def _first(value: Any) -> str:
 
 
 def _unpaywall_license(payload: dict[str, Any]) -> str:
-    location = payload.get("best_oa_location")
-    return str(location.get("license") or "").strip() if isinstance(location, dict) else ""
+    return str(_location_value(payload, "license") or "").strip()
 
 
 def _is_retracted(crossref: dict[str, Any]) -> bool:
