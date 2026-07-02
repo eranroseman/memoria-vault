@@ -519,14 +519,23 @@ def _work_graph_edges(vault: Path, work_id: str) -> list[dict[str, Any]]:
     with state.connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT relation_type, target_id, target_title, target_doi, source_provider
+            SELECT relation_type, target_id, target_title, target_doi, source_provider, raw_json
             FROM work_graph_edges
             WHERE work_id = ?
             ORDER BY relation_type, target_id
             """,
             (work_id,),
         ).fetchall()
-    return [dict(row) for row in rows]
+    out = []
+    for row in rows:
+        edge = dict(row)
+        try:
+            raw = json.loads(str(edge.get("raw_json") or "{}"))
+        except json.JSONDecodeError:
+            raw = {}
+        edge["raw"] = raw if isinstance(raw, dict) else {}
+        out.append(edge)
+    return out
 
 
 def _graph_neighborhood_body(source: dict[str, Any], edges: list[dict[str, Any]]) -> list[str]:
@@ -543,7 +552,33 @@ def _graph_neighborhood_body(source: dict[str, Any], edges: list[dict[str, Any]]
             f"{edge['relation_type']}: {title} "
             f"({edge['target_id']}; provider: {edge['source_provider']})"
         )
+        details = _graph_edge_details(edge)
+        if details:
+            lines.append(f"  - metadata: {', '.join(details)}")
     return lines
+
+
+def _graph_edge_details(edge: dict[str, Any]) -> list[str]:
+    details = []
+    if edge.get("target_doi"):
+        details.append(f"doi: {edge['target_doi']}")
+    raw = edge.get("raw") if isinstance(edge.get("raw"), dict) else {}
+    for field in ("subfield", "field", "domain"):
+        value = _raw_display_name(raw.get(field))
+        if value:
+            details.append(f"{field}: {value}")
+    score = raw.get("score")
+    if isinstance(score, int | float):
+        details.append(f"score: {score:g}")
+    return details
+
+
+def _raw_display_name(value: object) -> str:
+    if isinstance(value, dict):
+        return str(value.get("display_name") or value.get("name") or "").strip()
+    if isinstance(value, str):
+        return value.strip()
+    return ""
 
 
 def _generated_doc(path: str, frontmatter: dict[str, Any], body: list[str]) -> dict[str, Any]:

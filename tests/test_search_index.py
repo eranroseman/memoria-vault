@@ -98,7 +98,19 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
                 "target_id": "https://openalex.org/W999",
                 "target_title": "Beta Work",
                 "source_provider": "openalex",
-            }
+            },
+            {
+                "relation_type": "topic",
+                "target_id": "https://openalex.org/T123",
+                "target_title": "Machine Learning",
+                "source_provider": "openalex",
+                "raw": {
+                    "subfield": {"display_name": "Artificial Intelligence"},
+                    "field": {"display_name": "Computer Science"},
+                    "domain": {"display_name": "Physical Sciences"},
+                    "score": 0.82,
+                },
+            },
         ],
     )
 
@@ -113,7 +125,12 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     graph = vault / ".memoria/index/qmd/checked/graph-neighborhoods/source-alpha.md"
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
     assert '"doi": "10.1000/alpha"' in work.read_text(encoding="utf-8")
-    assert "Beta Work" in graph.read_text(encoding="utf-8")
+    graph_text = graph.read_text(encoding="utf-8")
+    assert "Beta Work" in graph_text
+    assert "Artificial Intelligence" in graph_text
+    assert "field: Computer Science" in graph_text
+    assert "domain: Physical Sciences" in graph_text
+    assert "score: 0.82" in graph_text
     assert filter_checked_results(vault, [{"file": graph.as_posix()}]) == [
         {"file": graph.as_posix()}
     ]
@@ -125,6 +142,10 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     assert _bm25(concept_only, "Beta Work") == []
     assert (
         answer_query(vault, "Beta Work")["sources"][0]["path"]
+        == "graph-neighborhoods/source-alpha.md"
+    )
+    assert (
+        answer_query(vault, "Artificial Intelligence")["sources"][0]["path"]
         == "graph-neighborhoods/source-alpha.md"
     )
 
