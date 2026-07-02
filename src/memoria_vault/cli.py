@@ -1048,6 +1048,7 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
         )
         regeneration = _enqueue_and_run(args, "regenerate-tracked-projections", {})
     observed = _enqueue_and_run(args, "observe-pi-edits", {})
+    needs_check_paths = list(observed["result"].get("paths") or [])
     payload = {
         "ok": (
             observed["ok"]
@@ -1056,6 +1057,8 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
         ),
         "job": observed["job"],
         "result": observed["result"],
+        "needs_check_count": len(needs_check_paths),
+        "needs_check_paths": needs_check_paths,
     }
     if quarantine is not None:
         payload["quarantine"] = quarantine["result"]
