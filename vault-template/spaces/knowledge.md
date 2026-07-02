@@ -12,7 +12,9 @@ cssclasses: memoria-space
 > anchored notes after capture.
 
 > [!suggestions] First actions
-> - Use **Memoria: capture note** for PI-authored direction or synthesis.
+> - Draft PI-authored notes under `knowledge/notes/`, then run
+>   `memoria workspace scan --workspace .`.
+> - Ask a checked-only question with `memoria ask --workspace . --question "<question>"`.
 
 ## Digests
 

@@ -22,8 +22,8 @@ Where every file lives.
 <vault>/
 ├── index.md                 generated workspace index
 ├── home.md                  launch/reset welcome note
-├── _nav.md                  the navigation rail — pinned in the left pane, owns space-switching
-├── steering.md        program memory — the PI's standing steering
+├── _nav.md                  plain Markdown navigation rail
+├── steering.md              program memory; the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
 ├── catalog/                 source and entity Concepts
@@ -45,7 +45,6 @@ Where every file lives.
     ├── templates/             starter notes per type
     ├── dashboards/            read-only system dashboards
     ├── patterns/              shared prompt preamble
-    ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
     ├── metrics/               derived metric notes and eval/runs.jsonl
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
@@ -59,9 +58,10 @@ What the Concept homes mean is in [Document types](document-types.md).
 
 ---
 
-## `.memoria/` — the runtime tooling layer
+## `.memoria/` - the runtime tooling layer
 
-Hidden from Obsidian; everything agents and operations need, shipped in `vault-template/.memoria`:
+Hidden runtime infrastructure; everything agents and operations need, shipped in
+`vault-template/.memoria`:
 
 ```text
 .memoria/
@@ -90,7 +90,7 @@ The policy gate's stable implementation lives in the installed
 thin entrypoints, but the baseline workspace does not contain a hidden adapter
 code home.
 
-## `.githooks/` — source hooks
+## `.githooks/` - source hooks
 
 Shipped in `vault-template/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `knowledge/projects/`.
 
@@ -107,15 +107,12 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ---
 
-## `.obsidian/` — app configuration
+## Editor configuration
 
-| Config area | Files | Purpose |
-| --- | --- | --- |
-| App/core settings | `app.json`, `appearance.json`, `core-plugins.json`, `community-plugins.json`, `graph.json` | Starter appearance, enabled plugins, and graph color groups. |
-| CSS snippets | `snippets/memoria-link-colors.css`, `snippets/memoria-property-badges.css` | Vault-local visual conventions. |
-| Plugin config | `plugins/` | QuickAdd, Commander, Modal Forms, agent-client, Local REST API, Buttons, Dataview, Citation, Callout Manager, Obsidian Git, Memoria Inspector, and Portals. |
-| Reset workspace | `workspaces.json` | The **Memoria** layout: `home.md` in the main pane and pinned `_nav.md` rail on the left. |
-| Space switching | `_nav.md` plus `spaces/*.md` | Rail links to Library, Knowledge, Project, Inbox, and Maintenance; see [Obsidian workspaces](obsidian-workspaces.md). |
+Alpha.14 ships no editor app configuration. Optional editors may keep local
+state beside or inside a working copy, but that state is not part of the
+standalone template, installer skeleton, golden copy, request lifecycle, or
+source-of-truth layout.
 
 ### The Bases views
 

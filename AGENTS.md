@@ -59,27 +59,17 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 | Piece | Host | Path |
 |---|---|---|
 | **Dev repo** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
-| **Hermes runtime** | Native Windows for production; Linux/WSL2 for test | `%LOCALAPPDATA%\hermes` or `~/.hermes/` — profiles, config, MCP venv |
-| **Obsidian + runtime vault** | Same host as the runtime for production | `~/Memoria` / `%USERPROFILE%\Memoria` |
+| **Standalone Memoria workspace** | WSL2 · ext4 for development and tests | `~/Memoria-test` |
+| **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
-- Obsidian opens only the *runtime* vault (`~/Memoria`) — never this dev repo.
-- Hermes reaches Obsidian via the Local REST API plugin's **native MCP** over
-  verified loopback HTTPS:
-  `https://127.0.0.1:${OBSIDIAN_MCP_PORT}/mcp` (default port **27124**) with
-  `OBSIDIAN_MCP_SSL_VERIFY` pointing at the plugin's exported PEM cert/CA
-  bundle.
-- Obsidian must open the runtime vault on the same OS/filesystem host as the
-  vault path. Linux/WSL test vaults such as `~/Memoria-test` use Linux Obsidian
-  on the native path, never Windows Obsidian through `\\wsl.localhost\...`.
-  Windows Obsidian verifies only Windows-hosted vaults.
-- If Hermes is deliberately split across WSL while Obsidian serves a
-  Windows-hosted vault, mirrored networking (`networkingMode=mirrored` in
-  `%UserProfile%\.wslconfig` + `wsl --shutdown`) lets Hermes reach that Windows
-  loopback listener.
-- `OBSIDIAN_API_KEY` (Bearer), `OBSIDIAN_MCP_PORT`, and
-  `OBSIDIAN_MCP_SSL_VERIFY` live in each profile's `.env` — never print or
-  commit the key.
+- Alpha.14's required surface is the `memoria` CLI plus the local workspace
+  engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
+  concerns only.
+- Test only against disposable workspaces such as `~/Memoria-test`; never use a
+  personal workspace as a test target.
+- Provider keys and optional adapter secrets live in local, gitignored config or
+  environment files. Never print or commit them.
 
 ---
 

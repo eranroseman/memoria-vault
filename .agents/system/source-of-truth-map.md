@@ -20,7 +20,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
 | Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
 | Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
-| Bundled Obsidian plugin provenance | `vault-template/.obsidian/plugin-provenance-lock.json` | `scripts/plugin_provenance_doctor.py`, CI lint, `tests/test_plugin_provenance.py`, plugin reference |
+| Dropped Obsidian baseline payload | `scripts/alpha14_negative_gate.py` + `scripts/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |
 | Offline e2e smoke stages | `scripts/e2e_smoke.py` | `scripts/e2e-smoke.sh`, ADR-80/testing docs, release stage evidence |

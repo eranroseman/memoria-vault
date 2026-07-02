@@ -7,45 +7,25 @@ nav_order: 1
 
 # Home welcome note
 
-The vault-root `home.md` is a thin welcome note — a "start here" screen for the
-Memoria Obsidian shell. On launch QuickAdd asks Obsidian's core Workspaces plugin to
-repair that shell when the pinned rail is missing: `home.md` in the main pane, the
-pinned rail on the left, and the Co-PI pane on the right
-([ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)).
-
----
+The vault-root `home.md` is a plain Markdown welcome note. It gives a fresh
+workspace a stable first file without requiring an editor plugin, saved layout,
+or custom renderer.
 
 ## What it shows
 
-The welcome note is a "start here" screen: capture a note, learn the three places
-(Library · Knowledge · Project), open the Inbox, and ask the Co-PI.
-It is not a dashboard — it carries no health views and no counts. Navigation between
-surfaces is the left-pane rail, not this note. The welcome note is a plain Markdown note;
-it owns no custom renderer.
+The welcome note points to the CLI-first loop: capture or import work, ask the
+checked workspace, check/repair the workspace, and move through Library,
+Knowledge, Project, and Inbox pages. It is not a dashboard and carries no
+separate health computation.
 
----
+## Why a note
 
-## Home is a consumer, never a producer
-
-The welcome note contains no bespoke computation and no embedded live views. The reason is
-single-source-of-truth: if `home.md` ran its own health queries, those queries would
-inevitably drift from the authoritative dashboard/Bases and rail definitions, and the
-human would have two slightly different answers to "is anything wrong?"
-
----
-
-## Why a note, not a plugin start-page
-
-The welcome note is a Markdown note rendered by Obsidian Bases/Dataview — git-tracked, lintable, and embeddable. A plugin-rendered start page would be opaque to git, outside the Linter's reach, and impossible to embed elsewhere. Startup depends on the already-bundled QuickAdd startup macro and Obsidian's core Workspaces plugin only as a fallback: Obsidian normally restores the previous session, and the saved **Memoria** shell is loaded only when the pinned rail is missing. `home.md` stays an ordinary, git-tracked note.
-
-This is the same discipline applied to the dashboards themselves: the human-facing surface is always a plain note the system's own tools can see and check.
-
----
+A Markdown note is git-tracked, lintable, and readable in any editor. A
+plugin-rendered start page would be opaque to the CLI/runtime checks and would
+make Obsidian a required product surface.
 
 ## Related
 
-- What Home links *to*: [the dashboards](../dashboards/README.md)
-- The visual restraint Home participates in: [Visual discipline](../../design/visual-discipline.md)
-- The plugin inventory behind these surfaces: [Obsidian plugins](../../reference/obsidian-plugins.md)
+- On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)
+- CLI reference: [Memoria CLI](../../reference/cli.md)
 - Current welcome-note decision: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)
-- Current launch model: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)

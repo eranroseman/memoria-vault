@@ -34,12 +34,11 @@ verification when only static or synthetic tests ran.
 |---|---|---|
 | Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | Any PR broader than a tiny prose edit. |
 | Package | A disposable vault assembles and the model-free workflow replay works. | Shipped vault, installer skeleton, hooks, plugins, or workflow replay changed. |
-| Runtime | Hermes, MCP, Obsidian bridge, model endpoint, cron, and policy boundaries work live. | Runtime wiring or release-candidate confidence depends on live services. |
-| Product | Research workflows produce reviewable value, telemetry, GUI/Bases/dashboard evidence, and quality evidence when claimed. | Release candidates or product-surface changes. |
-| Failure/recovery | Denied writes leave no file, MCP-down fails closed, retries recover, dry-run is clean, and installer re-run is idempotent. | Policy, ingest, MCP, installer, cron, or replay changed. |
+| Runtime | Installed CLI dispatch, model endpoint, qmd, scheduled wrappers, recovery, and policy boundaries work live. | Runtime wiring or release-candidate confidence depends on live services. |
+| Product | Research workflows produce reviewable value, telemetry, CLI/output evidence, and quality evidence when claimed. | Release candidates or product-surface changes. |
+| Failure/recovery | Denied writes leave no file, adapter-down paths fail closed, retries recover, dry-run is clean, and installer re-run is idempotent. | Policy, ingest, adapter, installer, scheduler, or replay changed. |
 
-Manual GUI checks cover bundled plugins, Local REST API, dashboards, spaces,
-Bases, Zotero/BBT, Agent Client, deny visibility, and board visibility. Record
+Manual adapter checks apply only when an optional adapter is in scope. Record
 manual evidence in the relevant release parent issue or sub-issue, not in docs.
 
 ## 4. Execute

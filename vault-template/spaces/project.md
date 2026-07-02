@@ -8,18 +8,21 @@ cssclasses: memoria-space
 
 # Project
 
-> [!brief] No projects yet? The alpha.11 worker creates checked project Concepts.
-> This page shows them and lets you keep local exploration traces.
+> [!brief] No projects yet? Create or scan checked project Concepts with the CLI.
+> This page shows the project keep-set.
 
 > [!suggestions] First actions
-> - Use **Memoria: record exploration trace** when a map or gap report reaches a dead end.
+> - Run `memoria project gaps --workspace . --seed-term <topic>` to surface missing
+>   evidence.
+> - Run `memoria project export --workspace . knowledge/projects/<project>.md` when an output is
+>   ready.
 
 ## Projects
 
 ![[knowledge.base#Projects]]
 
-Open a project Concept to see its question, sources, and local notes. Queue
-project analysis or Canvas rendering from Memoria Inspector.
+Open a project Concept to see its question, sources, and local notes. Project
+analysis and exports run through `memoria project ...` commands.
 
 ## Guides
 

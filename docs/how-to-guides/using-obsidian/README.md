@@ -8,12 +8,14 @@ permalink: /how-to-guides/using-obsidian/
 
 # Using Obsidian
 
-Driving Memoria from inside Obsidian — the command palette, the Agent Client pane, and the core surfaces. These are the day-to-day controls for the Obsidian-centred workflow; for terminal-side tasks see [Setup]({{ site.baseurl }}/how-to-guides/setup/) and [Operate]({{ site.baseurl }}/how-to-guides/operate/).
+Optional guidance for reading and editing the Memoria Markdown workspace in
+Obsidian. Alpha.14 actions run through the `memoria` CLI; Obsidian is not the
+required UI, scheduler, model runner, operation API, or write-policy boundary.
 
 | Guide | What it covers |
 | --- | --- |
-| [Vault launch screen](use-the-vault-launch-screen.md) | Land on the welcome note, switch spaces from the rail, update steering |
-| [Navigate Memoria surfaces](navigate-memoria-surfaces.md) | Which space, queue, or supporting dashboard to open for each situation |
-| [Reset workspace](reset-workspace.md) | Use the saved Memoria workspace as a reset layout |
-| [Agent Client pane](use-the-agent-client-pane.md) | Attach context, read responses, clear sessions |
-| [Command palette](obsidian-command-palette.md) | The shipped `Memoria:` capture and per-task commands, invoking by type, assigning hotkeys |
+| [Vault launch screen](use-the-vault-launch-screen.md) | Open the Markdown welcome note and space links |
+| [Navigate Memoria surfaces](navigate-memoria-surfaces.md) | Which Markdown space or CLI command to use for each situation |
+| [Reset workspace](reset-workspace.md) | What changed now that no saved editor workspace ships |
+| [Agent Client pane](use-the-agent-client-pane.md) | Why the pane is not part of alpha.14 |
+| [Command palette](obsidian-command-palette.md) | Why palette shortcuts are not part of alpha.14 |

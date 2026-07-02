@@ -1,7 +1,5 @@
 """L1 component tests for docs_doctor (ADR-44)."""
 
-import json
-
 import docs_doctor as _m
 
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
@@ -10,11 +8,9 @@ check_frontmatter = _m.check_frontmatter
 check_hidden_compatibility_page = _m.check_hidden_compatibility_page
 check_link_text = _m.check_link_text
 check_links = _m.check_links
-check_plugin_count_mirrors = _m.check_plugin_count_mirrors
 check_model_spine_link = _m.check_model_spine_link
 check_hermes_cli_skill_mirror = _m.check_hermes_cli_skill_mirror
 check_profile_skill_count_mirror = _m.check_profile_skill_count_mirror
-check_quickadd_command_reference_mirror = _m.check_quickadd_command_reference_mirror
 check_readmes = _m.check_readmes
 check_reference_readme_index = _m.check_reference_readme_index
 check_site_excluded_targets = _m.check_site_excluded_targets
@@ -224,36 +220,6 @@ def test_check_broken_vault_wikilinks_validates_note_targets_and_ignores_assets_
     assert anchor_errs == []
     assert asset_errs == []
     assert code_errs == []
-
-
-def test_quickadd_command_reference_mirror_flags_duplicate_rows(tmp_path):
-    data = tmp_path / "src" / ".obsidian" / "plugins" / "quickadd" / "data.json"
-    data.parent.mkdir(parents=True)
-    data.write_text(
-        json.dumps(
-            {
-                "choices": [
-                    {"name": "Memoria: write claim note", "command": True},
-                ]
-            }
-        ),
-        encoding="utf-8",
-    )
-    doc = tmp_path / "docs" / "reference" / "obsidian-command-palette.md"
-    doc.parent.mkdir(parents=True)
-    doc.write_text(
-        "| Command | Use |\n"
-        "| --- | --- |\n"
-        "| `Memoria: write claim note` | Capture |\n"
-        "| `Memoria: write claim note` | Utility |\n",
-        encoding="utf-8",
-    )
-
-    errors: list[str] = []
-    check_quickadd_command_reference_mirror(tmp_path, errors)
-
-    assert len(errors) == 1
-    assert "duplicates command row(s): Memoria: write claim note" in errors[0]
 
 
 def test_reference_readme_index_flags_missing_reference_pages(tmp_path):
@@ -545,49 +511,6 @@ def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
 
     assert len(errs) == 1
     assert "methodology vocabulary mirror differs" in errs[0]
-
-
-def test_check_quickadd_command_reference_mirror_compares_command_names(tmp_path):
-    repo = tmp_path
-    data_dir = repo / "src" / ".obsidian" / "plugins" / "quickadd"
-    doc_dir = repo / "docs" / "reference"
-    data_dir.mkdir(parents=True)
-    doc_dir.mkdir(parents=True)
-    (data_dir / "data.json").write_text(
-        '{"choices":[{"name":"Memoria: one","command":true},{"name":"Hidden","command":false}]}',
-        encoding="utf-8",
-    )
-    (doc_dir / "obsidian-command-palette.md").write_text(
-        "| Command | Use |\n| --- | --- |\n| `Memoria: one` | One |\n",
-        encoding="utf-8",
-    )
-
-    errs: list[str] = []
-    check_quickadd_command_reference_mirror(repo, errs)
-
-    assert errs == []
-
-
-def test_check_plugin_count_mirrors_compares_community_plugins(tmp_path):
-    repo = tmp_path
-    (repo / "src" / ".obsidian").mkdir(parents=True)
-    (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "docs" / "testing" / "plans").mkdir(parents=True)
-    (repo / "src" / ".obsidian" / "community-plugins.json").write_text(
-        '["a","b"]', encoding="utf-8"
-    )
-    (repo / "docs" / "reference" / "obsidian-plugins.md").write_text(
-        "## Required Obsidian plugins (3)\n", encoding="utf-8"
-    )
-    (repo / "docs" / "testing" / "plans" / "manual-gui-checks.md").write_text(
-        "Confirm all 2 required plugins.\n", encoding="utf-8"
-    )
-
-    errs: list[str] = []
-    check_plugin_count_mirrors(repo, errs)
-
-    assert len(errs) == 1
-    assert "says 3" in errs[0]
 
 
 def test_check_profile_skill_count_mirror_compares_skill_dirs(tmp_path):

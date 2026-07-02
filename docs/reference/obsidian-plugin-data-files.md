@@ -6,28 +6,18 @@ grand_parent: Reference
 
 # Obsidian plugin data files
 
-Rules for committed, generated, example, and secret-bearing plugin `data.json` files. For plugin inventory and load-bearing settings, see [Obsidian plugins](obsidian-plugins.md) and [Obsidian plugin settings](obsidian-plugin-settings.md).
+Alpha.14 ships no Obsidian plugin data files. There is no committed plugin
+`data.json`, plugin build artifact, editor secret file, or first-launch plugin
+setup in the standalone baseline.
 
-## `data.json` conventions
+## Adapter rule
 
-| Suffix | Meaning |
-| --- | --- |
-| `data.json` | Committed, ready to use. |
-| `data.json.example` | Committed stub; rename to `data.json` and fill in per-human values (e.g., API keys). |
-| (gitignored) | Contains secrets; generated on first launch with defaults. |
-
-**Example-file casing.** Memoria-authored example files use lowercase `.example`
-(the industry-standard convention; `.env.example`, `.sample`, etc.).
-
-| Constraint | Rule |
-| --- | --- |
-| `data.json` edits | Only edit while Obsidian is not running; Obsidian overwrites it on every settings change. |
-| `main.js` / `styles.css` / `manifest.json` | **Committed.** The starter vault ships every required plugin pre-installed, so the plugin build files are part of the distribution and are tracked in git. Do not add them to `.gitignore`. |
-| Private `data.json` | Any plugin `data.json` that holds secrets or per-machine data is **gitignored and ships as `data.json.example`**. Two qualify: `obsidian-local-rest-api/data.json` (apiKey + TLS cert + RSA private key, regenerated on first launch) and `agent-client/data.json` (per-machine agent command paths + any provider apiKeys). Every other plugin's `data.json` carries no private data and is committed, configured to spec. Rule: a new secret-bearing config gets **both** a `.gitignore` line and a `.example` sibling. |
-
----
+Optional editor adapters may keep local settings outside the baseline workspace
+contract. Secret-bearing adapter files must stay gitignored and must never become
+an authority for Memoria state, checks, policy, or operation definitions.
 
 ## Related
 
-- Plugin inventory: [Obsidian plugins](obsidian-plugins.md)
-- Plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
+- Plugin inventory boundary: [Obsidian plugins](obsidian-plugins.md)
+- Plugin settings boundary: [Obsidian plugin settings](obsidian-plugin-settings.md)
+- Memoria configuration: [Memoria configuration](configuration.md)

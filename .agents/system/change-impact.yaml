@@ -82,17 +82,15 @@ areas:
       - bash -n scripts/install.sh
       - python -m pytest tests/test_installer_skeleton.py
       - bash scripts/e2e-smoke.sh
-  - area: Bundled Obsidian plugin provenance
+  - area: Dropped Obsidian baseline payload
     paths:
-      - vault-template/.obsidian/community-plugins.json
-      - vault-template/.obsidian/plugin-provenance-lock.json
-      - vault-template/.obsidian/plugins/**
+      - vault-template/**
       - scripts/plugin_provenance_doctor.py
     inspect:
-      - Enabled plugin roster and bundled plugin directories
-      - Lock entry metadata, manifest versions, and SHA-256 artifact digests
-      - Undeclared executable artifacts under bundled plugin directories
-      - ADR-74 and Obsidian plugin reference wording
+      - Standalone template does not ship editor plugin bundles
+      - QuickAdd command scripts and Obsidian workspace files stay absent
+      - Optional adapter wording does not become baseline behavior
+      - Alpha.14 negative gate covers deleted payload contracts
     checks:
       - python scripts/plugin_provenance_doctor.py
       - python -m pytest tests/test_plugin_provenance.py

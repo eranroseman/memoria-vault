@@ -13,7 +13,9 @@ Ten principles that settle ambiguous decisions. When a tool choice, workflow ste
 
 **1. The vault is the artifact.**
 
-Not the chat log, not the PDF folder, not the Zotero library. The Obsidian vault is what you are building. Everything else — Zotero, Hermes, the Kanban board — serves the vault. A useful output that lives only in a chat transcript hasn't been captured.
+Not the chat log, not the PDF folder, not a reference-manager library. The
+Memoria workspace is what you are building. Everything else serves the workspace.
+A useful output that lives only in a chat transcript has not been captured.
 
 **2. Compound, don't just collect.**
 
@@ -47,9 +49,11 @@ Code artifacts belong in the vault and are traceable to the literature that moti
 
 Every tool in the stack addresses a specific friction point. Tools that don't address real friction are liabilities — they add maintenance overhead, failure modes, and cognitive load. The required core is deliberately narrow: the standalone CLI/engine plus the vault catalog. Zotero, Obsidian, and Hermes are optional adapters that earn their place by removing friction, not adding features.
 
-**10. The agent lives in the editor.**
+**10. The engine owns the workflow.**
 
-Research, writing, and coding all access the same agent from within their respective editors via ACP. Context-switching to a separate chat window is a UX failure mode — the agent should be present where the work is happening, with the active note as implicit context. This is why the agent-client plugin, the command palette, and the VS Code workspace pattern exist.
+Research, writing, and coding tools may add ergonomic adapters, but Memoria's
+required workflow lives in the CLI/engine. Optional editor presence is useful
+only when it calls the same request lifecycle, checks, and write boundary.
 
 ---
 

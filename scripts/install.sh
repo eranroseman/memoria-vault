@@ -236,7 +236,7 @@ copy_vault() {
   hdr "Runtime vault"
   local target="$VAULT_OVERRIDE"
   if [ -z "$target" ]; then
-    say "Pick a folder OUTSIDE any cloud-synced tree (OneDrive/Dropbox break the .obsidian DB and Hermes file locks)."
+    say "Pick a folder OUTSIDE any cloud-synced tree to avoid partial writes and file-lock churn."
     target="$(ask "Vault folder [$DEFAULT_TARGET]:" "$DEFAULT_TARGET")"
   fi
   # Expand a leading ~.

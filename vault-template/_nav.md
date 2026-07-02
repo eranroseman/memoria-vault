@@ -5,48 +5,25 @@ cssclasses: memoria-nav
 
 **Now**
 
-[[spaces/inbox|⬤ Action queue]] &nbsp; `$= dv.pages('"inbox"').where(p => p.projection == "attention" && p.attention_status == "open" && ["candidate", "gap", "work-prompt"].includes(p.attention_kind)).length`
+[[spaces/inbox|Action queue]]
 
-[[spaces/maintenance|Drift]] &nbsp; `$= (() => { const n = dv.pages('"inbox"').where(p => p.projection == "attention" && p.attention_status == "open" && ["flag", "alert"].includes(p.attention_kind)).length; return n > 0 ? "◆ " + n : n })()`
+[[spaces/maintenance|Maintenance]]
 
 ---
 
 **Places**
 
-[[spaces/library|Library]] &nbsp; `$= dv.pages('"catalog/sources"').where(p => p.check_status == "checked" && p.sample != true).length` sources
+[[spaces/library|Library]]
 
-[[spaces/knowledge|Knowledge]] &nbsp; `$= (() => { const n = dv.pages('"knowledge/notes"').where(p => p.check_status == "checked").length; return n > 0 ? n : n })()`
+[[spaces/knowledge|Knowledge]]
 
-[[spaces/project|Project]] &nbsp; `$= dv.pages('"knowledge/projects"').where(p => p.type == "project" && p.check_status == "checked").length` active
+[[spaces/project|Project]]
 
 ---
 
 **Actions**
 
-> [!note]- Inbox actions
-> ```button
-> name Capture note
-> type command
-> action QuickAdd: Memoria: capture note
-> ```
->
-> ```button
-> name Open Inbox
-> type command
-> action QuickAdd: Memoria: open Inbox
-> ```
->
-> ```button
-> name Resolve active
-> type command
-> action QuickAdd: Memoria: resolve inbox card
-> ```
-
-> [!note]- Project actions
-> ```button
-> name Record exploration trace
-> type command
-> action QuickAdd: Memoria: record exploration trace
-> ```
-
-<!-- ponytail: badges are Dataview inline-JS, not Bases formulas — Bases can't emit a standalone count. Needs Dataview "Enable inline JavaScript queries" on. Period precision is best-effort, not week-scoped. -->
+- Capture source: `memoria work capture --workspace . --doi <doi>`
+- Import bibliography: `memoria work import --workspace . --format bibtex --file <file>`
+- Ask the workspace: `memoria ask --workspace . --question "<question>"`
+- Check workspace: `memoria workspace check --workspace .`

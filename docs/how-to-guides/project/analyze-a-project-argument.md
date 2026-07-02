@@ -20,10 +20,9 @@ argument Canvas projection beside the project.
 
 **1. Run the analysis from the CLI.**
 
-Worker actions start from SQLite requests owned by the `memoria` CLI. The
-Inspector only shows operational state inside Obsidian. If the project does not
-exist yet, author a checked project Concept under `knowledge/projects/`, then
-run `memoria workspace scan --workspace <vault>`.
+Worker actions start from SQLite requests owned by the `memoria` CLI. If the
+project does not exist yet, author a checked project Concept under
+`knowledge/projects/`, then run `memoria workspace scan --workspace <vault>`.
 
 **2. Enter the project path.**
 

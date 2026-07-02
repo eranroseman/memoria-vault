@@ -39,9 +39,9 @@ What the installer does and does not do, by design:
 - API keys are **never** committed. Provider keys live in operator-owned local
   config or environment files, never in tracked workspace source.
 - The starter vault ships secret-bearing files only as sanitized `.example` /
-  `.EXAMPLE` siblings; the real files (`.env`, the Obsidian Local REST API
-  `data.json`, the agent-client `data.json`, `project-hints.yaml`) are
-  `.gitignore`d. **Never** remove those ignore rules or commit the real files.
+  `.EXAMPLE` siblings; real local environment files, provider config, optional
+  adapter secrets, and `project-hints.yaml` are `.gitignore`d. **Never** remove
+  those ignore rules or commit the real files.
 - If you ever paste a key into an issue, PR, chat, or log, treat it as
   compromised and **rotate it immediately**.
 

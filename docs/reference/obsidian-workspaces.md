@@ -6,54 +6,27 @@ grand_parent: Reference
 
 # Obsidian workspaces
 
-Memoria ships one saved Obsidian workspace named **Memoria** in
-`vault-template/.obsidian/workspaces.json`. It is a reset layout, not the space switcher
-([ADR-116](../adr/116-obsidian-surface-architecture.md)). Space switching happens
-through the pinned `_nav.md` rail note in the left pane.
+Alpha.14 ships no saved Obsidian workspace layout. The durable workspace shape is
+the on-disk Memoria workspace plus CLI commands.
 
-## Rail targets
+## Workspace navigation
 
-| Space | Job | Dashboard |
+| Area | Markdown entry point | CLI entry point |
 | --- | --- | --- |
-| Library | Collect and organize sources | `spaces/library.md` |
-| Knowledge | Build and test claims | `spaces/knowledge.md` |
-| Project | Steer bounded inquiry to output | `spaces/project.md` |
+| Inbox | `spaces/inbox.md` | `memoria request list --workspace .` |
+| Library | `spaces/library.md` | `memoria work capture`, `memoria work import`, `memoria work digest` |
+| Knowledge | `spaces/knowledge.md` | `memoria ask`, `memoria workspace scan` |
+| Project | `spaces/project.md` | `memoria project gaps`, `memoria project export` |
+| Maintenance | `spaces/maintenance.md` | `memoria workspace check`, `memoria doctor` |
 
-The rail's **Now** section links the Inbox queue (`spaces/inbox.md`) and
-Maintenance collection (`spaces/maintenance.md`). Its **Places** section links the
-three durable spaces above.
+## Adapter rule
 
-## Startup behavior
-
-On launch QuickAdd runs `Memoria: restore shell on startup`. If the pinned rail is
-already present, it reveals the shell and leaves the main pane where Obsidian
-restored it. If the rail is missing, it loads the saved **Memoria** workspace.
-
-## Reset layout
-
-The **Memoria** workspace has one shared shell:
-
-- **Main pane** — `home.md`, the launch/reset welcome note, opened in reading view.
-- **Left sidebar** — two tabs: the `_nav.md` navigation rail (surface switching) and a
-  core file-explorer leaf. Portals replaces that visible explorer surface at runtime and
-  hides `system/` and `.memoria/`. Primary movement happens through the rail and the
-  Bases views on each space dashboard; Portals is for browsing the underlying notes.
-- **Right sidebar** — the Co-PI Agent Client chat view.
-
-The core Workspaces plugin stays enabled so startup can repair a missing rail and
-so you can restore the reset shell manually with Obsidian's own **Manage
-workspaces** command if panes get rearranged.
-
-## Layout storage
-
-The reset layout is saved in `.obsidian/workspaces.json`. Runtime state such as
-`.obsidian/workspace.json` remains per-machine and is not part of the golden copy.
-
----
+An optional editor workspace may be provided later, but it is presentation only.
+It must not become the source of truth for navigation, request state, queued work,
+checks, recovery, or generated projections.
 
 ## Related
 
-- Surface architecture: [ADR-116](../adr/116-obsidian-surface-architecture.md)
-- The dashboard roster: [Dashboards](dashboards.md)
-- The plugin set behind the panes: [Obsidian plugins](obsidian-plugins.md)
-- Conversation surface: [Agent Client pane](../how-to-guides/using-obsidian/use-the-agent-client-pane.md)
+- On-disk layout: [On-disk layout](on-disk-layout.md)
+- CLI command reference: [Memoria CLI](cli.md)
+- External integrations: [External integrations](integrations.md)
