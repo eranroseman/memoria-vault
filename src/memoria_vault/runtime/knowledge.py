@@ -170,7 +170,7 @@ def curate_note_candidate(
     if not note.is_file():
         raise FileNotFoundError(note)
     frontmatter, body = split_frontmatter(note.read_text(encoding="utf-8"))
-    if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
+    if frontmatter.get("type") != "note" or not _has_checked_verdict(vault, note_rel):
         raise ValueError(f"{note_rel} is not a checked note")
     if frontmatter.get("status") != "candidate":
         raise ValueError(f"{note_rel} is not a candidate note")
@@ -217,7 +217,7 @@ def curate_note_link(
     if not source_note.is_file():
         raise FileNotFoundError(source_note)
     frontmatter, body = split_frontmatter(source_note.read_text(encoding="utf-8"))
-    if frontmatter.get("type") != "note" or frontmatter.get("check_status") != "checked":
+    if frontmatter.get("type") != "note" or not _has_checked_verdict(vault, source_rel):
         raise ValueError(f"{source_rel} is not a checked note")
     _checked_concept(vault, target_rel)
 
@@ -1125,7 +1125,7 @@ def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
         rel = path.relative_to(vault).as_posix()
         if (
             frontmatter.get("type") == "hub"
-            and frontmatter.get("check_status") == "checked"
+            and _has_checked_verdict(vault, rel)
             and _is_current_concept(rel, frontmatter)
             and _frontmatter_mentions_project(frontmatter, project_rel)
         ):
@@ -1195,7 +1195,7 @@ def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[s
     if not path.is_file():
         raise FileNotFoundError(path)
     frontmatter = read_frontmatter(path)
-    if frontmatter.get("type") != concept_type or frontmatter.get("check_status") != "checked":
+    if frontmatter.get("type") != concept_type or not _has_checked_verdict(vault, relpath):
         raise ValueError(f"{relpath} is not a checked {concept_type}")
     return frontmatter
 
@@ -1208,9 +1208,7 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
         for path in iter_markdown(base, skip_dirs=frozenset()):
             frontmatter = read_frontmatter(path)
             rel = path.relative_to(vault).as_posix()
-            if frontmatter.get("check_status") == "checked" and _is_current_concept(
-                rel, frontmatter
-            ):
+            if _has_checked_verdict(vault, rel) and _is_current_concept(rel, frontmatter):
                 yield rel, frontmatter
 
 
@@ -1544,11 +1542,15 @@ def _checked_concept(vault: Path, relpath: str) -> dict[str, Any]:
     if not path.is_file():
         raise FileNotFoundError(path)
     frontmatter = read_frontmatter(path)
-    if frontmatter.get("check_status") != "checked":
+    if not _has_checked_verdict(vault, relpath):
         raise ValueError(f"{relpath} is not checked")
     if not _is_current_frontmatter(frontmatter):
         raise ValueError(f"{relpath} is not current")
     return frontmatter
+
+
+def _has_checked_verdict(vault: Path, relpath: str) -> bool:
+    return state.concept_check_status(vault, relpath) == "checked"
 
 
 def _require_tool(policy: dict[str, Any], tool: str) -> None:

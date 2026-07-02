@@ -9,6 +9,7 @@ import pytest
 
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 ADAPTER_ENV_VARS = (
@@ -18,6 +19,16 @@ ADAPTER_ENV_VARS = (
     "ZOTERO_API_KEY",
     "HERMES_HOME",
 )
+
+
+def mark_file_status(workspace: Path, rel: str, concept_type: str, status: str = "checked") -> None:
+    state.record_observed_file_edit(
+        workspace,
+        output_id=rel,
+        concept_type=concept_type,
+        output_sha256=sha256_file(workspace / rel),
+    )
+    state.set_concept_verdict(workspace, rel, status)
 
 
 def test_palette_actions_have_standalone_cli_parity(
@@ -251,6 +262,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Body.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/projects/project-alpha.md", "project")
     thesis = workspace / "knowledge/notes/thesis.md"
     support = workspace / "knowledge/notes/support.md"
     thesis.parent.mkdir(parents=True, exist_ok=True)
@@ -258,6 +270,7 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "---\ntype: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n---\nThesis.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/notes/thesis.md", "note")
     support.write_text(
         "---\n"
         "type: note\n"
@@ -271,3 +284,4 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "Support.\n",
         encoding="utf-8",
     )
+    mark_file_status(workspace, "knowledge/notes/support.md", "note")

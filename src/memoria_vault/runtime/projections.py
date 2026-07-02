@@ -228,10 +228,18 @@ def _knowledge_views_index(vault: Path) -> str:
 def _concept_paths(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
+    vault = root.parent
+    if root.name == "capabilities":
+        return sorted(
+            path
+            for path in root.rglob("*.md")
+            if path.name != "index.md" and read_frontmatter(path).get("check_status") == "checked"
+        )
     return sorted(
         path
         for path in root.rglob("*.md")
-        if path.name != "index.md" and read_frontmatter(path).get("check_status") == "checked"
+        if path.name != "index.md"
+        and state.concept_check_status(vault, path.relative_to(vault).as_posix()) == "checked"
     )
 
 

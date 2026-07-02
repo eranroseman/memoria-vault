@@ -285,8 +285,12 @@ def _set_catalog_check_status(vault: Path, source_id: str, check_status: str) ->
             (check_status, source_id),
         )
         conn.execute(
-            "UPDATE concepts SET check_status = ? WHERE concept_id = ?",
-            (check_status, f"catalog/sources/{source_id}"),
+            """
+            INSERT INTO concept_verdicts(concept_id, check_status)
+            VALUES (?, ?)
+            ON CONFLICT(concept_id) DO UPDATE SET check_status = excluded.check_status
+            """,
+            (f"catalog/sources/{source_id}", check_status),
         )
 
 

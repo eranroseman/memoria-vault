@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import (
     _bm25,
     _tokens,
@@ -26,14 +27,38 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def note(vault: Path, name: str, status: str, body: str, extra: str = "") -> Path:
+def note(
+    vault: Path,
+    name: str,
+    status: str,
+    body: str,
+    extra: str = "",
+    *,
+    db_status: str | None = "",
+) -> Path:
     path = vault / "knowledge" / "notes" / f"{name}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         f"---\ntype: note\ncheck_status: {status}\ntitle: {name}\n{extra}---\n{body}\n",
         encoding="utf-8",
     )
+    if db_status is not None:
+        set_db_status(vault, path, "note", "unchecked")
+        if db_status or status != "unchecked":
+            state.set_concept_verdict(
+                vault, path.relative_to(vault).as_posix(), db_status or status
+            )
     return path
+
+
+def set_db_status(vault: Path, path: Path, concept_type: str, status: str) -> None:
+    state.record_observed_file_edit(
+        vault,
+        output_id=path.relative_to(vault).as_posix(),
+        concept_type=concept_type,
+        output_sha256=sha256_file(path),
+    )
+    state.set_concept_verdict(vault, path.relative_to(vault).as_posix(), status)
 
 
 def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path) -> None:
@@ -41,6 +66,7 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
     note(vault, "checked", "checked", "alpha beta")
     note(vault, "unchecked", "unchecked", "poison alpha")
     note(vault, "quarantined", "quarantined", "poison beta")
+    note(vault, "forged", "checked", "forged alpha", db_status=None)
     note(vault, "candidate", "checked", "candidate alpha", "status: candidate\n")
     note(vault, "superseded", "checked", "stale alpha", "status: superseded\n")
     capability = vault / "capabilities/operations/checked-operation.md"
@@ -66,6 +92,7 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/candidate.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/unchecked.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
+    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/forged.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
     assert manifest["qmd_commands"][-1] == "qmd update"
 
@@ -285,6 +312,7 @@ def test_answer_query_carries_project_context(tmp_path: Path) -> None:
         "Project body.\n",
         encoding="utf-8",
     )
+    set_db_status(vault, project, "project", "checked")
     note(vault, "thesis", "checked", "methods caveat")
 
     answer = answer_query(vault, "what matters", project_id="project-alpha")
@@ -339,6 +367,7 @@ def test_project_answer_expands_qmd_query_with_project_and_thesis_terms(
         "Project body.\n",
         encoding="utf-8",
     )
+    set_db_status(vault, project, "project", "checked")
     note(
         vault,
         "thesis",

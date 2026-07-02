@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -32,6 +33,7 @@ INTEGRITY_SWEEP_OPERATIONS = (
     "integrity-contradiction-check",
     "integrity-link-target-check",
 )
+OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
 
 
 def _payload_doi(payload: dict[str, Any]) -> str:
@@ -819,21 +821,34 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raw_path=source["raw_path"],
         )
         updated = state.catalog_source(vault, source["source_id"])
+        updates = {
+            key: value
+            for key, value in payload.items()
+            if key != "source_id" and value not in (None, [], "")
+        }
+        append_jsonl(
+            vault / OVERRIDE_LOG_REL,
+            [
+                {
+                    "timestamp": now_iso(),
+                    "operation": "update-work",
+                    "source_id": source["source_id"],
+                    "updates": updates,
+                }
+            ],
+        )
         state.append_journal_event(
             vault,
             {
                 "event": "work_updated",
                 "operation": "update-work",
                 "source_id": source["source_id"],
-                "updates": {
-                    key: value
-                    for key, value in payload.items()
-                    if key != "source_id" and value not in (None, [], "")
-                },
+                "updates": updates,
+                "override_log": OVERRIDE_LOG_REL,
             },
             machine=machine,
         )
-        return {"source_id": source["source_id"], "work": updated}
+        return {"source_id": source["source_id"], "work": updated, "override_log": OVERRIDE_LOG_REL}
     if operation_id == "capture-source":
         from memoria_vault.runtime.capture import stage_catalog_source
 

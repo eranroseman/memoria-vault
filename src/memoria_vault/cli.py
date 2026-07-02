@@ -691,7 +691,8 @@ def _cmd_project_suggest_hubs(args: argparse.Namespace) -> int:
     existing: set[str] = set()
     for path in iter_markdown(workspace):
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("check_status") != "checked":
+        rel = path.relative_to(workspace).as_posix()
+        if state.concept_check_status(workspace, rel) != "checked":
             continue
         if frontmatter.get("type") == "hub":
             existing.add(str(frontmatter.get("title") or path.stem).lower())
@@ -1154,9 +1155,11 @@ def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
         return _fail("workspace rebuild --embeddings requires --search", json_output=args.json)
     workspace = _workspace(args)
     from memoria_vault.runtime.capture import write_references_bib
+    from memoria_vault.runtime.trusted_writer import rebuild_concept_mirror_from_files
 
+    mirror = rebuild_concept_mirror_from_files(workspace)
     references = write_references_bib(workspace)
-    payload: dict[str, Any] = {"ok": True, "references": references}
+    payload: dict[str, Any] = {"ok": True, "concept_mirror": mirror, "references": references}
     if args.search:
         from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 
@@ -1663,7 +1666,10 @@ def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
 
     digest = workspace / digest_path
     frontmatter, body = split_frontmatter(digest.read_text(encoding="utf-8"))
-    if frontmatter.get("type") != "digest" or frontmatter.get("check_status") != "checked":
+    if (
+        frontmatter.get("type") != "digest"
+        or state.concept_check_status(workspace, digest_path) != "checked"
+    ):
         raise ValueError(f"{digest_path} is not a checked digest")
     title = str(frontmatter.get("title") or Path(digest_path).stem).removeprefix("Digest: ").strip()
     excerpt = " ".join(body.split())
