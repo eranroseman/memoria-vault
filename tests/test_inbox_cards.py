@@ -90,16 +90,20 @@ def test_work_prompt_card_is_attention_projection(tmp_path):
         tmp_path,
         "Review: Draft answer",
         "Review the draft, then accept or archive",
-        'Lane memoria-writer finished "Draft answer" (card t_b2).',
-        "board-export",
+        'Request REQ-b2 produced "Draft answer".',
+        "request-control",
         target="projects/p1/draft.md",
-        task_id="t_b2",
-        lane="memoria-writer",
+        request_id="REQ-b2",
+        posture="writer",
     )
     fm = _frontmatter(p)
     assert fm["projection"] == "attention"
     assert fm["attention_kind"] == "work-prompt"
     assert fm["attention_status"] == "open"
+    assert fm["request_id"] == "REQ-b2"
+    assert fm["posture"] == "writer"
+    assert "task_id" not in fm
+    assert "lane" not in fm
     assert "type" not in fm
     body = p.read_text(encoding="utf-8")
     assert "# Action" in body and "# What happened" in body and "# Where to look" in body
@@ -107,7 +111,12 @@ def test_work_prompt_card_is_attention_projection(tmp_path):
 
 def test_work_prompt_carries_no_verdict(tmp_path):
     p = inbox.write_work_prompt(
-        tmp_path, "Review: X", "review it", "lane finished X", "board-export", task_id="t_1"
+        tmp_path,
+        "Review: X",
+        "review it",
+        "request finished X",
+        "request-control",
+        request_id="REQ-1",
     )
     text = p.read_text(encoding="utf-8")
     assert "agent_recommendation" not in text  # ADR-54: never a verdict
@@ -121,12 +130,24 @@ def test_work_prompt_requires_a_pointer(tmp_path):
 
 def test_work_prompt_dedupe_slug_is_idempotent(tmp_path):
     a = inbox.write_work_prompt(
-        tmp_path, "Review: X", "a", "w", "board-export", task_id="t_1", dedupe_slug="review-t_1"
+        tmp_path,
+        "Review: X",
+        "a",
+        "w",
+        "request-control",
+        request_id="REQ-1",
+        dedupe_slug="review-REQ-1",
     )
     b = inbox.write_work_prompt(
-        tmp_path, "Review: X", "a", "w", "board-export", task_id="t_1", dedupe_slug="review-t_1"
+        tmp_path,
+        "Review: X",
+        "a",
+        "w",
+        "request-control",
+        request_id="REQ-1",
+        dedupe_slug="review-REQ-1",
     )
-    assert a is not None and a.name == "work-prompt-review-t-1.md"
+    assert a is not None and a.name == "work-prompt-review-req-1.md"
     assert b is None  # second emit for the same card id writes nothing
     assert len(list((tmp_path / "inbox").glob("*.md"))) == 1
 

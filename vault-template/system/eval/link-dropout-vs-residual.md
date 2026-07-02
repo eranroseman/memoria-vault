@@ -3,7 +3,7 @@ type: eval-task
 title: "Link two regularization approaches without conflating them"
 lifecycle: current
 workflow: link
-lane: link
+eval_role: link
 created: 2026-06-10
 references:
   - srivastava2014dropout

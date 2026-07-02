@@ -157,18 +157,14 @@ function Install-VaultHooks {
     $gitDir = Join-Path $Vault '.git'
     $hooksDir = Join-Path $gitDir 'hooks'
     $preCommit = Join-Path $Vault '.githooks/pre-commit'
-    $postCommit = Join-Path $Vault '.githooks/post-commit'
     if (-not $DryRun) {
         if (-not (Test-Path $gitDir)) { Stop-Install "Vault is not a Git repo: $Vault" }
         if (-not (Test-Path $preCommit)) { Stop-Install "Missing pre-commit hook at $preCommit" }
-        if (-not (Test-Path $postCommit)) { Stop-Install "Missing post-commit hook at $postCommit" }
         New-Item -ItemType Directory -Path $hooksDir -Force | Out-Null
         Copy-Item $preCommit (Join-Path $hooksDir 'pre-commit') -Force
-        Copy-Item $postCommit (Join-Path $hooksDir 'post-commit') -Force
     }
     Write-Line "  + copy $preCommit -> $hooksDir\pre-commit"
-    Write-Line "  + copy $postCommit -> $hooksDir\post-commit"
-    Write-Ok 'Vault hooks wired'
+    Write-Ok 'Vault pre-commit hook wired'
 }
 
 function Install-RuntimeDeps {

@@ -273,7 +273,6 @@ copy_vault() {
   fi
 
   wire_commit_gate
-  wire_verify_on_commit_hook
 
   # The runtime vault is the user's own repo — the installer initializes Git so
   # hooks can be wired, but it never commits or sets identity/remotes.

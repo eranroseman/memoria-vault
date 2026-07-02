@@ -46,8 +46,8 @@ const latest = runs[runs.length - 1];
 const num = (v) => (v === undefined || v === null) ? "—" : (typeof v === "number" ? v.toFixed(2) : String(v));
 dv.paragraph(`**${latest.quarter}** · scored ${latest.timestamp} · k=${latest.k}`);
 dv.table(
-  ["Task", "Workflow", "Lane", "Status", "Recall@k", "Support-rate", "FAMA-clean", "Self-score"],
-  latest.tasks.map(t => [t.task, t.workflow, t.lane, t.status,
+  ["Task", "Workflow", "Eval role", "Status", "Recall@k", "Support-rate", "FAMA-clean", "Self-score"],
+  latest.tasks.map(t => [t.task, t.workflow, t.eval_role, t.status,
                          num(t.metrics?.recall_at_k), num(t.metrics?.support_rate),
                          num(t.metrics?.fama_clean), num(t.self_score)])
 );
@@ -74,7 +74,7 @@ const runs = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const latest = runs[runs.length - 1];
 const missing = latest.tasks.filter(t => t.status === "unscored");
 if (!missing.length) { dv.paragraph("_None — every gold task reported a result._"); return; }
-dv.table(["Task", "Workflow", "Lane"], missing.map(t => [t.task, t.workflow, t.lane]));
+dv.table(["Task", "Workflow", "Eval role"], missing.map(t => [t.task, t.workflow, t.eval_role]));
 ```
 
 ## Related

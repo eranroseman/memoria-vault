@@ -45,7 +45,7 @@ Row objects may include `title` or `name`, `item_ref` or `target` or `path` or `
 | Path | Shape |
 | --- | --- |
 | `system/worklists/<worklist>/<rank-title>.md` | One `projection: worklist-item` row per report row. |
-| `inbox/work-prompt-*.md` | One `projection: attention`, `attention_kind: work-prompt` review prompt with `raised_by: worklists` and `lane: copi`. |
+| `inbox/work-prompt-*.md` | One `projection: attention`, `attention_kind: work-prompt` review prompt with `raised_by: worklists` and a `target` pointing at the generated worklist Base. |
 
 The aggregate prompt uses a `worklist-<slug>` dedupe key. Re-running the same report rewrites the item notes and does not create a second prompt when the deduped prompt already exists.
 

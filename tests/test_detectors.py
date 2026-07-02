@@ -98,7 +98,7 @@ def test_detectors():
             (v / "70-misc").mkdir(parents=True, exist_ok=True)
             (v / "70-misc/scratch.md").write_text("notes", encoding="utf-8")
             (v / ".githooks").mkdir(parents=True, exist_ok=True)
-            (v / ".githooks/post-commit").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            (v / ".githooks/pre-commit").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
             import json as _json
             from datetime import datetime, timedelta
 

@@ -92,7 +92,10 @@ code home.
 
 ## `.githooks/` - source hooks
 
-Shipped in `vault-template/.githooks`: canonical git hooks that the installer copies into the runtime vault's `.git/hooks/` after the user initializes the vault repository. `post-commit` enqueues Peer-reviewer verify cards for committed Markdown drafts under `knowledge/projects/`.
+Shipped in `vault-template/.githooks`: the canonical pre-commit schema gate that
+the installer copies into the runtime vault's `.git/hooks/` after the user
+initializes the vault repository. File-change work is observed through
+`memoria workspace scan`, not a Hermes-backed post-commit queue.
 
 Runtime-only (created in the deployed vault, never shipped):
 
@@ -103,7 +106,6 @@ Runtime-only (created in the deployed vault, never shipped):
 | `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
-| `.git/hooks/post-commit` | installer | The verify-on-commit trigger copied from `.githooks/post-commit`. |
 
 ---
 

@@ -163,10 +163,10 @@
       "tool": "inbox.write_work_prompt",
       "arg_shape": {
         "action": "str",
-        "lane": "str",
+        "posture": "str",
         "raised_by": "str",
+        "request_id": "str",
         "target": "str",
-        "task_id": "str",
         "title": "str",
         "what_happened": "str"
       },
@@ -175,8 +175,8 @@
         "action": "Review the cassette-backed source, notes, and argument canvas.",
         "what_happened": "The model-free package-gate harness replay reached the alpha.11 handoff.",
         "target": "knowledge/projects/harness/argument.canvas",
-        "task_id": "HARNESS-PACKAGE",
-        "lane": "memoria-writer",
+        "request_id": "HARNESS-PACKAGE",
+        "posture": "writer",
         "raised_by": "test-env-harness"
       },
       "expect": {

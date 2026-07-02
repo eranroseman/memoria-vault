@@ -24,7 +24,7 @@ layers — keeping them distinct is deliberate:
   decision (per-decision forensics, newest-first).
 - **Eval trend** is diagnostic capability evidence over the checked eval set. It
   tells you whether retrieval/extraction/linking/verification quality has moved,
-  not whether a worker lane should pause.
+  not whether the request queue should pause.
 - **[Drift watch](structural-health.md#drift-watch)** is *structural*, not operational: it is the Maintenance view over the Linter operation's open integrity findings, headlined by the verdict band — a different cadence and abstraction layer from the other two.
 
 In short: audit log is per-decision, eval trend is capability drift, and Drift

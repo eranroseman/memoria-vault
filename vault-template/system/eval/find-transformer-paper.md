@@ -3,7 +3,7 @@ type: eval-task
 title: "Find the paper that introduced the Transformer"
 lifecycle: current
 workflow: find
-lane: catalog
+eval_role: catalog
 created: 2026-06-10
 references:
   - vaswani2017attention

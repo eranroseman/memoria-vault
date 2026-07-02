@@ -7,7 +7,12 @@ nav_order: 10
 
 # Why the architecture is layered
 
-Memoria separates orchestration, execution, and settled knowledge into distinct layers. This is not a layering convention; it is the mechanism that makes retries safe, handoffs lossless, and review enforceable. [ADR-46](../adr/46-seven-layer-architecture.md) records the current seven-layer stack; the refinement added layers without weakening the separation between board, workers, and vault.
+Memoria separates orchestration, execution, and settled knowledge into distinct
+layers. This is not a layering convention; it is the mechanism that makes
+retries safe, handoffs lossless, and review enforceable. [ADR-46](../adr/46-seven-layer-architecture.md)
+records the older layered decision; alpha.14 implements the same separation
+through the standalone CLI, SQLite request table, worker operations, and checked
+workspace.
 
 For the current shared vocabulary, start with [Home](../README.md).
 
@@ -29,9 +34,9 @@ The failure mode of most single-agent or single-document systems is that these t
 
 | Collapse | Failure | Layered fix |
 | --- | --- | --- |
-| Orchestration + execution | Work state lives in chat or agent memory; retries duplicate work and handoffs lose context. | A board card records state, lane, handoff payload, and failure history. |
+| Orchestration + execution | Work state lives in chat or agent memory; retries duplicate work and handoffs lose context. | A request row records status, operation, input refs, output intents, handoff payload, and failure history. |
 | Execution + knowledge | Agents write canon directly; confident errors become cited knowledge. | The review gate separates "finished" from "trusted." |
-| Orchestration + knowledge | Task history pollutes the knowledge graph. | Tasks stay on the board; settled knowledge stays in the vault. |
+| Orchestration + knowledge | Task history pollutes the knowledge graph. | Requests stay in SQLite and the journal; settled knowledge stays in checked workspace Concepts. |
 
 ---
 
@@ -51,13 +56,22 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 ## From three layers to seven
 
-The original three-layer framing separated board, workers, and vault, but conflated two distinctions: *where* things live (structure) and *who* acts (actor-kind). [ADR-46](../adr/46-seven-layer-architecture.md) pulled them apart into the seven-layer stack: **PI · Interface · Co-PI · Tasks · MCP · Operations · Vault.**
+The original three-layer framing separated board, workers, and vault, but
+conflated two distinctions: *where* things live (structure) and *who* acts
+(actor-kind). [ADR-46](../adr/46-seven-layer-architecture.md) pulled them apart
+into the seven-layer stack. Alpha.14 keeps the boundary but replaces the board,
+MCP, and installed-profile mechanics with CLI/API requests, runtime policy, and
+operation manifests.
 
 Each refinement carries the same argument further:
 
-- The **board and workers** became the **Tasks** layer, with the **Co-PI** lifted out as its own layer — the one agent that converses and remembers, separated from the stateless lanes that execute.
-- The **policy boundary** became an explicit layer (**MCP**) rather than an implementation detail of the worker layer — naming where allow-listing, write-scoping, and audit actually live.
-- Deterministic work was pulled out of the worker set into **operations** — reproducible mechanism that needs no posture and no lane.
+- The **request table and workers** are the control layer, with the **Co-PI**
+  posture kept read-only and separated from deterministic operations.
+- The **policy boundary** is explicit runtime code rather than an adapter
+  convention — naming where allow-listing, write-scoping, and audit actually
+  live.
+- Deterministic work lives in **operations** — reproducible mechanism that needs
+  no installed profile or background lane.
 - The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (Co-PI → Tasks → MCP → Operations/Vault); the PI and cron/CI are direct edges.
 
 The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in ADR-46.
@@ -68,13 +82,23 @@ The file-as-bus, durable-state core — thick files, thin everything else — is
 
 The separation is maintained by rules that cannot be violated without breaking the design:
 
-**The board never holds knowledge.** It tracks work. Cards die at `archived`; knowledge lives in the vault. A card can reference a vault note by path; it never *is* a note.
+**Requests never hold knowledge.** They track work. Requests close; knowledge
+lives in checked workspace Concepts. A request can reference a note or Work by
+path or ID; it never *is* that knowledge.
 
-**The agents never hold permanent state.** Lanes claim cards, act, and release; the Co-PI's memory holds working style and conventions, never canon. Continuity comes from the board (in-flight) or the vault (settled).
+**The agent posture never holds permanent state.** Operations claim requests,
+act, and finish; read-only conversation can shape a follow-up request but never
+becomes canon. Continuity comes from request/journal state while work is in
+flight and checked workspace Concepts once settled.
 
-**The vault never schedules work.** It is the destination, not the orchestrator. A vault note does not trigger agent action; a board card does.
+**The workspace never silently schedules work.** It is the destination, not the
+orchestrator. CLI commands, observed file changes, and operator-managed
+scheduled jobs create explicit requests.
 
-**The boundary is enforced, not promised.** The policy gate intercepts every agent write; the gated zones degrade to proposals for every lane. The boundary isn't "an agent should not write here" — it's "an agent cannot write here."
+**The boundary is enforced, not promised.** Runtime policy and the worker
+lifecycle intercept machine writes; gated zones degrade to proposals or
+quarantine. The boundary isn't "an agent should not write here" — it's "machine
+work cannot bypass the checked request/write lifecycle."
 
 ---
 

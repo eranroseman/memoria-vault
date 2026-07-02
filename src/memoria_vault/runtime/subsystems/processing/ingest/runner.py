@@ -223,8 +223,8 @@ def run(
         "pmid": ids.get("pmid") or m.get("pmid", ""),
     }
     ex = extract.extract(ex_ids, pdf_path, _env("NCBI_EMAIL"), _env("NCBI_API_KEY"))
-    # carry the text so the caller can persist it (the extract store is outside the agent's
-    # write lane, so the ingest tool writes the extract file, not the worker)
+    # carry the text so the caller can persist it (the extract store is outside the worker
+    # output contract, so the ingest tool writes the extract file, not the worker)
     bundle["extract"] = {
         "source": ex["source"],
         "chars": ex["chars"],
@@ -233,8 +233,8 @@ def run(
     }
     if ex["degraded"]:
         bundle["degraded"].append("extract")
-    # the extract store lives at .memoria/data/extracts/ (ingest_mcp persists it there,
-    # outside the agent write lane) — the frontmatter must point at that real path so
+    # the extract store lives at .memoria/data/extracts/ (the ingest helper persists it there,
+    # outside the checked Concept homes) — the frontmatter must point at that real path so
     # the Linter's extract-path-broken detector resolves it (ADR-47 type-first layout).
     fm["extract_path"] = f".memoria/data/extracts/{citekey}.md" if ex["chars"] else ""
 

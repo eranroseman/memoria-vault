@@ -12,14 +12,19 @@ projections; they do not directly promote Concept files.
 
 ## Re-ingest backstops
 
-`reconcile.py` finds ingest work that started but did not land cleanly. Re-ingest must be board-serialized, so each backstop enqueues an idempotent re-ingest card with `hermes kanban create --idempotency-key reingest:<citekey>`; the board provides deduplication, backoff, and the failure circuit-breaker.
+`reconcile.py` finds ingest work that started but did not land cleanly.
+Re-ingest must be request-serialized, so each backstop creates an idempotent
+local request such as `reingest:<citekey>`; the SQLite request queue provides
+deduplication, backoff, and the failure circuit-breaker.
 
 | Pass | Detects |
 | --- | --- |
 | `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk. |
 | `--retry` | A captured note stuck at `ingest_status: tier0`. |
 
-`--dry-run` reports without touching the board. The installer wires these re-ingest passes into the `memoria-sweeps` cron every 15 minutes.
+`--dry-run` reports without creating requests. Alpha.14 does not install a host
+scheduler; an operator-managed scheduled task can invoke the sweep through the
+CLI when the re-ingest path is enabled.
 
 ## Retraction sweep
 

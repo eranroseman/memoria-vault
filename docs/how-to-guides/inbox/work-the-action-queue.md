@@ -33,22 +33,25 @@ Sit down once and sweep the action queue — high-cardinality decisions belong i
 **3. Act, then resolve.**
 
 Acting on an item is whatever the projection proposes — write the link, fix the
-note, or queue the discovery task through the worker/plugin. If you still need
-the item as a reminder, leave it open. When no action remains, clear it in
-place: `Cmd/Ctrl-P` -> **Memoria: resolve inbox card**. The command sets
-`attention_status: resolved` and stamps `resolved_at:`, so the Inbox converges
-to empty; empty is success.
+note, or queue the discovery task through the CLI/worker. If you still need the
+item as a reminder, leave it open. When no action remains, clear it with
+`memoria attention resolve --workspace <vault> <attention-path>`. The command
+sets `attention_status: resolved` and stamps `resolved_at:`, so the Inbox
+converges to empty; empty is success.
 
 **4. Reject cleanly.**
 
 Rejecting costs one decision and leaves nothing behind — the proposed write
-never landed. If the task behind an item was mis-specified and should be redone,
-delegate a corrected worker job through the Co-PI or Inspector rather than
-rewriting history.
+never landed. If the request behind an item was mis-specified and should be
+redone, amend or retry a corrected request through the CLI rather than rewriting
+history.
 
 **5. Mind the back-pressure.**
 
-The board caps `done` cards awaiting you at 5 — when the action queue fills, the dispatcher slows new work on that lane. That's the system protecting your review capacity, not a malfunction. If a lane stalls, clear the queue rather than wishing the cap away.
+The action queue intentionally back-pressures new work when too many finished
+requests still need your judgment. That's the system protecting your review
+capacity, not a malfunction. If work appears stalled, clear or resolve the open
+attention items before adding more requests.
 
 **6. Watch your own accept/reject pattern.**
 
@@ -64,7 +67,7 @@ evidence until a standalone runtime summary exists ([Dashboards](../../reference
 
 ## Related
 
-- Resolving cards from the palette: [Command palette](../using-obsidian/obsidian-command-palette.md)
+- CLI command reference: [CLI](../../reference/cli.md)
 - Attention projections: [Inbox card fields](../../reference/inbox-card-fields.md)
 - Current Concept types: [Document types](../../reference/document-types.md)
 - Why review is structural, not a convention: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

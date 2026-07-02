@@ -26,9 +26,12 @@ A hub adds perspective a query cannot produce: framing, curation, and a diagnosi
 
 ## Why curation can't be delegated
 
-Hubs live under `notes/hubs/`, a review-gated prefix: an agent write there degrades to a dry-run ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
+Hubs live under `knowledge/hubs/`, a review-gated Concept home: a machine write
+there degrades to a proposal ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
 
-So the agent stops at the threshold of judgment. The Librarian's `map` lane may propose that a dense cluster needs a hub, but only as a **bare member list plus threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates membership, and names gaps.
+So the engine stops at the threshold of judgment. A map or gap-analysis
+operation may propose that a dense cluster needs a hub, but only as a **bare
+member list plus threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates membership, and names gaps.
 
 ---
 
