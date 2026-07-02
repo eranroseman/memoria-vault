@@ -7,87 +7,51 @@ nav_order: 1
 
 # Safe mode
 
-**Symptom:** Hermes, ACP, or some optional tool is down, and you still need to ingest, triage, or export.
+Use safe mode when optional UI adapters, scheduled jobs, or provider-backed
+steps are unavailable. The rule is simple: use the standalone `memoria` CLI and
+Git directly.
 
-**Diagnosis:** the integration layer is unreachable, but the underlying operations don't depend on it — every core workflow has a terminal-level fallback.
-
-**Fix:** for each of the three workflows below — the command that must work, the named fallbacks, and the one thing never to run automatically.
-
-## Ingest a source
-
-**Must work:** enqueue the capture card from the terminal — the same card the palette commands create:
+## Capture Or Import
 
 ```bash
-hermes kanban create "Ingest <citekey>" --assignee memoria-librarian
+memoria work capture --workspace <workspace> --doi <doi>
+memoria work import --workspace <workspace> --format bibtex --file sources.bib
 ```
 
-**If the Agent Client pane is unresponsive** — the terminal is always the fallback: the pane and the palette macros shell out to the same `hermes kanban create`. A direct lane chat (`hermes -p memoria-librarian chat`) also works as a debugging posture.
+If enrichment providers are unavailable, keep the work unchecked and rerun
+`memoria work enrich --work-id <id>` when provider inputs are available.
 
-**If enrichment APIs are unreachable** — capture still creates the source Concept from supplied Zotero/BibTeX metadata; the per-field provenance records what's missing. The enrichment fills in on a later metadata check once connectivity is restored — a thin source is better than a deferred capture.
-
-**If `references.bib` is stale** — regenerate tracked projections from the
-Inspector or rerun the worker operation that writes `references.bib` from
-checked SQLite catalog rows.
-
-**Never run automatically:** a schema reshape. Schema changes are release work
-against the fresh template.
-
----
-
-## Review and triage
-
-**Must work:** open the Inbox queue for **Needs me** and Maintenance for weekly
-structural checks. The embedded Bases/Dataview queries surface the triage queue
-without any Hermes involvement.
-
-**If Hermes is unreachable** — triage is a human-only action anyway. Classify by hand:
-
-1. Open the paper entity from the Library space's Catalog papers view.
-2. Copy the fields you accept from the `_proposed_classification` block into the main frontmatter
-3. Delete the `_proposed_classification:` block
-4. Set `lifecycle: current` ([Classify a source](../library/classify-a-source.md))
-
-**If Dataview is not rendering** — search manually in Obsidian for `lifecycle: proposed` to find unclassified notes.
-
-**Never run automatically:** accept Inbox cards in bulk. Every `proposed` card requires human review — agent output is unverified until you confirm the citekeys and claims.
-
----
-
-## Export a draft
-
-**Must work:**
+## Review And Triage
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<draft>.md \
-  --citeproc \
-  --bibliography references.bib \
-  --csl .memoria/csl/<style>.csl \
-  -o /tmp/<output>.docx
+memoria attention list --workspace <workspace>
+memoria request list --workspace <workspace>
+memoria request show --workspace <workspace> <request-id>
 ```
 
-**If an Obsidian export plugin fails** — run Pandoc directly from the terminal; it is the authoritative export route (any plugin is just a UI wrapper over the same command). See [Export routes and formats](../../reference/export.md).
+Do not bulk-accept proposed notes or attention cards. Anything `proposed` still
+requires human review.
 
-**If `zotero.lua` live citations are broken** — fall back to static `--citeproc`. Do not debug `zotero.lua` mid-draft. Finish the draft with static citations, then investigate using the failure-modes guide.
-
-**Never run automatically:** auto-export on file save. Drafts change constantly; automatic export creates Git noise and can overwrite a clean export with a mid-sentence state.
-
----
-
-## Quick system check
-
-Run before assuming something is broken:
+## Export A Draft
 
 ```bash
-echo $KILOCODE_API_KEY $OPENALEX_API_KEY   # env vars loaded?
-hermes --version                           # Hermes reachable?
-hermes profile list                        # profiles registered?
-cd <vault-path> && git status              # vault synced?
+memoria project export --workspace <workspace> knowledge/projects/<project>/project.md \
+  --format docx --output /tmp/output.docx
 ```
 
-All four must return expected values before blaming a tool.
+If the export command is blocked by missing Pandoc or citation tooling, use
+Pandoc directly after verifying `references.bib`.
+
+## Quick System Check
+
+```bash
+memoria doctor bundle --workspace <workspace>
+memoria workspace rebuild --workspace <workspace> --search
+git -C <workspace> status --short
+```
 
 ## Related
 
 - Return-to-work checklist: [Return to work](../inbox/return-to-work.md)
-- Fix stuck card: [Fix a stuck card](fix-stuck-card.md)
+- Fix stuck request: [Fix a stuck card](fix-stuck-card.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)

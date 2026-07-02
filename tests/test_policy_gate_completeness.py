@@ -15,6 +15,22 @@ import policy_hook as _m
 evaluate_pre = _m.evaluate_pre
 Path = _m.Path
 ROOT = Path(__file__).resolve().parents[1]
+TOOL_REGISTRY = """
+version: 1
+groups:
+  qmd_read: [qmd.search]
+profiles:
+  memoria-copi:
+    allow: [memory, skills]
+  memoria-librarian:
+    allow: [skills, kanban, qmd_read]
+  memoria-writer:
+    allow: [skills, kanban, qmd_read]
+  memoria-peer-reviewer:
+    allow: [skills, kanban, qmd_read]
+  memoria-engineer:
+    allow: [skills, kanban]
+"""
 
 
 def _payload(tool_name: str) -> dict:
@@ -33,10 +49,7 @@ def _decide(tool_name: str, profile: str = "memoria-copi") -> dict:
 def _vault_with_registry(tmp_path: Path) -> Path:
     registry = tmp_path / ".memoria" / "tool-registry.yaml"
     registry.parent.mkdir(parents=True)
-    registry.write_text(
-        (ROOT / "vault-template/.memoria/tool-registry.yaml").read_text(encoding="utf-8"),
-        encoding="utf-8",
-    )
+    registry.write_text(TOOL_REGISTRY, encoding="utf-8")
     return tmp_path
 
 

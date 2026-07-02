@@ -66,6 +66,8 @@ def _profile_rows() -> list[tuple[str, str, str, str]]:
     rows = []
     profiles = ROOT / "vault-template/.memoria/profiles"
     overrides = ROOT / "vault-template/.memoria/lane-overrides"
+    if not profiles.exists():
+        return rows
     for directory in sorted(p for p in profiles.iterdir() if p.is_dir()):
         config = yaml.safe_load((directory / "config.yaml").read_text(encoding="utf-8")) or {}
         distribution = (
@@ -91,7 +93,7 @@ def _render_profiles() -> str:
         GENERATED,
         "# Profile policy matrix",
         "",
-        "Derived from profile configs, distribution metadata, and lane overrides.",
+        "Alpha.14 ships no installed Hermes profile packages or lane overrides.",
         "",
         "| Profile | Purpose | MCP servers | Write scope |",
         "|---|---|---|---|",

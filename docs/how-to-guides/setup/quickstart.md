@@ -15,7 +15,7 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Runtime provider keys for the CLI features you plan to use.
-- Optional adapters come later: `--with-hermes` for the Hermes/Obsidian path, Zotero when you need imports ([Set up Zotero](set-up-zotero.md)).
+- Optional adapters come later and are not part of the bootstrap. Portable Zotero exports can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
 
 ## Steps
 
@@ -31,7 +31,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, stages the golden copy, and wires local hooks. Add `--with-hermes` / `-WithHermes` only when you want the Hermes/Obsidian adapter.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, stages the golden copy, and wires local hooks.
 
 **2. Verify the CLI runtime.**
 
@@ -45,19 +45,7 @@ The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%
 & "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\python.exe" -m memoria_vault.cli workspace rebuild --workspace "$env:USERPROFILE\Memoria" --search
 ```
 
-**3. Fill optional adapter secrets.** For the Hermes/Obsidian adapter, copy the Local REST API `apiKey`, then put your keys in the shared Hermes env file (`%LOCALAPPDATA%\hermes\.env` on Windows, `~/.hermes/.env` on Linux/WSL2). At minimum that adapter needs `KILOCODE_API_KEY`, the `OBSIDIAN_*` keys, and `OPENALEX_API_KEY` — the full annotated list is in [Set up Hermes](set-up-hermes.md).
-
-Propagate them into every Hermes profile (profile runs read only their own `.env`):
-
-```powershell
-.\scripts\install.ps1 -ProfilesOnly -Vault "$env:USERPROFILE\Memoria"
-```
-
-```bash
-bash scripts/install.sh --profiles-only --vault ~/Memoria
-```
-
-**4. Make the first checkpoint.** The installer initializes Git and wires hooks, but it does not create the first commit or set a remote:
+**3. Make the first checkpoint.** The installer initializes Git and wires hooks, but it does not create the first commit or set a remote:
 
 ```bash
 cd ~/Memoria && git add -A && git commit -m "Initial Memoria vault"
@@ -79,6 +67,5 @@ those commands as the day-1 path for the space you are in.
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
-- API keys and profile secrets: [Set up Hermes](set-up-hermes.md)
 - First source task: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Optional Zotero import/export setup: [Set up Zotero](set-up-zotero.md)

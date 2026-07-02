@@ -430,6 +430,7 @@ def check_link_targets(
 def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
     """Return latest derived events whose inputs descend from ``target_id``."""
     target = normalize_path(target_id)
+    target_aliases = _trace_aliases(vault, target)
     derived = _latest_derived(Path(vault))
     by_input: dict[str, list[str]] = {}
     for output_id, event in derived.items():
@@ -440,9 +441,13 @@ def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
 
     found: list[dict[str, Any]] = []
     seen: set[str] = set()
-    queue: deque[str] = deque([target])
+    queue: deque[str] = deque(sorted(target_aliases))
+    expanded: set[str] = set()
     while queue:
         current = queue.popleft()
+        if current in expanded:
+            continue
+        expanded.add(current)
         for output_id in sorted(by_input.get(current, [])):
             if output_id in seen:
                 continue
@@ -639,6 +644,21 @@ def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
             if isinstance(output_id, str):
                 derived[normalize_path(output_id)] = event
     return derived
+
+
+def _trace_aliases(vault: Path, target: str) -> set[str]:
+    aliases = {target}
+    row = state.catalog_source(vault, target)
+    if row is None:
+        return aliases
+    source_id = str(row.get("source_id") or "").strip()
+    concept_path = str(row.get("concept_path") or "").strip()
+    if source_id:
+        aliases.add(f"catalog/sources/{source_id}")
+        aliases.add(f"catalog/sources/{source_id}/source.md")
+    if concept_path:
+        aliases.add(normalize_path(concept_path))
+    return aliases
 
 
 def _evidence_refs(frontmatter: dict[str, Any]) -> list[str]:

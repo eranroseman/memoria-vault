@@ -100,9 +100,8 @@ def test_policy_mcp():
             )
 
         # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
-        # Mirror the five real .memoria/lane-overrides/*.yaml so the gate contract
-        # for every shipped agent is unit-covered, plus synthetic lanes exercising
-        # generic write/auto-fix machinery.
+        # Exercise legacy adapter lanes as fixtures; alpha.14 does not ship
+        # lane-overrides in the template.
         engineer = LanePolicy(
             profile="memoria-engineer",
             allow_write=[],
@@ -381,43 +380,15 @@ def test_policy_mcp():
     _run()
 
 
-# Loaded from the real shipped lane-override YAMLs, not in-test mirrors, so a
-# lane edit that opens a hole in the template wall fails this test directly.
-SHIPPED_PROFILES = (
-    "memoria-copi",
-    "memoria-engineer",
-    "memoria-librarian",
-    "memoria-peer-reviewer",
-    "memoria-writer",
-)
-
-
-def test_shipped_lanes_deny_template_mutations():
-    """#179: every shipped lane ceiling denies every mutating action under
-    system/templates/. Agents are blocked here (deny.write `system/**`, Co-PI
-    `**`); accidental *human* overwrites are the golden copy's job
-    (tests/test_golden_restore.py)."""
+def test_template_no_longer_ships_lane_overrides():
+    """Alpha.14 removed shipped lane overrides; adapter policy must be supplied
+    explicitly and otherwise fails closed."""
     if yaml is None:
         pytest.skip("PyYAML not installed")
     src = Path(__file__).resolve().parent.parent / "vault-template"
-    path = "system/templates/claim.md"
-    for profile in SHIPPED_PROFILES:
-        lane = load_lane(src, profile)
-        for action in ("write", "append", "move"):
-            dec = decide(profile, action, path, lane)
-            assert dec.decision == "deny", (profile, action, dec)
-        # delete: even with explicit authorization, templates sit outside every
-        # lane's allow.write, so the scope check denies.
-        dec = decide(profile, "delete", path, lane, flags={"explicit_authorization": True})
-        assert dec.decision == "deny", (profile, "delete", dec)
-        # mkdir under templates: outside every routing.write_scope.
-        dec = decide(profile, "mkdir", "system/templates/sub", lane)
-        assert dec.decision == "deny", (profile, "mkdir", dec)
-        # auto_fix: even the two always-eligible classes are scoped to the
-        # lane's allow.write, which never reaches system/templates/.
-        for cls in ("safe-and-unambiguous", "authorized-targeted"):
-            dec = decide(profile, "auto_fix", path, lane, flags={"class": cls})
-            assert dec.decision == "deny", (profile, "auto_fix", cls, dec)
+    assert not (src / ".memoria/lane-overrides").exists()
+    with pytest.raises(FileNotFoundError):
+        load_lane(src, "memoria-writer")
 
 
 def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged(tmp_path):

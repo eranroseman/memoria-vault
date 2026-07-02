@@ -51,7 +51,7 @@ def test_verify_dry_run_writes_evidence(tmp_path: Path) -> None:
     }
 
 
-def test_verify_live_dry_run_includes_alpha11_cycle(tmp_path: Path) -> None:
+def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             sys.executable,
@@ -74,7 +74,10 @@ def test_verify_live_dry_run_includes_alpha11_cycle(tmp_path: Path) -> None:
     assert summary["gates"] == ["runtime"]
     assert [step["display"] for step in summary["steps"]] == [
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        "bash scripts/test-l2.sh",
+        (
+            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
+            "tests/test_worker_queue.py -q"
+        ),
     ]
 
 
@@ -108,7 +111,10 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
         "bash scripts/e2e-smoke.sh",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        "bash scripts/test-l2.sh",
+        (
+            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
+            "tests/test_worker_queue.py -q"
+        ),
     ]
 
 
@@ -142,7 +148,10 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
         "bash scripts/e2e-smoke.sh",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        "bash scripts/test-l2.sh",
+        (
+            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
+            "tests/test_worker_queue.py -q"
+        ),
     ]
     assert summary["manual_follow_up"] == [
         "Complete product/manual release evidence in the release parent issue.",

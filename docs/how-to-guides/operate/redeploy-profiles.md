@@ -5,70 +5,27 @@ grand_parent: How-to guides
 nav_order: 4
 ---
 
-
 # Redeploy profiles
 
-Push vault source edits — to `SOUL.md`, `config.yaml`, skills, or lane-overrides — out to the installed copies in `~/.hermes/profiles/`.
+Alpha.14 has no installed profile packages and no profile redeploy command.
 
-## When to redeploy
-
-- After editing any author-owned file in `<vault>/.memoria/profiles/memoria-<name>/`
-- After editing `<vault>/.memoria/lane-overrides/<name>.yaml`
-- After a `git pull` that changed profile files
-- After adding or rotating a key in `~/.hermes/.env` (the redeploy propagates it into each profile's `.env`)
-
-## Steps
-
-**1. Redeploy all profiles.** Run from the repo clone (it holds the installer); `--profiles-only` skips the full bootstrap and just re-deploys MCP dependencies, the five profiles, and the crons.
-
-```bash
-bash scripts/install.sh --profiles-only --vault <vault>      # Linux / WSL2 (where Hermes runs)
-```
-
-```powershell
-.\scripts/install.ps1 -ProfilesOnly -Vault <vault>           # Windows native production
-```
-
-`--vault <dir>` / `-Vault <dir>` names your runtime vault if it isn't the platform default (`~/Memoria` on Linux/WSL2, `%USERPROFILE%\Memoria` on Windows). The script is idempotent — safe to run at any time. It:
-
-- Stages each profile's files to a temp directory
-- Substitutes `{{PYTHON}}` (the vault venv interpreter) and `{{VAULT_PATH}}` in `config.yaml`
-- Calls `hermes profile install --force` for each of the five profiles ([Installer (bootstrap)](../../reference/installer.md))
-- Seeds each profile's `.env` from `~/.hermes/.env` — never overwrites a value already set
-
-**2. Redeploy a single profile** (faster when only one changed):
-
-```bash
-bash scripts/install.sh --profiles-only --only memoria-librarian
-```
-
-```powershell
-.\scripts/install.ps1 -ProfilesOnly -Only memoria-librarian
-```
-
-**3. Confirm the change landed.**
-
-```bash
-hermes profile show memoria-<name>
-```
-
-The output should reflect the edit you made (e.g., updated model name, new MCP server entry).
-
-For lane-override changes, verify with a test write operation — check `system/logs/audit.jsonl` to confirm the new policy is enforced.
+Do not run `--profiles-only`; that installer mode was removed with the
+pre-alpha.14 Hermes profile packaging. The shipped runtime is the standalone
+CLI/engine workspace. If system template files need to be refreshed, create a
+fresh workspace with the bootstrap installer and copy user-authored content
+intentionally.
 
 ## Verify
 
 ```bash
-hermes profile list
+python scripts/alpha14_negative_gate.py
 ```
 
-The five `memoria-*` profiles (`copi`, `librarian`, `writer`, `peer-reviewer`, `engineer`) show as registered.
-
-If you suspect the deployed copies still don't match the vault source, compare them directly and reconcile per the full procedure in [Fix profile drift](../troubleshooting/fix-profile-drift.md).
+The check fails if `vault-template/.memoria/profiles/` or
+`vault-template/.memoria/lane-overrides/` reappears.
 
 ## Related
 
-- Profile configuration guide: [Configure a profile](../hermes-agent/configure-a-profile.md)
-- Fix profile drift: [Fix profile drift](../troubleshooting/fix-profile-drift.md)
-- Set up profiles (first install): [Set up Hermes](../setup/set-up-hermes.md)
-- The flags and the idempotency mechanism: [Installer (bootstrap)](../../reference/installer.md)
+- Install the standalone workspace: [Set up the vault](../setup/set-up-the-vault.md)
+- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)
+- Installer reference: [Installer (bootstrap)](../../reference/installer.md)

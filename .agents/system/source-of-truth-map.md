@@ -12,11 +12,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Vault document types and fields | `vault-template/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
 | Type homes, staging/quarantine roots, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Installer, linter, templates, dashboards, worker promotion tests |
 | Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
-| Profile tool capabilities | `vault-template/.memoria/tool-registry.yaml` | Profile configs, profile tests, skill lifecycle dashboard |
-| Profile path permissions | `vault-template/.memoria/lane-overrides/*.yaml` | Policy MCP, policy plugin, tasks MCP, profile tests |
-| Hermes profile runtime wiring | `vault-template/.memoria/profiles/*/config.yaml` | Installer deployment, MCP process startup |
-| Agent posture | `vault-template/.memoria/profiles/*/SOUL.md` | Profile-owned skills and shared `vault-template/AGENTS.md` |
-| Profile package metadata | `vault-template/.memoria/profiles/*/distribution.yaml` | Installer profile deployment |
+| Installed profile absence | `tests/test_profiles.py` + `scripts/alpha14_negative_gate.py` | Installer tests, profile reference page |
 | Task lane to profile routing | `vault-template/.memoria/mcp/tasks_mcp.py` | QuickAdd delegation, board cards, task tests |
 | Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Policy MCP, tasks MCP, patterns MCP |
 | Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | MCP modules, operations, test harnesses |
@@ -29,7 +25,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |
 | Offline e2e smoke stages | `scripts/e2e_smoke.py` | `scripts/e2e-smoke.sh`, ADR-80/testing docs, release stage evidence |
-| Live Hermes L2 smoke contract | `scripts/test-l2.sh` | `scripts/l2_smoke.py`, `scripts/l2_openai_smoke_server.py`, `scripts/l2_obsidian_mcp_shim.py`, ADR-29, testing verification matrix |
+| Standalone disposable install harness | `scripts/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |
 | Contributor Python tooling | `requirements-dev.txt` | Dev setup, lint workflows, python-selftest, Dependabot |
 | Contributor code search (qmd) | `package.json` + `scripts/qmd-codebase-index.sh` / `scripts/qmd-install-hooks.sh` | AGENTS.md "Searching the codebase (qmd)", dev setup |
 | GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/github_doctor.py`, issue tracking docs |

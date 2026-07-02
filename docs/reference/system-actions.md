@@ -6,9 +6,15 @@ grand_parent: Reference
 
 # System actions
 
-Every action the system can perform, with its performer. Three performer kinds: **deterministic operations** (zero-LLM Python, report-only or idempotent), **agents** (LLM lanes acting through gated MCP tools and skills), and the **PI** (palette actions and review decisions). Where a topic has its own reference page, that page is authoritative for the details — this catalog is the map.
+Every action the system can perform, with its performer. Three performer kinds:
+**operations** (CLI/engine work, deterministic or runner-backed), **optional
+adapters** (external surfaces that call the same engine), and the **PI** (palette
+actions and review decisions). Where a topic has its own reference page, that
+page is authoritative for the details — this catalog is the map.
 
-This page is a guarded mirror, not the source of truth. Action implementation lives in the referenced Python modules, QuickAdd scripts, profile skills, and linked reference pages; docs checks keep the mirror linked.
+This page is a guarded mirror, not the source of truth. Action implementation
+lives in the referenced Python modules, QuickAdd scripts, capability manifests,
+and linked reference pages; docs checks keep the mirror linked.
 
 ## Deterministic operations
 

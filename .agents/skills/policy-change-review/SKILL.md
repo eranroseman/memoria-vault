@@ -1,13 +1,13 @@
 ---
 name: policy-change-review
-description: Review changes to Memoria profile capabilities, lane write scopes, policy enforcement, task delegation ceilings, or privileged policy workflows for cross-file drift and weakened boundaries.
+description: Review changes to Memoria operation capabilities, write policy enforcement, task delegation ceilings, optional adapter policy, or privileged policy workflows for cross-file drift and weakened boundaries.
 ---
 
 # Policy change review
 
-Use this skill when a diff touches `vault-template/.memoria/tool-registry.yaml`,
-`vault-template/.memoria/lane-overrides/`, profile MCP/tool configuration, policy MCP/hook
-code, the write-gate plugin, task delegation, or PR policy.
+Use this skill when a diff touches `vault-template/capabilities/operations/`,
+runtime policy code, policy MCP/hook code, the write-gate plugin, task delegation,
+provider ceilings, or PR policy.
 
 ## Authority and maps
 
@@ -21,27 +21,27 @@ Read:
 ## Review procedure
 
 1. Resolve the exact diff and list every changed policy surface.
-2. Build a per-profile matrix containing:
-   - Tool capabilities from `tool-registry.yaml`
-   - MCP servers and disabled toolsets from `config.yaml`
-   - Allowed and denied paths from the lane override
-   - Invocation and external API policy
-   - Plugin enforcement
+2. Build an operation/policy matrix containing:
+   - Operation id and manifest home
+   - Allowed tools, paths, and network/provider ceilings
+   - Request input/output intents and mutation targets
+   - Required checks and promotion gates
+   - Optional adapter enforcement, if present
 3. Confirm capability and scope remain separate:
-   - Tool registry answers what a profile can call.
-   - Lane override answers where a permitted tool can write.
-   - Task payloads may narrow but never widen the lane ceiling.
+   - Operation manifests answer what an operation may call and touch.
+   - Request payloads may narrow but never widen the operation ceiling.
+   - Optional adapter policy may only add fail-closed checks.
 4. Trace every changed mutating path through:
 
    ```text
-   tool call -> policy hook/plugin -> policy decision -> filesystem side effect
+   request -> operation manifest -> policy decision -> filesystem side effect
    -> complete_write/audit
    ```
 
 5. Verify the structural invariants:
-   - The Co-PI remains hard read-only and delegates writes.
-   - No profile gains direct-world `file`, `terminal`, `code_execution`,
-     `browser`, `web`, or `computer_use`.
+   - No removed installed-profile package, lane override, or tool registry reappears.
+   - No operation gains direct-world `file`, `terminal`, `code_execution`,
+     `browser`, `web`, or `computer_use` outside an explicit checked manifest.
    - Review-gated prefixes cannot be automatically written.
    - Deny rules and invalid configuration fail closed.
    - Delete and auto-fix retain explicit authorization/class controls.
@@ -56,6 +56,6 @@ Read:
 ## Output
 
 Use the [review report template](../../templates/review-report.md). Findings must
-identify the profile or workflow, the widened or inconsistent authority, the
+identify the operation or workflow, the widened or inconsistent authority, the
 reachable operation, and the missing control. If no issue survives, include the
 matrix surfaces reviewed and tests run.

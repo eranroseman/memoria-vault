@@ -128,7 +128,7 @@ repos:
         name: agents-doctor
         language: system
         entry: python scripts/agents_doctor.py
-        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$|vault-template/\.memoria/(profiles|lane-overrides)/)
+        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$)
         pass_filenames: false
 
       - id: github-doctor

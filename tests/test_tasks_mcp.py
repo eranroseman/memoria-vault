@@ -22,10 +22,8 @@ def _vault(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def test_every_lane_routes_to_a_shipped_profile():
-    shipped = {p.name for p in (SRC / ".memoria" / "profiles").iterdir() if p.is_dir()}
-    for lane, profile in tasks_mcp.LANE_PROFILE.items():
-        assert profile in shipped, f"lane {lane} routes to unshipped {profile}"
+def test_legacy_lane_routes_do_not_require_shipped_profiles():
+    assert not (SRC / ".memoria" / "profiles").exists()
     assert set(tasks_mcp.LANE_PROFILE) == {
         "catalog",
         "extract",

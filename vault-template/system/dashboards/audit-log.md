@@ -51,9 +51,10 @@ dv.table(
 );
 ```
 
-## Per-profile activity (last 24h)
+## Adapter activity (last 24h)
 
-Is each profile writing where expected? Smells: any `memoria-copi` write (write-denied), any `memoria-peer-reviewer` write outside `inbox/`, a Librarian writing thousands/hour.
+If optional adapters write through the policy shim, their `profile` field appears
+here. Alpha.14 does not install any profiles by default.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {
@@ -109,12 +110,9 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
-- Co-PI (`memoria-copi`) with any allowed write (its lane is `write: []`).
-- Peer-reviewer (`memoria-peer-reviewer`) allowed write outside `inbox/`.
-- Writer (`memoria-writer`) allowed write outside `knowledge/projects/`.
-- Engineer (`memoria-engineer`) allowed write outside `knowledge/projects/*/code/`.
-- Librarian `allow`/`allow_with_log` to `knowledge/notes/**` or `knowledge/hubs/**`.
-- Any allowed write missing `before_hash` / `after_hash`.
+- Any allowed adapter write missing `before_hash` / `after_hash`.
+- Any adapter write allowed under `.memoria/`.
+- Any adapter write allowed under `system/`.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {
@@ -127,16 +125,12 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const isAllowed = (d) => d === "allow" || d === "allow_with_log";
 const writeAction = (a) => a === "write" || a === "append";
-const inInbox = (p) => /^inbox\//.test(p ?? "");
-const inProjects = (p) => /^projects\//.test(p ?? "");
-const inCode = (p) => /^projects\/[^/]+\/code\//.test(p ?? "");
+const hiddenRuntime = (p) => /^\.memoria\//.test(p ?? "");
+const systemPath = (p) => /^system\//.test(p ?? "");
 const anomalies = events.filter(e =>
-  (e.profile === "memoria-copi" && writeAction(e.action) && isAllowed(e.decision)) ||
-  (e.profile === "memoria-peer-reviewer" && writeAction(e.action) && isAllowed(e.decision) && !inInbox(e.path)) ||
-  (e.profile === "memoria-writer" && writeAction(e.action) && isAllowed(e.decision) && !inProjects(e.path)) ||
-  (e.profile === "memoria-engineer" && writeAction(e.action) && isAllowed(e.decision) && !inCode(e.path)) ||
-  (e.profile === "memoria-librarian" && ((e.path ?? "").startsWith("knowledge/notes/") || (e.path ?? "").startsWith("knowledge/hubs/")) && isAllowed(e.decision)) ||
-  (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash))
+  (isAllowed(e.decision) && writeAction(e.action) && (!e.before_hash || !e.after_hash)) ||
+  (isAllowed(e.decision) && writeAction(e.action) && hiddenRuntime(e.path)) ||
+  (isAllowed(e.decision) && writeAction(e.action) && systemPath(e.path))
 );
 dv.table(
   ["When", "Profile", "Action", "Path", "Decision", "Rule"],

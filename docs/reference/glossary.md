@@ -14,15 +14,23 @@ For the short version of the core terms, see [Home](../README.md).
 
 ## System
 
-**ACP** (Agent Client Protocol) — the editor-level protocol that exposes Hermes profiles to editor chat panes. Obsidian's Agent Client pane uses ACP to talk to Hermes. Distinct from the Obsidian Local REST API (which gives Hermes vault-level read/write access).
+**ACP** (Agent Client Protocol) — an optional editor-level protocol for external
+chat adapters. Alpha.14 does not ship an ACP/Hermes profile setup.
 
-**Co-PI** — the one conversational agent (`memoria-copi`, [ADR-48](../adr/48-copi-and-agent-consolidation.md)): a reflective thinking-partner, system explainer, and delegation front. Hard read-only across the vault (empty write scope); every write it wants goes out as a board card; the sole carrier of the Hermes memory loop.
+**Co-PI** — the research-partner role exposed in alpha.14 through the
+standalone `memoria ask` / `memoria project ask` commands. Older designs mapped
+this role to a Hermes profile; alpha.14 does not ship that profile.
 
-**Operation** — deterministic, no-LLM (or LLM-free-by-default) code that runs on cron/CI or behind an MCP facade, never as a board lane. Operations compute and propose; agents judge; the PI decides. The shipped operations are listed in [Operations — the deterministic layer](../explanation/operations.md).
+**Operation** — a checked capability manifest plus runner behavior invoked by
+the CLI/engine. Operations compute and propose; the PI decides. The shipped
+operations are listed in [Operations](operations.md).
 
-**Hermes** — the Nous Research agent runtime Memoria runs on: Kanban, profile management, MCP server connections, skills, cron, and the gateway process.
+**Hermes** — an optional external agent runtime that may wrap the CLI/engine in
+future adapter work. It is not required by alpha.14.
 
-**Memoria** — the whole system: the vault, the Co-PI + four background agents, the Operations layer, the policy gate, the board, and the tooling layer (`.memoria/`).
+**Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
+standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
+runtime state.
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
@@ -135,9 +143,12 @@ name over a bare "state". Field contracts are specified in
 
 **Extraction-uncertainty flag** — the near-tie rule ([ADR-56](../adr/56-extraction-uncertainty-flag.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
-**Lane-override file** — per-lane YAML at `.memoria/lane-overrides/<lane>.yaml` declaring `policy.allow`/`deny`/`require` and `routing` (invocation, external-API policy, write scope). Read by the policy MCP.
+**Lane-override file** — optional adapter YAML read by the legacy Policy MCP
+shim when an external adapter supplies it. Alpha.14 does not ship lane overrides.
 
-**Policy MCP** — the runtime write-gate: intercepts every vault action, returns `allow` / `allow_with_log` / `deny` / `dry_run`, and appends to the audit log. Enforced in-process by the fail-closed `memoria-policy-gate` plugin. See [Policy MCP](policy-mcp.md).
+**Policy MCP** — optional adapter decision shim: returns `allow` /
+`allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails
+closed when adapter policy is missing. See [Policy MCP](policy-mcp.md).
 
 **Review-gated zone** — an older policy term for folders where agent writes
 degrade to proposals. Alpha.11 replaces this with worker-owned staging and

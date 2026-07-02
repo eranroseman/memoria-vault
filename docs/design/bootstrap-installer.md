@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. The alpha.14 direction is the standalone CLI/runtime path: [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, stage the golden copy, install the `memoria` package into the vault-local venv, register qmd search, and wire local integrity hooks. Hermes profiles, Hermes crons, and Obsidian guidance are an explicit adapter path, not the default runtime.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, stage the golden copy, install the `memoria` package into the vault-local venv, register qmd search, and wire local integrity hooks. Alpha.14 does not install Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -26,17 +26,16 @@ The distribution mechanism is `vault-template/` plus the hashed `<vault>/.memori
 | Stage golden copy | Save the restore baseline. |
 | Wire runtime | Initialize Git, add the pre-commit hook, add the verify-on-commit hook, create the vault-local venv, install the Memoria package, register qmd search, and install the optional cluster stack only when `--with-cluster` is passed. |
 
-Ordered steps, component checklist, and cron list are owned by [Installer (bootstrap)](../reference/installer.md); the profile roster is [Profile capabilities](../reference/profile-capabilities.md).
+Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md); the no-installed-profile contract is [Installed profiles](../reference/profile-capabilities.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately
 *left* the installer — it is an optional import/export adapter, not core
-provisioning, so its setup moved to the tutorial. Hermes likewise moved behind
-`--with-hermes` / `-WithHermes` because the core runtime is the standalone CLI
-and engine.
+provisioning, so its setup moved to the tutorial. Hermes likewise left the
+installer baseline: optional adapters may wrap the CLI/engine later, but this
+bootstrap path is standalone.
 
-The install contract is narrow: fresh install by default, idempotent adapter
-redeploy for source/secret changes, detect-then-install, no clobbering user
-content, no writing secrets, and no in-place release migration
+The install contract is narrow: fresh install, detect-then-install, no
+clobbering user content, no writing secrets, and no in-place release migration
 ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ## Entry point and safety model
@@ -50,23 +49,15 @@ The primary path is inspect-first: download, read, then run. The one-liner is co
 | Unclear effects | `--dry-run` prints actions without executing them. |
 | Silent elevation | The installer stops and prints the exact `sudo`/admin command. |
 
-## Standalone default and adapter path
-
-Both installers treat the standalone CLI/runtime as the normal path. Adding
-`--with-hermes` / `-WithHermes` layers on the Hermes/Obsidian adapter: Hermes
-install, profile rendering, profile skills, Hermes crons, Obsidian CSS snippet
-reconciliation, and Obsidian guidance.
+## Standalone-only bootstrap
 
 - **Linux/WSL default:** `scripts/install.sh` installs the standalone CLI/runtime workspace.
 - **Windows default:** `scripts/install.ps1` installs the standalone CLI/runtime workspace.
-- **Linux/WSL adapter:** `scripts/install.sh --with-hermes` also provisions Hermes profiles, skills, crons, and Obsidian guidance.
-- **Windows adapter:** `scripts/install.ps1 -WithHermes` does the native Windows Hermes/profile/cron setup.
 
-The production path has no `/mnt/c` vault path, no WSL2 gate in the PowerShell
-installer, and no `windowsWslMode` requirement for the Agent Client pane on production
-Windows. WSL-specific test docs open the ext4 test vault with Linux Obsidian on
-the native path; mirrored networking is only relevant for an explicit split
-where WSL Hermes talks to Windows Obsidian serving a Windows-hosted vault.
+The production path has no `/mnt/c` vault path and no WSL2 gate in the
+PowerShell installer. Any future Obsidian/Hermes adapter is separate from the
+bootstrap contract and must not reintroduce installed profiles or profile-only
+redeploy modes into the core installer.
 
 ## Simplifying decisions
 
@@ -85,10 +76,10 @@ Each trades breadth for less installer code:
 
 | Trade-off | Accepted cost |
 | --- | --- |
-| Standalone default plus Hermes adapter | More branches, but the adapter is explicit and no longer hides in the default path. |
+| Standalone-only installer | Users who want an external adapter need a separate adapter setup later, but the core install has one path. |
 | One-line installer option | Inherent trust cost, mitigated by inspect-first docs and `--dry-run`. |
 | Assisted secrets setup | The UX must say when automation stops. |
-| Fresh release installs | No in-place migrations; profile redeploy remains the idempotent path. |
+| Fresh release installs | No in-place migrations or profile redeploy modes. |
 
 ## Related
 

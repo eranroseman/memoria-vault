@@ -15,11 +15,11 @@ used as framing, or rejected. The design argument is
 | Pattern | Representative sources | Memoria use |
 | --- | --- | --- |
 | Stage-gated pipeline | ResearchArena, MLR-Copilot, AutoResearchClaw | Library intake and Project output run as distinct stages with validated handoffs. |
-| Explicit roles per agent | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), [LatteReview](bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](bibliography.md#schmidgall2025agentlaboratory) | Five permission-scoped Hermes profiles. |
+| Explicit roles per operation | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), [LatteReview](bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](bibliography.md#schmidgall2025agentlaboratory) | Permission-scoped operation manifests and request rows. |
 | Strong schema at handoffs | AI Scientist, AutoResearchClaw | Typed frontmatter catches mismatches that free-text handoffs would compound. |
 | Persistent knowledge graph | [OmegaWiki](bibliography.md#qian2026omegawiki), Idea2Story | Wikilinks, typed relations, hubs, and entity notes. |
 | Reviewable organization artifacts | LitLLM, [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and Bases views keep synthesis visible. |
-| Persistent Kanban + worker lanes | Hermes Agent | The durable board where background lanes claim work. |
+| Persistent work queue | Hermes Agent | Historical inspiration; alpha.14 uses operation requests in the workspace DB. |
 | Durable-state thesis | [Chen et al. 2026](bibliography.md#chen2026autonomous), [MetaGPT](bibliography.md#hong2024metagpt), [PARNESS](bibliography.md#wang2026parness) | Thin control over thick state. |
 | Claim-to-evidence chain | [ScientistOne](bibliography.md#meng2026scientistone), [AutoResearchClaw](bibliography.md#liu2026autoresearchclaw) | Peer-reviewer claim-trace and citation checks. |
 | Point-of-action discovery | Karpathy Autoresearch | Deferred nightly Librarian discovery with bounded batch size. |

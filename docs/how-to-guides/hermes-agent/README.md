@@ -8,13 +8,13 @@ permalink: /how-to-guides/hermes-agent/
 
 # Hermes Agent
 
-Operational guides for the Hermes CLI — profile configuration and interactive chat sessions.
+Boundary notes for optional Hermes adapter experiments. Alpha.14 does not ship
+installed Hermes profiles.
 
 | Guide                                       | What it covers                                        |
 | ------------------------------------------- | ----------------------------------------------------- |
-| [Configure a profile](configure-a-profile.md)     | Model routing, write permissions, skills, API keys    |
-| [Run a CLI chat session](run-a-cli-chat-session.md) | Start a session, run skill commands, use dry-run mode |
+| [Configure a profile](configure-a-profile.md)     | Why profile configuration is not part of alpha.14    |
+| [Run a CLI chat session](run-a-cli-chat-session.md) | Optional external chat experiment notes |
 
-First-time install configures the profiles for you — see [Set up Hermes](../setup/set-up-hermes.md). **Configure a profile** is for *editing* a profile afterward (changing model routing, skills, or keys).
-
-Administrative CLI commands (profile list/install, kanban management, skills, cron) are reference material: [Hermes CLI](../../reference/hermes-cli.md).
+Use the standalone [CLI](../../reference/cli.md) for the current product surface.
+The Hermes boundary is summarized in [Hermes CLI](../../reference/hermes-cli.md).

@@ -6,82 +6,53 @@ grand_parent: Reference
 
 # Policy MCP
 
-The legacy profile policy gate (`vault-template/.memoria/mcp/policy_mcp.py`)
-checks lane-override rules and returns a decision before profile tools write.
-In alpha.11 it is not the canonical write boundary; machine Concept writes,
-promotion, projections, journal rows, and `check_status` transitions route
-through the worker. The stable deployed entrypoint is `policy_mcp.py`; the
-behavior-preserving core is split under `memoria_vault.runtime.policy` (`model`,
-`paths`, `lanes`, `decision`, `audit`, and `engine`), with the MCP tools wrapped
-by `vault-template/.memoria/mcp/policy_server.py`.
+The alpha.14 write boundary is the standalone CLI/engine: operation manifests,
+request rows, staging, checks, promotion, and journal entries control machine
+mutations. `vault-template/.memoria/mcp/policy_mcp.py` remains as an optional
+adapter shim for tools that still need a pre-write decision API.
 
----
+The template does **not** ship lane overrides. If an adapter calls the Policy MCP
+without an operator-supplied `.memoria/lane-overrides/<lane>.yaml`, the decision
+fails closed with `policy_rule: lane.load-error`.
 
-## Request flow
+## Request Flow
 
 ```text
-Hermes profile
-  → tool call (write / move / delete / auto_fix)
-    → Policy MCP
-      → profile lookup in lane-override file
-      → path + action evaluation
-      → allow | allow_with_log | deny | dry_run
-      → filesystem execution or diff report
+optional adapter tool call
+  -> Policy MCP
+     -> load operator-supplied lane policy, if present
+     -> normalize path and action
+     -> allow | allow_with_log | deny | dry_run
+     -> adapter executes or blocks
 ```
 
-Every request carries complete identity and task metadata. `task_id` is required — the MCP cannot ask the worker mid-decision which task it is running. A missing `task_id` or a path-traversal attempt (`..` escaping the vault root) is denied and audited.
+Every request carries complete identity and task metadata. `task_id` is required.
+A missing `task_id` or a path-traversal attempt (`..` escaping the vault root) is
+denied and audited.
 
----
-
-## Action vocabulary
-
-Eight guarded actions; `read` and `report` are non-mutating. The old
-review-gated `dry_run` rule remains as a legacy fallback for pre-alpha.11
-profile tools.
+## Action Vocabulary
 
 | Action | Default disposition |
 | --- | --- |
-| `read` | Default-allow; `allow_with_log` in legacy review-gated zones; an explicit `deny.read` wins. |
-| `write` / `append` | `deny.write` wins; else `allow.write` -> allow; else **default-deny**. `dry_run` in legacy review-gated zones. |
+| `read` | Default-allow unless explicitly denied. |
+| `write` / `append` | `deny.write` wins; else `allow.write` -> allow; else default-deny. |
 | `move` | As write, and always `allow_with_log` when allowed. |
-| `delete` | `deny` unless `flags.explicit_authorization` (then `allow_with_log`, within the lane's write globs); legacy review-gated -> `dry_run`. |
-| `mkdir` | `allow` within `routing.write_scope`, else `deny`. |
-| `auto_fix` | Class-gated via `flags.class` (see [Auto-fix policy](#auto-fix-policy)). |
-| `report` | Always `allow` within the worker's lane. |
+| `delete` | Deny unless `flags.explicit_authorization` and the path is inside scope. |
+| `mkdir` | Allow within `routing.write_scope`, else deny. |
+| `auto_fix` | Class-gated by `flags.class`. |
+| `report` | Non-mutating report action. |
 
-A skill loaded for the session can only **narrow**: its `policy.deny.write` patterns are composed additively onto the lane (one-way for the session; checked before everything but action validity).
+A loaded skill policy can only narrow the lane by adding deny globs for the
+session.
 
----
-
-## Decision values
-
-| Decision | Meaning | Logged? |
-| --- | --- | --- |
-| `allow` | Action proceeds. | Only if the lane's `policy.require` includes `audit_log` (every shipped lane does). |
-| `allow_with_log` | Action proceeds; audit entry mandatory. | Always. |
-| `deny` | Action blocked; worker must escalate or choose a different path. | Always. |
-| `dry_run` | Action logged and reported but not performed; the worker surfaces it as a board comment. | Always. |
-
-**Two rules override lane configuration entirely:**
-
-1. **Review-gated Concept zones are never auto-written by this policy module.**
-   Alpha.11 no longer declares `gated_prefixes` in `folders.yaml`; the
-   dependency-free fallback tuple in `memoria_vault.runtime.policy.paths` covers
-   `knowledge/notes/` and `knowledge/hubs/` when the runtime cannot load the
-   folder manifest. The alpha.11 write boundary is still worker staging and
-   checked promotion, not this dry-run fallback.
-2. **Auto-fix is class-gated.** Only `flags.class ∈ {safe-and-unambiguous, authorized-targeted}` may proceed; `schema-content` is pinned to `dry_run` and `review-gated-edit` to `deny`, regardless of who asks.
-
----
-
-## Request contract
+## Request Contract
 
 ```json
 {
   "profile": "memoria-writer",
   "action": "write",
   "path": "knowledge/projects/project-x/drafts/chapter-1.md",
-  "reason": "draft synthesis from claim notes",
+  "reason": "draft synthesis from checked notes",
   "task_id": "TASK-2026-05-31-007",
   "flags": {
     "explicit_authorization": false,
@@ -92,35 +63,33 @@ A skill loaded for the session can only **narrow**: its `policy.deny.write` patt
 
 | Field | Required | Notes |
 | --- | --- | --- |
-| `profile` | yes | Must match a lane-override file (`memoria-writer` → `writer.yaml`). |
-| `action` | yes | One of the eight actions above. |
-| `path` | yes | Vault-root-relative, forward slashes; normalized (no `./`, no `..`) before evaluation. |
+| `profile` | yes | Adapter profile/lane id. It must resolve to an operator-supplied lane policy when the shim is used. |
+| `action` | yes | One of the actions above. |
+| `path` | yes | Vault-root-relative, forward slashes; normalized before evaluation. |
 | `reason` | no | Short prose for the audit log. |
-| `task_id` | yes | The board card that triggered the action. Required on every request. |
-| `flags.explicit_authorization` | no | Required for `delete`; forces `allow_with_log` on writes. |
+| `task_id` | yes | The request/card/session that triggered the action. |
+| `flags.explicit_authorization` | no | Required for privileged deletes. |
 | `flags.class` | no | Required for `auto_fix`. |
 
-Debugging an unexpected deny is a one-shot CLI away (the lane-override says what the rule is; the audit log says what was decided):
+Debug a decision with:
 
 ```bash
-python3 .memoria/mcp/policy_mcp.py --vault <vault> \
-  --decide '{"profile":"memoria-librarian","action":"write","path":"catalog/sources/x/source.md","task_id":"T1"}'
+python3 .memoria/mcp/policy_mcp.py --vault <workspace> \
+  --decide '{"profile":"memoria-writer","action":"write","path":"knowledge/projects/x/draft.md","task_id":"T1"}'
 ```
 
----
-
-## Response contract
+## Response Contract
 
 Allow:
 
 ```json
-{ "decision": "allow", "policy_rule": "Librarian.write.catalog", "log_required": true }
+{ "decision": "allow", "policy_rule": "Writer.write.projects", "log_required": true }
 ```
 
 Deny:
 
 ```json
-{ "decision": "deny", "policy_rule": "Librarian.deny.write", "message": "memoria-librarian is denied write to 'knowledge/notes/x.md'" }
+{ "decision": "deny", "policy_rule": "lane.load-error", "message": "no lane-override for profile 'memoria-writer'" }
 ```
 
 Dry-run:
@@ -129,87 +98,25 @@ Dry-run:
 { "decision": "dry_run", "policy_rule": "review_gated.dry_run", "message": "review-gated Concept write requires worker promotion" }
 ```
 
-On an allowed mutating action the response also carries `before_hash`; the worker calls `complete_write` after the write so the paired `after_hash` lands in the audit trail as a separate `write_complete` record (see [Audit log format](#audit-log-format)).
+On an allowed mutating action, the response also carries `before_hash`. The
+adapter calls `complete_write` after the write so the paired `after_hash` lands
+in the audit trail as a separate `write_complete` record.
 
-### Tools
+## Tools
 
 | Tool | Does |
 | --- | --- |
-| `check_permission(profile, action, path, task_id, reason, flags)` | The decision entry point. |
-| `complete_write(profile, action, path, task_id, before_hash)` | Records the post-write `after_hash` (reversibility / tamper trail). |
-| `set_session_skill(task_id, skill_policy)` / `clear_session_skill(task_id)` | Register / drop a loaded skill's one-way deny narrowing. |
+| `check_permission(profile, action, path, task_id, reason, flags)` | Decision entry point. |
+| `complete_write(profile, action, path, task_id, before_hash)` | Records the post-write `after_hash`. |
+| `set_session_skill(task_id, skill_policy)` / `clear_session_skill(task_id)` | Register or clear one-way session narrowing. |
 
----
+## Audit Log
 
-## Audit log format
-
-The full audit-log schema, JSON example, decision enum, and per-write SHA-256 hash-pairing rules live in [Policy audit log](policy-audit-log.md).
-
-## Auto-fix policy
-
-The auto-fix classes and their dispositions live in [Policy auto-fix](policy-auto-fix.md).
-
-## The five lane-overrides
-
-The policy manifest for each profile lives in `vault-template/.memoria/lane-overrides` — `copi.yaml`, `librarian.yaml`, `writer.yaml`, `peer-reviewer.yaml`, `engineer.yaml`. Shape:
-
-```yaml
-profile: memoria-librarian
-
-policy:
-  allow:
-    skills: [obsidian, qmd]
-    write: []
-  deny:
-    skills: [review_gated_publish, destructive_shell]
-    write:
-      - "catalog/**"
-      - "knowledge/**"
-      - "capabilities/**"
-      - "inbox/**"
-      - "system/**"
-  require:
-    - audit_log
-    - timeout_required
-    - source_tracking
-
-routing:
-  invocation: dispatched
-  external_api_policy: explicit_only
-  write_scope:
-    - ".memoria/staging/catalog/"
-    - ".memoria/staging/knowledge/"
-```
-
-`policy.deny` wins over `policy.allow`; an unmatched path is default-denied. The Co-PI's override is the limiting case: `allow.write: []` plus `deny.write: "**"` — the structural guarantee behind "read directly, delegate writes". The full scope table is in [Profile capabilities](profile-capabilities.md).
-
-One consequence worth naming: every shipped lane denies writes under `system/**` (the Co-PI under `**`), and no lane's `allow.write`, `routing.write_scope`, or auto-fix scope reaches into `system/` — so no profile can mutate `system/templates/` (or any other system file) through the gate, for any action: write, append, move, delete (even with `explicit_authorization`, the scope check denies), mkdir, auto_fix. Accidental *human* overwrites of system files are the golden copy's job — drift detection plus `lint:restore`, see [Linter: detectors and auto-fix](linter.md#the-golden-copy).
-
-Globs use doublestar semantics: `**` crosses path segments, `*` stays within one, `?` matches one non-`/` character.
-
----
-
-## Enforcement: the policy-gate plugin
-
-`check_permission` only decides — the bridge that actually stops a write is the **`memoria-policy-gate` Hermes plugin** (deployed per profile by the installer; it reuses `vault-template/.memoria/mcp/policy_hook.py`'s decision core):
-
-- **`pre_tool_call`** maps the obsidian tool to a policy action, calls the decision core, and blocks on `deny`/`dry_run`; on an allowed write it stashes the `before_hash`. **Fail-closed:** any error inside the gate blocks.
-- **`post_tool_call`** computes `after_hash` and appends the paired `write_complete` audit record.
-
-It is a Python plugin, not a shell hook ([ADR-28](../adr/28-write-gate-as-plugin.md)):
-
-| Layer | Enforcement |
-| --- | --- |
-| Plugin choice | Hermes registers MCP tools as `mcp_<server>_<tool>`; shell hooks are consent-gated and fail-open. The plugin runs in-process, receives `task_id`, and fails closed. |
-| Hard denies | Native `vault_delete` / `vault_move`, `command_execute`, direct-world/history tools, and `session_search`. |
-| Capability check | The per-profile tool registry is enforced before lane path checks; Hermes `memory` is allowed only where the registry grants it. |
-| Lane policy | Writes then narrow through the lane override. |
-
----
+The full audit-log schema, JSON example, decision enum, and per-write SHA-256
+hash-pairing rules live in [Policy audit log](policy-audit-log.md).
 
 ## Related
 
-- The lane ceilings in table form: [Profile capabilities](profile-capabilities.md)
-- Audit-log substrate and retention: [Memory substrates](memory-substrates.md)
-- The ceiling check on delegation payloads: [Kanban board reference](kanban-board.md)
-- The gated folder map's single source: [Document types](document-types.md)
+- Current CLI/engine command surface: [CLI](cli.md)
+- Operation allowlists: [Operations](operations.md)
+- No installed profile packages: [Installed profiles](profile-capabilities.md)

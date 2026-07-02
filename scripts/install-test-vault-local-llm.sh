@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Disposable full-install smoke for the local Memoria test vault.
+# Disposable standalone-install smoke for the local Memoria test workspace.
 #
-# The target root may contain tool-managed mounts, so the actual vault defaults
-# to ~/Memoria-test/vault and that subdirectory is wiped on every run.
+# The target root may contain tool-managed mounts, so the actual workspace
+# defaults to ~/Memoria-test/vault and that child directory is wiped on every run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,9 +10,7 @@ TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/Memoria-test}"
 VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
 MODEL="${MEMORIA_TEST_LLM_MODEL:-memoria-qwen2.5:7b-64k}"
-CONTEXT="${MEMORIA_TEST_LLM_CONTEXT:-65536}"
-RUN_LIVE_LLM=1
-CRON_IDS_TO_RESUME=""
+CHECK_LOCAL_LLM=0
 
 say() { printf '%s\n' "$*"; }
 hdr() { printf '\n== %s ==\n' "$*"; }
@@ -22,21 +20,22 @@ usage() {
   cat <<'EOF'
 Usage: scripts/install-test-vault-local-llm.sh [options]
 
-Rebuild the disposable Memoria test vault, wire Hermes profiles to a local
-OpenAI-compatible LLM endpoint, and run the package/golden/detector/L2 checks.
+Rebuild the disposable Memoria test workspace and run the standalone installer,
+package, golden-copy, detector, and CLI doctor checks. The optional local-LLM
+check only verifies that an OpenAI-compatible endpoint is reachable; alpha.14
+does not install Hermes profiles or drive a Hermes dispatch.
 
 Options:
-  --root DIR        Disposable test root (default: ~/Memoria-test)
-  --vault DIR       Actual vault path; must be below --root (default: DIR/vault)
-  --base-url URL    OpenAI-compatible endpoint (default: http://127.0.0.1:11434/v1)
-  --model NAME      Local model name (default: memoria-qwen2.5:7b-64k)
-  --context N       Model context length (default: 65536)
-  --skip-live-llm   Rebuild and verify the install, but skip the real-model L2 smoke
-  -h, --help        Show this help
+  --root DIR          Disposable test root (default: ~/Memoria-test)
+  --vault DIR         Actual workspace path; must be below --root (default: DIR/vault)
+  --check-local-llm   Check the configured OpenAI-compatible endpoint
+  --base-url URL      Endpoint used by --check-local-llm (default: http://127.0.0.1:11434/v1)
+  --model NAME        Model label printed with --check-local-llm
+  -h, --help          Show this help
 
 Environment overrides mirror the flags:
   MEMORIA_TEST_ROOT, MEMORIA_TEST_VAULT, MEMORIA_TEST_LLM_BASE_URL,
-  MEMORIA_TEST_LLM_MODEL, MEMORIA_TEST_LLM_CONTEXT
+  MEMORIA_TEST_LLM_MODEL
 EOF
 }
 
@@ -57,33 +56,6 @@ run() {
 
 need() {
   command -v "$1" >/dev/null 2>&1 || die "$1 is required on PATH"
-}
-
-pause_memoria_crons() {
-  command -v hermes >/dev/null 2>&1 || return 0
-  CRON_IDS_TO_RESUME="$(
-    hermes cron list 2>/dev/null | awk '
-      /^[[:space:]]+[0-9a-f]+ \[active\]/ { id = $1; active = 1; next }
-      /^[[:space:]]+[0-9a-f]+ \[/ { id = ""; active = 0; next }
-      /^[[:space:]]+Name:[[:space:]]+memoria-/ && active { print id }
-    '
-  )" || return 0
-  [ -n "$CRON_IDS_TO_RESUME" ] || return 0
-  hdr "Pause Memoria crons"
-  local id
-  for id in $CRON_IDS_TO_RESUME; do
-    run hermes cron pause "$id" || true
-  done
-}
-
-resume_memoria_crons() {
-  [ -n "$CRON_IDS_TO_RESUME" ] || return 0
-  hdr "Resume Memoria crons"
-  local id
-  for id in $CRON_IDS_TO_RESUME; do
-    run hermes cron resume "$id" || true
-  done
-  CRON_IDS_TO_RESUME=""
 }
 
 models_url() {
@@ -109,6 +81,10 @@ while [ "$#" -gt 0 ]; do
       VAULT="$(expand_path "$2")"
       shift 2
       ;;
+    --check-local-llm)
+      CHECK_LOCAL_LLM=1
+      shift
+      ;;
     --base-url)
       [ "$#" -ge 2 ] || die "--base-url needs a URL"
       BASE_URL="$2"
@@ -118,15 +94,6 @@ while [ "$#" -gt 0 ]; do
       [ "$#" -ge 2 ] || die "--model needs a model name"
       MODEL="$2"
       shift 2
-      ;;
-    --context)
-      [ "$#" -ge 2 ] || die "--context needs a value"
-      CONTEXT="$2"
-      shift 2
-      ;;
-    --skip-live-llm)
-      RUN_LIVE_LLM=0
-      shift
       ;;
     -h|--help)
       usage
@@ -147,21 +114,20 @@ case "$VAULT" in
   *) die "--vault must be below --root; refusing to wipe $VAULT" ;;
 esac
 [ "$VAULT" != "$TEST_ROOT" ] || die "--vault must be a child of --root, not the root itself"
-[ "$VAULT" != "$HOME" ] || die "refusing to use HOME as the disposable vault"
-[ "$VAULT" != "/" ] || die "refusing to use / as the disposable vault"
+[ "$VAULT" != "$HOME" ] || die "refusing to use HOME as the disposable workspace"
+[ "$VAULT" != "/" ] || die "refusing to use / as the disposable workspace"
 
-need curl
 need git
-trap resume_memoria_crons EXIT
 
-if [ "$RUN_LIVE_LLM" -eq 1 ]; then
+if [ "$CHECK_LOCAL_LLM" -eq 1 ]; then
+  need curl
   hdr "Local LLM preflight"
+  say "  endpoint: $BASE_URL"
+  say "  model: $MODEL"
   run curl -fsS --max-time 5 "$(models_url)" >/dev/null
 fi
 
-pause_memoria_crons
-
-hdr "Rebuild disposable vault"
+hdr "Rebuild disposable workspace"
 run mkdir -p "$TEST_ROOT"
 run rm -rf "$VAULT"
 run mkdir -p "$VAULT"
@@ -170,54 +136,26 @@ run git -C "$VAULT" branch -M main
 run git -C "$VAULT" config user.email memoria-test@example.invalid
 run git -C "$VAULT" config user.name "Memoria Test"
 
-hdr "Full installer"
-run env \
-  MEMORIA_ENV=test \
-  MEMORIA_MODEL_PROVIDER=custom \
-  MEMORIA_MODEL_BASE_URL="$BASE_URL" \
-  MEMORIA_MODEL_NAME="$MODEL" \
-  MEMORIA_MODEL_CONTEXT_LENGTH="$CONTEXT" \
-  bash "$ROOT/scripts/install.sh" --with-hermes --vault "$VAULT" --no-apps --yes
+hdr "Standalone installer"
+run env MEMORIA_ENV=test bash "$ROOT/scripts/install.sh" --vault "$VAULT" --yes
 
 hdr "Baseline commit"
 run git -C "$VAULT" add -A
-run git -C "$VAULT" commit -qm "Initial Memoria test vault"
-resume_memoria_crons
+run git -C "$VAULT" commit -qm "Initial Memoria test workspace"
 
 PY="$VAULT/.memoria/.venv/bin/python"
 [ -x "$PY" ] || die "installed venv python not found: $PY"
 
 hdr "Install checks"
 run "$PY" -c "import memoria_vault; print(memoria_vault.__version__)"
+run "$PY" -m memoria_vault.cli doctor bundle --workspace "$VAULT" --json
 run "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" check
 verdict="$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$VAULT" | tail -1)"
 say "  detectors: $verdict"
 case "$verdict" in
   *"verdict: PASS"*) ;;
-  *) die "fresh installed vault detectors were not clean: $verdict" ;;
+  *) die "fresh installed workspace detectors were not clean: $verdict" ;;
 esac
 
-hdr "Profile checks"
-run hermes profile list
-run hermes cron list
-
-if [ "$RUN_LIVE_LLM" -eq 1 ]; then
-  hdr "L2 real-model smoke"
-  l2_smoke() {
-    run env \
-      MEMORIA_L2_USE_SMOKE_MODEL=0 \
-      MEMORIA_L2_MODEL_PROVIDER=custom \
-      MEMORIA_L2_MODEL_BASE_URL="$BASE_URL" \
-      MEMORIA_L2_MODEL_NAME="$MODEL" \
-      MEMORIA_L2_MODEL_CONTEXT_LENGTH="$CONTEXT" \
-      OPENAI_API_KEY="${OPENAI_API_KEY:-dummy}" \
-      bash "$ROOT/scripts/test-l2.sh" --real-model
-  }
-  if ! l2_smoke; then
-    say "  L2 real-model smoke failed once; retrying."
-    l2_smoke
-  fi
-fi
-
 hdr "Done"
-say "Disposable Memoria install verified at $VAULT"
+say "Disposable Memoria standalone install verified at $VAULT"

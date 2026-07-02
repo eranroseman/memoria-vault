@@ -80,7 +80,6 @@ Run the focused docs checks:
 ```bash
 python scripts/docs_doctor.py docs
 python scripts/agents_doctor.py
-python scripts/render_profile_configs.py reference --check
 python scripts/gen_reference_refs.py --check
 python scripts/docs_doctor.py --vault-links
 ```

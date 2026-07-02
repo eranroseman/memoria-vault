@@ -6,113 +6,36 @@ grand_parent: Reference
 
 # Hermes CLI
 
-Every `hermes …` command-line operation: the per-profile research skills, the administrative commands (profiles, skills, cron), and the Kanban board commands. These are the **terminal** surface; the primary day-to-day surface is Obsidian's spaces, Bases views, and `Memoria:` command palette. The Agent Client pane is the conversational route for shaping unclear work, not the first or only way to trigger tasks. For the in-Obsidian palette see [Obsidian command palette](obsidian-command-palette.md).
+Alpha.14 does not ship a Hermes command surface. The installed product surface is
+the standalone [`memoria` CLI](cli.md) plus the local engine state in the
+workspace.
 
-Command structure: `hermes <command> [subcommand] [args]` — runs from any directory; Hermes resolves the vault path from the profile's `config.yaml`. Per-profile sessions run as `hermes -p memoria-<name> chat` (or `hermes -p memoria-copi acp` for the Co-PI Agent Client pane).
+The bootstrap installers do not install Hermes, profiles, lane overrides,
+profile skills, Hermes crons, or profile-only redeploy commands. The template
+must not contain `vault-template/.memoria/profiles/` or
+`vault-template/.memoria/lane-overrides/`; [Installed profiles](profile-capabilities.md)
+owns that contract.
 
----
+Hermes remains an optional future adapter: it may wrap the CLI/engine for users
+who want a Hermes-hosted chat, dispatcher, or board UI, but it is not the
+authority for operation manifests, write policy, provider config, or scheduled
+work in alpha.14.
 
-## The profile set
+## Current Commands
 
-Five profiles: `memoria-copi`, `memoria-librarian`, `memoria-writer`, `memoria-peer-reviewer`, `memoria-engineer` (see [Profile capabilities](profile-capabilities.md)).
+Use these references for the current shipped surfaces:
 
----
+- CLI command list: [CLI](cli.md)
+- Operation manifests: [Operations](operations.md)
+- Write policy: [Policy MCP](policy-mcp.md)
+- Install flow: [Installer (bootstrap)](installer.md)
 
-## Skill names
+## API Server
 
-Lane skills use the **`<task>-<verb>-<object>`** kebab-case convention — the task/lane is the first token, the verb comes from a closed set, and the object is the artifact, so a skill's name says which task delegates it (e.g. `catalog-enrich-record`, `link-suggest-claim`). Co-PI conversational skills that are not lane work use bare `<verb>-<object>` names (`explore-framings`, `route-task`, `explain-system`). One spelling is used everywhere — in prose, on disk, and at the `-s` load flag.
+No Hermes API server is installed by the alpha.14 bootstrap. External API
+adapters must call the standalone CLI/engine.
 
-So `catalog-enrich-record` lives in `skills/catalog-enrich-record/` and loads as `hermes -p memoria-librarian chat -s catalog-enrich-record`. When serialized as an MCP tool the separators collapse to underscores: `catalog_enrich_record`.
+## Board Management
 
-The on-disk registry under `vault-template/.memoria/profiles/<profile>/skills/` matches the table below exactly (enforced by `tests/test_profiles.py`):
-
-| Actor | Skills (all shipped in `vault-template/.memoria/profiles/<profile>/skills/`) |
-| --- | --- |
-| **Co-PI** (pane) | `ask-question-source` · `ask-read-lens` · `explore-framings` · `route-task` · `explain-system` |
-| **Librarian** (catalog · extract · link · map) | `catalog-find-source` · `catalog-enrich-record` · `catalog-classify-source` · `catalog-rank-candidate` · `extract-stub-claim` · `extract-flag-distill` · `link-suggest-claim` · `link-surface-tension` · `map-scope-project` · `map-report-coverage` · `map-cluster-corpus` · `map-seed-canvas` · `map-graph-claims` · `map-canvas-hub` |
-| **Writer** (draft) | None — draft/export skills are deferred after alpha.11. |
-| **Peer-reviewer** (verify) | `verify-check-citation` · `verify-trace-claim` · `verify-card-gap` · `verify-propose-fix` |
-
-Deterministic operation entrypoints are MCP tools, cron wrappers, or repo scripts, not Hermes chat skills. Use [Operations](operations.md), [Ingest routing](ingest.md), [Search](search.md), [Clustering](clustering.md), [Linter](linter.md), and [Sweeps](sweeps.md) for their current commands. Two map-lane entries from the design's full registry remain **deferred, not shipped**: `map:score-writability` / `map:score-readiness` are later Project-gate expansion work (calibration-gated). The Writer draft/export package is also deferred after alpha.11. The graph-visualization pair `map-graph-claims` / `map-canvas-hub` now ship (#381) — both emit propose-class JSON Canvas over the cluster operation's typed graph, with no score or calibration.
-
-Every shipped `SKILL.md` carries a machine-checkable `metadata.memoria` block (`skill_id`, `profile`, `lane`, `mcp_tools`, `write_scope`, `outputs`): the MCP tools must resolve against the tool registry (`vault-template/.memoria/tool-registry.yaml`) and the write scope must sit inside the lane-override ceiling — `tests/test_profiles.py` enforces both.
-
----
-
-## The MCP tool surface
-
-Tools the profiles call (and you can exercise directly when debugging — each server also runs one-shot from the CLI):
-
-| Server | Tool | Does |
-| --- | --- | --- |
-| tasks | `delegate_route_task(lane, goal, context, allowed_paths, expected_outputs, review_checks, idempotency_key)` | The Co-PI's delegation path: validates the handoff against the lane ceiling, then creates the board card. See [Kanban board reference](kanban-board.md). |
-| cluster | `cluster_build_graph(seed)` | NetworkX over authored `links:` + given `relationships` → nodes, typed edges, communities, centrality, layout. Read-only; params echoed. |
-| cluster | `cluster_model_topics(folder, min_cluster_size)` | BERTopic over note text → topics, doc-topic map, outliers (needs the opt-in cluster stack). |
-| cluster | `cluster_emit_canvas(scope, out, seed)` | Writes the note-debate JSON Canvas artifact under `knowledge/notes/maps/` — the Librarian's map lane (`map-seed-canvas`). |
-| patterns | `patterns_list(mode)` | Checked prompt operations, optionally filtered by `library` / `project` / `knowledge`. |
-| patterns | `patterns_run(pattern_id, input_text, input_ref)` | Compose preamble + pattern + input → the prompt + staging target; gated targets degrade to dry-run; every run provenance-logged to `system/logs/patterns.jsonl`. |
-| ingest | `ingest_pipeline(citekey, enrich, pdf_path)` | The deterministic draft bundle with the two LLM holes. See [Ingest routing](ingest.md). |
-| policy | `check_permission` / `complete_write` | The write gate. See [Policy MCP](policy-mcp.md). |
-
----
-
-## API server
-
-Hermes's API server is the programmatic surface for non-human triggers such as file watchers, Zotero hooks, git hooks, and cross-machine dispatch. Memoria treats it as another entry point into the same profile and policy model: API writes still pass through the policy MCP. The default port is `8642`.
-
----
-
-## Board management
-
-| Command | What it does |
-| --- | --- |
-| `hermes kanban list` | List all cards on the board. |
-| `hermes kanban show <card-id>` | Full card state: status, retry count, blocker reason, handoff summary. |
-| `hermes kanban create "<title>" --assignee memoria-<name>` | Create a card (the tasks MCP shells out to this same command; `--idempotency-key` dedupes). |
-| `hermes kanban specify <id>` | Flesh out a `triage` card into a concrete spec → `todo`. |
-| `hermes kanban release <id>` | Release a `todo` card to `ready` for dispatch. |
-| `hermes kanban dispatch` | Run one dispatcher pass. |
-| `hermes kanban unblock <id>` | Clear a `blocked` card → `ready`. |
-| `hermes kanban edit <id> --assignee <lane>` | Correct an unresolvable assignee. |
-| `hermes kanban archive <id> --reason "<text>"` | Archive a terminal card with an explicit reason. |
-| `hermes kanban decompose <id>` | Fan out a `triage` card into child task cards. |
-
----
-
-## Profile management
-
-| Command | What it does |
-| --- | --- |
-| `hermes profile list` | List registered profiles: alias, status, installed path. |
-| `hermes profile install <dir> --name <name> --alias --force --yes` | Install a profile from a staged directory. In practice use `scripts/install.sh --profiles-only` or `scripts/install.ps1 -ProfilesOnly` — the installer renders Python, vault, qmd, and model tokens, writes deployed `config.yaml`, and seeds `.env` first. |
-| `hermes profile show <alias>` | A profile's `SOUL.md`, MCP servers, skills, and `.env` key names (values redacted). |
-| `hermes profile remove <alias>` | Remove a profile registration. Does not delete the vault source under `.memoria/profiles/`. |
-
----
-
-## Skills
-
-| Command | What it does |
-| --- | --- |
-| `hermes skills list` | List installed skills. |
-| `hermes skills install <id> --yes` | Install a hub skill (the installer fetches `obsidian-markdown` and `qmd` this way). |
-
----
-
-## Scheduled tasks (cron)
-
-| Command | What it does |
-| --- | --- |
-| `hermes cron list` | List scheduled tasks with next-run times (you should see the five crons the installer wires — see [Installer (bootstrap)](installer.md)). |
-| `hermes cron create '<spec>' --script <name>.sh --no-agent --name <name> --deliver local` | The shape the installer uses for the deterministic crons. |
-| `hermes cron run <task-name>` | Run a scheduled task immediately. |
-| `hermes cron enable <task-name>` / `disable <task-name>` | Toggle a task without removing it. |
-
----
-
-## Related
-
-- In-Obsidian command palette (`Memoria:` entries): [Obsidian command palette](obsidian-command-palette.md)
-- The lane identifiers the commands map to: [Profile capabilities](profile-capabilities.md)
-- The delegation path behind the board: [Kanban board reference](kanban-board.md)
-- What the installer wires for you: [Installer (bootstrap)](installer.md)
+No Hermes board-management CLI is installed by the alpha.14 bootstrap. Use
+[CLI](cli.md) request and attention commands for the current control plane.

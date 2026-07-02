@@ -12,12 +12,12 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 
 | Symptom                                                           | Guide                                                            |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Hermes or ACP is down and you still need to work                  | [Safe mode](safe-mode.md)                                        |
+| Optional UI adapter is down and you still need to work            | [Safe mode](safe-mode.md)                                        |
 | A card won't advance on the Kanban board                          | [Fix a stuck card](fix-stuck-card.md)                            |
 | YAML parse error; a note is missing from Dataview queries         | [Fix broken frontmatter](fix-broken-frontmatter.md)              |
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
-| Deployed profile doesn't match the vault source                   | [Fix profile drift](fix-profile-drift.md)                        |
-| Enrichment is empty after ingest; classification never applied    | [Set up Hermes](../setup/set-up-hermes.md), then rerun source metadata checks |
+| Removed profile package reappeared                                | [Fix profile drift](fix-profile-drift.md)                        |
+| Enrichment is empty after ingest; classification never applied    | Check provider config, then rerun source metadata checks |
 | A filtered query returns nothing though the notes are valid       | [Fix missing query results](fix-missing-query-results.md)        |
 
 ## When several failures appear at once

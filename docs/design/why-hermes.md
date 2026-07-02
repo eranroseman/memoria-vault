@@ -56,7 +56,7 @@ The API grants no extra power. Every write still passes through the policy MCP, 
 | Native memory tiers, MCP host, API server | Hermes adapter |
 | Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
 | Write-gating policy MCP | Memoria (plugs into Hermes's MCP interface) |
-| The five profile `SOUL.md`s and lane-overrides | Memoria |
+| Capability manifests and operation policy | Memoria |
 | The vault, schema, and document types | Memoria |
 
 The rule of thumb: **Memoria must run without Hermes; when Hermes is installed, Hermes moves adapter work and Memoria still decides what work means and what may become canonical.**

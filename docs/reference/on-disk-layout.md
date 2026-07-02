@@ -69,32 +69,26 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
-├── operations/              the deterministic operation cores
-│   ├── lib/                   schema.py (loader/validator) + inbox.py (card writer) + loudness.py (alert/block routing)
-│   ├── processing/ingest/     runner.py, ingest_paper.py, resolve_merge.py, extract.py, link.py
-│   ├── integrity/linter/      detectors.py, hub_handoff.py, precommit_check.py, pre-commit, golden_restore.py
-│   ├── integrity/retraction/  retraction.py
-│   ├── cleanup/               reconcile.py
-│   └── telemetry/eval/        eval_dispatch.py, eval_score.py
-├── mcp/                     the MCP servers (Layer 5)
+├── config/                  provider and runtime policy (`providers.yaml`)
+├── blobs/                   gitignored provider payloads and staged source content
+├── mcp/                     MCP shims for optional adapters and local tools
 │   ├── policy_mcp.py + policy_server.py + policy_hook.py     the write gate
 │   ├── ingest_mcp.py · cluster_mcp.py · tasks_mcp.py · patterns_mcp.py
 │   ├── board_export.py · metrics_aggregate.py    telemetry (cron, not MCP)
 │   └── requirements.txt · requirements-cluster.txt
-├── profiles/                the five Hermes profile packages
-│   └── memoria-{copi,librarian,writer,peer-reviewer,engineer}/
-│       ├── SOUL.md · config.yaml · distribution.yaml · skills/
-├── lane-overrides/          the five lane ceilings: copi/librarian/writer/peer-reviewer/engineer.yaml
-├── config/                 provider policy for catalog enrichment (`providers.yaml`)
-├── blobs/                  gitignored provider payloads and staged source content
-├── plugins/memoria-policy-gate/   the fail-closed write-gate Hermes plugin
-├── scripts/                 cron wrappers (worker, sweeps, lint, board-export, retraction refresh)
-├── tool-registry.yaml       authoritative per-profile tool allowlist
+├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters
+├── scripts/                 wrappers for operator-managed scheduled tasks
 ├── memoria.sqlite           SQLite working-state DB
+├── state/                   runtime state owned by the CLI/engine
 ├── audit/                   git-trackable audit anchors
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
 ├── design-system.md · project-hints.yaml.example
 ```
+
+Alpha.14 deliberately does **not** ship hidden operation-package homes, installed
+profile packages, lane override packages, or profile tool registries. Operation
+manifests live under `capabilities/operations/`; operation code lives in the
+installed `memoria_vault` package.
 
 The policy gate's stable deployed entrypoint stays in `.memoria/mcp/`, while its
 behavior-preserving decision/audit/engine modules live in the installed
