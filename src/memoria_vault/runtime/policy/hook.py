@@ -1,6 +1,6 @@
 """Adapter hook helpers that route workspace writes through the policy gate.
 
-The standalone alpha.14 runtime does not require MCP or Hermes. Optional adapters
+The standalone alpha.14 runtime does not require MCP or chat runtimes. Optional adapters
 can still call these helpers before and after tool invocations so adapter writes
 reuse the same fail-closed policy and audit behavior as the runtime package.
 
@@ -10,8 +10,8 @@ This one script handles BOTH the gate and the audit completion, branching on
   - post_tool_call -> read the stash, compute after_hash, append the paired
                       reversibility record (before+after) to audit.jsonl, clean up.
 
-Wire protocol used by Hermes-style adapters:
-  stdin  : {"tool_name","tool_input","session_id","cwd","extra":{"task_id",...}}
+External adapter wire protocol:
+  stdin  : {"tool_name","tool_input","session_id","cwd","extra":{"request_id",...}}
   stdout : {} to allow; {"decision":"block","reason":"..."} to block.
 """
 
@@ -40,7 +40,7 @@ WRITE_KEYWORDS = {
     "rename": "move",
     "move": "move",
 }
-# Direct-capability and unaudited-egress tools hard-denied for EVERY adapter lane.
+# Direct-capability and unaudited-egress tools hard-denied for EVERY adapter actor.
 # The standalone runtime owns writes through requests and trusted_writer; any
 # adapter call reaching these tools is config drift or prompt-injection bypassing
 # schema-hiding, so fail closed.
@@ -55,7 +55,7 @@ DENY_DIRECT_TOOLS = frozenset(
         "search_files",  # file toolset
         "terminal",
         "process",  # terminal toolset — sibling of `terminal`, runs/inspects processes
-        "run_command",  # legacy/alias name (not in installed Hermes; harmless)
+        "run_command",  # common alias name; harmless when absent
         "code_execution",  # legacy/alias name (the real tool is `execute_code`)
         "execute_code",  # code_execution toolset
         "session_search",
@@ -98,7 +98,7 @@ DENY_DIRECT_TOOLS = frozenset(
 )
 PATH_KEYS = ("filepath", "file_path", "path", "file", "target", "filename", "dest", "destination")
 
-# Obsidian native-MCP tools hard-denied for EVERY lane. `command_execute` runs an
+# Obsidian native-MCP tools hard-denied for EVERY actor. `command_execute` runs an
 # arbitrary Obsidian command and has no single path to gate (so the path matcher
 # can't bound it); `vault_delete`/`vault_move` are destructive ops the workflows
 # don't need (least privilege -- the prior uvx mcp-obsidian exposed only
@@ -120,17 +120,14 @@ BUILTIN_TOOLSET_BY_TOOL = {
 }
 
 
-def _allowed_registry_tools(vault: Path, profile: str) -> set[str]:
-    import yaml
+def _actor_tool_policy(workspace: Path, actor: str) -> tuple[set[str], set[str]]:
+    from memoria_vault.runtime.policy.workspace import load_actor_policy
 
-    path = vault / ".memoria" / "tool-registry.yaml"
-    registry = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    groups = registry["groups"]
-    allow = registry["profiles"][profile]["allow"]
-    out: set[str] = set()
-    for entry in allow:
-        out.update(str(tool).lower() for tool in groups.get(entry, [entry]))
-    return out
+    policy = load_actor_policy(workspace, actor)
+    return (
+        {str(tool).lower() for tool in policy.allow_tools},
+        {str(tool).lower() for tool in policy.deny_tools},
+    )
 
 
 def _tool_candidates(tool_name: str, allowed: set[str]) -> set[str]:
@@ -169,28 +166,30 @@ def _tool_candidates(tool_name: str, allowed: set[str]) -> set[str]:
     return candidates
 
 
-def _registry_block(tool_name: str, profile: str, vault: Path) -> dict | None:
+def _tool_policy_block(tool_name: str, actor: str, workspace: Path) -> dict | None:
     try:
-        allowed = _allowed_registry_tools(vault, profile)
-    except Exception as exc:  # noqa: BLE001 -- missing/invalid registry must fail closed
+        allowed, denied = _actor_tool_policy(workspace, actor)
+    except Exception as exc:  # noqa: BLE001 -- missing/invalid policy must fail closed
         return {
             "decision": "block",
-            "reason": f"policy gate: tool registry unavailable for {profile} ({exc}) -- blocked fail-closed.",
+            "reason": f"policy gate: workspace policy unavailable for {actor} ({exc}) -- blocked fail-closed.",
         }
-    if _tool_candidates(tool_name, allowed).isdisjoint(allowed):
+    candidates = _tool_candidates(tool_name, allowed | denied)
+    if not candidates.isdisjoint(denied):
         return {
             "decision": "block",
-            "reason": f"policy gate: '{tool_name}' is outside {profile}'s tool-registry allowlist.",
+            "reason": f"policy gate: '{tool_name}' is denied for actor {actor}.",
+        }
+    if candidates.isdisjoint(allowed):
+        return {
+            "decision": "block",
+            "reason": f"policy gate: '{tool_name}' is outside actor {actor}'s tool allowlist.",
         }
     return None
 
 
 def classify(tool_name: str) -> str | None:
-    """Policy action for a gated *write* tool, or None for reads / ungated tools.
-
-    Two families: obsidian MCP writes (substring match, survives prefixing) and
-    Hermes `file` toolset writes (exact base-name match). Everything else --
-    reads, and crucially the `terminal` toolset -- returns None (not gated here)."""
+    """Policy action for a gated *write* tool, or None for reads / ungated tools."""
     t = (tool_name or "").lower()
     if "obsidian" in t:
         for kw, action in WRITE_KEYWORDS.items():
@@ -208,15 +207,15 @@ def extract_path(tool_input: dict) -> str:
     return ""
 
 
-def to_vault_relative(path: str, vault: Path):
-    """Normalize a tool-supplied path to vault-root-relative (forward slashes).
+def to_workspace_relative(path: str, workspace: Path):
+    """Normalize a tool-supplied path to workspace-root-relative.
 
-    Obsidian tools already emit vault-relative paths (pass-through). The `file`
-    toolset can emit ABSOLUTE paths; the policy lane globs are vault-relative, so:
+    Obsidian tools already emit vault-relative paths (pass-through). Some
+    adapter tools can emit ABSOLUTE paths; the policy globs are workspace-relative, so:
       - relative path        -> returned as-is (sans leading ``./``)
-      - absolute under vault -> relativized to the vault root
-      - absolute OUTSIDE vault -> ``None``: the gate governs vault zones only, so
-        an external write (e.g. the Engineer committing to a repo outside the vault) is
+      - absolute under workspace -> relativized to the workspace root
+      - absolute OUTSIDE workspace -> ``None``: the gate governs workspace zones only, so
+        an external write (for example, a separate code repository) is
         not this hook's concern and is left to proceed."""
     if not path:
         return path
@@ -225,38 +224,40 @@ def to_vault_relative(path: str, vault: Path):
     if not pp.is_absolute():
         return p[2:] if p.startswith("./") else p
     try:
-        return str(pp.resolve().relative_to(vault.resolve())).replace("\\", "/")
+        return str(pp.resolve().relative_to(workspace.resolve())).replace("\\", "/")
     except (ValueError, OSError):
         return None
 
 
-def _audit_registry_block(vault: Path, profile: str, tool_name: str, payload: dict, reason: str):
+def _audit_tool_policy_block(
+    workspace: Path, actor: str, tool_name: str, payload: dict, reason: str
+):
     action = classify(tool_name)
     if action is None:
         return
-    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault)
+    path = to_workspace_relative(extract_path(payload.get("tool_input") or {}), workspace)
     extra = payload.get("extra") or {}
-    task_id = extra.get("task_id") or payload.get("session_id") or ""
-    if path is None or not path or not task_id:
+    request_id = extra.get("request_id") or ""
+    if path is None or not path or not request_id:
         return
     try:
         from memoria_vault.runtime.policy.audit import append_audit
         from memoria_vault.runtime.time import now_iso
 
         append_audit(
-            vault,
+            workspace,
             {
                 "timestamp": now_iso(),
-                "profile": profile,
+                "actor": actor,
                 "action": action,
                 "path": path,
-                "task_id": task_id,
+                "request_id": request_id,
                 "decision": "deny",
-                "policy_rule": "tool-registry.allowlist",
+                "policy_rule": "tool-policy.allowlist",
                 "message": reason,
             },
         )
-    except Exception:  # noqa: BLE001 -- registry block itself already fails closed
+    except Exception:  # noqa: BLE001 -- policy block itself already fails closed
         return
 
 
@@ -266,17 +267,17 @@ def _stash_key(payload: dict) -> str:
     tcid = extra.get("tool_call_id")
     if tcid:
         return str(tcid)
-    # Fallback when the runtime omits tool_call_id: task_id + path slug.
-    task_id = extra.get("task_id") or payload.get("session_id") or "notask"
+    # Fallback when the runtime omits tool_call_id: request_id + path slug.
+    request_id = extra.get("request_id") or "norequest"
     slug = extract_path(payload.get("tool_input") or {}).replace("/", "_") or "nopath"
-    return f"{task_id}__{slug}"
+    return f"{request_id}__{slug}"
 
 
-def _pending_file(vault: Path, key: str) -> Path:
-    return vault / "system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
+def _pending_file(workspace: Path, key: str) -> Path:
+    return workspace / "system" / "logs" / ".pending" / f"{safe_filename(key)}.json"
 
 
-def _prune_stale_pending(vault: Path, max_age_s: float = 24 * 3600) -> None:
+def _prune_stale_pending(workspace: Path, max_age_s: float = 24 * 3600) -> None:
     """Opportunistically drop .pending/ stash files older than 24h.
 
     A stash with no matching post_tool_call (a crashed tool, a lost pair key)
@@ -284,7 +285,7 @@ def _prune_stale_pending(vault: Path, max_age_s: float = 24 * 3600) -> None:
     runs on the pre_tool_call hot path and must NEVER raise or block a write."""
     try:
         cutoff = time.time() - max_age_s
-        for f in (vault / "system" / "logs" / ".pending").glob("*.json"):
+        for f in (workspace / "system" / "logs" / ".pending").glob("*.json"):
             try:
                 if f.stat().st_mtime < cutoff:
                     f.unlink()
@@ -294,18 +295,18 @@ def _prune_stale_pending(vault: Path, max_age_s: float = 24 * 3600) -> None:
         pass
 
 
-def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
+def evaluate_pre(payload: dict, actor: str, workspace: Path) -> dict:
     """pre_tool_call: gate the write. Returns {} (allow) or a block dict.
 
     Side effect on allow: stashes before_hash so the post_tool_call pass can
     complete the reversibility record. Pure enough to unit-test otherwise."""
-    _prune_stale_pending(vault)  # opportunistic; never raises
+    _prune_stale_pending(workspace)  # opportunistic; never raises
     tool_name = payload.get("tool_name", "")
     t = (tool_name or "").lower()
     if "obsidian" in t and any(d in t for d in DENY_OBSIDIAN):
         return {
-            "decision": "block",  # hard deny -> never reaches a lane check
-            "reason": f"policy gate: '{tool_name}' is not permitted for any lane "
+            "decision": "block",  # hard deny -> never reaches actor policy
+            "reason": f"policy gate: '{tool_name}' is not permitted for any actor "
             f"(arbitrary command execution / destructive op has no path to gate).",
         }
     base = t.rsplit("__", 1)[-1].rsplit(".", 1)[-1]  # strip server/toolset prefix
@@ -313,29 +314,29 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
         return {
             "decision": "block",  # direct tool escape -> fail closed
             "reason": f"policy gate: '{tool_name}' is direct or unaudited external access -- "
-            f"adapter agents must use approved workspace tools; no lane is "
+            f"adapter agents must use approved workspace tools; no actor is "
             f"permitted this toolset.",
         }
-    registry_block = _registry_block(tool_name, profile, vault)
-    if registry_block is not None:
-        _audit_registry_block(vault, profile, tool_name, payload, registry_block["reason"])
-        return registry_block
+    tool_policy_block = _tool_policy_block(tool_name, actor, workspace)
+    if tool_policy_block is not None:
+        _audit_tool_policy_block(workspace, actor, tool_name, payload, tool_policy_block["reason"])
+        return tool_policy_block
     action = classify(tool_name)
     if action is None:
         return {}  # read / terminal / ungated tool -> not our concern
 
-    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault)
+    path = to_workspace_relative(extract_path(payload.get("tool_input") or {}), workspace)
     if path is None:
-        return {}  # file write outside the vault -> gate governs vault zones only
+        return {}  # file write outside the workspace -> gate governs workspace zones only
     extra = payload.get("extra") or {}
-    task_id = extra.get("task_id") or payload.get("session_id") or ""
+    request_id = extra.get("request_id") or ""
 
     # Fail closed on our own decision: a write we can't identify is blocked.
-    if not profile or not path or not task_id:
+    if not actor or not path or not request_id:
         return {
             "decision": "block",
             "reason": f"policy gate: cannot evaluate '{payload.get('tool_name')}' "
-            f"(missing {'profile' if not profile else 'path' if not path else 'task_id'}) "
+            f"(missing {'actor' if not actor else 'path' if not path else 'request_id'}) "
             f"-- blocked fail-closed.",
         }
 
@@ -347,8 +348,8 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
             "reason": f"policy gate unavailable ({exc}) -- write blocked fail-closed.",
         }
 
-    resp = PolicyEngine(vault).check(
-        profile, action, path, task_id, reason=f"obsidian:{payload.get('tool_name')}"
+    resp = PolicyEngine(workspace).check(
+        actor, action, path, request_id, reason=f"adapter:{payload.get('tool_name')}"
     )
     decision = resp.get("decision")
     rule = resp.get("policy_rule", "")
@@ -356,7 +357,7 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
         # Stash before_hash for the post pass to pair with after_hash.
         before = resp.get("before_hash")
         if before is not None:
-            pend = _pending_file(vault, _stash_key(payload))
+            pend = _pending_file(workspace, _stash_key(payload))
             pend.parent.mkdir(parents=True, exist_ok=True)
             pend.write_text(json.dumps({"before_hash": before, "path": path}), encoding="utf-8")
         return {}
@@ -364,22 +365,22 @@ def evaluate_pre(payload: dict, profile: str, vault: Path) -> dict:
         return {
             "decision": "block",
             "reason": f"review-gated ({rule}): write to '{path}' must be human-approved "
-            f"-- surface as a board comment; do not write directly.",
+            f"-- surface as an attention item; do not write directly.",
         }
     return {
         "decision": "block",  # deny / anything unexpected
         "reason": f"policy {decision} ({rule}): "
-        f"{resp.get('message') or f'write to {path!r} not permitted for {profile}'}",
+        f"{resp.get('message') or f'write to {path!r} not permitted for {actor}'}",
     }
 
 
-def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
+def evaluate_post(payload: dict, actor: str, workspace: Path) -> dict:
     """post_tool_call: complete the audit record with after_hash, then clean up.
 
     Post hooks never block (they can only allow/inject), so this always returns
     {}. It only acts when a matching pre-stash exists (i.e. an allowed write);
     reads and blocked writes leave no stash and are no-ops."""
-    pend = _pending_file(vault, _stash_key(payload))
+    pend = _pending_file(workspace, _stash_key(payload))
     if not pend.is_file():
         return {}  # read, denied write, or unmatched -> nothing to complete
     try:
@@ -388,23 +389,29 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
         return {}
 
     action = classify(payload.get("tool_name", "")) or "write"
-    path = to_vault_relative(extract_path(payload.get("tool_input") or {}), vault) or stashed.get(
-        "path", ""
-    )
+    path = to_workspace_relative(
+        extract_path(payload.get("tool_input") or {}), workspace
+    ) or stashed.get("path", "")
     extra = payload.get("extra") or {}
-    task_id = extra.get("task_id") or payload.get("session_id") or ""
+    request_id = extra.get("request_id") or ""
+    if not request_id:
+        try:
+            pend.unlink()
+        except OSError:
+            pass
+        return {}
 
     try:
         from memoria_vault.runtime.policy import EMPTY_SHA256, PolicyEngine
 
-        PolicyEngine(vault).complete_write(
-            profile, action, path, task_id, stashed.get("before_hash", EMPTY_SHA256)
+        PolicyEngine(workspace).complete_write(
+            actor, action, path, request_id, stashed.get("before_hash", EMPTY_SHA256)
         )
     except Exception as exc:  # noqa: BLE001
-        # Never break the agent loop on the audit-completion path, but always
-        # log the failure to stderr so it is diagnosable in Hermes logs.
+        # Never break the adapter loop on the audit-completion path, but always
+        # log the failure to stderr so it is diagnosable.
         print(
-            f"[policy_hook] audit completion failed for {profile}/{path}: "
+            f"[policy_hook] audit completion failed for {actor}/{path}: "
             f"{type(exc).__name__}: {exc}",
             file=sys.stderr,
         )
@@ -414,11 +421,11 @@ def evaluate_post(payload: dict, profile: str, vault: Path) -> dict:
                 level="error",
                 code="audit_completion_failed",
                 details={
-                    "profile": profile,
+                    "actor": actor,
                     "path": path,
                     "exception_type": type(exc).__name__,
                 },
-                vault_path=vault,
+                vault_path=workspace,
             )
         except Exception:  # noqa: S110, BLE001
             pass
@@ -435,18 +442,18 @@ def main() -> None:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument(
-        "--profile",
-        default=os.environ.get("HERMES_PROFILE", ""),
-        help="profile whose lane to enforce (e.g. memoria-writer)",
+        "--actor",
+        default=os.environ.get("MEMORIA_POLICY_ACTOR", ""),
+        help="workspace actor to enforce, for example adapter",
     )
     ap.add_argument(
-        "--vault",
-        default=os.environ.get("MEMORIA_VAULT", ""),
-        help="workspace root; required unless MEMORIA_VAULT is set",
+        "--workspace",
+        default=os.environ.get("MEMORIA_WORKSPACE", ""),
+        help="workspace root; required unless MEMORIA_WORKSPACE is set",
     )
     args = ap.parse_args()
-    if not args.vault:
-        print("[policy_hook] --vault or MEMORIA_VAULT is required", file=sys.stderr)
+    if not args.workspace:
+        print("[policy_hook] --workspace or MEMORIA_WORKSPACE is required", file=sys.stderr)
         print(json.dumps({"decision": "block", "reason": "policy gate: missing workspace"}))
         return
 
@@ -454,11 +461,11 @@ def main() -> None:
         payload = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError) as exc:
         print(f"[policy_hook] malformed stdin payload: {exc}", file=sys.stderr)
-        print("{}")  # let Hermes proceed
+        print(json.dumps({"decision": "block", "reason": "policy gate: malformed payload"}))
         return
     event = payload.get("hook_event_name", "pre_tool_call")
     handler = evaluate_post if event == "post_tool_call" else evaluate_pre
-    print(json.dumps(handler(payload, args.profile, Path(args.vault))))
+    print(json.dumps(handler(payload, args.actor, Path(args.workspace))))
 
 
 # --------------------------------------------------------------------------- #

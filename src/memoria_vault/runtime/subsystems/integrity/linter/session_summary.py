@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""session_summary — per-session deterministic digests of the audit log (ADR-25).
+"""session_summary — per-request deterministic digests of the audit log.
 
-The second of ADR-25's two logs. The Linter is zero-LLM, so the per-session
+The Linter is zero-LLM, so the per-request
 record is a *deterministic digest*, not an LLM narrative: this operation groups
-`system/logs/audit.jsonl` entries by `task_id` (one session = one task) and, for
-each session not yet summarized, writes one JSONL file under
+`system/logs/audit.jsonl` entries by `request_id` and, for each request not yet
+summarized, writes one JSONL file under
 `system/logs/sessions/` named `YYYY-MM-DD-HHMM.jsonl` from the session's first
-timestamp (a deterministic `-2`, `-3`, … suffix disambiguates two sessions that
-share a start minute). Each file carries a header record (task_id, profiles,
+timestamp (a deterministic `-2`, `-3`, … suffix disambiguates two requests that
+share a start minute). Each file carries a header record (request_id, actors,
 start/end, counts by action and decision) and one record per touched path
 (actions, final decision, final after_hash).
 
-Idempotent by construction: a session whose task_id already appears in an
-existing digest header is never re-written, and a session whose last activity
+Idempotent by construction: a request whose `request_id` already appears in an
+existing digest header is never re-written, and a request whose last activity
 is younger than the quiet window (24 h) is left for a later run so an in-flight
-session is never summarized early. Malformed audit lines are skipped, mirroring
+request is never summarized early. Malformed audit lines are skipped, mirroring
 the detectors.
 
 Usage:
@@ -43,8 +43,7 @@ def _parse_ts(value) -> datetime | None:
 
 
 def load_sessions(vault: Path) -> dict[str, list[dict]]:
-    """Audit entries grouped by task_id; entries without a parseable timestamp
-    or a task_id (and malformed lines) are skipped."""
+    """Audit entries grouped by request_id."""
     log = vault / AUDIT_RELPATH
     sessions: dict[str, list[dict]] = {}
     if not log.is_file():
@@ -56,16 +55,16 @@ def load_sessions(vault: Path) -> dict[str, list[dict]]:
             continue
         if not isinstance(e, dict):
             continue
-        tid, ts = e.get("task_id"), _parse_ts(e.get("timestamp"))
-        if not tid or ts is None:
+        request_id, ts = e.get("request_id"), _parse_ts(e.get("timestamp"))
+        if not request_id or ts is None:
             continue
         e["_ts"] = ts
-        sessions.setdefault(str(tid), []).append(e)
+        sessions.setdefault(str(request_id), []).append(e)
     return sessions
 
 
-def summarized_task_ids(vault: Path) -> set[str]:
-    """task_ids already digested — read from each existing file's header line."""
+def summarized_request_ids(vault: Path) -> set[str]:
+    """request_ids already digested -- read from each existing file's header line."""
     out: set[str] = set()
     d = vault / SESSIONS_RELDIR
     if not d.is_dir():
@@ -80,21 +79,21 @@ def summarized_task_ids(vault: Path) -> set[str]:
                 h = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if isinstance(h, dict) and h.get("record") == "session" and h.get("task_id"):
-                out.add(str(h["task_id"]))
+            if isinstance(h, dict) and h.get("record") == "session" and h.get("request_id"):
+                out.add(str(h["request_id"]))
     return out
 
 
-def digest(task_id: str, entries: list[dict]) -> list[dict]:
+def digest(request_id: str, entries: list[dict]) -> list[dict]:
     """The JSONL records for one session: a header, then one record per path."""
     entries = sorted(entries, key=lambda e: e["_ts"])
     actions: dict[str, int] = {}
     decisions: dict[str, int] = {}
-    profiles: set[str] = set()
+    actors: set[str] = set()
     paths: dict[str, dict] = {}
     for e in entries:
-        if e.get("profile"):
-            profiles.add(str(e["profile"]))
+        if e.get("actor"):
+            actors.add(str(e["actor"]))
         a, d = e.get("action"), e.get("decision")
         if a:
             actions[a] = actions.get(a, 0) + 1
@@ -121,8 +120,8 @@ def digest(task_id: str, entries: list[dict]) -> list[dict]:
             rec["final_decision"] = d
     header = {
         "record": "session",
-        "task_id": task_id,
-        "profiles": sorted(profiles),
+        "request_id": request_id,
+        "actors": sorted(actors),
         "started": entries[0]["_ts"].strftime("%Y-%m-%dT%H:%M:%SZ"),
         "ended": entries[-1]["_ts"].strftime("%Y-%m-%dT%H:%M:%SZ"),
         "entries": len(entries),
@@ -142,15 +141,15 @@ def write_summaries(
 ) -> list[Path]:
     """Digest every finished, not-yet-summarized session. Returns files written."""
     now = now or datetime.now(UTC)
-    done = summarized_task_ids(vault)
+    done = summarized_request_ids(vault)
     outdir = vault / SESSIONS_RELDIR
     written: list[Path] = []
     sessions = load_sessions(vault)
-    # Deterministic order (first timestamp, then task_id) so suffixes are stable.
-    for tid, entries in sorted(
+    # Deterministic order (first timestamp, then request_id) so suffixes are stable.
+    for request_id, entries in sorted(
         sessions.items(), key=lambda kv: (min(e["_ts"] for e in kv[1]), kv[0])
     ):
-        if tid in done:
+        if request_id in done:
             continue
         last = max(e["_ts"] for e in entries)
         if (now - last).total_seconds() < quiet_hours * 3600:
@@ -161,12 +160,12 @@ def write_summaries(
         while (outdir / name).exists():
             name, n = f"{base}-{n}.jsonl", n + 1
         outdir.mkdir(parents=True, exist_ok=True)
-        records = digest(tid, entries)
+        records = digest(request_id, entries)
         (outdir / name).write_text(
             "\n".join(json.dumps(r, sort_keys=True) for r in records) + "\n", encoding="utf-8"
         )
         written.append(outdir / name)
-        done.add(tid)
+        done.add(request_id)
     return written
 
 

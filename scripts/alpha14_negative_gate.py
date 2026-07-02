@@ -36,6 +36,11 @@ FORBIDDEN_TEXT = (
     "capture-zotero-source",
     "capture_zotero_source",
     "zotero-export",
+    "LANE_OVERRIDE_RELDIR",
+    "LanePolicy",
+    "load_lane(",
+    "parse_lane(",
+    "tool-registry allowlist",
 )
 SEARCH_ROOTS = (
     ".agents",

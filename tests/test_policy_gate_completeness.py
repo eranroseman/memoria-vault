@@ -12,21 +12,17 @@ from memoria_vault.runtime.policy import hook as _m
 evaluate_pre = _m.evaluate_pre
 Path = _m.Path
 ROOT = Path(__file__).resolve().parents[1]
-TOOL_REGISTRY = """
+POLICY_CONFIG = """
 version: 1
-groups:
-  qmd_read: [qmd.search]
-profiles:
-  memoria-copi:
-    allow: [memory, skills]
-  memoria-librarian:
-    allow: [skills, kanban, qmd_read]
-  memoria-writer:
-    allow: [skills, kanban, qmd_read]
-  memoria-peer-reviewer:
-    allow: [skills, kanban, qmd_read]
-  memoria-engineer:
-    allow: [skills, kanban]
+actors:
+  memory-reader:
+    allow:
+      tools: [memory]
+  adapter:
+    allow:
+      tools: [skills, kanban, qmd.search]
+    deny:
+      tools: [memory]
 """
 
 
@@ -35,18 +31,18 @@ def _payload(tool_name: str) -> dict:
         "tool_name": tool_name,
         "tool_input": {},
         "session_id": "t_sweep",
-        "extra": {"task_id": "t_sweep"},
+        "extra": {"request_id": "req_sweep"},
     }
 
 
-def _decide(tool_name: str, profile: str = "memoria-copi") -> dict:
-    return evaluate_pre(_payload(tool_name), profile, Path("/nonexistent"))
+def _decide(tool_name: str, actor: str = "adapter") -> dict:
+    return evaluate_pre(_payload(tool_name), actor, Path("/nonexistent"))
 
 
-def _vault_with_registry(tmp_path: Path) -> Path:
-    registry = tmp_path / ".memoria" / "tool-registry.yaml"
-    registry.parent.mkdir(parents=True)
-    registry.write_text(TOOL_REGISTRY, encoding="utf-8")
+def _workspace_with_policy(tmp_path: Path) -> Path:
+    config = tmp_path / ".memoria" / "config" / "policy.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(POLICY_CONFIG, encoding="utf-8")
     return tmp_path
 
 
@@ -62,7 +58,7 @@ def test_every_denylisted_tool_is_blocked_bare_and_prefixed():
 
 
 def test_process_is_blocked_regression():
-    """`process` is a real tool in Hermes's terminal toolset; the denylist once
+    """`process` is a real tool in terminal toolsets; the denylist once
     missed it, so the gate returned {} (allow). Regression guard."""
     assert "process" in _m.DENY_DIRECT_TOOLS
     assert _decide("process").get("decision") == "block"
@@ -78,24 +74,20 @@ def test_egress_tools_are_blocked_regression():
         assert _decide(f"mcp_x__{tool}").get("decision") == "block"
 
 
-def test_acp_exposed_local_history_tools_are_blocked_or_lane_scoped(tmp_path):
-    vault = _vault_with_registry(tmp_path)
+def test_acp_exposed_local_history_tools_are_blocked_or_actor_scoped(tmp_path):
+    vault = _workspace_with_policy(tmp_path)
     assert "session_search" in _m.DENY_DIRECT_TOOLS
     assert _decide("session_search").get("decision") == "block"
     assert _decide("mcp_x__session_search").get("decision") == "block"
 
-    assert evaluate_pre(_payload("memory"), "memoria-copi", vault) == {}
-    assert evaluate_pre(_payload("mcp_x__memory"), "memoria-copi", vault).get("decision") == "block"
-    for profile in (
-        "memoria-librarian",
-        "memoria-writer",
-        "memoria-peer-reviewer",
-        "memoria-engineer",
-    ):
-        decision = evaluate_pre(_payload("memory"), profile, vault)
-        assert decision.get("decision") == "block", f"gate did not block memory for {profile}"
-        assert "tool-registry allowlist" in decision.get("reason", "")
-        assert evaluate_pre(_payload("mcp_x__memory"), profile, vault).get("decision") == "block"
+    assert evaluate_pre(_payload("memory"), "memory-reader", vault) == {}
+    assert (
+        evaluate_pre(_payload("mcp_x__memory"), "memory-reader", vault).get("decision") == "block"
+    )
+    decision = evaluate_pre(_payload("memory"), "adapter", vault)
+    assert decision.get("decision") == "block", f"gate did not block memory: {decision}"
+    assert "denied for actor adapter" in decision.get("reason", "")
+    assert evaluate_pre(_payload("mcp_x__memory"), "adapter", vault).get("decision") == "block"
 
 
 if __name__ == "__main__":  # pragma: no cover — manual smoke

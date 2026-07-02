@@ -1,4 +1,4 @@
-"""Policy data models shared by the decision core and MCP wrapper."""
+"""Policy data models shared by the decision core and adapter hooks."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class LanePolicy:
-    """Parsed lane-override policy for one profile."""
+class ActorPolicy:
+    """Parsed workspace policy for one actor."""
 
-    profile: str
-    allow_skills: list[str] = field(default_factory=list)
+    actor: str
+    allow_tools: list[str] = field(default_factory=list)
     allow_write: list[str] = field(default_factory=list)
     allow_read: list[str] = field(default_factory=list)
     allow_auto_fix_classes: list[str] = field(default_factory=list)
-    deny_skills: list[str] = field(default_factory=list)
+    deny_tools: list[str] = field(default_factory=list)
     deny_write: list[str] = field(default_factory=list)
     deny_read: list[str] = field(default_factory=list)
     deny_auto_fix_classes: list[str] = field(default_factory=list)
@@ -26,9 +26,7 @@ class LanePolicy:
     @property
     def short(self) -> str:
         """Capitalized short name for policy rule ids."""
-        name = (
-            self.profile[len("memoria-") :] if self.profile.startswith("memoria-") else self.profile
-        )
+        name = self.actor
         return name[:1].upper() + name[1:]
 
 

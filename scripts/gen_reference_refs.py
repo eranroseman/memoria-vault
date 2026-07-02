@@ -467,10 +467,10 @@ files or this generator, not this page.
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
 | Policy gate plugin | `vault-template/.memoria/plugins/memoria-policy-gate/plugin.yaml` | workspace policy package for optional adapters | Memoria | Edit source | policy tests |
-| Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
-| Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
-| Schema config | `vault-template/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
-| Calibration | `vault-template/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
+| Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
+| Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<workspace>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
+| Schema config | `vault-template/.memoria/schemas/**` | workspace source | Memoria | Edit source | linter and schema tests |
+| Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
 | Scheduled-task wrappers | `vault-template/.memoria/scripts/*.sh` | workspace source for operator-managed scheduled tasks | Memoria | Edit source | shellcheck |
 | Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.14 baseline | adapter tests |
@@ -481,11 +481,10 @@ files or this generator, not this page.
 
 | Change | Command |
 | --- | --- |
-| Schema or vault source config | reinstall or refresh the vault, then run the linter |
+| Schema or workspace source config | reinstall or refresh the workspace, then run the linter |
 | qmd index inputs | `bash scripts/qmd-codebase-index.sh --embed` |
 
-Use the production vault path instead of `~/Memoria-test` only when you are
-deploying a real runtime vault. Development verification uses the test vault.
+Use a disposable workspace under `~/Memoria-test` for development verification.
 
 ## Never commit
 

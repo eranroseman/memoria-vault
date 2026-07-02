@@ -8,17 +8,17 @@ import pytest
 from memoria_vault.runtime.policy import (
     AUDIT_RELPATH,
     EMPTY_SHA256,
-    LANE_OVERRIDE_RELDIR,
-    LanePolicy,
+    POLICY_CONFIG_RELPATH,
+    ActorPolicy,
     PolicyEngine,
     compose_skill_deny,
     decide,
-    load_lane,
+    load_actor_policy,
     normalize_path,
     path_matches,
     sha256_file,
 )
-from memoria_vault.runtime.policy.lanes import yaml
+from memoria_vault.runtime.policy.workspace import yaml
 
 
 def test_runtime_policy_core():
@@ -81,13 +81,13 @@ def test_runtime_policy_core():
         with tempfile.TemporaryDirectory() as td_trav:
             trav_vault = Path(td_trav)
             eng_trav = PolicyEngine(trav_vault)
-            trav_resp = eng_trav.check("memoria-coder", "write", "../../etc/passwd", "T-TRAV")
+            trav_resp = eng_trav.check("operation", "write", "../../etc/passwd", "REQ-TRAV")
             check(
                 "engine denies path-traversal escape",
                 trav_resp["decision"] == "deny" and trav_resp["policy_rule"] == "path.traversal",
             )
-            # The traversal attempt must be audited (#214) -- exactly one deny entry,
-            # carrying the raw path and the task_id, so intrusion probes leave a trace.
+            # The traversal attempt must be audited -- exactly one deny entry,
+            # carrying the raw path and the request_id, so intrusion probes leave a trace.
             trav_lines = (trav_vault / AUDIT_RELPATH).read_text(encoding="utf-8").splitlines()
             trav_entry = json.loads(trav_lines[-1]) if trav_lines else {}
             check(
@@ -96,38 +96,34 @@ def test_runtime_policy_core():
                 and trav_entry["decision"] == "deny"
                 and trav_entry["policy_rule"] == "path.traversal"
                 and trav_entry["path"] == "../../etc/passwd"
-                and trav_entry["task_id"] == "T-TRAV",
+                and trav_entry["request_id"] == "REQ-TRAV",
             )
 
-        # ---- lanes (built directly so the self-test needs no PyYAML) ----------- #
-        # Exercise legacy adapter lanes as fixtures; alpha.14 does not ship
-        # lane-overrides in the template.
-        engineer = LanePolicy(
-            profile="memoria-engineer",
+        # ---- actor policies (built directly so the self-test needs no PyYAML) -- #
+        engineer = ActorPolicy(
+            actor="engineer",
             allow_write=[],
             deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
             write_scope=[],
         )
-        writer = LanePolicy(
-            profile="memoria-writer",
+        writer = ActorPolicy(
+            actor="writer",
             allow_write=[],
             deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
             write_scope=[],
         )
-        copi = LanePolicy(
-            profile="memoria-copi", allow_write=[], deny_write=["**"], require=["audit_log"]
-        )
-        write_fixture = LanePolicy(
-            profile="memoria-write-fixture",
+        copi = ActorPolicy(actor="copi", allow_write=[], deny_write=["**"], require=["audit_log"])
+        write_fixture = ActorPolicy(
+            actor="write-fixture",
             allow_write=["projects/**"],
             deny_write=["knowledge/notes/**", "catalog/**", "inbox/**", "system/**"],
             require=["audit_log"],
             write_scope=["projects/"],
         )
-        maintenance = LanePolicy(
-            profile="memoria-linter-engine",
+        maintenance = ActorPolicy(
+            actor="integrity",
             allow_write=["system/logs/**"],
             allow_auto_fix_classes=["safe-and-unambiguous", "authorized-targeted"],
             deny_write=["inbox/**", "catalog/**", "notes/**", "projects/**"],
@@ -135,8 +131,8 @@ def test_runtime_policy_core():
             require=["audit_log"],
             write_scope=["system/logs/"],
         )
-        librarian = LanePolicy(
-            profile="memoria-librarian",
+        cataloger = ActorPolicy(
+            actor="cataloger",
             allow_write=[],
             deny_write=[
                 "catalog/**",
@@ -150,8 +146,8 @@ def test_runtime_policy_core():
             require=["audit_log"],
             write_scope=[".memoria/staging/catalog/", ".memoria/staging/knowledge/"],
         )
-        peer_reviewer = LanePolicy(
-            profile="memoria-peer-reviewer",
+        reviewer = ActorPolicy(
+            actor="reviewer",
             allow_write=[],
             deny_write=[
                 "notes/**",
@@ -167,18 +163,18 @@ def test_runtime_policy_core():
         )
 
         d = lambda p, a, pa, fl=None, sk=None: (
-            decide(p.profile, a, pa, p, flags=fl, skill_deny_write=sk).decision
+            decide(p.actor, a, pa, p, flags=fl, skill_deny_write=sk).decision
         )
 
         # ---- write decisions --------------------------------------------------- #
-        # B5c: every mutating allow is audited — a write/append/move that passes
-        # the lane returns allow_with_log, never a bare (possibly unlogged) allow.
+        # Every mutating allow is audited -- a write/append/move that passes
+        # the policy returns allow_with_log, never a bare unlogged allow.
         check(
             "Write fixture write to own scope -> allow_with_log",
             d(write_fixture, "write", "projects/x/code/main.py") == "allow_with_log",
         )
         check(
-            "Engineer write to notes -> deny (lane deny)",
+            "Engineer write to notes -> deny (policy deny)",
             d(engineer, "write", "catalog/sources/d/source.md") == "deny",
         )
         check(
@@ -194,7 +190,7 @@ def test_runtime_policy_core():
             d(writer, "write", "knowledge/hubs/r.md") == "deny",
         )
         check(
-            "Writer write to claims -> deny (lane deny beats degrade)",
+            "Writer write to claims -> deny (policy deny beats degrade)",
             d(writer, "write", "knowledge/notes/c.md") == "deny",
         )
         check(
@@ -269,33 +265,33 @@ def test_runtime_policy_core():
         # the audit chain has no unlogged-allow hole left.)
         check(
             "Librarian direct write to catalog/inbox -> deny",
-            d(librarian, "write", "catalog/sources/smith/source.md") == "deny"
-            and d(librarian, "write", "inbox/candidate-x.md") == "deny",
+            d(cataloger, "write", "catalog/sources/smith/source.md") == "deny"
+            and d(cataloger, "write", "inbox/candidate-x.md") == "deny",
         )
         check(
             "X1 Librarian write to claims -> deny (write-wall)",
-            d(librarian, "write", "knowledge/notes/c.md") == "deny",
+            d(cataloger, "write", "knowledge/notes/c.md") == "deny",
         )
         check(
             "Librarian write to projects/system -> deny",
-            d(librarian, "write", "projects/x/d.md") == "deny"
-            and d(librarian, "write", "system/templates/claim.md") == "deny",
+            d(cataloger, "write", "projects/x/d.md") == "deny"
+            and d(cataloger, "write", "system/templates/claim.md") == "deny",
         )
         check(
             "Peer-reviewer direct write to inbox cards -> deny",
-            d(peer_reviewer, "write", "inbox/flag-broken-citekey.md") == "deny"
-            and d(peer_reviewer, "write", "inbox/gap-missing-rcts.md") == "deny",
+            d(reviewer, "write", "inbox/flag-broken-citekey.md") == "deny"
+            and d(reviewer, "write", "inbox/gap-missing-rcts.md") == "deny",
         )
         check(
             "V1 Peer-reviewer write to the draft under test -> deny (no self-edit)",
-            d(peer_reviewer, "write", "projects/x/draft.md") == "deny",
+            d(reviewer, "write", "projects/x/draft.md") == "deny",
         )
         check(
             "Peer-reviewer write to claims -> deny (write-wall)",
-            d(peer_reviewer, "write", "knowledge/notes/c.md") == "deny",
+            d(reviewer, "write", "knowledge/notes/c.md") == "deny",
         )
 
-        # ---- invalid action + missing task_id ---------------------------------- #
+        # ---- invalid action + missing request_id ------------------------------- #
         check(
             "unknown action -> deny", d(engineer, "frobnicate", "projects/x/code/main.py") == "deny"
         )
@@ -309,27 +305,30 @@ def test_runtime_policy_core():
         # ---- engine: audit append + full request path -------------------------- #
         with tempfile.TemporaryDirectory() as td:
             vault = Path(td)
-            lane_dir = vault / LANE_OVERRIDE_RELDIR
-            lane_dir.mkdir(parents=True)
-            # Write a minimal coder lane so load_lane is exercised when PyYAML is present.
-            (lane_dir / "coder.yaml").write_text(
-                "profile: memoria-coder\n"
-                'policy:\n  allow:\n    write:\n      - "40-workbench/*/06-code/**"\n'
-                '  deny:\n    write:\n      - "30-synthesis/**"\n  require:\n    - audit_log\n'
-                'routing:\n  write_scope:\n    - "40-workbench/*/06-code/"\n',
+            config = vault / POLICY_CONFIG_RELPATH
+            config.parent.mkdir(parents=True)
+            # Write a minimal actor policy so load_actor_policy is exercised when PyYAML is present.
+            config.write_text(
+                "version: 1\n"
+                "actors:\n"
+                "  operation:\n"
+                "    allow:\n"
+                '      write: ["40-workbench/*/06-code/**"]\n'
+                "    deny:\n"
+                '      write: ["30-synthesis/**"]\n'
+                '    require: ["audit_log"]\n'
+                '    write_scope: ["40-workbench/*/06-code/"]\n',
                 encoding="utf-8",
             )
             engine = PolicyEngine(vault)
             if yaml is not None:
                 resp = engine.check(
-                    "memoria-coder", "write", "40-workbench/x/06-code/main.py", "TASK-1", "impl"
+                    "operation", "write", "40-workbench/x/06-code/main.py", "REQ-1", "impl"
                 )
                 check("engine allow includes before_hash", resp.get("before_hash") == EMPTY_SHA256)
                 check("engine logged the allow to audit.jsonl", (vault / AUDIT_RELPATH).is_file())
-                deny = engine.check(
-                    "memoria-coder", "write", "30-synthesis/01-claims/c.md", "TASK-1"
-                )
-                check("engine deny on lane-denied path", deny["decision"] == "deny")
+                deny = engine.check("operation", "write", "30-synthesis/01-claims/c.md", "REQ-1")
+                check("engine deny on policy-denied path", deny["decision"] == "deny")
                 lines = (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
                 check("audit has one line per decision", len(lines) == 2)
                 check("audit lines are valid JSON", all(json.loads(ln) for ln in lines))
@@ -341,10 +340,10 @@ def test_runtime_policy_core():
                 # B5d: complete_write validates the caller's before_hash against the
                 # pre-decision audit record — a different hash is logged, not trusted.
                 done = engine.complete_write(
-                    "memoria-coder",
+                    "operation",
                     "write",
                     "40-workbench/x/06-code/main.py",
-                    "TASK-1",
+                    "REQ-1",
                     "sha256:" + "f" * 64,
                 )
                 last = json.loads(
@@ -358,10 +357,10 @@ def test_runtime_policy_core():
                     and last.get("expected_before_hash") == EMPTY_SHA256,
                 )
                 done2 = engine.complete_write(
-                    "memoria-coder",
+                    "operation",
                     "write",
                     "40-workbench/x/06-code/main.py",
-                    "TASK-1",
+                    "REQ-1",
                     EMPTY_SHA256,
                 )
                 last2 = json.loads(
@@ -373,35 +372,34 @@ def test_runtime_policy_core():
                 )
             else:
                 print("  SKIP  engine YAML-load checks (PyYAML not installed)")
-            # task_id is mandatory
-            no_task = engine.check("memoria-coder", "write", "40-workbench/x/06-code/m.py", "")
-            check("missing task_id -> deny", no_task["decision"] == "deny")
+            # request_id is mandatory
+            no_request = engine.check("operation", "write", "40-workbench/x/06-code/m.py", "")
+            check("missing request_id -> deny", no_request["decision"] == "deny")
 
     _run()
 
 
-def test_template_no_longer_ships_lane_overrides():
-    """Alpha.14 removed shipped lane overrides; adapter policy must be supplied
-    explicitly and otherwise fails closed."""
+def test_template_no_longer_ships_adapter_policy_config():
+    """Alpha.14 removed shipped adapter policy; adapters must supply it explicitly."""
     if yaml is None:
         pytest.skip("PyYAML not installed")
     src = Path(__file__).resolve().parent.parent / "vault-template"
-    assert not (src / ".memoria/lane-overrides").exists()
+    assert not (src / POLICY_CONFIG_RELPATH).exists()
     with pytest.raises(FileNotFoundError):
-        load_lane(src, "memoria-writer")
+        load_actor_policy(src, "adapter")
 
 
 def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledged(tmp_path):
-    lane_dir = tmp_path / LANE_OVERRIDE_RELDIR
-    lane_dir.mkdir(parents=True)
-    (lane_dir / "writer.yaml").write_text(
-        "profile: memoria-writer\n"
-        "policy:\n"
-        "  allow:\n"
-        '    write: ["knowledge/hubs/**"]\n'
-        '  require: ["audit_log"]\n'
-        "routing:\n"
-        '  write_scope: ["knowledge/hubs/"]\n',
+    config = tmp_path / POLICY_CONFIG_RELPATH
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        "version: 1\n"
+        "actors:\n"
+        "  operation:\n"
+        "    allow:\n"
+        '      write: ["knowledge/hubs/**"]\n'
+        '    require: ["audit_log"]\n'
+        '    write_scope: ["knowledge/hubs/"]\n',
         encoding="utf-8",
     )
     (tmp_path / "inbox").mkdir()
@@ -412,7 +410,7 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     )
 
     engine = PolicyEngine(tmp_path)
-    blocked = engine.check("memoria-writer", "write", "knowledge/hubs/h.md", "T-BLOCK")
+    blocked = engine.check("operation", "write", "knowledge/hubs/h.md", "REQ-BLOCK")
     assert blocked["decision"] == "deny"
     assert blocked["policy_rule"] == "loudness.block.active"
     assert blocked["blockers"][0]["path"] == "inbox/block.md"
@@ -421,17 +419,17 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
         "---\ntitle: Stop\ntype: alert\nlifecycle: current\nloudness: block\nresolved: 2026-06-15\n---\n",
         encoding="utf-8",
     )
-    unblocked = engine.check("memoria-writer", "write", "knowledge/hubs/h.md", "T-OPEN")
+    unblocked = engine.check("operation", "write", "knowledge/hubs/h.md", "REQ-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
 
 
 def test_split_policy_decision_core_imports_without_mcp_server():
     from memoria_vault.runtime.policy.decision import decide
-    from memoria_vault.runtime.policy.model import LanePolicy
+    from memoria_vault.runtime.policy.model import ActorPolicy
 
-    lane = LanePolicy(profile="memoria-test", allow_write=["inbox/**"], require=["audit_log"])
-    result = decide("memoria-test", "write", "inbox/card.md", lane)
+    policy = ActorPolicy(actor="adapter", allow_write=["inbox/**"], require=["audit_log"])
+    result = decide("adapter", "write", "inbox/attention.md", policy)
 
     assert result.decision == "allow_with_log"
-    assert result.policy_rule == "Test.write.inbox"
+    assert result.policy_rule == "Adapter.write.inbox"

@@ -7,17 +7,17 @@ nav_order: 3
 
 # Interaction channels
 
-Memoria has one daily PI surface and two secondary channels:
+Memoria has one required PI surface and optional secondary channels:
 
 | Channel | Mode | Purpose |
 | --- | --- | --- |
-| **Obsidian** | Focused desktop work | Inbox triage, reading, writing, dashboards, review decisions, and Co-PI conversation. |
-| **CLI** (`hermes ...`) | Operator/admin work | Forensic queries, profile administration, manual dispatch, backup, and safe-mode checks. |
-| **Telegram** | Mobile async signal | Urgent push notifications today; mobile capture remains planned work. |
+| **CLI** (`memoria ...`) | Required daily and operator work | Capture, enrich, digest, ask, request recovery, audit queries, rebuilds, and checks. |
+| **Editor files** | Focused desktop work | Reading, writing, dashboards, and review decisions over the workspace files. |
+| **Telegram** | Optional mobile async signal | Urgent push notifications when configured; mobile capture remains planned work. |
 
-The API server is not a human channel. Programs use it for filesystem watchers,
-Zotero hooks, git hooks, or dispatch integrations, and policy still gates writes
-at the calling profile's permissions.
+An optional adapter is not the source of authority. Programs may wrap the CLI or
+watch files, but the request queue, operation manifests, policy gate, and journal
+remain the write boundary.
 
 ## Signal routing
 
@@ -25,11 +25,10 @@ Every finding has a loudness. Quiet and notice-level events wait in dashboards o
 Maintenance. Alert and block-level events may push to Telegram because they can
 change what the PI does soon.
 
-Daily approvals should not require the CLI. Routine events should not push to the
-phone. If either happens often, the surface is wrong.
+Routine events should not push to the phone. If they do, the loudness policy is
+wrong.
 
 ## Related
 
-- Obsidian layout contract: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
-- CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
+- CLI commands: [CLI](../../reference/cli.md)
 - Policy boundary: [Policy gate](../../reference/policy-mcp.md)

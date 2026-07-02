@@ -18,8 +18,7 @@ from .decision import (
     set_gated_prefixes,
 )
 from .engine import PolicyEngine
-from .lanes import LANE_OVERRIDE_RELDIR, load_gated_prefixes, load_lane, parse_lane
-from .model import Decision, LanePolicy
+from .model import ActorPolicy, Decision
 from .paths import (
     ACTIONS,
     MUTATING_ACTIONS,
@@ -28,6 +27,12 @@ from .paths import (
     normalize_path,
     path_matches,
     within_scope,
+)
+from .workspace import (
+    POLICY_CONFIG_RELPATH,
+    load_actor_policy,
+    load_gated_prefixes,
+    load_policy_map,
 )
 
 __all__ = [
@@ -38,22 +43,22 @@ __all__ = [
     "AUTO_FIX_DENY_CLASSES",
     "AUTO_FIX_DRY_RUN_CLASSES",
     "EMPTY_SHA256",
-    "LANE_OVERRIDE_RELDIR",
     "MUTATING_ACTIONS",
+    "POLICY_CONFIG_RELPATH",
     "REVIEW_GATED_PREFIXES",
     "REVIEW_MODE",
+    "ActorPolicy",
     "Decision",
-    "LanePolicy",
     "PolicyEngine",
     "append_audit",
     "compose_skill_deny",
     "decide",
     "glob_to_regex",
     "is_review_gated",
+    "load_actor_policy",
     "load_gated_prefixes",
-    "load_lane",
+    "load_policy_map",
     "normalize_path",
-    "parse_lane",
     "path_matches",
     "set_gated_prefixes",
     "sha256_file",

@@ -96,18 +96,14 @@ def gated_prefixes(folders: dict) -> list[str]:
     return list(folders.get("gated_prefixes", []))
 
 
-# Dependency-free fallback for the alpha.11 profile policy runtime. The schema no
-# longer declares gated prefixes; machine writes route through worker staging,
+# Dependency-free fallback for the structural review gate. The schema no longer
+# declares gated prefixes; machine writes route through worker staging,
 # promotion, and quarantine instead.
 FALLBACK_GATED_PREFIXES = ("knowledge/notes/", "knowledge/hubs/")
 
 
 def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
-    """Return the legacy profile-policy gated prefixes.
-
-    Alpha.11 does not declare these in folders.yaml; the worker owns the real
-    write boundary. This remains for the older profile-policy modules.
-    """
+    """Return structural review-gated prefixes."""
     try:
         return (
             tuple(load_folders(schemas_dir).get("gated_prefixes") or ()) or FALLBACK_GATED_PREFIXES
@@ -239,7 +235,7 @@ def _under_home(path: Path, root: Path, home: str) -> bool:
 
 
 def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
-    """Permissive OKF-core shape check for the alpha.11 bundle roots."""
+    """Permissive OKF-core shape check for bundle roots."""
     root = Path(root)
     folders = load_folders(schemas_dir)
     errors: list[str] = []
@@ -257,8 +253,8 @@ def validate_okf_core_workspace(root: Path, schemas_dir: Path | None = None) -> 
     return errors
 
 
-def validate_memoria_profile_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
-    """Strict Memoria-profile check before promotion into alpha.11 bundle roots."""
+def validate_memoria_workspace(root: Path, schemas_dir: Path | None = None) -> list[str]:
+    """Strict Memoria Concept check before promotion into bundle roots."""
     root = Path(root)
     types = load_types(schemas_dir)
     folders = load_folders(schemas_dir)

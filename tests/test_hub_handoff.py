@@ -1,4 +1,4 @@
-"""ADR-19 Tier 2: hub-threshold findings delegate to the map lane."""
+"""ADR-19 Tier 2: hub-threshold findings create map-proposal requests."""
 
 from pathlib import Path
 
@@ -6,13 +6,6 @@ from memoria_vault.runtime.subsystems.integrity.linter import hub_handoff
 
 
 def _vault(tmp_path: Path) -> Path:
-    lo = tmp_path / ".memoria" / "lane-overrides"
-    lo.mkdir(parents=True)
-    (lo / "librarian.yaml").write_text(
-        "profile: memoria-librarian\nrouting:\n  write_scope:\n"
-        '    - "catalog/"\n    - "knowledge/notes/maps/"\n',
-        encoding="utf-8",
-    )
     return tmp_path
 
 
@@ -33,7 +26,8 @@ def test_hub_threshold_handoff_creates_map_card_with_staging_paths(tmp_path):
     assert len(rows) == 1
     assert rows[0]["topic"] == "sleep"
     assert rows[0]["count"] == 3
-    assert rows[0]["lane"] == "map"
+    assert rows[0]["operation_id"] == "suggest-hubs"
+    assert rows[0]["posture"] == "mapping"
     assert rows[0]["goal"] == "Draft hub proposal: sleep"
     assert rows[0]["idempotency_key"] == "hub-threshold-sleep"
     assert rows[0]["allowed_paths"] == ["knowledge/notes/maps/"]

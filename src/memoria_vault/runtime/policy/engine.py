@@ -1,4 +1,4 @@
-"""Stateful policy engine: lane loading, hashing, audit, and loudness checks."""
+"""Stateful policy engine: actor-policy loading, hashing, audit, and loudness checks."""
 
 from __future__ import annotations
 
@@ -11,48 +11,48 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 
 from .audit import AUDIT_RELPATH, append_audit, sha256_file
 from .decision import compose_skill_deny, decide, is_review_gated
-from .lanes import load_lane
-from .model import LanePolicy
+from .model import ActorPolicy
 from .paths import MUTATING_ACTIONS, normalize_path
+from .workspace import load_actor_policy
 
 
 class PolicyEngine:
     """Stateful wrapper around the pure decision core."""
 
-    def __init__(self, vault: Path):
-        self.vault = vault
-        self._lane_cache: dict[str, LanePolicy] = {}
+    def __init__(self, workspace: Path):
+        self.workspace = workspace
+        self._policy_cache: dict[str, ActorPolicy] = {}
         self._session_skill_deny: dict[str, list[str]] = {}
 
-    def lane(self, profile: str) -> LanePolicy:
-        if profile not in self._lane_cache:
-            self._lane_cache[profile] = load_lane(self.vault, profile)
-        return self._lane_cache[profile]
+    def policy(self, actor: str) -> ActorPolicy:
+        if actor not in self._policy_cache:
+            self._policy_cache[actor] = load_actor_policy(self.workspace, actor)
+        return self._policy_cache[actor]
 
-    def set_session_skill(self, task_id: str, skill_policy: dict | None) -> None:
+    def set_session_skill(self, request_id: str, skill_policy: dict | None) -> None:
         """Register one loaded skill's additive write-deny policy for a session."""
-        lane_stub = LanePolicy(profile="")
-        extra = compose_skill_deny(lane_stub, skill_policy)
+        policy_stub = ActorPolicy(actor="")
+        extra = compose_skill_deny(policy_stub, skill_policy)
         if extra:
-            self._session_skill_deny[task_id] = extra
+            self._session_skill_deny[request_id] = extra
         else:
-            self._session_skill_deny.pop(task_id, None)
+            self._session_skill_deny.pop(request_id, None)
 
-    def clear_session_skill(self, task_id: str) -> None:
-        self._session_skill_deny.pop(task_id, None)
+    def clear_session_skill(self, request_id: str) -> None:
+        self._session_skill_deny.pop(request_id, None)
 
     def _audit_traversal(
-        self, profile: str, action: str, path: str, task_id: str, message: str
+        self, actor: str, action: str, path: str, request_id: str, message: str
     ) -> None:
         """Log a path traversal denial with the raw path that failed normalization."""
         append_audit(
-            self.vault,
+            self.workspace,
             {
                 "timestamp": now_iso(),
-                "profile": profile,
+                "actor": actor,
                 "action": action,
                 "path": path,
-                "task_id": task_id,
+                "request_id": request_id,
                 "decision": "deny",
                 "policy_rule": "path.traversal",
                 "message": message,
@@ -61,38 +61,38 @@ class PolicyEngine:
 
     def check(
         self,
-        profile: str,
+        actor: str,
         action: str,
         path: str,
-        task_id: str,
+        request_id: str,
         reason: str = "",
         flags: dict | None = None,
     ) -> dict[str, Any]:
         """Decide, hash mutating allows, append audit rows, and shape the response."""
-        if not task_id:
+        if not request_id:
             return {
                 "decision": "deny",
-                "policy_rule": "request.no-task-id",
-                "message": "task_id is required on every request",
+                "policy_rule": "request.no-request-id",
+                "message": "request_id is required on every request",
             }
         try:
             npath = normalize_path(path)
         except ValueError as exc:
-            self._audit_traversal(profile, action, path, task_id, str(exc))
+            self._audit_traversal(actor, action, path, request_id, str(exc))
             return {"decision": "deny", "policy_rule": "path.traversal", "message": str(exc)}
 
         if action in MUTATING_ACTIONS and is_review_gated(npath):
-            blockers = _open_blockers(self.vault)
+            blockers = _open_blockers(self.workspace)
             if blockers:
                 message = _blocker_message(blockers)
                 append_audit(
-                    self.vault,
+                    self.workspace,
                     {
                         "timestamp": now_iso(),
-                        "profile": profile,
+                        "actor": actor,
                         "action": action,
                         "path": npath,
-                        "task_id": task_id,
+                        "request_id": request_id,
                         "decision": "deny",
                         "policy_rule": "loudness.block.active",
                         "message": message,
@@ -106,17 +106,17 @@ class PolicyEngine:
                 }
 
         try:
-            lane = self.lane(profile)
-        except (FileNotFoundError, RuntimeError) as exc:
-            return {"decision": "deny", "policy_rule": "lane.load-error", "message": str(exc)}
+            policy = self.policy(actor)
+        except (FileNotFoundError, KeyError, RuntimeError, ValueError) as exc:
+            return {"decision": "deny", "policy_rule": "policy.load-error", "message": str(exc)}
 
-        skill_deny = self._session_skill_deny.get(task_id)
-        dec = decide(profile, action, npath, lane, flags=flags, skill_deny_write=skill_deny)
+        skill_deny = self._session_skill_deny.get(request_id)
+        dec = decide(actor, action, npath, policy, flags=flags, skill_deny_write=skill_deny)
 
         before_hash = None
         if dec.decision in ("allow", "allow_with_log") and action in MUTATING_ACTIONS:
             try:
-                before_hash = sha256_file(self.vault / npath)
+                before_hash = sha256_file(self.workspace / npath)
             except OSError as exc:
                 return {
                     "decision": "deny",
@@ -127,10 +127,10 @@ class PolicyEngine:
         if dec.log_required or dec.decision in ("allow_with_log", "deny", "dry_run"):
             entry = {
                 "timestamp": now_iso(),
-                "profile": profile,
+                "actor": actor,
                 "action": action,
                 "path": npath,
-                "task_id": task_id,
+                "request_id": request_id,
                 "decision": dec.decision,
                 "policy_rule": dec.policy_rule,
             }
@@ -139,7 +139,7 @@ class PolicyEngine:
             if before_hash is not None:
                 entry["before_hash"] = before_hash
                 entry["after_hash"] = None
-            append_audit(self.vault, entry)
+            append_audit(self.workspace, entry)
 
         resp = dec.response()
         if before_hash is not None:
@@ -148,37 +148,37 @@ class PolicyEngine:
 
     def complete_write(
         self,
-        profile: str,
+        actor: str,
         action: str,
         path: str,
-        task_id: str,
+        request_id: str,
         before_hash: str,
     ) -> dict[str, Any]:
         """Record the post-write ``after_hash`` for reversibility."""
         try:
             npath = normalize_path(path)
         except ValueError as exc:
-            self._audit_traversal(profile, action, path, task_id, str(exc))
+            self._audit_traversal(actor, action, path, request_id, str(exc))
             return {"ok": False, "message": str(exc)}
         try:
-            after_hash = sha256_file(self.vault / npath)
+            after_hash = sha256_file(self.workspace / npath)
         except OSError as exc:
             return {"ok": False, "message": f"cannot hash '{npath}': {exc}"}
         entry = {
             "timestamp": now_iso(),
-            "profile": profile,
+            "actor": actor,
             "action": action,
             "path": npath,
-            "task_id": task_id,
+            "request_id": request_id,
             "decision": "write_complete",
             "before_hash": before_hash,
             "after_hash": after_hash,
         }
         expected = None
-        for audit_entry in iter_jsonl(self.vault / AUDIT_RELPATH):
+        for audit_entry in iter_jsonl(self.workspace / AUDIT_RELPATH):
             if (
                 audit_entry.get("path") == npath
-                and audit_entry.get("task_id") == task_id
+                and audit_entry.get("request_id") == request_id
                 and audit_entry.get("decision") in ("allow", "allow_with_log")
                 and audit_entry.get("before_hash")
             ):
@@ -186,7 +186,7 @@ class PolicyEngine:
         if expected is not None and expected != before_hash:
             entry["hash_mismatch"] = True
             entry["expected_before_hash"] = expected
-        append_audit(self.vault, entry)
+        append_audit(self.workspace, entry)
         return {"ok": True, "after_hash": after_hash}
 
 

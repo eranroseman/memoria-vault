@@ -29,7 +29,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     """A mutating allow in the audit chain whose write never completed.
 
     Every mutating allow / allow_with_log record carries a before_hash and is
-    paired by a `write_complete` record (same path + task_id) once the worker's
+    paired by a `write_complete` record (same path + request_id) once the worker's
     write lands (policy_hook post_tool_call -> complete_write). An unpaired
     record older than `max_age_h` means the reversibility chain has a hole --
     the write either failed silently or completed without its after_hash, so
@@ -40,13 +40,13 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
     if not log.is_file():
         return []
     mutating = {"write", "append", "move", "delete", "mkdir", "auto_fix"}
-    pending: dict[tuple[str, str], dict] = {}  # (path, task_id) -> pre-record
+    pending: dict[tuple[str, str], dict] = {}  # (path, request_id) -> pre-record
     for line in read(log).splitlines():
         try:
             e = json.loads(line)
         except json.JSONDecodeError:
             continue
-        key = (e.get("path", ""), e.get("task_id", ""))
+        key = (e.get("path", ""), e.get("request_id", ""))
         if e.get("decision") == "write_complete":
             pending.pop(key, None)
         elif (
@@ -57,7 +57,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
             pending[key] = e
     now = datetime.now(UTC)
     out = []
-    for (path, task_id), e in sorted(pending.items()):
+    for (path, request_id), e in sorted(pending.items()):
         try:
             ts = datetime.fromisoformat(str(e.get("timestamp", "")).replace("Z", "+00:00"))
         except ValueError:
@@ -69,7 +69,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
                     "audit-unpaired-writes",
                     "MEDIUM",
                     path,
-                    f"mutating allow ({e.get('action')}, task {task_id}) has no "
+                    f"mutating allow ({e.get('action')}, request {request_id}) has no "
                     f"paired write_complete after {age_h:.1f}h -- the audit "
                     f"chain cannot pin this write's after-state",
                 )
@@ -133,8 +133,8 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
                     "CRITICAL",
                     path,
                     f"on-disk state ({state}) no longer matches the last "
-                    f"audited after_hash ({e.get('action')}, task "
-                    f"{e.get('task_id')}, {e.get('timestamp')}) -- "
+                    f"audited after_hash ({e.get('action')}, request "
+                    f"{e.get('request_id')}, {e.get('timestamp')}) -- "
                     f"out-of-band change; the audit trail no longer "
                     f"pins this file's state",
                 )
