@@ -52,6 +52,7 @@ def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
         "catalog/catalog.base",
         "catalog/index.md",
         "knowledge/index.md",
+        "knowledge/_views/index.md",
         "capabilities/index.md",
         "references.bib",
         "golden_restore",

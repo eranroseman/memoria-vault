@@ -23,7 +23,13 @@ def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     (tmp_path / "catalog").mkdir()
     (tmp_path / "knowledge").mkdir()
-    for rel in ("index.md", "catalog/index.md", "knowledge/index.md", "capabilities/index.md"):
+    for rel in (
+        "index.md",
+        "catalog/index.md",
+        "knowledge/index.md",
+        "knowledge/_views/index.md",
+        "capabilities/index.md",
+    ):
         (tmp_path / rel).unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "projections@example.invalid")
@@ -139,6 +145,24 @@ def test_tracked_projections_render_sqlite_catalog_work_without_source_markdown(
     assert f"`{source_ref}`" in catalog_index
     assert "DB Source `source`" in catalog_index
     assert not (vault / "catalog/sources/db-source/source.md").exists()
+    assert check_tracked_projections(vault)["ok"]
+
+
+def test_tracked_projections_render_knowledge_views(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note = vault / "knowledge/notes/alpha.md"
+    note.parent.mkdir(parents=True, exist_ok=True)
+    note.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: Alpha note\n---\n# Alpha note\n",
+        encoding="utf-8",
+    )
+
+    result = write_tracked_projections(vault, commit=True, machine="test-machine")
+
+    view = (vault / "knowledge/_views/index.md").read_text(encoding="utf-8")
+    assert "knowledge/_views/index.md" in result["changed"]
+    assert "# Knowledge views index" in view
+    assert "- `note`: 1" in view
     assert check_tracked_projections(vault)["ok"]
 
 

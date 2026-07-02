@@ -1344,7 +1344,7 @@ def _workspace(args: argparse.Namespace) -> Path:
 def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
     if fixture != "direct-write-generated-projection":
         raise ValueError(f"unknown workspace scan fixture: {fixture}")
-    rel = "knowledge/index.md"
+    rel = "knowledge/_views/index.md"
     path = workspace / rel
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -1385,7 +1385,9 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
 
 
 def _changed_generated_projection_paths(workspace: Path) -> list[str]:
-    paths = ("catalog/index.md", "knowledge/index.md", "capabilities/index.md")
+    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+
+    paths = TRACKED_PROJECTION_PATHS
     proc = _git(
         workspace,
         "status",

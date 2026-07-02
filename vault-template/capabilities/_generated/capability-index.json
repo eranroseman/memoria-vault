@@ -1194,7 +1194,7 @@
       ],
       "title": "Regenerate tracked projections",
       "trust": {
-        "sha256": "sha256:dc65907a8e1cd19ef2a40f735d66a3f5fc54d445503be13cce5bfe524525c5ce",
+        "sha256": "sha256:7eabeca8092a52158e402e15d7979290c4159633aa576a7c8710f0fe298d7b6f",
         "source": "local"
       },
       "type": "operation"
