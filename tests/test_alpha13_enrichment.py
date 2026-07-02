@@ -116,6 +116,14 @@ def provider_payloads(
             },
             "referenced_works": ["https://openalex.org/W999"],
             "related_works": ["https://openalex.org/W888"],
+            "primary_topic": {
+                "id": "https://openalex.org/T321",
+                "display_name": "Knowledge management",
+                "subfield": {"display_name": "Information systems"},
+                "field": {"display_name": "Computer science"},
+                "domain": {"display_name": "Physical sciences"},
+                "score": 0.91,
+            },
             "topics": [{"id": "https://openalex.org/T123", "display_name": "Research workflows"}],
         },
         "unpaywall": {
@@ -309,6 +317,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         ("references", "https://openalex.org/W999"),
         ("related", "https://openalex.org/W888"),
         ("topic", "https://openalex.org/T123"),
+        ("topic", "https://openalex.org/T321"),
     ]
     assert discovered == []
     assert len(done["discovery_candidate_paths"]) == 3

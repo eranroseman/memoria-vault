@@ -707,15 +707,17 @@ def _first_order_work_graph(
                     {"id": target_id, "source_work": source_id},
                 )
 
+    topic_candidates = []
+    if isinstance(openalex.get("primary_topic"), dict):
+        topic_candidates.append(openalex["primary_topic"])
     topics = openalex.get("topics")
     if isinstance(topics, list):
-        for topic in topics:
-            if not isinstance(topic, dict):
-                continue
-            title = str(topic.get("display_name") or topic.get("name") or "").strip()
-            target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
-            if target_id:
-                _add_graph_row(rows, "topic", target_id, title, "", "openalex", topic)
+        topic_candidates.extend(topic for topic in topics if isinstance(topic, dict))
+    for topic in topic_candidates:
+        title = str(topic.get("display_name") or topic.get("name") or "").strip()
+        target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
+        if target_id:
+            _add_graph_row(rows, "topic", target_id, title, "", "openalex", topic)
     return list(rows.values())
 
 
