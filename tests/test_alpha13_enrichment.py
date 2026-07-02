@@ -125,6 +125,7 @@ def provider_payloads(
                 "score": 0.91,
             },
             "topics": [{"id": "https://openalex.org/T123", "display_name": "Research workflows"}],
+            "keywords": [{"id": "https://openalex.org/K123", "display_name": "research workflow"}],
         },
         "unpaywall": {
             "doi": "10.1000/alpha",
@@ -313,6 +314,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert ("doi", "10.1000/alpha") in [tuple(row) for row in external_ids]
     assert materialization["materialization_status"] == "materialized"
     assert [tuple(row) for row in graph_edges] == [
+        ("keyword", "https://openalex.org/K123"),
         ("references", "doi:10.1000/beta"),
         ("references", "https://openalex.org/W999"),
         ("related", "https://openalex.org/W888"),

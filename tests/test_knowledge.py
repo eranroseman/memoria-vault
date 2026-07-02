@@ -418,7 +418,13 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
                 "target_id": "https://openalex.org/T1",
                 "source_provider": "openalex",
                 "raw": {"subfield": {"display_name": "Graph-only Topic"}},
-            }
+            },
+            {
+                "relation_type": "keyword",
+                "target_id": "https://openalex.org/K1",
+                "target_title": "Graph-only Keyword",
+                "source_provider": "openalex",
+            },
         ],
     )
     state.replace_work_graph_edges(
@@ -437,7 +443,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     result = analyze_gaps(tmp_path, dense_threshold=1)
 
     gaps = {gap["topic"]: gap for gap in result["gaps"]}
-    assert set(gaps) == {"Graph-only Topic", "catalog-only"}
+    assert set(gaps) == {"Graph-only Keyword", "Graph-only Topic", "catalog-only"}
     assert gaps["catalog-only"]["gap_type"] == "undigested"
     assert gaps["catalog-only"]["source_count"] == 1
     assert gaps["catalog-only"]["digest_count"] == 0
@@ -446,6 +452,10 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     assert gaps["Graph-only Topic"]["source_count"] == 1
     assert gaps["Graph-only Topic"]["digest_count"] == 0
     assert gaps["Graph-only Topic"]["note_count"] == 0
+    assert gaps["Graph-only Keyword"]["gap_type"] == "undigested"
+    assert gaps["Graph-only Keyword"]["source_count"] == 1
+    assert gaps["Graph-only Keyword"]["digest_count"] == 0
+    assert gaps["Graph-only Keyword"]["note_count"] == 0
 
 
 def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(

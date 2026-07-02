@@ -418,7 +418,7 @@ def _add_graph_topic_gap_terms(
                 SELECT target_title, raw_json
                 FROM work_graph_edges
                 WHERE work_id = ?
-                  AND relation_type = 'topic'
+                  AND relation_type IN ('topic', 'keyword')
                 ORDER BY target_id
                 """,
                 (source_id,),
