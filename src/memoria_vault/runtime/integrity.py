@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 from collections import deque
@@ -165,6 +166,20 @@ def check_prompt_injection_markers(
     """Flag checked Concepts carrying explicit prompt-injection marker text."""
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
+    for row in state.catalog_sources(vault):
+        marker = _prompt_injection_marker(_source_row_scan_text(vault, row))
+        if marker:
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    f"catalog/sources/{row['source_id']}",
+                    check="prompt-injection",
+                    status="failed",
+                    reason=f"prompt-injection marker: {marker}",
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
@@ -242,10 +257,32 @@ def check_source_metadata(
     """Flag checked sources whose bibliographic metadata is too thin."""
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
+    for row in state.catalog_sources(vault):
+        if row.get("check_status") != "checked":
+            continue
+        target_id = f"catalog/sources/{row['source_id']}"
+        frontmatter = _source_row_frontmatter(row)
+        for reason in [
+            *_source_metadata_issues(frontmatter),
+            *_linked_entity_identity_issues(vault, frontmatter),
+        ]:
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    target_id,
+                    check="source-metadata",
+                    status="failed",
+                    reason=reason,
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
         if frontmatter.get("type") != "source" or frontmatter.get("check_status") != "checked":
+            continue
+        if _source_ref(rel):
             continue
         for reason in [
             *_source_metadata_issues(frontmatter),
@@ -470,13 +507,19 @@ def cascade_rollback(
     target = normalize_path(target_id)
     derived = _latest_derived(vault)
     events = trace_downstream(vault, target)
+    catalog_target = ""
+    catalog_quarantine_id = ""
+    if include_target:
+        catalog_target, catalog_quarantine_id = _quarantine_catalog_source(
+            vault, target, reason, machine
+        )
     if include_target and target in derived:
         events = [derived[target], *events]
 
-    reverted: list[str] = []
+    reverted: list[str] = [catalog_target] if catalog_target else []
     needs_human: list[str] = []
     skipped: list[str] = []
-    touched: list[str] = []
+    touched: list[str] = [catalog_quarantine_id] if catalog_quarantine_id else []
     seen: set[str] = set()
     for event in events:
         output_id = event.get("output_id")
@@ -634,6 +677,59 @@ def _quarantine_machine_descendant(
     )
 
 
+def _quarantine_catalog_source(
+    vault: Path, target: str, reason: str, machine: str | None
+) -> tuple[str, str]:
+    source_ref = _source_ref(target)
+    if not source_ref:
+        return "", ""
+    row = state.catalog_source(vault, source_ref)
+    if row is None:
+        return "", ""
+    source_id = str(row["source_id"])
+    with state.connect(vault) as conn:
+        conn.execute(
+            "UPDATE catalog_sources SET check_status = 'quarantined' WHERE source_id = ?",
+            (source_id,),
+        )
+        conn.execute(
+            "UPDATE concepts SET check_status = 'quarantined' WHERE concept_id = ?",
+            (source_ref,),
+        )
+    quarantine_path = _unique_path(vault / ".memoria/quarantine" / source_ref)
+    quarantine_path.parent.mkdir(parents=True, exist_ok=True)
+    quarantine_path.write_text(
+        json.dumps(
+            {
+                "target_id": source_ref,
+                "store": "db",
+                "reason": reason,
+                "check_status": "quarantined",
+            },
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    quarantine_id = quarantine_path.relative_to(vault).as_posix()
+    append_journal_event(
+        vault,
+        {
+            "event": EVENT_DERIVED,
+            "output_id": source_ref,
+            "inputs": [{"id": target, "role": "rollback-trigger"}],
+            "operation": "cascade-rollback",
+            "actor": "integrity",
+            "store": "db",
+            "status": "quarantined",
+            "quarantined_id": quarantine_id,
+            "reason": reason,
+        },
+        machine=machine,
+    )
+    return source_ref, quarantine_id
+
+
 def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     derived: dict[str, dict[str, Any]] = {}
     for path in sorted((vault / "journal").glob("*.jsonl")):
@@ -655,7 +751,6 @@ def _trace_aliases(vault: Path, target: str) -> set[str]:
     concept_path = str(row.get("concept_path") or "").strip()
     if source_id:
         aliases.add(f"catalog/sources/{source_id}")
-        aliases.add(f"catalog/sources/{source_id}/source.md")
     if concept_path:
         aliases.add(normalize_path(concept_path))
     return aliases
@@ -734,9 +829,8 @@ def _concept_status(vault: Path, rel: str) -> dict[str, str]:
         row = state.catalog_source(vault, source_ref)
         if row is not None:
             return _source_row_status(row)
-        path = vault / f"{source_ref}/source.md"
-    else:
-        path = vault / rel
+        return {"status": "missing"}
+    path = vault / rel
     if not path.is_file():
         return {"status": "missing"}
     return _frontmatter_status(read_frontmatter(path))
@@ -773,10 +867,8 @@ def _checked_source_texts(vault: Path, frontmatter: dict[str, Any]) -> list[str]
             if row is not None:
                 if row.get("check_status") == "checked":
                     _append_content_path_text(vault, texts, str(row.get("content_path") or ""))
-                continue
-            path = vault / f"{source_ref}/source.md"
-        else:
-            path = vault / evidence_rel
+            continue
+        path = vault / evidence_rel
         evidence_fm = read_frontmatter(path)
         if evidence_fm.get("type") != "source" or evidence_fm.get("check_status") != "checked":
             continue
@@ -801,16 +893,48 @@ def _source_metadata_status(vault: Path, rel: str) -> tuple[str, str]:
             if row.get("check_status") != "checked":
                 return source_ref, ""
             return source_ref, str(row.get("metadata_status") or "")
-        path = vault / f"{source_ref}/source.md"
-    else:
-        source_ref = rel
-        path = vault / rel
+        return source_ref, ""
+    source_ref = rel
+    path = vault / rel
     if not path.is_file():
         return source_ref, ""
     source_fm = read_frontmatter(path)
     if source_fm.get("type") != "source" or source_fm.get("check_status") != "checked":
         return source_ref, ""
     return source_ref, str(source_fm.get("metadata_status") or "")
+
+
+def _source_row_frontmatter(row: dict[str, Any]) -> dict[str, Any]:
+    csl_json = row.get("csl_json") if isinstance(row.get("csl_json"), dict) else {}
+    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    return {
+        "type": "source",
+        "check_status": row.get("check_status") or "",
+        "title": row.get("title") or "",
+        "description": row.get("description") or "",
+        "source_id": f"catalog/sources/{row.get('source_id') or ''}",
+        "citekey": row.get("citekey") or "",
+        "metadata_status": row.get("metadata_status") or "",
+        "text_status": row.get("text_status") or "",
+        "resource": row.get("resource") or "",
+        "identifiers": row.get("identifiers") if isinstance(row.get("identifiers"), dict) else {},
+        "csl_json": csl_json,
+        "links": memoria.get("links") if isinstance(memoria.get("links"), dict) else {},
+    }
+
+
+def _source_row_scan_text(vault: Path, row: dict[str, Any]) -> str:
+    parts = [
+        str(row.get("title") or ""),
+        str(row.get("description") or ""),
+        json.dumps(row.get("csl_json") or {}, sort_keys=True),
+    ]
+    content_path = str(row.get("content_path") or "")
+    if content_path.strip():
+        content = vault / normalize_path(content_path)
+        if content.is_file():
+            parts.append(content.read_text(encoding="utf-8"))
+    return "\n".join(parts)
 
 
 def _source_ref(value: str) -> str:

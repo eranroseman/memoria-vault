@@ -46,14 +46,14 @@
     {
       "id": "conflicting-doi-metadata",
       "error_class": "structural:source-metadata",
-      "target_id": "catalog/sources/conflicting-doi/source.md",
+      "target_id": "catalog/sources/conflicting-doi",
       "expected_check": "source-metadata",
       "rollback": "include-target"
     },
     {
       "id": "ambiguous-entity-identity",
       "error_class": "structural:source-metadata",
-      "target_id": "catalog/sources/ambiguous-entity/source.md",
+      "target_id": "catalog/sources/ambiguous-entity",
       "expected_check": "source-metadata",
       "rollback": "include-target"
     },
@@ -88,7 +88,7 @@
     {
       "id": "poisoned-span",
       "error_class": "structural:poisoned-span",
-      "target_id": "catalog/sources/poisoned-span/source.md",
+      "target_id": "catalog/sources/poisoned-span",
       "expected_check": "prompt-injection",
       "rollback": "include-target"
     },

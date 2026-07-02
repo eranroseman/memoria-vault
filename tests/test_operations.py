@@ -160,6 +160,39 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     }
 
 
+def test_compile_source_digest_rejects_legacy_source_markdown_without_catalog_row(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    legacy = vault / "catalog/sources/legacy/source.md"
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text(
+        "---\n"
+        "type: source\n"
+        "check_status: checked\n"
+        "title: Legacy Source\n"
+        "description: Should not be treated as a Work row.\n"
+        "source_id: legacy\n"
+        "content_path: .memoria/blobs/source-content/legacy/content.txt\n"
+        "text_status: full-text\n"
+        "---\n"
+        "# Legacy Source\n",
+        encoding="utf-8",
+    )
+    content = vault / ".memoria/blobs/source-content/legacy/content.txt"
+    content.parent.mkdir(parents=True, exist_ok=True)
+    content.write_text("Legacy source text.\n", encoding="utf-8")
+
+    with pytest.raises(FileNotFoundError, match="catalog/sources/legacy"):
+        compile_source_digest(
+            vault,
+            "legacy",
+            ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
+            machine="op-machine",
+            run_id="compile-legacy",
+        )
+
+
 def test_compile_source_digest_rejects_unsupported_required_promotion_check(
     tmp_path: Path,
 ) -> None:
