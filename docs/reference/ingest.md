@@ -21,12 +21,9 @@ writer, promotes them checked, writes the checked source metadata into the
 SQLite catalog state, and commits the Concepts, `content.md`, journal, and any
 required `references.bib` projection together. Portable BibTeX/CSL imports use
 the unchecked SQLite staging path instead of the checked source-Concept path.
-Zotero support is an exported-item file import only; live Zotero Local API
-capture is not part of the alpha.14 runtime. Zotero annotations are not
-imported. The PDF adapter
-`capture_pdf_source()` uses the optional PyMuPDF parser from the vault MCP
-requirements to extract page text. URL snapshots use `capture_url_source()`
-with stdlib HTML text extraction.
+The PDF adapter `capture_pdf_source()` uses the optional PyMuPDF parser when it
+is installed to extract page text. URL snapshots use `capture_url_source()` with
+stdlib HTML text extraction.
 
 The older paper-ingest operation has been ported into
 `memoria_vault.runtime.subsystems.processing.ingest`. The runtime package is the
@@ -42,7 +39,7 @@ source of truth for catalog writes.
 | Raw copy | `capture_source()` / `stage_catalog_source()` | Non-enrichment captures write `catalog/sources/<source_id>/raw/<filename>` plus `raw_text_sha256`; DOI/ISBN staging writes equivalent raw blobs under `.memoria/blobs/source-content/<source_id>/`. Raw blobs are gitignored and synced out of band. |
 | Extracted content | `capture_source()` / `stage_catalog_source()` | Non-enrichment captures write `catalog/sources/<source_id>/content.md`; DOI/ISBN staging writes `.memoria/blobs/source-content/<source_id>/content.md`, both with `normalized_text_sha256`. |
 | BibTeX import | `memoria work import --format bibtex` / worker `capture-bibtex-source` | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, durable raw `.bib` blob, and an unchecked SQLite catalog row. DOI imports queue `enrich-source`; no source/entity markdown or `references.bib` is written at import time. |
-| Zotero export import | `memoria work import --format zotero-export` / worker `capture-zotero-source` | Parses one exported Zotero item object into a stable `source_id`, citekey alias, CSL-JSON-shaped metadata, identifiers, durable raw `.zotero.json` blob, and an unchecked SQLite catalog row. DOI imports queue `enrich-source`; no live Zotero API, source/entity markdown, or `references.bib` update runs at import time. |
+| CSL import | `memoria work import --format csl` / worker `capture-source` | Parses one local CSL-JSON item into a stable `source_id`, CSL-JSON-shaped metadata, identifiers, durable raw `.csl.json` blob, and an unchecked SQLite catalog row. DOI imports queue `enrich-source`; no source/entity markdown or `references.bib` update runs at import time. |
 | URL snapshot | `capture_url_source()` / worker `capture-url-source` | Fetches one URL, preserves raw HTML, extracts plain text with stdlib `HTMLParser`, and writes the same checked source Concept path. |
 | PDF import | `capture_pdf_source()` / worker `capture-pdf-source` | Parses raw PDF bytes into page-headed markdown behind a basic text-coherence guard and writes the same checked source Concept path. |
 | Metadata merge | `capture_source()` / `enrich_source()` | Recapturing or enriching the same stable source path merges non-empty identifiers, CSL-JSON fields, metadata status, and link lists instead of dropping previously captured source metadata. |
@@ -56,7 +53,7 @@ source of truth for catalog writes.
 
 The current extraction input is already-normalized markdown text, one DOI/ISBN
 payload staged for enrichment, one local BibTeX entry plus caller-supplied
-content, one exported Zotero item file, one URL snapshot, or PDF bytes when the
+content, one CSL-JSON item file, one URL snapshot, or PDF bytes when the
 optional PyMuPDF parser is installed. Live URL smoke beyond mocked fetch tests,
 ISBN URL-depth enrichment, ambiguous entity disambiguation, ambiguous identity
 flags, parser selection, and richer coherence gates remain follow-on work.
@@ -88,10 +85,8 @@ input rebuild.
 
 - ISBN URL-depth enrichment.
 - Live URL smoke beyond mocked single-page fetch tests.
-- Live Zotero availability smoke beyond mocked item-key fetch tests.
 - Semantic Scholar, PubMed, arXiv, graph enrichment, embeddings, and UI.
 - Parser selection and richer coherence gates for PDFs and other source formats.
-- Zotero annotation import and PDF quote/bbox annotation references.
 - Ambiguous entity disambiguation beyond exact deterministic CSL author and venue paths.
 
 ## Related

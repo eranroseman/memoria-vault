@@ -14,6 +14,7 @@ FORBIDDEN_PATHS = (
     "vault-template/.memoria/lane-overrides",
     "vault-template/.memoria/tool-registry.yaml",
     "vault-template/system/dashboards/fleet-health.md",
+    "vault-template/capabilities/operations/capture-zotero-source.md",
 )
 FORBIDDEN_TEXT = (
     "vault-template/.memoria/operations",
@@ -23,6 +24,9 @@ FORBIDDEN_TEXT = (
     "system/dashboards/fleet-health",
     "system/metrics/lane-",
     'type = "lane-metric"',
+    "capture-zotero-source",
+    "capture_zotero_source",
+    "zotero-export",
 )
 SEARCH_ROOTS = (
     ".agents",

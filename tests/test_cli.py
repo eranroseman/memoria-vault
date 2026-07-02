@@ -1118,22 +1118,18 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
-    zotero = tmp_path / "zotero.json"
+    csl_file = tmp_path / "portable-work.csl.json"
     export_path = tmp_path / "workspace-export.json"
-    zotero.write_text(
+    csl_file.write_text(
         json.dumps(
             {
-                "items": [
-                    {
-                        "key": "ZOT1",
-                        "itemType": "journalArticle",
-                        "title": "Zotero Exported Work",
-                        "DOI": "10.1000/zotero",
-                        "creators": [{"firstName": "Ada", "lastName": "River"}],
-                        "abstractNote": "Portable Zotero JSON.",
-                        "date": "2026",
-                    }
-                ]
+                "id": "portable-work",
+                "type": "article-journal",
+                "title": "Portable Exported Work",
+                "DOI": "10.1000/portable",
+                "abstract": "Portable CSL JSON.",
+                "author": [{"family": "River", "given": "Ada"}],
+                "issued": {"date-parts": [[2026]]},
             }
         ),
         encoding="utf-8",
@@ -1162,18 +1158,18 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
                 "--workspace",
                 str(workspace),
                 "--format",
-                "zotero-export",
+                "csl",
                 "--file",
-                str(zotero),
+                str(csl_file),
                 "--json",
                 "--idempotency-key",
-                "import-zotero",
+                "import-csl",
             ]
         )
         == 0
     )
     imported = json.loads(capsys.readouterr().out)
-    assert imported["result"]["source_id"] == "ZOT1"
+    assert imported["result"]["source_id"] == "portable-work"
 
     assert (
         main(
@@ -1183,27 +1179,27 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
                 "--workspace",
                 str(workspace),
                 "--work-id",
-                "ZOT1",
+                "portable-work",
                 "--title",
-                "Updated Zotero Work",
+                "Updated Portable Work",
                 "--standing",
                 "archived",
                 "--research-area",
                 "personal-informatics",
                 "--json",
                 "--idempotency-key",
-                "update-zotero",
+                "update-portable",
             ]
         )
         == 0
     )
     updated = json.loads(capsys.readouterr().out)
-    assert updated["result"]["work"]["title"] == "Updated Zotero Work"
+    assert updated["result"]["work"]["title"] == "Updated Portable Work"
     assert updated["result"]["work"]["csl_json"]["memoria"]["standing"] == "archived"
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT operation_id, status FROM operation_requests WHERE request_id = ?",
-            ("update-zotero",),
+            ("update-portable",),
         ).fetchone()
     assert tuple(row) == ("update-work", "done")
 

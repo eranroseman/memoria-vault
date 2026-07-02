@@ -286,39 +286,6 @@
     {
       "allowed_network": [],
       "allowed_paths": [
-        ".memoria/blobs/source-content/",
-        "journal/"
-      ],
-      "allowed_tools": [
-        "trusted_writer"
-      ],
-      "check_status": "checked",
-      "description": "Stage one exported Zotero item as an unchecked catalog Work seed.",
-      "id": "capture-zotero-source",
-      "model": "deterministic-fixture",
-      "operation_id": "capture-zotero-source",
-      "path": "capabilities/operations/capture-zotero-source.md",
-      "prompt_version": "capture-zotero-source.v1",
-      "required_checks": [
-        "memoria-runtime"
-      ],
-      "risk_class": "medium",
-      "runner": "pydantic-ai",
-      "tags": [
-        "alpha14",
-        "capture",
-        "zotero"
-      ],
-      "title": "Capture Zotero source",
-      "trust": {
-        "sha256": "sha256:b069d2ef8fc21d68a25d8a14f845671c591ce0f8992d34de043d2806aefbf214",
-        "source": "local"
-      },
-      "type": "operation"
-    },
-    {
-      "allowed_network": [],
-      "allowed_paths": [
         "catalog/",
         "knowledge/",
         "journal/",

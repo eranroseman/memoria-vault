@@ -12,7 +12,6 @@ Generated bundle projection. Edit Concept files, not this file.
 - [Capture PDF source](operations/capture-pdf-source.md) `operation` — Capture a supplied PDF blob as a checked catalog source.
 - [Capture source](operations/capture-source.md) `operation` — Capture supplied source metadata and text; DOI/ISBN records stage for enrichment.
 - [Capture URL source](operations/capture-url-source.md) `operation` — Fetch a URL snapshot and capture it as a checked catalog source.
-- [Capture Zotero source](operations/capture-zotero-source.md) `operation` — Stage one exported Zotero item as an unchecked catalog Work seed.
 - [Cascade rollback](operations/cascade-rollback.md) `operation` — Rollback traced machine descendants and flag PI-directed descendants.
 - [Check falsifiability](operations/check-falsifiability.md) `operation` — Check whether input claims are empirically falsifiable.
 - [Check source metadata](operations/check-source-metadata.md) `operation` — Run bibliographic metadata checks over checked sources.

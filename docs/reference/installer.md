@@ -59,7 +59,7 @@ bootstrap.
 | Runtime provider keys | Shell environment or workspace runtime configuration consumed by the standalone CLI. |
 | Optional qmd/Node runtime | Node >=22 plus `@tobilu/qmd`, or an equivalent bundled qmd path. |
 | git binary + Git workspace | The host must have `git` on `PATH`; checkpoints, hooks, rollback, and history need the runtime workspace to be a repo. |
-| Zotero exports | Portable BibTeX/CSL/Zotero-export files passed to `memoria work import`; no live Zotero authority is installed. |
+| Bibliography imports | Portable BibTeX/CSL files passed to `memoria work import`; no live reference-manager authority is installed. |
 
 ## Related
 

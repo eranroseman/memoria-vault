@@ -15,7 +15,9 @@ full walkthrough with explanations, see [Set up the vault](set-up-the-vault.md).
 
 - Git and Python 3 with venv support on your `PATH`; sandbox images must include Git too.
 - Runtime provider keys for the CLI features you plan to use.
-- Optional adapters come later and are not part of the bootstrap. Portable Zotero exports can be imported when you need them ([Set up Zotero](set-up-zotero.md)).
+- Optional adapters come later and are not part of the bootstrap. Generic
+  BibTeX/CSL files exported from Zotero can be imported when you need them
+  ([Set up Zotero](set-up-zotero.md)).
 
 ## Steps
 
@@ -68,4 +70,4 @@ those commands as the day-1 path for the space you are in.
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
 - First source task: [Capture and ingest a source](../library/capture-and-ingest.md)
-- Optional Zotero import/export setup: [Set up Zotero](set-up-zotero.md)
+- Optional Zotero export setup: [Set up Zotero](set-up-zotero.md)
