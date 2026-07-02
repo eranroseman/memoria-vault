@@ -227,7 +227,8 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
       year = {2026},
       journal = {Journal of Testable Systems},
       doi = {10.1000/harness.2026},
-      abstract = {A fixture paper for the Memoria test environment harness.}
+      abstract = {A fixture paper for the Memoria test environment harness.},
+      references = {10.1000/beta; https://openalex.org/W999}
     }"""
 
     result = capture_bibtex_source(vault, bibtex, machine="test-machine")
@@ -247,6 +248,20 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
     assert source["csl_json"]["author"] == [
         {"family": "Ada", "given": "River"},
         {"family": "Lin", "given": "Morgan"},
+    ]
+    with state.connect(vault) as conn:
+        edges = conn.execute(
+            """
+            SELECT relation_type, target_id, target_doi, source_provider
+            FROM work_graph_edges
+            WHERE work_id = ?
+            ORDER BY target_id
+            """,
+            ("doi-10.1000_harness.2026",),
+        ).fetchall()
+    assert [tuple(row) for row in edges] == [
+        ("references", "doi:10.1000/beta", "10.1000/beta", "import"),
+        ("references", "https://openalex.org/W999", "", "import"),
     ]
     assert raw.read_text(encoding="utf-8").startswith("@article{harness2026,")
     assert not (vault / "catalog/sources/doi-10.1000_harness.2026/source.md").exists()
@@ -288,6 +303,70 @@ def test_capture_bibtex_source_does_not_create_legacy_entity_links(tmp_path: Pat
     assert state.catalog_source(vault, "doi-10.1000_shared.two") is not None
     assert not (vault / "catalog/entities/person-morgan-lin.md").exists()
     assert not (vault / "catalog/entities/venue-journal-of-shared-metadata.md").exists()
+
+
+def test_capture_reference_edges_preserve_provider_graph(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha source text.",
+        csl_json={"id": "alpha", "title": "Alpha Source"},
+        machine="test-machine",
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "doi:10.1000/provider",
+                "target_title": "Provider Reference",
+                "target_doi": "10.1000/provider",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W9",
+                "target_title": "Provider Related",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha source text.",
+        csl_json={
+            "id": "alpha",
+            "title": "Alpha Source",
+            "references": [
+                {"DOI": "10.1000/provider", "title": "Imported duplicate"},
+                {"DOI": "10.1000/imported", "title": "Imported Reference"},
+            ],
+        },
+        machine="test-machine",
+    )
+
+    with state.connect(vault) as conn:
+        edges = conn.execute(
+            """
+            SELECT relation_type, target_id, target_title, source_provider
+            FROM work_graph_edges
+            WHERE work_id = 'source-alpha'
+            ORDER BY relation_type, target_id
+            """
+        ).fetchall()
+    assert [tuple(row) for row in edges] == [
+        ("references", "doi:10.1000/imported", "Imported Reference", "import"),
+        ("references", "doi:10.1000/provider", "Provider Reference", "openalex"),
+        ("related", "https://openalex.org/W9", "Provider Related", "openalex"),
+    ]
 
 
 def test_capture_source_does_not_materialize_legacy_entity_records(

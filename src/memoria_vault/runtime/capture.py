@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from html.parser import HTMLParser
 from pathlib import Path
@@ -128,6 +129,8 @@ def stage_catalog_source(
         content_path=content_rel,
         raw_path=raw_rel,
     )
+    if _has_reference_metadata(csl_json):
+        _replace_import_reference_edges(vault, source_id, _reference_edges(csl_json))
     finished = append_journal_event(
         vault,
         {
@@ -791,7 +794,106 @@ def _csl_json(entry: dict[str, Any]) -> dict[str, Any]:
         csl["URL"] = url
     if abstract := fields.get("abstract"):
         csl["abstract"] = abstract
+    if references := fields.get("references") or fields.get("reference"):
+        csl["references"] = references
     return csl
+
+
+def _has_reference_metadata(csl_json: dict[str, Any] | None) -> bool:
+    return isinstance(csl_json, dict) and ("references" in csl_json or "reference" in csl_json)
+
+
+def _replace_import_reference_edges(
+    vault: Path, source_id: str, import_edges: list[dict[str, Any]]
+) -> None:
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT relation_type, target_id, target_title, target_doi, source_provider, raw_json
+            FROM work_graph_edges
+            WHERE work_id = ?
+              AND source_provider != 'import'
+            ORDER BY relation_type, target_id
+            """,
+            (source_id,),
+        ).fetchall()
+    preserved = []
+    for row in rows:
+        edge = dict(row)
+        try:
+            raw = json.loads(str(edge.get("raw_json") or "{}"))
+        except json.JSONDecodeError:
+            raw = {}
+        edge["raw"] = raw if isinstance(raw, dict) else {}
+        preserved.append(edge)
+    preserved_keys = {(edge["relation_type"], edge["target_id"]) for edge in preserved}
+    new_edges = [
+        edge
+        for edge in import_edges
+        if (edge["relation_type"], edge["target_id"]) not in preserved_keys
+    ]
+    state.replace_work_graph_edges(vault, source_id, [*preserved, *new_edges])
+
+
+def _reference_edges(csl_json: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(csl_json, dict):
+        return []
+    refs = csl_json.get("references", csl_json.get("reference", []))
+    if isinstance(refs, str):
+        items: list[Any] = [part for part in re.split(r"[\n;]+", refs) if part.strip()]
+    elif isinstance(refs, list):
+        items = refs
+    else:
+        items = []
+    edges = {}
+    for item in items:
+        edge = _reference_edge(item)
+        if edge:
+            edges[(edge["relation_type"], edge["target_id"])] = edge
+    return [edges[key] for key in sorted(edges)]
+
+
+def _reference_edge(item: Any) -> dict[str, Any] | None:
+    raw = item if isinstance(item, dict) else {"value": str(item)}
+    doi = _reference_doi(raw)
+    target = f"doi:{doi.casefold()}" if doi else _reference_target(raw)
+    if not target:
+        return None
+    title = _reference_title(raw) or target
+    return {
+        "relation_type": "references",
+        "target_id": target,
+        "target_title": title,
+        "target_doi": doi,
+        "source_provider": "import",
+        "raw": raw,
+    }
+
+
+def _reference_doi(raw: dict[str, Any]) -> str:
+    for key in ("DOI", "doi"):
+        if doi := str(raw.get(key) or "").strip():
+            return doi
+    value = str(raw.get("value") or "")
+    match = re.search(r"\b10\.\d{4,9}/[-._;()/:A-Z0-9]+\b", value, flags=re.IGNORECASE)
+    return match.group(0).rstrip(".,;") if match else ""
+
+
+def _reference_target(raw: dict[str, Any]) -> str:
+    for key in ("id", "ID", "URL", "url", "openalex"):
+        if value := str(raw.get(key) or "").strip():
+            return value
+    value = str(raw.get("value") or "").strip()
+    if value.startswith(("http://", "https://")):
+        return value
+    return ""
+
+
+def _reference_title(raw: dict[str, Any]) -> str:
+    for key in ("title", "article-title", "container-title", "unstructured", "value"):
+        if value := str(raw.get(key) or "").strip():
+            return value
+    return ""
 
 
 def _csl_type(entry_type: str) -> str:
