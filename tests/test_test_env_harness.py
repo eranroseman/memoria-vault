@@ -44,13 +44,6 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     assert "knowledge/projects/harness/argument.canvas" in summary["artifacts"]
     assert not (tmp_path / "knowledge/notes/blocked-by-harness.md").exists()
 
-    audit = [
-        json.loads(line)
-        for line in (tmp_path / "system/logs/audit.jsonl").read_text(encoding="utf-8").splitlines()
-    ]
-    assert audit[-1]["decision"] == "deny"
-    assert audit[-1]["task_id"] == "HARNESS-DENY"
-
     canvas = json.loads(
         (tmp_path / "knowledge/projects/harness/argument.canvas").read_text(encoding="utf-8")
     )

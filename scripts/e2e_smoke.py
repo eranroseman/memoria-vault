@@ -15,15 +15,13 @@ for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-from memoria_vault.runtime.jsonl import iter_jsonl
-
 STAGE_LABELS = {
     "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
     "vault-assembly-2": "2. vault-assembly: golden copy + git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
     "offline-ingest-1": "5. offline-ingest: checked source + references projection",
-    "offline-ingest-2": "6. offline-ingest: alpha.11 argument graph projection",
+    "offline-ingest-2": "6. offline-ingest: argument graph projection",
     "workflow-replay": "7. workflow-replay: package-gate test-env harness",
     "final-integrity": "8. final-integrity: lint over the worked vault",
 }
@@ -141,12 +139,7 @@ def assert_workflow_replay_artifacts(vault: Path) -> None:
         assert (vault / rel).is_file(), f"workflow replay artifact missing: {rel}"
     forbidden = vault / "knowledge/notes/blocked-by-harness.md"
     assert not forbidden.exists(), "workflow replay left forbidden note behind"
-    audit = list(iter_jsonl(vault / "system/logs/audit.jsonl"))
-    assert audit[-1]["decision"] == "deny", f"last audit decision was not deny: {audit[-1]}"
-    assert audit[-1]["task_id"] == "HARNESS-DENY", (
-        f"last audit task_id was not HARNESS-DENY: {audit[-1]}"
-    )
-    print("   deny audit row and forbidden-file absence asserted")
+    print("   workflow replay artifacts and forbidden-file absence asserted")
 
 
 def assert_final_verdict(verdict: str) -> None:

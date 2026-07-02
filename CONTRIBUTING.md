@@ -82,8 +82,8 @@ installers against the real `~/Memoria`.
   before submitting installer changes.
 - **PowerShell:** `scripts/install.ps1` targets Windows PowerShell 5.1. Test on
   Windows when the change affects Windows behavior.
-- **Profiles:** profile source lives under `vault-template/.memoria/profiles/`; keep the
-  existing `SOUL.md`, `config.yaml`, `distribution.yaml`, and `skills/` shape.
+- **Optional adapters:** do not add installed profile packages or lane overrides
+  to `vault-template/`; adapters must wrap the standalone CLI/engine boundary.
 - **Docs:** follow [Diátaxis](https://diataxis.fr/): tutorials teach, how-to
   guides direct, reference informs, and explanation discusses.
 - **Markdown:** `.markdownlint.json` holds the structural rules enforced locally

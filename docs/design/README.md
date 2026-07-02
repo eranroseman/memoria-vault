@@ -29,8 +29,8 @@ bounded the way it is.
 
 | Page | The question it answers |
 | --- | --- |
-| [Why the architecture is layered](why-layered-architecture.md) | Why board, workers, and vault are kept separate |
-| [Why specialist profiles](why-specialist-profiles.md) | Why Memoria has one conversational Co-PI plus specialist background profiles |
+| [Why the architecture is layered](why-layered-architecture.md) | Why requests, workers, and workspace knowledge are kept separate |
+| [Why operation postures](why-specialist-profiles.md) | Why Memoria has one read-only conversational posture plus scoped operation postures |
 | [Why the review gate is structural](why-review-gate-is-structural.md) | Why the human approval gate is enforced by architecture |
 | [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md) | Why synthesis stays human-owned |
 | [Why Hermes](why-hermes.md) | Why the optional Hermes adapter exists |

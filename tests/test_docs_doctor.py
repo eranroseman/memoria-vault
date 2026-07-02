@@ -9,14 +9,11 @@ check_hidden_compatibility_page = _m.check_hidden_compatibility_page
 check_link_text = _m.check_link_text
 check_links = _m.check_links
 check_model_spine_link = _m.check_model_spine_link
-check_hermes_cli_skill_mirror = _m.check_hermes_cli_skill_mirror
-check_profile_skill_count_mirror = _m.check_profile_skill_count_mirror
 check_readmes = _m.check_readmes
 check_reference_readme_index = _m.check_reference_readme_index
 check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
 check_site_nav_hierarchy = _m.check_site_nav_hierarchy
-check_system_actions_skill_mirror = _m.check_system_actions_skill_mirror
 check_template_frontmatter = _m.check_template_frontmatter
 check_thin_folders = _m.check_thin_folders
 check_vocabulary_reference_mirror = _m.check_vocabulary_reference_mirror
@@ -511,60 +508,3 @@ def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
 
     assert len(errs) == 1
     assert "methodology vocabulary mirror differs" in errs[0]
-
-
-def test_check_profile_skill_count_mirror_compares_skill_dirs(tmp_path):
-    repo = tmp_path
-    profile = repo / "src" / ".memoria" / "profiles" / "memoria-copi" / "skills"
-    profile.mkdir(parents=True)
-    (profile / "one").mkdir()
-    (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "docs" / "reference" / "profiles.md").write_text(
-        "**1 skills**\n\n| Profile | Bundled-skill count |\n| --- | --- |\n"
-        "| `memoria-copi` | 0 |\n",
-        encoding="utf-8",
-    )
-
-    errs: list[str] = []
-    check_profile_skill_count_mirror(repo, errs)
-
-    assert len(errs) == 1
-    assert "memoria-copi" in errs[0]
-
-
-def test_check_system_actions_skill_mirror_compares_skill_ids(tmp_path):
-    repo = tmp_path
-    skills = repo / "src" / ".memoria" / "profiles" / "memoria-librarian" / "skills"
-    skills.mkdir(parents=True)
-    (skills / "one").mkdir()
-    (skills / "two").mkdir()
-    (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "docs" / "reference" / "system-actions.md").write_text(
-        "### Librarian (1)\n\n| Skill | What it does |\n| --- | --- |\n| one | A |\n",
-        encoding="utf-8",
-    )
-
-    errs: list[str] = []
-    check_system_actions_skill_mirror(repo, errs)
-
-    assert any("Librarian skill heading says 1" in e for e in errs)
-    assert any("missing: ['two']" in e for e in errs)
-
-
-def test_check_hermes_cli_skill_mirror_compares_skill_ids(tmp_path):
-    repo = tmp_path
-    skills = repo / "src" / ".memoria" / "profiles" / "memoria-writer" / "skills"
-    skills.mkdir(parents=True)
-    (skills / "draft-one").mkdir()
-    (skills / "draft-two").mkdir()
-    (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "docs" / "reference" / "hermes-cli.md").write_text(
-        "| Actor | Skills |\n| --- | --- |\n| **Writer** (draft) | `draft-one` |\n",
-        encoding="utf-8",
-    )
-
-    errs: list[str] = []
-    check_hermes_cli_skill_mirror(repo, errs)
-
-    assert len(errs) == 1
-    assert "missing: ['draft-two']" in errs[0]

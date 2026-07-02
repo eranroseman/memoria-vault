@@ -1,6 +1,6 @@
 ---
 title: The Co-PI
-parent: Profiles
+parent: Operation postures
 grand_parent: Explanation
 nav_order: 1
 ---

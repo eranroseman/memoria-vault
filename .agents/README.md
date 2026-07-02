@@ -52,7 +52,6 @@ Code, or Codex unless that client explicitly supports `.agents/skills/`.
 |---|---|
 | [Source-of-truth map](system/source-of-truth-map.md) | Find the file that owns each repository contract |
 | [Change-impact map](system/change-impact-map.md) | Identify consumers and focused checks for a changed area |
-| [Profile policy matrix](system/profile-policy-matrix.md) | Review the generated profile, MCP, and write-scope summary |
 | [Test selection](system/test-selection.md) | Choose focused tests, the full gate, and runtime-dependent verification |
 
 ## Maintenance rules

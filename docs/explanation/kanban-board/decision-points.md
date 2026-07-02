@@ -1,6 +1,6 @@
 ---
 title: Decision points
-parent: Kanban board
+parent: Request control plane
 grand_parent: Explanation
 nav_order: 3
 ---
@@ -13,10 +13,11 @@ approvals.
 
 ## Approval gates
 
-Approval gates review agent-produced output: candidate triage, link
+Approval gates review machine-produced output: candidate triage, link
 confirmation, certification before shipping, re-adjudication after a retraction,
 near-tie dedup calls, and archive proposals. Each gate gives the PI decision
-material, not a verdict. The card format is the [honesty card](honesty-card.md).
+material, not a verdict. The prompt format is the
+[honesty prompt](honesty-card.md).
 
 ## Work prompts
 
@@ -26,10 +27,10 @@ They are handles into work, not proposals to accept.
 
 ## Batch worklists
 
-High-cardinality decisions become one worklist, not many cards. When a coverage
+High-cardinality decisions become one worklist, not many prompts. When a coverage
 report finds forty sources to screen, the Inbox gets one aggregate prompt that
 points to a Bases-backed worklist where each row carries its own decision field.
-Forty cards would flood a queue meant to converge to zero.
+Forty prompts would flood a queue meant to converge to zero.
 
 ## Automated steps
 
@@ -40,16 +41,18 @@ behavior.
 
 ## Workflow triggers
 
-Some workflow triggers create cards automatically because the trigger itself is
-the useful invariant. Where a workflow trigger is wired, it creates the board
-card and returns; the owning lane claims the card through the normal dispatcher.
+Some workflow triggers create request rows automatically because the trigger
+itself is the useful invariant. A CLI command, observed file change, or scheduled
+job records the request and returns; the engine claims the request through the
+normal worker path.
 
-That does not make completion automatic. The result is an `agent_recommendation`,
-never approval. The PI still reads the report and decides whether to revise.
+That does not make completion automatic. The result is a machine
+recommendation, never approval. The PI still reads the report and decides
+whether to revise.
 
 ## Related
 
 - Promotion boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
-- Card shape: [The honesty card](honesty-card.md)
+- Prompt shape: [The honesty prompt](honesty-card.md)
 - Batch-worklist decision: [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)
 - How project analysis is queued: [Analyze a project argument](../../how-to-guides/project/analyze-a-project-argument.md)

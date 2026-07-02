@@ -7,14 +7,21 @@ topic: overview
 
 # Memoria
 
-A research operating system for a single researcher (the PI) — a Co-PI you converse with and specialist background profiles that read, enrich, map, and verify inside your Obsidian vault, under a human-approval gate that audits every proposed change before it lands.
+A research operating system for a single researcher (the PI): a standalone local
+CLI and engine that capture, enrich, map, verify, and ask over a checked
+workspace under a human-approval gate that audits every proposed change before
+it lands.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
 something, see [How-to guides](how-to-guides). If you need exact values, field
 names, or configuration formats, see [Reference](reference).
 
-**Status: v0.1 alpha source install** — installer validated; not yet run end-to-end on a live Hermes. · [GitHub](https://github.com/eranroseman/memoria-vault) · [Install](https://github.com/eranroseman/memoria-vault#install) · [Issues](https://github.com/eranroseman/memoria-vault/issues)
+**Status: v0.1 alpha source install** — alpha.14 is cutting over to the
+standalone CLI/engine; the full end-to-end release gate is still open. ·
+[GitHub](https://github.com/eranroseman/memoria-vault) ·
+[Install](https://github.com/eranroseman/memoria-vault#install) ·
+[Issues](https://github.com/eranroseman/memoria-vault/issues)
 
 <!-- SCREENSHOT: Replace this comment with ![Memoria vault](assets/screenshot.png) once the system is running. -->
 
@@ -31,10 +38,10 @@ keeps the work visible, traceable, and review-gated.
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The conversational agent in Obsidian. It explains, questions, reads, and delegates. It does not write directly. |
-| Lanes | The active board routes: Librarian handles `catalog`, `extract`, `link`, and `map`; Peer-reviewer handles `verify`. Writer/`draft` and Engineer/`code` packages ship deferred. |
-| Board | The Hermes Kanban control plane. It records delegated work, status, blockers, review, and completion. |
-| Vault | The Obsidian folder tree. It holds notes, catalog records, inbox cards, spaces, and system projections. |
+| Co-PI | The read-only conversational posture behind `memoria ask` and guided interviews. It explains, questions, reads, and routes durable work into requests. |
+| Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
+| Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
+| Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |
 
 ### The working loop
 
@@ -51,8 +58,9 @@ Nothing important depends only on chat history.
 
 ### The control rule
 
-Agents propose; the PI disposes. Background lanes can create staged notes, Inbox cards,
-or project scratch within their lane scope. Promotion into review-gated knowledge stays
+Operations propose; the PI disposes. CLI commands, observed file changes, and
+scheduled jobs can create request rows, attention prompts, and staged outputs
+within their manifest scope. Promotion into review-gated knowledge stays
 human-owned and policy-gated.
 
 ---
@@ -73,9 +81,9 @@ human-owned and policy-gated.
 
 ## New here? Start with the current path
 
-Alpha.11 does not ship a tutorial arc. Start with
+Alpha.14 does not ship a tutorial arc. Start with
 [Quickstart](how-to-guides/setup/quickstart.md), then use the current
-Obsidian, Library, Knowledge, and Project task guides below.
+CLI, Library, Knowledge, and Project task guides below.
 
 ---
 
@@ -94,10 +102,10 @@ Design Book foundations, then the Explanation pages in this order.
 5. [Architecture](explanation/architecture/README.md) — the layered structure
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
-8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why only the Co-PI carries memory
-9. [Profiles](explanation/profiles/README.md) — the Co-PI and specialist background profiles
-10. [Operations](explanation/operations.md) — the deterministic layer beneath the agents
-11. [The control plane](explanation/kanban-board/README.md) — the board as a state machine
+8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
+9. [Operation postures](explanation/profiles/README.md) — how old profile language maps to requests and operations
+10. [Operations](explanation/operations.md) — the deterministic and checked operation layer
+11. [The control plane](explanation/kanban-board/README.md) — request state, attention, and review boundaries
 12. [Decision points](explanation/kanban-board/decision-points.md) — how approvals, prompts, worklists, and triggers differ
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
 14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
@@ -106,14 +114,14 @@ Design Book foundations, then the Explanation pages in this order.
 **Then learn it by doing**
 
 16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
-17. [Current task guides](how-to-guides/README.md) — work from the implemented alpha.11 surfaces
+17. [Current task guides](how-to-guides/README.md) — work from the implemented alpha.14 surfaces
 
 ---
 
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up Hermes](how-to-guides/setup/set-up-hermes.md) · [Vault launch screen](how-to-guides/using-obsidian/use-the-vault-launch-screen.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · [Configure project hints](how-to-guides/setup/configure-project-hints.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
@@ -129,30 +137,34 @@ Design Book foundations, then the Explanation pages in this order.
 
 ---
 
-## The agents
+## Operation postures
 
-| Agent             | What it does                                                                  |
+| Posture           | What it does                                                                  |
 | ----------------- | ----------------------------------------------------------------------------- |
-| **Co-PI**         | The one agent you converse with — questions, explains, and delegates; read-only |
-| **Librarian**     | The four processing lanes (catalog · extract · link · map) — intake to corpus maps |
-| **Writer**        | Deferred draft lane — planned to turn evidence into review-bound prose |
-| **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
-| **Engineer**      | Deferred code lane — planned to scaffold handoffs to external coding agents |
+| **Co-PI**         | The read-only conversational posture for questions, explanation, and request routing |
+| **Librarian**     | Intake, extraction, linking, and mapping operations from source capture to corpus maps |
+| **Writer**        | Draft-proposal posture for future prose generation over checked evidence |
+| **Peer-reviewer** | Verification posture for citation, source, and claim-support checks |
+| **Engineer**      | Handoff posture for external coding work without making Memoria a code runner |
 
 Deterministic **operations** do the mechanical work, behind the policy gate.
 
-→ [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profile-capabilities.md)
+→ [Operation-posture rationale](explanation/profiles/README.md) · [No-installed-profile contract](reference/profile-capabilities.md)
 
 ---
 
 ## Current status and limitations
 
-Memoria is in the **v0.1 alpha source-install** phase: the installer is validated, but the system has not yet been run end to end on a live Hermes runtime. What is not working today:
+Memoria is in the **v0.1 alpha source-install** phase: the installer and CLI
+engine are being validated as a standalone local product. What is not working today:
 
-- **No end-to-end run on a live runtime** — continuous, unattended operation through all workflow stages is not yet demonstrated.
+- **No complete alpha.14 end-to-end gate yet** — capture, enrich, digest, ask,
+  export, recovery, and seeded-error evidence are still being closed as release
+  gates.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
-- **Writability and readiness scoring are not implemented** — `map:score-writability` / `map:score-readiness` are deferred ([Hermes CLI](reference/hermes-cli.md)).
+- **Writability and readiness scoring are not implemented** — project readiness
+  scoring remains deferred.
 - **Single-user only** — team and multi-user review are out of scope by design.
 - **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
 - **Some integrations are planned, not shipped** — e.g. expanded reference-manager support.
@@ -163,7 +175,7 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 ## Browse the docs
 
-[**Tutorials**](tutorials/README.md) — No current alpha.11 tutorial arc; use Quickstart and current task guides.
+[**Tutorials**](tutorials/README.md) — No current alpha.14 tutorial arc; use Quickstart and current task guides.
 
 [**How-to guides**](how-to-guides/README.md) — Task recipes.
 

@@ -159,28 +159,6 @@
       }
     },
     {
-      "id": "deny-assertion",
-      "tool": "policy.deny_assertion",
-      "arg_shape": {
-        "content": "str",
-        "path": "str",
-        "profile": "str",
-        "task_id": "str",
-        "tool_name": "str"
-      },
-      "args": {
-        "profile": "memoria-writer",
-        "tool_name": "mcp_obsidian_vault_write",
-        "path": "knowledge/notes/blocked-by-harness.md",
-        "content": "must not land",
-        "task_id": "HARNESS-DENY"
-      },
-      "expect": {
-        "audit_decision": "deny",
-        "not_exists": ["knowledge/notes/blocked-by-harness.md"]
-      }
-    },
-    {
       "id": "done-prompt",
       "tool": "inbox.write_work_prompt",
       "arg_shape": {
@@ -214,8 +192,7 @@
       "knowledge/notes/harness-thesis.md",
       "knowledge/notes/harness-support.md",
       "knowledge/notes/harness-refutation.md",
-      "knowledge/projects/harness/argument.canvas",
-      "system/logs/audit.jsonl"
+      "knowledge/projects/harness/argument.canvas"
     ],
     "not_exists": ["knowledge/notes/blocked-by-harness.md"]
   }

@@ -7,7 +7,12 @@ nav_order: 2
 
 # The memory model
 
-"Memory" in Memoria is not one thing: it's seven distinct stores — **substrates** — each with its own scope, owner, and lifespan. Knowing which substrate a fact lives in is what keeps one lane's reasoning out of another's, and durable knowledge out of size-capped session stores. Confusing the scopes is the source of most "the agent forgot" and "the agent remembered something it shouldn't" problems.
+"Memory" in Memoria is not one thing: it is a set of distinct stores -
+**substrates** - each with its own scope, owner, and lifespan. Knowing which
+substrate a fact lives in is what keeps one operation's request context out of
+another's, and durable knowledge out of size-capped session stores. Confusing
+the scopes is the source of most "the system forgot" and "the adapter remembered
+something it shouldn't" problems.
 
 They're grouped below by how much **you** touch them — the ones you steer and read first, the ones the runtime manages on its own last.
 
@@ -15,17 +20,25 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 
 ## The ones you steer and read
 
-**Program memory** (your standing steering — `steering` discovery priorities + `screening-protocol` review mode), **project memory** (one sub-project's cross-lane working state — open questions, decisions, framing), and **audit memory** (the tamper-evident record of every gated write, append-only forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
+**Program memory** (your standing steering — `steering` discovery priorities +
+`screening-protocol` review mode), **project memory** (one sub-project's
+cross-operation working state — open questions, decisions, framing), and
+**audit memory** (the tamper-evident record of every gated write, append-only
+forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
 
 ## The ones the runtime manages
 
-**Handoff memory** (what travels with a card between lanes), **agent memory** (the Co-PI's `MEMORY.md` + `USER.md`, the **sole memory carrier** — the background lanes are stateless), **session history**, and **working memory** (the live session's reasoning).
+**Request memory** (what travels with one queued operation), **session history**
+when an optional adapter exists, and **working memory** (the live operation run's
+in-context reasoning).
 
 What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](../../reference/memory-substrates.md); the rest of this page explains *why* each has the scope it does.
 
-`SOUL.md` is adjacent but is *not* memory — it's an agent's identity prompt (its posture), stable across sessions by design.
-
-**Why the Co-PI alone carries memory.** Concentrating every conversation in one agent is what lets Hermes' self-improving loop — **memory · /goals · skills** — compound into a genuine Co-PI rather than fragmenting across lanes that never converse ([ADR-48](../../adr/48-copi-and-agent-consolidation.md)). The background lanes (Librarian, Writer, Peer-reviewer, Engineer) are stateless propose-then-dispose executors: each run grounds on the card's handoff payload and the vault, never on remembered context.
+**Why the workspace carries durable memory.** Alpha.14 makes the standalone
+workspace the authority. Optional adapters can have chat memory, but anything
+durable must become checked workspace state, request/journal evidence, or a
+project record. Operation runs ground on request input refs and checked
+workspace content, not remembered profile context.
 
 ---
 
@@ -38,16 +51,18 @@ Store facts at the narrowest scope that can safely own them:
 | Program memory | Program-wide, persistent | Holds standing strategy: what to pursue and how to screen. |
 | Project memory | One project, archived with it | Keeps a project's working state separate from program strategy. |
 | Audit memory | Append-only record | Preserves hash-paired write provenance; see [Policy gate](../../reference/policy-mcp.md). |
-| Handoff memory | One board card | Carries context across lanes without sharing session state. |
-| Agent memory | Co-PI only, loaded at session start | Holds stable recall; token caps make it unsuitable for task state. |
-| Session history | Searchable recall | Helps answer "did we discuss this?" but never outranks the vault. |
-| Working memory | One live session | Keeps active reasoning from leaking across agents or sessions. |
+| Request memory | One operation request | Carries context across retries and recovery without sharing session state. |
+| Adapter memory | Adapter-defined | May help a chat adapter, but never outranks checked workspace state. |
+| Session history | Optional searchable recall | Helps answer "did we discuss this?" when an adapter has it, but never outranks the vault. |
+| Working memory | One live operation | Keeps active reasoning from leaking across operations or sessions. |
 
 ---
 
 ## Why the split matters
 
-This is thin-control-over-thick-state applied to memory. Hermes-native memory stays thin: working memory, capped Co-PI notes, and searchable history. Durable state lives in files: handoff payloads while work is in flight, and the vault after review.
+This is thin-control-over-thick-state applied to memory. Optional adapter memory
+stays thin: working memory, chat notes, and searchable history. Durable state
+lives in checked workspace files plus request/journal rows.
 
 The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([ADR-23](../../adr/23-scoped-memory-substrates.md)).
 
@@ -58,9 +73,10 @@ The split also keeps three vault memories apart: program steering, project worki
 A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
 in a memory substrate. The test is: **memory is read back as recall;
 configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the
-scoping-review project" is a rule (config → [Configure project
-hints](../../how-to-guides/setup/configure-project-hints.md)); "the user prefers
-British spelling" is recall (agent memory).
+scoping-review project" is a rule (config -> [Configure project
+hints](../../how-to-guides/setup/configure-project-hints.md)); "the PI prefers
+British spelling" is recall only after it becomes checked steering or preference
+state.
 
 For the exact "what lives where" lookup table, use [Memory
 substrates](../../reference/memory-substrates.md). This page owns the rationale, not the
@@ -72,7 +88,7 @@ field-by-field routing matrix.
 
 **Explanation**
 
-- Board handoff payload (handoff memory travels here): [The honesty card](../kanban-board/honesty-card.md)
+- Request and attention payloads: [The honesty prompt](../kanban-board/honesty-card.md)
 - Architecture overview: [Architecture](README.md)
 
 **How-to**
@@ -86,4 +102,5 @@ field-by-field routing matrix.
 
 **Background**
 
-- Hermes native memory: [hermes-agent.nousresearch.com/docs/user-guide/features/memory](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)
+- Optional adapter memory is adapter-local context, not Memoria's durable memory
+  authority.

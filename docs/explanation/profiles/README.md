@@ -1,12 +1,12 @@
 ---
-title: Profiles
+title: Operation postures
 parent: Explanation
 nav_order: 3
 has_children: true
 permalink: /explanation/profiles/
 ---
 
-# Profiles
+# Operation postures
 
 Alpha.14 does not ship installed Hermes profiles. The old profile language maps
 to current concepts this way:

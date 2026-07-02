@@ -1,15 +1,18 @@
 ---
-title: The honesty card
-parent: Kanban board
+title: The honesty prompt
+parent: Request control plane
 grand_parent: Explanation
 nav_order: 2
 ---
 
-# The honesty card
+# The honesty prompt
 
 An Inbox prompt is the one artifact the PI is guaranteed to read, so its format is where automation bias is won or lost. Research is blunt about the failure mode: hand a human a confident verdict and their scrutiny drops. And for a *proposal*, the verdict is a **given** — the agent surfaced the item because it recommends it, so printing "recommend: ACCEPT" adds nothing and subtracts attention. The honesty body ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)) is the answer: **proposals carry an honest argument, not a verdict; verification prompts lead with the finding.**
 
-Inbox prompts are generated attention projections, not durable Concept types. Engines and lanes (a lane is a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) share one writer, so every prompt of a given attention kind is shaped identically.
+Inbox prompts are generated attention projections, not durable Concept types.
+Operations share one attention writer, so every prompt of a given attention kind
+is shaped identically regardless of whether it came from a CLI command, file
+scan, or scheduled job.
 
 ---
 
@@ -21,13 +24,15 @@ Inbox prompts are generated attention projections, not durable Concept types. En
 | Verification | flag/alert attention | `finding` and any soft `agent_recommendation` | Human disposal | The point is what the check found; even a `clean` flag closes nothing on its own. |
 | Work prompt | work-prompt attention | The work waiting on the PI | Verdict | It is a review or worklist handle, not a proposal to accept. |
 
-The retired durable-card schema note is in [Inbox card fields](../../reference/inbox-card-fields.md). `agent_recommendation` is a soft verdict only; [Board states and the review gate](states.md) owns the "never a gate" rule.
+The retired durable-card schema note is in [Inbox card fields](../../reference/inbox-card-fields.md).
+Machine recommendations are soft verdicts only; [Request states and the review
+gate](states.md) owns the "never a gate" rule.
 
 ---
 
 ## Graded loudness
 
-`loudness` decides where a card appears:
+`loudness` decides where an attention prompt appears:
 
 | Loudness | Surface |
 | --- | --- |
@@ -39,20 +44,20 @@ The 30-minute test is owned by [Interaction channels](../architecture/interactio
 
 ---
 
-## What deliberately isn't a card
+## What deliberately isn't an attention prompt
 
-| Not a card | Why |
+| Not an attention prompt | Why |
 | --- | --- |
 | Classification | It is audited, correctable metadata; gating it would be a rubber stamp ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)). |
-| High-cardinality screening | It becomes a Bases-backed worklist plus one aggregate work-prompt, not dozens of cards. |
-| `review-request` | Any card awaiting the PI is simply in `proposed`, pointing at the artifact under review. |
+| High-cardinality screening | It becomes a Bases-backed worklist plus one aggregate work-prompt, not dozens of prompts. |
+| `review-request` | Any request awaiting the PI is represented as attention, pointing at the artifact under review. |
 
 ---
 
 ## Related
 
-- Conceptual overview: [Kanban board](README.md)
-- State machine: [Board states and the review gate](states.md)
-- The decision-kind model the card serves: [Decision points](decision-points.md)
-- The card types in the type system: [Document types and epistemic roles](../knowledge/document-types.md)
+- Conceptual overview: [Request control plane](README.md)
+- State machine: [Request states and the review gate](states.md)
+- The decision-kind model the prompt serves: [Decision points](decision-points.md)
+- The attention shapes in the type system: [Document types and epistemic roles](../knowledge/document-types.md)
 - How policy gates writes: [Policy gate](../../reference/policy-mcp.md)

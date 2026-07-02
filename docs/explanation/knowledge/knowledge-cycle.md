@@ -12,17 +12,25 @@ Every note in the vault is somewhere in a long-term progression from catalogued 
 ## Delegable tasks are not a pipeline
 
 The PI works at the three spaces — **Library**, **Knowledge**, and **Project** —
-plus the **Inbox** queue. Beneath them, background lanes can catalog, extract,
-link, map, draft, and verify; the authoritative task-lane → profile map lives in
-[Profile capabilities](../../reference/profile-capabilities.md).
+plus the **Inbox** queue. Beneath them, capability-backed operations can capture,
+enrich, extract, link, map, digest, and verify; the concrete operation surface
+lives in [Operations](../../reference/operations.md).
 
 These tasks are **individually triggered, not a set**. A human gate — often a
 long gap — sits between each: a source is catalogued; much later, if ever,
 extracted; only after a claim exists does linking fire.
 
-A new source typically arrives as a `candidate` card, is kept at triage, and becomes a Catalog entity plus a `proposed` source note. The PI reads it, distills claims in their own words, and confirms the links that connect them into the graph. Those claims mature and cross-link; once enough accumulate, a project maps the corpus, drafts, verifies, and ships.
+A new source typically arrives as a catalog row plus a `candidate` attention
+item, is kept or rejected by the PI, and becomes checked source state only after
+the required enrichment and review checks pass. The PI reads it, distills claims
+in their own words, and confirms the links that connect them into the graph.
+Those claims mature and cross-link; once enough accumulate, a project maps the
+corpus, drafts, verifies, and ships.
 
-**The loop that compounds:** gaps found in _map_ and _verify_ raise Inbox `gap` cards that re-trigger _catalog_. The output end of the cycle feeds the intake end — what you write exposes what you're missing, and what you catalog next is shaped by what you tried to write.
+**The loop that compounds:** gaps found in mapping and verification raise Inbox
+attention that can trigger new capture/catalog work. The output end of the cycle
+feeds the intake end - what you write exposes what you're missing, and what you
+catalog next is shaped by what you tried to write.
 
 ## Why the cycle is not a linear path
 
@@ -40,7 +48,12 @@ A new source's value is not the text it contains but what it contributes to exis
 
 The Inbox and space dashboards surface exactly where work has stopped. Sources awaiting reading and distillation surface in the Library reading pipeline. Unconnected claims surface in Knowledge's Open questions view; low-stakes structural debt surfaces in Maintenance's Loose ends view. Open verification findings surface as Inbox `flag`/`alert` cards in Maintenance. The correspondence between stuck points and views is not accidental — they were designed to make the cycle's failure modes visible before they compound.
 
-The one transition the dashboards cannot surface is when developed claims are never assembled into a draft — that gap is a judgment call, not a structural signal. It is also the hardest gap to notice, because a vault full of well-developed claims looks healthy even when nothing is being written. Today the _map_ task surfaces coverage, clusters, graph/canvas views, and gap cards; writability/readiness scoring is deferred future work.
+The one transition the dashboards cannot surface is when developed claims are
+never assembled into a draft - that gap is a judgment call, not a structural
+signal. It is also the hardest gap to notice, because a vault full of
+well-developed claims looks healthy even when nothing is being written. Today
+mapping operations surface coverage, clusters, graph/canvas views, and gap
+attention; writability/readiness scoring is deferred future work.
 
 ## Why archiving preserves the cycle's integrity
 

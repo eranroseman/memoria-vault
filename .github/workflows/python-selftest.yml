@@ -47,6 +47,6 @@ jobs:
 
       - name: E2E smoke (offline vault build + the Library loop)
         # Builds a vault from vault-template/ exactly as the installer would, then walks
-        # scaffold -> golden -> commit gate -> offline ingest -> honesty card ->
+        # scaffold -> golden -> commit gate -> offline ingest -> attention prompt ->
         # lint. Caught two real bugs the unit suite missed; pure-local, no network.
         run: bash scripts/e2e-smoke.sh

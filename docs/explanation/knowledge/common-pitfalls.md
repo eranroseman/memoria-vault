@@ -11,9 +11,17 @@ Failure modes that recur in research vaults built this way. Most of them look li
 
 ## Treating agent output as verified content
 
-The Writer (the background agent that drafts prose — see [Glossary](../../reference/glossary.md)) produces a draft in response to a query. It looks good. A paragraph gets copied into a composition. Later it emerges that the agent cited paper X for a claim that paper X does not actually make — the semantic similarity was there, but the specific claim wasn't.
+The future Writer posture or a generative draft operation produces prose from
+checked evidence. It looks good. A paragraph gets copied into a composition.
+Later it emerges that the draft cited paper X for a claim that paper X does not
+actually make - the semantic similarity was there, but the specific claim
+wasn't.
 
-This is the failure the Peer-reviewer (the background agent that checks drafts and citations — see [Glossary](../../reference/glossary.md)) exists to catch, but its `verify-check-citation` pass only verifies that citekeys resolve — it doesn't verify that the source actually supports the specific claim in the prose. That final check is irreducibly human. The system's design treats agent output as a proposal that requires verification, not a draft that requires only polish.
+This is the failure the Peer-reviewer posture and verification operations exist
+to catch, but citation-resolution checks only verify that citekeys resolve; they
+do not prove that the source actually supports the specific claim in the prose.
+That final check is irreducibly human. The system's design treats machine output
+as a proposal that requires verification, not a draft that requires only polish.
 
 ## Unpinned citekeys
 
@@ -35,13 +43,20 @@ The failure is that summary and synthesis look identical in the moment of writin
 
 ## Distilling before triaging
 
-The **Librarian** (the background agent that catalogs and classifies sources — see [Glossary](../../reference/glossary.md)) proposes a classification that often surfaces project connections that weren't obvious at intake — connections that should appear in the claim's `sources:` frontmatter and `links:`. Writing the claim before reviewing that proposal means missing those connections, because the classification pass is also when the system discovers what the source has to do with your existing work.
+The Librarian operation posture proposes a classification that often surfaces
+project connections that were not obvious at intake - connections that should
+appear in the claim's `sources:` frontmatter and `links:`. Writing the claim
+before reviewing that proposal means missing those connections, because the
+classification pass is also when the system discovers what the source has to do
+with your existing work.
 
 The deeper reason: classification (automated, audited, correctable) is how the system integrates a source into the existing graph. Bypassing it produces a claim that cites a paper but isn't connected to the web of context that would have been visible from the review.
 
 ## Queue accumulation
 
-The Inbox grows week over week. Source notes sit at `lifecycle: proposed` for months. Candidate cards accumulate without triage. The dashboards show activity — sources are being catalogued — but the claim layer isn't growing.
+The Inbox grows week over week. Source rows sit unchecked for months. Candidate
+attention accumulates without triage. The dashboards show activity - sources are
+being catalogued - but the claim layer is not growing.
 
 This is a systemic failure because the Inbox and the reading queue are processing surfaces, not storage. The vault is compounding only when sources move through reading into claims. A queue that grows without shrinking is capture without synthesis — a sophisticated reading list, not a knowledge system. The weekly review exists precisely to catch this before it hardens into months of backlog.
 
@@ -57,7 +72,9 @@ The failures above share a root, and naming it directly is the best defense. A r
 
 Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is the failure mode the system's review gate (the human approval step before content is trusted — see [Glossary](../../reference/glossary.md)) exists to prevent.
 
-For the explicit mapping of tasks to their appropriate owner, see [Profile capabilities](../../reference/profile-capabilities.md).
+For the explicit mapping of current operation surfaces, see
+[Operations](../../reference/operations.md). For the no-installed-profile
+boundary, see [Installed profiles](../../reference/profile-capabilities.md).
 
 ---
 
@@ -66,4 +83,4 @@ For the explicit mapping of tasks to their appropriate owner, see [Profile capab
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
 - The repair surface for overloaded note graphs: [Link checked notes](../../how-to-guides/knowledge/link-related-claims.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
-- Lane (a background agent's execution path on the board — see [Glossary](../../reference/glossary.md)) permissions referenced here: [Profile capabilities](../../reference/profile-capabilities.md)
+- Current operation surfaces: [Operations](../../reference/operations.md)

@@ -109,5 +109,5 @@ Tools evaluated and not in the current design:
 ## Related
 
 - Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
-- Profile permissions (which profiles can call which integrations): [Profile capabilities](profile-capabilities.md)
+- No installed-profile boundary: [Installed profiles](profile-capabilities.md)
 - Where API keys are configured: [Memoria configuration](configuration.md)

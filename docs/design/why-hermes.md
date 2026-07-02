@@ -20,11 +20,14 @@ The optional adapter contributes four runtime properties:
 | Adapter need | Hermes feature | Memoria overlay |
 | --- | --- | --- |
 | Durable task state | Kanban board (`kanban.db`) | Review metadata on cards. |
-| Role separation | Profiles with lanes | Five Memoria profile directories and lane ceilings. |
+| Role separation | Profiles with lanes | Adapter-local mapping onto Memoria requests and operation ceilings. |
 | Background execution | Dispatcher | Routing rules, not an Orchestrator agent. |
-| Controlled integration | Memory, MCP, API server | Policy gate, profile memory rules, and programmatic triggers. |
+| Controlled integration | Memory, MCP, API server | Policy gate, request rows, and programmatic triggers. |
 
-Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy gate that gates writes, the five profile `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points when the adapter is installed.
+Memoria supplies the *conventions on top*: the review-gate overlay in card
+`metadata`, the policy gate that gates writes, request mapping, and the workspace
+schema. None of those require modifying Hermes, and alpha.14 does not ship
+installed Hermes profile packages.
 
 ---
 
@@ -54,7 +57,7 @@ The API grants no extra power. Every write still passes through the policy gate,
 | Board state machine, dispatcher, retries | Hermes adapter |
 | Profile mechanism (identity, model routing, lanes) | Hermes adapter |
 | Native memory tiers, MCP host, API server | Hermes adapter |
-| Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
+| Review-gate overlay and machine recommendation | Memoria (request/attention metadata) |
 | Write-gating policy gate | Memoria (plugs into Hermes's MCP interface) |
 | Capability manifests and operation policy | Memoria |
 | The vault, schema, and document types | Memoria |
@@ -68,8 +71,8 @@ The rule of thumb: **Memoria must run without Hermes; when Hermes is installed, 
 **Explanation**
 
 - What Hermes coordinates — the layered architecture: [Why the architecture is layered](why-layered-architecture.md)
-- The board as a state machine: [Board states and the review gate](../explanation/kanban-board/states.md)
-- The honesty-card overlay Memoria adds on top of Hermes: [The honesty card](../explanation/kanban-board/honesty-card.md)
+- The request state machine: [Request states and the review gate](../explanation/kanban-board/states.md)
+- The attention prompt shape: [The honesty prompt](../explanation/kanban-board/honesty-card.md)
 - The interaction channels (Obsidian, CLI, Telegram): [Interaction channels](../explanation/architecture/interaction-channels.md)
 
 **Reference**

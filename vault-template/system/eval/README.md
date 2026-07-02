@@ -25,9 +25,10 @@ gate.
 
 ## Gold task format
 
-Each task is a markdown note with `type: eval-task` frontmatter (schema:
-`.memoria/schemas/types/eval-task.yaml`) and three body sections — `## Input`,
-`## Expected behavior`, `## Scoring rubric` — so the task is self-contained.
+Each task is a diagnostic markdown fixture with `type: eval-task` frontmatter
+and three body sections — `## Input`, `## Expected behavior`,
+`## Scoring rubric` — so the task is self-contained. `eval-task` is not a
+checked Concept type and has no schema under `.memoria/schemas/types/`.
 The shipped tasks reference well-known papers (the Transformer, BERT, ResNet,
 Adam, Dropout) so they work on any vault after those papers are ingested; the
 `references:` field lists the citekeys a task presupposes in the catalog.

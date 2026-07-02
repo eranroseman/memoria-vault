@@ -14,7 +14,6 @@ def test_generated_agent_references_are_limited_to_guidance_mirrors():
 
     assert generated == {
         ".agents/system/change-impact-map.md",
-        ".agents/system/profile-policy-matrix.md",
     }
 
 
