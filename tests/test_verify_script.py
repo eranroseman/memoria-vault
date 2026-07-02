@@ -73,6 +73,7 @@ def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -
     assert summary["result"] == "dry-run"
     assert summary["gates"] == ["runtime"]
     assert [step["display"] for step in summary["steps"]] == [
+        "python3 -m pytest tests/test_alpha14_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
         (
             "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
@@ -110,6 +111,7 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
         ),
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
         "bash scripts/e2e-smoke.sh",
+        "python3 -m pytest tests/test_alpha14_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
         (
             "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
@@ -147,6 +149,7 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
         ),
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
         "bash scripts/e2e-smoke.sh",
+        "python3 -m pytest tests/test_alpha14_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
         (
             "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "

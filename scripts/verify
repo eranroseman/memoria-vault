@@ -54,6 +54,7 @@ GATE_COMMANDS = {
         ["bash", "scripts/e2e-smoke.sh"],
     ],
     "runtime": [
+        ["python3", "-m", "pytest", "tests/test_alpha14_runtime_gate.py", "-q"],
         ["python3", "-m", "pytest", "tests/test_alpha11_cycle.py", "-q"],
         [
             "python3",

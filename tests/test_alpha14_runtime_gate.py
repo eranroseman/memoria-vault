@@ -1,0 +1,462 @@
+"""Alpha.14 runtime-local gate replay."""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+import pytest
+
+from memoria_vault.cli import main
+from memoria_vault.runtime import state
+from memoria_vault.runtime.trusted_writer import (
+    commit_writer_changes,
+    promote_checked,
+    stage_concept,
+)
+
+
+def test_alpha14_runtime_gate_replays_user_facing_commands(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace-alpha14"
+    provider_replay = tmp_path / "providers.json"
+    provider_replay.write_text(json.dumps(_provider_payloads()), encoding="utf-8")
+    interview = tmp_path / "interview.json"
+    interview.write_text(
+        json.dumps(
+            {
+                "prompt": "What matters?",
+                "response": "The PI cares about the methods caveat.",
+                "project_id": "knowledge/projects/project-alpha.md",
+            }
+        ),
+        encoding="utf-8",
+    )
+    _fake_qmd_toolchain(tmp_path, monkeypatch)
+    _fake_runner(monkeypatch)
+    _fake_seeded_verdict(monkeypatch, workspace)
+
+    dry_run = _run_json(capsys, "init", "--workspace", str(workspace), "--dry-run")
+    assert dry_run["dry_run"] is True
+    assert not workspace.exists()
+
+    _run_json(capsys, "init", "--workspace", str(workspace), "--yes")
+    _write_project_fixture(workspace)
+    doctor = _run_json(capsys, "doctor", "--workspace", str(workspace))
+    assert doctor["checks"]["state_db"] is True
+
+    _run_json(
+        capsys,
+        "work",
+        "capture",
+        "--workspace",
+        str(workspace),
+        "--doi",
+        "10.1000/alpha",
+        "--title",
+        "Alpha Source",
+        "--text",
+        "Alpha full text about framing, methods, outcomes, gaps, and impact.",
+        "--idempotency-key",
+        "gate-capture",
+    )
+    _run_json(
+        capsys,
+        "work",
+        "enrich",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--provider-replay",
+        str(provider_replay),
+        "--idempotency-key",
+        "gate-enrich",
+    )
+    _run_json(
+        capsys,
+        "work",
+        "update",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--topic",
+        "framing",
+        "--idempotency-key",
+        "gate-update",
+    )
+    _run_json(
+        capsys,
+        "work",
+        "interview",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--fixture",
+        str(interview),
+        "--idempotency-key",
+        "gate-interview",
+    )
+    digest = _run_json(
+        capsys,
+        "work",
+        "digest",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--idempotency-key",
+        "gate-digest",
+    )
+    digest_path = digest["result"]["digest_path"]
+
+    proposed = _run_json(
+        capsys,
+        "note",
+        "propose",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--idempotency-key",
+        "gate-note-propose",
+    )
+    note_path = proposed["result"]["note_paths"][0]
+    _run_json(
+        capsys,
+        "note",
+        "accept",
+        "--workspace",
+        str(workspace),
+        note_path,
+        "--reason",
+        "PI accepted",
+        "--idempotency-key",
+        "gate-note-accept",
+    )
+    _run_json(
+        capsys,
+        "note",
+        "link",
+        "--workspace",
+        str(workspace),
+        note_path,
+        "supports",
+        "knowledge/notes/thesis.md",
+        "--reason",
+        "PI linked",
+        "--idempotency-key",
+        "gate-note-link",
+    )
+
+    recovered = _run_json(
+        capsys,
+        "workspace",
+        "recover",
+        "--workspace",
+        str(workspace),
+        "--fixture",
+        "crash-before-materialization",
+    )
+    assert recovered["restored"] == ["knowledge/notes/crash-before-materialization.md"]
+
+    runner = _run_json(
+        capsys,
+        "doctor",
+        "--workspace",
+        str(workspace),
+        "--check",
+        "runner",
+        "--provider",
+        "local",
+    )
+    assert runner["checks"]["runner_agent_constructed"] is True
+    _run_json(capsys, "doctor", "self-test", "--workspace", str(workspace))
+    bundle = _run_json(capsys, "doctor", "bundle", "--workspace", str(workspace), "--redacted")
+    assert bundle["redacted"] is True
+
+    scan = _run_json(
+        capsys,
+        "workspace",
+        "scan",
+        "--workspace",
+        str(workspace),
+        "--fixture",
+        "direct-write-generated-projection",
+    )
+    assert scan["quarantine"]["finding_count"] == 1
+    assert scan["needs_check_count"] == 0
+    assert (workspace / ".memoria/quarantine/knowledge/index.md").is_file()
+
+    qmd = _run_json(capsys, "doctor", "--workspace", str(workspace), "--check", "qmd")
+    assert qmd["checks"]["qmd_collection_root"] is True
+    _run_json(
+        capsys,
+        "workspace",
+        "run",
+        "--workspace",
+        str(workspace),
+        "--schedule-id",
+        "queue-drain",
+    )
+    structural = _run_json(
+        capsys,
+        "workspace",
+        "check",
+        "--workspace",
+        str(workspace),
+        "--schedule-id",
+        "structural-check",
+    )
+    assert structural["schedule_id"] == "structural-check"
+    rebuild = _run_json(
+        capsys,
+        "workspace",
+        "rebuild",
+        "--workspace",
+        str(workspace),
+        "--search",
+        "--embeddings",
+    )
+    assert len(rebuild["qmd"]["manifest"]["documents"]) >= 1
+
+    status = _run_json(capsys, "status", "--workspace", str(workspace), ok_key=False)
+    assert status["requests"]["done"] >= 1
+    answer = _run_json(
+        capsys,
+        "ask",
+        "--workspace",
+        str(workspace),
+        "--question",
+        "framing outcomes",
+        "--idempotency-key",
+        "gate-ask",
+    )
+    assert {source["path"] for source in answer["result"]["sources"]} & {digest_path, note_path}
+    project_answer = _run_json(
+        capsys,
+        "project",
+        "ask",
+        "--workspace",
+        str(workspace),
+        "project-alpha",
+        "--question",
+        "status",
+        "--idempotency-key",
+        "gate-project-ask",
+    )
+    assert project_answer["result"]["project_context"]["project_path"] == (
+        "knowledge/projects/project-alpha.md"
+    )
+    export = _run_json(
+        capsys,
+        "project",
+        "export",
+        "--workspace",
+        str(workspace),
+        "project-alpha",
+        "--format",
+        "markdown",
+        "--output",
+        str(tmp_path / "project-alpha.md"),
+        "--idempotency-key",
+        "gate-project-export",
+    )
+    assert Path(export["result"]["output_path"]).is_file()
+
+    journal = _run_json(
+        capsys,
+        "journal",
+        "list",
+        "--workspace",
+        str(workspace),
+        "--operation",
+        "work.digest",
+        ok_key=False,
+    )
+    assert journal["events"]
+
+    verdict = _run_json(
+        capsys,
+        "eval",
+        "seeded-error-verdict",
+        "--workspace",
+        str(workspace),
+        "--idempotency-key",
+        "gate-seeded-verdict",
+    )
+    assert verdict["result"]["passed"] is True
+
+    with state.connect(workspace) as conn:
+        requests = {
+            row["operation_id"]
+            for row in conn.execute("SELECT operation_id FROM operation_requests")
+        }
+    assert {
+        "capture-source",
+        "enrich-source",
+        "compile-source-digest",
+        "answer-query",
+        "export-project",
+        "run-seeded-error-verdict",
+    } <= requests
+
+
+def _run_json(
+    capsys: pytest.CaptureFixture[str], *argv: str, ok_key: bool = True
+) -> dict[str, object]:
+    rc = main([*argv, "--json"])
+    output = json.loads(capsys.readouterr().out)
+    assert rc == 0, output
+    if ok_key:
+        assert output["ok"] is True
+    return output
+
+
+def _fake_runner(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeProvider:
+        def __init__(self, **kwargs: object) -> None:
+            self.kwargs = kwargs
+
+    class FakeModel:
+        def __init__(self, model_name: str, *, provider: object) -> None:
+            self.model_name = model_name
+            self.provider = provider
+
+    class FakeAgent:
+        def __init__(self, model: object) -> None:
+            self.model = model
+
+    monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://127.0.0.1:11434/v1")
+    monkeypatch.setenv("MEMORIA_MODEL", "local-test-model")
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+
+def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> None:
+    def fake_verdict(
+        vault: Path, *, template_root: Path, bundle_path: Path, machine: str
+    ) -> dict[str, object]:
+        assert vault != workspace
+        assert template_root == workspace
+        assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert machine == "memoria-cli"
+        return {"passed": True, "metrics": {"expected_errors": 1, "detected_errors": 1}}
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
+        fake_verdict,
+    )
+
+
+def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    npm_root = tmp_path / "npm-global"
+    npm_bin = npm_root / "bin"
+    npm_bin.mkdir(parents=True)
+    node = bin_dir / "node"
+    node.write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
+    npm = bin_dir / "npm"
+    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
+    qmd = npm_bin / "qmd"
+    qmd.write_text(
+        f"#!{sys.executable}\n"
+        "import os, pathlib, sys\n"
+        "if sys.argv[1:] == ['collection', 'show', 'memoria-checked']:\n"
+        "    root = pathlib.Path(os.environ['QMD_CONFIG_DIR']).parent / 'checked'\n"
+        "    print('Collection: memoria-checked')\n"
+        "    print(f'  Path:     {root}')\n"
+        "    print('  Pattern:  **/*.md')\n"
+        "elif sys.argv[1:] == ['doctor']:\n"
+        "    print('model cache: ready')\n"
+        "elif sys.argv[1:2] == ['query']:\n"
+        '    print(\'[{"file": "qmd://memoria-checked/knowledge/digests/doi-10.1000_alpha.md", "score": 9}]\')\n',
+        encoding="utf-8",
+    )
+    node.chmod(0o755)
+    npm.chmod(0o755)
+    qmd.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+
+
+def _write_project_fixture(workspace: Path) -> None:
+    project = (
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Alpha project\n"
+        "description: Runtime gate project\n"
+        "thesis: knowledge/notes/thesis.md\n"
+        "---\n"
+        "Body.\n"
+    )
+    note = "---\ntype: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n---\nBody.\n"
+    stage_concept(
+        workspace,
+        "knowledge/projects/project-alpha.md",
+        project,
+        operation="runtime-gate-fixture",
+        machine="memoria-cli",
+    )
+    promote_checked(workspace, "knowledge/projects/project-alpha.md", machine="memoria-cli")
+    stage_concept(
+        workspace,
+        "knowledge/notes/thesis.md",
+        note,
+        operation="runtime-gate-fixture",
+        machine="memoria-cli",
+    )
+    promote_checked(workspace, "knowledge/notes/thesis.md", machine="memoria-cli")
+    commit_writer_changes(
+        workspace,
+        "runtime gate project fixture",
+        ["knowledge/projects/project-alpha.md", "knowledge/notes/thesis.md"],
+        machine="memoria-cli",
+    )
+
+
+def _provider_payloads() -> dict[str, object]:
+    return {
+        "crossref": {
+            "message": {
+                "DOI": "10.1000/alpha",
+                "URL": "https://doi.org/10.1000/alpha",
+                "type": "journal-article",
+                "title": ["Alpha Source"],
+                "container-title": ["Journal of Testable Systems"],
+                "author": [{"given": "Ada", "family": "River"}],
+                "issued": {"date-parts": [[2026]]},
+                "relation": {},
+            }
+        },
+        "openalex": {
+            "id": "https://openalex.org/W123",
+            "doi": "https://doi.org/10.1000/alpha",
+            "title": "Alpha Source",
+            "authorships": [
+                {
+                    "author": {
+                        "id": "https://openalex.org/A123",
+                        "display_name": "Ada River",
+                    },
+                    "institutions": [],
+                }
+            ],
+            "primary_location": {"source": {"display_name": "Journal of Testable Systems"}},
+            "topics": [{"display_name": "Research workflows"}],
+        },
+        "unpaywall": {
+            "doi": "10.1000/alpha",
+            "is_oa": True,
+            "oa_status": "gold",
+            "best_oa_location": {"url_for_pdf": "https://example.test/alpha.pdf"},
+        },
+    }
