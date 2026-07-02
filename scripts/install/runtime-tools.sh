@@ -48,35 +48,3 @@ wire_commit_gate() {
     say "  (vault is not a git repo yet — initialize git, then copy .githooks/pre-commit into .git/hooks/pre-commit)"
   fi
 }
-
-install_hermes_cron() {
-  local header="$1" skip_label="$2" source_name="$3" dest_name="$4" schedule="$5" job_name="$6"
-  local present_label="$7" missing_label="$8" missing_job_label="$9" manual_hint="${10}"
-  local note="${11}" ok_label="${12}"
-
-  hdr "$header"
-  if ! have hermes; then warn "Hermes not on PATH — skipping the $skip_label cron."; return 0; fi
-  local src="$VAULT_PATH/.memoria/scripts/$source_name"
-  local scripts_dir="$HERMES_HOME/scripts"
-  local dst="$scripts_dir/$dest_name"
-  if [ ! -f "$src" ]; then
-    warn "$missing_label cron wrapper missing at $src — $missing_job_label cron NOT wired."
-    return 0
-  fi
-  run mkdir -p "$scripts_dir"
-  local pybin="${VENV_PYTHON:-python}"
-  local pybin_esc vault_esc
-  pybin_esc="$(sed_repl "$pybin")"
-  vault_esc="$(sed_repl "$VAULT_PATH")"
-  run_sh "sed -e 's|{{PYTHON}}|$pybin_esc|g' -e 's|{{VAULT_PATH}}|$vault_esc|g' \"$src\" > \"$dst\""
-  run chmod +x "$dst"
-  if [ "$DRY_RUN" -eq 0 ] && hermes cron list --all 2>/dev/null | grep -q "$job_name"; then
-    say "  $present_label cron already present — wrapper refreshed, job left as-is"
-  else
-    run hermes cron create "$schedule" --script "$dest_name" --no-agent \
-      --name "$job_name" --deliver local \
-      || warn "could not create the $present_label cron — create it manually$manual_hint"
-  fi
-  say "  ($note)"
-  ok "$ok_label cron wired"
-}
