@@ -2235,6 +2235,12 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
                 "title": "Standalone Book",
                 "ISBN": "9780000000002",
                 "author": [{"family": "River", "given": "Ada"}],
+                "references": [
+                    {
+                        "DOI": "10.1000/book.ref",
+                        "title": "Referenced Book Work",
+                    }
+                ],
             }
         ),
         encoding="utf-8",
@@ -2268,12 +2274,27 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
             "SELECT title, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
             ("book2026",),
         ).fetchone()
+        edge = conn.execute(
+            """
+            SELECT relation_type, target_id, target_title, target_doi, source_provider
+            FROM work_graph_edges
+            WHERE work_id = ?
+            """,
+            ("book2026",),
+        ).fetchone()
         columns = {
             column["name"] for column in conn.execute("PRAGMA table_info(operation_requests)")
         }
     assert row["title"] == "Standalone Book"
     assert row["check_status"] == "unchecked"
     assert json.loads(row["identifiers_json"]) == {"isbn": "9780000000002"}
+    assert tuple(edge) == (
+        "references",
+        "doi:10.1000/book.ref",
+        "Referenced Book Work",
+        "10.1000/book.ref",
+        "import",
+    )
     _assert_alpha14_request_columns(columns)
 
 
