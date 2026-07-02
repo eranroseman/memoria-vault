@@ -514,7 +514,7 @@ def _fixture_full_text(
 def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict[str, Any]]) -> str:
     from memoria_vault.runtime.operations import require_allowed_network
 
-    for url in _open_access_text_urls(payloads.get("unpaywall", {})):
+    for url in _open_access_text_urls(payloads):
         try:
             require_allowed_network(policy, url)
         except PermissionError:
@@ -535,14 +535,25 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
     return ""
 
 
-def _open_access_text_urls(payload: dict[str, Any]) -> list[str]:
+def _open_access_text_urls(payloads: dict[str, dict[str, Any]]) -> list[str]:
     urls = []
-    for location in _open_access_locations(payload):
+    for location in _open_access_locations(payloads.get("unpaywall", {})):
         for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
-            url = str(location.get(key) or "").strip()
-            if url and url not in urls:
-                urls.append(url)
+            _append_url(urls, location.get(key))
+    openalex = payloads.get("openalex", {})
+    open_access = openalex.get("open_access")
+    if isinstance(open_access, dict):
+        _append_url(urls, open_access.get("oa_url"))
+    for location in _openalex_open_access_locations(openalex):
+        for key in ("pdf_url", "landing_page_url"):
+            _append_url(urls, location.get(key))
     return urls
+
+
+def _append_url(urls: list[str], value: Any) -> None:
+    url = str(value or "").strip()
+    if url and url not in urls:
+        urls.append(url)
 
 
 def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -554,6 +565,24 @@ def _open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if isinstance(oa_locations, list):
         for location in oa_locations:
             if isinstance(location, dict) and location not in locations:
+                locations.append(location)
+    return locations
+
+
+def _openalex_open_access_locations(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    locations = []
+    for key in ("best_oa_location", "primary_location"):
+        location = payload.get(key)
+        if isinstance(location, dict) and location.get("is_oa") is not False:
+            locations.append(location)
+    all_locations = payload.get("locations")
+    if isinstance(all_locations, list):
+        for location in all_locations:
+            if (
+                isinstance(location, dict)
+                and location.get("is_oa") is not False
+                and location not in locations
+            ):
                 locations.append(location)
     return locations
 

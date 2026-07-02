@@ -580,6 +580,78 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
     )
 
 
+def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, monkeypatch) -> None:
+    vault = workspace(tmp_path)
+    policy = vault / "capabilities/operations/enrich-source.md"
+    policy.write_text(
+        policy.read_text(encoding="utf-8").replace(
+            "  - https://api.unpaywall.org/",
+            "  - https://api.unpaywall.org/\n  - https://example.test/",
+        ),
+        encoding="utf-8",
+    )
+    payload = {
+        **doi_payload(),
+        "content_text": "Only the abstract.",
+        "text_status": "abstract-only",
+    }
+    enqueue_operation(vault, "capture-source", payload=payload, idempotency_key="capture-alpha")
+    run_next_job(vault, machine="test-machine")
+    providers = provider_payloads()
+    providers["unpaywall"]["best_oa_location"] = {
+        "url_for_fulltext": "https://blocked.test/full.html",
+    }
+    providers["openalex"]["open_access"] = {
+        "is_oa": True,
+        "oa_url": "https://blocked.test/openalex.html",
+    }
+    providers["openalex"]["primary_location"] = {
+        "is_oa": False,
+        "pdf_url": "https://example.test/closed.pdf",
+    }
+    providers["openalex"]["locations"] = [
+        {
+            "is_oa": True,
+            "landing_page_url": "https://example.test/openalex.html",
+        }
+    ]
+    calls = []
+
+    class Response:
+        def __init__(self):
+            self.headers = {"Content-Type": "text/html; charset=utf-8"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return b"<html><body>OpenAlex discovered full text.</body></html>"
+
+    def fake_urlopen(req, timeout):
+        calls.append(req.full_url)
+        assert timeout == 20
+        return Response()
+
+    monkeypatch.setattr("memoria_vault.runtime.enrichment.request.urlopen", fake_urlopen)
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done["enrichment_status"] == "enriched"
+    assert calls == ["https://example.test/openalex.html"]
+    assert "OpenAlex discovered full text" in (vault / done["content_path"]).read_text(
+        encoding="utf-8"
+    )
+
+
 def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_operation(
