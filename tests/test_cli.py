@@ -2535,6 +2535,9 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
 
     assert rc == 0
     assert output["ok"] is True
+    assert output["qmd"]["manifest"]["mode"] == "hybrid"
+    assert output["qmd"]["manifest"]["embeddings"] is True
+    assert output["qmd"]["manifest"]["qmd_commands"][-1] == "qmd embed --chunk-strategy auto"
     assert output["qmd"]["manifest"]["documents"][0]["path"] == "knowledge/notes/qmd.md"
     assert output["qmd"]["index_path"] == f"{workspace}/.memoria/index/qmd/index.sqlite"
     assert output["qmd"]["cache_home"] == ""

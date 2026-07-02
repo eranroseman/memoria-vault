@@ -1158,7 +1158,7 @@ def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
     if args.search:
         from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 
-        manifest = rebuild_checked_qmd_source(workspace)
+        manifest = rebuild_checked_qmd_source(workspace, embeddings=args.embeddings)
         payload["qmd"] = _run_qmd_rebuild(workspace, embeddings=args.embeddings)
         payload["qmd"]["manifest"] = manifest
     return _emit(payload, args)

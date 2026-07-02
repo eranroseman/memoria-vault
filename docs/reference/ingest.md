@@ -85,7 +85,7 @@ input rebuild.
 
 - ISBN URL-depth enrichment.
 - Live URL smoke beyond mocked single-page fetch tests.
-- Semantic Scholar, PubMed, arXiv, graph enrichment, embeddings, and UI.
+- Semantic Scholar, PubMed, arXiv, and UI.
 - Parser selection and richer coherence gates for PDFs and other source formats.
 - Ambiguous entity disambiguation beyond exact deterministic CSL author and venue paths.
 

@@ -58,6 +58,8 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
 
     manifest = rebuild_checked_qmd_source(vault)
 
+    assert manifest["mode"] == "bm25"
+    assert manifest["embeddings"] is False
     assert [row["path"] for row in manifest["documents"]] == ["knowledge/notes/checked.md"]
     assert (vault / ".memoria/index/qmd/checked/knowledge/notes/checked.md").is_file()
     assert not (vault / ".memoria/index/qmd/checked/capabilities").exists()
@@ -66,6 +68,19 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
     assert manifest["qmd_commands"][-1] == "qmd update"
+
+
+def test_rebuild_checked_qmd_source_records_embedding_mode(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    note(vault, "checked", "checked", "alpha beta")
+
+    manifest = rebuild_checked_qmd_source(vault, embeddings=True)
+
+    assert manifest["mode"] == "hybrid"
+    assert manifest["embeddings"] is True
+    assert manifest["qmd_commands"][-1] == "qmd embed --chunk-strategy auto"
+    stored = vault / ".memoria/index/qmd/manifest.json"
+    assert '"mode": "hybrid"' in stored.read_text(encoding="utf-8")
 
 
 def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
