@@ -71,7 +71,7 @@ def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
     assert summary["mode"] == "live"
     assert summary["result"] == "dry-run"
-    assert summary["gates"] == ["runtime"]
+    assert summary["gates"] == ["runtime", "live"]
     assert [step["display"] for step in summary["steps"]] == [
         "python3 -m pytest tests/test_alpha14_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
@@ -79,6 +79,7 @@ def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -
             "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
             "tests/test_worker_queue.py -q"
         ),
+        "bash scripts/test.sh live",
     ]
 
 

@@ -47,6 +47,7 @@ TEST_LEVELS = {
     "test_integrity.py": "runtime",
     "test_knowledge.py": "runtime",
     "test_link.py": "unit",
+    "test_live_runner.py": "live",
     "test_live_docs_links.py": "static",
     "test_loudness.py": "unit",
     "test_node_tooling.py": "static",
