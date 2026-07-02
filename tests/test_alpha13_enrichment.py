@@ -125,6 +125,13 @@ def provider_payloads(
                 "score": 0.91,
             },
             "topics": [{"id": "https://openalex.org/T123", "display_name": "Research workflows"}],
+            "concepts": [
+                {
+                    "id": "https://openalex.org/C123",
+                    "display_name": "Information retrieval",
+                    "score": 0.82,
+                }
+            ],
             "keywords": [{"id": "https://openalex.org/K123", "display_name": "research workflow"}],
         },
         "unpaywall": {
@@ -318,6 +325,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         ("references", "doi:10.1000/beta"),
         ("references", "https://openalex.org/W999"),
         ("related", "https://openalex.org/W888"),
+        ("topic", "https://openalex.org/C123"),
         ("topic", "https://openalex.org/T123"),
         ("topic", "https://openalex.org/T321"),
     ]

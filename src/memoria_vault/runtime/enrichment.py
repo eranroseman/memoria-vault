@@ -742,6 +742,9 @@ def _first_order_work_graph(
     topics = openalex.get("topics")
     if isinstance(topics, list):
         topic_candidates.extend(topic for topic in topics if isinstance(topic, dict))
+    concepts = openalex.get("concepts")
+    if isinstance(concepts, list):
+        topic_candidates.extend(concept for concept in concepts if isinstance(concept, dict))
     for topic in topic_candidates:
         title = str(topic.get("display_name") or topic.get("name") or "").strip()
         target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
