@@ -34,9 +34,13 @@ runtime state.
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
-**Agent** — a running instance of the model doing work, operating under exactly one **profile**. Two kinds: the **Co-PI**, the interactive agent the PI talks to (it runs off the board), and **background agents**, which execute board cards in **lanes**. An agent is a *process*; its permissions come from its profile, and its place on the board is its lane. Contrast *profile* (the configured posture) and *lane* (the board slot).
+**Agent** — a model-backed process doing work. Alpha.14 exposes agents through
+the standalone CLI/engine and optional adapters; it does not ship installed
+profile packages or lane assignments.
 
-**Profile** — a Hermes role with bounded permissions, skills, and tools. Memoria defines five: Co-PI, Librarian, Writer, Peer-reviewer, Engineer. A profile is *configuration* — a posture — not a running process; the process that runs under it is an **agent** and its board slot is a **lane**. Permissions live on the profile, so "agent permissions" and "a lane's permissions" are shorthand for the permissions of the profile that agent or lane runs. See [Profile capabilities](profile-capabilities.md).
+**Profile** — historical Hermes role configuration from earlier designs.
+Alpha.14 does not ship installed profiles; the current boundary is in
+[Profile capabilities](profile-capabilities.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
@@ -51,7 +55,8 @@ Obsidian vault root.
 
 **Navigator rail** — the left-pane surface for everyday navigation (`_nav.md`, [ADR-116](../adr/116-obsidian-surface-architecture.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
 
-**Now** — the rail's top band: what is waiting on you right now — **Action queue** (your Inbox queue), **Drift** (open integrity flags), and **Fleet** (background-worker health).
+**Now** — the rail's top band: what is waiting on you right now — **Action
+queue** (your Inbox queue) and **Drift** (open integrity flags).
 
 **Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
 
@@ -72,7 +77,8 @@ Clearing it to empty is the goal.
 `alert` attention projections; non-zero means structural debt is waiting in
 Maintenance.
 
-**System dashboard** — one of the read-only, Dataview-backed notes in `system/dashboards/` (consolidated to five in [ADR-118](../adr/118-dashboard-consolidation.md)); the spaces and Maintenance carry the action surfaces.
+**System dashboard** — one of the read-only, Dataview-backed notes in
+`system/dashboards/`; the spaces and Maintenance carry the action surfaces.
 
 **Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)).
 
@@ -168,8 +174,6 @@ are promoted into `catalog/`, `knowledge/`, or `capabilities/`.
 | `agent_recommendation` | `inconclusive` / `issues-found` / `clean` | Peer-reviewer / operations | advisory only |
 | verdict band | `PASS` / `REVIEW` / `FAIL` | Linter operation | structural rollup over the detectors — the rollup rule is owned by [Linter: detectors and auto-fix](linter.md) |
 | `certainty` | `confident` / `likely` / `unsure` | proposing agent | calibrated confidence on an attention projection |
-
-**Trust score** — a 0–100 per-lane operational-health aggregate on the fleet-health dashboard; its inputs and bands are specified in [Dashboards](dashboards.md).
 
 ---
 

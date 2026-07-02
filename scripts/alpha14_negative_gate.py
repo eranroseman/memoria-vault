@@ -13,12 +13,16 @@ FORBIDDEN_PATHS = (
     "vault-template/.memoria/profiles",
     "vault-template/.memoria/lane-overrides",
     "vault-template/.memoria/tool-registry.yaml",
+    "vault-template/system/dashboards/fleet-health.md",
 )
 FORBIDDEN_TEXT = (
     "vault-template/.memoria/operations",
     ".memoria/operations/",
     "vault-template/.memoria/mcp",
     ".memoria/mcp/",
+    "system/dashboards/fleet-health",
+    "system/metrics/lane-",
+    'type = "lane-metric"',
 )
 SEARCH_ROOTS = (
     ".agents",

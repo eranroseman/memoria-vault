@@ -1,10 +1,10 @@
 # Audit log
 
-Policy-MCP write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Permissions: [Profile policies](https://eranroseman.github.io/memoria-vault/reference/profile-capabilities) · design: [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp), [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).
+Policy-gate write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Contract: [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).
 
 ## Recent denies and dry-runs
 
-Writes the policy MCP refused or downgraded. Anything here > 1 day without a board card is an unhandled escalation.
+Writes the policy gate refused or downgraded. Anything here > 1 day without attention is an unhandled escalation.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {
@@ -108,7 +108,7 @@ dv.table(["Last write", "Profile", "Path", "Recorded after_hash"], rows);
 
 ## Anomalies
 
-Patterns the query flags — each is a configuration bug; see [policy MCP](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
+Patterns the query flags — each is a configuration bug; see [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) for why:
 
 - Any allowed adapter write missing `before_hash` / `after_hash`.
 - Any adapter write allowed under `.memoria/`.

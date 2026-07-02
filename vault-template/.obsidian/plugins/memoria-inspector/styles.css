@@ -84,7 +84,6 @@
 .memoria-inspector__band small,
 .memoria-inspector__audit small,
 .memoria-inspector__flags small,
-.memoria-inspector__fleet small,
 .memoria-inspector__graph small,
 .memoria-inspector__count span {
   color: var(--text-muted);
@@ -139,7 +138,6 @@
 .memoria-inspector__lanes,
 .memoria-inspector__audit,
 .memoria-inspector__flags,
-.memoria-inspector__fleet,
 .memoria-inspector__graph {
   display: grid;
   gap: 8px;
@@ -150,7 +148,6 @@
 
 .memoria-inspector__audit li,
 .memoria-inspector__flags li,
-.memoria-inspector__fleet li,
 .memoria-inspector__graph li {
   display: grid;
   gap: 2px;

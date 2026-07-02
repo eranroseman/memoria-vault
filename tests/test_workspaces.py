@@ -119,10 +119,10 @@ def test_navigation_rail_warns_only_when_badges_are_nonzero():
     assert '["flag", "alert"].includes(p.attention_kind)' in text
     assert "p.lifecycle" not in text
     assert "[[spaces/maintenance|◆ Drift]]" not in text
-    assert "[[system/dashboards/fleet-health|◆ Fleet]]" not in text
     assert "[[spaces/maintenance|Drift]]" in text
-    assert "[[system/dashboards/fleet-health|Fleet]]" in text
-    assert text.count('return n > 0 ? "◆ " + n : n') == 2
+    assert "fleet-health" not in text
+    assert "lane-metric" not in text
+    assert text.count('return n > 0 ? "◆ " + n : n') == 1
     assert 'dv.pages(\'"knowledge/notes"\').where(p => p.check_status == "checked").length' in text
 
 

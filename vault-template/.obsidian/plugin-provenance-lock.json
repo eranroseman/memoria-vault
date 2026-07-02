@@ -158,9 +158,9 @@
       "license": "NOASSERTION",
       "local_patch_status": "memoria-authored-read-only-inspector",
       "sha256": {
-        "plugins/memoria-inspector/main.js": "26b409a604e32fa3021ffb9624e01213c100f202641e6f58b429426e46ada58a",
+        "plugins/memoria-inspector/main.js": "7007af0b525d3dd2509614174c37d11dc251097c5db4c96e5bf052731ebf900c",
         "plugins/memoria-inspector/manifest.json": "aa57e041603495bc2c54527829844fa73e5c565b7b655bccbd9527c73ce27dcd",
-        "plugins/memoria-inspector/styles.css": "705c8a32812613a49e6ffa6da271fd10524172cd2feb34a7a735a3812a9c7896"
+        "plugins/memoria-inspector/styles.css": "3a22f4e271d30f314c429d2347353abff8592c1b5f1fd4a8403fcd3a0c30a30d"
       }
     },
     {

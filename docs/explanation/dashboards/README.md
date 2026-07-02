@@ -15,7 +15,7 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 | [Daily glance](daily-glance.md)                    | Rail Now, Inbox queue action view                            | Start of every session — "what needs me?"         |
 | [Synthesis agenda](synthesis-agenda.md)            | Reading pipeline, Discuss queue, Open questions, Contradictions | When deciding what to read, discuss, or reconcile |
 | [Structural health](structural-health.md)          | Maintenance collection, Drift watch, Loose ends, Board state  | Weekly maintenance and drift checks               |
-| [Operational health](operational-health.md)        | Fleet health, Audit log, Eval trend, Skill state            | When checking how the agent fleet is performing   |
+| [Operational health](operational-health.md)        | Audit log, Eval trend                                      | When checking runtime decisions and eval trends   |
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.

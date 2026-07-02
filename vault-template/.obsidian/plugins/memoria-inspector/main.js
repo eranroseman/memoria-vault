@@ -5,11 +5,9 @@ const BOARD_STATE = "system/logs/board-state.jsonl";
 const AUDIT_LOG = "system/logs/audit.jsonl";
 const JOURNAL_PREFIX = "journal/";
 const LINT_VERDICT_PREFIX = "system/metrics/lint-verdict-";
-const LANE_METRIC_PREFIX = "system/metrics/lane-";
 const BOARD_DASHBOARD = "system/dashboards/board-state";
 const AUDIT_DASHBOARD = "system/dashboards/audit-log";
 const DRIFT_DASHBOARD = "spaces/maintenance#Drift watch";
-const FLEET_DASHBOARD = "system/dashboards/fleet-health";
 const KNOWLEDGE_DASHBOARD = "knowledge/views/knowledge.base";
 const REFRESH_INTERVAL_MS = 60000;
 const GRAPH_PREFIXES = ["catalog/", "knowledge/"];
@@ -87,12 +85,11 @@ class MemoriaInspectorView extends ItemView {
     });
     refresh.addEventListener("click", () => this.refresh());
 
-    const [board, audit, flags, verdict, laneMetrics, graph] = await Promise.all([
+    const [board, audit, flags, verdict, graph] = await Promise.all([
       latestJsonLine(this.app, BOARD_STATE),
       recentJsonLines(this.app, AUDIT_LOG, 5),
       recentIntegrityFlags(this.app),
       latestLintVerdict(this.app),
-      latestLaneMetrics(this.app),
       knowledgeGraphSummary(this.app),
     ]);
 
@@ -101,7 +98,6 @@ class MemoriaInspectorView extends ItemView {
     renderGraph(root, graph, this.app);
     renderBoard(root, board, this.app);
     renderAudit(root, audit, this.app);
-    renderFleet(root, laneMetrics, this.app);
   }
 }
 
@@ -148,28 +144,6 @@ async function latestLintVerdict(app) {
     medium_count: frontmatter.medium_count ?? null,
     low_count: frontmatter.low_count ?? null,
   };
-}
-
-async function latestLaneMetrics(app) {
-  const files = app.vault
-    .getFiles()
-    .filter((file) => file.path.startsWith(LANE_METRIC_PREFIX))
-    .sort((a, b) => b.path.localeCompare(a.path));
-  const latestByLane = new Map();
-  for (const file of files) {
-    const frontmatter = parseFrontmatter(await readText(app, file.path));
-    const lane = frontmatter.lane;
-    if (!lane || latestByLane.has(lane)) continue;
-    latestByLane.set(lane, {
-      path: file.path,
-      lane,
-      period: frontmatter.period ?? periodFromName(file.basename),
-      trust_score: frontmatter.trust_score ?? null,
-      band: frontmatter.band ?? "unknown",
-      samples: frontmatter.samples ?? null,
-    });
-  }
-  return Array.from(latestByLane.values()).sort((a, b) => a.lane.localeCompare(b.lane));
 }
 
 async function recentIntegrityFlags(app, limit = 5) {
@@ -421,30 +395,6 @@ function renderAudit(root, rows, app) {
   }
 }
 
-function renderFleet(root, metrics, app) {
-  const section = panel(root, "Fleet trust", app, FLEET_DASHBOARD);
-  if (metrics.length === 0) {
-    section.createEl("p", {
-      cls: "memoria-inspector__empty",
-      text: "No lane metric notes found.",
-    });
-    return;
-  }
-  const list = section.createEl("ul", { cls: "memoria-inspector__fleet" });
-  for (const metric of metrics) {
-    const item = list.createEl("li");
-    item.createEl("strong", { text: metric.lane });
-    item.createEl("span", { text: ` ${formatScore(metric.trust_score)} (${metric.band})` });
-    item.createEl("small", {
-      text: compact(
-        [metric.period, formatCount(metric.samples, "sample"), metric.path]
-          .filter(Boolean)
-          .join(" - "),
-      ),
-    });
-  }
-}
-
 function panel(root, title, app, dashboard) {
   const section = root.createEl("section", { cls: "memoria-inspector__panel" });
   const header = section.createDiv({ cls: "memoria-inspector__panel-header" });
@@ -468,11 +418,6 @@ function openButton(parent, app, target) {
   });
 }
 
-function periodFromName(name) {
-  const match = name.match(/(\d{4}-W\d{2})$/);
-  return match ? match[1] : name;
-}
-
 function label(value) {
   return value.replace(/_/g, " ");
 }
@@ -485,9 +430,4 @@ function compact(value) {
 function formatCount(value, singular) {
   if (value === null || value === undefined) return "count unavailable";
   return `${value} ${Number(value) === 1 ? singular : `${singular}s`}`;
-}
-
-function formatScore(value) {
-  if (value === null || value === undefined) return "score unavailable";
-  return `${value}/100`;
 }

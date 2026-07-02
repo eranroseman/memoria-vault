@@ -24,8 +24,8 @@ Drift watch is the structural view over open `flag` and `alert` cards produced b
 the Linter and verification sweeps. It sorts loudest-first and feeds the rail
 health band.
 
-It is not audit-log or fleet-health. Those are operational views; Drift watch is
-the structural layer over detectable integrity findings.
+It is not the audit log or eval trend. Those are operational views; Drift watch
+is the structural layer over detectable integrity findings.
 
 ## Loose ends
 
@@ -37,7 +37,7 @@ without losing the debt.
 
 Board state is the full maintenance/debugging view over the Inbox board and worker
 projections. Use it when the Inbox Activity strip is too compact and you need to
-see what Hermes is executing underneath.
+see runtime queue projections underneath.
 
 ## Weekly review
 
