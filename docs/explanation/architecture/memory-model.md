@@ -37,7 +37,7 @@ Store facts at the narrowest scope that can safely own them:
 | --- | --- | --- |
 | Program memory | Program-wide, persistent | Holds standing strategy: what to pursue and how to screen. |
 | Project memory | One project, archived with it | Keeps a project's working state separate from program strategy. |
-| Audit memory | Append-only record | Preserves hash-paired write provenance; see [Policy MCP](../../reference/policy-mcp.md). |
+| Audit memory | Append-only record | Preserves hash-paired write provenance; see [Policy gate](../../reference/policy-mcp.md). |
 | Handoff memory | One board card | Carries context across lanes without sharing session state. |
 | Agent memory | Co-PI only, loaded at session start | Holds stable recall; token caps make it unsuitable for task state. |
 | Session history | Searchable recall | Helps answer "did we discuss this?" but never outranks the vault. |
@@ -81,7 +81,7 @@ field-by-field routing matrix.
 
 **Reference**
 
-- Audit log format: [Policy MCP](../../reference/policy-mcp.md)
+- Audit log format: [Policy gate](../../reference/policy-mcp.md)
 - The substrate table as reference: [Memory substrates](../../reference/memory-substrates.md)
 
 **Background**

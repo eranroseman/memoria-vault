@@ -18,11 +18,11 @@ superseded_by: []
 > [ADR-119](119-schema-driven-document-creation.md). The supersession decision
 > (`superseded_by`, distinct from read state) is unchanged.*
 
-> **Verified on-box 2026-06-21.** The default query path now runs through
-> `vault-template/.memoria/mcp/qmd_filter_mcp.py`, which preserves qmd's tool surface while
-> excluding claim notes with `superseded_by` unless the caller passes
-> `include_superseded: true` for historical lookup. The FAMA-style draft linter
-> remains a separate follow-up.
+> **Updated for alpha.14.** The default query path now runs through
+> `memoria_vault.runtime.search_index`, which filters qmd and BM25 results through
+> the checked-current read barrier. Superseded notes are excluded by default; the
+> explicit historical lookup escape hatch is `include_stale=True`. The FAMA-style
+> linter detector now exists separately in the runtime linter subsystem.
 
 ## Context
 
@@ -66,6 +66,6 @@ draft or answer citing a superseded claim. This one relation is adopted as a
 ## Related
 
 - **Workflows affected:** [Link checked notes](../how-to-guides/knowledge/link-related-claims.md) (where the link is set), [Query](../how-to-guides/knowledge/query-the-vault.md) (filter superseded claims), and project analysis once the FAMA-style draft detector ships.
-- **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Document types](../reference/document-types.md), the claim template, and `vault-template/.memoria/mcp/qmd_filter_mcp.py`.
+- **Files affected:** [Frontmatter fields](../reference/frontmatter.md) (add the relation), [Document types](../reference/document-types.md), the claim template, and `memoria_vault.runtime.search_index`.
 - **Related decisions / Depends on:** [ADR-52 typed links](52-links-vs-relationships.md) (the authored link namespace); [ADR-9 contradictions dashboard](09-contradictions-dashboard.md) (supersession is the temporal complement to contradiction).
 - **Source discussion:** benchmark review — [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md) (Change 1, and the benchmark detail); evidence from Memora/FAMA and ClawArena.

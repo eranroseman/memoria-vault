@@ -6,14 +6,14 @@ grand_parent: Reference
 
 # Pattern library
 
-The shipped prompt operations, the CLI worker runner, and the compatibility
-`patterns_list` / `patterns_run` contract.
+The shipped prompt operations, the CLI worker runner, and the runtime prompt
+composition contract.
 
 - Prompt operations are checked `operation` Concepts in `capabilities/operations/`.
 - `memoria operation run <pattern-id>` is the core runner: it reads checked input
   refs, records request/journal provenance, and stages one unchecked report note.
-- The patterns MCP (`vault-template/.memoria/mcp/patterns_mcp.py`) remains a
-  compatibility prompt composer ([ADR-53](../adr/53-pattern-library.md)).
+- `memoria_vault.runtime.patterns` is the compatibility prompt composer for tests
+  and optional adapters ([ADR-53](../adr/53-pattern-library.md)).
 - To inspect the available pattern actions, see [System actions](system-actions.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 

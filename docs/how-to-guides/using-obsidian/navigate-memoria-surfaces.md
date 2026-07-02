@@ -76,7 +76,7 @@ Open **Fleet health** (`system/dashboards/fleet-health.md`), reachable from *Now
 
 This dashboard scores each lane (background worker) on trust and cost. Check it monthly, or when a lane seems slow or degraded. It is not a daily surface — the numbers only mean something after a week or more of accumulated data.
 
-### "What did the policy MCP allow or deny?"
+### "What did the policy gate allow or deny?"
 
 Open the **Audit log** (`system/dashboards/audit-log.md`) manually.
 

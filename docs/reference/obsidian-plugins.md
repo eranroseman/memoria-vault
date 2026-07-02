@@ -74,7 +74,7 @@ Documented but not in the install set. Obsidian-side evaluated alternatives. (Zo
 | obsidian-kanban | Evaluated, not wired in | Cannot render `kanban.db` without an unadopted bridge. |
 | Workspaces Plus | Evaluated, not shipped | Registers workspace-switching commands, but the navigator rail keeps space switching out of saved workspace layouts. The core Workspaces plugin remains only as a reset layout. |
 | templater-obsidian | Evaluated, not shipped | QuickAdd and Modal Forms own Memoria capture flows. Templater's arbitrary template execution is not part of the checked worker-write boundary. |
-| obsidian-linter | **Incompatible — do not install** ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy MCP audit trail. No config makes it safe. |
+| obsidian-linter | **Incompatible — do not install** ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Frontend formatter; second frontmatter authority that collides with the agent-owned `_proposed_classification` / `_enrichment` namespaces and writes outside the policy gate audit trail. No config makes it safe. |
 
 ---
 

@@ -62,7 +62,7 @@ The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): 
 
 `memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
-This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
+This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy gate](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
 | Command | Effect |
 | --- | --- |

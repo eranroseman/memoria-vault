@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Diagnostics
 
-Local troubleshooting records for Memoria-owned Python MCP servers and Operations. These records are not audit memory and never live under the vault or `system/logs/`.
+Local troubleshooting records for Memoria-owned Python runtime modules and Operations. These records are not audit memory and never live under the vault or `system/logs/`.
 
 ## Contract
 

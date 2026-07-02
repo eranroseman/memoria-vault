@@ -32,4 +32,4 @@ phone. If either happens often, the surface is wrong.
 
 - Obsidian layout contract: [Obsidian workspaces](../../reference/obsidian-workspaces.md)
 - CLI commands: [Hermes CLI](../../reference/hermes-cli.md)
-- Policy boundary: [Policy MCP](../../reference/policy-mcp.md)
+- Policy boundary: [Policy gate](../../reference/policy-mcp.md)

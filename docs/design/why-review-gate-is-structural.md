@@ -7,7 +7,7 @@ nav_order: 12
 
 # Why the review gate is structural
 
-Memoria's review gate is **structural**: the policy MCP blocks writes to canonical zones regardless of profile. It is not an advisory suggestion, a setting the human can relax, or a prompt instruction. This page explains why.
+Memoria's review gate is **structural**: the policy gate blocks writes to canonical zones regardless of profile. It is not an advisory suggestion, a setting the human can relax, or a prompt instruction. This page explains why.
 
 Promotion makes content canonical: a claim, hub, link, or project thesis now
 represents a PI decision and downstream work may trust it. The rule is
@@ -49,7 +49,7 @@ A prompt-based rule is subject to:
 - **Reasoning about exceptions**, where the agent argues to itself that this case is different.
 - **Session restart**, where the instruction isn't carried forward.
 
-A structural gate — enforced at the policy MCP — is not subject to any of these. The MCP intercepts every write before it reaches disk and returns `dry_run` for review-gated zones. No reasoning happens; no context is consulted; no exception is possible. The write doesn't succeed. The agent that "decides" to canonize cannot, because the file-system call returns before any content reaches disk.
+A structural gate — enforced at the policy gate — is not subject to any of these. The MCP intercepts every write before it reaches disk and returns `dry_run` for review-gated zones. No reasoning happens; no context is consulted; no exception is possible. The write doesn't succeed. The agent that "decides" to canonize cannot, because the file-system call returns before any content reaches disk.
 
 The practical difference: prompt discipline has a mean time to failure. Structural enforcement doesn't degrade.
 
@@ -99,5 +99,5 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 **Reference**
 
-- Policy MCP enforcement details: [Profile capabilities](../reference/profile-capabilities.md) (permissions) · [Memory substrates](../reference/memory-substrates.md) (audit log)
-- The enforcement mechanism: [Policy MCP](../reference/policy-mcp.md)
+- Policy gate enforcement details: [Profile capabilities](../reference/profile-capabilities.md) (permissions) · [Memory substrates](../reference/memory-substrates.md) (audit log)
+- The enforcement mechanism: [Policy gate](../reference/policy-mcp.md)

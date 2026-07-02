@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Policy audit log
 
-The audit trail written by the Policy MCP. For the request/response protocol and lane enforcement rules, see [Policy MCP](policy-mcp.md).
+The audit trail written by the Policy gate. For the request/response protocol and lane enforcement rules, see [Policy gate](policy-mcp.md).
 
 ## Format
 
@@ -56,5 +56,5 @@ Auditing uses **per-write SHA-256 hash pairing, not a cross-entry chain**: each 
 
 ## Related
 
-- Runtime gate: [Policy MCP](policy-mcp.md)
+- Runtime gate: [Policy gate](policy-mcp.md)
 - Audit-memory substrate: [Memory substrates](memory-substrates.md)

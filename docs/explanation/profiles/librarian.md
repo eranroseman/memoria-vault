@@ -17,7 +17,7 @@ A research librarian does both intake and literature search, so corpus work (sco
 
 ## The four lanes
 
-The table below is an orienting illustration of what each lane does and the Inbox signal (a proposal card in your queue — see [Glossary](../../reference/glossary.md)) it raises; [Profile capabilities](../../reference/profile-capabilities.md) owns the canonical lane definitions (task-lane ids, write scopes, MCP servers).
+The table below is an orienting illustration of what each lane does and the Inbox signal (a proposal card in your queue — see [Glossary](../../reference/glossary.md)) it raises; [Profile capabilities](../../reference/profile-capabilities.md) owns the canonical lane definitions (task-lane ids, write scopes, optional adapter servers).
 
 | Lane | Work | Inbox signal |
 | --- | --- | --- |

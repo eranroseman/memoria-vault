@@ -18,9 +18,6 @@
     Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
     (deliberately outside OneDrive).
 
-.PARAMETER WithCluster
-    Install the optional clustering stack.
-
 .PARAMETER DryRun
     Print commands without changing the machine where practical.
 
@@ -33,7 +30,6 @@
 [CmdletBinding()]
 param(
     [string]$Vault = (Join-Path $env:USERPROFILE 'Memoria'),
-    [switch]$WithCluster,
     [switch]$DryRun,
     [switch]$Yes
 )
@@ -175,29 +171,20 @@ function Install-VaultHooks {
     Write-Ok 'Vault hooks wired'
 }
 
-function Install-McpDeps {
+function Install-RuntimeDeps {
     param([string]$RepoRoot)
     Write-Header 'Runtime dependencies'
-    $reqs = Join-Path $Vault '.memoria/mcp/requirements.txt'
-    $clusterReqs = Join-Path $Vault '.memoria/mcp/requirements-cluster.txt'
     $venv = Join-Path $Vault '.memoria/.venv'
     $script:VenvPython = Join-Path $venv 'Scripts/python.exe'
     if ($DryRun) {
-        Write-Line "  + would create venv $venv and install $reqs plus Memoria from $RepoRoot"
-        if ($WithCluster) { Write-Line "  + would install optional cluster deps from $clusterReqs" }
+        Write-Line "  + would create venv $venv and install Memoria from $RepoRoot"
         return
     }
-    if (-not (Test-Path $reqs)) { Write-Warn "No requirements file at $reqs"; return }
     if (-not (Test-Path $script:VenvPython)) {
         $py = Get-PythonForVenv
         Invoke-Python -PythonSpec $py -ArgumentList @('-m', 'venv', $venv)
     }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip')
-    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $reqs)
-    if ($WithCluster) {
-        if (-not (Test-Path $clusterReqs)) { Stop-Install "Missing optional cluster requirements at $clusterReqs" }
-        Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '-r', $clusterReqs)
-    }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', $RepoRoot)
     Write-Ok "Runtime deps installed in $venv"
 }
@@ -309,7 +296,7 @@ function Invoke-Main {
     Assert-RequiredCommands
     $repoRoot = Get-RepoRoot
     Copy-VaultSource -RepoRoot $repoRoot
-    Install-McpDeps -RepoRoot $repoRoot
+    Install-RuntimeDeps -RepoRoot $repoRoot
     Install-RuntimeScaffold
     Initialize-VaultGit
     Install-VaultHooks

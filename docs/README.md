@@ -139,7 +139,7 @@ Design Book foundations, then the Explanation pages in this order.
 | **Peer-reviewer** | The independent verify gate — traces claims, red-teams arguments; flags, never fixes |
 | **Engineer**      | Deferred code lane — planned to scaffold handoffs to external coding agents |
 
-Deterministic **operations** do the mechanical work, behind the policy MCP.
+Deterministic **operations** do the mechanical work, behind the policy gate.
 
 → [Per-agent design rationale](explanation/profiles/README.md) · [Capability and permission table](reference/profile-capabilities.md)
 

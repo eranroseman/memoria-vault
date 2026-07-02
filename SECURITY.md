@@ -31,13 +31,13 @@ What the installer does and does not do, by design:
 - **Your notes folder is yours.** The installer copies the starter vault to a
   folder you choose (default `~/Memoria`) and does **not** run `git init` or
   commit on your behalf — you set up your own git, identity, and remote.
-- **Dependencies are isolated.** MCP server dependencies install into a
-  vault-local virtualenv (`<vault>/.memoria/.venv`), not your system Python.
+- **Dependencies are isolated.** Runtime dependencies install into a
+  workspace-local virtualenv (`<workspace>/.memoria/.venv`), not your system Python.
 
 ## API keys and secrets
 
-- API keys are **never** committed. They live only in per-profile `.env` files
-  under `~/.hermes/profiles/<profile>/.env`, which you fill in after install.
+- API keys are **never** committed. Provider keys live in operator-owned local
+  config or environment files, never in tracked workspace source.
 - The starter vault ships secret-bearing files only as sanitized `.example` /
   `.EXAMPLE` siblings; the real files (`.env`, the Obsidian Local REST API
   `data.json`, the agent-client `data.json`, `project-hints.yaml`) are
@@ -63,10 +63,12 @@ Areas of particular interest:
 
 - **scripts/install.sh / scripts/install.ps1** — path traversal, argument injection, unsafe downloads, or privilege escalation in the installer
 - **API key handling** — keys exposed in logs, written to unexpected locations, or leaked through environment variables
-- **Hermes profile configs** (`vault-template/.memoria/profiles/` in source; `<vault>/.memoria/profiles/` after install) — prompt injection, write-gate bypass, or lane policy circumvention via profile YAML
-- **Policy MCP layer** — any path that allows an agent to write to canonical vault zones without human confirmation
+- **Optional adapter config** — prompt injection, write-gate bypass, or policy
+  circumvention through external adapter wiring
+- **Policy gate layer** — any path that allows an agent to write to canonical vault zones without human confirmation
 
 ## Out of Scope
 
-- Vulnerabilities in upstream dependencies (Hermes, Obsidian, obsidian-local-rest-api, Zotero) — report those to their respective projects
+- Vulnerabilities in upstream optional tools or providers — report those to their
+  respective projects
 - Issues requiring physical access to the machine

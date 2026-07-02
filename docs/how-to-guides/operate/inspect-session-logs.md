@@ -13,7 +13,7 @@ Both logs are append-only JSONL and **read-only** — never edit them; an
 out-of-band edit is exactly what the Linter's tamper detectors exist to catch.
 The two-log design is in [Session
 logging](../../explanation/architecture/session-logging.md); the audit field
-schema is owned by [Policy MCP](../../reference/policy-mcp.md).
+schema is owned by [Policy gate](../../reference/policy-mcp.md).
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ The digest's header carries the task, profiles, start/end, and counts by action 
 ## Related
 
 - The two-log design and why they stay separate: [Session logging](../../explanation/architecture/session-logging.md)
-- The audit field schema and hash pairing: [Policy MCP](../../reference/policy-mcp.md)
+- The audit field schema and hash pairing: [Policy gate](../../reference/policy-mcp.md)
 - The full log inventory and JSONL conventions: [Telemetry & logs](../../reference/telemetry.md)
 - The dashboards over this data: [Dashboards](../../reference/dashboards.md)
 - Diagnosing a write that was denied: [Diagnose a denied or blocked write](../troubleshooting/diagnose-a-denied-write.md)

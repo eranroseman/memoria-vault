@@ -5,72 +5,63 @@ grand_parent: How-to guides
 nav_order: 4
 ---
 
-
 # Diagnose a denied or blocked write
 
-**Symptom:** an agent reports a write, but it never shows up in the vault.
+**Symptom:** a CLI command or optional adapter reports a write, but the expected
+workspace file or projection is missing.
 
-**Diagnosis:** there are two very different causes, and they need opposite fixes:
+**Diagnosis:** separate policy denial from runtime failure:
 
-1. The policy MCP **denied** it — a deliberate decision, recorded in the audit log.
-2. The write **never reached the gate** — a wiring or plugin failure. Because Hermes fails *open* on hook errors, these can be silent.
-
-**Fix:** use the audit log to tell the two apart, then act on the cause — read the policy `reason`, or repair the wiring.
-
-## Prerequisites
-
-- The policy MCP wired and running — it writes `system/logs/audit.jsonl`. Until the gate runs live, that log does not exist; a missing *file* is a wiring problem, not a denial.
-- The [audit-log dashboard](../../explanation/dashboards/operational-health.md#audit-log) available in Obsidian
+1. The runtime policy gate denied or dry-ran an optional adapter write.
+2. The CLI worker request failed before materialization.
+3. A direct editor/file change was quarantined until `workspace scan` checks it.
 
 ## Steps
 
-**1. Open the audit-log dashboard.**
+**1. Check request state.**
 
-From `home.md` → the audit-log dashboard. Its primary view is recent **denies and dry-runs**, newest first. Find an entry whose `path` and `profile` match the missing write, around the time it happened.
+```bash
+memoria status --workspace <workspace> --json
+memoria request list --workspace <workspace> --json
+```
 
-**2. Found a matching `deny` or `dry_run`? It was a policy decision.**
+If the request is failed or pending, inspect the request payload and retry or
+resume it with the `request` command surface.
 
-Read the `decision`, `policy_rule`, and `reason` fields on the entry (full field schema: [Policy audit log](../../reference/policy-audit-log.md); lane-override decision protocol: [Policy MCP](../../reference/policy-mcp.md)):
+**2. Check the audit log.**
 
-- **`deny`** — the lane forbids that action on that path. The fix is either the wrong lane for the task, or an intended permission you must change in the lane-override.
-- **`dry_run`** — the legacy policy fallback held the write instead of performing it. Alpha.11 Concept writes should go through the worker.
+```bash
+memoria journal list --workspace <workspace> --json
+```
 
-**3. No matching entry at all? The write never reached the gate.**
+For optional adapter writes, also inspect `system/logs/audit.jsonl`. A matching
+`deny` or `dry_run` means the gate worked; read `policy_rule` and `reason`.
 
-Hermes fails open on hook errors, so a broken hook or unregistered MCP can let an attempt pass without ever logging a decision. Check, in order:
+**3. Check quarantine.**
 
-- Is the policy server registered in the profile's `config.yaml` (`mcp_servers`)?
-- Smoke-test the gate live:
+```bash
+memoria workspace scan --workspace <workspace> --json
+```
 
-  ```bash
-  python3 .memoria/mcp/policy_mcp.py --vault . --decide '{"profile":"memoria-librarian","action":"write","path":"knowledge/notes/x.md","task_id":"T1"}'
-  ```
+Observed external edits are not machine-consumable until checked. The scanner
+journals them as external edits, marks them unchecked, and promotes only after
+the relevant checks pass.
 
-  Expected result depends on the lane override. If the command errors or gives
-  a surprising decision, the component test suite is `scripts/test.sh l1` from
-  the repo clone.
-- Did the Obsidian Local REST API native MCP or a plugin error? The agent may report success while the write silently failed upstream of the gate. Check the plugin's HTTPS server is on, its port matches `OBSIDIAN_MCP_PORT`, and `OBSIDIAN_MCP_SSL_VERIFY` points at the exported PEM certificate/CA bundle ([Set up Obsidian](../setup/set-up-obsidian.md)).
+**4. Check generated projections.**
 
-A missing log entry for a write that *should* have been attempted points at wiring, not policy.
+```bash
+memoria workspace rebuild --workspace <workspace> --json
+```
 
-**4. Distinguish a policy denial from a plugin failure.**
+Generated files such as indexes, bibliography, and qmd input mirrors are rebuilt
+from SQLite and checked Concepts. A direct edit to a generated target is not
+authoritative.
 
-If the agent reported success, nothing changed on disk, and there's **no** audit entry, suspect the vault-access path (obsidian-local-rest-api) rather than policy. The audit log only records what reached the gate — silence there means the write didn't get that far.
+## Common Outcomes
 
-**5. Watch for a spike — it can be a security signal.**
-
-A sudden rise in denies, especially right after ingesting a PDF, can indicate an indirect prompt-injection attempt nudging an agent toward unauthorized writes — not just operator error. The audit log is where this surfaces first; escalate and inspect the source rather than reflexively widening permissions.
-
-## Verify
-
-- You can name the cause: a logged `deny`/`dry_run` (policy) vs no entry (wiring/plugin).
-- For a policy denial, you've read `policy_rule` and `reason`.
-- Each write's `before_hash` / `after_hash` pairing is intact (the Linter's `audit-unpaired-writes` isn't firing) — confirming the write completed and wasn't tampered with.
-
-## Related
-
-- Approving a held (`dry_run`) write: [Work the action queue](../inbox/work-the-action-queue.md)
-- Other troubleshooting procedures: [Troubleshooting](README.md)
-- The audit event schema: [Policy audit log](../../reference/policy-audit-log.md)
-- The decision protocol and action vocabulary: [Policy MCP](../../reference/policy-mcp.md)
-- The dashboard: [audit-log dashboard](../../explanation/dashboards/operational-health.md#audit-log)
+| Outcome | What to do |
+| --- | --- |
+| `deny` | Use the correct CLI operation or narrow adapter policy; do not bypass the gate. |
+| `dry_run` | The target is gated or missing an approved promotion path; inspect the staged output. |
+| failed request | Fix the payload/provider/runner error, then retry or resume the request. |
+| quarantined external edit | Review the scan result, then accept/promote through the checked workflow. |

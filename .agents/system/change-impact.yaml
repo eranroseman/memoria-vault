@@ -19,7 +19,7 @@ areas:
       - Installer scaffold and golden-copy behavior
       - Dashboards and links
     checks:
-      - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_policy_mcp.py tests/test_patterns.py tests/test_detectors.py
+      - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_runtime_policy.py tests/test_patterns.py tests/test_detectors.py
   - area: Dropped installed profile package
     paths:
       - scripts/alpha14_negative_gate.py
@@ -34,18 +34,15 @@ areas:
       - python -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
   - area: Runtime policy
     paths:
-      - vault-template/.memoria/mcp/policy_mcp.py
-      - vault-template/.memoria/mcp/policy_server.py
-      - vault-template/.memoria/mcp/policy_hook.py
       - vault-template/.memoria/plugins/memoria-policy-gate/**
       - src/memoria_vault/runtime/policy/**
     inspect:
       - Legacy gated-prefix fallback
       - Audit contract
-      - Mutating Obsidian tool mappings
-      - Tasks delegation semantics
+      - Optional adapter tool mappings
+      - Fail-closed direct tool denial
     checks:
-      - python -m pytest tests/test_policy_mcp.py tests/test_policy_hook.py tests/test_tasks_mcp.py tests/test_schemas.py
+      - python -m pytest tests/test_runtime_policy.py tests/test_policy_hook.py tests/test_policy_gate_plugin.py tests/test_policy_gate_completeness.py tests/test_schemas.py
   - area: Runtime helpers
     paths:
       - src/memoria_vault/runtime/vaultio.py
@@ -64,14 +61,13 @@ areas:
     paths:
       - src/memoria_vault/runtime/subsystems/processing/ingest/**
       - src/memoria_vault/runtime/subsystems/integrity/linter/**
-      - vault-template/.memoria/mcp/ingest_mcp.py
     inspect:
       - Calibration and schemas
       - Inbox card contract and shared writers
       - Extract store and source/entity linking
       - Cron wrappers and dashboard fields
     checks:
-      - python -m pytest tests/test_pipeline.py tests/test_ingest_mcp.py tests/test_inbox_cards.py tests/test_detectors.py
+      - python -m pytest tests/test_pipeline.py tests/test_inbox_cards.py tests/test_detectors.py
   - area: Installer
     paths:
       - scripts/install.sh

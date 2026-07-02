@@ -59,7 +59,7 @@ A card carries three independent signals, and keeping them separate is what prev
 
 A worker finishing implies nothing about acceptance; a `clean` recommendation never
 substitutes for the PI acting. The review gate is enforced, not advisory: approval
-flows through the state machine and policy MCP — a worker cannot declare its own
+flows through the state machine and policy gate — a worker cannot declare its own
 output approved.
 
 **Rejection creates a new card, not a revision of the old one.** A rejected card is archived; rework begins on a fresh card that records what it `supersedes` — mirroring claim supersession. Each card is one attempt with one stated outcome, so the history of attempts stays traceable. A system where rejected cards are silently reopened is a system where the audit trail lies.

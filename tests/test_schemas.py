@@ -225,11 +225,8 @@ def test_round_trip_holds(tmp_path):
 
 
 def test_alpha11_schema_has_no_gated_prefixes_while_legacy_policy_keeps_fallback():
-    import patterns_mcp
-
     from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
     assert schema.gated_prefixes(schema.load_folders()) == []
     assert schema.load_gated_prefixes() == schema.FALLBACK_GATED_PREFIXES
     assert schema.FALLBACK_GATED_PREFIXES == REVIEW_GATED_PREFIXES
-    assert schema.FALLBACK_GATED_PREFIXES == patterns_mcp.REVIEW_GATED_PREFIXES

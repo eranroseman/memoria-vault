@@ -1,5 +1,5 @@
 # Python dependencies for Memoria contributor tooling and CI.
-# Runtime/vault dependencies live in vault-template/.memoria/mcp/requirements.txt.
+# Runtime package dependencies live in pyproject.toml.
 
 pre-commit==4.6.0
 pre-commit-hooks==6.0.0

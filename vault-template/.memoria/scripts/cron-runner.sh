@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Shared dispatcher for Memoria's deterministic Hermes cron jobs.
+# Shared dispatcher for Memoria's deterministic scheduled jobs.
 set -u
 
 py="${MEMORIA_PYTHON:-}"
 vault="${MEMORIA_VAULT:-}"
 [ -n "$py" ] || py="{{PYTHON}}"
 [ -n "$vault" ] || vault="{{VAULT_PATH}}"
-export PYTHONPATH="$vault/.memoria:$vault/.memoria/mcp:${PYTHONPATH:-}"
+export PYTHONPATH="$vault/.memoria:${PYTHONPATH:-}"
 job="${1:-}"
 status=0
 
@@ -15,38 +15,25 @@ run_py() {
 }
 
 case "$job" in
-  board-export)
-    run_py "$vault/.memoria/mcp/board_export.py" --vault "$vault"
-    heartbeat="memoria-board-export"
-    ;;
   sweeps)
     run_py -m memoria_vault.runtime.subsystems.cleanup.reconcile --vault "$vault"
-    heartbeat="memoria-sweeps"
     ;;
   worker)
     run_py -m memoria_vault.runtime.worker --vault "$vault" observe-pi-edits
     run_py -m memoria_vault.runtime.worker --vault "$vault" run-pending --limit 10
-    heartbeat="memoria-worker"
     ;;
   lint)
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$vault" check
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault "$vault"
     run_py -m memoria_vault.runtime.worker --vault "$vault" integrity-sweep
-    heartbeat="memoria-lint"
-    ;;
-  metrics)
-    run_py "$vault/.memoria/mcp/metrics_aggregate.py" --vault "$vault"
-    heartbeat="memoria-metrics"
     ;;
   eval)
     run_py -m memoria_vault.cli eval run --workspace "$vault" --json
-    heartbeat="memoria-eval"
     ;;
   retraction-refresh)
     run_py -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh
     run_py -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault "$vault"
-    heartbeat="memoria-retraction-refresh"
     ;;
   *)
     echo "unknown Memoria cron job: $job" >&2
@@ -54,7 +41,4 @@ case "$job" in
     ;;
 esac
 
-if [ "$status" -eq 0 ]; then
-  "$py" "$vault/.memoria/mcp/cron_heartbeat.py" --vault "$vault" --job "$heartbeat" >/dev/null || true
-fi
 exit "$status"

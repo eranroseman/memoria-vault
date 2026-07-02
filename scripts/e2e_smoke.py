@@ -69,7 +69,6 @@ def add_repo_paths(root: Path) -> None:
     for path in (
         root,
         root / "vault-template/.memoria",
-        root / "vault-template/.memoria/mcp",
     ):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))

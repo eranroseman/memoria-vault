@@ -20,7 +20,6 @@ BOT_LABELS = {"dependencies", "python", "github_actions", "release"}
 EXPECTED_DEPENDABOT_UPDATES = {
     ("github-actions", "/"),
     ("pip", "/"),
-    ("pip", "/vault-template/.memoria/mcp"),
 }
 STALE_PROFILE_TERMS = {
     "memoria-mapper",

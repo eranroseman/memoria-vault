@@ -22,9 +22,9 @@ The optional adapter contributes four runtime properties:
 | Durable task state | Kanban board (`kanban.db`) | Review metadata on cards. |
 | Role separation | Profiles with lanes | Five Memoria profile directories and lane ceilings. |
 | Background execution | Dispatcher | Routing rules, not an Orchestrator agent. |
-| Controlled integration | Memory, MCP, API server | Policy MCP, profile memory rules, and programmatic triggers. |
+| Controlled integration | Memory, MCP, API server | Policy gate, profile memory rules, and programmatic triggers. |
 
-Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy MCP that gates writes, the five profile `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points when the adapter is installed.
+Memoria supplies the *conventions on top*: the review-gate overlay in card `metadata`, the policy gate that gates writes, the five profile `SOUL.md`s, and the vault schema. None of those require modifying Hermes — they ride its extension points when the adapter is installed.
 
 ---
 
@@ -42,7 +42,7 @@ This is a deliberate **borrow** in the [pattern-provenance](why-pattern-provenan
 
 In the standalone runtime, programs connect through CLI commands, file changes, and external schedulers. With the Hermes adapter installed, Hermes's API server adds another programmatic surface for file watchers, Zotero hooks, git hooks, calendar integrations, or cross-machine dispatch. The PI may use Obsidian for daily action; CLI remains the required channel ([Interaction channels](../explanation/architecture/interaction-channels.md)).
 
-The API grants no extra power. Every write still passes through the policy MCP, so the caller has only the permissions of the profile it acts as. See [Policy MCP](../reference/policy-mcp.md) and [Hermes CLI](../reference/hermes-cli.md#api-server).
+The API grants no extra power. Every write still passes through the policy gate, so the caller has only the permissions of the profile it acts as. See [Policy gate](../reference/policy-mcp.md) and [Hermes CLI](../reference/hermes-cli.md#api-server).
 
 ---
 
@@ -55,7 +55,7 @@ The API grants no extra power. Every write still passes through the policy MCP, 
 | Profile mechanism (identity, model routing, lanes) | Hermes adapter |
 | Native memory tiers, MCP host, API server | Hermes adapter |
 | Review-gate overlay (`review_status`, `agent_recommendation`) | Memoria (card `metadata`) |
-| Write-gating policy MCP | Memoria (plugs into Hermes's MCP interface) |
+| Write-gating policy gate | Memoria (plugs into Hermes's MCP interface) |
 | Capability manifests and operation policy | Memoria |
 | The vault, schema, and document types | Memoria |
 
@@ -74,5 +74,5 @@ The rule of thumb: **Memoria must run without Hermes; when Hermes is installed, 
 
 **Reference**
 
-- What the API's writes pass through: [Policy MCP](../reference/policy-mcp.md)
+- What the API's writes pass through: [Policy gate](../reference/policy-mcp.md)
 - Hermes admin commands (reference): [Hermes CLI](../reference/hermes-cli.md)

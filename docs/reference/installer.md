@@ -23,7 +23,6 @@ and stages a golden copy of system files.
 | Flag | Effect |
 | --- | --- |
 | `--vault DIR` / `-Vault DIR` | Install the runtime workspace here (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows). Pick a folder outside any cloud-synced tree. |
-| `--with-cluster` / `-WithCluster` | Install the optional clustering stack (`bertopic` -> `torch`, about 2 GB). Without this flag, graph tools still work and topic modeling errors clearly. |
 | `--dry-run` / `-DryRun` | Print commands that would run; change nothing where practical. |
 | `--yes` / `-Yes` | Non-interactive: accept defaults and run guided installs. |
 
@@ -35,7 +34,7 @@ and stages a golden copy of system files.
 | Source | Uses the local checkout or clones `memoria-vault` to a temporary staging directory. |
 | Workspace copy | Copies `vault-template/` into a fresh target. The installer refuses an existing Memoria workspace. |
 | Skeleton | Recreates schema-owned empty folders from `folders.yaml`. |
-| Runtime dependencies | Creates `<workspace>/.memoria/.venv`, installs `.memoria/mcp/requirements.txt`, then installs the Memoria Python package. |
+| Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
 | Git hooks | Initializes Git when needed and wires `.githooks/pre-commit` and `.githooks/post-commit`. The installer never commits, sets identity, or adds a remote. |
 | Golden copy | Stages `.memoria/golden/` using `memoria_vault.runtime.subsystems.integrity.linter.golden_restore`. |
 | qmd | Registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index state. |

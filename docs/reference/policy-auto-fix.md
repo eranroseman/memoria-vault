@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Policy auto-fix
 
-The class gate for automated repairs that pass through the Policy MCP. For the request/response protocol and lane enforcement rules, see [Policy MCP](policy-mcp.md).
+The class gate for automated repairs that pass through the Policy gate. For the request/response protocol and lane enforcement rules, see [Policy gate](policy-mcp.md).
 
 ## Classes
 
@@ -21,5 +21,5 @@ The class gate for automated repairs that pass through the Policy MCP. For the r
 
 ## Related
 
-- Runtime gate: [Policy MCP](policy-mcp.md)
+- Runtime gate: [Policy gate](policy-mcp.md)
 - Linter repair surfaces: [Linter: detectors and auto-fix](linter.md)

@@ -60,7 +60,7 @@ So a bounded code experiment loop could be admissible in principle.
 
 **But no autonomy exception exists anywhere in the current system** ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)). The Engineer is **MCP-only with no terminal, file, or execution capability**. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and owns the per-task commit/revert checkpoint while the substantive coding happens in an external agent the PI reviews. No lane carries an autonomous keep/revert loop.
 
-The synthesis gate remains structurally untouched. The policy MCP's review-gated-zone deny rule still blocks writes to `notes/claims/` and `notes/hubs/`. Whether to admit a bounded code-experiment loop will be revisited only when the code lane / external-coding-agent path is defined beyond the current Project gate handoff — and reopening it requires a superseding decision, not an incremental relaxation.
+The synthesis gate remains structurally untouched. The policy gate's review-gated-zone deny rule still blocks writes to `notes/claims/` and `notes/hubs/`. Whether to admit a bounded code-experiment loop will be revisited only when the code lane / external-coding-agent path is defined beyond the current Project gate handoff — and reopening it requires a superseding decision, not an incremental relaxation.
 
 ---
 

@@ -163,11 +163,7 @@ def test_standalone_installer_does_not_wire_hermes_cron_jobs():
 
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
-        ("sweeps-cron.sh", "memoria-sweeps.sh", "*/15 * * * *", "memoria-sweeps"),
-        ("worker-cron.sh", "memoria-worker.sh", "* * * * *", "memoria-worker"),
-        ("lint-cron.sh", "memoria-lint.sh", "0 6 * * *", "memoria-lint"),
         ("metrics-cron.sh", "memoria-metrics.sh", "30 6 * * 1", "memoria-metrics"),
-        ("eval-cron.sh", "memoria-eval.sh", "0 7 1 */3 *", "memoria-eval"),
     ):
         assert source not in text
         assert dest not in text
@@ -178,9 +174,8 @@ def test_standalone_installer_does_not_wire_hermes_cron_jobs():
 def test_linux_installer_defaults_to_standalone_cli_runtime():
     text = INSTALL.read_text(encoding="utf-8")
 
-    assert "WITH_CLUSTER=0" in text
     assert "--with-hermes" not in text
-    assert "--with-cluster" in text
+    assert "--with-cluster" not in text
     assert "Proceed with the standalone Memoria install?" in text
     assert "memoria_vault.cli doctor bundle --workspace" in text
     for required in (
@@ -188,7 +183,7 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
         "resolve_repo",
         "load_install_modules",
         "copy_vault",
-        "install_mcp_deps",
+        "install_runtime_deps",
         "ensure_qmd",
         "print_cli_next_steps",
     ):
@@ -213,7 +208,7 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
     text = INSTALL_PS.read_text(encoding="utf-8")
 
     assert "[switch]$WithHermes" not in text
-    assert "[switch]$WithCluster" in text
+    assert "[switch]$WithCluster" not in text
     assert "Default path: standalone CLI/runtime workspace" in text
     assert "memoria_vault.cli doctor bundle --workspace" in text
     assert "memoria_vault.cli workspace rebuild --workspace" in text
@@ -221,7 +216,7 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
         "Assert-RequiredCommands",
         "Get-RepoRoot",
         "Copy-VaultSource",
-        "Install-McpDeps",
+        "Install-RuntimeDeps",
         "Install-RuntimeScaffold",
         "Initialize-VaultGit",
         "Install-VaultHooks",
@@ -242,7 +237,7 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
 
 def test_lint_cron_writes_lint_findings_telemetry():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
-    assert 'PYTHONPATH="$vault/.memoria:$vault/.memoria/mcp:${PYTHONPATH:-}"' in text
+    assert 'PYTHONPATH="$vault/.memoria:${PYTHONPATH:-}"' in text
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
     assert '-m memoria_vault.runtime.worker --vault "$vault" integrity-sweep' in text
@@ -252,13 +247,12 @@ def test_worker_cron_runs_pi_observer_and_pending_queue():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert '-m memoria_vault.runtime.worker --vault "$vault" observe-pi-edits' in text
     assert '-m memoria_vault.runtime.worker --vault "$vault" run-pending --limit 10' in text
-    assert 'heartbeat="memoria-worker"' in text
 
 
 def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
     runner = ROOT / "vault-template/.memoria/scripts/cron-runner.sh"
     result = subprocess.run(
-        ["bash", str(runner), "board-export"],
+        ["bash", str(runner), "worker"],
         env={"MEMORIA_PYTHON": "/bin/true", "MEMORIA_VAULT": str(tmp_path)},
         check=False,
         capture_output=True,
@@ -307,7 +301,7 @@ def test_installer_has_no_profile_template_replacement_layer():
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
     assert "python_install_guidance()" in text
-    assert "Python 3 is required for Memoria's deterministic tools and MCP servers." in text
+    assert "Python 3 is required for Memoria's standalone CLI and deterministic tools." in text
     assert "sudo apt-get update && sudo apt-get install -y python3 python3-venv" in text
     ensure_prereqs = re.search(
         r"ensure_prereqs\(\) \{(?P<body>.*?)\n\}",
@@ -331,41 +325,28 @@ def test_installers_treat_git_as_a_hard_prerequisite():
     assert "Assert-RequiredCommands" in ps
 
 
-def test_mcp_deps_fail_loudly_without_python():
+def test_runtime_deps_fail_loudly_without_python():
     text = INSTALL.read_text(encoding="utf-8")
-    install_mcp_deps = re.search(
-        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
+    install_runtime_deps = re.search(
+        r"install_runtime_deps\(\) \{(?P<body>.*?)\n\}",
         text,
         re.S,
     ).group("body")
-    assert "No Python found" in install_mcp_deps
-    assert "python_install_guidance" in install_mcp_deps
-    assert "sudo apt-get install -y python3 python3-venv" in install_mcp_deps
-    assert "skipping MCP deps" not in install_mcp_deps
-
-
-def test_optional_cluster_stack_requires_explicit_flag():
-    text = INSTALL.read_text(encoding="utf-8")
-    install_mcp_deps = re.search(
-        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
-        text,
-        re.S,
-    ).group("body")
-
-    assert 'if [ "$WITH_CLUSTER" -eq 1 ]; then' in install_mcp_deps
-    assert "Install the OPTIONAL clustering stack" not in install_mcp_deps
-    assert "confirm " not in install_mcp_deps
+    assert "No Python found" in install_runtime_deps
+    assert "python_install_guidance" in install_runtime_deps
+    assert "sudo apt-get install -y python3 python3-venv" in install_runtime_deps
+    assert "skipping MCP deps" not in install_runtime_deps
 
 
 def test_installers_install_memoria_package_non_editable():
     text = INSTALL.read_text(encoding="utf-8")
-    install_mcp_deps = re.search(
-        r"install_mcp_deps\(\) \{(?P<body>.*?)\n\}",
+    install_runtime_deps = re.search(
+        r"install_runtime_deps\(\) \{(?P<body>.*?)\n\}",
         text,
         re.S,
     ).group("body")
-    assert 'install --quiet "$REPO_DIR"' in install_mcp_deps
-    assert '-e "$REPO_DIR"' not in install_mcp_deps
+    assert 'install --quiet "$REPO_DIR"' in install_runtime_deps
+    assert '-e "$REPO_DIR"' not in install_runtime_deps
     ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "@('-m', 'pip', 'install', $RepoRoot)" in ps
 

@@ -47,7 +47,7 @@ Where every file lives.
     ├── patterns/              shared prompt preamble
     ├── scripts/               QuickAdd capture scripts (capture-from-url/-zotero)
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
-    ├── metrics/               derived metric notes (lane-*, lint-verdict-*) + eval/runs.jsonl
+    ├── metrics/               derived metric notes and eval/runs.jsonl
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
@@ -71,11 +71,6 @@ Hidden from Obsidian; everything agents and operations need, shipped in `vault-t
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
 ├── config/                  provider and runtime policy (`providers.yaml`)
 ├── blobs/                   gitignored provider payloads and staged source content
-├── mcp/                     MCP shims for optional adapters and local tools
-│   ├── policy_mcp.py + policy_server.py + policy_hook.py     the write gate
-│   ├── ingest_mcp.py · cluster_mcp.py · tasks_mcp.py · patterns_mcp.py
-│   ├── board_export.py · metrics_aggregate.py    telemetry (cron, not MCP)
-│   └── requirements.txt · requirements-cluster.txt
 ├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters
 ├── scripts/                 wrappers for operator-managed scheduled tasks
 ├── memoria.sqlite           SQLite working-state DB
@@ -90,9 +85,10 @@ profile packages, lane override packages, or profile tool registries. Operation
 manifests live under `capabilities/operations/`; operation code lives in the
 installed `memoria_vault` package.
 
-The policy gate's stable deployed entrypoint stays in `.memoria/mcp/`, while its
-behavior-preserving decision/audit/engine modules live in the installed
-`memoria_vault.runtime.policy` package.
+The policy gate's stable implementation lives in the installed
+`memoria_vault.runtime.policy` package. Optional adapters may ship their own
+thin entrypoints, but the baseline workspace does not contain a hidden adapter
+code home.
 
 ## `.githooks/` — source hooks
 
@@ -103,9 +99,9 @@ Runtime-only (created in the deployed vault, never shipped):
 | Path | Created by | Holds |
 | --- | --- | --- |
 | `.memoria/golden/` | installer (`golden_restore.py stage`) | The restorable golden copy of every system file + `manifest.json` (SHA-256). |
-| `.memoria/data/extracts/` | ingest MCP | Full-text extracts per citekey — outside the Librarian's write lane. |
+| `.memoria/data/extracts/` | runtime ingest helpers | Full-text extracts per citekey, when a workflow needs an intermediate extract store. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
-| `.memoria/.venv/` | installer | The vault-local Python the MCP servers run on. |
+| `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
 | `.git/hooks/post-commit` | installer | The verify-on-commit trigger copied from `.githooks/post-commit`. |
 
@@ -135,9 +131,8 @@ The `.base` files sit alongside their data: `catalog/catalog.base`,
 | Path | Holds |
 | --- | --- |
 | `<repo>/scripts/` | `install.sh` / `install.ps1`, `docs_doctor.py`, test drivers — install tooling never deploys into the vault. |
-| `%LOCALAPPDATA%\hermes\profiles\memoria-*` (Windows) / `~/.hermes/profiles/memoria-*` (Linux/WSL2) | The deployed profile copies (config substituted, `.env` seeded). |
-| `%LOCALAPPDATA%\hermes\scripts\` (Windows) / `~/.hermes/scripts/` (Linux/WSL2) | The substituted cron wrappers (`memoria-worker.sh`, `memoria-sweeps.sh`, `memoria-lint.sh`, `memoria-board-export.sh`, …), copied and renamed from the repo's `.memoria/scripts/<job>-cron.sh`. |
-| `%LOCALAPPDATA%\hermes\.env` (Windows) / `~/.hermes/.env` (Linux/WSL2) | The shared secrets file the installer propagates per profile. |
+| qmd user cache | Model files and global qmd cache managed by qmd; Memoria keeps workspace config/index state inside `.memoria/index/qmd/`. |
+| OS diagnostic state directory | Redacted support bundles and raw diagnostic captures; see [Diagnostics](diagnostics.md). |
 
 ---
 

@@ -21,7 +21,7 @@ files or this generator, not this page.
 | Surface | Source | Installed location | Owner | Edit policy | Validator |
 | --- | --- | --- | --- | --- | --- |
 | Policy gate plugin | `vault-template/.memoria/plugins/memoria-policy-gate/plugin.yaml` | workspace policy package for optional adapters | Memoria | Edit source | policy tests |
-| MCP Python dependencies | `vault-template/.memoria/mcp/requirements*.txt` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall deps | installer tests |
+| Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<vault>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
 | Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<vault>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
 | Schema config | `vault-template/.memoria/schemas/**` | vault source and runtime vault | Memoria | Edit source | linter and schema tests |
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | vault source and runtime vault | Memoria | Edit source | calibration and linter tests |
@@ -95,7 +95,7 @@ deploying a real runtime vault. Development verification uses the test vault.
 ## Related references
 
 - Installer rendering and environment overlays: [Installer (bootstrap)](installer.md)
-- Write-gate contract: [Policy MCP](policy-mcp.md)
+- Write-gate contract: [Policy gate](policy-mcp.md)
 - Obsidian plugin files: [Obsidian plugin data files](obsidian-plugin-data-files.md)
 - Obsidian plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
 - External integrations: [External integrations](integrations.md)

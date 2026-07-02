@@ -106,21 +106,17 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Retraction sweep | sweeps operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
 | Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection. |
 
-## Vault-side MCP servers and hooks (`.memoria/mcp/`)
+## Runtime policy and helper modules
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Policy decision | [Policy MCP](policy-mcp.md) (`policy_mcp.py`) | Decides allow / allow_with_log / deny / dry_run for every vault action against the lane's ceiling; fail-closed. |
-| Pre-tool gate | policy hook (`policy_hook.py`) | Blocks denied or gated writes before the tool runs and stashes the file's `before_hash`. |
-| Post-tool pairing | policy hook (`policy_hook.py`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
-| Build cluster graph | cluster MCP (`cluster_mcp.py`), Librarian-facing | Builds the typed knowledge graph from authored links and computes communities and centrality. |
-| Emit canvas | cluster MCP (`cluster_mcp.py`) | Renders the note-debate map as a JSON Canvas under `knowledge/notes/maps/`, with status-colored nodes and typed edges. |
-| Model topics | cluster MCP (`cluster_mcp.py`) | Runs BERTopic over the corpus to extract topics, the doc-topic map, and outliers. |
-| List / run patterns | patterns MCP (`patterns_mcp.py`) | Lists checked prompt operations from `capabilities/operations/` and composes a pattern run, refusing gated-zone output targets and logging provenance. |
-| Route task | tasks MCP (`tasks_mcp.py`), Co-PI-facing | Validates a delegation against the target lane's ceiling, refuses dispatch while an open `loudness: block` card exists, and creates the kanban card. |
+| Policy decision | [Policy gate](policy-mcp.md) (`memoria_vault.runtime.policy`) | Decides allow / allow_with_log / deny / dry_run for optional adapter writes and runtime checks; fail-closed. |
+| Pre-tool gate | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Optional adapters call it before a tool runs; denied, dry-run, direct-file, terminal, browser, and unaudited egress tools are blocked. |
+| Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
+| Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
+| Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
+| List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked prompt operations from `capabilities/operations/`, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
-| Board export | board export (`board_export.py`, 60 s cron) | Projects kanban cards into `system/board/` and appends board-state, transition, cost, and blind-review telemetry; review disposition is emitted by QuickAdd when the human resolves a work prompt. |
-| Metrics aggregate | metrics aggregator (`metrics_aggregate.py`, weekly cron) | Rolls audit + board + lint signals into per-lane trust-score notes under `system/metrics/`. |
 
 ## CLI requests and read-only Inspector
 
@@ -137,65 +133,34 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
 | Resolve attention | `memoria attention resolve [--outcome resolved\|dismissed]` | Runs the attention-disposition request, closes the attention projection, and records the PI outcome in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
-| Inspect operational state | Memoria Inspector (`memoria-inspector`) | Reads board snapshots, recent audit rows, failed integrity flags, lint verdicts, lane metrics, and checked graph data; it does not write worker requests or Concept state. |
+| Inspect operational state | Memoria Inspector (`memoria-inspector`) | Reads request/journal state, recent audit rows, failed integrity flags, lint verdicts, eval metrics, and checked graph data; it does not write worker requests or Concept state. |
 | Browse checked graph | Memoria Inspector (`memoria-inspector`) | Reads checked `catalog/` and `knowledge/` Concepts plus their declared references, previews recent nodes and edges, then opens existing Concept notes, normalized edge targets, or `knowledge/views/knowledge.base`; it does not write graph state. |
 
-## External MCP servers (declared per profile)
+## Optional external adapters
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Vault read / gated write | obsidian native MCP (all lanes) | File reads, search, and writes into the vault over the Local REST API plugin's MCP — every write passing the policy gate. |
-| Vault search | optional filtered qmd MCP adapter | Wraps the same checked-only qmd search tree used by `memoria ask`; unchecked and quarantined rows are hidden by the read barrier. The standalone CLI/runtime does not require MCP. |
-| Literature discovery | paper_search MCP (Librarian) | Searches arXiv, PubMed, Semantic Scholar, Google Scholar, and bioRxiv (Unpaywall email for OA lookups). |
-| Zotero reads | pyzotero MCP (Librarian, Peer-reviewer) | Read-only citekey resolution, metadata, and citation context from the local Zotero library — no write-back. |
+| Vault read / gated write | optional editor or BYO-agent adapter | Reads may inspect workspace files; writes must call the runtime policy hook and then enter the same checked request/journal boundary as CLI work. |
+| Vault search | `memoria ask` / qmd debug commands | Uses the checked-only qmd tree and runtime read barrier; no required external operation API ships. |
+| Literature discovery | provider-backed runtime operations | Uses configured provider allowlists and replay fixtures for tests; no live Zotero or required external agent server is authoritative. |
+| Zotero import | portable exported item import | Reads exported Zotero item JSON/BibTeX/CSL as input data only; no live Zotero DB/API is a baseline dependency. |
 
-## Scheduled crons (`.memoria/scripts/`)
+## Scheduled tasks (`.memoria/scripts/`)
 
-The deterministic cron jobs (board export, sweeps, lint, metrics, retraction refresh, eval) and their schedules are owned by [Installer (bootstrap)](installer.md#the-crons-it-wires). They run from the repo source wrappers under `.memoria/scripts/`: the installer copies each `<job>-cron.sh` to `~/.hermes/scripts/` renamed **`memoria-<job>.sh`** — that `memoria-*` form is the cron-job name `hermes cron list` shows.
+The deterministic scheduled jobs are optional operator wiring around the CLI and
+runtime package. The shipped wrappers call `.memoria/scripts/cron-runner.sh`,
+which dispatches `sweeps`, `worker`, `lint`, `eval`, and
+`retraction-refresh`. No scheduler is required for a one-shot CLI workflow; a
+systemd timer, cron entry, launchd job, or another local scheduler can call the
+same wrappers when always-on maintenance is desired.
 
-## Agent skills (per lane)
+## Skills and prompts
 
-### Librarian (14)
-
-| Skill | What it does |
-| --- | --- |
-| catalog-find-source | Searches the literature via paper_search, screens against the workspace, and raises honesty-bodied attention projections. |
-| catalog-rank-candidate | Ranks candidate sources by relevance / novelty / venue into a batch worklist. |
-| catalog-classify-source | Proposes `research_area` / `methodology` from the vocabulary for PI direction and worker promotion. |
-| catalog-enrich-record | Runs the ingest pipeline MCP and stages worker-owned source updates. |
-| extract-flag-distill | Flags kept sources worth reading and raises a distill work prompt. |
-| extract-stub-claim | Proposes one-sentence, citekey-bound note candidates from checked sources or digests. |
-| link-suggest-claim | Proposes typed links (supports / contradicts / extends) as attention with quoted evidence. |
-| link-surface-tension | Surfaces claim-pair contradictions with both sides quoted and reconciliation options. |
-| map-cluster-corpus | Clusters topics via the cluster MCP and emits a map note plus a report card. |
-| map-report-coverage | Topic-models the corpus and composes a gap report of thin topics; records rejected directions/dead ends as a companion exploration-trace note when present. |
-| map-scope-project | Corpus-maps a project into a narrative map with thin spots named; records rejected directions/dead ends as a companion exploration-trace note when present. |
-| map-seed-canvas | Seeds a JSON Canvas from the cluster graph (communities, edges, layout). |
-| map-graph-claims | Emits a propose-class claim-debate JSON Canvas from authored `supports` / `contradicts` / `extends` links, with pruning disclosed in a companion note. |
-| map-canvas-hub | Assembles existing maps, claim graphs, project gates, and dashboards into a propose-class JSON Canvas hub for navigation. |
-
-### Writer (0)
-
-Draft/export skills are deferred after alpha.11 and do not ship in the template.
-
-### Peer-reviewer (4)
-
-| Skill | What it does |
-| --- | --- |
-| verify-trace-claim | Traces a draft's factual claims to supporting notes (link → citekey → similarity) and flags failures. |
-| verify-check-citation | Checks every `[@citekey]` resolves and that the source supports the claim. |
-| verify-card-gap | Converts missing-evidence findings into gap attention in `inbox/`. |
-| verify-propose-fix | Proposes the obvious remedy for a finding as attention — flag, don't fix. |
-
-### Co-PI (5)
-
-| Skill | What it does |
-| --- | --- |
-| ask-question-source | Answers questions about a source from vault holdings, read-only. |
-| ask-read-lens | Re-reads a source through a named lens (frame / checklist / hypothesis), read-only. |
-| explore-framings | Branches a question into rival framings — the sparring partner. |
-| route-task | Routes work to the right lane via the tasks MCP with a composed handoff payload. |
-| explain-system | Teaches how Memoria works, pointing at concrete affordances. |
+Alpha.14 does not ship installed profile skill bundles or per-lane task routing.
+Reusable prompt behavior lives as checked operation Concepts under
+`capabilities/operations/` and runs through `memoria operation run`. Optional
+adapters may expose their own skills later, but those adapters are not current
+product authority.
 
 ## PI actions
 

@@ -28,7 +28,7 @@ The placement, cap values, collapse states, and drift-signal cutoffs are in the 
 
 - The producing agent writes the callout; the human owns it after that.
 - Producers append a dated update rather than overwriting human edits.
-- Writes pass through the policy MCP, so callouts cannot bypass the review gate.
+- Writes pass through the policy gate, so callouts cannot bypass the review gate.
 
 ---
 

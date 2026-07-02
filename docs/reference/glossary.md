@@ -80,19 +80,24 @@ Maintenance.
 
 ## Board and delegation
 
-**Card** — a task on the Hermes Kanban board. Carries `status`, `assignee`, retry count, and a handoff summary. Lives in `kanban.db`, projected into `system/board/`.
+**Card** — historical task-board representation from earlier designs. Alpha.14
+uses SQLite request rows and attention projections for product state.
 
-**Ceiling** — a lane's `routing.write_scope` in its lane-override: the outer bound on where its writes may land. A card's `allowed_paths` may _narrow_ but never _widen_ it (lane = ceiling, payload = floor); the tasks MCP refuses widening delegations and the policy MCP re-checks per write.
+**Ceiling** — the maximum write scope an optional adapter policy grants. Request
+payloads may narrow that scope, but never widen it.
 
-**Dispatcher** — the Hermes component that polls the board every 60 seconds and claims `ready` cards for matching-lane profiles. Makes no quality or approval decisions.
+**Dispatcher** — alpha.14 dispatcher behavior lives in the local worker queue:
+CLI commands, scans, and scheduled tasks create request rows, and the worker runs
+pending jobs.
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
-**Lane** — a background agent's execution path on the board. Active alpha.11 task lanes are `catalog`, `extract`, `link`, `map`, and `verify`; Writer/`draft` and Engineer/`code` are deferred profile packages. Each active lane runs one fixed **profile** and so inherits that profile's permissions; the thing that actually runs in the lane is an **agent**. The Co-PI has no lane; operations run off the board.
+**Lane** — historical background-agent execution path from earlier profile
+designs. Alpha.14 does not ship installed lanes; operations run through the
+standalone CLI/runtime queue.
 
-**Card vs task** — a *task* is a unit of delegated work; a card is its runtime
-board representation. Alpha.11 surfaces board state as projections, not Concept
-types.
+**Task/request** — a unit of work represented by a SQLite request row. Attention
+projections are PI-facing views over work that needs review.
 
 **Worklist** — the batch surface for high-cardinality decisions: instead of one
 attention item per row, like decisions queue into one `system/worklists/` batch
@@ -125,14 +130,13 @@ adopts them.
 
 **Pattern** — compatibility name for a checked prompt operation stored as data
 in `capabilities/operations/` ([ADR-53](../adr/53-pattern-library.md)) and
-executed through `memoria operation run`; the patterns MCP remains a read-only
-compatibility prompt composer.
+executed through `memoria operation run`; `memoria_vault.runtime.patterns`
+remains a compatibility prompt composer for tests and optional adapters.
 
 **State** — not a field name on its own; use the specific field. A Concept's
-read state is **`check_status`**; a board card's execution state is **`status`**;
-review carries **`review_status`**, ingest **`ingest_status`**, and the
-operational-health dashboard tracks **skill state**. Prefer the precise field
-name over a bare "state". Field contracts are specified in
+read state is **`check_status`**; request state lives in SQLite; ingest carries
+**`ingest_status`**. Prefer the precise field name over a bare "state". Field
+contracts are specified in
 [Frontmatter fields](frontmatter.md).
 
 ---
@@ -143,12 +147,12 @@ name over a bare "state". Field contracts are specified in
 
 **Extraction-uncertainty flag** — the near-tie rule ([ADR-56](../adr/56-extraction-uncertainty-flag.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
-**Lane-override file** — optional adapter YAML read by the legacy Policy MCP
+**Lane-override file** — optional adapter YAML read by the legacy Policy gate
 shim when an external adapter supplies it. Alpha.14 does not ship lane overrides.
 
-**Policy MCP** — optional adapter decision shim: returns `allow` /
+**Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails
-closed when adapter policy is missing. See [Policy MCP](policy-mcp.md).
+closed when adapter policy is missing. See [Policy gate](policy-mcp.md).
 
 **Review-gated zone** — an older policy term for folders where agent writes
 degrade to proposals. Alpha.11 replaces this with worker-owned staging and

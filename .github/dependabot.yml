@@ -1,6 +1,6 @@
 # Dependabot version-update PRs for the dependency surfaces that exist: GitHub
-# Actions pinned in .github/workflows/, contributor/CI Python tooling at the repo
-# root, and the MCP Python deps the installer pip-installs (vault-template/.memoria/mcp).
+# Actions pinned in .github/workflows/ and contributor/CI Python tooling at the
+# repo root.
 # Monthly + a small PR cap keeps the noise low; commit messages use the `chore`
 # prefix to match Conventional Commits.
 #
@@ -29,15 +29,4 @@ updates:
       prefix: chore
     groups:
       dev-python:
-        patterns: ["*"]
-
-  - package-ecosystem: pip
-    directory: /vault-template/.memoria/mcp
-    schedule:
-      interval: monthly
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: chore
-    groups:
-      python:
         patterns: ["*"]

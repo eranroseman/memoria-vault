@@ -60,4 +60,4 @@ Total types: **12** (Catalog Concepts: 4, Knowledge Concepts: 4, Capability Conc
 - Retired Inbox card contracts: [Inbox card fields](inbox-card-fields.md)
 - The folder tree the homes map into: [On-disk layout](on-disk-layout.md)
 - What enforces the schemas: [Linter: detectors and auto-fix](linter.md) and
-  [Policy MCP](policy-mcp.md)
+  [Policy gate](policy-mcp.md)
