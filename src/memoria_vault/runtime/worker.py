@@ -533,6 +533,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "checked_topics": result["checked_topics"],
             "dense_threshold": result["dense_threshold"],
             "full_text_gap_count": result["full_text_gap_count"],
+            "full_text_attention_paths": result["full_text_attention_paths"],
+            "full_text_attention_commit": result["full_text_attention_commit"],
             "argument_gap_count": result["argument_gap_count"],
             "discovery_candidate_paths": result["discovery_candidate_paths"],
             "discovery_commit": result["discovery_commit"],

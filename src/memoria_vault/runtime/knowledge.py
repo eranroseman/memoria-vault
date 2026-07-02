@@ -8,6 +8,7 @@ import shutil
 import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
+from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -341,11 +342,16 @@ def analyze_gaps(
     full_text_gaps = _missing_full_text_gaps(vault)
     gaps.extend(full_text_gaps)
     gaps.extend(argument_gaps)
+    full_text_attention_paths, full_text_attention_commit = _write_full_text_gap_attention(
+        vault, full_text_gaps, machine=machine
+    )
     candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, machine=machine)
     result = {
         "checked_topics": len(counts),
         "dense_threshold": dense_threshold,
         "full_text_gap_count": len(full_text_gaps),
+        "full_text_attention_paths": full_text_attention_paths,
+        "full_text_attention_commit": full_text_attention_commit,
         "argument_gap_count": len(argument_gaps),
         "discovery_candidate_paths": candidate_paths,
         "discovery_commit": commit,
@@ -541,6 +547,85 @@ def _missing_full_text_gaps(vault: Path) -> list[dict[str, Any]]:
     return gaps
 
 
+def _write_full_text_gap_attention(
+    vault: Path,
+    gaps: list[dict[str, Any]],
+    *,
+    machine: str | None,
+) -> tuple[list[str], str]:
+    if machine is None:
+        return [], ""
+    paths = []
+    for gap in gaps:
+        source_id = str(gap.get("source_id") or "").strip()
+        if not source_id:
+            continue
+        source = state.catalog_source(vault, source_id)
+        if source is None:
+            continue
+        rel = normalize_path(f"inbox/flag-gap-full-text-{safe_filename(source_id)}.md")
+        path = vault / rel
+        if path.exists():
+            continue
+        title = f"Full text needed for {source_id}"
+        target = f"catalog/sources/{source_id}"
+        text_status = str(source.get("text_status") or gap.get("text_status") or "missing")
+        finding = (
+            f"Gap analysis found `{target}` has `text_status: {text_status}`; "
+            "checked digests and retrieval require full text."
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(
+                [
+                    "---",
+                    f'title: "{_yaml_str(title)}"',
+                    "projection: attention",
+                    "attention_kind: flag",
+                    "attention_status: open",
+                    f'finding: "{_yaml_str(finding)}"',
+                    "agent_recommendation: issues-found",
+                    f'target: "{_yaml_str(target)}"',
+                    "raised_by: analyze-gaps",
+                    "loudness: alert",
+                    f"created: {date.today().isoformat()}",
+                    "---",
+                    "",
+                    "# Finding",
+                    "",
+                    finding,
+                    "",
+                    "# Evidence",
+                    "",
+                    f"`{target}` must acquire or attach full text before digest compilation.",
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        paths.append(rel)
+    if not paths:
+        return [], ""
+    append_journal_event(
+        vault,
+        {
+            "event": "check-fired",
+            "check": "source-full-text",
+            "status": "failed",
+            "operation": "analyze-gaps",
+            "outputs": sorted(paths),
+        },
+        machine=machine,
+    )
+    commit = commit_writer_changes(
+        vault,
+        "flag gap full text",
+        sorted(paths),
+        machine=machine,
+    )
+    return sorted(paths), commit
+
+
 def _write_gap_discovery_candidates(
     vault: Path,
     gaps: list[dict[str, Any]],
@@ -722,6 +807,10 @@ def _source_id_from_path(path: str) -> str:
         if len(parts) >= 3:
             return parts[2]
     return ""
+
+
+def _yaml_str(value: str) -> str:
+    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
