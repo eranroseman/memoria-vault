@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from html.parser import HTMLParser
 from pathlib import Path
@@ -319,69 +318,6 @@ def csl_capture_payload(
         "citekey": str(csl_json.get("id") or ""),
         "stage_only": True,
     }
-
-
-def capture_zotero_source(
-    vault: Path,
-    item: dict[str, Any],
-    *,
-    content_text: str | None = None,
-    source_id: str | None = None,
-    description: str | None = None,
-    raw_filename: str | None = None,
-    machine: str | None = None,
-    run_id: str | None = None,
-) -> dict[str, Any]:
-    """Stage one Zotero exported item snapshot as an unchecked catalog row."""
-    data = item.get("data") if isinstance(item.get("data"), dict) else item
-    if not isinstance(data, dict):
-        raise ValueError("Zotero export item must be an object")
-    key = str(item.get("key") or data.get("key") or "").strip()
-    if not key:
-        raise ValueError("Zotero export item key is required")
-    if str(data.get("itemType") or "").lower() == "annotation":
-        raise ValueError("Zotero annotation import is not supported")
-
-    title = str(data.get("title") or key).strip()
-    item_type = _zotero_item_type(str(data.get("itemType") or ""))
-    abstract = str(data.get("abstractNote") or "").strip()
-    citekey = _zotero_citekey(data)
-    stable_id = source_id or f"zotero-{key.lower()}"
-    raw_text = (
-        json.dumps(_zotero_metadata_snapshot(item), ensure_ascii=False, sort_keys=True, indent=2)
-        + "\n"
-    )
-    identifiers = _zotero_identifiers(data)
-    csl_json = _zotero_csl_json(key, data)
-    return stage_catalog_source(
-        vault,
-        stable_id,
-        title,
-        description or abstract or f"Zotero {data.get('itemType') or 'item'} source.",
-        content_text or abstract or title,
-        raw_bytes=raw_text.encode(),
-        raw_filename=raw_filename or f"{safe_filename(stable_id)}.zotero.json",
-        resource=_zotero_resource(item, data, identifiers),
-        item_type=item_type,
-        identifiers=identifiers or None,
-        csl_json=csl_json,
-        metadata_status="partial",
-        text_status=_fallback_text_status(content_text, abstract),
-        citekey=citekey,
-        machine=machine,
-        run_id=run_id or f"capture-zotero:{key}",
-        workflow="capture_zotero_source",
-    )
-
-
-def _zotero_metadata_snapshot(item: dict[str, Any]) -> dict[str, Any]:
-    snapshot = {key: value for key, value in item.items() if key not in {"annotations", "children"}}
-    data = snapshot.get("data")
-    if isinstance(data, dict):
-        snapshot["data"] = {
-            key: value for key, value in data.items() if not key.lower().startswith("annotation")
-        }
-    return snapshot
 
 
 def capture_url_source(
@@ -885,15 +821,6 @@ def _csl_author(name: str) -> dict[str, str]:
     return {"literal": name}
 
 
-def _zotero_citekey(data: dict[str, Any]) -> str:
-    for key in ("citationKey", "citekey", "bibtexKey"):
-        if value := str(data.get(key) or "").strip():
-            return value
-    extra = str(data.get("extra") or "")
-    match = re.search(r"(?im)^\s*(?:citation key|citekey|bibtex)\s*:\s*(\S+)", extra)
-    return match.group(1) if match else ""
-
-
 def _read_url_bytes(url: str, timeout: float) -> bytes:
     with urlopen(url, timeout=timeout) as response:
         return response.read()
@@ -943,112 +870,6 @@ class _TextHTMLParser(HTMLParser):
             self.title = f"{self.title} {text}".strip()
         else:
             self.parts.append(text)
-
-
-def _zotero_identifiers(data: dict[str, Any]) -> dict[str, str]:
-    fields = {
-        "doi": "DOI",
-        "isbn": "ISBN",
-        "issn": "ISSN",
-        "pmid": "PMID",
-        "pmcid": "PMCID",
-        "arxiv": "arXiv",
-    }
-    return {
-        key: value for key, field in fields.items() if (value := str(data.get(field) or "").strip())
-    }
-
-
-def _zotero_resource(
-    item: dict[str, Any], data: dict[str, Any], identifiers: dict[str, str]
-) -> str:
-    if url := str(data.get("url") or "").strip():
-        return url
-    if doi := identifiers.get("doi"):
-        return f"https://doi.org/{doi}"
-    links = item.get("links")
-    alternate = links.get("alternate") if isinstance(links, dict) else None
-    if isinstance(alternate, dict) and alternate.get("href"):
-        return str(alternate["href"])
-    key = str(item.get("key") or data.get("key") or "").strip()
-    return f"zotero://select/library/items/{key}" if key else ""
-
-
-def _zotero_csl_json(key: str, data: dict[str, Any]) -> dict[str, Any]:
-    csl: dict[str, Any] = {
-        "id": _zotero_citekey(data) or key,
-        "type": _zotero_csl_type(str(data.get("itemType") or "")),
-        "title": str(data.get("title") or key),
-    }
-    creators = data.get("creators")
-    if isinstance(creators, list):
-        authors = [_zotero_creator(creator) for creator in creators if isinstance(creator, dict)]
-        if authors:
-            csl["author"] = authors
-    if year := _zotero_year(str(data.get("date") or "")):
-        csl["issued"] = {"date-parts": [[int(year)]]}
-    if container := str(
-        data.get("publicationTitle")
-        or data.get("bookTitle")
-        or data.get("proceedingsTitle")
-        or data.get("conferenceName")
-        or ""
-    ).strip():
-        csl["container-title"] = container
-    if doi := str(data.get("DOI") or "").strip():
-        csl["DOI"] = doi
-    if url := str(data.get("url") or "").strip():
-        csl["URL"] = url
-    if abstract := str(data.get("abstractNote") or "").strip():
-        csl["abstract"] = abstract
-    return csl
-
-
-def _zotero_creator(creator: dict[str, Any]) -> dict[str, str]:
-    if name := str(creator.get("name") or "").strip():
-        return {"literal": name}
-    family = str(creator.get("lastName") or "").strip()
-    given = str(creator.get("firstName") or "").strip()
-    if family and given:
-        return {"family": family, "given": given}
-    if family:
-        return {"family": family}
-    return {"literal": given}
-
-
-def _zotero_year(date: str) -> str:
-    match = re.search(r"\b(1[5-9]\d{2}|20\d{2}|21\d{2})\b", date)
-    return match.group(1) if match else ""
-
-
-def _zotero_item_type(item_type: str) -> str:
-    if item_type in {"book", "bookSection"}:
-        return "book"
-    if item_type in {"webpage", "blogPost", "forumPost"}:
-        return "webpage"
-    if item_type == "dataset":
-        return "dataset"
-    if item_type == "computerProgram":
-        return "software"
-    if item_type in {"report", "thesis"}:
-        return "report"
-    return "article"
-
-
-def _zotero_csl_type(item_type: str) -> str:
-    if item_type == "book":
-        return "book"
-    if item_type in {"conferencePaper", "presentation"}:
-        return "paper-conference"
-    if item_type in {"webpage", "blogPost", "forumPost"}:
-        return "webpage"
-    if item_type == "dataset":
-        return "dataset"
-    if item_type == "computerProgram":
-        return "software"
-    if item_type in {"report", "thesis"}:
-        return "report"
-    return "article-journal"
 
 
 def _render_source_bibtex(frontmatter: dict[str, Any]) -> str:

@@ -14,7 +14,6 @@ from memoria_vault.runtime.capture import (
     capture_pdf_source,
     capture_source,
     capture_url_source,
-    capture_zotero_source,
     check_references_bib,
     render_references_bib,
     write_references_bib,
@@ -414,83 +413,6 @@ def test_capture_bibtex_source_accepts_explicit_stable_source_id(tmp_path: Path)
     assert source is not None
     assert source["source_id"] == "source-stable-identity"
     assert source["citekey"] == "temporary2026"
-
-
-def test_capture_zotero_source_stages_exported_item_snapshot(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    item = {
-        "key": "ABCD1234",
-        "links": {"alternate": {"href": "http://zotero.local/items/ABCD1234"}},
-        "data": {
-            "key": "ABCD1234",
-            "itemType": "journalArticle",
-            "title": "Zotero Harness Source",
-            "creators": [
-                {"creatorType": "author", "firstName": "Ada", "lastName": "River"},
-                {"creatorType": "author", "name": "Test Lab"},
-            ],
-            "date": "2026-03-01",
-            "publicationTitle": "Journal of Local APIs",
-            "DOI": "10.1000/zotero.2026",
-            "abstractNote": "A Zotero exported-item fixture.",
-            "annotationText": "Should not be imported.",
-            "extra": "bibtex: river2026zotero\n",
-        },
-        "children": [{"data": {"itemType": "annotation", "annotationText": "Child note"}}],
-        "annotations": [{"text": "annotation payload"}],
-    }
-
-    result = capture_zotero_source(vault, item, machine="test-machine")
-
-    source = state.catalog_source(vault, result["source_id"])
-    raw = vault / result["raw_path"]
-
-    assert result["source_id"] == "zotero-abcd1234"
-    assert result["check_status"] == "unchecked"
-    assert not (vault / "catalog/sources/zotero-abcd1234/source.md").exists()
-    assert source is not None
-    assert source["check_status"] == "unchecked"
-    assert source["title"] == "Zotero Harness Source"
-    assert source["citekey"] == "river2026zotero"
-    assert source["resource"] == "https://doi.org/10.1000/zotero.2026"
-    assert source["identifiers"] == {"doi": "10.1000/zotero.2026"}
-    assert source["csl_json"]["author"] == [
-        {"family": "River", "given": "Ada"},
-        {"literal": "Test Lab"},
-    ]
-    assert source["csl_json"]["issued"] == {"date-parts": [[2026]]}
-    raw_text = raw.read_text(encoding="utf-8")
-    assert raw_text.startswith("{\n")
-    assert "annotationText" not in raw_text
-    assert "annotations" not in raw_text
-    assert "children" not in raw_text
-    assert (vault / result["content_path"]).read_text(encoding="utf-8") == (
-        "A Zotero exported-item fixture.\n"
-    )
-
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
-    assert events[0]["workflow"] == "capture_zotero_source"
-    assert events[1]["workflow"] == "capture_zotero_source"
-
-
-def test_capture_zotero_source_rejects_annotation_items(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-
-    with pytest.raises(ValueError, match="Zotero annotation import is not supported"):
-        capture_zotero_source(
-            vault,
-            {
-                "key": "ANN01",
-                "data": {
-                    "key": "ANN01",
-                    "itemType": "annotation",
-                    "annotationText": "Highlighted text.",
-                },
-            },
-            machine="test-machine",
-        )
-
-    assert not (vault / "catalog/sources/zotero-ann01").exists()
 
 
 def test_capture_url_source_snapshots_html_text(tmp_path: Path, monkeypatch) -> None:

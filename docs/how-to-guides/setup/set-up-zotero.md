@@ -36,11 +36,11 @@ This produces keys in the `mamykina2010sense` shape — lowercase author, year, 
 
 **3. Leave bibliography generation to Memoria.**
 
-Do not create a Better BibTeX auto-export into the vault. Capture reads
-Zotero item snapshots when explicitly requested. Portable BibTeX files are
-standalone imports: they stage unchecked SQLite Work rows and queue DOI
-enrichment; `references.bib` is regenerated only after enrichment checks the
-Work.
+Do not create a Better BibTeX auto-export into the vault. Export generic BibTeX
+or CSL files outside the workspace, then import them explicitly. Portable
+BibTeX/CSL files are standalone imports: they stage unchecked SQLite Work rows
+and queue DOI enrichment; `references.bib` is regenerated only after enrichment
+checks the Work.
 
 **4. Pin citekeys for existing items.**
 
@@ -62,10 +62,10 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 
 ## Export an item snapshot
 
-Alpha.14 capture reads portable files. Export a Zotero item to CSL JSON or copy
-BibTeX for the item, then import it with `memoria work import --format csl` or
-`memoria work import --format bibtex`. Live Zotero Local API capture is not part
-of the standalone runtime.
+Alpha.14 capture reads portable files. Export a Zotero item to generic CSL JSON
+or copy BibTeX for the item, then import it with `memoria work import --format
+csl` or `memoria work import --format bibtex`. Live Zotero Local API capture is
+not part of the standalone runtime.
 
 ## MarkDB-Connect
 

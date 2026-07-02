@@ -24,7 +24,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | Command | Purpose |
 | --- | --- |
 | `memoria work capture` | Capture a DOI, URL, PDF, file, or supplied text. |
-| `memoria work import` | Import portable BibTeX, CSL JSON, or Zotero-export files. |
+| `memoria work import` | Import portable BibTeX or CSL JSON files. |
 | `memoria work enrich` | Enrich a work from provider replay/payload inputs. |
 | `memoria work digest` | Compile a source digest. |
 | `memoria work interview` | Record source interview responses. |

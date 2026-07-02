@@ -956,66 +956,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "check_status": result["check_status"],
             "enrichment_job": enrichment_job,
         }
-    if operation_id == "capture-zotero-source":
-        from memoria_vault.runtime.capture import capture_zotero_source
-
-        item = payload.get("zotero_item")
-        item_key = str(payload.get("item_key") or "").strip()
-        if item is not None and not isinstance(item, dict):
-            raise ValueError("capture-zotero-source zotero_item must be an object")
-        if item_key:
-            raise ValueError("capture-zotero-source accepts exported zotero_item only")
-        if item is None:
-            raise ValueError("capture-zotero-source requires exported zotero_item object")
-        content_text = payload.get("content_text")
-        source_id = payload.get("source_id")
-        description = payload.get("description")
-        raw_filename = payload.get("raw_filename")
-        run_id = payload.get("run_id")
-        if content_text is not None and not isinstance(content_text, str):
-            raise ValueError("capture-zotero-source content_text must be a string")
-        if source_id is not None and not isinstance(source_id, str):
-            raise ValueError("capture-zotero-source source_id must be a string")
-        if description is not None and not isinstance(description, str):
-            raise ValueError("capture-zotero-source description must be a string")
-        if raw_filename is not None and not isinstance(raw_filename, str):
-            raise ValueError("capture-zotero-source raw_filename must be a string")
-        if run_id is not None and not isinstance(run_id, str):
-            raise ValueError("capture-zotero-source run_id must be a string")
-        kwargs = {
-            "content_text": content_text,
-            "source_id": source_id or None,
-            "description": description or None,
-            "raw_filename": raw_filename or None,
-            "machine": machine,
-            "run_id": run_id or None,
-        }
-        result = capture_zotero_source(vault, item, **kwargs)
-        enrichment_job = None
-        source = state.catalog_source(vault, str(result["source_id"]))
-        if source and _payload_doi(
-            {"identifiers": source["identifiers"], "csl_json": source["csl_json"]}
-        ):
-            enrichment_job = enqueue_operation(
-                vault,
-                "enrich-source",
-                payload={"source_id": result["source_id"]},
-                idempotency_key=f"enrich-{result['source_id']}",
-                input_refs=[{"id": result["source_id"], "kind": "catalog_source"}],
-                primary_target=f"catalog/sources/{result['source_id']}",
-                causal_refs=[str(job["job_id"])],
-                actor="operation",
-                provenance={"surface": "worker", "command": "capture-zotero-source"},
-            )
-        return {
-            "commit": result["commit"],
-            "source_id": result["source_id"],
-            "content_path": result["content_path"],
-            "raw_path": result["raw_path"],
-            "text_status": result["text_status"],
-            "check_status": result["check_status"],
-            "enrichment_job": enrichment_job,
-        }
     if operation_id == "capture-url-source":
         from memoria_vault.runtime.capture import stage_url_source
 

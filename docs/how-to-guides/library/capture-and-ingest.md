@@ -6,8 +6,8 @@ grand_parent: How-to guides
 
 # Capture and ingest a source
 
-Capture always enters through a SQLite worker request. DOI/ISBN, BibTeX, CSL
-JSON, and Zotero exported-item imports stage unchecked catalog Work rows under
+Capture always enters through a SQLite worker request. DOI/ISBN, BibTeX, and CSL
+JSON imports stage unchecked catalog Work rows under
 `.memoria/memoria.sqlite` plus durable blobs under `.memoria/blobs/source-content/`.
 URL, PDF, and already-supplied non-enrichment text can still produce checked
 source Concepts after the worker checks them.
@@ -23,9 +23,9 @@ normalizes, checks, commits, and journals the source.
 
 **2. Import portable bibliographic files.**
 
-Use `memoria work import --format bibtex|csl|zotero-export --file <path>` for
-portable metadata. Imports write unchecked Work rows and queue DOI enrichment
-when a DOI is present. They do not fetch from Zotero, create source/entity
+Use `memoria work import --format bibtex|csl --file <path>` for portable
+metadata. Imports write unchecked Work rows and queue DOI enrichment when a DOI
+is present. They do not fetch from a reference-manager API, create source/entity
 Markdown, or update `references.bib` at import time.
 
 **3. Confirm checked source files, when the route creates them.**
@@ -50,8 +50,7 @@ gitignored and synced out of band.
 
 ## Deferred UI
 
-Live Zotero selection capture and annotation import are not part of the
-standalone alpha.14 runtime.
+Reference-manager adapters are not part of the standalone alpha.14 runtime.
 
 ## Related
 

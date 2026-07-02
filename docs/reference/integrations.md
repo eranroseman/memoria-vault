@@ -17,7 +17,7 @@ source of truth.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Portable Zotero export files and BibTeX files are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. The alpha.14 runtime does not fetch from a live Zotero API, and Zotero annotations are not imported. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
+| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Generic CSL JSON and BibTeX files exported from Zotero are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. The alpha.14 runtime does not fetch from a live Zotero API, and Zotero annotations are not imported. See [Citekey naming convention](../adr/06-citekey-naming-convention.md). |
 | **`references.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---

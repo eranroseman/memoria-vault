@@ -113,7 +113,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 
     import_cmd = work_sub.add_parser("import")
     _common(import_cmd)
-    import_cmd.add_argument("--format", choices=("bibtex", "csl", "zotero-export"), required=True)
+    import_cmd.add_argument("--format", choices=("bibtex", "csl"), required=True)
     import_cmd.add_argument("--file", required=True)
     import_cmd.set_defaults(handler=_cmd_work_import)
 
@@ -608,10 +608,6 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
 
         csl_item = _read_csl_item(text)
         payload = csl_capture_payload(csl_item, raw_text=text)
-    else:
-        from memoria_vault.runtime.capture import csl_capture_payload
-
-        payload = csl_capture_payload(_read_zotero_export_item(text), raw_text=text)
     output = _enqueue_and_run(args, "capture-source", payload)
     if enrichment := _queue_import_enrichment(args, payload, output):
         output["enrichment_job"] = enrichment
@@ -1985,73 +1981,6 @@ def _read_csl_item(text: str) -> dict[str, Any]:
     if isinstance(data, dict):
         return data
     raise ValueError("CSL import expects a JSON object or one-item array")
-
-
-def _read_zotero_export_item(text: str) -> dict[str, Any]:
-    data = json.loads(text)
-    if isinstance(data, dict) and isinstance(data.get("items"), list):
-        data = data["items"]
-    if isinstance(data, list):
-        if len(data) != 1 or not isinstance(data[0], dict):
-            raise ValueError("Zotero export expects one item")
-        data = data[0]
-    if not isinstance(data, dict):
-        raise ValueError("Zotero export expects a JSON object or one-item array")
-    item = data.get("data") if isinstance(data.get("data"), dict) else data
-    if "type" in item and "title" in item:
-        return dict(item)
-    key = str(item.get("key") or item.get("itemKey") or item.get("id") or "").strip()
-    title = str(item.get("title") or key).strip()
-    if not title:
-        raise ValueError("Zotero export item requires title or key")
-    csl: dict[str, Any] = {
-        "id": key or title,
-        "type": _zotero_csl_type(str(item.get("itemType") or "")),
-        "title": title,
-    }
-    if doi := str(item.get("DOI") or item.get("doi") or "").strip():
-        csl["DOI"] = doi
-    if isbn := str(item.get("ISBN") or item.get("isbn") or "").strip():
-        csl["ISBN"] = isbn
-    if url := str(item.get("url") or item.get("URL") or "").strip():
-        csl["URL"] = url
-    if abstract := str(item.get("abstractNote") or item.get("abstract") or "").strip():
-        csl["abstract"] = abstract
-    if authors := _zotero_creators(item.get("creators")):
-        csl["author"] = authors
-    if year := str(item.get("date") or "").strip()[:4]:
-        if year.isdigit():
-            csl["issued"] = {"date-parts": [[int(year)]]}
-    return csl
-
-
-def _zotero_creators(value: Any) -> list[dict[str, str]]:
-    if not isinstance(value, list):
-        return []
-    rows = []
-    for creator in value:
-        if not isinstance(creator, dict):
-            continue
-        if name := str(creator.get("name") or "").strip():
-            rows.append({"literal": name})
-            continue
-        family = str(creator.get("lastName") or creator.get("family") or "").strip()
-        given = str(creator.get("firstName") or creator.get("given") or "").strip()
-        if family or given:
-            rows.append({"family": family, "given": given})
-    return rows
-
-
-def _zotero_csl_type(item_type: str) -> str:
-    return {
-        "journalArticle": "article-journal",
-        "conferencePaper": "paper-conference",
-        "book": "book",
-        "bookSection": "chapter",
-        "thesis": "thesis",
-        "report": "report",
-        "webpage": "webpage",
-    }.get(item_type, "article")
 
 
 def _qmd_status(workspace: Path, *, include_collection: bool = True) -> dict[str, Any]:
