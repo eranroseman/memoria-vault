@@ -514,7 +514,7 @@ def _fixture_full_text(
 def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict[str, Any]]) -> str:
     from memoria_vault.runtime.operations import require_allowed_network
 
-    for url in _open_access_text_urls(payloads):
+    for url in _discovered_full_text_urls(payloads):
         try:
             require_allowed_network(policy, url)
         except PermissionError:
@@ -535,7 +535,7 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
     return ""
 
 
-def _open_access_text_urls(payloads: dict[str, dict[str, Any]]) -> list[str]:
+def _discovered_full_text_urls(payloads: dict[str, dict[str, Any]]) -> list[str]:
     urls = []
     for location in _open_access_locations(payloads.get("unpaywall", {})):
         for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
@@ -547,6 +547,11 @@ def _open_access_text_urls(payloads: dict[str, dict[str, Any]]) -> list[str]:
     for location in _openalex_open_access_locations(openalex):
         for key in ("pdf_url", "landing_page_url"):
             _append_url(urls, location.get(key))
+    crossref_links = _crossref_message(payloads.get("crossref", {})).get("link")
+    if isinstance(crossref_links, list):
+        for link in crossref_links:
+            if isinstance(link, dict):
+                _append_url(urls, link.get("URL") or link.get("url"))
     return urls
 
 
