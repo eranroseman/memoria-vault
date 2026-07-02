@@ -445,6 +445,68 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
     assert "Fetched open access full text" in content
 
 
+def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypatch) -> None:
+    vault = workspace(tmp_path)
+    policy = vault / "capabilities/operations/enrich-source.md"
+    policy.write_text(
+        policy.read_text(encoding="utf-8").replace(
+            "  - https://api.unpaywall.org/",
+            "  - https://api.unpaywall.org/\n  - https://example.test/",
+        ),
+        encoding="utf-8",
+    )
+    payload = {
+        **doi_payload(),
+        "content_text": "Only the abstract.",
+        "text_status": "abstract-only",
+    }
+    enqueue_operation(vault, "capture-source", payload=payload, idempotency_key="capture-alpha")
+    run_next_job(vault, machine="test-machine")
+    providers = provider_payloads()
+    providers["unpaywall"]["best_oa_location"] = {
+        "url_for_pdf": "https://example.test/empty.txt",
+        "url_for_landing_page": "https://example.test/full.html",
+    }
+    calls = []
+
+    class Response:
+        def __init__(self, body: str):
+            self.body = body
+            self.headers = {"Content-Type": "text/html; charset=utf-8"}
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def read(self):
+            return self.body.encode()
+
+    def fake_urlopen(req, timeout):
+        calls.append(req.full_url)
+        assert timeout == 20
+        if req.full_url.endswith("/empty.txt"):
+            return Response("")
+        return Response("<html><body>Fallback open access full text.</body></html>")
+
+    monkeypatch.setattr("memoria_vault.runtime.enrichment.request.urlopen", fake_urlopen)
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done["enrichment_status"] == "enriched"
+    assert calls == ["https://example.test/empty.txt", "https://example.test/full.html"]
+    assert "Fallback open access full text" in (vault / done["content_path"]).read_text(
+        encoding="utf-8"
+    )
+
+
 def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_operation(

@@ -512,34 +512,39 @@ def _fixture_full_text(
 
 
 def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict[str, Any]]) -> str:
-    url = _open_access_text_url(payloads.get("unpaywall", {}))
-    if not url:
-        return ""
     from memoria_vault.runtime.operations import require_allowed_network
 
-    try:
-        require_allowed_network(policy, url)
-    except PermissionError:
-        return ""
-    req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha14"})
-    try:
-        with request.urlopen(req, timeout=20) as resp:
-            raw = resp.read()
-            content_type = _response_content_type(resp)
-    except (OSError, error.HTTPError):
-        return ""
-    return _extract_full_text(url, raw, content_type)
+    for url in _open_access_text_urls(payloads.get("unpaywall", {})):
+        try:
+            require_allowed_network(policy, url)
+        except PermissionError:
+            continue
+        req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha14"})
+        try:
+            with request.urlopen(req, timeout=20) as resp:
+                raw = resp.read()
+                content_type = _response_content_type(resp)
+        except (OSError, error.HTTPError):
+            continue
+        try:
+            text = _extract_full_text(url, raw, content_type)
+        except (RuntimeError, ValueError):
+            continue
+        if text:
+            return text
+    return ""
 
 
-def _open_access_text_url(payload: dict[str, Any]) -> str:
+def _open_access_text_urls(payload: dict[str, Any]) -> list[str]:
     location = payload.get("best_oa_location")
     if not isinstance(location, dict):
-        return ""
+        return []
+    urls = []
     for key in ("url_for_pdf", "url_for_fulltext", "url_for_landing_page", "url"):
         url = str(location.get(key) or "").strip()
-        if url:
-            return url
-    return ""
+        if url and url not in urls:
+            urls.append(url)
+    return urls
 
 
 def _response_content_type(resp: Any) -> str:
