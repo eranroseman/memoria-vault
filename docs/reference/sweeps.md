@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Sweeps
 
-Deterministic maintenance passes under `vault-template/.memoria/operations`.
+Deterministic maintenance passes under `memoria_vault.runtime.subsystems`.
 Re-ingest and retraction sweeps surface review work through worker-owned
 projections; they do not directly promote Concept files.
 

@@ -14,6 +14,7 @@ V="$(mktemp -d "${TMPDIR:-/tmp}/memoria-e2e-XXXXXXXX")"
 # so swallow cleanup errors rather than failing the run under `set -e`.
 trap 'rm -rf "$V" 2>/dev/null || true' EXIT
 PY="${PYTHON:-python3}"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
 fail() { echo "e2e-smoke: FAIL — $1" >&2; exit 1; }
 HELPER="$ROOT/scripts/e2e_smoke.py"
 stage() { "$PY" "$HELPER" stage-label "$1"; }
@@ -33,20 +34,20 @@ vault_assembly() {
   "$PY" "$HELPER" vault-skeleton "$ROOT" "$V"
 
   echo "== $(stage vault-assembly-2) =="
-  "$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" stage
+  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" stage
   git -C "$V" init -q
   git -C "$V" config user.email "e2e@example.invalid"
   git -C "$V" config user.name "Memoria E2E Smoke"
   git -C "$V" rev-parse --is-inside-work-tree >/dev/null || fail "disposable vault is not a git repository"
-  cp "$V/.memoria/operations/integrity/linter/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
+  cp "$V/.githooks/pre-commit" "$V/.git/hooks/pre-commit" && chmod +x "$V/.git/hooks/pre-commit"
   cp "$V/.githooks/post-commit" "$V/.git/hooks/post-commit" && chmod +x "$V/.git/hooks/post-commit"
   assert_executable "$V/.git/hooks/pre-commit" "pre-commit hook"
   assert_executable "$V/.git/hooks/post-commit" "post-commit hook"
   "$PY" "$HELPER" plugin-bundle "$V"
 
   echo "== $(stage vault-assembly-3) =="
-  "$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"
-  "$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" check || fail "golden drift on a fresh vault"
+  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"
+  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" check || fail "golden drift on a fresh vault"
 }
 
 commit_gate() {
@@ -87,10 +88,10 @@ workflow_replay() {
 
 final_integrity() {
   echo "== $(stage final-integrity) =="
-  verdict=$("$PY" "$V/.memoria/operations/integrity/linter/detectors.py" --vault "$V" | tail -1)
+  verdict=$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$V" | tail -1)
   echo "   $verdict"
   "$PY" "$HELPER" final-verdict "$verdict" || fail "worked vault verdict: $verdict"
-  "$PY" "$V/.memoria/operations/integrity/linter/golden_restore.py" --vault "$V" check || fail "golden drift after the loop"
+  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" check || fail "golden drift after the loop"
 }
 
 vault_assembly

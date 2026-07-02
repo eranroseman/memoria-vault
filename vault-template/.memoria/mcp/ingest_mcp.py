@@ -108,7 +108,7 @@ def build_server(vault: Path):
         ]
         if flags:
             try:
-                from operations.lib import inbox as inbox_writer
+                from memoria_vault.runtime.subsystems.lib import inbox as inbox_writer
 
                 for flag in flags:
                     inbox_writer.write_finding(

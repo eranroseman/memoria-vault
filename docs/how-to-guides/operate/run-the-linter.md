@@ -7,7 +7,7 @@ nav_order: 1
 
 # Run the Linter
 
-Run a structural health check on the vault, or review the scheduled report. The Linter is an **operation, not an agent** — deterministic, zero-LLM Python under `.memoria/operations/integrity/linter/`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
+Run a structural health check on the vault, or review the scheduled report. The Linter is an **operation, not an agent** — deterministic, zero-LLM runtime code under `memoria_vault.runtime.subsystems.integrity.linter`, report-only by design: findings surface for you to act on; nothing is auto-moved or auto-archived ([Linter: detectors and auto-fix](../../reference/linter.md)).
 
 ## When it runs without you
 
@@ -23,7 +23,7 @@ Run it by hand after a large batch ingest, after structural edits, or when a Dat
 From the vault root:
 
 ```bash
-python3 .memoria/operations/integrity/linter/detectors.py --vault .
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .
 ```
 
 Add `--json` for machine-readable output. The detectors cover schema validity, broken frontmatter and body wikilinks, misplaced typed documents, dashboard field drift, superseded-claim reuse (`fama-exposure`), broken extract paths, orphan synthesis notes, leftover working files, and stale fleeting notes.
@@ -42,14 +42,14 @@ The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDI
 **3. Check golden-copy drift.**
 
 ```bash
-python3 .memoria/operations/integrity/linter/golden_restore.py --vault . check
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . check
 ```
 
 Reports any system file (templates, dashboards, patterns, eval tasks, scripts, `home.md`, `system/vocabulary.md`, `AGENTS.md`) that drifted from the installer-staged golden copy. To repair:
 
 ```bash
-python3 .memoria/operations/integrity/linter/golden_restore.py --vault . restore          # propose-only: lists what it would restore
-python3 .memoria/operations/integrity/linter/golden_restore.py --vault . restore --apply  # write the golden bytes back, deliberately
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . restore          # propose-only: lists what it would restore
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . restore --apply  # write the golden bytes back, deliberately
 ```
 
 **4. Fix findings by hand.**

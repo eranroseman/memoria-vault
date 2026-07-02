@@ -27,7 +27,7 @@ CHECKS = (
         name="ADR-55 golden restore has no shipped upgrade command",
         adr="docs/adr/55-src-scaffold-populate-golden-copy.md",
         required_paths=(
-            "vault-template/.memoria/operations/integrity/linter/golden_restore.py",
+            "src/memoria_vault/runtime/subsystems/integrity/linter/golden_restore.py",
             "tests/test_golden_restore.py",
         ),
         required_text=(

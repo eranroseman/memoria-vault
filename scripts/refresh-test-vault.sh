@@ -132,7 +132,6 @@ for rel in \
   .githooks \
   .memoria/lane-overrides \
   .memoria/mcp \
-  .memoria/operations \
   .memoria/plugins \
   .memoria/profiles \
   .memoria/schemas \
@@ -196,7 +195,7 @@ for rel in folders.get("skeleton", []):
 PY
 
 hdr "Restage golden copy"
-run "$python_cmd" "$VAULT/.memoria/operations/integrity/linter/golden_restore.py" --vault "$VAULT" stage
+run "$python_cmd" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" stage
 
 case "$PROFILES" in
   always)

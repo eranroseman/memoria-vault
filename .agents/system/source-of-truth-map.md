@@ -22,8 +22,8 @@ find the owning file, then fix the stale consumer rather than the source.
 | Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | MCP modules, operations, test harnesses |
 | Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,lanes,audit,engine}.py` | `vault-template/.memoria/mcp/policy_mcp.py`, `vault-template/.memoria/mcp/policy_server.py`, policy hook/plugin, lane overrides, audit log |
 | Write interception | `vault-template/.memoria/plugins/memoria-policy-gate/` and `vault-template/.memoria/mcp/policy_hook.py` | Every profile's enabled plugins |
-| Shared schema validation | `vault-template/.memoria/operations/lib/schema.py` | Linter, pre-commit, installer and schema tests |
-| Inbox card rendering and loudness routing | `vault-template/.memoria/operations/lib/inbox.py` + `vault-template/.memoria/operations/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
+| Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
+| Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations and lanes that raise cards; Home/Telegram push; tasks and policy block checks |
 | Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
 | Bundled Obsidian plugin provenance | `vault-template/.obsidian/plugin-provenance-lock.json` | `scripts/plugin_provenance_doctor.py`, CI lint, `tests/test_plugin_provenance.py`, plugin reference |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |

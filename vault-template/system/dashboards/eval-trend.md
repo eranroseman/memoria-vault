@@ -1,6 +1,6 @@
 # Eval trend
 
-vault-eval capability scores over time, from `system/metrics/eval/runs.jsonl` — written by the deterministic scorer (`.memoria/operations/telemetry/eval/eval_score.py`, ADR-11). Open after the quarterly run scores (or an on-demand scoring pass) to see whether the deployed system still finds, extracts, links, and verifies correctly on this vault. The verdict is **diagnostic, never gating** — a dip informs you; it does not pause scheduled work. Reference: [vault eval](https://eranroseman.github.io/memoria-vault/reference/vault-eval) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#eval-trend).
+vault-eval capability scores over time, from `system/metrics/eval/runs.jsonl` — written by the deterministic scorer (`memoria_vault.runtime.subsystems.telemetry.eval.eval_score`, ADR-11). Open after the quarterly run scores (or an on-demand scoring pass) to see whether the deployed system still finds, extracts, links, and verifies correctly on this vault. The verdict is **diagnostic, never gating** — a dip informs you; it does not pause scheduled work. Reference: [vault eval](https://eranroseman.github.io/memoria-vault/reference/vault-eval) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#eval-trend).
 
 Metrics (each 0–1, higher is better; a task is **unscored** when its card reported no machine-readable result — never faked):
 
@@ -60,7 +60,7 @@ if (exposed.length) {
 
 ## Unscored tasks (latest run)
 
-A task lands here when its eval card carried no machine-readable result block for the quarter — the run is honest about what it could not score. Re-run the lane's card (or fix the report) and score again: `python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarter <quarter>`.
+A task lands here when its eval report carried no machine-readable result block for the quarter — the run is honest about what it could not score. Re-run the task (or fix the report) and score again: `python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter <quarter> --from-json results.json`.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {

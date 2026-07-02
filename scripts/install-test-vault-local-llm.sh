@@ -189,8 +189,8 @@ PY="$VAULT/.memoria/.venv/bin/python"
 
 hdr "Install checks"
 run "$PY" -c "import memoria_vault; print(memoria_vault.__version__)"
-run "$PY" "$VAULT/.memoria/operations/integrity/linter/golden_restore.py" --vault "$VAULT" check
-verdict="$("$PY" "$VAULT/.memoria/operations/integrity/linter/detectors.py" --vault "$VAULT" | tail -1)"
+run "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" check
+verdict="$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$VAULT" | tail -1)"
 say "  detectors: $verdict"
 case "$verdict" in
   *"verdict: PASS"*) ;;

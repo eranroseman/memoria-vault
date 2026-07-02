@@ -270,7 +270,7 @@ function Install-VaultHooks {
     Write-Header 'Vault Git hooks'
     $gitDir = Join-Path $Vault '.git'
     $hooksDir = Join-Path $gitDir 'hooks'
-    $preCommit = Join-Path $Vault '.memoria/operations/integrity/linter/pre-commit'
+    $preCommit = Join-Path $Vault '.githooks/pre-commit'
     $postCommit = Join-Path $Vault '.githooks/post-commit'
     if (-not $DryRun) {
         if (-not (Test-Path $gitDir)) { Stop-Install "Vault is not a Git repo: $Vault" }
@@ -362,10 +362,10 @@ function Install-RuntimeScaffold {
     Write-Header 'Runtime scaffold'
     $script:VenvPython = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
     $schema = Join-Path $Vault '.memoria/schemas/folders.yaml'
-    $golden = Join-Path $Vault '.memoria/operations/integrity/linter/golden_restore.py'
+    $goldenModule = 'memoria_vault.runtime.subsystems.integrity.linter.golden_restore'
     if ($DryRun) {
         Write-Line "  + ensure skeleton directories from $schema"
-        Write-Line "  + $script:VenvPython $golden --vault $Vault stage"
+        Write-Line "  + $script:VenvPython -m $goldenModule --vault $Vault stage"
         return
     }
     if (-not (Test-Path $script:VenvPython)) { Stop-Install "Missing venv Python at $script:VenvPython" }
@@ -376,8 +376,13 @@ function Install-RuntimeScaffold {
         "[(v/d).mkdir(parents=True, exist_ok=True) for d in (data.get('skeleton') or [])]"
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-c', $code, $Vault)
     Write-Ok 'Folder skeleton ensured from folders.yaml'
-    if (-not (Test-Path $golden)) { Stop-Install "Missing golden restore script at $golden" }
-    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @($golden, '--vault', $Vault, 'stage')
+    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @(
+        '-m',
+        $goldenModule,
+        '--vault',
+        $Vault,
+        'stage'
+    )
     Write-Ok 'Golden copy staged (.memoria/golden/)'
 }
 

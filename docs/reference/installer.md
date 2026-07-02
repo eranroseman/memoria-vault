@@ -77,7 +77,7 @@ The model overlay changes only the Hermes model block in the `--with-hermes` ada
 | 2. Fetch the repo | Clones `memoria-vault` to a temp staging dir (or uses a local checkout). |
 | 3. Scaffold + populate | Copies `vault-template/` into a new vault, then recreates the empty-folder **skeleton** (the `SKELETON_DIRS` list mirrors `folders.yaml`'s `skeleton:` block). A full install refuses an existing Memoria vault; use a fresh target for a new release. |
 | 3a. Golden copy | Stages the shipped system files and SHA-256 manifest at `.memoria/golden/` — the Linter's restore source (`golden_restore.py stage`). |
-| 3b. Git repo + hooks | Initializes Git when needed, wires `.memoria/operations/integrity/linter/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue verification. The vault is _your_ repo: the installer never commits, sets identity, or adds a remote. |
+| 3b. Git repo + hooks | Initializes Git when needed, wires `.githooks/pre-commit` into `.git/hooks/pre-commit` so staged notes pass schema validation, and `.githooks/post-commit` into `.git/hooks/post-commit` so committed project drafts enqueue verification. The vault is _your_ repo: the installer never commits, sets identity, or adds a remote. |
 | 4. Runtime dependencies + package | Creates the vault-local venv at `.memoria/.venv`, pip-installs `mcp/requirements.txt`, and installs the Memoria package from the release root (`pip install <release_root>`). The **clustering stack is opt-in**: add `--with-cluster` to install `requirements-cluster.txt` (bertopic → torch, ~2 GB); skipping it leaves graph tools working and `cluster_model_topics` erroring cleanly. |
 | 5. qmd search engine | Installs `@tobilu/qmd` (npm, Node ≥22) if missing and registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index paths. |
 | 6. CLI next steps | Prints the exact vault-local Python commands for `memoria doctor bundle --workspace ...`, `memoria workspace rebuild --search`, and `memoria ask`. |
@@ -102,13 +102,13 @@ With `--with-hermes` / `-WithHermes`, all six are deterministic, no-LLM `hermes 
 | Cron | Schedule | Runs | Effect |
 | --- | --- | --- | --- |
 | `memoria-board-export` | `* * * * *` | `board_export.py` | Projects the live kanban board into `system/board/` and appends its telemetry logs (metrics aggregation is the separate weekly `memoria-metrics` job). |
-| `memoria-sweeps` | `*/15 * * * *` | `operations/cleanup/reconcile.py` | Recovers stalled captures: enqueues idempotent re-ingest cards (see [Ingest routing](ingest.md)). |
+| `memoria-sweeps` | `*/15 * * * *` | `memoria_vault.runtime.subsystems.cleanup.reconcile` | Recovers stalled captures: enqueues idempotent re-ingest requests (see [Ingest routing](ingest.md)). |
 | `memoria-worker` | `* * * * *` | `memoria_vault.runtime.worker` | Observes direct PI edits and drains up to 10 pending SQLite request jobs through the worker/trusted-writer boundary. |
-| `memoria-lint` | `0 6 * * *` | `operations/integrity/linter/detectors.py` + `golden_restore.py check` | The daily monitor: structural detectors + golden-copy drift (see [Linter: detectors and auto-fix](linter.md)). |
+| `memoria-lint` | `0 6 * * *` | `memoria_vault.runtime.subsystems.integrity.linter.detectors` + `golden_restore check` | The daily monitor: structural detectors + golden-copy drift (see [Linter: detectors and auto-fix](linter.md)). |
 | `memoria-metrics` | `30 6 * * 1` | `mcp/metrics_aggregate.py` | Weekly fleet health: rolls the audit log, the Hermes board, and lint findings into per-lane trust-score notes under `system/metrics/` (read by the fleet-health dashboard). |
-| `memoria-eval` | `0 7 1 */3 *` | `operations/telemetry/eval/eval_score.py` + `eval_dispatch.py` | Quarterly vault-eval: scores the previous quarter's run into `system/metrics/eval/runs.jsonl`, then fans the `system/eval/` gold set out as one idempotent eval card per task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |
+| `memoria-eval` | `0 7 1 */3 *` | `memoria eval run` | Quarterly vault-eval dispatch: fans the `system/eval/` gold set out as one idempotent eval task per current task — diagnostic, never gating (see [Vault eval](vault-eval.md)). |
 
-A further wrapper ships for the monthly Retraction Watch refresh (`vault-template/.memoria/scripts/retraction-refresh-cron.sh` — `retraction.py --refresh` + `--sweep`).
+A further wrapper ships for the monthly Retraction Watch refresh (`vault-template/.memoria/scripts/retraction-refresh-cron.sh` — runtime retraction `--refresh` + `--sweep`).
 
 ---
 
