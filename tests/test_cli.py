@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault import typer_cli
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.trusted_writer import append_journal_event
@@ -58,7 +59,21 @@ def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixt
 def test_pyproject_exposes_memoria_console_script() -> None:
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert data["project"]["scripts"]["memoria"] == "memoria_vault.cli:main"
+    assert data["project"]["scripts"]["memoria"] == "memoria_vault.typer_cli:main"
+
+
+def test_typer_console_entrypoint_delegates_current_commands(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+
+    rc = typer_cli.main(["init", "--workspace", str(workspace), "--dry-run", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["dry_run"] is True
+    assert output["workspace"] == str(workspace)
 
 
 def test_alpha14_cli_command_surface_is_exact() -> None:
