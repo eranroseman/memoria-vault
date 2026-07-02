@@ -3,15 +3,17 @@ topic: decisions
 id: 48
 title: One Co-PI fronts everything; specialists consolidate to posture-defined agents
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [22, 46]
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-48: One Co-PI fronts everything; specialists consolidate to posture-defined agents
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

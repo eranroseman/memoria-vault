@@ -3,15 +3,18 @@ topic: decisions
 id: 23
 title: Memory is seven scoped substrates, not one store
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-01
 date_resolved: 2026-06-02
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-23: Memory is seven scoped substrates, not one store
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Revised 2026-06-02.** Originally six substrates. Substrate 5 ("vault project memory") was split into **project memory** and **program memory**, and the set was renamed for self-explanatory, scope-faithful names. Updated in place rather than superseded — this extends the same decision a day after it was recorded, it does not reverse it. (The count is authoritative at **seven**; the file was renamed from `six-memory-substrates` to `scoped-memory-substrates` so the name no longer states a stale count.)
 >

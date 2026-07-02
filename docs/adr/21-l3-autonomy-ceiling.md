@@ -3,15 +3,17 @@ topic: decisions
 id: 21
 title: L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired)
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-01
 date_resolved: 2026-06-01
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [128]
 ---
 
 # ADR-21: L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired)
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-128](128-no-write-time-correctness-oracle.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

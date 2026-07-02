@@ -3,15 +3,17 @@ topic: decisions
 id: 32
 title: Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-04
 date_resolved: 2026-06-04
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-32: External access over MCP
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

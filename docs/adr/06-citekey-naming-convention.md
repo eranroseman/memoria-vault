@@ -3,15 +3,17 @@ topic: decisions
 id: 06
 title: Citekey naming convention
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-05-15
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [124]
 ---
 
 # ADR-06: Citekey naming convention
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-124](124-standalone-catalog-citation-authority.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

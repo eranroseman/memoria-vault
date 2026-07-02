@@ -3,15 +3,17 @@ topic: decisions
 id: 74
 title: Manage bundled Obsidian plugins with a pinned provenance manifest
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-14
 date_resolved: 2026-06-18
-assumes: [26, 55, 67]
+assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-74: Manage bundled Obsidian plugins with a pinned provenance manifest
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

@@ -3,15 +3,17 @@ topic: decisions
 id: 72
 title: Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-14
 date_resolved: 2026-06-14
 assumes: [48]
 supersedes: []
-superseded_by: []
+superseded_by: [130]
 ---
 
 # ADR-72: Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

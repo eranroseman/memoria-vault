@@ -3,15 +3,18 @@ topic: decisions
 id: 83
 title: Direct PI relate control
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
 assumes: [52, 72, 79, 116, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [126]
 ---
 
 # ADR-83: Direct PI relate control
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Verified on-box 2026-06-21 (accepted but not yet implemented).** This control is
 > `accepted` but **nothing is built**: there is no PI relate command in QuickAdd/Commander,

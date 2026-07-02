@@ -3,15 +3,18 @@ topic: decisions
 id: 30
 title: Tiered ingest pipeline (capture → fallback-chained enrichment → gated write)
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-03
 date_resolved: 2026-06-03
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [129]
 ---
 
 # ADR-30: Tiered ingest pipeline
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-129](129-layered-machine-judgment.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > *Terminology note (0.1.0-alpha.12): `captured` is now the `ingest_status: tier0`
 > floor, **not** a read-state value, and the retry sweep keys on `ingest_status`.

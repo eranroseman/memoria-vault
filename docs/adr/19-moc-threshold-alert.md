@@ -3,15 +3,18 @@ topic: decisions
 id: 19
 title: Agent-proposed hubs (threshold alert and Mapper handoff)
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-31
 date_resolved: 2026-06-01
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [126]
 ---
 
 # ADR-19: Agent-proposed hubs (threshold alert and Mapper handoff)
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Tier 1 ships (status note, 2026-06-12).** The report-only check is implemented as the Linter's `hub-threshold` detector ([#426](https://github.com/eranroseman/memoria-vault/issues/426)). The chosen rule, where this ADR left the reading open: a "topic" is a term in a claim's `topics` list or a paper's `research_area` list (the paper-side topic facet the classify stage fills — papers carry no `topics` field); the threshold is **15 notes** (papers + claims combined, the lower edge of the ≥15–20 band in [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md#hub-thresholds)); matching is case-insensitive; a topic already covered by a `hub` (or legacy `moc`) note — its `topic` or `title` matches the term — is suppressed. The finding is a LOW advisory ("consider creating a hub"), never auto-creation. **Tier 2 ships (status note, 2026-06-16).** The deterministic `hub_handoff.py` operation reads current `hub-threshold` findings and delegates a `map` lane card to the Librarian. The handoff is ceiling-validated by `tasks_mcp.py`, allows only `notes/fleeting/maps/` and `inbox/`, and explicitly forbids writes under `notes/hubs/`; the PI still creates or promotes the final hub.
 

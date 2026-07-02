@@ -3,15 +3,17 @@ topic: decisions
 id: 116
 title: "Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges"
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
 assumes: [101, 114, 115, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [130]
 ---
 
 # ADR-116: Obsidian surface architecture — View, Collection, Rail
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

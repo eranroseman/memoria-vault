@@ -3,15 +3,17 @@ topic: decisions
 id: 03
 title: Review gate is structural, enforced by the policy MCP
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-01
 date_resolved: 2026-05-01
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [128]
 ---
 
 # ADR-03: Review gate is structural, enforced by the policy MCP
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-128](128-no-write-time-correctness-oracle.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

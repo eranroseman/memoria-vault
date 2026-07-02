@@ -3,15 +3,18 @@ topic: decisions
 id: 28
 title: The vault write gate is a Hermes Python plugin, not a shell hook
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-02
 date_resolved: 2026-06-02
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-28: The vault write gate is a Hermes Python plugin, not a shell hook
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Mechanism correction.** Earlier shell-hook gate validation used synthetic tool
 > names and did not prove live enforcement. This ADR replaces that shell-hook

@@ -3,15 +3,17 @@ topic: decisions
 id: 14
 title: Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-30
 date_resolved: 2026-05-30
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [126]
 ---
 
 # ADR-14: advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

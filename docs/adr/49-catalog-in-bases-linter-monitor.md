@@ -8,10 +8,13 @@ date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [119]
 supersedes: []
-superseded_by: [122]
+superseded_by: [125]
 ---
 
 # ADR-49: Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > Superseded by [ADR-122](122-sqlite-working-state-boundary.md): catalog record
 > state now lives in SQLite behind the checked Concept boundary. Bases may remain a

@@ -3,15 +3,18 @@ topic: decisions
 id: 55
 title: The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [26, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-55: The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Verified on-box 2026-06-21.** The shipped mechanism is the SHA-256 golden
 > manifest plus `check` and `restore`; `restore` is propose-only unless the caller

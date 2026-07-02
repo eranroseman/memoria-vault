@@ -3,15 +3,18 @@ topic: decisions
 id: 46
 title: Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [22]
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-46: Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Vocabulary amended (2026-06-14, [ADR-69: Operations — name the deterministic
 > layer and its four categories]({{ site.baseurl }}/adr/69-operations-layer-naming.html)).** The layer this ADR

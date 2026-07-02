@@ -3,15 +3,17 @@ topic: decisions
 id: 102
 title: Disposable projection engine
 nav_exclude: true
-status: proposed
+status: superseded
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-07-02
 assumes: [57, 69, 116, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [130]
 ---
 
 # ADR-102: Disposable projection engine
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 
