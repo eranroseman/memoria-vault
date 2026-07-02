@@ -3,15 +3,17 @@ topic: decisions
 id: 09
 title: Contradictions / tensions dashboard
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-15
 date_resolved: 2026-05-29
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [129]
 ---
 
 # ADR-09: Contradictions / tensions dashboard
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-129](129-layered-machine-judgment.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

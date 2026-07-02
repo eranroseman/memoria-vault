@@ -3,15 +3,17 @@ topic: decisions
 id: 106
 title: Cost and disposition capture — Hermes session store and the review action
 nav_exclude: true
-status: accepted
+status: rejected
 date_proposed: 2026-06-19
-date_resolved: 2026-06-19
+date_resolved: 2026-07-02
 assumes: [20, 22, 104]
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-106: Cost and disposition capture — Hermes session store and the review action
+
+> **Status note (0.1.0-alpha.15):** rejected: Hermes session-store capture is dead with the dropped Hermes runtime.
 
 ## Context
 

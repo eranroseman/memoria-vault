@@ -3,15 +3,17 @@ topic: decisions
 id: 97
 title: Writer-proposed candidate claim notes
 nav_exclude: true
-status: proposed
+status: rejected
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-07-02
 assumes: [21, 54]
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-97: Writer-proposed candidate claim notes
+
+> **Status note (0.1.0-alpha.15):** rejected: Writer-proposed claim notes conflict with the alpha.15 non-goal for a Writer agent.
 
 ## Context
 

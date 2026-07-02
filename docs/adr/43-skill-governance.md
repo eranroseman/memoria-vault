@@ -3,15 +3,17 @@ topic: decisions
 id: 43
 title: Skill governance and lifecycle
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-05-31
 date_resolved: 2026-06-12
 assumes: [24]
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-43: Skill governance and lifecycle
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

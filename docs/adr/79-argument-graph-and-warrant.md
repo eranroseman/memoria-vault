@@ -3,15 +3,17 @@ topic: decisions
 id: 79
 title: Argument graph and warrant
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-16
 date_resolved: 2026-06-16
 assumes: [52, 77, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [126]
 ---
 
 # ADR-79: Argument graph and warrant
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

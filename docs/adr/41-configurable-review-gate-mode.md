@@ -3,15 +3,18 @@ topic: decisions
 id: 41
 title: Configurable review-gate mode (blocking / advisory) for comparison studies
 nav_exclude: true
-status: accepted
+status: superseded
 assumes: []
 date_proposed: 2026-05-31
 date_resolved: 2026-06-19
 supersedes: []
-superseded_by: []
+superseded_by: [128]
 ---
 
 # ADR-41: Configurable review-gate mode (blocking / advisory) for comparison studies
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-128](128-no-write-time-correctness-oracle.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Naming.** This is **not** [ADR-14](14-advisor-review-vs-frozen-deliverable.md)'s "advisor-review export" (a live-citation `.docx` for a *human academic advisor* in Word). That concerns deliverables. This proposal concerns the *agent review gate* and exists purely as measurement infrastructure.
 

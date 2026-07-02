@@ -3,15 +3,17 @@ topic: decisions
 id: 119
 title: "Concept schemas own field, home, read-state, and form contracts"
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
 assumes: [52, 116]
 supersedes: []
-superseded_by: []
+superseded_by: [126]
 ---
 
 # ADR-119: Concept schemas own field, home, read-state, and form contracts
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

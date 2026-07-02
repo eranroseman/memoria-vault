@@ -3,15 +3,17 @@ topic: decisions
 id: 104
 title: Telemetry as three planes — audit, analytics, diagnostic
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-19
 date_resolved: 2026-06-19
 assumes: [20, 24, 25]
 supersedes: []
-superseded_by: []
+superseded_by: [127]
 ---
 
 # ADR-104: Telemetry as three planes — audit, analytics, diagnostic
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-127](127-quarantine-and-verify-integrity.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

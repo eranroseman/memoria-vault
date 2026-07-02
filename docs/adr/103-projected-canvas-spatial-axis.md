@@ -3,15 +3,17 @@ topic: decisions
 id: 103
 title: Projected Canvas spatial axis
 nav_exclude: true
-status: proposed
+status: rejected
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-07-02
 assumes: [52, 79, 83, 102, 116]
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-103: Projected Canvas spatial axis
+
+> **Status note (0.1.0-alpha.15):** rejected: spatial canvas is not the validated default; tabular/faceted views remain the baseline.
 
 ## Context
 

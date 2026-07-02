@@ -3,15 +3,17 @@ topic: decisions
 id: 114
 title: "Left pane is a navigation rail: Now over Places"
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-23
 date_resolved: 2026-06-23
 assumes: [101, 116]
 supersedes: []
-superseded_by: []
+superseded_by: [130]
 ---
 
 # ADR-114: Left pane is a navigation rail — Now over Places
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

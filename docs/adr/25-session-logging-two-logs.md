@@ -3,15 +3,18 @@ topic: decisions
 id: 25
 title: Two separate session logs — hash-paired audit vs. per-session digests
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-01
 date_resolved: 2026-06-12
 assumes: [3, 23]
 supersedes: []
-superseded_by: []
+superseded_by: [127]
 ---
 
 # ADR-25: Two separate session logs — hash-paired audit vs. per-session digests
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-127](127-quarantine-and-verify-integrity.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > **Status: accepted — fully implemented (2026-06-12).** Both halves now ship: the **audit log** (hash-paired per write, guarded by the Linter's `audit-unpaired-writes` and `vault-hash-drift` detectors) and the **per-session digests** under `system/logs/sessions/`, written by the Linter's `session_summary` engine on the daily cron ([#391](https://github.com/eranroseman/memoria-vault/issues/391), [#392](https://github.com/eranroseman/memoria-vault/issues/392)). Two amendments from the original draft: the audit log is **append-only forever — never rotated** (the "weekly rotation" of early drafts is rejected, [#393](https://github.com/eranroseman/memoria-vault/issues/393); growth is surfaced by the Linter's `audit-log-size` advisory at 50 MB), and the second log is a **deterministic digest, not an LLM narrative** — the Linter is zero-LLM, so "narrative" below reads as "per-session digest."
 

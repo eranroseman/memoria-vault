@@ -3,15 +3,18 @@ topic: decisions
 id: 38
 title: Ratchet — a qmd similarity gate before filing a synthesis note
 nav_exclude: true
-status: accepted
+status: superseded
 assumes: [56]  # ADR-56 covers catalog-side near-ties; the claim-side pre-file ratchet was never decided against. Trigger (a) "live qmd index in retrieval" is now MET (qmd is wired into the Librarian/Writer/Peer-reviewer skills); only (b) dense-corpus tuning + building the find-duplicates sweep remain
 date_proposed: 2026-05-30
 date_resolved: 2026-06-19
 supersedes: []
-superseded_by: []
+superseded_by: [129]
 ---
 
 # ADR-38: Ratchet — a qmd similarity gate before filing a synthesis note
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-129](129-layered-machine-judgment.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 > *Terminology note (0.1.0-alpha.12): synthesis material now lives in checked
 > `note` and `hub` Concepts under `knowledge/notes/` and `knowledge/hubs/`

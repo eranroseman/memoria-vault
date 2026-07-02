@@ -3,15 +3,18 @@ topic: decisions
 id: 16
 title: Adopt-on-demand — systematic-review tooling
 nav_exclude: true
-status: accepted
+status: proposed
 date_proposed: 2026-05-30
-date_resolved: 2026-06-01
+date_resolved:
 assumes: []
 supersedes: []
 superseded_by: []
 ---
 
 # ADR-16: Adopt-on-demand — systematic-review tooling
+
+> **Status note (0.1.0-alpha.15):** reverted to proposed/deferred status by the alpha.15 consolidation sweep; adopt-on-demand remains parked until a real systematic review needs it.
+
 
 Four feature clusters — **systematic-review mode**, **evidence-quality fields**, **pre-ingest screening**, and the **dual-rater workflow** — all add schema, fields, or workflow whose only purpose is to serve **formal scoping reviews and systematic reviews**. They share one rationale and are consolidated into this single decision; the table below records what is unique to each. (In an earlier draft these were four separate ADRs, now folded together here — the original draft numbers are not used, to avoid collision with the accepted ADR set.)
 

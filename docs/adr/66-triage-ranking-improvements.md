@@ -3,15 +3,17 @@ topic: decisions
 id: 66
 title: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-11
 date_resolved: 2026-06-19
 assumes: [54, 119]
 supersedes: []
-superseded_by: []
+superseded_by: [129]
 ---
 
 # ADR-66: Semi-automatic triage, agent-consensus pre-filter, and tournament ranking
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-129](129-layered-machine-judgment.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

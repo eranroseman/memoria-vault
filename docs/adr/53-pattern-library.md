@@ -3,15 +3,17 @@ topic: decisions
 id: 53
 title: The pattern library — curated prompt-transformations as data in system/patterns/, one runner
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [3, 48]
 supersedes: []
-superseded_by: []
+superseded_by: [125]
 ---
 
 # ADR-53: The pattern library — curated prompt-transformations as data in system/patterns/, one runner
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

@@ -3,15 +3,17 @@ topic: decisions
 id: 54
 title: Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-10
 date_resolved: 2026-06-10
 assumes: [3]
 supersedes: []
-superseded_by: []
+superseded_by: [128]
 ---
 
 # ADR-54: Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-128](128-no-write-time-correctness-oracle.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 ## Context
 

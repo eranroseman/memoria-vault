@@ -7,7 +7,7 @@ status: accepted
 date_proposed: 2026-07-01
 date_resolved: 2026-07-01
 assumes: [55]
-supersedes: [5]
+supersedes: [5, 6]
 superseded_by: []
 ---
 
@@ -60,6 +60,6 @@ and cannot be the local source of truth.
 
 ## Related
 
-- Superseded decision: [ADR-05 superseded Zotero bibliography authority](05-zotero-as-bibliographic-backbone.md)
+- Superseded decisions: [ADR-05 superseded Zotero bibliography authority](05-zotero-as-bibliographic-backbone.md) and [ADR-06 citekey naming convention](06-citekey-naming-convention.md)
 - Capture routing: [Ingest routing](../reference/ingest.md)
 - Installer decision: [ADR-55 source scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md)

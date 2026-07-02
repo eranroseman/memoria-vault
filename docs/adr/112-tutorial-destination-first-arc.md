@@ -3,15 +3,18 @@ topic: decisions
 id: 112
 title: "Onboarding is one destination-first project arc"
 nav_exclude: true
-status: accepted
+status: superseded
 date_proposed: 2026-06-22
 date_resolved: 2026-06-22
 assumes: []
 supersedes: []
-superseded_by: []
+superseded_by: [130]
 ---
 
 # ADR-112: Onboarding is one destination-first project arc
+
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+
 
 This ADR redesigns the onboarding tutorials from first principles: learner
 requirements, Diátaxis, and learning-science evidence for worked examples, guidance
