@@ -24,14 +24,15 @@ separately in [Clustering](clustering.md).
 ## Retrieval Surface
 
 Memoria owns the checked qmd source tree and invokes qmd from CLI commands:
-`memoria workspace rebuild --search`, `memoria ask`, project gap analysis, and
-diagnostics. Optional adapters may wrap the same checked tree later, but MCP,
-profiles, Obsidian, and Hermes are not required for alpha.14 search.
+`memoria workspace rebuild --search`, `memoria ask`, `memoria project ask`,
+project gap analysis, and diagnostics. Optional adapters may wrap the same
+checked tree later, but MCP, profiles, Obsidian, and Hermes are not required for
+alpha.14 search.
 
 | Property | Value |
 | --- | --- |
 | Backend | `qmd`, local; no network call leaves the machine |
-| Product mode | `memoria workspace rebuild --search` builds the checked tree and qmd collection; `memoria ask` reads it |
+| Product mode | `memoria workspace rebuild --search` builds the checked tree and qmd collection; `memoria ask` and `memoria project ask` read it |
 | Debug mode | Raw `qmd ...` commands for index checks |
 | Access | **Read-only** — qmd never writes Concepts, catalog rows, or journal rows |
 | Baseline | qmd lexical/vector query when ready; deterministic Python BM25 fallback and eval harness in `memoria_vault.runtime.search_index` |
@@ -53,6 +54,8 @@ The implemented baseline is qmd over retrieval documents written into
 not runnable or the manifest has not been built, `answer_query()` falls back to
 the deterministic Python BM25 path so the CLI still returns a stable Ask/Query
 contract: `sources`, `unknowns`, `staleness`, and `contradictions`.
+`memoria project ask` uses the same contract and includes `project_context` when
+the project resolves to a checked project Concept.
 
 | Signal | Catches |
 | --- | --- |
@@ -72,6 +75,7 @@ than maintaining their own.
 | Consumer | Uses search for |
 | --- | --- |
 | `memoria ask` | Grounded checked retrieval behind a user question ([Query the vault](../how-to-guides/knowledge/query-the-vault.md)). |
+| `memoria project ask` | The same checked retrieval contract with checked project context included in the response. |
 | `memoria project gaps` | qmd-backed gap discovery over checked Work text and graph neighborhoods. |
 | Prompt and integrity operations | Candidate evidence pulls without writing through qmd. |
 | Debug sessions | Raw qmd search to distinguish index staleness from query/answer behavior. |
@@ -95,6 +99,7 @@ neighborhood documents when results go stale. The rebuild procedure is owned by
 | `memoria workspace rebuild --workspace <path> --search` | Rebuilds the checked tree, qmd collection, and qmd index. |
 | `memoria workspace rebuild --workspace <path> --search --embeddings` | Also runs qmd embedding after `qmd pull` has populated the model cache. |
 | `memoria ask --workspace <path> --question "..."` | Queries checked retrieval documents through the Ask/Query contract. |
+| `memoria project ask --workspace <path> <project-id> --question "..."` | Queries the same checked retrieval surface with project context. |
 | `qmd search "<term>"` | One-shot query — the fastest way to confirm whether the index, not Memoria, is the problem. |
 | `QMD_CONFIG_DIR=.memoria/index/qmd/config INDEX_PATH=.memoria/index/qmd/index.sqlite qmd collection add .memoria/index/qmd/checked --name memoria-checked --mask '**/*.md'` | Raw equivalent of the collection registration done by `workspace rebuild --search`. |
 | `QMD_CONFIG_DIR=.memoria/index/qmd/config INDEX_PATH=.memoria/index/qmd/index.sqlite qmd update` | Raw qmd index refresh. |

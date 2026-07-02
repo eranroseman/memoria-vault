@@ -491,6 +491,227 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
     }
 
 
+def test_cli_thin_knowledge_loop_runs_end_to_end(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    replay = tmp_path / "providers.json"
+    replay.write_text(json.dumps(_doi_provider_payloads()), encoding="utf-8")
+    interview_fixture = tmp_path / "interview.json"
+    interview_fixture.write_text(
+        json.dumps(
+            {
+                "prompt": "What matters?",
+                "response": "The PI cares about methods caveats and framing.",
+                "project_id": "knowledge/projects/project-alpha.md",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def run_json(*argv: str) -> dict:
+        rc = main([*argv, "--json"])
+        output = json.loads(capsys.readouterr().out)
+        assert rc == 0, output
+        assert output["ok"] is True
+        return output
+
+    run_json("init", "--workspace", str(workspace), "--yes")
+    _write_project_argument_fixture(workspace)
+
+    run_json(
+        "work",
+        "capture",
+        "--workspace",
+        str(workspace),
+        "--doi",
+        "10.1000/alpha",
+        "--title",
+        "Alpha Source",
+        "--text",
+        "Alpha full text about framing, methods, outcomes, gaps, and impact.",
+        "--idempotency-key",
+        "loop-capture",
+    )
+    run_json(
+        "work",
+        "enrich",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--provider-replay",
+        str(replay),
+        "--idempotency-key",
+        "loop-enrich",
+    )
+    updated = run_json(
+        "work",
+        "update",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--topic",
+        "framing",
+        "--idempotency-key",
+        "loop-update",
+    )
+    assert updated["result"]["work"]["csl_json"]["memoria"]["topics"] == ["framing"]
+    run_json(
+        "work",
+        "interview",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--fixture",
+        str(interview_fixture),
+        "--idempotency-key",
+        "loop-interview",
+    )
+    digest = run_json(
+        "work",
+        "digest",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--idempotency-key",
+        "loop-digest",
+    )
+    digest_path = digest["result"]["digest_path"]
+
+    proposed = run_json(
+        "note",
+        "propose",
+        "--workspace",
+        str(workspace),
+        "--work-id",
+        "doi-10.1000_alpha",
+        "--idempotency-key",
+        "loop-note-propose",
+    )
+    [note_path] = proposed["result"]["note_paths"]
+    run_json(
+        "note",
+        "accept",
+        "--workspace",
+        str(workspace),
+        note_path,
+        "--reason",
+        "PI accepted the loop note",
+        "--idempotency-key",
+        "loop-note-accept",
+    )
+    run_json(
+        "note",
+        "link",
+        "--workspace",
+        str(workspace),
+        note_path,
+        "supports",
+        "knowledge/notes/thesis.md",
+        "--reason",
+        "PI linked the accepted note to the thesis",
+        "--idempotency-key",
+        "loop-note-link",
+    )
+
+    answer = run_json(
+        "ask",
+        "--workspace",
+        str(workspace),
+        "--question",
+        "framing outcomes",
+        "--idempotency-key",
+        "loop-ask",
+    )
+    assert {source["path"] for source in answer["result"]["sources"]} & {
+        digest_path,
+        note_path,
+        "works/doi-10.1000_alpha.md",
+    }
+
+    project_answer = run_json(
+        "project",
+        "ask",
+        "--workspace",
+        str(workspace),
+        "project-alpha",
+        "--question",
+        "what matters",
+        "--idempotency-key",
+        "loop-project-ask",
+    )
+    assert project_answer["result"]["project_context"]["project_path"] == (
+        "knowledge/projects/project-alpha.md"
+    )
+
+    gaps = run_json(
+        "project",
+        "gaps",
+        "--workspace",
+        str(workspace),
+        "--seed-term",
+        "new area",
+        "--dense-threshold",
+        "1",
+        "--idempotency-key",
+        "loop-gaps",
+    )
+    assert gaps["result"]["gap_count"] >= 1
+
+    exported = run_json(
+        "project",
+        "export",
+        "--workspace",
+        str(workspace),
+        "project-alpha",
+        "--output",
+        "exports/project-alpha.md",
+        "--idempotency-key",
+        "loop-export",
+    )
+    assert exported["result"]["output_path"] == "exports/project-alpha.md"
+    assert (workspace / "exports/project-alpha.md").is_file()
+
+    recovered = run_json(
+        "workspace",
+        "recover",
+        "--workspace",
+        str(workspace),
+        "--fixture",
+        "crash-before-materialization",
+    )
+    assert recovered["restored"] == ["knowledge/notes/crash-before-materialization.md"]
+
+    with state.connect(workspace) as conn:
+        operations = {
+            row["operation_id"]
+            for row in conn.execute(
+                """
+                SELECT operation_id
+                FROM operation_requests
+                WHERE request_id LIKE 'loop-%'
+                """
+            )
+        }
+    assert {
+        "capture-source",
+        "enrich-source",
+        "update-work",
+        "record-copi-interview",
+        "compile-source-digest",
+        "propose-note-candidates",
+        "curate-note-candidate",
+        "curate-note-link",
+        "answer-query",
+        "analyze-gaps",
+        "export-project",
+    } <= operations
+
+
 def test_cli_project_gaps_runs_gap_analysis_request(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
