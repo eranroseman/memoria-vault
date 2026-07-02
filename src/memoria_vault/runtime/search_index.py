@@ -294,12 +294,17 @@ def _project_context(
         if target not in aliases and normalized not in aliases:
             continue
         thesis = _project_link(frontmatter.get("thesis") or frontmatter.get("active_thesis"))
-        return {
+        context = {
             "project_id": path_id,
             "project_path": path,
             "title": frontmatter.get("title") or Path(path).stem,
             "thesis_path": thesis,
         }
+        terms = _frontmatter_terms(frontmatter)
+        terms.extend(_linked_concept_terms(thesis, docs))
+        if terms:
+            context["retrieval_terms"] = sorted(set(terms))
+        return context
     return {"project_id": target, "project_path": normalized if normalized.endswith(".md") else ""}
 
 
@@ -310,6 +315,7 @@ def _project_query(query: str, project_context: dict[str, Any]) -> str:
         str(project_context.get("title") or ""),
         Path(str(project_context.get("project_id") or "")).name,
         Path(str(project_context.get("thesis_path") or "")).stem,
+        *[str(term) for term in project_context.get("retrieval_terms") or []],
     ]
     return " ".join([query, *(term for term in terms if term)]).strip()
 
@@ -324,6 +330,33 @@ def _project_link(raw: object) -> str:
     if text.startswith("[[") and text.endswith("]]"):
         text = text[2:-2].split("|", 1)[0].split("#", 1)[0]
     return normalize_path(text).removesuffix(".md") + ".md" if text else ""
+
+
+def _linked_concept_terms(relpath: str, docs: list[tuple[str, str, dict[str, Any]]]) -> list[str]:
+    if not relpath:
+        return []
+    target = normalize_path(relpath)
+    return next(
+        (_frontmatter_terms(frontmatter) for path, _text, frontmatter in docs if path == target), []
+    )
+
+
+def _frontmatter_terms(frontmatter: dict[str, Any]) -> list[str]:
+    terms = []
+    for key in ("scope_topics", "topics", "tags", "keywords", "research_area", "methodology"):
+        terms.extend(_string_list(frontmatter.get(key)))
+    facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
+    for key in ("research_area", "methodology", "topics"):
+        terms.extend(_string_list(facets.get(key)))
+    return [term for term in terms if term]
+
+
+def _string_list(value: object) -> list[str]:
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, list):
+        return [item.strip() for item in value if isinstance(item, str) and item.strip()]
+    return []
 
 
 def _qmd_query_hits(

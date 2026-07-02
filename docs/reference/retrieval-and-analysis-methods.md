@@ -38,9 +38,11 @@ writes checked Concepts plus generated checked Work text and graph neighborhoods
 `.memoria/index/qmd/checked/`; Memoria filters qmd results back through
 `check_status: checked`. `answer_query()` first uses qmd when the checked
 manifest and qmd binary are ready, then falls back to deterministic Python BM25.
-`run_bm25_eval()` provides the eval harness. Rerank and broader query expansion
-are later Ask/retrieval eval work; they count only after they beat the qmd or
-BM25 baseline.
+For project-scoped Ask, it expands the query with checked project scope/facet
+terms and checked linked thesis terms before querying qmd. `run_bm25_eval()`
+provides the eval harness. Rerank and broader global query expansion are later
+Ask/retrieval eval work; they count only after they beat the qmd or BM25
+baseline.
 
 **Cost:** local index rebuild plus qmd query time. Determinism: total for the Python BM25
 baseline; qmd CLI ranking is treated as an implementation detail behind the checked-only
