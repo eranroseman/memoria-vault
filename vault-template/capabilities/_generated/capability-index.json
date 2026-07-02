@@ -68,7 +68,7 @@
         "read_checked_concepts"
       ],
       "check_status": "checked",
-      "description": "Classify checked catalog/knowledge topic mismatches for gap analysis.",
+      "description": "Classify checked catalog/knowledge topic mismatches and optional project argument-health gaps.",
       "id": "analyze-gaps",
       "model": "deterministic-fixture",
       "operation_id": "analyze-gaps",
@@ -83,7 +83,7 @@
       ],
       "title": "Analyze gaps",
       "trust": {
-        "sha256": "sha256:c692ca053aac04e019a985f5426c75f9b6639240aa127f159fa824059620a7a3",
+        "sha256": "sha256:a777a53503d1aa3f772bcb3b83341816c9c3cf9ef08fd58747b1cf1ed732f63e",
         "source": "local"
       },
       "type": "operation"

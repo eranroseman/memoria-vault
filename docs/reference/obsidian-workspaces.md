@@ -16,7 +16,7 @@ the on-disk Memoria workspace plus CLI commands.
 | Inbox | `spaces/inbox.md` | `memoria request list --workspace .` |
 | Library | `spaces/library.md` | `memoria work capture`, `memoria work import`, `memoria work digest` |
 | Knowledge | `spaces/knowledge.md` | `memoria ask`, `memoria workspace scan` |
-| Project | `spaces/project.md` | `memoria project gaps`, `memoria project export` |
+| Project | `spaces/project.md` | `memoria project gaps <project-path>`, `memoria project export` |
 | Maintenance | `spaces/maintenance.md` | `memoria workspace check`, `memoria doctor` |
 
 ## Adapter rule

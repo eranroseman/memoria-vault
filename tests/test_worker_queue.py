@@ -891,6 +891,51 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert gaps["new area"]["gap_type"] == "new-topic"
 
 
+def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    (vault / "knowledge/projects").mkdir(parents=True)
+    (vault / "knowledge/projects/project-alpha.md").write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Alpha project\n"
+        "thesis: knowledge/notes/thesis.md\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    for name, body in {
+        "thesis": "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+        "support": (
+            "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+            "links:\n  supports:\n    - knowledge/notes/thesis.md\n"
+        ),
+        "refute": (
+            "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
+            "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n"
+        ),
+    }.items():
+        note = vault / f"knowledge/notes/{name}.md"
+        note.parent.mkdir(parents=True, exist_ok=True)
+        note.write_text(f"---\n{body}---\nBody.\n", encoding="utf-8")
+
+    queued = enqueue_operation(
+        vault,
+        "analyze-gaps",
+        payload={"project_path": "project-alpha", "seed_terms": [], "dense_threshold": 2},
+        idempotency_key="project-gap-analysis",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["project_path"] == "knowledge/projects/project-alpha.md"
+    assert done["thesis_path"] == "knowledge/notes/thesis.md"
+    assert done["argument_gap_count"] == 2
+    assert {gap["finding_kind"] for gap in done["gaps"]} == {"thin-argument", "conflict"}
+
+
 def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     (vault / "knowledge/projects").mkdir(parents=True)

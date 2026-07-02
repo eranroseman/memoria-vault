@@ -5,7 +5,7 @@ Generated bundle projection. Edit Concept files, not this file.
 
 - [Acknowledge attention](operations/acknowledge-attention.md) `operation` — Record that the PI acknowledged a generated attention item.
 - [Analyze claims](operations/analyze-claims.md) `operation` — Extract and rank truth claims from selected input.
-- [Analyze gaps](operations/analyze-gaps.md) `operation` — Classify checked catalog/knowledge topic mismatches for gap analysis.
+- [Analyze gaps](operations/analyze-gaps.md) `operation` — Classify checked catalog/knowledge topic mismatches and optional project argument-health gaps.
 - [Analyze project argument](operations/analyze-project-argument.md) `operation` — Report argument health for a checked project thesis graph.
 - [Answer query](operations/answer-query.md) `operation` — Answer an Ask query over checked retrieval documents with BM25 sources.
 - [Capture BibTeX source](operations/capture-bibtex-source.md) `operation` — Stage one BibTeX record as an unchecked catalog Work seed.

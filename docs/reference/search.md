@@ -76,7 +76,7 @@ than maintaining their own.
 | --- | --- |
 | `memoria ask` | Grounded checked retrieval behind a user question ([Query the vault](../how-to-guides/knowledge/query-the-vault.md)). |
 | `memoria project ask` | The same checked retrieval contract with checked project context included in the response. |
-| `memoria project gaps` | qmd-backed gap discovery over checked Work text and graph neighborhoods. |
+| `memoria project gaps <project-path>` | qmd-backed gap discovery over checked Work text, graph neighborhoods, and checked project argument health. |
 | Prompt and integrity operations | Candidate evidence pulls without writing through qmd. |
 | Debug sessions | Raw qmd search to distinguish index staleness from query/answer behavior. |
 

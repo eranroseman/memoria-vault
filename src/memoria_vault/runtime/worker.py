@@ -521,21 +521,35 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             raise ValueError("analyze-gaps requires seed_terms")
         if not isinstance(dense_threshold, int) or dense_threshold < 1:
             raise ValueError("analyze-gaps requires dense_threshold >= 1")
+        project_path = str(payload.get("project_path") or "").strip()
         result = analyze_gaps(
             vault,
             seed_terms=seed_terms,
             dense_threshold=dense_threshold,
+            project_path=project_path,
             machine=machine,
         )
-        return {
+        out = {
             "checked_topics": result["checked_topics"],
             "dense_threshold": result["dense_threshold"],
             "full_text_gap_count": result["full_text_gap_count"],
+            "argument_gap_count": result["argument_gap_count"],
             "discovery_candidate_paths": result["discovery_candidate_paths"],
             "discovery_commit": result["discovery_commit"],
             "gap_count": len(result["gaps"]),
             "gaps": result["gaps"],
         }
+        if project_path:
+            out.update(
+                {
+                    "project_path": result["project_path"],
+                    "thesis_path": result["thesis_path"],
+                    "argument_stage": result["argument_stage"],
+                    "evidence_saturation": result["evidence_saturation"],
+                    "displayed_confidence": result["displayed_confidence"],
+                }
+            )
+        return out
     if operation_id == "analyze-project-argument":
         from memoria_vault.runtime.knowledge import analyze_project_argument
 

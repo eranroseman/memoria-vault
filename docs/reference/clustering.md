@@ -14,7 +14,7 @@ but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 | Capability | Current owner |
 | --- | --- |
 | First-order graph neighborhoods | `memoria_vault.runtime.search_index` builds checked qmd input documents from Concepts, acquired text, and SQLite graph rows. |
-| Project gap analysis | `memoria project gaps` / worker operation `analyze-gaps`. |
+| Project gap analysis | `memoria project gaps <project-path>` / worker operation `analyze-gaps` with optional `project_path`. |
 | Argument graph inspection | `memoria project trace` and `render-project-argument-canvas`. |
 | Retrieval ranking | qmd over checked retrieval documents, with deterministic BM25 fallback in `memoria_vault.runtime.search_index`. |
 

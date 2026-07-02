@@ -206,6 +206,7 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     ask.set_defaults(handler=_cmd_project_ask)
     gaps = project_sub.add_parser("gaps")
     _common(gaps)
+    gaps.add_argument("project_path")
     gaps.add_argument("--seed-term", action="append", default=[])
     gaps.add_argument("--dense-threshold", type=int, default=2)
     gaps.set_defaults(handler=_cmd_project_gaps)
@@ -667,7 +668,11 @@ def _cmd_project_gaps(args: argparse.Namespace) -> int:
         _enqueue_and_run(
             args,
             "analyze-gaps",
-            {"seed_terms": args.seed_term, "dense_threshold": args.dense_threshold},
+            {
+                "project_path": args.project_path,
+                "seed_terms": args.seed_term,
+                "dense_threshold": args.dense_threshold,
+            },
         ),
         args,
     )

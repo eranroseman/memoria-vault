@@ -509,6 +509,40 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     assert [row["kind"] for row in result["advisories"]] == ["structural"]
 
 
+def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
+    _md(
+        tmp_path / "knowledge/projects/project-alpha.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "knowledge/notes/refute.md",
+        "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
+        "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n",
+    )
+
+    result = analyze_gaps(tmp_path, project_path="project-alpha")
+
+    assert result["project_path"] == "knowledge/projects/project-alpha.md"
+    assert result["thesis_path"] == "knowledge/notes/thesis.md"
+    assert result["argument_stage"] == "developing"
+    assert result["argument_gap_count"] == 2
+    gaps = {gap["finding_kind"]: gap for gap in result["gaps"]}
+    assert gaps["thin-argument"]["gap_type"] == "argument-finding"
+    assert gaps["thin-argument"]["note_count"] == 3
+    assert gaps["conflict"]["gap_type"] == "argument-gap"
+    assert gaps["conflict"]["advice"] == "resolve or preserve the contradiction"
+
+
 def test_write_project_argument_canvas_projects_checked_note_links(tmp_path: Path) -> None:
     _md(
         tmp_path / "knowledge/projects/project-alpha.md",
