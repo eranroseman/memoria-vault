@@ -330,6 +330,8 @@ def analyze_gaps(
             "note_count": note_count,
             "proposed_seed": seed,
         }
+        if source_ids := _source_ids_from_seen(seen[key]["sources"]):
+            gap["source_ids"] = source_ids
         if key in retrieval:
             gap["retrieval_engine"] = retrieval[key]["engine"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
@@ -629,11 +631,22 @@ def _gap_source_ids(gap: dict[str, Any]) -> list[str]:
     ids = []
     if isinstance(gap.get("source_id"), str):
         ids.append(str(gap["source_id"]))
+    source_ids = gap.get("source_ids")
+    if isinstance(source_ids, list):
+        ids.extend(str(source_id) for source_id in source_ids if str(source_id).strip())
     for source in gap.get("retrieval_sources") or []:
         source_id = _source_id_from_path(str(source.get("path") or ""))
         if source_id:
             ids.append(source_id)
-    return ids
+    return sorted(set(ids))
+
+
+def _source_ids_from_seen(identities: set[str]) -> list[str]:
+    return sorted(
+        identity.removeprefix("sources:")
+        for identity in identities
+        if identity.startswith("sources:")
+    )
 
 
 def _candidate_paths_for_gap(

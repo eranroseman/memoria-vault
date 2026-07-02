@@ -514,6 +514,46 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     }
 
 
+def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path / "vault")
+    state.upsert_catalog_record(
+        vault,
+        source_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W777",
+                "target_title": "Gamma Work",
+                "target_doi": "10.1000/gamma",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    gap = {row["topic"]: row for row in result["gaps"]}["catalog-only"]
+    assert gap["source_ids"] == ["db-alpha"]
+    assert gap["discovery_candidate_paths"] == [
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W777.md"
+    ]
+    assert result["discovery_candidate_paths"] == gap["discovery_candidate_paths"]
+    candidate = vault / result["discovery_candidate_paths"][0]
+    fm = read_frontmatter(candidate)
+    assert fm["raised_by"] == "analyze-gaps"
+    assert fm["discovered_work_id"] == "https://openalex.org/W777"
+
+
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,

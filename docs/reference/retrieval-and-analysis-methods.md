@@ -44,6 +44,11 @@ provides the eval harness. Rerank and broader global query expansion are later
 Ask/retrieval eval work; they count only after they beat the qmd or BM25
 baseline.
 
+Project gap analysis also reads SQLite catalog source terms and first-order
+reference/related graph edges. When a checked source creates a source-only gap,
+the gap keeps that source id and can emit unchecked candidate Work attention
+cards from its graph edges without requiring qmd to rediscover the source.
+
 **Cost:** local index rebuild plus qmd query time. Determinism: total for the Python BM25
 baseline; qmd CLI ranking is treated as an implementation detail behind the checked-only
 read barrier.
