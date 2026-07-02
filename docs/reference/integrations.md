@@ -92,6 +92,7 @@ These are called during `find` to surface candidate sources.
 | Integration | Role |
 |---|---|
 | **Kilo Code gateway** | Optional model provider for the standalone runner, configured through workspace provider config/environment. No Hermes profile defaults ship in alpha.14. |
+| **pydantic-ai runner** | Required operation runner. `memoria doctor --check runner` verifies package/provider construction; `memoria doctor --check runner --live` performs an opt-in live dispatch against the configured OpenAI-compatible endpoint. |
 | **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the alpha.14 baseline. |
 
 ---

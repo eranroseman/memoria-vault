@@ -15,6 +15,8 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | --- | --- |
 | `memoria init` | Create/scaffold a workspace. |
 | `memoria status` | Show workspace state. |
+| `memoria doctor --check qmd` | Check required qmd search prerequisites. |
+| `memoria doctor --check runner` | Check the pydantic-ai runner wiring; add `--live` for an opt-in model dispatch. |
 | `memoria doctor bundle` | Emit a diagnostic bundle. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |

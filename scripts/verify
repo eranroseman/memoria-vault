@@ -66,6 +66,7 @@ GATE_COMMANDS = {
             "-q",
         ],
     ],
+    "live": [["bash", "scripts/test.sh", "live"]],
 }
 
 MODES = {
@@ -73,7 +74,7 @@ MODES = {
     "package": ["source", "package"],
     "runtime": ["source", "package", "runtime"],
     "rc": ["source", "package", "runtime"],
-    "live": ["runtime"],
+    "live": ["runtime", "live"],
 }
 
 MANUAL_FOLLOW_UP = {

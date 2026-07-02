@@ -66,6 +66,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(doctor, workspace_required=False)
     doctor.add_argument("--check", choices=("qmd", "runner"), default=None)
     doctor.add_argument("--provider", default=None)
+    doctor.add_argument("--live", action="store_true")
     doctor.add_argument("--repair", action="store_true")
     doctor.set_defaults(handler=_cmd_doctor)
     bundle = doctor_sub.add_parser("bundle")
@@ -468,8 +469,10 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             },
             args,
         )
+    if args.live and args.check != "runner":
+        return _fail("doctor --live is only valid with --check runner", json_output=args.json)
     if args.check == "runner":
-        status = _runner_status(args.provider)
+        status = _runner_status(args.provider, live=args.live)
         checks.update(status["checks"])
         return _emit(
             {
@@ -2040,8 +2043,12 @@ def _qmd_status(workspace: Path, *, include_collection: bool = True) -> dict[str
     }
 
 
-def _runner_status(provider: str | None) -> dict[str, Any]:
-    from memoria_vault.runtime.operations import _load_pydantic_ai_openai, model_base_url
+def _runner_status(provider: str | None, *, live: bool = False) -> dict[str, Any]:
+    from memoria_vault.runtime.operations import (
+        _load_pydantic_ai_openai,
+        _pydantic_ai_chat,
+        model_base_url,
+    )
 
     provider_name = (provider or "default").strip() or "default"
     base_url = model_base_url(provider_name)
@@ -2056,6 +2063,8 @@ def _runner_status(provider: str | None) -> dict[str, Any]:
         "runner_base_url": bool(base_url),
         "runner_agent_constructed": False,
     }
+    if live:
+        checks["runner_live_dispatch"] = False
     error = ""
     try:
         Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
@@ -2066,6 +2075,18 @@ def _runner_status(provider: str | None) -> dict[str, Any]:
         model = OpenAIChatModel(model_name, provider=OpenAIProvider(**provider_kwargs))
         Agent(model)
         checks["runner_agent_constructed"] = True
+        if live:
+            _pydantic_ai_chat(
+                {
+                    "operation_id": "doctor-runner-live",
+                    "runner": "pydantic-ai",
+                    "provider": provider_name,
+                    "model": model_name,
+                    "allowed_network": [base_url],
+                },
+                "Reply with a short confirmation that the Memoria runner is reachable.",
+            )
+            checks["runner_live_dispatch"] = True
     except Exception as exc:  # noqa: BLE001 -- doctor reports adapter failures as data.
         error = str(exc)
     return {

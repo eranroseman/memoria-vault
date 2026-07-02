@@ -2430,6 +2430,82 @@ def test_cli_doctor_runner_uses_local_default_base_url(
     assert seen["model_name"] == "doctor"
 
 
+def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    seen = {}
+
+    class FakeProvider:
+        def __init__(self, **kwargs):
+            seen["provider_kwargs"] = kwargs
+
+    class FakeModel:
+        def __init__(self, model_name, *, provider):
+            seen["model_name"] = model_name
+            seen["provider"] = provider
+
+    class FakeResult:
+        output = "runner ok"
+
+    class FakeAgent:
+        def __init__(self, model):
+            seen.setdefault("models", []).append(model)
+
+        def run_sync(self, prompt, *, model_settings):
+            seen["prompt"] = prompt
+            seen["model_settings"] = model_settings
+            return FakeResult()
+
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
+    monkeypatch.setenv("MEMORIA_MODEL", "live-test-model")
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
+        lambda: (FakeAgent, FakeModel, FakeProvider),
+    )
+
+    rc = main(
+        [
+            "doctor",
+            "--workspace",
+            str(workspace),
+            "--check",
+            "runner",
+            "--provider",
+            "local",
+            "--live",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["checks"]["runner_live_dispatch"] is True
+    assert seen["provider_kwargs"] == {"base_url": "http://model.test/v1"}
+    assert seen["model_name"] == "live-test-model"
+    assert len(seen["models"]) == 2
+    assert "Memoria runner is reachable" in seen["prompt"]
+    assert seen["model_settings"]["temperature"] == 0
+
+
+def test_cli_doctor_live_requires_runner_check(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(["doctor", "--workspace", str(workspace), "--live", "--json"])
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert output["ok"] is False
+    assert output["error"] == "doctor --live is only valid with --check runner"
+
+
 def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
