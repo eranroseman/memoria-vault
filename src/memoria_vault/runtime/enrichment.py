@@ -845,6 +845,12 @@ def _first_order_work_graph(
     concepts = openalex.get("concepts")
     if isinstance(concepts, list):
         topic_candidates.extend(concept for concept in concepts if isinstance(concept, dict))
+    mesh = openalex.get("mesh")
+    if isinstance(mesh, list):
+        topic_candidates.extend(_openalex_mesh_topics(mesh))
+    sdgs = openalex.get("sustainable_development_goals")
+    if isinstance(sdgs, list):
+        topic_candidates.extend(sdg for sdg in sdgs if isinstance(sdg, dict))
     for topic in topic_candidates:
         title = str(topic.get("display_name") or topic.get("name") or "").strip()
         target_id = str(topic.get("id") or "").strip() or (f"topic:{title}" if title else "")
@@ -865,6 +871,22 @@ def _first_order_work_graph(
             if target_id:
                 _add_graph_row(rows, "keyword", target_id, title, "", "openalex", keyword)
     return list(rows.values())
+
+
+def _openalex_mesh_topics(rows: list[Any]) -> list[dict[str, Any]]:
+    topics = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        title = str(row.get("descriptor_name") or "").strip()
+        qualifier = str(row.get("qualifier_name") or "").strip()
+        display = f"{title} / {qualifier}" if title and qualifier else title or qualifier
+        target_id = str(row.get("descriptor_ui") or row.get("qualifier_ui") or "").strip()
+        if display or target_id:
+            topics.append(
+                {**row, "id": f"mesh:{target_id}" if target_id else "", "display_name": display}
+            )
+    return topics
 
 
 def _add_graph_row(
