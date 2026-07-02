@@ -28,9 +28,9 @@ imported. The PDF adapter
 requirements to extract page text. URL snapshots use `capture_url_source()`
 with stdlib HTML text extraction.
 
-The older paper-ingest operation under
-`vault-template/.memoria/operations/processing/ingest/` is pre-reset code. It is
-not the source of truth for catalog writes.
+The older paper-ingest operation has been ported into
+`memoria_vault.runtime.subsystems.processing.ingest`. The runtime package is the
+source of truth for catalog writes.
 
 ## Current Pipeline
 

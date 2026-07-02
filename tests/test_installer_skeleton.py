@@ -449,7 +449,7 @@ def test_fresh_installer_copies_the_runtime_src_tree():
     assert (
         "Invoke-Logged -FilePath 'git' -ArgumentList @('-C', $Vault, 'branch', '-M', 'main')" in ps
     )
-    assert "golden_restore.py" in ps
+    assert "memoria_vault.runtime.subsystems.integrity.linter.golden_restore" in ps
     assert "Install-VaultHooks" in ps
 
 

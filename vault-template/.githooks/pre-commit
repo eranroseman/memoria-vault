@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# pre-commit — schema-validate staged Memoria Markdown.
+set -euo pipefail
+
+VAULT_ROOT="$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.md' || true)
+[ -n "$staged" ] || exit 0
+
+PY="$VAULT_ROOT/.memoria/.venv/bin/python"
+if [ ! -x "$PY" ]; then
+  PY="$VAULT_ROOT/.memoria/.venv/Scripts/python.exe"
+fi
+if [ ! -x "$PY" ]; then
+  PY="python3"
+fi
+
+# shellcheck disable=SC2086
+exec "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.precommit_check \
+  --vault "$VAULT_ROOT" $staged

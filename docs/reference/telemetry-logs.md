@@ -162,7 +162,7 @@ The wrappers do not write a success heartbeat after a failed command. Missing or
 
 ## lint-findings.jsonl
 
-One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `vault-template/.memoria/operations/integrity/linter/detectors.py`; serialized as:
+One row per detector finding from a `memoria-lint` run. The in-memory shape is the `Finding` dataclass in `memoria_vault.runtime.subsystems.integrity.linter.detectors`; serialized as:
 
 ```json
 {"timestamp": "2026-06-01T02:00:00Z", "detector": "fama-exposure", "severity": "HIGH", "path": "knowledge/projects/draft-x/notes/n.md", "message": "cites superseded claim [[oldclaim]]"}

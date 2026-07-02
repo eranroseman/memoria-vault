@@ -7,7 +7,7 @@ nav_order: 2
 
 # Run a retraction sweep
 
-Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps operation** — deterministic, read-only Python at `.memoria/operations/integrity/retraction/retraction.py`; flag-don't-fix: it raises Inbox **`alert`** cards and never flips a note.
+Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps operation** — deterministic, read-only runtime code in `memoria_vault.runtime.subsystems.integrity.retraction.retraction`; flag-don't-fix: it raises Inbox **`alert`** cards and never flips a note.
 
 ## When it runs without you
 
@@ -18,7 +18,7 @@ The installer ships a monthly cron wrapper (`retraction-refresh-cron.sh`) that r
 **1. Refresh the local dataset** (skippable if the monthly cron just ran):
 
 ```bash
-python3 .memoria/operations/integrity/retraction/retraction.py --refresh
+python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh
 ```
 
 Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
@@ -26,7 +26,7 @@ Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 **2. Run the sweep.**
 
 ```bash
-python3 .memoria/operations/integrity/retraction/retraction.py --sweep --vault .
+python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault .
 ```
 
 The sweep scans the Catalog's DOIs against three sources, most authoritative first: the local Retraction Watch index, the live Crossref `update-to` delta, and Open Retractions as a cross-check. Each hit raises one finding-first **`alert`** card in `inbox/`.

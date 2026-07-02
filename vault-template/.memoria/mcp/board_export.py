@@ -19,10 +19,10 @@ for _path in (_RUNTIME_ROOT, _REPO_DIR):
         sys.path.insert(0, str(_path))
 
 from board_export_cost import CostDoctorError, HermesCostLookup, load_card_detail, run_cost_doctor
-from operations.lib import inbox
 
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import load_json, resolve_vault, safe_filename
+from memoria_vault.runtime.subsystems.lib import inbox
 from memoria_vault.runtime.time import now_iso
 
 BOARD_RELDIR = "system/board"

@@ -76,7 +76,7 @@ This page is a guarded mirror, not the source of truth. Action implementation li
 | Cascade rollback | runtime integrity helper (`cascade_rollback`) | Moves machine-derived downstream Concepts to `.memoria/quarantine/`, appends `resolved` plus inverse `derived` events, and leaves PI-derived downstream Concepts live while flagging them with route `ask`. |
 | Run seeded-error verdict | worker operation `run-seeded-error-verdict` + runtime helper (`run_seeded_error_verdict`) | Builds the seeded structural fixture from `system/eval/alpha12-seeded-errors.json` (falling back to alpha.11) in a disposable temp workspace, measures recall, false positives, check timing, detection timing, rollback completeness, residual error, no-checks residual baseline, residual reduction, and ask-routed checkpoint value, then returns a pass/fail verdict for that bundle. |
 
-### Linter (`operations/integrity/linter/`)
+### Linter (`memoria_vault.runtime.subsystems.integrity.linter`)
 
 The seventeen registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](linter.md#the-detectors); every detector is report-only.
 
@@ -88,14 +88,14 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
-| Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent Librarian `map` cards that stage proposals under `knowledge/notes/maps/`; curated `knowledge/hubs/` stays PI-approved. |
+| Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; curated `knowledge/hubs/` stays PI-approved. |
 
-### Sweeps (`operations/`)
+### Sweeps (`memoria_vault.runtime.subsystems`)
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Eval dispatch | sweeps operation (`eval_dispatch.py`, quarterly cron) | Fans the gold set out as one idempotent kanban card per task, routed to the owning lane ([Vault eval](vault-eval.md)). |
-| Eval score | sweeps operation (`eval_score.py`, quarterly cron) | Computes recall@k / support-rate / FAMA-clean from the result blocks reported on eval cards; appends to `system/metrics/eval/runs.jsonl`. |
+| Eval dispatch | sweeps operation (`eval_dispatch.py`, scheduled task or `memoria eval run`) | Fans the gold set out as one idempotent local eval task per current task ([Vault eval](vault-eval.md)). |
+| Eval score | sweeps operation (`eval_score.py`, scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
 | Retraction check | sweeps operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
 | Retraction sweep | sweeps operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
 | Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection. |
@@ -112,7 +112,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Model topics | cluster MCP (`cluster_mcp.py`) | Runs BERTopic over the corpus to extract topics, the doc-topic map, and outliers. |
 | List / run patterns | patterns MCP (`patterns_mcp.py`) | Lists checked prompt operations from `capabilities/operations/` and composes a pattern run, refusing gated-zone output targets and logging provenance. |
 | Route task | tasks MCP (`tasks_mcp.py`), Co-PI-facing | Validates a delegation against the target lane's ceiling, refuses dispatch while an open `loudness: block` card exists, and creates the kanban card. |
-| Loudness routing | shared operation helper (`operations/lib/loudness.py`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
+| Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
 | Board export | board export (`board_export.py`, 60 s cron) | Projects kanban cards into `system/board/` and appends board-state, transition, cost, and blind-review telemetry; review disposition is emitted by QuickAdd when the human resolves a work prompt. |
 | Metrics aggregate | metrics aggregator (`metrics_aggregate.py`, weekly cron) | Rolls audit + board + lint signals into per-lane trust-score notes under `system/metrics/`. |
 

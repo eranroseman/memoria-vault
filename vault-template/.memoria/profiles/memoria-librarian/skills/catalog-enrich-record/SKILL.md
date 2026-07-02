@@ -29,7 +29,7 @@ metadata:
 
 Turn a citekey into a populated source Concept. The mechanical ~80% of ingest is
 **deterministic and lives behind the `ingest_pipeline` MCP tool** (the
-`memoria-ingest` server wrapping the ingest operation (`.memoria/operations/processing/ingest/runner.py`)) — you do not reimplement
+`memoria-ingest` server wrapping the ingest runtime subsystem (`memoria_vault.runtime.subsystems.processing.ingest.runner`)) — you do not reimplement
 it, and you cannot run it as a script (`code_execution` is disabled for this
 profile). The tool returns a *draft bundle* with exactly **two holes** that only
 a model can fill: the classification proposal and the comparative `[!brief]`.

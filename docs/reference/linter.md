@@ -11,7 +11,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 
 | Question | Answer |
 | --- | --- |
-| What is it? | Deterministic, zero-LLM Python under `vault-template/.memoria/operations/integrity/linter`. |
+| What is it? | Deterministic, zero-LLM Python under `src/memoria_vault/runtime/subsystems/integrity/linter`. |
 | What blocks? | The pre-commit hook blocks schema-invalid notes from being committed. |
 | What reports? | The daily cron reports everything else, including live in-app edits caught by the next sweep. |
 | What never happens? | Detectors do not auto-move or auto-archive files; findings surface for the PI. |
@@ -20,7 +20,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 
 ## The detectors
 
-`vault-template/.memoria/operations/integrity/linter/detectors.py` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
+`memoria_vault.runtime.subsystems.integrity.linter.detectors` — self-contained (vault tree only), report-only. Constants are **schema-driven**: when `.memoria/schemas/` + PyYAML are available, the type → home map and the legal root folders are derived from `folders.yaml`/`types/*.yaml`; the hardcoded fallbacks keep the operation running without dependencies.
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
@@ -44,8 +44,8 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 CLI entry point:
 
 ```bash
-python3 .memoria/operations/integrity/linter/detectors.py --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
-python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--threshold 15] [--json]
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault <vault> [--json] [--gate dashboard-field-drift,design-system-drift]
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault <vault> [--threshold 15] [--json]
 ```
 
 `--gate DETECTORS` makes only the named detectors blocking (exit 1); everything else stays advisory. The verdict rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM/HIGH) / **FAIL** (any CRITICAL).
@@ -54,22 +54,22 @@ python3 .memoria/operations/integrity/linter/hub_handoff.py --vault <vault> [--t
 
 ## The pre-commit hook
 
-The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): the installer wires `vault-template/.memoria/operations/integrity/linter/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `vault-template/.memoria/operations/integrity/linter/precommit_check.py`, which validates each typed document against its schema via the shared loader (`vault-template/.memoria/operations/lib/schema.py`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
 ## The golden copy
 
-`vault-template/.memoria/operations/integrity/linter/golden_restore.py` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
+`memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file — `system/templates|dashboards|patterns|eval|scripts/` plus `home.md`, `system/vocabulary.md`, `AGENTS.md` — at `.memoria/golden/` with a SHA-256 `manifest.json`.
 
 This is the human-facing half of template protection (#179): agents are already blocked by the lane ceilings — every shipped lane-override denies writes under `system/**` (see [Policy MCP](policy-mcp.md)) — so the golden copy exists to catch and repair an *accidental human* edit or deletion of a system file.
 
 | Command | Effect |
 | --- | --- |
-| `golden_restore.py --vault V stage` | Stage or refresh the golden copy from the live system files. |
-| `golden_restore.py --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
-| `golden_restore.py --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
-| `golden_restore.py --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
+| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V stage` | Stage or refresh the golden copy from the live system files. |
+| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
+| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
+| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
 
 The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): each shipped plugin's `data.json` plus `.obsidian/community-plugins.json`, `core-plugins.json`, and the `memoria-link-colors.css` and `memoria-property-badges.css` snippets. Per-machine and runtime-generated state never enters the manifest — `agent-client/data.json` (seeded per machine), `obsidian-local-rest-api/data.json` (regenerated on first launch), and workspace/appearance state stay the user's.
 
@@ -77,7 +77,7 @@ The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-55](../ad
 
 ## Per-session digests
 
-`vault-template/.memoria/operations/integrity/linter/session_summary.py` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
+`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |
@@ -88,7 +88,7 @@ The manifest also covers the **Memoria-shipped Obsidian config** ([ADR-55](../ad
 | Quiet window | Sessions active within the last **24 h** (`--quiet-hours`) wait for a later run. |
 
 ```bash
-python3 .memoria/operations/integrity/linter/session_summary.py --vault <vault> [--quiet-hours H]
+python3 -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault <vault> [--quiet-hours H]
 ```
 
 ---

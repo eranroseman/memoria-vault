@@ -84,7 +84,7 @@ repos:
       - id: dashboard-schema-drift
         name: dashboard-schema-drift
         language: system
-        entry: python vault-template/.memoria/operations/integrity/linter/detectors.py --vault vault-template --gate dashboard-field-drift
+        entry: env PYTHONPATH=src python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault vault-template --gate dashboard-field-drift
         files: ^vault-template/system/dashboards/.*\.md$|^vault-template/system/templates/.*\.md$
         pass_filenames: false
 

@@ -13,7 +13,7 @@ The frontmatter contract for every typed document. **The single source is
 `vault-template/.memoria/schemas/types`, the type-to-folder map in
 `vault-template/.memoria/schemas/folders.yaml`, and calibrated thresholds in
 `vault-template/.memoria/schemas/calibration.yaml`. The shared loader/validator is
-`vault-template/.memoria/operations/lib/schema.py`; the Linter, pre-commit hook, and
+`src/memoria_vault/runtime/subsystems/lib/schema.py`; the Linter, pre-commit hook, and
 installer-skeleton tests all read it. This generated page explains the grammar
 and universal fields; the per-type tables live in [Document types](document-types.md).
 

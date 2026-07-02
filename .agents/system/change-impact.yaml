@@ -62,8 +62,8 @@ areas:
       - python -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
   - area: Ingest or linter operation
     paths:
-      - vault-template/.memoria/operations/processing/ingest/**
-      - vault-template/.memoria/operations/integrity/linter/**
+      - src/memoria_vault/runtime/subsystems/processing/ingest/**
+      - src/memoria_vault/runtime/subsystems/integrity/linter/**
       - vault-template/.memoria/mcp/ingest_mcp.py
     inspect:
       - Calibration and schemas

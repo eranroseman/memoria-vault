@@ -20,7 +20,7 @@ case "$job" in
     heartbeat="memoria-board-export"
     ;;
   sweeps)
-    run_py "$vault/.memoria/operations/cleanup/reconcile.py" --vault "$vault"
+    run_py -m memoria_vault.runtime.subsystems.cleanup.reconcile --vault "$vault"
     heartbeat="memoria-sweeps"
     ;;
   worker)
@@ -29,9 +29,9 @@ case "$job" in
     heartbeat="memoria-worker"
     ;;
   lint)
-    run_py "$vault/.memoria/operations/integrity/linter/detectors.py" --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
-    run_py "$vault/.memoria/operations/integrity/linter/golden_restore.py" --vault "$vault" check
-    run_py "$vault/.memoria/operations/integrity/linter/session_summary.py" --vault "$vault"
+    run_py -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
+    run_py -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$vault" check
+    run_py -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault "$vault"
     run_py -m memoria_vault.runtime.worker --vault "$vault" integrity-sweep
     heartbeat="memoria-lint"
     ;;
@@ -40,13 +40,12 @@ case "$job" in
     heartbeat="memoria-metrics"
     ;;
   eval)
-    run_py "$vault/.memoria/operations/telemetry/eval/eval_score.py" --vault "$vault" --quarter previous
-    run_py "$vault/.memoria/operations/telemetry/eval/eval_dispatch.py" --vault "$vault"
+    run_py -m memoria_vault.cli eval run --workspace "$vault" --json
     heartbeat="memoria-eval"
     ;;
   retraction-refresh)
-    run_py "$vault/.memoria/operations/integrity/retraction/retraction.py" --refresh
-    run_py "$vault/.memoria/operations/integrity/retraction/retraction.py" --sweep --vault "$vault"
+    run_py -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh
+    run_py -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault "$vault"
     heartbeat="memoria-retraction-refresh"
     ;;
   *)

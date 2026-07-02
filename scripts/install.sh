@@ -424,13 +424,6 @@ copy_vault() {
   done
   ok "Folder skeleton ensured (${#SKELETON_DIRS[@]} dirs)"
 
-  # Stage the golden copy (ADR-55): a canonical copy of every system file with a
-  # hash manifest at <vault>/.memoria/golden/.
-  local pybin="${VENV_PYTHON:-python3}"
-  run "$pybin" "$VAULT_PATH/.memoria/operations/integrity/linter/golden_restore.py" --vault "$VAULT_PATH" stage \
-    || warn "golden copy not staged — run golden_restore.py stage manually (lint:restore needs it)"
-  ok "Golden copy staged (.memoria/golden/)"
-
   if [ "$WITH_HERMES" -eq 1 ]; then
     ensure_memoria_css_snippets
   fi
@@ -540,6 +533,14 @@ install_mcp_deps() {
       say "  (skipped optional clustering stack — rerun with --with-cluster if topic modeling needs bertopic/torch)"
     fi
   fi
+}
+
+stage_golden_copy() {
+  hdr "Golden copy"
+  local pybin="${VENV_PYTHON:-python3}"
+  run "$pybin" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT_PATH" stage \
+    || warn "golden copy not staged — run memoria runtime golden_restore stage manually (lint:restore needs it)"
+  ok "Golden copy staged (.memoria/golden/)"
 }
 
 # Seed shared secrets into a profile's .env. Hermes profile runs read ONLY the
@@ -1041,6 +1042,7 @@ main() {
     resolve_repo            # Memoria package install (install_mcp_deps) needs REPO_DIR
     resolve_vault_for_profiles
     install_mcp_deps
+    stage_golden_copy
     ensure_memoria_css_snippets
     ensure_qmd
     install_profiles
@@ -1064,6 +1066,7 @@ main() {
     load_install_modules
     copy_vault
     install_mcp_deps
+    stage_golden_copy
     ensure_qmd
     print_cli_next_steps
     hdr "Done"
@@ -1078,6 +1081,7 @@ main() {
   ensure_hermes
   copy_vault
   install_mcp_deps
+  stage_golden_copy
   ensure_qmd
   install_profiles
   install_skills

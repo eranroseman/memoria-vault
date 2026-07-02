@@ -7,18 +7,18 @@ nav_order: 8
 
 # Run the vault eval
 
-Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks, let the lanes work them, and score the results — instead of waiting for the quarterly cron. The eval measures whether the *deployed system* finds, extracts, links, and verifies correctly on your vault; its verdict is diagnostic, never gating. For the gold set, the metrics, and the result contract, see [Vault eval](../../reference/vault-eval.md).
+Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks through the local runtime and score reported results — instead of waiting for the scheduled run. The eval measures whether the *deployed system* finds, extracts, links, and verifies correctly on your vault; its verdict is diagnostic, never gating. For the gold set, the metrics, and the result contract, see [Vault eval](../../reference/vault-eval.md).
 
 ## When to run it by hand
 
-- After installing a fresh release vault or changing profiles, to confirm capability didn't regress
+- After installing a fresh release vault, to confirm capability didn't regress
 - When the eval-trend dashboard shows a dip you want to reproduce immediately
 - To smoke-test a fresh vault once the gold-set papers (Transformer, BERT, ResNet, Adam, Dropout) are ingested
 
 ## Prerequisites
 
 - The gold-set papers ingested — the shipped tasks reference well-known papers so they work on any vault once those are present
-- The board and the five profiles running (the eval reuses board dispatch and the lane → profile map)
+- The local runtime installed and `memoria` available on `PATH`
 
 ## Steps
 
@@ -26,22 +26,22 @@ Run Memoria's system-level evaluation on demand — dispatch the gold-set tasks,
 
 ```bash
 cd <vault>
-python .memoria/operations/telemetry/eval/eval_dispatch.py --vault . --dry-run
+memoria eval run --workspace . --dry-run --json
 ```
 
-**2. Dispatch the cards.** One idempotent card per gold task, on its owning lane. The idempotency key is per `(task, quarter)`, so re-running inside the same quarter converges to one card per task rather than duplicating:
+**2. Dispatch the tasks.** One idempotent local eval task per gold task. The idempotency key is per `(task, quarter)`, so re-running inside the same quarter converges to one task per fixture rather than duplicating:
 
 ```bash
-python .memoria/operations/telemetry/eval/eval_dispatch.py --vault .
+memoria eval run --workspace . --json
 ```
 
-**3. Let the lanes run the cards.** Each lane works its eval card under the non-committing contract — scratch-only writes, results reported on the card; a run never mutates the vault. Give the board time to drain (`hermes kanban list` to watch).
+**3. Run the eval work.** Each eval task follows the non-committing contract — scratch-only writes, results reported as JSON; a run never mutates the vault.
 
-**4. Score the run.** The deterministic, zero-LLM scorer reads the cards' reported result blocks and computes only what each result makes computable — no faked scores:
+**4. Score the run.** The deterministic, zero-LLM scorer reads reported result payloads and computes only what each result makes computable — no faked scores:
 
 ```bash
-python .memoria/operations/telemetry/eval/eval_score.py --vault .                    # current quarter
-python .memoria/operations/telemetry/eval/eval_score.py --vault . --quarter previous # what the cron scores
+python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --from-json results.json
+python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --quarter previous --from-json results.json
 ```
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.
@@ -50,14 +50,14 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 
 ## Verify
 
-- `system/metrics/eval/runs.jsonl` has a new line (timestamp, quarter, k, per-task records, per-metric aggregates) — written only when at least one card reported a result block
+- `system/metrics/eval/runs.jsonl` has a new line (timestamp, quarter, k, per-task records, per-metric aggregates) — written only when at least one result payload is reported
 - The eval-trend dashboard shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
-- A task whose card reported no machine-readable result shows as **unscored** — never a faked score
+- A task with no machine-readable result shows as **unscored** — never a faked score
 - `system/eval/last-run.md` reflects the dispatch you just ran
 
 ## The cron equivalent
 
-The quarterly `memoria-eval` cron does exactly these steps in one pass: it **scores the previous quarter** first (its cards have reported by then), then **dispatches** the new quarter's cards. Running on demand is the same two commands by hand. The schedule and wrapper are owned by [Installer (bootstrap)](../../reference/installer.md).
+The scheduled `memoria-eval` wrapper dispatches the current quarter's local eval tasks. Scoring is explicit: run the scorer with `--from-json` once result payloads exist. The schedule and wrapper are owned by [Installer (bootstrap)](../../reference/installer.md).
 
 ## Related
 

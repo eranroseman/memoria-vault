@@ -54,7 +54,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         "vault-template/.memoria/profiles/memoria-linter/detectors.py",
         "vault-template/.memoria/mcp/policy_mcp.py",
         "vault-template/.memoria/lane-overrides/coder.yaml",
-        "vault-template/.memoria/operations/processing/ingest/runner.py",
+        "src/memoria_vault/runtime/subsystems/processing/ingest/runner.py",
         "vault-template/.memoria/schemas/folders.yaml",
         "vault-template/.memoria/design-system.md",
         "docs/adr/29-testing-framework.md",

@@ -25,7 +25,7 @@ lane can run and score it with nothing but the file.
 | `title` | str | The card title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `lane` | enum | The active board lane the eval card routes to: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). Draft and code eval lanes remain deferred with their profile packages. |
+| `lane` | enum | The eval role bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). Draft and code eval roles remain deferred. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
@@ -33,10 +33,10 @@ The shipped set (nine tasks) references well-known papers — the Transformer, B
 
 | Workflow | Lane | Gold tasks |
 | --- | --- | --- |
-| `find` | `catalog` (Librarian) | locate the Transformer paper; resolve a paraphrase to the ResNet paper |
-| `extract` | `extract` (Librarian) | claim stubs from the Transformer paper; Adam's exact default hyperparameters |
-| `link` | `link` (Librarian) | propose BERT builds-on Transformer; *decline* a strong dropout↔ResNet edge (negative control) |
-| `verify` | `verify` (Peer-reviewer) | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
+| `find` | `catalog` | locate the Transformer paper; resolve a paraphrase to the ResNet paper |
+| `extract` | `extract` | claim stubs from the Transformer paper; Adam's exact default hyperparameters |
+| `link` | `link` | propose BERT builds-on Transformer; *decline* a strong dropout↔ResNet edge (negative control) |
+| `verify` | `verify` | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
 
 Eval tasks are authored directly — the files *are* the instances, no template.
 They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
@@ -47,23 +47,23 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 
 ## Dispatch
 
-`vault-template/.memoria/operations/telemetry/eval/eval_dispatch.py` — a sweeps-shaped operation: deterministic, no-LLM, enqueues idempotent cards and lets the board provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
+`memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
 
-- One `hermes kanban create` per `lifecycle: current` gold task, assigned to the lane's owning profile (the same lane → profile map as the Co-PI's `tasks_mcp.py`; a test guards the parity).
+- One local eval task plan per `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the quarterly cron and any on-demand re-runs inside a quarter converge to one card per task; a new quarter re-opens the window.
-- The card body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported on the card — a run never mutates the vault.
+- The task body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported as JSON — a run never mutates the vault.
 - The dispatch record is written to `system/eval/last-run.md` (plain markdown, overwritten each run).
 
 ```sh
-python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault>            # dispatch
-python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault> --dry-run  # print, create nothing
+memoria eval run --workspace <vault> --json            # dispatch
+memoria eval run --workspace <vault> --dry-run --json  # print, create nothing
 ```
 
 ## Scoring
 
-`vault-template/.memoria/operations/telemetry/eval/eval_score.py` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
+`memoria_vault.runtime.subsystems.telemetry.eval.eval_score` — the deterministic scorer (zero-LLM, report-only). It closes the loop the dispatcher opens, turning each quarter's run into machine scores.
 
-**The result contract.** A lane never writes the vault; it ends its card report with one fenced `json` block (the card body shows the exact template, pre-filled with the task id and quarter):
+**The result contract.** An eval run never writes the vault; it ends its report with one fenced `json` block (the task body shows the exact template, pre-filled with the task id and quarter):
 
 ```json
 {
@@ -77,7 +77,7 @@ python .memoria/operations/telemetry/eval/eval_dispatch.py --vault <vault> --dry
 }
 ```
 
-`retrieved` (ranked results, best first), `cited` (citekeys offered as evidence), and `claims` (claim notes used or produced; `[]` = none) are each optional — a lane reports the fields its workflow produces. The scorer reads the cards via `hermes kanban list --json` (`--from-json <file>` offline, the `board_export.py` pattern) and computes per task only what the result makes computable — **no fake scores**; a task with no result block is reported `unscored`, and a result with no computable field is `reported`.
+`retrieved` (ranked results, best first), `cited` (citekeys offered as evidence), and `claims` (claim notes used or produced; `[]` = none) are each optional — a run reports the fields its workflow produces. The scorer reads a local JSON payload via `--from-json <file>` and computes per task only what the result makes computable — **no fake scores**; a task with no result block is reported `unscored`, and a result with no computable field is `reported`.
 
 | Metric | 0–1, higher is better | Computed when |
 | --- | --- | --- |
@@ -90,14 +90,14 @@ The lane's rubric `self_score` is recorded per task for comparison but never agg
 **The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
 
 ```sh
-python .memoria/operations/telemetry/eval/eval_score.py --vault <vault>                       # score the current quarter
-python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarter previous    # what the cron runs
-python .memoria/operations/telemetry/eval/eval_score.py --vault <vault> --quarter 2026-Q2 --dry-run
+python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
+python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter previous --from-json results.json
+python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter 2026-Q2 --from-json results.json --dry-run
 ```
 
 ## Cadence
 
-The installer wires the quarterly `memoria-eval` cron (schedule and wrapper owned by [Installer (bootstrap)](installer.md#the-crons-it-wires)), following the same pattern as the lint and metrics crons. The wrapper first **scores the previous quarter** (its cards have reported by then), then **dispatches** the new quarter's cards. On-demand runs are the same commands by hand.
+The installer wires the scheduled `memoria-eval` wrapper (schedule and wrapper owned by [Installer (bootstrap)](installer.md#the-crons-it-wires)), following the same pattern as the lint and metrics wrappers. The wrapper dispatches the current quarter's local eval task plans. Scoring is explicit and uses `eval_score --from-json` once result payloads exist.
 
 ---
 
