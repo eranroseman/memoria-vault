@@ -204,6 +204,7 @@ def answer_query(
     *,
     k: int = 5,
     include_stale: bool = False,
+    project_id: str = "",
 ) -> dict[str, Any]:
     """Return a deterministic Ask/Query contract over checked retrieval hits."""
     vault = Path(vault)
@@ -211,7 +212,9 @@ def answer_query(
         (document["path"], document["text"], document["frontmatter"])
         for document in checked_search_documents(vault, include_stale=include_stale)
     ]
-    qmd_hits = _qmd_query_hits(vault, query, k=k, include_stale=include_stale)
+    project_context = _project_context(project_id, docs)
+    retrieval_query = _project_query(query, project_context)
+    qmd_hits = _qmd_query_hits(vault, retrieval_query, k=k, include_stale=include_stale)
     if qmd_hits is not None:
         frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
         return _answer_from_hits(
@@ -219,11 +222,14 @@ def answer_query(
             qmd_hits,
             frontmatter_by_path,
             engine="qmd",
+            project_context=project_context,
         )
     tokenized = [(path, _tokens(text)) for path, text, _frontmatter in docs]
     frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
-    hits = _bm25(tokenized, query)[:k]
-    return _answer_from_hits(query, hits, frontmatter_by_path, engine="bm25")
+    hits = _bm25(tokenized, retrieval_query)[:k]
+    return _answer_from_hits(
+        query, hits, frontmatter_by_path, engine="bm25", project_context=project_context
+    )
 
 
 def _answer_from_hits(
@@ -232,6 +238,7 @@ def _answer_from_hits(
     frontmatter_by_path: dict[str, dict[str, Any]],
     *,
     engine: str,
+    project_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     sources = []
     staleness = []
@@ -253,7 +260,7 @@ def _answer_from_hits(
         if isinstance(frontmatter.get("contradictions"), list):
             for item in frontmatter["contradictions"]:
                 contradictions.append({"path": path, "contradiction": item})
-    return {
+    answer = {
         "query": query,
         "engine": engine,
         "sources": sources,
@@ -261,6 +268,62 @@ def _answer_from_hits(
         "staleness": staleness,
         "contradictions": contradictions,
     }
+    if project_context:
+        answer["project_context"] = project_context
+    return answer
+
+
+def _project_context(
+    project_id: str, docs: list[tuple[str, str, dict[str, Any]]]
+) -> dict[str, Any]:
+    normalized = normalize_path(project_id.strip()) if project_id.strip() else ""
+    if not normalized:
+        return {}
+    target = normalized.removesuffix(".md")
+    for path, _text, frontmatter in docs:
+        if frontmatter.get("type") != "project":
+            continue
+        path_id = path.removesuffix(".md")
+        aliases = {
+            path,
+            path_id,
+            Path(path).stem,
+            str(frontmatter.get("slug") or ""),
+            str(frontmatter.get("title") or ""),
+        }
+        if target not in aliases and normalized not in aliases:
+            continue
+        thesis = _project_link(frontmatter.get("thesis") or frontmatter.get("active_thesis"))
+        return {
+            "project_id": path_id,
+            "project_path": path,
+            "title": frontmatter.get("title") or Path(path).stem,
+            "thesis_path": thesis,
+        }
+    return {"project_id": target, "project_path": normalized if normalized.endswith(".md") else ""}
+
+
+def _project_query(query: str, project_context: dict[str, Any]) -> str:
+    if not project_context:
+        return query
+    terms = [
+        str(project_context.get("title") or ""),
+        Path(str(project_context.get("project_id") or "")).name,
+        Path(str(project_context.get("thesis_path") or "")).stem,
+    ]
+    return " ".join([query, *(term for term in terms if term)]).strip()
+
+
+def _project_link(raw: object) -> str:
+    value = raw
+    if isinstance(raw, dict):
+        value = raw.get("target") or raw.get("path") or raw.get("id")
+    if not isinstance(value, str):
+        return ""
+    text = value.strip()
+    if text.startswith("[[") and text.endswith("]]"):
+        text = text[2:-2].split("|", 1)[0].split("#", 1)[0]
+    return normalize_path(text).removesuffix(".md") + ".md" if text else ""
 
 
 def _qmd_query_hits(

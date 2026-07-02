@@ -50,7 +50,7 @@ reference pages; docs checks keep the mirror linked.
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Rebuild checked qmd source | worker operation `rebuild-checked-qmd-source` + runtime helper (`rebuild_checked_qmd_source`) | Rebuilds `.memoria/index/qmd/checked/` from checked retrieval documents: current Concepts plus generated checked Work text and graph neighborhoods. |
-| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, and contradictions. |
+| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the qmd-backed or deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, contradictions, and project context when supplied. |
 
 ### Knowledge construction (`memoria_vault.runtime.knowledge`)
 
@@ -125,7 +125,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Run integrity check | `memoria operation run <operation-id>` | Inserts one SQLite request and runs worker-owned integrity operations such as `integrity-evidence-check`, `integrity-quote-anchor-check`, `integrity-claim-quote-check`, `integrity-link-target-check`, and `check-source-metadata`; the worker owns journal rows and routing. |
 | Capture or enrich source | `memoria work capture`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
 | Compile digest or record interview | `memoria work digest`, `memoria work interview` | Queues and runs source synthesis jobs, recording Co-PI interview takeaways and digest materialization through the same request/journal path. |
-| Ask query | `memoria ask --question ...` | Runs `answer-query` and returns the deterministic Ask/Query response contract over checked retrieval documents. |
+| Ask query | `memoria ask --question ...` / `memoria project ask <project-id> --question ...` | Runs `answer-query` and returns the Ask/Query response contract over checked retrieval documents; project Ask includes checked project context when available. |
 | Curate notes and links | `memoria note propose`, `accept`, `reject`, `link` | Runs note proposal, accept/reject, and typed-link curation through worker-owned requests and journal rows. |
 | Analyze project | `memoria project gaps`, `trace`, `export` | Runs checked graph gap analysis, argument tracing, and deterministic Markdown/Pandoc project export from the CLI control plane. Project Concepts are authored as checked Markdown under `knowledge/projects/` and observed by `memoria workspace scan`. |
 | Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, capability index, indexes, and checked-only qmd inputs from worker-readable state. |

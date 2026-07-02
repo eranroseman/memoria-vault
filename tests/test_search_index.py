@@ -211,6 +211,35 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
     assert missing["unknowns"] == ["No checked current sources matched: absent"]
 
 
+def test_answer_query_carries_project_context(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    project = vault / "knowledge/projects/project-alpha.md"
+    project.parent.mkdir(parents=True, exist_ok=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "check_status: checked\n"
+        "title: Framing project\n"
+        "thesis: knowledge/notes/thesis.md\n"
+        "---\n"
+        "Project body.\n",
+        encoding="utf-8",
+    )
+    note(vault, "thesis", "checked", "methods caveat")
+
+    answer = answer_query(vault, "what matters", project_id="project-alpha")
+
+    assert answer["project_context"] == {
+        "project_id": "knowledge/projects/project-alpha",
+        "project_path": "knowledge/projects/project-alpha.md",
+        "title": "Framing project",
+        "thesis_path": "knowledge/notes/thesis.md",
+    }
+    assert [source["path"] for source in answer["sources"]][:1] == [
+        "knowledge/projects/project-alpha.md"
+    ]
+
+
 def test_answer_query_uses_qmd_after_rebuild(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

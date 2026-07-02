@@ -625,6 +625,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             query,
             k=k,
             include_stale=bool(payload.get("include_stale", False)),
+            project_id=str(payload.get("project_id") or ""),
         )
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
