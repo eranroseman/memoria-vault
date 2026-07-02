@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
+UNIVERSAL_CONCEPT_BUNDLES = frozenset({"knowledge", "capabilities"})
+UNIVERSAL_CONCEPT_STANDINGS = frozenset({"current", "superseded", "retracted", "archived"})
 
 
 def safe_read(path: Path) -> str:
@@ -68,6 +70,40 @@ def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
     if not body.endswith("\n"):
         body += "\n"
     return f"---\n{dump_frontmatter(frontmatter)}\n---{body}"
+
+
+def apply_universal_concept_frontmatter(
+    frontmatter: dict[str, Any], rel_path: str
+) -> dict[str, Any]:
+    """Add alpha.14 universal fields for knowledge/capability Concepts."""
+    normalized = rel_path.replace("\\", "/")
+    if not normalized.endswith(".md"):
+        return frontmatter
+    parts = normalized.split("/", 1)
+    if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
+        return frontmatter
+    frontmatter.setdefault("id", parts[1].removesuffix(".md"))
+    frontmatter.setdefault("standing", "current")
+    frontmatter.setdefault("links", {})
+    return frontmatter
+
+
+def universal_concept_frontmatter_errors(frontmatter: dict[str, Any], rel_path: str) -> list[str]:
+    normalized = rel_path.replace("\\", "/")
+    if not normalized.endswith(".md"):
+        return []
+    parts = normalized.split("/", 1)
+    if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
+        return []
+    concept_id = parts[1].removesuffix(".md")
+    errors: list[str] = []
+    if frontmatter.get("id") != concept_id:
+        errors.append(f"id must be {concept_id!r}")
+    if frontmatter.get("standing") not in UNIVERSAL_CONCEPT_STANDINGS:
+        errors.append(f"standing must be one of {sorted(UNIVERSAL_CONCEPT_STANDINGS)}")
+    if not isinstance(frontmatter.get("links"), dict):
+        errors.append("links must be a map")
+    return errors
 
 
 def concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:

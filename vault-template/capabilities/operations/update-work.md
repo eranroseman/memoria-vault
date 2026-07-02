@@ -1,13 +1,14 @@
 ---
-title: "Update Work"
+title: Update Work
 type: operation
 check_status: checked
-description: "Apply PI-owned Work metadata and lifecycle updates through the worker queue."
+description: Apply PI-owned Work metadata and lifecycle updates through the worker
+  queue.
 operation_id: update-work
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - journal/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -17,8 +18,13 @@ io_schema:
   output: updated_work
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha14, catalog]
+- memoria-runtime
+tags:
+- alpha14
+- catalog
+id: operations/update-work
+standing: current
+links: {}
 ---
 
 # Operation

@@ -1,13 +1,13 @@
 ---
-title: "Run vault eval"
+title: Run vault eval
 type: operation
 check_status: checked
-description: "Plan the current vault-eval task set through the local runtime engine."
+description: Plan the current vault-eval task set through the local runtime engine.
 operation_id: eval-run
 allowed_tools:
-  - eval_dispatch
+- eval_dispatch
 allowed_paths:
-  - system/eval/
+- system/eval/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -17,8 +17,13 @@ io_schema:
   output: eval_run_plan
 risk_class: low
 required_checks:
-  - eval-task-schema
-tags: [alpha14, eval]
+- eval-task-schema
+tags:
+- alpha14
+- eval
+id: operations/eval-run
+standing: current
+links: {}
 ---
 
 # Operation

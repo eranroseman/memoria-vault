@@ -1,14 +1,14 @@
 ---
-title: "Extract claim stubs"
+title: Extract claim stubs
 type: operation
 check_status: checked
-description: "Draft source-grounded candidate note stubs from a source note."
+description: Draft source-grounded candidate note stubs from a source note.
 operation_id: extract-claim-stubs
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: note_candidates
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: librarian
 mode: library
 action: extract
 input: source-note
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/extract_wisdom"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/extract_wisdom
 created: 2026-06-10
+id: operations/extract-claim-stubs
+standing: current
+links: {}
 ---
 
 # Pattern

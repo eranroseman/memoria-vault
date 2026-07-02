@@ -37,7 +37,8 @@ def test_detectors():
                 (v / d).mkdir(parents=True, exist_ok=True)
 
             (v / "knowledge/notes/good.md").write_text(
-                "---\ntype: note\ncheck_status: checked\ntitle: Good\n---\nA note. [[good]]\n",
+                "---\ntype: note\nid: notes/good\ncheck_status: checked\n"
+                "standing: current\nlinks: {}\ntitle: Good\n---\nA note. [[good]]\n",
                 encoding="utf-8",
             )
             (v / "knowledge/notes/bad.md").write_text(
@@ -65,12 +66,14 @@ def test_detectors():
                 encoding="utf-8",
             )
             (v / "knowledge/notes/oldnote.md").write_text(
-                "---\ntype: note\ncheck_status: checked\ntitle: Old\nstatus: superseded\n---\nOld note.\n",
+                "---\ntype: note\nid: notes/oldnote\ncheck_status: checked\n"
+                "standing: superseded\nstatus: superseded\nlinks: {}\ntitle: Old\n---\nOld note.\n",
                 encoding="utf-8",
             )
             (v / "knowledge/projects/proj/project.md").write_text(
-                "---\ntype: project\ncheck_status: checked\ntitle: P\n"
-                "description: Project\n---\nWe still rely on [[oldnote]] here.\n",
+                "---\ntype: project\nid: projects/proj/project\ncheck_status: checked\n"
+                "standing: current\nlinks: {}\ntitle: P\ndescription: Project\n---\n"
+                "We still rely on [[oldnote]] here.\n",
                 encoding="utf-8",
             )
             (v / "system/templates/note.md").write_text(
@@ -83,7 +86,8 @@ def test_detectors():
                 encoding="utf-8",
             )
             (v / "knowledge/notes/tablelink.md").write_text(
-                "---\ntype: note\ncheck_status: checked\ntitle: Table\n---\n"
+                "---\ntype: note\nid: notes/tablelink\ncheck_status: checked\n"
+                "standing: current\nlinks: {}\ntitle: Table\n---\n"
                 "| col | [[good\\|Good]] |\n",
                 encoding="utf-8",
             )
@@ -445,7 +449,8 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
 def _topic_note(v, name, topics):
     (v / "knowledge/notes").mkdir(parents=True, exist_ok=True)
     (v / f"knowledge/notes/{name}.md").write_text(
-        f"---\ntype: note\ncheck_status: checked\ntitle: {name}\ntopics: {topics}\n---\nBody.\n",
+        f"---\ntype: note\nid: notes/{name}\ncheck_status: checked\n"
+        f"standing: current\nlinks: {{}}\ntitle: {name}\ntopics: {topics}\n---\nBody.\n",
         encoding="utf-8",
     )
 
@@ -468,7 +473,8 @@ def test_hub_threshold(tmp_path):
     # an existing hub for the topic suppresses the alert
     (v / "knowledge/hubs").mkdir(parents=True, exist_ok=True)
     (v / "knowledge/hubs/sleep.md").write_text(
-        "---\ntype: hub\ncheck_status: checked\ntitle: Sleep\ndescription: Sleep topic\n---\n",
+        "---\ntype: hub\nid: hubs/sleep\ncheck_status: checked\nstanding: current\n"
+        "links: {}\ntitle: Sleep\ndescription: Sleep topic\n---\n",
         encoding="utf-8",
     )
     assert _m.hub_threshold(v, threshold=3) == []

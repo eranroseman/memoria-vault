@@ -1,18 +1,18 @@
 ---
-title: "Capture URL source"
+title: Capture URL source
 type: operation
 check_status: checked
-description: "Fetch a URL snapshot and capture it as a checked catalog source."
+description: Fetch a URL snapshot and capture it as a checked catalog source.
 operation_id: capture-url-source
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - journal/
-  - references.bib
+- catalog/
+- journal/
+- references.bib
 allowed_network:
-  - http://
-  - https://
+- http://
+- https://
 runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: capture-url-source.v1
@@ -21,8 +21,13 @@ io_schema:
   output: checked_source
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, capture]
+- memoria-runtime
+tags:
+- alpha11
+- capture
+id: operations/capture-url-source
+standing: current
+links: {}
 ---
 
 # Operation

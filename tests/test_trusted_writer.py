@@ -68,10 +68,27 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
     staged = vault / ".memoria/staging/knowledge/notes/alpha.md"
     assert staged.is_file()
     assert not (vault / "knowledge/notes/alpha.md").exists()
-    assert read_frontmatter(staged)["check_status"] == "unchecked"
+    frontmatter = read_frontmatter(staged)
+    assert frontmatter["check_status"] == "unchecked"
+    assert frontmatter["id"] == "notes/alpha"
+    assert frontmatter["standing"] == "current"
+    assert frontmatter["links"] == {}
     assert event["event"] == "derived"
     assert event["output_id"] == "knowledge/notes/alpha.md"
     assert events(vault) == [event]
+
+
+def test_stage_concept_rejects_wrong_universal_id(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    with pytest.raises(ValueError, match="id must be 'notes/alpha'"):
+        stage_concept(
+            vault,
+            "knowledge/notes/alpha.md",
+            "---\ntype: note\nid: notes/wrong\ncheck_status: checked\n"
+            "standing: current\nlinks: {}\ntitle: Alpha note\n---\nAlpha body.\n",
+            machine="test-machine",
+        )
 
 
 def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) -> None:
@@ -145,7 +162,11 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
         machine="test-machine",
     )
 
-    assert read_frontmatter(target)["check_status"] == "unchecked"
+    frontmatter = read_frontmatter(target)
+    assert frontmatter["check_status"] == "unchecked"
+    assert frontmatter["id"] == "notes/pi"
+    assert frontmatter["standing"] == "current"
+    assert frontmatter["links"] == {}
     assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"][-1] == {

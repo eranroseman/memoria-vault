@@ -3,11 +3,25 @@ category: capabilities
 gated: false
 initial_check_status: unchecked
 enums:
-  check_status: [unchecked, checked, quarantined]
-  risk_class: [low, medium, high]
+  check_status:
+  - unchecked
+  - checked
+  - quarantined
+  risk_class:
+  - low
+  - medium
+  - high
+  standing:
+  - current
+  - superseded
+  - retracted
+  - archived
 required:
   type: literal:operation
+  id: str
   check_status: enum:check_status
+  standing: enum:standing
+  links: map
   title: str
   description: str
 optional:

@@ -3,15 +3,25 @@ category: knowledge
 gated: false
 initial_check_status: unchecked
 enums:
-  check_status: [unchecked, checked, quarantined]
+  check_status:
+  - unchecked
+  - checked
+  - quarantined
+  standing:
+  - current
+  - superseded
+  - retracted
+  - archived
 required:
   type: literal:project
+  id: str
   check_status: enum:check_status
+  standing: enum:standing
+  links: map
   title: str
   description: str
 optional:
   resource: str
   thesis: str
   scope: map
-  links: map
   tags: list

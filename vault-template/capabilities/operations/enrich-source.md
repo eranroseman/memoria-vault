@@ -1,22 +1,22 @@
 ---
-title: "Enrich source"
+title: Enrich source
 type: operation
 check_status: checked
-description: "Resolve and merge DOI provider metadata for one staged catalog source."
+description: Resolve and merge DOI provider metadata for one staged catalog source.
 operation_id: enrich-source
 allowed_tools:
-  - provider_fetch
-  - projection_writer
+- provider_fetch
+- projection_writer
 allowed_paths:
-  - .memoria/blobs/
-  - .memoria/config/providers.yaml
-  - inbox/
-  - journal/
-  - references.bib
+- .memoria/blobs/
+- .memoria/config/providers.yaml
+- inbox/
+- journal/
+- references.bib
 allowed_network:
-  - https://api.crossref.org/
-  - https://api.openalex.org/
-  - https://api.unpaywall.org/
+- https://api.crossref.org/
+- https://api.openalex.org/
+- https://api.unpaywall.org/
 runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: enrich-source.v1
@@ -25,8 +25,14 @@ io_schema:
   output: enriched_source
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha13, enrichment, library]
+- memoria-runtime
+tags:
+- alpha13
+- enrichment
+- library
+id: operations/enrich-source
+standing: current
+links: {}
 ---
 
 # Operation

@@ -25,7 +25,7 @@
       ],
       "title": "Acknowledge attention",
       "trust": {
-        "sha256": "sha256:a419ff2b7186166ab3c047b75f09fd73d4df3b3c31e8343ea5643c3e140ce035",
+        "sha256": "sha256:8a2101f8f6f4f9285c16ef860257148f9808da58604d0c0e4cd1058edef3865c",
         "source": "local"
       },
       "type": "operation"
@@ -53,7 +53,7 @@
       "runner": "pydantic-ai",
       "title": "Analyze claims",
       "trust": {
-        "sha256": "sha256:dcf86c0926a3f375eb794b3b407766a8e0219a81209c6e9f85e73790ea683c1f",
+        "sha256": "sha256:ab748499cff449f9dd01997df7c671c01af20f7532efef0aa27f27486b5d75ad",
         "source": "local"
       },
       "type": "operation"
@@ -83,7 +83,7 @@
       ],
       "title": "Analyze gaps",
       "trust": {
-        "sha256": "sha256:a777a53503d1aa3f772bcb3b83341816c9c3cf9ef08fd58747b1cf1ed732f63e",
+        "sha256": "sha256:674cd0a00c6d051fb3ab651c4fee873d72c717c84b7e9e9fc06ac9f718295dd6",
         "source": "local"
       },
       "type": "operation"
@@ -112,7 +112,7 @@
       ],
       "title": "Analyze project argument",
       "trust": {
-        "sha256": "sha256:b67f944722066a0532d1578c5aa44e6e2e0ff945497178b844a5a5817d88675b",
+        "sha256": "sha256:8c0d578b58efc942d925299ff2e90a2739aa51575eaa76681e159773a2881c5d",
         "source": "local"
       },
       "type": "operation"
@@ -143,7 +143,7 @@
       ],
       "title": "Answer query",
       "trust": {
-        "sha256": "sha256:f91193b33bb829919f96fc2cd2066d27116ea76d9b6e2f51ea787e08c46f0c4e",
+        "sha256": "sha256:3a582620ebc877e3ca235bbbe628580b8690eba224e670150ded50b88fac3925",
         "source": "local"
       },
       "type": "operation"
@@ -175,7 +175,7 @@
       ],
       "title": "Capture BibTeX source",
       "trust": {
-        "sha256": "sha256:e1c4165edc71fda0bea9f7b108353c3ada6901c030e1bb2fea641d62f1485082",
+        "sha256": "sha256:380d84916dad25745dbacfff1a8b04f3900fce304aea4bff5e9c4f8aa3e90c28",
         "source": "local"
       },
       "type": "operation"
@@ -208,7 +208,7 @@
       ],
       "title": "Capture PDF source",
       "trust": {
-        "sha256": "sha256:71fb88eeac2459683785b5979c8508fab57cf56db8da365de476fe843cbca17a",
+        "sha256": "sha256:e6f9a88736032bf6e89f4717b75c99b744d6f7016205959e39658c1d37e6eba8",
         "source": "local"
       },
       "type": "operation"
@@ -242,7 +242,7 @@
       ],
       "title": "Capture source",
       "trust": {
-        "sha256": "sha256:dcd85e2014ec3efbc068891e7de10603bf44e0949b570bb9e054af5bf8a59247",
+        "sha256": "sha256:02ac5343251eee30f3dea8cbdd8ea2e385c6dc67f0e4a3fa265b1b0560efc1c5",
         "source": "local"
       },
       "type": "operation"
@@ -278,7 +278,7 @@
       ],
       "title": "Capture URL source",
       "trust": {
-        "sha256": "sha256:9cae1d1a91c39f8122cdb878b1ef7bc1e487ddce9f6ed43b5b5aae092d90f563",
+        "sha256": "sha256:00a1fe0473751cd812f95bb7557e0a3e4e5baa11d3292523fadd797a86ac0501",
         "source": "local"
       },
       "type": "operation"
@@ -312,7 +312,7 @@
       ],
       "title": "Cascade rollback",
       "trust": {
-        "sha256": "sha256:122e427e8554b129a714c0287e62ebcc8ea4eeb1ffcfca3ff7d5bad33f26c9f4",
+        "sha256": "sha256:2f11ab5a41dc7bc2790926b8c953766dd7b4965e14b6d9751e1f6df96341563e",
         "source": "local"
       },
       "type": "operation"
@@ -340,7 +340,7 @@
       "runner": "pydantic-ai",
       "title": "Check falsifiability",
       "trust": {
-        "sha256": "sha256:106aadb8261974e426e160229748e7ea07d2ba4b1cd15a34606ed22b5a94533b",
+        "sha256": "sha256:1e5529b9421e2c426400751dbeba2fcb18eac0aebbdf1e9db231d0492c51bec8",
         "source": "local"
       },
       "type": "operation"
@@ -370,7 +370,7 @@
       ],
       "title": "Check source metadata",
       "trust": {
-        "sha256": "sha256:962fbf699f46cf4729ccea359fbd6d9429b7f954924fbde68360184be0d77fb4",
+        "sha256": "sha256:aa2926871280679d84e9b244211c59d5f336cc3b32082ff6a9f161ca84196d9b",
         "source": "local"
       },
       "type": "operation"
@@ -398,7 +398,7 @@
       "runner": "pydantic-ai",
       "title": "Compare and contrast",
       "trust": {
-        "sha256": "sha256:5f724607e19ab92a4576b09fee6685c5378d5826b5e10e59ba2566eefcba03f6",
+        "sha256": "sha256:b36fb2d15dace578513dcfea826232bd7068746ff8115ab0f8af244084629f06",
         "source": "local"
       },
       "type": "operation"
@@ -428,7 +428,7 @@
       "runner": "pydantic-ai",
       "title": "Compile source digest",
       "trust": {
-        "sha256": "sha256:a176d651c81cf5a5e0ac792374cdaf45e7d977ec41b571d5006ad78d8e4891d1",
+        "sha256": "sha256:ba9a56a8a42cb3586c40be4f2562d2444c28cce045c05a4bd7e72c8e50cb34a0",
         "source": "local"
       },
       "type": "operation"
@@ -460,7 +460,7 @@
       ],
       "title": "Curate note candidate",
       "trust": {
-        "sha256": "sha256:cec5ced17ed7160aa460893733ca6b2156bc045097ae74f7b1c05b349b2a62a8",
+        "sha256": "sha256:8ed716879a99f7665110403a3d93d4ba22c33e0f96c6f83e9b28ff3299c6f01d",
         "source": "local"
       },
       "type": "operation"
@@ -492,7 +492,7 @@
       ],
       "title": "Curate note link",
       "trust": {
-        "sha256": "sha256:bd3bf32cd36127eea18dd0c94d81e10198debd4245a97c8e6457c37cf771403d",
+        "sha256": "sha256:f71b0945fd90a4ac6ac549cabbe8e45ee0780a4bf7f2bb673d6517bc57d4c346",
         "source": "local"
       },
       "type": "operation"
@@ -533,7 +533,7 @@
       ],
       "title": "Enrich source",
       "trust": {
-        "sha256": "sha256:7f3676df57e963773a7be394e125e03592295192fb5ca1a631c8cdbad42fb022",
+        "sha256": "sha256:8196122b4f43ffcab1572c1edce88268da107eced2261251a1def3d2887f5fb1",
         "source": "local"
       },
       "type": "operation"
@@ -564,7 +564,7 @@
       ],
       "title": "Run vault eval",
       "trust": {
-        "sha256": "sha256:1a5c212187db84615b81369b6698847311edad03caf5352ece781df7a78769b3",
+        "sha256": "sha256:566e3ffd25f04c6e380188ba3f60955d7b12e20c256aa079df703b11f2398b85",
         "source": "local"
       },
       "type": "operation"
@@ -595,7 +595,7 @@
       ],
       "title": "Export project",
       "trust": {
-        "sha256": "sha256:6d005a5962805151985f650c59c21ffa6a3f892b04bb9188fe99759b4e6f39ae",
+        "sha256": "sha256:a40926325148fea67fdafde9c798e437057f60dcd9efec850ac09e526d8e42a0",
         "source": "local"
       },
       "type": "operation"
@@ -623,7 +623,7 @@
       "runner": "pydantic-ai",
       "title": "Extract claim stubs",
       "trust": {
-        "sha256": "sha256:0f2e9d6fc8432fadd91451ba01d69c29bae9b6ec8dbfd1f301d276de3393eefb",
+        "sha256": "sha256:e719ecb90c1b80000a16d8013577c0d0753e6a6291cd916b10501f8fe496dd21",
         "source": "local"
       },
       "type": "operation"
@@ -656,7 +656,7 @@
       ],
       "title": "Integrity citation survival check",
       "trust": {
-        "sha256": "sha256:00f14c5951d0f4dd177a81b1f7d214efcd8d526b4734bb1b4362005ade77dd73",
+        "sha256": "sha256:91d303e51d4fb9ad32d76c11106ab7bc864e1b03fd0f80075509c76914d30d3b",
         "source": "local"
       },
       "type": "operation"
@@ -687,7 +687,7 @@
       ],
       "title": "Integrity claim quote check",
       "trust": {
-        "sha256": "sha256:823bd66266bb0679ee1e744eb2ca92884d3ccfad9eb2d973818c2b767bf7ab39",
+        "sha256": "sha256:cc2fcebfbf278ebc7f4f10d95dcbce72387de30af5c04f1435021dd1600abb40",
         "source": "local"
       },
       "type": "operation"
@@ -717,7 +717,7 @@
       ],
       "title": "Integrity contradiction check",
       "trust": {
-        "sha256": "sha256:1df3b71e65989380c040d06ccc9b372cf0277d7b7ca882ab0594c51009235482",
+        "sha256": "sha256:419f6af27e65d8916b6ff8c7dadd868f986abc7892e1454b21d14aaafc54b08c",
         "source": "local"
       },
       "type": "operation"
@@ -748,7 +748,7 @@
       ],
       "title": "Integrity evidence check",
       "trust": {
-        "sha256": "sha256:e6a9c0137709715523df9afaa3b8d4ba48313339c5723f9dc188b24a1d81443b",
+        "sha256": "sha256:c0fa399d278fbe69abc684baf1e18f3378ec6734f32db238d42345f1b663d7e9",
         "source": "local"
       },
       "type": "operation"
@@ -778,7 +778,7 @@
       ],
       "title": "Integrity link target check",
       "trust": {
-        "sha256": "sha256:295bb0b9e2fd852e1b65034d198392f9db5ac2c83312658c855cfc55eb34d53c",
+        "sha256": "sha256:4822239b0ddc7e2d5ceadd541afd565d2c88dd6a9c811b1f60143da01c1fa9eb",
         "source": "local"
       },
       "type": "operation"
@@ -808,7 +808,7 @@
       ],
       "title": "Integrity prompt injection check",
       "trust": {
-        "sha256": "sha256:6beaa4994ef311c9598266f3af2e8a701e58f0d018116a9d36f78ba63bd96604",
+        "sha256": "sha256:a4089ce6f1df5272aaedf3ae328334efff98003084a21aec0c4dc0c5296cbd48",
         "source": "local"
       },
       "type": "operation"
@@ -839,7 +839,7 @@
       ],
       "title": "Integrity provenance checkpoint",
       "trust": {
-        "sha256": "sha256:1c7ed019ea25a0a0c288bfeebb913cbafa3c90ba9b2b314541d586e04f688447",
+        "sha256": "sha256:9141e1abc98ac8f1a6aa350f686e0788a405735ccba1a1cc77d3dfe1774a1cf0",
         "source": "local"
       },
       "type": "operation"
@@ -870,7 +870,7 @@
       ],
       "title": "Integrity quote anchor check",
       "trust": {
-        "sha256": "sha256:f42c2ce8d3bbdd35902d1b4c418e8d7f6e0bc6b438d2765f1884039db92d7aae",
+        "sha256": "sha256:65efbc5f79bcc746ce1efcede4b217c28c32895d68a2fe25f61e964efb537d51",
         "source": "local"
       },
       "type": "operation"
@@ -904,7 +904,7 @@
       ],
       "title": "Mark checked",
       "trust": {
-        "sha256": "sha256:8b47d7079b49cc8af9e6bd586acc1f45c9d52f22473f2b55ed7dc5f1fe4ebd78",
+        "sha256": "sha256:8bed32bf13e055c1d5eb784010235b546086e9551ff7697fdd84ec1b43232aa6",
         "source": "local"
       },
       "type": "operation"
@@ -938,7 +938,7 @@
       ],
       "title": "Observe PI edits",
       "trust": {
-        "sha256": "sha256:5cc7ce0b7cf80caf8af0d11c06259242b3217bba0da706fc8b5011a84b8396df",
+        "sha256": "sha256:6fe779c8efaeff57c21bdd4af30822ac87b76d5b2900e6a49dcc72e4a4c318b1",
         "source": "local"
       },
       "type": "operation"
@@ -967,7 +967,7 @@
       "runner": "pydantic-ai",
       "title": "Propose note candidates",
       "trust": {
-        "sha256": "sha256:58462c9e3898bcaab24f0b5162c67a92b4f23235d89280395618f378f51abdbe",
+        "sha256": "sha256:b9bbd82495c863e92884b654f9931988e5becf218f00d15baba0b52bd08d609c",
         "source": "local"
       },
       "type": "operation"
@@ -999,7 +999,7 @@
       ],
       "title": "Rebuild checked qmd source",
       "trust": {
-        "sha256": "sha256:c6ebad91ecac52c6f85596ad574454a4438e8689501fc689114d30a27cf6f3f5",
+        "sha256": "sha256:19046646f902bdcf9e5a8e400fffd2283095d220a9aef1123657050145add508",
         "source": "local"
       },
       "type": "operation"
@@ -1030,7 +1030,7 @@
       ],
       "title": "Record Co-PI interview",
       "trust": {
-        "sha256": "sha256:c13dbfacb8e90d334f290a4bbd9a948a538b06b48260542d3a83a3608eb817bd",
+        "sha256": "sha256:7853d704dcf8b75859b7280b4f5a4edd46fa06ba21b279f2a59eaefae43fed26",
         "source": "local"
       },
       "type": "operation"
@@ -1058,7 +1058,7 @@
       "runner": "pydantic-ai",
       "title": "Red-team an argument",
       "trust": {
-        "sha256": "sha256:e38aced7519369cc619e0cfd1513da5a73bf3aaaa516035652b085098c629d96",
+        "sha256": "sha256:a642c1ddd1aa2a792ab0ce98bbda14a10b18cb2dbd95fe5150dcc809793b773a",
         "source": "local"
       },
       "type": "operation"
@@ -1090,7 +1090,7 @@
       ],
       "title": "Regenerate capability index",
       "trust": {
-        "sha256": "sha256:b0b54a1ba4fca60b4c3686130554ffffc2a1da372418eeee8db81a1d8a734bd6",
+        "sha256": "sha256:43e6ecc422d69f718c8b39d2031e422e0e9d3afa97f222ad714aa2248b6ba1ba",
         "source": "local"
       },
       "type": "operation"
@@ -1125,7 +1125,7 @@
       ],
       "title": "Regenerate indexes",
       "trust": {
-        "sha256": "sha256:7e13dec670504c31396de43064e0a90a384324162c0c4f22e6539d53252c3194",
+        "sha256": "sha256:6c42c6a8cc9eb6c4f1dbcbefdcd1f6423869dafb83c518b4a47d4b1b3b4ef43a",
         "source": "local"
       },
       "type": "operation"
@@ -1158,7 +1158,7 @@
       ],
       "title": "Regenerate references.bib",
       "trust": {
-        "sha256": "sha256:efba3dc933d967bd91e72e73f391875cddffd3ad819fecec687b2f800a4b63b7",
+        "sha256": "sha256:3baa72bc6a9be6228e170cd6842fa0d8251ad4af33fae9e7e4d50bd9ae8576ad",
         "source": "local"
       },
       "type": "operation"
@@ -1194,7 +1194,7 @@
       ],
       "title": "Regenerate tracked projections",
       "trust": {
-        "sha256": "sha256:7eabeca8092a52158e402e15d7979290c4159633aa576a7c8710f0fe298d7b6f",
+        "sha256": "sha256:9db8cc670519b4eff3e8861366d518e27263dbf2dc5e3e460bb3a319a12b1e70",
         "source": "local"
       },
       "type": "operation"
@@ -1226,7 +1226,7 @@
       ],
       "title": "Render project argument canvas",
       "trust": {
-        "sha256": "sha256:18c2296c26577c8201176334984b0967b9c7cb4b898fe3560796afca22705706",
+        "sha256": "sha256:383b919d6eb2c29472a69fe0bcba86c886dcc102584c710afcb809c58eb37192",
         "source": "local"
       },
       "type": "operation"
@@ -1256,7 +1256,7 @@
       ],
       "title": "Resolve attention",
       "trust": {
-        "sha256": "sha256:7ea0ce5a875c2e4d0303a18ebcbae6b7af7edabd4c19066f4099edd77e696f25",
+        "sha256": "sha256:750ef3a165078fbf82e4d943eb3b4d803e395f05ecb2c0a3b097422bc0bee901",
         "source": "local"
       },
       "type": "operation"
@@ -1291,7 +1291,7 @@
       ],
       "title": "Run seeded-error verdict",
       "trust": {
-        "sha256": "sha256:3828fc1eb7d1ba8debe84eaa53f5e68f0490b5883751e9e516e791755ce5cca1",
+        "sha256": "sha256:488ff7928ee1d1c36dedd2bd9af0f41c4ead996b4cb268dbc346461084506769",
         "source": "local"
       },
       "type": "operation"
@@ -1319,7 +1319,7 @@
       "runner": "pydantic-ai",
       "title": "Summarize for recall",
       "trust": {
-        "sha256": "sha256:d1a7f8150b2d57ee7f2563724a472387ef7f15f0a66658e3bf841492e82db2fd",
+        "sha256": "sha256:13d921f24f56ab3fed7e3a5ec307517cabd2dbedfdc6af51f24f29809c1fca43",
         "source": "local"
       },
       "type": "operation"
@@ -1347,7 +1347,7 @@
       "runner": "pydantic-ai",
       "title": "Surface tensions",
       "trust": {
-        "sha256": "sha256:ee6da29bb2a8ac81b55af1a40be384063f7ea1b224c148f5f0e55cd7d78dbce6",
+        "sha256": "sha256:aa698f17caea327c36919bcc7307456130bc144253e8068c84344afa82d99d72",
         "source": "local"
       },
       "type": "operation"
@@ -1379,7 +1379,7 @@
       ],
       "title": "Trace integrity scan",
       "trust": {
-        "sha256": "sha256:720dde23885c947c584d1cc3ed55f7cb5eb09edfad631baaad87fdc74393496b",
+        "sha256": "sha256:d9816ae60f239149259c717c9b557c00305d7ff1f03734de383596a5491c2ef0",
         "source": "local"
       },
       "type": "operation"
@@ -1410,7 +1410,7 @@
       ],
       "title": "Update Work",
       "trust": {
-        "sha256": "sha256:45714932d4325b58e2ac70b9441f591e306a29a5fefc3d50ad1dec45b901b02a",
+        "sha256": "sha256:9c6a0305d7f9983e60a542ab544ac5c760a44945821aa16ae4166125add8c4fb",
         "source": "local"
       },
       "type": "operation"

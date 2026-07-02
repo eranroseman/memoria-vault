@@ -1,14 +1,14 @@
 ---
-title: "Surface tensions"
+title: Surface tensions
 type: operation
 check_status: checked
-description: "List candidate tensions across notes without writing links."
+description: List candidate tensions across notes without writing links.
 operation_id: surface-tensions
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: tension_candidates
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: librarian
 mode: library
 action: link
 input: note-set
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "open-notebook/transformations"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: open-notebook/transformations
 created: 2026-06-10
+id: operations/surface-tensions
+standing: current
+links: {}
 ---
 
 # Pattern

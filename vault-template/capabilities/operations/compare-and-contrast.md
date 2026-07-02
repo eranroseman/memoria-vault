@@ -1,14 +1,14 @@
 ---
-title: "Compare and contrast"
+title: Compare and contrast
 type: operation
 check_status: checked
-description: "Compare multiple notes or sources and surface grounded disagreements."
+description: Compare multiple notes or sources and surface grounded disagreements.
 operation_id: compare-and-contrast
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: comparison_report
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: librarian
 mode: both
 action: compare
 input: two-or-more-notes
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/compare_and_contrast"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/compare_and_contrast
 created: 2026-06-10
+id: operations/compare-and-contrast
+standing: current
+links: {}
 ---
 
 # Pattern

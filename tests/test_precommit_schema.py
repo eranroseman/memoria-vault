@@ -14,7 +14,8 @@ def _vault(tmp_path: Path) -> Path:
 def test_clean_note_passes(tmp_path):
     vault = _vault(tmp_path)
     (vault / "knowledge/notes/n.md").write_text(
-        "---\ntype: note\ncheck_status: unchecked\ntitle: T\n---\nBody.\n",
+        "---\ntype: note\nid: notes/n\ncheck_status: unchecked\n"
+        "standing: current\nlinks: {}\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
     assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []

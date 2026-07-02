@@ -1,14 +1,14 @@
 ---
-title: "Analyze claims"
+title: Analyze claims
 type: operation
 check_status: checked
-description: "Extract and rank truth claims from selected input."
+description: Extract and rank truth claims from selected input.
 operation_id: analyze-claims
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
+- catalog/
+- knowledge/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,16 +18,19 @@ io_schema:
   output: claim_analysis
 risk_class: medium
 required_checks:
-  - memoria-runtime
+- memoria-runtime
 posture: peer-reviewer
 mode: both
 action: analyze
 input: selection-or-note
-output_target: ".memoria/staging/knowledge/"
-model_hint: ""
-version: "1.0"
-adapted_from: "fabric/analyze_claims"
+output_target: .memoria/staging/knowledge/
+model_hint: ''
+version: '1.0'
+adapted_from: fabric/analyze_claims
 created: 2026-06-10
+id: operations/analyze-claims
+standing: current
+links: {}
 ---
 
 # Pattern

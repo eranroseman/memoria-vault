@@ -1,14 +1,14 @@
 ---
-title: "Curate note link"
+title: Curate note link
 type: operation
 check_status: checked
-description: "Record a PI-authored typed link between checked notes."
+description: Record a PI-authored typed link between checked notes.
 operation_id: curate-note-link
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - knowledge/notes/
-  - journal/
+- knowledge/notes/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,8 +18,13 @@ io_schema:
   output: linked_note
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, notes]
+- memoria-runtime
+tags:
+- alpha11
+- notes
+id: operations/curate-note-link
+standing: current
+links: {}
 ---
 
 # Operation

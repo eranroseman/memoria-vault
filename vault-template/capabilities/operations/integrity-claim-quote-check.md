@@ -1,15 +1,15 @@
 ---
-title: "Integrity claim quote check"
+title: Integrity claim quote check
 type: operation
 check_status: checked
-description: "Check whether a claim's quoted evidence appears in its source."
+description: Check whether a claim's quoted evidence appears in its source.
 operation_id: integrity-claim-quote-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: integrity_findings
 risk_class: low
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-claim-quote-check
+standing: current
+links: {}
 ---
 
 # Operation

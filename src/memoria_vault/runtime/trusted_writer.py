@@ -16,7 +16,12 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
-from memoria_vault.runtime.vaultio import split_frontmatter, write_frontmatter_doc
+from memoria_vault.runtime.vaultio import (
+    apply_universal_concept_frontmatter,
+    split_frontmatter,
+    universal_concept_frontmatter_errors,
+    write_frontmatter_doc,
+)
 
 EVENT_DERIVED = "derived"
 EVENT_OBSERVED_EXTERNAL_EDIT = "observed_external_edit"
@@ -477,6 +482,7 @@ def _staged_path(vault: Path, target: str) -> Path:
 
 
 def _validate_concept(contract: dict[str, Any], target: str, frontmatter: dict[str, Any]) -> None:
+    apply_universal_concept_frontmatter(frontmatter, target)
     concept_type = str(frontmatter.get("type") or "")
     schema = contract["types"].get(concept_type)
     if not schema:
@@ -493,6 +499,8 @@ def _validate_concept(contract: dict[str, Any], target: str, frontmatter: dict[s
     check_status = frontmatter.get("check_status")
     if check_status not in {"unchecked", "checked", "quarantined"}:
         raise ValueError(f"invalid check_status: {check_status!r}")
+    for error in universal_concept_frontmatter_errors(frontmatter, target):
+        raise ValueError(error)
 
 
 def _write_checked(

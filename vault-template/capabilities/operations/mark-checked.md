@@ -1,16 +1,16 @@
 ---
-title: "Mark checked"
+title: Mark checked
 type: operation
 check_status: checked
-description: "Promote an observed PI edit back to checked after worker checks pass."
+description: Promote an observed PI edit back to checked after worker checks pass.
 operation_id: mark-checked
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - capabilities/
-  - journal/
+- catalog/
+- knowledge/
+- capabilities/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -20,8 +20,13 @@ io_schema:
   output: check_event
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, trace]
+- memoria-runtime
+tags:
+- alpha11
+- trace
+id: operations/mark-checked
+standing: current
+links: {}
 ---
 
 # Operation

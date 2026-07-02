@@ -1,16 +1,16 @@
 ---
-title: "Rebuild checked qmd source"
+title: Rebuild checked qmd source
 type: operation
 check_status: checked
-description: "Rebuild qmd's disposable input tree from checked retrieval documents."
+description: Rebuild qmd's disposable input tree from checked retrieval documents.
 operation_id: rebuild-checked-qmd-source
 allowed_tools:
-  - indexer
+- indexer
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - capabilities/
-  - .memoria/index/
+- catalog/
+- knowledge/
+- capabilities/
+- .memoria/index/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -20,7 +20,12 @@ io_schema:
   output: qmd_manifest
 risk_class: low
 required_checks: []
-tags: [alpha11, index]
+tags:
+- alpha11
+- index
+id: operations/rebuild-checked-qmd-source
+standing: current
+links: {}
 ---
 
 # Operation

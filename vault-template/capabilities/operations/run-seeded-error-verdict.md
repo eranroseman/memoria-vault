@@ -1,17 +1,17 @@
 ---
-title: "Run seeded-error verdict"
+title: Run seeded-error verdict
 type: operation
 check_status: checked
-description: "Run the frozen seeded-error integrity-loop verdict bundle."
+description: Run the frozen seeded-error integrity-loop verdict bundle.
 operation_id: run-seeded-error-verdict
 allowed_tools:
-  - evaluator
-  - trusted_writer
+- evaluator
+- trusted_writer
 allowed_paths:
-  - system/eval/
-  - catalog/
-  - knowledge/
-  - journal/
+- system/eval/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -21,8 +21,13 @@ io_schema:
   output: verdict_metrics
 risk_class: high
 required_checks:
-  - seeded-error-bar
-tags: [alpha11, gate]
+- seeded-error-bar
+tags:
+- alpha11
+- gate
+id: operations/run-seeded-error-verdict
+standing: current
+links: {}
 ---
 
 # Operation

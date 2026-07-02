@@ -103,18 +103,21 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
 
     _write_note(
         vault / "knowledge/projects/package-gate.md",
-        "type: project\ncheck_status: checked\ntitle: Package gate\n"
+        "type: project\nid: projects/package-gate\ncheck_status: checked\n"
+        "standing: current\nlinks: {}\ntitle: Package gate\n"
         "description: Package gate project.\nthesis: knowledge/notes/package-thesis.md\n",
         "Package gate project.",
     )
     _write_note(
         vault / "knowledge/notes/package-thesis.md",
-        "type: note\ncheck_status: checked\ntitle: Package thesis\nstatus: accepted\n",
+        "type: note\nid: notes/package-thesis\ncheck_status: checked\n"
+        "standing: current\nlinks: {}\ntitle: Package thesis\nstatus: accepted\n",
         "Package thesis.",
     )
     _write_note(
         vault / "knowledge/notes/package-support.md",
-        "type: note\ncheck_status: checked\ntitle: Package support\nstatus: accepted\n"
+        "type: note\nid: notes/package-support\ncheck_status: checked\n"
+        "standing: current\ntitle: Package support\nstatus: accepted\n"
         "links:\n  supports:\n    - knowledge/notes/package-thesis.md\n",
         "Package support.",
     )

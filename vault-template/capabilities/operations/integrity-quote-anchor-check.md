@@ -1,15 +1,15 @@
 ---
-title: "Integrity quote anchor check"
+title: Integrity quote anchor check
 type: operation
 check_status: checked
-description: "Check anchored note quotes against their source content."
+description: Check anchored note quotes against their source content.
 operation_id: integrity-quote-anchor-check
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: anchor_findings
 risk_class: low
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-quote-anchor-check
+standing: current
+links: {}
 ---
 
 # Operation

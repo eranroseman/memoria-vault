@@ -1,14 +1,14 @@
 ---
-title: "Export project"
+title: Export project
 type: operation
 check_status: checked
-description: "Export a checked project composition to Markdown or a Pandoc-backed format."
+description: Export a checked project composition to Markdown or a Pandoc-backed format.
 operation_id: export-project
 allowed_tools:
-  - projection_writer
+- projection_writer
 allowed_paths:
-  - knowledge/
-  - references.bib
+- knowledge/
+- references.bib
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -18,7 +18,13 @@ io_schema:
   output: project_export
 risk_class: low
 required_checks: []
-tags: [alpha14, project, export]
+tags:
+- alpha14
+- project
+- export
+id: operations/export-project
+standing: current
+links: {}
 ---
 
 # Operation

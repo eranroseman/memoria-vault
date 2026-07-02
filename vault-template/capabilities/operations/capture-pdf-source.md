@@ -1,15 +1,15 @@
 ---
-title: "Capture PDF source"
+title: Capture PDF source
 type: operation
 check_status: checked
-description: "Capture a supplied PDF blob as a checked catalog source."
+description: Capture a supplied PDF blob as a checked catalog source.
 operation_id: capture-pdf-source
 allowed_tools:
-  - trusted_writer
+- trusted_writer
 allowed_paths:
-  - catalog/
-  - journal/
-  - references.bib
+- catalog/
+- journal/
+- references.bib
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,8 +19,13 @@ io_schema:
   output: checked_source
 risk_class: medium
 required_checks:
-  - memoria-runtime
-tags: [alpha11, capture]
+- memoria-runtime
+tags:
+- alpha11
+- capture
+id: operations/capture-pdf-source
+standing: current
+links: {}
 ---
 
 # Operation

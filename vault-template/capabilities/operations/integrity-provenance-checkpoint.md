@@ -1,15 +1,15 @@
 ---
-title: "Integrity provenance checkpoint"
+title: Integrity provenance checkpoint
 type: operation
 check_status: checked
-description: "Route synthesis from uncorroborated checked sources to PI attention."
+description: Route synthesis from uncorroborated checked sources to PI attention.
 operation_id: integrity-provenance-checkpoint
 allowed_tools:
-  - integrity_checker
+- integrity_checker
 allowed_paths:
-  - catalog/
-  - knowledge/
-  - journal/
+- catalog/
+- knowledge/
+- journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
@@ -19,7 +19,12 @@ io_schema:
   output: provenance_findings
 risk_class: medium
 required_checks: []
-tags: [alpha11, integrity]
+tags:
+- alpha11
+- integrity
+id: operations/integrity-provenance-checkpoint
+standing: current
+links: {}
 ---
 
 # Operation
