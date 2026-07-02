@@ -555,20 +555,40 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
 
 
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
     state.upsert_catalog_record(
-        tmp_path,
+        vault,
         source_id="metadata-only",
         title="Metadata Only",
         text_status="metadata-only",
         check_status="unchecked",
     )
 
-    result = analyze_gaps(tmp_path)
+    result = analyze_gaps(vault, machine="gap-machine")
 
     assert result["full_text_gap_count"] == 1
     gap = result["gaps"][0]
     assert gap["gap_type"] == "missing-full-text"
     assert gap["source_id"] == "metadata-only"
+    assert result["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
+    attention = vault / result["full_text_attention_paths"][0]
+    fm = read_frontmatter(attention)
+    assert fm["attention_kind"] == "flag"
+    assert fm["raised_by"] == "analyze-gaps"
+    assert fm["target"] == "catalog/sources/metadata-only"
+    committed = set(
+        git(
+            vault,
+            "show",
+            "--name-only",
+            "--format=",
+            result["full_text_attention_commit"],
+        ).splitlines()
+    )
+    assert committed == {
+        "inbox/flag-gap-full-text-metadata-only.md",
+        "journal/gap-machine.jsonl",
+    }
 
 
 def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> None:

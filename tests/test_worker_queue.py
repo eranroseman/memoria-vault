@@ -868,6 +868,13 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         check_status="checked",
         csl_json={"memoria": {"topics": ["catalog-only"]}},
     )
+    state.upsert_catalog_record(
+        vault,
+        source_id="metadata-only",
+        title="Metadata Only",
+        text_status="metadata-only",
+        check_status="unchecked",
+    )
     (vault / "knowledge/digests").mkdir(parents=True)
     (vault / "knowledge/digests/source-alpha.md").write_text(
         "---\n"
@@ -894,9 +901,12 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert done is not None
     assert done["status"] == "done"
     gaps = {gap["topic"]: gap for gap in done["gaps"]}
-    assert done["gap_count"] == 3
+    assert done["gap_count"] == 4
+    assert done["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
+    assert (vault / done["full_text_attention_paths"][0]).is_file()
     assert gaps["catalog-only"]["gap_type"] == "undigested"
     assert gaps["catalog-only"]["source_count"] == 1
+    assert gaps["Metadata Only"]["gap_type"] == "missing-full-text"
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
 
