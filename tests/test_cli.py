@@ -653,6 +653,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "gaps",
         "--workspace",
         str(workspace),
+        "project-alpha",
         "--seed-term",
         "new area",
         "--dense-threshold",
@@ -661,6 +662,8 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "loop-gaps",
     )
     assert gaps["result"]["gap_count"] >= 1
+    assert gaps["result"]["project_path"] == "knowledge/projects/project-alpha.md"
+    assert gaps["result"]["argument_gap_count"] >= 1
 
     exported = run_json(
         "project",
@@ -730,6 +733,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         "Body.\n",
         encoding="utf-8",
     )
+    _write_project_argument_fixture(workspace)
 
     rc = main(
         [
@@ -737,6 +741,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
             "gaps",
             "--workspace",
             str(workspace),
+            "project-alpha",
             "--seed-term",
             "new area",
             "--dense-threshold",
@@ -753,6 +758,13 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
+    assert output["result"]["project_path"] == "knowledge/projects/project-alpha.md"
+    assert output["result"]["argument_gap_count"] == 2
+    assert {
+        gap["finding_kind"]
+        for gap in output["result"]["gaps"]
+        if gap["gap_type"].startswith("argument-")
+    } == {"thin-argument", "conflict"}
     with state.connect(workspace) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(operation_requests)")}
         row = conn.execute(
@@ -762,6 +774,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     _assert_alpha14_request_columns(columns)
     assert row["operation_id"] == "analyze-gaps"
     assert json.loads(row["args_json"]) == {
+        "project_path": "project-alpha",
         "seed_terms": ["new area"],
         "dense_threshold": 1,
     }

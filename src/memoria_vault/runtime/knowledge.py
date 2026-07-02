@@ -267,10 +267,17 @@ def analyze_gaps(
     *,
     seed_terms: Iterable[str] = (),
     dense_threshold: int = 2,
+    project_path: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
     """Classify source/note topic mismatches over checked Concepts and qmd hits."""
     vault = Path(vault)
+    project_path = project_path.strip()
+    project_argument: dict[str, Any] | None = None
+    argument_gaps: list[dict[str, Any]] = []
+    if project_path:
+        project_argument = analyze_project_argument(vault, project_path)
+        argument_gaps = _project_argument_gaps(project_argument)
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sources": 0, "digests": 0, "notes": 0}
     )
@@ -327,15 +334,56 @@ def analyze_gaps(
         gaps.append(gap)
     full_text_gaps = _missing_full_text_gaps(vault)
     gaps.extend(full_text_gaps)
+    gaps.extend(argument_gaps)
     candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, machine=machine)
-    return {
+    result = {
         "checked_topics": len(counts),
         "dense_threshold": dense_threshold,
         "full_text_gap_count": len(full_text_gaps),
+        "argument_gap_count": len(argument_gaps),
         "discovery_candidate_paths": candidate_paths,
         "discovery_commit": commit,
         "gaps": gaps,
     }
+    if project_argument is not None:
+        result.update(
+            {
+                "project_path": project_argument["project_path"],
+                "thesis_path": project_argument["thesis_path"],
+                "argument_stage": project_argument["argument_stage"],
+                "evidence_saturation": project_argument["evidence_saturation"],
+                "displayed_confidence": project_argument["displayed_confidence"],
+            }
+        )
+    return result
+
+
+def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = []
+    for source_key, finding_type in (
+        ("findings", "argument-finding"),
+        ("gap_findings", "argument-gap"),
+    ):
+        for finding in argument.get(source_key) or []:
+            kind = str(finding.get("kind") or "finding")
+            gap = {
+                "topic": f"Project argument: {kind}",
+                "gap_type": finding_type,
+                "project_path": argument["project_path"],
+                "thesis_path": argument["thesis_path"],
+                "finding_kind": kind,
+                "severity": str(finding.get("severity") or "info"),
+                "source_count": 0,
+                "digest_count": 0,
+                "note_count": argument["node_count"],
+                "proposed_seed": "curate checked notes or links around the project thesis",
+            }
+            advice = str(finding.get("advice") or "").strip()
+            if advice:
+                gap["advice"] = advice
+                gap["proposed_seed"] = advice
+            rows.append(gap)
+    return rows
 
 
 def _add_qmd_gap_hits(

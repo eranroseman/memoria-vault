@@ -2,7 +2,7 @@
 title: "Analyze gaps"
 type: operation
 check_status: checked
-description: "Classify checked catalog/knowledge topic mismatches for gap analysis."
+description: "Classify checked catalog/knowledge topic mismatches and optional project argument-health gaps."
 operation_id: analyze-gaps
 allowed_tools:
   - read_checked_concepts
@@ -23,4 +23,6 @@ tags: [alpha11, gaps]
 
 # Operation
 
-Read checked current Concepts and return source/note mismatch gaps.
+Read checked current Concepts and return source/note mismatch gaps. When the
+payload includes `project_path`, also read that checked project's argument graph
+and return argument-health gaps.
