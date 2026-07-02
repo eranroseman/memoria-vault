@@ -29,7 +29,6 @@ GATE_COMMANDS = {
             "-m",
             "pip",
             "wheel",
-            "--no-deps",
             "--no-build-isolation",
             "--wheel-dir",
             "{evidence_dir}/dist",

@@ -35,7 +35,7 @@ def test_verify_dry_run_writes_evidence(tmp_path: Path) -> None:
     assert summary["gates"] == ["source", "package"]
     assert [step["display"] for step in summary["steps"]] == [
         "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-deps --no-build-isolation --wheel-dir {tmp_path}/dist .",
+        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
         f"python3 -m venv --clear {tmp_path}/venv",
         (
             f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
@@ -102,7 +102,7 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
     assert summary["gates"] == ["source", "package", "runtime"]
     assert [step["display"] for step in summary["steps"]] == [
         "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-deps --no-build-isolation --wheel-dir {tmp_path}/dist .",
+        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
         f"python3 -m venv --clear {tmp_path}/venv",
         (
             f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
@@ -139,7 +139,7 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
     assert summary["gates"] == ["source", "package", "runtime"]
     assert [step["display"] for step in summary["steps"]] == [
         "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-deps --no-build-isolation --wheel-dir {tmp_path}/dist .",
+        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
         f"python3 -m venv --clear {tmp_path}/venv",
         (
             f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
