@@ -191,7 +191,7 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
     )
     assert scan["quarantine"]["finding_count"] == 1
     assert scan["needs_check_count"] == 0
-    assert (workspace / ".memoria/quarantine/knowledge/index.md").is_file()
+    assert (workspace / ".memoria/quarantine/knowledge/_views/index.md").is_file()
 
     qmd = _run_json(capsys, "doctor", "--workspace", str(workspace), "--check", "qmd")
     assert qmd["checks"]["qmd_collection_root"] is True

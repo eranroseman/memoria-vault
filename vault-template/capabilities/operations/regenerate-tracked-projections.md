@@ -28,4 +28,5 @@ tags: [alpha11, projection]
 
 # Operation
 
-Render `index.md`, bundle indexes, and `references.bib`.
+Render `index.md`, bundle indexes, `knowledge/_views/index.md`, `references.bib`,
+and `capabilities/_generated/capability-index.json`.

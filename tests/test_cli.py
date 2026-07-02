@@ -139,6 +139,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
+        "knowledge/_views/index.md",
         "capabilities/index.md",
         "references.bib",
         "capabilities/_generated/capability-index.json",
@@ -1912,20 +1913,20 @@ def test_cli_workspace_scan_fixture_quarantines_generated_projection(
 
     assert scan["fixture"] == {
         "name": "direct-write-generated-projection",
-        "path": "knowledge/index.md",
+        "path": "knowledge/_views/index.md",
     }
     assert scan["quarantine"]["finding_count"] == 1
-    assert scan["quarantine"]["findings"][0]["target_id"] == "knowledge/index.md"
-    assert "knowledge/index.md" in scan["regeneration"]["changed"]
+    assert scan["quarantine"]["findings"][0]["target_id"] == "knowledge/_views/index.md"
+    assert "knowledge/_views/index.md" in scan["regeneration"]["changed"]
     assert scan["result"]["observed_count"] == 0
-    assert (workspace / "knowledge/index.md").is_file()
+    assert (workspace / "knowledge/_views/index.md").is_file()
     assert "direct-write-generated-projection fixture" not in (
-        workspace / "knowledge/index.md"
+        workspace / "knowledge/_views/index.md"
     ).read_text(encoding="utf-8")
-    assert (workspace / ".memoria/quarantine/knowledge/index.md").is_file()
+    assert (workspace / ".memoria/quarantine/knowledge/_views/index.md").is_file()
     with state.connect(workspace) as conn:
         consumable = conn.execute(
-            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/index.md'"
+            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/_views/index.md'"
         ).fetchone()
     assert consumable is None
 

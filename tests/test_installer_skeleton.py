@@ -73,6 +73,7 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
+        "knowledge/_views/index.md",
         "capabilities/index.md",
         "references.bib",
         "steering.md",

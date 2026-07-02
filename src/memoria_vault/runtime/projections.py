@@ -13,8 +13,14 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 
 BUNDLE_ROOTS = ("catalog", "knowledge", "capabilities")
 INDEX_PATHS = ("index.md", "catalog/index.md", "knowledge/index.md", "capabilities/index.md")
+KNOWLEDGE_VIEWS_INDEX_PATH = "knowledge/_views/index.md"
 CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"
-TRACKED_PROJECTION_PATHS = (*INDEX_PATHS, "references.bib", CAPABILITY_INDEX_PATH)
+TRACKED_PROJECTION_PATHS = (
+    *INDEX_PATHS,
+    KNOWLEDGE_VIEWS_INDEX_PATH,
+    "references.bib",
+    CAPABILITY_INDEX_PATH,
+)
 
 
 def render_workspace_index(vault: Path, index_path: str) -> str:
@@ -33,6 +39,8 @@ def render_tracked_projection(vault: Path, projection_path: str) -> str:
     rel = normalize_path(projection_path)
     if rel in INDEX_PATHS:
         return render_workspace_index(vault, rel)
+    if rel == KNOWLEDGE_VIEWS_INDEX_PATH:
+        return _knowledge_views_index(Path(vault))
     if rel == "references.bib":
         from memoria_vault.runtime.capture import render_references_bib
 
@@ -80,10 +88,19 @@ def write_tracked_projections(
 
     vault = Path(vault)
     index_result = write_workspace_indexes(vault)
+    knowledge_views_changed: list[str] = []
+    output = vault / KNOWLEDGE_VIEWS_INDEX_PATH
+    text = render_tracked_projection(vault, KNOWLEDGE_VIEWS_INDEX_PATH)
+    old = output.read_text(encoding="utf-8") if output.exists() else None
+    if old != text:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        knowledge_views_changed.append(KNOWLEDGE_VIEWS_INDEX_PATH)
     references_result = write_references_bib(vault)
     capability_index_result = write_capability_index(vault)
     changed = [
         *index_result["changed"],
+        *knowledge_views_changed,
         *([references_result["path"]] if references_result["changed"] else []),
         *([capability_index_result["path"]] if capability_index_result["changed"] else []),
     ]
@@ -188,6 +205,22 @@ def _bundle_index(vault: Path, bundle: str) -> str:
     return _generated(
         f"{bundle.title()} index",
         "Generated bundle projection. Edit Concept files, not this file.",
+        body,
+    )
+
+
+def _knowledge_views_index(vault: Path) -> str:
+    root = vault / "knowledge"
+    counts: dict[str, int] = {}
+    for path in _concept_paths(root):
+        frontmatter = read_frontmatter(path)
+        concept_type = str(frontmatter.get("type") or "concept")
+        counts[concept_type] = counts.get(concept_type, 0) + 1
+    rows = "\n".join(f"- `{kind}`: {counts[kind]}" for kind in sorted(counts))
+    body = rows if rows else "_No checked knowledge Concepts._"
+    return _generated(
+        "Knowledge views index",
+        "Generated knowledge view projection. Edit Concept files, not this file.",
         body,
     )
 

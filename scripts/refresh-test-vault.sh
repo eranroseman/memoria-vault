@@ -119,6 +119,7 @@ for rel in \
   catalog/catalog.base \
   catalog/index.md \
   knowledge/index.md \
+  knowledge/_views/index.md \
   capabilities/index.md \
   references.bib \
   system/vocabulary.md
