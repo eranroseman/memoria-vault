@@ -708,6 +708,62 @@ def test_source_metadata_check_routes_string_block_duplicates_to_attention(
     assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
 
 
+def test_source_metadata_check_routes_duplicate_entity_external_ids_to_attention(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    state.replace_external_ids(
+        vault,
+        [
+            {
+                "owner_type": "person",
+                "owner_id": "https://openalex.org/A1",
+                "namespace": "orcid",
+                "value": "0000-0002-1825-0097",
+            },
+            {
+                "owner_type": "person",
+                "owner_id": "https://openalex.org/A2",
+                "namespace": "orcid",
+                "value": "https://orcid.org/0000-0002-1825-0097",
+            },
+        ],
+    )
+
+    result = check_source_metadata(
+        vault,
+        shadow=False,
+        machine="integrity-machine",
+        commit=True,
+    )
+
+    assert [
+        (finding["check"], finding["target_id"], finding["reason"], finding["route"])
+        for finding in result["findings"]
+    ] == [
+        (
+            "record-linkage",
+            "catalog/entities/person-https___openalex.org_A1.md",
+            "duplicate person external id orcid=0000-0002-1825-0097 also used by "
+            "https://openalex.org/A2",
+            "ask",
+        ),
+        (
+            "record-linkage",
+            "catalog/entities/person-https___openalex.org_A2.md",
+            "duplicate person external id orcid=0000-0002-1825-0097 also used by "
+            "https://openalex.org/A1",
+            "ask",
+        ),
+    ]
+    assert result["attention_path"] == "inbox/work-prompt-record-linkage-entity-external-ids.md"
+    assert result["attention_paths"] == [result["attention_path"]]
+    card = read_frontmatter(vault / result["attention_path"])
+    assert card["target"] == "catalog/entities"
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
+
+
 def test_db_capture_does_not_create_legacy_entity_identity_findings(
     tmp_path: Path,
 ) -> None:
