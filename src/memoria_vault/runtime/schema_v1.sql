@@ -58,6 +58,14 @@ CREATE TABLE IF NOT EXISTS concept_verdicts (
     concept_id TEXT PRIMARY KEY,
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
 );
+CREATE TABLE IF NOT EXISTS concept_flags (
+    concept_id TEXT NOT NULL,
+    flag TEXT NOT NULL CHECK (flag IN ('stale')),
+    reason TEXT NOT NULL DEFAULT '',
+    trigger_id TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (concept_id, flag)
+);
 CREATE VIEW IF NOT EXISTS concept_status AS
 SELECT
     c.concept_id,

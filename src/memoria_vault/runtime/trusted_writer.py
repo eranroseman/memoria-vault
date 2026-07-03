@@ -188,6 +188,17 @@ def observe_pi_edits_from_status(
         )
         for target in targets
     ]
+    if observed:
+        from memoria_vault.runtime.integrity import propagate_scan_demotion
+
+        for event in observed:
+            output_id = str(event["output_id"])
+            propagate_scan_demotion(
+                vault,
+                output_id,
+                reason=f"scan observed unchecked edit: {output_id}",
+                machine=machine,
+            )
     commit = ""
     if observed:
         commit = commit_writer_changes(vault, "observe PI edits", targets, machine=machine)

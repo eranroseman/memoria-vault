@@ -139,11 +139,12 @@ def checked_search_documents(vault: Path, *, include_stale: bool = False) -> lis
     docs: list[dict[str, Any]] = []
     for path in checked_concepts(vault, include_stale=include_stale):
         text = safe_read(path)
+        rel = path.relative_to(vault).as_posix()
         docs.append(
             {
-                "path": path.relative_to(vault).as_posix(),
+                "path": rel,
                 "text": text,
-                "frontmatter": parse_frontmatter(text),
+                "frontmatter": _frontmatter_with_flags(vault, rel, text),
                 "source": path,
             }
         )
@@ -165,7 +166,7 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
             rel = path.relative_to(vault).as_posix()
             if not is_consumable_checked_file(vault, rel):
                 continue
-            frontmatter = parse_frontmatter(safe_read(path))
+            frontmatter = _frontmatter_with_flags(vault, rel, safe_read(path))
             if _is_searchable_frontmatter(frontmatter, include_stale=include_stale):
                 docs.append(path)
     return sorted(docs)
@@ -489,10 +490,26 @@ def evaluate_bm25(
 def _is_searchable_frontmatter(frontmatter: dict[str, Any], *, include_stale: bool = False) -> bool:
     if frontmatter.get("type") not in {"work", "note", "hub", "project"}:
         return False
-    return include_stale or not _staleness("", frontmatter)
+    return include_stale or not _hard_staleness("", frontmatter)
+
+
+def _frontmatter_with_flags(vault: Path, relpath: str, text: str) -> dict[str, Any]:
+    frontmatter = parse_frontmatter(text)
+    if "stale" in state.concept_flags(vault, relpath):
+        frontmatter["_memoria_stale"] = True
+    return frontmatter
 
 
 def _staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
+    hard = _hard_staleness(path, frontmatter)
+    if hard:
+        return hard
+    if frontmatter.get("_memoria_stale"):
+        return {"path": path, "field": "stale", "value": True}
+    return {}
+
+
+def _hard_staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
     lifecycle = str(frontmatter.get("lifecycle") or "")
     status = str(frontmatter.get("status") or "")
     if lifecycle in {"retracted", "archived"}:

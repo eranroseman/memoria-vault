@@ -207,6 +207,11 @@ def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None
             "UPDATE outputs SET check_status = ? WHERE output_id = ?",
             (status, target),
         )
+        if status == "checked":
+            conn.execute(
+                "DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'",
+                (target,),
+            )
 
 
 def concept_check_status(vault: Path, concept_id: str) -> str:
@@ -327,6 +332,7 @@ def mark_checked(vault: Path, output_id: str, output_sha256: str, payload_text: 
             (output_sha256, target),
         )
         _set_concept_verdict_conn(conn, target, "checked")
+        conn.execute("DELETE FROM concept_flags WHERE concept_id = ? AND flag = 'stale'", (target,))
         if payload_text:
             if _sha256_text(payload_text) != output_sha256:
                 raise ValueError(f"checked payload hash mismatch for {target}")
@@ -389,6 +395,55 @@ def mark_materialized(vault: Path, output_id: str, *, commit: str = "") -> None:
             """,
             (commit, target),
         )
+
+
+def set_concept_flag(
+    vault: Path,
+    concept_id: str,
+    flag: str,
+    *,
+    reason: str = "",
+    trigger_id: str = "",
+) -> None:
+    if flag != "stale":
+        raise ValueError(f"invalid concept flag: {flag!r}")
+    target = normalize_path(concept_id)
+    with connect(vault) as conn:
+        conn.execute(
+            """
+            INSERT INTO concept_flags(concept_id, flag, reason, trigger_id, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(concept_id, flag) DO UPDATE SET
+                reason = excluded.reason,
+                trigger_id = excluded.trigger_id,
+                created_at = excluded.created_at
+            """,
+            (target, flag, reason, normalize_path(trigger_id) if trigger_id else "", now_iso()),
+        )
+
+
+def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
+    target = normalize_path(concept_id)
+    if not db_path(vault).is_file():
+        return {}
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT flag, reason, trigger_id, created_at
+            FROM concept_flags
+            WHERE concept_id = ?
+            ORDER BY flag
+            """,
+            (target,),
+        ).fetchall()
+    return {
+        str(row["flag"]): {
+            "reason": str(row["reason"]),
+            "trigger_id": str(row["trigger_id"]),
+            "created_at": str(row["created_at"]),
+        }
+        for row in rows
+    }
 
 
 def record_projection_output(
