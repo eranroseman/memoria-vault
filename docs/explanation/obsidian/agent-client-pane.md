@@ -12,9 +12,9 @@ is `memoria ask`, which reads checked retrieval documents through the engine and
 returns a sourced answer in the terminal.
 
 The old pane idea remains useful as an adapter constraint: a future editor pane
-may improve ergonomics, but it must call the same CLI/engine and stay read-only
-unless it enters the normal request lifecycle. It cannot own operation manifests,
-write policy, scheduled work, or source authority.
+may improve ergonomics, but it needs its own ADR, must call the same CLI/engine,
+and must stay read-only unless it enters the normal request lifecycle. It cannot
+own operation manifests, write policy, scheduled work, or source authority.
 
 ## Related
 

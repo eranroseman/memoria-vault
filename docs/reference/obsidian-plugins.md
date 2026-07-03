@@ -19,11 +19,11 @@ state, qmd search state, and auxiliary Memoria files only.
 | Does runtime depend on Local REST, Agent Client, Dataview, or QuickAdd? | No. |
 | Where is plugin provenance checked? | Nowhere in the baseline; `scripts/plugin_provenance_doctor.py` verifies the deleted payload stays absent. |
 
-## Optional adapters
+## Future adapters
 
-A future Obsidian adapter is specified as a thin client, but its implementation
-is excluded from alpha.15. It must be a caller of the stable CLI/engine and
-cannot own source authority, operation manifests, request lifecycle, write
+Alpha.15 does not specify or ship an Obsidian adapter. If one is scheduled
+later, it needs its own ADR and must be a thin caller of the stable CLI/engine.
+It cannot own source authority, operation manifests, request lifecycle, write
 policy, qmd indexing, checks, or recovery.
 
 ## Related
