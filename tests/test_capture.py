@@ -91,6 +91,36 @@ def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     assert committed == {state.JOURNAL_HEAD_REL}
 
 
+def test_capture_source_populates_work_aspect_read_model(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "# Paper\n\n## Method\n\nInterview coding.\n\n## Results\n\nCare pathways changed.\n",
+        csl_json={
+            "id": "alpha",
+            "memoria": {
+                "aspects": {
+                    "key_idea": "Coordination work is visible in local traces.",
+                    "projected_impact": "Excluded from the alpha.15 aspect model.",
+                }
+            },
+        },
+    )
+
+    aspects = state.work_aspects(vault, "source-alpha")
+
+    assert [(row["aspect_type"], row["aspect_text"]) for row in aspects] == [
+        ("key_idea", "Coordination work is visible in local traces."),
+        ("method", "Interview coding."),
+        ("outcome", "Care pathways changed."),
+    ]
+    assert {row["check_status"] for row in aspects} == {"checked"}
+
+
 def test_capture_source_rejects_legacy_required_check_argument(
     tmp_path: Path,
 ) -> None:

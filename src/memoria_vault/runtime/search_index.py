@@ -572,6 +572,7 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
                     ),
                     "```",
                     "",
+                    *_work_aspect_body(vault, source_id),
                     "## Full Text",
                     "",
                     safe_read(content_path),
@@ -592,6 +593,23 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
                 )
             )
     return docs
+
+
+def _work_aspect_body(vault: Path, source_id: str) -> list[str]:
+    aspects = state.work_aspects(vault, source_id)
+    if not aspects:
+        return []
+    lines = ["## Work Aspects", ""]
+    for aspect in aspects:
+        lines.extend(
+            [
+                f"### {str(aspect['aspect_type']).replace('_', ' ').title()}",
+                "",
+                str(aspect["aspect_text"]),
+                "",
+            ]
+        )
+    return lines
 
 
 def _work_graph_edges(vault: Path, work_id: str) -> list[dict[str, Any]]:

@@ -19,6 +19,7 @@ from memoria_vault.runtime.capture import (
     _html_text,
     _pdf_content_text,
     _validate_pdf_text_coherence,
+    derive_work_aspect_rows,
     render_references_bib,
 )
 from memoria_vault.runtime.integrity import record_integrity_check
@@ -204,6 +205,15 @@ def enrich_source(
         raw_hash=source.get("raw_text_sha256", ""),
         content_path=content_path,
         raw_path=source.get("raw_path", ""),
+    )
+    state.replace_work_aspects(
+        vault,
+        source["source_id"],
+        derive_work_aspect_rows(
+            canonical["csl_json"],
+            _source_content_text(vault, content_path),
+            check_status=check_status,
+        ),
     )
 
     if blocked_status:
@@ -714,6 +724,15 @@ def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[s
     if not path.exists():
         write_text_durable(path, normalized, create_parent=True)
     return content_hash, rel
+
+
+def _source_content_text(vault: Path, content_path: str) -> str:
+    if not content_path:
+        return ""
+    path = vault / normalize_path(content_path)
+    if not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8")
 
 
 def _merge_doi_source(

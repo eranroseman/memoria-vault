@@ -19,6 +19,24 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
+WORK_ASPECT_ORDER = ("context", "key_idea", "method", "outcome", "limitation", "assumption")
+_ASPECT_HEADING_ALIASES = {
+    "assumption": "assumption",
+    "assumptions": "assumption",
+    "background": "context",
+    "context": "context",
+    "key_idea": "key_idea",
+    "key_ideas": "key_idea",
+    "limitation": "limitation",
+    "limitations": "limitation",
+    "method": "method",
+    "methods": "method",
+    "outcome": "outcome",
+    "outcomes": "outcome",
+    "result": "outcome",
+    "results": "outcome",
+}
+
 
 def source_requires_enrichment(
     *,
@@ -130,6 +148,11 @@ def stage_catalog_source(
         content_path=content_rel,
         raw_path=raw_rel,
     )
+    state.replace_work_aspects(
+        vault,
+        source_id,
+        derive_work_aspect_rows(csl_json, content_text, check_status=check_status),
+    )
     if _has_reference_metadata(csl_json):
         _replace_import_reference_edges(vault, source_id, _reference_edges(csl_json))
     finished = append_journal_event(
@@ -203,6 +226,75 @@ def capture_source(
         workflow=workflow,
         check_status="checked",
     )
+
+
+def derive_work_aspect_rows(
+    csl_json: dict[str, Any] | None,
+    content_text: str,
+    *,
+    check_status: str = "unchecked",
+) -> list[dict[str, str]]:
+    csl_json = csl_json if isinstance(csl_json, dict) else {}
+    rows: dict[str, dict[str, str]] = {}
+    for aspect_type, aspect_text in _structured_aspects(csl_json).items():
+        rows[aspect_type] = _aspect_row(aspect_type, aspect_text, check_status)
+    for aspect_type, aspect_text in _markdown_aspects(content_text).items():
+        rows.setdefault(aspect_type, _aspect_row(aspect_type, aspect_text, check_status))
+    return [rows[aspect_type] for aspect_type in WORK_ASPECT_ORDER if aspect_type in rows]
+
+
+def _structured_aspects(csl_json: dict[str, Any]) -> dict[str, str]:
+    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
+    raw = memoria.get("aspects") or memoria.get("_aspects") or csl_json.get("_aspects") or {}
+    if not isinstance(raw, dict):
+        return {}
+    out = {}
+    for key, value in raw.items():
+        aspect_type = _aspect_type(str(key))
+        text = str(value or "").strip()
+        if aspect_type and text:
+            out[aspect_type] = text
+    return out
+
+
+def _markdown_aspects(content_text: str) -> dict[str, str]:
+    out = {}
+    current = ""
+    lines: list[str] = []
+
+    def flush() -> None:
+        if current and lines:
+            text = " ".join(line.strip() for line in lines if line.strip())
+            if text:
+                out.setdefault(current, re.sub(r"\s+", " ", text).strip())
+
+    for line in content_text.splitlines():
+        match = re.match(r"^\s{0,3}#{1,6}\s+(.+?)\s*$", line)
+        if match:
+            flush()
+            current = _aspect_type(match.group(1))
+            lines = []
+            continue
+        if current:
+            lines.append(line)
+    flush()
+    return out
+
+
+def _aspect_type(value: str) -> str:
+    key = re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
+    return _ASPECT_HEADING_ALIASES.get(key, "")
+
+
+def _aspect_row(aspect_type: str, aspect_text: str, check_status: str) -> dict[str, str]:
+    text = re.sub(r"\s+", " ", aspect_text).strip()
+    return {
+        "aspect_type": aspect_type,
+        "aspect_text": text,
+        "anchor_text": text[:200],
+        "check_status": check_status,
+        "source_provider": "deterministic",
+    }
 
 
 def capture_bibtex_source(

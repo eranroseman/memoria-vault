@@ -19,9 +19,12 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
+WORK_ASPECT_TYPES = frozenset(
+    {"context", "key_idea", "method", "outcome", "limitation", "assumption"}
+)
 
 
 def db_path(vault: Path) -> Path:
@@ -1025,6 +1028,58 @@ def replace_work_graph_edges(vault: Path, work_id: str, rows: Iterable[dict[str,
             )
 
 
+def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, Any]]) -> None:
+    source_id = _source_id(source_ref)
+    with connect(vault) as conn:
+        conn.execute("DELETE FROM work_aspects WHERE source_id = ?", (source_id,))
+        for row in rows:
+            aspect_text = str(row.get("aspect_text") or "").strip()
+            if not aspect_text:
+                continue
+            aspect_type = _work_aspect_type(str(row.get("aspect_type") or ""))
+            conn.execute(
+                """
+                INSERT INTO work_aspects(
+                    source_id,
+                    aspect_type,
+                    aspect_text,
+                    anchor_text,
+                    check_status,
+                    source_provider,
+                    updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    source_id,
+                    aspect_type,
+                    aspect_text,
+                    str(row.get("anchor_text") or "").strip(),
+                    _check_status(str(row.get("check_status") or "unchecked")),
+                    str(row.get("source_provider") or "deterministic"),
+                    now_iso(),
+                ),
+            )
+
+
+def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
+    if not db_path(vault).is_file():
+        return []
+    source_id = _source_id(source_ref)
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT source_id, aspect_type, aspect_text, anchor_text, check_status,
+                   source_provider, updated_at
+            FROM work_aspects
+            WHERE source_id = ?
+            ORDER BY aspect_type
+            """,
+            (source_id,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
 def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     if not db_path(vault).is_file():
         return {}
@@ -1177,6 +1232,13 @@ def _check_status(check_status: str) -> str:
     if status not in CHECK_STATUSES:
         raise ValueError(f"invalid check_status: {check_status!r}")
     return status
+
+
+def _work_aspect_type(value: str) -> str:
+    aspect_type = value.strip().lower().replace("-", "_")
+    if aspect_type not in WORK_ASPECT_TYPES:
+        raise ValueError(f"unknown work aspect type: {value}")
+    return aspect_type
 
 
 def _source_id(value: str) -> str:
