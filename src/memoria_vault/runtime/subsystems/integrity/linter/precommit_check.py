@@ -24,7 +24,8 @@ from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
 
 def check_paths(vault: Path, paths: list[str]) -> list[str]:
     """Return error strings for staged documents that fail their schema."""
-    types = schema.load_types()
+    schemas_dir = vault / ".memoria/schemas"
+    types = schema.load_types(schemas_dir if schemas_dir.is_dir() else None)
     errors: list[str] = []
     for raw in paths:
         p = (vault / raw) if not Path(raw).is_absolute() else Path(raw)

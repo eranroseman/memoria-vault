@@ -128,12 +128,20 @@ done
 hdr "Remove dropped standalone baseline payloads"
 run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts"
 
+hdr "Wire git hook"
+if [ -d "$VAULT/.git" ] && [ -f "$VAULT/.githooks/pre-commit" ]; then
+  run mkdir -p "$VAULT/.git/hooks"
+  run cp "$VAULT/.githooks/pre-commit" "$VAULT/.git/hooks/pre-commit"
+  run chmod +x "$VAULT/.git/hooks/pre-commit"
+fi
+
 hdr "Ensure empty-folder skeleton"
 python_cmd="python3"
 if [ -x "$VAULT/.memoria/.venv/bin/python" ]; then
   python_cmd="$VAULT/.memoria/.venv/bin/python"
 fi
-run "$python_cmd" - "$VAULT" <<'PY'
+PYTHONPATH_VALUE="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+run env PYTHONPATH="$PYTHONPATH_VALUE" "$python_cmd" - "$VAULT" <<'PY'
 import sys
 from pathlib import Path
 
@@ -146,7 +154,7 @@ for rel in folders.get("skeleton", []):
 PY
 
 hdr "Restage golden copy"
-run "$python_cmd" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" stage
+run env PYTHONPATH="$PYTHONPATH_VALUE" "$python_cmd" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" stage
 
 hdr "Done"
 say "Refreshed $VAULT from $SRC"

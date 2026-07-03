@@ -47,6 +47,8 @@ def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
         "system/scripts",
         "system/templates",
         "spaces",
+        ".git/hooks/pre-commit",
+        "PYTHONPATH_VALUE",
         "index.md",
         "catalog/catalog.base",
         "catalog/index.md",
