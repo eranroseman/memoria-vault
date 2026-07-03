@@ -606,13 +606,13 @@ def test_db_capture_does_not_create_legacy_entity_identity_findings(
 
 def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/digests/bad-contradiction.md"
-    control = "knowledge/digests/good-contradiction.md"
-    good_target = "knowledge/digests/other.md"
+    target = "knowledge/works/bad-contradiction.md"
+    control = "knowledge/works/good-contradiction.md"
+    good_target = "knowledge/works/other.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / good_target).write_text(
         "---\n"
-        "type: digest\n"
+        "type: work\n"
         "check_status: checked\n"
         "title: Other\n"
         "description: Other digest.\n"
@@ -623,26 +623,26 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     )
     (vault / target).write_text(
         "---\n"
-        "type: digest\n"
+        "type: work\n"
         "check_status: checked\n"
         "title: Bad contradiction\n"
         "description: Missing contradiction target.\n"
         "source_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - knowledge/digests/missing.md\n"
+        "  - knowledge/works/missing.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",
     )
     (vault / control).write_text(
         "---\n"
-        "type: digest\n"
+        "type: work\n"
         "check_status: checked\n"
         "title: Good contradiction\n"
         "description: Resolving contradiction target.\n"
         "source_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - knowledge/digests/other.md\n"
+        "  - knowledge/works/other.md\n"
         "---\n"
         "# Good contradiction\n",
         encoding="utf-8",
@@ -654,7 +654,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     [finding] = result["findings"]
     assert finding["check"] == "contradiction-link"
     assert finding["target_id"] == target
-    assert finding["reason"] == "unresolved contradiction target: knowledge/digests/missing.md"
+    assert finding["reason"] == "unresolved contradiction target: knowledge/works/missing.md"
     assert finding["route"] == "ask"
 
 
@@ -757,14 +757,14 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     assert all(not (vault / hub_path).exists() for hub_path in digest["hub_paths"])
     assert not (vault / notes["note_paths"][0]).exists()
     assert (vault / pi_note).is_file()
-    assert (
-        read_frontmatter(vault / ".memoria/quarantine" / digest["digest_path"])["check_status"]
-        == "quarantined"
+    assert "check_status" not in read_frontmatter(
+        vault / ".memoria/quarantine" / digest["digest_path"]
     )
-    assert (
-        read_frontmatter(vault / ".memoria/quarantine" / notes["note_paths"][0])["check_status"]
-        == "quarantined"
+    assert state.concept_check_status(vault, digest["digest_path"]) == "quarantined"
+    assert "check_status" not in read_frontmatter(
+        vault / ".memoria/quarantine" / notes["note_paths"][0]
     )
+    assert state.concept_check_status(vault, notes["note_paths"][0]) == "quarantined"
 
     rollback_events = list(iter_jsonl(vault / "journal/integrity-machine.jsonl"))
     assert [event["event"] for event in rollback_events].count("resolved") == len(

@@ -50,7 +50,7 @@ def emit_note_candidates(
 
     digest_rel = _digest_rel(digest_path)
     _require_path(policy, digest_rel)
-    digest_fm = _checked_frontmatter(vault, digest_rel, "digest")
+    digest_fm = _checked_frontmatter(vault, digest_rel, "work")
     rows = list(candidates)
     if not rows:
         raise ValueError("at least one note candidate is required")
@@ -84,6 +84,9 @@ def emit_note_candidates(
     staged = []
     checked = []
     note_paths = []
+    digest_source_ref = digest_fm.get("source_id") or (
+        f"catalog/sources/{digest_fm['work_id']}" if digest_fm.get("work_id") else None
+    )
     for row in rows:
         title = _required_text(row, "title")
         body = _required_text(row, "body")
@@ -91,11 +94,12 @@ def emit_note_candidates(
         _require_path(policy, note_rel)
         frontmatter = {
             "type": "note",
-            "check_status": "unchecked",
             "title": title,
             "status": "candidate",
-            "source_id": row.get("source_id") or digest_fm.get("source_id"),
-            "evidence_set": row.get("evidence_set") or digest_fm.get("evidence_set") or [],
+            "source_id": row.get("source_id") or digest_source_ref,
+            "evidence_set": row.get("evidence_set")
+            or digest_fm.get("evidence_set")
+            or ([digest_source_ref] if digest_source_ref else []),
             "extraction_confidence": str(row.get("extraction_confidence") or "medium"),
             "tags": _string_list(row.get("tags")),
         }
@@ -781,7 +785,7 @@ def _retrieval_bucket(source: dict[str, Any]) -> str:
     source_type = source.get("type")
     if path.startswith(("works/", "graph-neighborhoods/", "catalog/sources/")):
         return "sources"
-    if path.startswith("knowledge/digests/") or source_type == "digest":
+    if path.startswith("knowledge/works/") or source_type == "work":
         return "digests"
     if path.startswith("knowledge/notes/") or source_type == "note":
         return "notes"
@@ -1201,7 +1205,7 @@ def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[s
 
 
 def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
-    for root in ("catalog/sources", "knowledge/digests", "knowledge/notes"):
+    for root in ("catalog/sources", "knowledge/works", "knowledge/notes"):
         base = vault / root
         if not base.exists():
             continue
@@ -1216,7 +1220,7 @@ def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     concept_type = frontmatter.get("type")
     if relpath.startswith("catalog/sources/") and concept_type == "source":
         return "sources"
-    if relpath.startswith("knowledge/digests/") and concept_type == "digest":
+    if relpath.startswith("knowledge/works/") and concept_type == "work":
         return "digests"
     if relpath.startswith("knowledge/notes/") and concept_type == "note":
         return "notes"
@@ -1477,7 +1481,7 @@ def _is_current_note(frontmatter: dict[str, Any]) -> bool:
 def _digest_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel and not rel.endswith(".md"):
-        rel = f"knowledge/digests/{rel}.md"
+        rel = f"knowledge/works/{rel}.md"
     if not rel.endswith(".md"):
         rel += ".md"
     return rel

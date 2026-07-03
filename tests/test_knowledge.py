@@ -111,7 +111,8 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     note = vault / note_rel
     fm = read_frontmatter(note)
     assert fm["type"] == "note"
-    assert fm["check_status"] == "checked"
+    assert "check_status" not in fm
+    assert state.concept_check_status(vault, note_rel) == "checked"
     assert fm["status"] == "candidate"
     assert fm["source_id"] == "catalog/sources/source-alpha"
     assert fm["evidence_set"] == ["catalog/sources/source-alpha"]
@@ -351,8 +352,8 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         "type: source\ncheck_status: checked\ntitle: Alpha\ndescription: Alpha\ntags: [sleep]\n",
     )
     _md(
-        tmp_path / "knowledge/digests/source-alpha.md",
-        "type: digest\ncheck_status: checked\ntitle: Alpha digest\n"
+        tmp_path / "knowledge/works/source-alpha.md",
+        "type: work\ncheck_status: checked\ntitle: Alpha digest\n"
         "description: Alpha\nsource_id: catalog/sources/source-alpha\ntags: [sleep]\n",
     )
     for idx in range(2):

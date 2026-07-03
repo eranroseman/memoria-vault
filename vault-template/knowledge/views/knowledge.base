@@ -5,16 +5,15 @@ properties:
     displayName: Note
 views:
   - type: table
-    name: Digests
+    name: Works
     filters:
       and:
-        - file.inFolder("knowledge/digests")
-        - type == "digest"
+        - file.inFolder("knowledge/works")
+        - type == "work"
     order:
       - formula.note
-      - check_status
+      - work_id
       - description
-      - source_id
   - type: table
     name: Notes
     filters:
@@ -23,7 +22,6 @@ views:
         - type == "note"
     order:
       - formula.note
-      - check_status
       - description
   - type: table
     name: Hubs
@@ -33,7 +31,7 @@ views:
         - type == "hub"
     order:
       - formula.note
-      - check_status
+      - tag
       - description
   - type: table
     name: Projects
@@ -43,5 +41,4 @@ views:
         - type == "project"
     order:
       - formula.note
-      - check_status
       - description

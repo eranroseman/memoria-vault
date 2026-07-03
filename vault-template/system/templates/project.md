@@ -1,13 +1,12 @@
 ---
 title: "{{VALUE:project title}}"
 type: project
-id: "projects/{{VALUE:project slug}}/project"
-check_status: unchecked
-standing: current
+id: "{{VALUE:ulid}}"
 description: "{{VALUE:project description}}"
-scope: {}
-links: {}
 tags: []
+links: {}
+outcome_frame: {}
+paper_plan: {}
 ---
 # {{VALUE:project title}}
 

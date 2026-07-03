@@ -404,7 +404,7 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
         ).fetchone()
     assert tuple(row) == ("unchecked", "abstract-only")
     assert not (vault / "references.bib").exists()
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert not (vault / "knowledge/works/source-alpha.md").exists()
 
 
 def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
@@ -446,8 +446,8 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
     policy = vault / "capabilities/operations/enrich-source.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - https://api.unpaywall.org/",
-            "  - https://api.unpaywall.org/\n  - https://example.test/",
+            "- https://api.unpaywall.org/",
+            "- https://api.unpaywall.org/\n- https://example.test/",
         ),
         encoding="utf-8",
     )
@@ -502,8 +502,8 @@ def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypat
     policy = vault / "capabilities/operations/enrich-source.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - https://api.unpaywall.org/",
-            "  - https://api.unpaywall.org/\n  - https://example.test/",
+            "- https://api.unpaywall.org/",
+            "- https://api.unpaywall.org/\n- https://example.test/",
         ),
         encoding="utf-8",
     )
@@ -564,8 +564,8 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
     policy = vault / "capabilities/operations/enrich-source.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - https://api.unpaywall.org/",
-            "  - https://api.unpaywall.org/\n  - https://example.test/",
+            "- https://api.unpaywall.org/",
+            "- https://api.unpaywall.org/\n- https://example.test/",
         ),
         encoding="utf-8",
     )
@@ -626,8 +626,8 @@ def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, mon
     policy = vault / "capabilities/operations/enrich-source.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - https://api.unpaywall.org/",
-            "  - https://api.unpaywall.org/\n  - https://example.test/",
+            "- https://api.unpaywall.org/",
+            "- https://api.unpaywall.org/\n- https://example.test/",
         ),
         encoding="utf-8",
     )
@@ -698,8 +698,8 @@ def test_enrich_source_fetches_crossref_full_text_link(tmp_path: Path, monkeypat
     policy = vault / "capabilities/operations/enrich-source.md"
     policy.write_text(
         policy.read_text(encoding="utf-8").replace(
-            "  - https://api.unpaywall.org/",
-            "  - https://api.unpaywall.org/\n  - https://example.test/",
+            "- https://api.unpaywall.org/",
+            "- https://api.unpaywall.org/\n- https://example.test/",
         ),
         encoding="utf-8",
     )

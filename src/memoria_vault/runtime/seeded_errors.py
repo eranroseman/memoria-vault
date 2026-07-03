@@ -24,6 +24,7 @@ from memoria_vault.runtime.integrity import (
 )
 from memoria_vault.runtime.knowledge import emit_note_candidates
 from memoria_vault.runtime.operations import compile_source_digest
+from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     promote_checked,
@@ -312,18 +313,19 @@ def _set_catalog_standing(vault: Path, source_id: str, standing: str) -> None:
 
 
 def _checked_broken_digest(vault: Path) -> dict[str, Any]:
-    target = "knowledge/digests/seeded-missing-digest-evidence.md"
+    target = "knowledge/works/seeded-missing-digest-evidence.md"
     stage = stage_concept(
         vault,
         target,
         concept_text(
             {
-                "type": "digest",
-                "check_status": "unchecked",
+                "type": "work",
                 "title": "Seeded missing digest evidence",
                 "description": "Injected structural error.",
+                "work_id": "missing-digest-source",
+                "tags": [],
+                "links": {},
                 "source_id": "catalog/sources/missing-digest-source",
-                "confidence": "medium",
                 "evidence_set": ["catalog/sources/missing-digest-source"],
             },
             "Seeded missing digest evidence",
@@ -339,20 +341,21 @@ def _checked_broken_digest(vault: Path) -> dict[str, Any]:
 
 
 def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
-    target = "knowledge/digests/seeded-missing-contradiction.md"
+    target = "knowledge/works/seeded-missing-contradiction.md"
     stage = stage_concept(
         vault,
         target,
         concept_text(
             {
-                "type": "digest",
-                "check_status": "unchecked",
+                "type": "work",
                 "title": "Seeded missing contradiction",
                 "description": "Injected structural contradiction-link error.",
+                "work_id": "seed-source",
+                "tags": [],
+                "links": {},
                 "source_id": "catalog/sources/seed-source",
-                "confidence": "medium",
                 "evidence_set": ["catalog/sources/seed-source"],
-                "contradictions": ["knowledge/digests/missing-contradiction-target.md"],
+                "contradictions": ["knowledge/works/missing-contradiction-target.md"],
             },
             "Seeded missing contradiction",
             "This checked digest intentionally points at a missing contradiction target.",
@@ -376,9 +379,9 @@ def _checked_false_link_note(vault: Path) -> dict[str, Any]:
         concept_text(
             {
                 "type": "note",
-                "check_status": "unchecked",
                 "title": "Seeded false link",
                 "description": "Injected structural Link target error.",
+                "tags": [],
                 "source_id": "catalog/sources/seed-source",
                 "links": {"supports": ["knowledge/notes/missing-linked-note.md"]},
             },
@@ -418,13 +421,12 @@ def _checked_conflicting_doi_source(vault: Path) -> dict[str, Any]:
 
 def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
     entity = "catalog/entities/person-ambiguous-river.md"
-    entity_stage = stage_concept(
-        vault,
-        entity,
+    entity_path = vault / entity
+    entity_path.parent.mkdir(parents=True, exist_ok=True)
+    entity_path.write_text(
         concept_text(
             {
-                "type": "person",
-                "check_status": "unchecked",
+                "type": "entity",
                 "title": "Ambiguous River",
                 "description": "Injected catalog identity ambiguity.",
                 "canonical_name": "Ambiguous River",
@@ -443,11 +445,15 @@ def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
             "Ambiguous River",
             "This checked entity intentionally carries conflicting identity metadata.",
         ),
-        inputs=[],
-        operation="seeded-ambiguous-entity",
-        machine="seeded-source",
+        encoding="utf-8",
     )
-    entity_check = promote_checked(vault, entity, machine="seeded-source")
+    state.record_observed_file_edit(
+        vault,
+        output_id=entity,
+        concept_type="person",
+        output_sha256=sha256_file(entity_path),
+    )
+    state.set_concept_verdict(vault, entity, "checked")
     source = capture_source(
         vault,
         "ambiguous-entity",
@@ -484,8 +490,7 @@ def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
     return {
         "source_path": source["source_path"],
         "entity_path": entity,
-        "entity_derived": entity_stage,
-        "entity_checked": entity_check,
+        "entity_checked": {"target_id": entity, "status": "checked"},
         "source": source,
         "commit": commit,
     }

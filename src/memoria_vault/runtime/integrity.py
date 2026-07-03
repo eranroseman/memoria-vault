@@ -89,7 +89,7 @@ def check_evidence_integrity(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"digest", "note"}:
+        if frontmatter.get("type") not in {"work", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
             status = _evidence_status(vault, evidence_rel)
@@ -189,7 +189,7 @@ def check_prompt_injection_markers(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"source", "digest", "note"}:
+        if frontmatter.get("type") not in {"source", "work", "note"}:
             continue
         marker = _prompt_injection_marker(_concept_scan_text(vault, path, frontmatter))
         if marker:
@@ -324,7 +324,7 @@ def check_citation_survival(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"digest", "note", "hub"}:
+        if frontmatter.get("type") not in {"work", "note", "hub"}:
             continue
         for reason in state.check_citation_payload(frontmatter):
             findings.append(
@@ -361,7 +361,7 @@ def check_provenance_checkpoint(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"digest", "note"}:
+        if frontmatter.get("type") not in {"work", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
             source_ref, status = _source_metadata_status(vault, evidence_rel)
@@ -399,7 +399,7 @@ def check_contradiction_links(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "digest" or not _is_checked_concept(vault, rel):
+        if frontmatter.get("type") != "work" or not _is_checked_concept(vault, rel):
             continue
         contradictions = frontmatter.get("contradictions")
         if not isinstance(contradictions, list):
@@ -640,15 +640,11 @@ def _quarantine_machine_descendant(
 ) -> None:
     source = vault / output_id
     original_sha = sha256_file(source)
-    frontmatter, body = split_frontmatter(source.read_text(encoding="utf-8"))
-    if frontmatter:
-        frontmatter["check_status"] = "quarantined"
-        write_frontmatter_doc(source, frontmatter, body)
-    quarantined_sha = sha256_file(source)
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / output_id)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(source), quarantine_path)
     quarantine_id = quarantine_path.relative_to(vault).as_posix()
+    state.set_concept_verdict(vault, output_id, "quarantined")
     append_journal_event(
         vault,
         {
@@ -657,7 +653,7 @@ def _quarantine_machine_descendant(
             "target_id": output_id,
             "target_sha256": original_sha,
             "quarantined_id": quarantine_id,
-            "quarantined_sha256": quarantined_sha,
+            "quarantined_sha256": original_sha,
             "trigger_id": target,
             "reason": reason,
         },
@@ -991,7 +987,7 @@ def _linked_entity_identity_issues(vault: Path, frontmatter: dict[str, Any]) -> 
         if not entity.is_file():
             continue
         entity_fm = read_frontmatter(entity)
-        if entity_fm.get("check_status") != "checked":
+        if state.concept_check_status(vault, entity_rel) != "checked":
             continue
         metadata = entity_fm.get("metadata") if isinstance(entity_fm.get("metadata"), dict) else {}
         if metadata.get("identity_status") == "ambiguous":

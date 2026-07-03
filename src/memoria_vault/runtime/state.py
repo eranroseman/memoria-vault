@@ -871,7 +871,7 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
     concept_type = frontmatter.get("type")
-    if concept_type not in {"note", "digest", "hub"}:
+    if concept_type not in {"note", "work", "hub"}:
         return []
     refs = _source_refs(frontmatter)
     if not refs:

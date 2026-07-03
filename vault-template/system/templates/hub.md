@@ -1,13 +1,11 @@
 ---
 title: "{{VALUE:hub title}}"
 type: hub
-id: "hubs/{{VALUE:hub slug}}"
-check_status: unchecked
-standing: current
+id: "{{VALUE:ulid}}"
 description: "{{VALUE:hub description}}"
-members: []
-links: {}
 tags: []
+links: {}
+tag: "{{VALUE:tag id}}"
 ---
 # {{VALUE:hub title}}
 

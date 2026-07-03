@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS concepts (
     concept_id TEXT PRIMARY KEY,
     concept_type TEXT NOT NULL
         CHECK (concept_type IN (
-            'source', 'digest', 'note', 'hub', 'capability',
+            'source', 'work', 'note', 'hub', 'capability',
             'operation', 'skill', 'adapter', 'workflow', 'person',
             'organization', 'venue', 'project'
         )),

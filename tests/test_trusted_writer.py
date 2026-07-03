@@ -21,7 +21,7 @@ from memoria_vault.runtime.trusted_writer import (
     rebuild_trace_state,
     stage_concept,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter
+from memoria_vault.runtime.vaultio import is_ulid, read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -32,8 +32,17 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def note_text(*, status: str = "checked", title: str = "Alpha note") -> str:
-    return f"---\ntype: note\ncheck_status: {status}\ntitle: {title}\n---\nAlpha body.\n"
+def note_text(*, title: str = "Alpha note") -> str:
+    return (
+        "---\n"
+        "type: note\n"
+        "id: 01KBN6V6KX0000000000000001\n"
+        f"title: {title}\n"
+        "tags: []\n"
+        "links: {}\n"
+        "---\n"
+        "Alpha body.\n"
+    )
 
 
 def events(vault: Path) -> list[dict]:
@@ -59,7 +68,7 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
     event = stage_concept(
         vault,
         "knowledge/notes/alpha.md",
-        note_text(status="checked"),
+        note_text(),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         run_id="run-1",
         machine="test-machine",
@@ -69,24 +78,23 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
     assert staged.is_file()
     assert not (vault / "knowledge/notes/alpha.md").exists()
     frontmatter = read_frontmatter(staged)
-    assert frontmatter["check_status"] == "unchecked"
-    assert frontmatter["id"] == "notes/alpha"
-    assert frontmatter["standing"] == "current"
-    assert frontmatter["links"] == {}
+    assert "check_status" not in frontmatter
+    assert is_ulid(frontmatter["id"])
+    assert "standing" not in frontmatter
+    assert frontmatter["links"] == []
     assert event["event"] == "derived"
     assert event["output_id"] == "knowledge/notes/alpha.md"
     assert events(vault) == [event]
 
 
-def test_stage_concept_rejects_wrong_universal_id(tmp_path: Path) -> None:
+def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
-    with pytest.raises(ValueError, match="id must be 'notes/alpha'"):
+    with pytest.raises(ValueError, match="retired frontmatter field is ignored: check_status"):
         stage_concept(
             vault,
             "knowledge/notes/alpha.md",
-            "---\ntype: note\nid: notes/wrong\ncheck_status: checked\n"
-            "standing: current\nlinks: {}\ntitle: Alpha note\n---\nAlpha body.\n",
+            "---\ntype: note\ncheck_status: checked\ntitle: Alpha note\ntags: []\nlinks: {}\n---\nAlpha body.\n",
             machine="test-machine",
         )
 
@@ -100,7 +108,8 @@ def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) ->
     target = vault / "knowledge/notes/alpha.md"
     assert target.is_file()
     assert not (vault / ".memoria/staging/knowledge/notes/alpha.md").exists()
-    assert read_frontmatter(target)["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(target)
+    assert state.concept_check_status(vault, "knowledge/notes/alpha.md") == "checked"
     assert event["event"] == "check-fired"
     assert event["status"] == "passed"
     assert event["output_sha256"] == sha256_file(target)
@@ -163,10 +172,10 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
     )
 
     frontmatter = read_frontmatter(target)
-    assert frontmatter["check_status"] == "unchecked"
-    assert frontmatter["id"] == "notes/pi"
-    assert frontmatter["standing"] == "current"
-    assert frontmatter["links"] == {}
+    assert "check_status" not in frontmatter
+    assert is_ulid(frontmatter["id"])
+    assert "standing" not in frontmatter
+    assert frontmatter["links"] == []
     assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"][-1] == {
@@ -186,7 +195,8 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
 
     check_event = mark_checked(vault, "knowledge/notes/pi.md", machine="test-machine")
 
-    assert read_frontmatter(target)["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(target)
+    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "checked"
     assert check_event["status"] == "passed"
     assert rebuild_trace_state(vault)["knowledge/notes/pi.md"] == check_event
 
@@ -221,7 +231,8 @@ def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -
         {"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"},
         {"id": "knowledge/notes/pi.md", "sha256": prior_sha, "role": "prior-head"},
     ]
-    assert read_frontmatter(vault / "knowledge/notes/pi.md")["check_status"] == "unchecked"
+    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/pi.md")
+    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "unchecked"
 
 
 def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Path) -> None:
@@ -263,8 +274,10 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
         "id": "catalog/sources/source-a/source.md",
         "sha256": "sha256:abc",
     }
-    assert read_frontmatter(vault / "knowledge/notes/pi.md")["check_status"] == "unchecked"
-    assert read_frontmatter(new_path)["check_status"] == "unchecked"
+    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/pi.md")
+    assert "check_status" not in read_frontmatter(new_path)
+    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "unchecked"
+    assert state.concept_check_status(vault, "knowledge/notes/pi-new.md") == "unchecked"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         "journal/test-machine.jsonl",
@@ -278,7 +291,7 @@ def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     staged = vault / ".memoria/staging/knowledge/notes/bad.md"
     staged.parent.mkdir(parents=True)
-    staged.write_text("---\ntype: note\ncheck_status: unchecked\n---\nBody.\n", encoding="utf-8")
+    staged.write_text("---\ntype: note\ntags: []\nlinks: {}\n---\nBody.\n", encoding="utf-8")
 
     try:
         promote_checked(vault, "knowledge/notes/bad.md", machine="test-machine")
@@ -306,7 +319,8 @@ def test_quarantine_untraced_moves_explicit_foreign_file(tmp_path: Path) -> None
     quarantined = vault / ".memoria/quarantine/knowledge/notes/foreign.md"
     assert not foreign.exists()
     assert quarantined.is_file()
-    assert read_frontmatter(quarantined)["check_status"] == "quarantined"
+    assert "check_status" not in read_frontmatter(quarantined)
+    assert state.concept_check_status(vault, "knowledge/notes/foreign.md") == "quarantined"
     assert event["event"] == "check-fired"
     assert event["status"] == "failed"
     assert event["reason"] == "foreign-untraced"

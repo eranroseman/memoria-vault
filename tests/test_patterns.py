@@ -1,4 +1,4 @@
-"""Prompt operations validate as capabilities; the runtime runner enforces rules."""
+"""Prompt operations validate as product policies; the runtime runner enforces rules."""
 
 import re
 from pathlib import Path
@@ -6,6 +6,7 @@ from pathlib import Path
 import yaml
 
 from memoria_vault.runtime import patterns
+from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.subsystems.lib import schema
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
@@ -30,13 +31,11 @@ def _targeted_operation_files() -> list[Path]:
     return [p for p in _operation_files() if _frontmatter(p).get("output_target")]
 
 
-def test_shipped_operations_validate_against_the_schema():
-    types = schema.load_types()
+def test_shipped_operations_validate_against_policy_loader():
     shipped = _operation_files()
-    assert len(shipped) >= 6, "the vault ships checked operation concepts"
+    assert len(shipped) >= 6, "the vault ships checked operation policies"
     for p in shipped:
-        fm = _frontmatter(p)
-        assert schema.validate_frontmatter(fm, types["operation"]) == [], p.name
+        load_operation_policy(SRC, p.stem)
 
 
 def test_no_shipped_prompt_operation_targets_a_gated_zone():

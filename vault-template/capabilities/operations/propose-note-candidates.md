@@ -8,7 +8,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/sources/
-- knowledge/digests/
+- knowledge/works/
 - knowledge/notes/
 allowed_network: []
 runner: pydantic-ai

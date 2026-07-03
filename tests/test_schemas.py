@@ -1,4 +1,4 @@
-"""The canonical alpha.11 schema home: every consumer reads .memoria/schemas/."""
+"""The canonical alpha.15 schema home: every consumer reads .memoria/schemas/."""
 
 import shutil
 from pathlib import Path
@@ -7,33 +7,19 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
 
-ALPHA11_TYPES = {
-    "source",
-    "person",
-    "organization",
-    "venue",
-    "digest",
+ALPHA15_TYPES = {
     "note",
+    "work",
     "hub",
     "project",
-    "adapter",
-    "operation",
-    "skill",
-    "workflow",
 }
 
 
 def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
-    parts = path.parts
-    for bundle in ("knowledge", "capabilities"):
-        if bundle not in parts:
-            continue
-        bundle_index = parts.index(bundle)
-        concept_id = Path(*parts[bundle_index + 1 :]).as_posix().removesuffix(".md")
-        frontmatter.setdefault("id", concept_id)
-        frontmatter.setdefault("standing", "current")
+    if "knowledge" in path.parts:
+        frontmatter.setdefault("id", "01KBN6V6KX0000000000000001")
+        frontmatter.setdefault("tags", [])
         frontmatter.setdefault("links", {})
-        break
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "---\n" + yaml.safe_dump(frontmatter, sort_keys=False) + "---\n" + body,
@@ -51,78 +37,53 @@ def _empty_workspace(root: Path) -> Path:
 def _m0_schema_reset_fixture(root: Path) -> Path:
     _empty_workspace(root)
     _md(
-        root / "catalog/sources/source-alpha/source.md",
+        root / "knowledge/works/source-alpha.md",
         {
-            "type": "source",
-            "check_status": "checked",
-            "title": "Alpha source",
-            "description": "Fixture source.",
-            "source_id": "source-alpha",
-            "citekey": "alpha2026",
-        },
-    )
-    _md(
-        root / "knowledge/digests/source-alpha.md",
-        {
-            "type": "digest",
-            "check_status": "checked",
+            "type": "work",
             "title": "Alpha digest",
             "description": "Per-source synthesis.",
-            "source_id": "catalog/sources/source-alpha",
-            "evidence_set": ["catalog/sources/source-alpha/source#s1"],
+            "work_id": "source-alpha",
         },
     )
     _md(
         root / "knowledge/notes/alpha-method.md",
         {
             "type": "note",
-            "check_status": "checked",
             "title": "Alpha method reduces drift",
-            "evidence_set": ["catalog/sources/source-alpha/source#s1"],
         },
     )
     _md(
         root / "knowledge/hubs/drift.md",
         {
             "type": "hub",
-            "check_status": "checked",
             "title": "Drift",
             "description": "Topic synthesis.",
-            "members": ["knowledge/digests/source-alpha", "knowledge/notes/alpha-method"],
+            "tag": "drift",
         },
     )
     _md(
         root / "knowledge/projects/project-alpha/project.md",
         {
             "type": "project",
-            "check_status": "checked",
             "title": "Alpha project",
             "description": "Project direction.",
-        },
-    )
-    _md(
-        root / "capabilities/operations/capture.md",
-        {
-            "type": "operation",
-            "check_status": "checked",
-            "title": "Capture",
-            "description": "Capture a source into the catalog.",
-            "operation_id": "capture",
         },
     )
     return root
 
 
-def test_alpha11_concept_types_load():
+def test_alpha15_concept_types_load():
     types = schema.load_types()
-    assert set(types) == ALPHA11_TYPES
+    assert set(types) == ALPHA15_TYPES
 
 
-def test_check_status_declared_for_every_type():
+def test_frontmatter_has_no_verdict_or_standing_fields():
     types = schema.load_types()
     for name, sc in types.items():
-        assert sc.get("initial_check_status") == "unchecked", name
-        assert schema.check_status_for(sc) == ["unchecked", "checked", "quarantined"], name
+        payload = {**(sc.get("required") or {}), **(sc.get("optional") or {})}
+        assert "check_status" not in payload, name
+        assert "standing" not in payload, name
+        assert schema.check_status_for(sc) == [], name
 
 
 def test_type_field_matches_filename_literal():
@@ -131,26 +92,22 @@ def test_type_field_matches_filename_literal():
         assert sc["required"]["type"] == f"literal:{name}"
 
 
-def test_alpha11_portable_fields_declared():
+def test_alpha15_portable_fields_declared():
     types = schema.load_types()
     for name, sc in types.items():
         required = sc.get("required") or {}
         optional = sc.get("optional") or {}
         assert required["title"] == "str", name
-        assert required["check_status"] == "enum:check_status", name
-        assert optional.get("resource") == "str", name
-        if sc["category"] in {"knowledge", "capabilities"}:
-            assert required["id"] == "str", name
-            assert required["standing"] == "enum:standing", name
-            assert required["links"] == "map", name
-            assert optional.get("links") is None, name
-        if name == "note":
-            assert optional.get("description") == "str"
-        else:
-            assert required["description"] == "str", name
+        assert required["id"] == "ulid", name
+        assert required["tags"] == "list", name
+        assert required["links"] == "map", name
+        assert optional.get("archived") == "bool", name
+        assert optional.get("x") == "map", name
+    assert types["work"]["required"]["work_id"] == "str"
+    assert types["hub"]["required"]["tag"] == "str"
 
 
-def test_folder_map_covers_every_alpha11_type():
+def test_folder_map_covers_every_alpha15_type():
     types = schema.load_types()
     folders = schema.load_folders()
     for name in types:
@@ -170,34 +127,31 @@ def test_skeleton_contains_every_home_and_barrier_root():
 
 
 def test_validate_frontmatter_round_trip():
-    source = schema.load_types()["source"]
+    work = schema.load_types()["work"]
     good = {
-        "type": "source",
-        "check_status": "unchecked",
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "work",
         "title": "T",
-        "description": "D",
-        "source_id": "source-alpha",
+        "tags": [],
+        "links": {},
+        "work_id": "source-alpha",
     }
-    assert schema.validate_frontmatter(good, source) == []
-    assert any("description" in e for e in schema.validate_frontmatter({"type": "source"}, source))
-    assert any(
-        "check_status" in e
-        for e in schema.validate_frontmatter(dict(good, check_status="unknown"), source)
-    )
+    assert schema.validate_frontmatter(good, work) == []
+    assert any("work_id" in e for e in schema.validate_frontmatter({"type": "work"}, work))
+    assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), work))
 
 
 def test_note_links_are_typed_maps():
     note = schema.load_types()["note"]
     good = {
-        "id": "notes/t",
+        "id": "01KBN6V6KX0000000000000001",
         "type": "note",
-        "check_status": "checked",
-        "standing": "current",
         "title": "T",
-        "links": {"supports": ["knowledge/notes/other.md"]},
+        "tags": [],
+        "links": {"supports": ["knowledge/notes/target.md"]},
     }
     assert schema.validate_frontmatter(good, note) == []
-    assert any("links" in e for e in schema.validate_frontmatter(dict(good, links=["other"]), note))
+    assert any("links" in e for e in schema.validate_frontmatter(dict(good, links=[]), note))
 
 
 def test_okf_core_empty_workspace_validates(tmp_path):
@@ -215,20 +169,18 @@ def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
 
     errors = schema.validate_okf_core_workspace(root)
 
-    assert any("id must be 'notes/bad'" in err for err in errors)
-    assert any("standing must be one of" in err for err in errors)
+    assert any("id must be a ULID" in err for err in errors)
     assert any("links must be a map" in err for err in errors)
 
 
 def test_memoria_workspace_rejects_malformed_concept(tmp_path):
     root = _empty_workspace(tmp_path)
     _md(
-        root / "catalog/sources/bad/source.md",
-        {"type": "source", "check_status": "checked", "title": "Bad"},
+        root / "knowledge/works/bad.md",
+        {"type": "work", "title": "Bad"},
     )
     errors = schema.validate_memoria_workspace(root)
-    assert any("description" in err for err in errors)
-    assert any("source_id" in err for err in errors)
+    assert any("work_id" in err for err in errors)
 
 
 def test_m0_schema_reset_fixture_passes(tmp_path):

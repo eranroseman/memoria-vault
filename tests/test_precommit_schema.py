@@ -6,7 +6,7 @@ from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
 
 
 def _vault(tmp_path: Path) -> Path:
-    for rel in ("catalog/sources/s1", "knowledge/notes", "system", "inbox"):
+    for rel in ("knowledge/notes", "system", "inbox"):
         (tmp_path / rel).mkdir(parents=True)
     return tmp_path
 
@@ -14,8 +14,8 @@ def _vault(tmp_path: Path) -> Path:
 def test_clean_note_passes(tmp_path):
     vault = _vault(tmp_path)
     (vault / "knowledge/notes/n.md").write_text(
-        "---\ntype: note\nid: notes/n\ncheck_status: unchecked\n"
-        "standing: current\nlinks: {}\ntitle: T\n---\nBody.\n",
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
     assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
@@ -23,14 +23,15 @@ def test_clean_note_passes(tmp_path):
 
 def test_schema_violation_blocks(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "catalog/sources/s1/source.md").write_text(
-        "---\ntype: source\ncheck_status: pending\ntitle: T\n---\nBody.\n",
+    (vault / "knowledge/notes/bad.md").write_text(
+        "---\ntype: note\nid: notes/bad\ncheck_status: pending\nlinks: []\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
-    errors = precommit_check.check_paths(vault, ["catalog/sources/s1/source.md"])
+    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
     assert any("check_status" in error for error in errors)
-    assert any("description" in error for error in errors)
-    assert any("source_id" in error for error in errors)
+    assert any("id" in error for error in errors)
+    assert any("tags" in error for error in errors)
+    assert any("links" in error for error in errors)
 
 
 def test_unknown_type_blocks(tmp_path):

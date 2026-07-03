@@ -21,7 +21,7 @@ SKELETON_DIRS=(
   catalog/sources
   catalog/entities
   knowledge
-  knowledge/digests
+  knowledge/works
   knowledge/notes
   knowledge/hubs
   knowledge/projects

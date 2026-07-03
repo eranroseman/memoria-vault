@@ -1,13 +1,13 @@
-type: hub
+type: work
 category: knowledge
 gated: false
 required:
-  type: literal:hub
+  type: literal:work
   id: ulid
   title: str
   tags: list
   links: map
-  tag: str
+  work_id: str
 optional:
   aliases: list
   archived: bool

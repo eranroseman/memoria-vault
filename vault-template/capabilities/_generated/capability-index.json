@@ -408,7 +408,7 @@
       "allowed_paths": [
         "catalog/sources/",
         ".memoria/blobs/source-content/",
-        "knowledge/digests/",
+        "knowledge/works/",
         "knowledge/hubs/"
       ],
       "allowed_tools": [
@@ -428,7 +428,7 @@
       "runner": "pydantic-ai",
       "title": "Compile source digest",
       "trust": {
-        "sha256": "sha256:ba9a56a8a42cb3586c40be4f2562d2444c28cce045c05a4bd7e72c8e50cb34a0",
+        "sha256": "sha256:66eaf741dc334ae84a459c24b8699df449c52d73c5b45c170541e46584e759df",
         "source": "local"
       },
       "type": "operation"
@@ -947,7 +947,7 @@
       "allowed_network": [],
       "allowed_paths": [
         "catalog/sources/",
-        "knowledge/digests/",
+        "knowledge/works/",
         "knowledge/notes/"
       ],
       "allowed_tools": [
@@ -967,7 +967,7 @@
       "runner": "pydantic-ai",
       "title": "Propose note candidates",
       "trust": {
-        "sha256": "sha256:b9bbd82495c863e92884b654f9931988e5becf218f00d15baba0b52bd08d609c",
+        "sha256": "sha256:b6d3f4db0706eddd4683f542afd9fb9f6b2d2827bd1c41f85ce7f9cf04ae40a4",
         "source": "local"
       },
       "type": "operation"

@@ -37,8 +37,8 @@ def test_detectors():
                 (v / d).mkdir(parents=True, exist_ok=True)
 
             (v / "knowledge/notes/good.md").write_text(
-                "---\ntype: note\nid: notes/good\ncheck_status: checked\n"
-                "standing: current\nlinks: {}\ntitle: Good\n---\nA note. [[good]]\n",
+                "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+                "tags: []\nlinks: {}\ntitle: Good\n---\nA note. [[good]]\n",
                 encoding="utf-8",
             )
             (v / "knowledge/notes/bad.md").write_text(
@@ -66,13 +66,13 @@ def test_detectors():
                 encoding="utf-8",
             )
             (v / "knowledge/notes/oldnote.md").write_text(
-                "---\ntype: note\nid: notes/oldnote\ncheck_status: checked\n"
-                "standing: superseded\nstatus: superseded\nlinks: {}\ntitle: Old\n---\nOld note.\n",
+                "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAW\n"
+                "tags: []\nlinks: {}\ntitle: Old\nstatus: superseded\n---\nOld note.\n",
                 encoding="utf-8",
             )
             (v / "knowledge/projects/proj/project.md").write_text(
-                "---\ntype: project\nid: projects/proj/project\ncheck_status: checked\n"
-                "standing: current\nlinks: {}\ntitle: P\ndescription: Project\n---\n"
+                "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAX\n"
+                "tags: []\nlinks: {}\ntitle: P\ndescription: Project\n---\n"
                 "We still rely on [[oldnote]] here.\n",
                 encoding="utf-8",
             )
@@ -86,8 +86,8 @@ def test_detectors():
                 encoding="utf-8",
             )
             (v / "knowledge/notes/tablelink.md").write_text(
-                "---\ntype: note\nid: notes/tablelink\ncheck_status: checked\n"
-                "standing: current\nlinks: {}\ntitle: Table\n---\n"
+                "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAY\n"
+                "tags: []\nlinks: {}\ntitle: Table\n---\n"
                 "| col | [[good\\|Good]] |\n",
                 encoding="utf-8",
             )
@@ -95,8 +95,9 @@ def test_detectors():
                 '```dataview\nTABLE check_status, projct\nFROM "knowledge"\nSORT file.mtime DESC\n```\n',
                 encoding="utf-8",
             )
-            (v / "catalog/sources/stray-note.md").write_text(
-                "---\ntype: note\ncheck_status: checked\ntitle: Stray\n---\nWrong home.\n",
+            (v / "knowledge/hubs/stray-note.md").write_text(
+                "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAZ\n"
+                "tags: []\nlinks: {}\ntitle: Stray\n---\nWrong home.\n",
                 encoding="utf-8",
             )
             (v / "70-misc").mkdir(parents=True, exist_ok=True)
@@ -241,8 +242,8 @@ def test_detectors():
                 not any("good" in x.message for x in by("fama-exposure")),
             )
             check(
-                "misplaced-note flags note under catalog sources",
-                any("stray-note.md" in x.path for x in by("misplaced-note")),
+                "misplaced-note flags note under the wrong knowledge home",
+                any("knowledge/hubs/stray-note.md" in x.path for x in by("misplaced-note")),
             )
             check(
                 "misplaced-note ignores correctly-placed note",
@@ -432,25 +433,23 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
         "## topics\n",
         encoding="utf-8",
     )
-    (v / "catalog/sources/off-source").mkdir(parents=True)
-    (v / "catalog/sources/off-source/source.md").write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: Off source\n"
-        "description: Source\nsource_id: off-source\n"
-        "research_area: [Health Informatics]\nmethodology: [not-a-method]\n---\n",
+    (v / "knowledge/notes").mkdir(parents=True)
+    (v / "knowledge/notes/off-topic.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB0\n"
+        "tags: []\nlinks: {}\ntitle: Off topic\ntopics: [not-a-topic]\n---\n",
         encoding="utf-8",
     )
 
     findings = _m.frontmatter_schema_check(v)
     messages = "\n".join(f.message for f in findings)
-    assert "research_area: off-vocabulary" in messages
-    assert "methodology: off-vocabulary" in messages
+    assert "topics: off-vocabulary" in messages
 
 
 def _topic_note(v, name, topics):
     (v / "knowledge/notes").mkdir(parents=True, exist_ok=True)
     (v / f"knowledge/notes/{name}.md").write_text(
-        f"---\ntype: note\nid: notes/{name}\ncheck_status: checked\n"
-        f"standing: current\nlinks: {{}}\ntitle: {name}\ntopics: {topics}\n---\nBody.\n",
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\n"
+        f"tags: []\nlinks: {{}}\ntitle: {name}\ntopics: {topics}\n---\nBody.\n",
         encoding="utf-8",
     )
 

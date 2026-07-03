@@ -71,10 +71,10 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         (
             "---\n"
             "type: note\n"
-            "check_status: checked\n"
             "title: Thesis\n"
             "status: accepted\n"
             "tags: [Memory Consolidation]\n"
+            "links: {}\n"
             "---\n"
             "Sleep-dependent memory consolidation needs supporting evidence.\n"
         ),
@@ -86,9 +86,10 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         (
             "---\n"
             "type: project\n"
-            "check_status: checked\n"
             "title: Sleep memory project\n"
             "description: A disposable alpha.11 cycle project.\n"
+            "tags: []\n"
+            "links: {}\n"
             "thesis: knowledge/notes/thesis.md\n"
             "---\n"
             "Project framing.\n"
@@ -189,7 +190,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         },
         key="compile-digest",
     )
-    assert digest["digest_path"] == "knowledge/digests/doi-10.1000_cycle.2026.md"
+    assert digest["digest_path"] == "knowledge/works/doi-10.1000_cycle.2026.md"
     assert len(digest["hub_paths"]) == 5
 
     notes = run_operation(
@@ -282,15 +283,15 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     ]
     assert any(event.get("event") == "model_call" for event in events)
     assert any(event.get("operation") == "curate-note-link" for event in events)
-    assert all(
-        read_frontmatter(
+    for path in indexed_paths:
+        source_path = (
             (vault / path)
             if (vault / path).is_file()
             else (vault / ".memoria/index/qmd/checked" / path)
-        )["check_status"]
-        == "checked"
-        for path in indexed_paths
-    )
+        )
+        assert "check_status" not in read_frontmatter(source_path)
+        if (vault / path).is_file():
+            assert state.concept_check_status(vault, path) == "checked"
 
     rollback = run_operation(
         vault,
@@ -307,10 +308,9 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     assert not (vault / source_ref).exists()
     assert not (vault / digest["digest_path"]).exists()
     assert not (vault / note_path).exists()
-    assert (
-        read_frontmatter(vault / ".memoria/quarantine" / digest["digest_path"])["check_status"]
-        == "quarantined"
+    assert "check_status" not in read_frontmatter(
+        vault / ".memoria/quarantine" / digest["digest_path"]
     )
-    assert (
-        read_frontmatter(vault / ".memoria/quarantine" / note_path)["check_status"] == "quarantined"
-    )
+    assert state.concept_check_status(vault, digest["digest_path"]) == "quarantined"
+    assert "check_status" not in read_frontmatter(vault / ".memoria/quarantine" / note_path)
+    assert state.concept_check_status(vault, note_path) == "quarantined"
