@@ -32,7 +32,7 @@ The Inbox page turns the rail count into work:
 | Fleeting notes | Which raw PI captures still need processing? |
 
 Activity is status only. Done and blocked tasks leave Activity; a blocked task
-creates an actionable card in the Action queue only when the PI can do something
+creates an actionable attention item only when the PI can do something
 about it.
 
 ## Board-state support

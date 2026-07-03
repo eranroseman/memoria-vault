@@ -11,8 +11,8 @@ Walk the Friday ritual: refresh your steering, sweep the Inbox, use Maintenance'
 
 ## Prerequisites
 
-- Obsidian open with the vault
-- `spaces/maintenance.md` open — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
+- A local workspace available to the `memoria` CLI
+- `spaces/maintenance.md` or the equivalent CLI attention/request views available — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
 
 ## Steps
 
@@ -22,11 +22,16 @@ Open `steering.md`. Confirm or update the active questions and reading focus —
 
 **Step 2 — Sweep the Inbox (10–15 min).**
 
-Open the Inbox queue's **Needs me** view of `inbox/inbox.base` and work the proposed action cards as one batch: candidates kept or skipped, gaps turned into discovery tasks or archived, and work prompts dismissed once no action remains ([Work the action queue](../inbox/work-the-action-queue.md)). The weekly review is the backstop that keeps the queue from aging past a week.
+Open the Inbox queue's **Needs me** view, or run `memoria attention list`, and
+work the proposed action items as one batch: candidates kept or skipped, gaps
+turned into discovery tasks or archived, and work prompts dismissed once no
+action remains ([Work the action queue](../inbox/work-the-action-queue.md)). The
+weekly review is the backstop that keeps the queue from aging past a week.
 
 **Step 3 — Notice-level findings (5 min).**
 
-Maintenance's **Loose ends** view lists cards at `loudness: notice` — things that didn't demand attention mid-week. Resolve each or consciously defer.
+Maintenance's **Loose ends** view lists `loudness: notice` attention items —
+things that didn't demand attention mid-week. Resolve each or consciously defer.
 
 **Step 4 — Review the week's movement (5–10 min).**
 

@@ -15,8 +15,8 @@ judgment, or recommendation belongs to an agent or to the PI.
 
 Operations do not occupy board lanes. They run through the CLI, scheduled tasks,
 CI, or optional adapters that call the same runtime package. Their findings may
-surface as attention projections, but the operation itself is not a card-claiming
-worker.
+surface as attention projections, but the operation itself is not a queue-owning
+agent.
 
 ## Invocation rule
 

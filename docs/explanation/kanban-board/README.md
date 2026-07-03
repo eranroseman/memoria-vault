@@ -48,7 +48,7 @@ For the current control-plane command lookup, see the
 
 - Why review is structural: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
 - The decision model behind attention prompts: [Decision points](decision-points.md)
-- The Inbox card types: [Document types and epistemic roles](../knowledge/document-types.md)
+- Attention projections and retired Inbox-card schema: [Inbox card fields](../../reference/inbox-card-fields.md)
 
 **Dashboards**
 

@@ -22,7 +22,7 @@ promotion; PI edits are direct and then observed/backfilled.
 
 **1. Open the queue and work it as one batch.**
 
-Sit down once and sweep the action queue — high-cardinality decisions belong in one worklist worked in one sitting, never N cards trickling at you ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
+Sit down once and sweep the action queue — high-cardinality decisions belong in one worklist worked in one sitting, never N attention items trickling at you ([ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)).
 
 **2. Read each item the right way round.**
 

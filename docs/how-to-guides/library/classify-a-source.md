@@ -15,7 +15,7 @@ Three situations bring you in:
 
 | Situation | What it means |
 | --- | --- |
-| Genuine ambiguity | Ingest left the field blank and raised a `flag` card with candidate values and scores. It reports; you decide. |
+| Genuine ambiguity | Ingest left the field blank and raised a `flag` attention item with candidate values and scores. It reports; you decide. |
 | Draft to review | The Librarian parked a suggested value in `_proposed_classification`, separate from the real fields. |
 | Correction | Ingest applied a value you disagree with; edit the frontmatter directly. |
 
@@ -27,7 +27,7 @@ For what ingest decides and how, see [Ingest routing](../../reference/ingest.md)
 
 ## Steps
 
-**1. Handle any `flag` card first.**
+**1. Handle any `flag` attention first.**
 
 Use `memoria status` or `memoria request list` to find source metadata attention.
 If ingest hit genuine ambiguity, you'll see a finding for the source. Pick the
@@ -72,7 +72,7 @@ later queries miss results ([Vocabulary discipline](../../explanation/knowledge/
 ## Verify
 
 - The source reads `lifecycle: current`, has settled metadata, and no longer has a `_proposed_classification` block
-- No `flag` card for this citekey is still at `proposed` in your queue
+- No `flag` attention item for this citekey is still open in your queue
 - `system/logs/classify.jsonl` records the decision (applied or flagged) for this citekey
 
 ## Related
