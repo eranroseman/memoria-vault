@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import uuid
 from importlib.metadata import PackageNotFoundError, version
@@ -404,6 +405,11 @@ def _eval_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     _common(seeded)
     seeded.add_argument("--mode", choices=("test", "live"), default="test")
     seeded.set_defaults(handler=_cmd_eval_seeded_error_verdict)
+    select = eval_sub.add_parser("select-models")
+    _common(select)
+    select.add_argument("--operation")
+    select.add_argument("--mode", choices=("test", "live"), default="test")
+    select.set_defaults(handler=_cmd_eval_select_models)
     run = eval_sub.add_parser("run")
     _common(run)
     run.add_argument("--dry-run", action="store_true")
@@ -1130,6 +1136,61 @@ def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
     return _emit(_enqueue_and_run(args, "run-seeded-error-verdict", {"mode": args.mode}), args)
 
 
+def _cmd_eval_select_models(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime import seeded_errors
+    from memoria_vault.runtime.capabilities import iter_capability_manifests
+    from memoria_vault.runtime.operations import load_operation_policy, resolve_operation_runner
+
+    workspace = _workspace(args)
+    bundle_path = _seeded_error_bundle_path(workspace)
+    operation_ids = (
+        [args.operation]
+        if args.operation
+        else sorted(
+            str(item["frontmatter"]["operation_id"])
+            for item in iter_capability_manifests("operation")
+        )
+    )
+    selections = []
+    for operation_id in operation_ids:
+        policy = load_operation_policy(workspace, operation_id)
+        runner = resolve_operation_runner(workspace, policy, args.mode)
+        with tempfile.TemporaryDirectory(prefix="memoria-select-models-") as tmpdir:
+            verdict = seeded_errors.run_seeded_error_verdict(
+                Path(tmpdir),
+                template_root=workspace,
+                bundle_path=bundle_path,
+                runner=runner,
+                operation_id=operation_id,
+                machine="memoria-cli",
+            )
+        passed = bool(verdict.get("passed"))
+        selections.append(
+            {
+                "operation_id": operation_id,
+                "mode": runner["mode"],
+                "candidate_count": 1,
+                "candidate_source": "operation_manifest_runner",
+                "selected": runner if passed else None,
+                "attention_required": not passed,
+                "bar_failures": verdict.get("bar_failures") or [],
+                "verdict_key": verdict.get("verdict_key", ""),
+                "non_sandbox_licensed": bool(verdict.get("non_sandbox_licensed", False)),
+            }
+        )
+    payload = {
+        "ok": all(item["selected"] for item in selections),
+        "mode": args.mode,
+        "selection_count": sum(1 for item in selections if item["selected"]),
+        "failed_count": sum(1 for item in selections if not item["selected"]),
+        "selections": selections,
+    }
+    if args.operation:
+        payload["operation_id"] = args.operation
+        payload["selection"] = selections[0]
+    return _emit(payload, args)
+
+
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
     results = run_pending_jobs(_workspace(args), limit=args.limit, machine="memoria-cli")
     payload = {"ok": True, "ran": len(results), "results": results}
@@ -1448,6 +1509,18 @@ def _payload_doi(payload: dict[str, Any]) -> str:
 
 def _workspace(args: argparse.Namespace) -> Path:
     return Path(args.workspace).resolve()
+
+
+def _seeded_error_bundle_path(workspace: Path) -> Path:
+    for rel in (
+        "system/eval/alpha15-seeded-errors.json",
+        "system/eval/alpha12-seeded-errors.json",
+        "system/eval/alpha11-seeded-errors.json",
+    ):
+        path = workspace / rel
+        if path.is_file():
+            return path
+    raise FileNotFoundError("system/eval seeded-error bundle")
 
 
 def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:

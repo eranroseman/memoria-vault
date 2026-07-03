@@ -768,14 +768,16 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault / "system/eval/alpha12-seeded-errors.json",
             vault / "system/eval/alpha11-seeded-errors.json",
         )
-        runner = resolve_operation_runner(vault, policy, str(payload.get("mode") or "test"))
+        target_operation_id = str(payload.get("target_operation_id") or operation_id)
+        target_policy = load_operation_policy(vault, target_operation_id)
+        runner = resolve_operation_runner(vault, target_policy, str(payload.get("mode") or "test"))
         with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
             return run_seeded_error_verdict(
                 Path(tmpdir),
                 template_root=vault,
                 bundle_path=bundle_path,
                 runner=runner,
-                operation_id=str(payload.get("target_operation_id") or operation_id),
+                operation_id=target_operation_id,
                 machine=machine or "seeded-gate",
             )
     if operation_id == "eval-run":
