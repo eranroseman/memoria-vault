@@ -11,8 +11,6 @@ supersedes: [7, 22, 23, 26, 28, 32, 33, 35, 43, 46, 48, 49, 53, 55, 69, 74, 80, 
 superseded_by: []
 ---
 
-<!-- cspell:words Typer -->
-
 # ADR-125: Memoria is a standalone local CLI + engine
 
 One of six consolidation ADRs (125–130) that align the corpus with the

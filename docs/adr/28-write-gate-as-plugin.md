@@ -31,7 +31,7 @@ superseded_by: [125]
 > (`tools/registry.py:390`). So a disabled tool is hidden from the model, not removed
 > from the runtime; against the injection threat ([ADR-32](32-external-access-over-mcp.md),
 > the dominant one) the denylist is not a capability boundary. What actually makes the
-> single gated path sufficient is the **plugin's own behaviour**, which the code
+> single gated path sufficient is the **plugin's own behavior**, which the code
 > already gets right: `policy_hook` **independently hard-denies** `file`/`terminal`/
 > `code_execution` and **defaults to block** for any unknown tool
 > (`vault-template/.memoria/mcp/policy_hook.py:82-96, 204, 264`), explicitly "rather than trusting

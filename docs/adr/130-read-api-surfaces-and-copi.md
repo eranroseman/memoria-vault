@@ -11,8 +11,6 @@ supersedes: [31, 51, 70, 72, 81, 102, 109, 112, 114, 115, 116, 118, 121]
 superseded_by: []
 ---
 
-<!-- cspell:words dogfood -->
-
 # ADR-130: Read-API-only surfaces and the agent contract
 
 Consolidation ADR (see ADR-125 preamble). Every human and agent surface, on

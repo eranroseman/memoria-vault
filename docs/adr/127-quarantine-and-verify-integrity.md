@@ -11,8 +11,6 @@ supersedes: [25, 104]
 superseded_by: []
 ---
 
-<!-- cspell:words journaled Litestream -->
-
 # ADR-127: Quarantine-and-verify integrity engine
 
 Consolidation ADR (see ADR-125 preamble). This is the mechanism layer that

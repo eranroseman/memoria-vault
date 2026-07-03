@@ -11,8 +11,6 @@ supersedes: [9, 10, 30, 38, 39, 56, 66]
 superseded_by: []
 ---
 
-<!-- cspell:words journaled Hypothes unsteerable -->
-
 # ADR-129: Layered machine judgment
 
 Consolidation ADR (see ADR-125 preamble). Everything a model or score is
