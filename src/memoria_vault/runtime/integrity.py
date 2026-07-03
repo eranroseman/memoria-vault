@@ -65,6 +65,7 @@ _HANS_ACCEPTANCE = (
         NLI_REFUTED,
     ),
 )
+_SOURCE_RECORD_LINKAGE_ATTENTION = "inbox/work-prompt-record-linkage-source-external-ids.md"
 
 
 def record_integrity_check(
@@ -340,10 +341,113 @@ def check_source_metadata(
                     machine=machine,
                 )
             )
+    record_linkage_findings = _duplicate_source_external_id_findings(
+        vault,
+        shadow=shadow,
+        machine=machine,
+    )
+    findings.extend(record_linkage_findings)
+    attention_path = ""
+    commit_paths: list[str] = []
+    active_record_linkage_findings = [
+        finding for finding in record_linkage_findings if finding.get("route") == "ask"
+    ]
+    if active_record_linkage_findings and commit:
+        attention_path, commit_paths = _write_source_record_linkage_attention(
+            vault,
+            active_record_linkage_findings,
+        )
     commit_hash = ""
     if findings and commit:
-        commit_hash = commit_writer_changes(vault, "source metadata check", [], machine=machine)
-    return {"findings": findings, "commit": commit_hash}
+        commit_hash = commit_writer_changes(
+            vault, "source metadata check", commit_paths, machine=machine
+        )
+    return {"findings": findings, "commit": commit_hash, "attention_path": attention_path}
+
+
+def _duplicate_source_external_id_findings(
+    vault: Path,
+    *,
+    shadow: bool,
+    machine: str | None,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for namespace, value, source_ids in _duplicate_source_external_id_groups(vault):
+        for source_id in source_ids:
+            target_id = f"catalog/sources/{source_id}"
+            if state.concept_check_status(vault, target_id) != "checked":
+                continue
+            others = [f"catalog/sources/{other}" for other in source_ids if other != source_id]
+            if not others:
+                continue
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    target_id,
+                    check="record-linkage",
+                    status="failed",
+                    reason=(
+                        f"duplicate source external id {namespace}={value} also used by "
+                        f"{', '.join(others)}"
+                    ),
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
+    return findings
+
+
+def _duplicate_source_external_id_groups(vault: Path) -> list[tuple[str, str, list[str]]]:
+    if not state.db_path(vault).is_file():
+        return []
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT e.namespace, e.value, e.owner_id
+            FROM external_ids e
+            JOIN catalog_sources s ON s.source_id = e.owner_id
+            WHERE e.owner_type = 'source'
+            ORDER BY e.namespace, e.value, e.owner_id
+            """
+        ).fetchall()
+    groups: dict[tuple[str, str], set[str]] = {}
+    for row in rows:
+        namespace = str(row["namespace"] or "").strip()
+        value = str(row["value"] or "").strip()
+        owner_id = str(row["owner_id"] or "").strip()
+        if not namespace or not value or not owner_id:
+            continue
+        groups.setdefault((namespace, value), set()).add(owner_id)
+    return [
+        (namespace, value, sorted(source_ids))
+        for (namespace, value), source_ids in sorted(groups.items())
+        if len(source_ids) > 1
+    ]
+
+
+def _write_source_record_linkage_attention(
+    vault: Path,
+    findings: list[dict[str, Any]],
+) -> tuple[str, list[str]]:
+    path = write_work_prompt(
+        vault,
+        "Review source record-linkage candidates",
+        "Review duplicate source records before merging or treating them as separate works.",
+        (
+            f"The source metadata check found {len(findings)} active exact external ID "
+            "collision(s). The check-fired events list each affected source and duplicate ID."
+        ),
+        "check-source-metadata",
+        target="catalog/sources",
+        posture="librarian",
+        loudness="alert",
+        dedupe_slug="record-linkage-source-external-ids",
+        prompt_kind="record-linkage",
+    )
+    if path is None:
+        return _SOURCE_RECORD_LINKAGE_ATTENTION, []
+    rel = path.relative_to(vault).as_posix()
+    return rel, [rel]
 
 
 def check_citation_survival(

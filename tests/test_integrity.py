@@ -549,6 +549,105 @@ def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
     assert not (vault / "catalog/sources/conflict/source.md").exists()
 
 
+def test_source_metadata_check_routes_duplicate_source_external_ids_to_attention(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    state.upsert_catalog_record(
+        vault,
+        source_id="source-one",
+        title="First External ID Source",
+        description="A fixture source.",
+        resource="https://doi.org/10.1000/external.one",
+        identifiers={"doi": "10.1000/external.one"},
+        citekey="externalOne2026",
+        csl_json={
+            "id": "externalOne2026",
+            "type": "article-journal",
+            "title": "First External ID Source",
+            "DOI": "10.1000/external.one",
+            "issued": {"date-parts": [[2026]]},
+            "author": [{"family": "River", "given": "Ada"}],
+        },
+        provider_coverage="full",
+        text_status="full-text",
+        check_status="checked",
+    )
+    state.upsert_catalog_record(
+        vault,
+        source_id="source-two",
+        title="Second External ID Source",
+        description="A fixture source.",
+        resource="https://doi.org/10.1000/external.two",
+        identifiers={"doi": "10.1000/external.two"},
+        citekey="externalTwo2026",
+        csl_json={
+            "id": "externalTwo2026",
+            "type": "article-journal",
+            "title": "Second External ID Source",
+            "DOI": "10.1000/external.two",
+            "issued": {"date-parts": [[2026]]},
+            "author": [{"family": "River", "given": "Ada"}],
+        },
+        provider_coverage="full",
+        text_status="full-text",
+        check_status="checked",
+    )
+    state.replace_external_ids(
+        vault,
+        [
+            {
+                "owner_type": "source",
+                "owner_id": "source-one",
+                "namespace": "openalex",
+                "value": "https://openalex.org/W123",
+            },
+            {
+                "owner_type": "source",
+                "owner_id": "source-two",
+                "namespace": "openalex",
+                "value": "https://openalex.org/W123",
+            },
+        ],
+    )
+
+    result = check_source_metadata(
+        vault,
+        shadow=False,
+        machine="integrity-machine",
+        commit=True,
+    )
+
+    assert [
+        (finding["check"], finding["target_id"], finding["reason"], finding["route"])
+        for finding in result["findings"]
+    ] == [
+        (
+            "record-linkage",
+            "catalog/sources/source-one",
+            "duplicate source external id openalex=https://openalex.org/W123 also used by "
+            "catalog/sources/source-two",
+            "ask",
+        ),
+        (
+            "record-linkage",
+            "catalog/sources/source-two",
+            "duplicate source external id openalex=https://openalex.org/W123 also used by "
+            "catalog/sources/source-one",
+            "ask",
+        ),
+    ]
+    assert result["attention_path"] == "inbox/work-prompt-record-linkage-source-external-ids.md"
+    card = read_frontmatter(vault / result["attention_path"])
+    assert card["attention_kind"] == "work-prompt"
+    assert card["attention_status"] == "open"
+    assert card["target"] == "catalog/sources"
+    assert not (vault / "catalog/sources/source-one/source.md").exists()
+    assert not (vault / "catalog/sources/source-two/source.md").exists()
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
+
+
 def test_db_capture_does_not_create_legacy_entity_identity_findings(
     tmp_path: Path,
 ) -> None:
