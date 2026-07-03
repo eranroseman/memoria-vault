@@ -3,6 +3,13 @@ branches:
   doi:
     required: [crossref, openalex, unpaywall]
     optional: []
+runner_providers:
+  local:
+    url: http://127.0.0.1:11434/v1
+    key_env: null
+  gateway:
+    url: https://api.openai.com/v1
+    key_env: KILOCODE_API_KEY
 providers:
   crossref:
     enabled: true

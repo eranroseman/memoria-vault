@@ -11,8 +11,9 @@ allowed_paths:
 - knowledge/
 - .memoria/index/
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: answer-query.v1
 io_schema:
   input: query

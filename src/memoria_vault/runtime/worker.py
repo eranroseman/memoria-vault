@@ -293,6 +293,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         load_operation_policy,
         require_allowed_network,
         required_promotion_checks,
+        resolve_operation_runner,
     )
 
     policy = load_operation_policy(vault, operation_id)
@@ -455,6 +456,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             source_id,
             [topic.strip() for topic in hub_topics],
+            mode=str(payload.get("mode") or "test"),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
         )
@@ -503,6 +505,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             digest_path,
             candidates,
+            mode=str(payload.get("mode") or "test"),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,
         )
@@ -701,11 +704,13 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         bundle_path = vault / "system/eval/alpha12-seeded-errors.json"
         if not bundle_path.is_file():
             bundle_path = vault / "system/eval/alpha11-seeded-errors.json"
+        runner = resolve_operation_runner(vault, policy, str(payload.get("mode") or "test"))
         with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
             return run_seeded_error_verdict(
                 Path(tmpdir),
                 template_root=vault,
                 bundle_path=bundle_path,
+                runner=runner,
                 machine=machine or "seeded-gate",
             )
     if operation_id == "eval-run":
@@ -847,6 +852,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             vault,
             operation_id,
             payload,
+            mode=str(payload.get("mode") or "test"),
             machine=machine,
             run_id=str(job["job_id"]),
         )

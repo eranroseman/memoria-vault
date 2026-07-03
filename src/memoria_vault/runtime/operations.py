@@ -11,6 +11,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import read_capability_manifest
 from memoria_vault.runtime.jsonl import iter_jsonl
@@ -36,14 +38,15 @@ REQUIRED_POLICY_FIELDS = {
     "allowed_paths",
     "allowed_network",
     "runner",
-    "model",
     "prompt_version",
     "io_schema",
     "risk_class",
     "required_checks",
 }
 SUPPORTED_OPERATION_RUNNERS = frozenset({"pydantic-ai"})
-DEFAULT_LOCAL_MODEL_BASE_URL = "http://127.0.0.1:11434/v1"
+PROVIDER_CONFIG = ".memoria/config/providers.yaml"
+RUNNER_MODES = frozenset({"test", "live"})
+RUNNER_PROVIDER_NAMES = ("local", "gateway")
 
 
 def record_copi_interview_turn(
@@ -106,9 +109,7 @@ def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict
     missing = sorted(field for field in REQUIRED_POLICY_FIELDS if field not in policy)
     if missing:
         raise ValueError(f"{operation_id} missing operation policy fields: {', '.join(missing)}")
-    runner = policy["runner"]
-    if runner not in SUPPORTED_OPERATION_RUNNERS:
-        raise ValueError(f"{operation_id} unsupported operation runner: {runner}")
+    _validate_runner_policy(operation_id, policy["runner"])
     io_schema = policy["io_schema"]
     if not isinstance(io_schema, dict):
         raise ValueError(f"{operation_id} io_schema must be a map")
@@ -117,6 +118,110 @@ def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{operation_id} io_schema.{key} must be a non-empty string")
     return policy
+
+
+def resolve_operation_runner(
+    vault: Path,
+    policy: dict[str, Any],
+    mode: str | None = None,
+) -> dict[str, Any]:
+    """Resolve the one manifest-declared runner branch selected by run mode."""
+    operation_id = str(policy.get("operation_id") or "<unknown>")
+    run_mode = normalize_run_mode(mode)
+    runner_policy = _validate_runner_policy(operation_id, policy.get("runner"))[run_mode]
+    provider = str(runner_policy["provider"])
+    provider_config = load_runner_provider_config(vault)
+    if provider not in provider_config:
+        raise ValueError(f"{operation_id} runner.{run_mode} unknown provider: {provider}")
+    spec = provider_config[provider]
+    base_url = str(spec.get("url") or "").strip().rstrip("/")
+    if not base_url:
+        raise ValueError(f"{PROVIDER_CONFIG} runner provider {provider} requires url")
+    return {
+        "mode": run_mode,
+        "runner": str(runner_policy.get("engine") or "pydantic-ai"),
+        "provider": provider,
+        "model": str(runner_policy["model"]),
+        "base_url": base_url,
+        "key_env": spec.get("key_env"),
+        "params": {
+            key: runner_policy[key]
+            for key in ("temperature", "max_tokens", "timeout")
+            if key in runner_policy
+        },
+    }
+
+
+def normalize_run_mode(mode: str | None = None) -> str:
+    """Return the supported runner mode, defaulting to the local test branch."""
+    value = str(mode or "test").strip()
+    if value not in RUNNER_MODES:
+        raise ValueError(f"unsupported run mode: {value}")
+    return value
+
+
+def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
+    """Load OpenAI-compatible runner provider connections from workspace config."""
+    path = Path(vault) / PROVIDER_CONFIG
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"{PROVIDER_CONFIG} must be a map")
+    providers = data.get("runner_providers")
+    if providers is None:
+        providers = _runner_providers_from_legacy_root(data)
+    if not isinstance(providers, dict):
+        raise ValueError(f"{PROVIDER_CONFIG} runner_providers must be a map")
+    missing = [name for name in RUNNER_PROVIDER_NAMES if name not in providers]
+    if missing:
+        raise ValueError(f"{PROVIDER_CONFIG} missing runner providers: {', '.join(missing)}")
+    resolved: dict[str, dict[str, Any]] = {}
+    for name in RUNNER_PROVIDER_NAMES:
+        spec = providers[name]
+        if not isinstance(spec, dict):
+            raise ValueError(f"{PROVIDER_CONFIG} runner provider {name} must be a map")
+        url = str(spec.get("url") or spec.get("base_url") or "").strip().rstrip("/")
+        if not url:
+            raise ValueError(f"{PROVIDER_CONFIG} runner provider {name} requires url")
+        key_env = spec.get("key_env")
+        if key_env is not None and not isinstance(key_env, str):
+            raise ValueError(f"{PROVIDER_CONFIG} runner provider {name}.key_env must be a string")
+        resolved[name] = {"url": url, "key_env": key_env}
+    return resolved
+
+
+def _runner_providers_from_legacy_root(data: dict[str, Any]) -> dict[str, Any] | None:
+    providers = data.get("providers")
+    if not isinstance(providers, dict):
+        return None
+    if all(name in providers for name in RUNNER_PROVIDER_NAMES):
+        return providers
+    return None
+
+
+def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, dict[str, Any]]:
+    if not isinstance(runner_policy, dict):
+        raise ValueError(f"{operation_id} runner must define test and live branches")
+    missing = sorted(mode for mode in RUNNER_MODES if mode not in runner_policy)
+    if missing:
+        raise ValueError(f"{operation_id} runner missing branches: {', '.join(missing)}")
+    branches: dict[str, dict[str, Any]] = {}
+    for mode in sorted(RUNNER_MODES):
+        branch = runner_policy[mode]
+        if not isinstance(branch, dict):
+            raise ValueError(f"{operation_id} runner.{mode} must be a map")
+        engine = str(branch.get("engine") or "pydantic-ai").strip()
+        if engine not in SUPPORTED_OPERATION_RUNNERS:
+            raise ValueError(f"{operation_id} unsupported operation runner: {engine}")
+        provider = str(branch.get("provider") or "").strip()
+        model = str(branch.get("model") or "").strip()
+        if provider not in RUNNER_PROVIDER_NAMES:
+            raise ValueError(f"{operation_id} runner.{mode} provider must be local or gateway")
+        if not model:
+            raise ValueError(f"{operation_id} runner.{mode}.model must be non-empty")
+        branches[mode] = {**branch, "engine": engine, "provider": provider, "model": model}
+    return branches
 
 
 def required_promotion_checks(policy: dict[str, Any]) -> list[str]:
@@ -136,12 +241,14 @@ def run_prompt_operation(
     operation_id: str,
     payload: dict[str, Any],
     *,
+    mode: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Run one checked prompt operation through the standard staged write path."""
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
+    runner = resolve_operation_runner(vault, policy, mode)
     _require_tool(policy, "trusted_writer")
     manifest = read_capability_manifest("operation", operation_id)
     _frontmatter, pattern = split_frontmatter(manifest["text"])
@@ -170,18 +277,21 @@ def run_prompt_operation(
         {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
         machine=machine,
     )
-    output = _run_prompt_model(policy, prompt, input_text)
+    output = _run_prompt_model(policy, runner, prompt, input_text)
     model_call = append_journal_event(
         vault,
         {
             "event": "model_call",
             "run_id": run_id,
-            "runner": policy["runner"],
-            "provider": policy.get("provider", "local"),
-            "model": policy["model"],
+            "mode": runner["mode"],
+            "runner": runner["runner"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "model_params": runner["params"],
             "route": "prompt-operation",
             "purpose": operation_id,
             "prompt_version": policy["prompt_version"],
+            "prompt_hash": _sha256_text(prompt),
             "toolset": policy["allowed_tools"],
             "fallback_used": False,
             "compression_used": False,
@@ -245,12 +355,14 @@ def compile_source_digest(
     hub_topics: Iterable[str],
     *,
     operation_id: str = "compile-source-digest",
+    mode: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Compile one checked source into a checked digest plus hub suggestions."""
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
+    runner = resolve_operation_runner(vault, policy, mode)
     _require_tool(policy, "trusted_writer")
     promotion_checks = required_promotion_checks(policy)
 
@@ -284,18 +396,22 @@ def compile_source_digest(
 
     content = safe_read(content_path)
     interviews = _source_interviews(vault, source_id)
-    digest_text = _run_digest_model(policy, source_fm, content, topics, interviews)
+    digest_prompt = _digest_prompt(source_fm, content, topics, interviews)
+    digest_text = _run_digest_model(policy, runner, source_fm, content, topics, interviews)
     model_call = append_journal_event(
         vault,
         {
             "event": "model_call",
             "run_id": run_id,
-            "runner": policy["runner"],
-            "provider": policy.get("provider", "local"),
-            "model": policy["model"],
+            "mode": runner["mode"],
+            "runner": runner["runner"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "model_params": runner["params"],
             "route": policy.get("route", "digest-compile"),
             "purpose": "digest_compile",
             "prompt_version": policy["prompt_version"],
+            "prompt_hash": _sha256_text(digest_prompt),
             "toolset": policy["allowed_tools"],
             "fallback_used": False,
             "compression_used": False,
@@ -562,12 +678,14 @@ def _prompt_text(vault: Path, pattern: str, input_text: str) -> str:
     return f"{preamble}\n\n---\n\n{prompt}".strip()
 
 
-def _run_prompt_model(policy: dict[str, Any], prompt: str, input_text: str) -> str:
-    if policy["model"] == "deterministic-fixture":
+def _run_prompt_model(
+    policy: dict[str, Any], runner: dict[str, Any], prompt: str, input_text: str
+) -> str:
+    if runner["model"] == "deterministic-fixture":
         return _prompt_fixture_body(policy, input_text)
-    if policy["runner"] == "pydantic-ai":
-        return _pydantic_ai_chat(policy, prompt)
-    raise ValueError(f"unsupported operation runner: {policy['runner']}")
+    if runner["runner"] == "pydantic-ai":
+        return _pydantic_ai_chat(policy, runner, prompt)
+    raise ValueError(f"unsupported operation runner: {runner['runner']}")
 
 
 def _prompt_fixture_body(policy: dict[str, Any], input_text: str) -> str:
@@ -667,19 +785,20 @@ def _digest_body(
 
 def _run_digest_model(
     policy: dict[str, Any],
+    runner: dict[str, Any],
     source_fm: dict[str, Any],
     content: str,
     topics: list[str],
     interviews: list[dict[str, Any]],
 ) -> str:
-    if policy["model"] == "deterministic-fixture":
+    if runner["model"] == "deterministic-fixture":
         text = _digest_body(source_fm, content, topics, interviews)
     else:
         prompt = _digest_prompt(source_fm, content, topics, interviews)
-        if policy["runner"] == "pydantic-ai":
-            text = _pydantic_ai_chat(policy, prompt)
+        if runner["runner"] == "pydantic-ai":
+            text = _pydantic_ai_chat(policy, runner, prompt)
         else:
-            raise ValueError(f"unsupported operation runner: {policy['runner']}")
+            raise ValueError(f"unsupported operation runner: {runner['runner']}")
     return _validate_digest_output(text, content, topics, interviews)
 
 
@@ -704,24 +823,31 @@ def _digest_prompt(
     )
 
 
-def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
-    base_url = model_base_url(policy.get("provider", "local"))
+def _pydantic_ai_chat(policy: dict[str, Any], runner: dict[str, Any], prompt: str) -> str:
+    base_url = str(runner["base_url"])
     _require_network(policy, base_url)
-    api_key = (
-        os.environ.get("MEMORIA_MODEL_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("KILOCODE_API_KEY")
-    )
+    key_env = runner.get("key_env")
+    if isinstance(key_env, str) and key_env:
+        api_key = os.environ.get(key_env)
+    else:
+        api_key = (
+            os.environ.get("MEMORIA_MODEL_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("KILOCODE_API_KEY")
+        )
     Agent, OpenAIChatModel, OpenAIProvider = _load_pydantic_ai_openai()
     provider_kwargs = {"base_url": base_url}
     if api_key:
         provider_kwargs["api_key"] = api_key
-    model = OpenAIChatModel(policy["model"], provider=OpenAIProvider(**provider_kwargs))
+    model = OpenAIChatModel(runner["model"], provider=OpenAIProvider(**provider_kwargs))
     agent = Agent(model)
+    params = runner.get("params") if isinstance(runner.get("params"), dict) else {}
     settings = {
-        "temperature": 0,
-        "max_tokens": int(os.environ.get("MEMORIA_MODEL_MAX_TOKENS", "2048")),
-        "timeout": float(os.environ.get("MEMORIA_MODEL_TIMEOUT", "90")),
+        "temperature": params.get("temperature", 0),
+        "max_tokens": int(
+            params.get("max_tokens", os.environ.get("MEMORIA_MODEL_MAX_TOKENS", 2048))
+        ),
+        "timeout": float(params.get("timeout", os.environ.get("MEMORIA_MODEL_TIMEOUT", 90))),
     }
     try:
         result = agent.run_sync(prompt, model_settings=settings)
@@ -731,16 +857,6 @@ def _pydantic_ai_chat(policy: dict[str, Any], prompt: str) -> str:
     if not text:
         raise RuntimeError("pydantic-ai model returned no message content")
     return text
-
-
-def model_base_url(provider: str | None = None) -> str:
-    configured = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
-    if configured:
-        return configured.rstrip("/")
-    provider_name = (provider or "default").strip() or "default"
-    if provider_name == "local":
-        return DEFAULT_LOCAL_MODEL_BASE_URL
-    return "https://api.openai.com/v1"
 
 
 def _load_pydantic_ai_openai() -> tuple[Any, Any, Any]:

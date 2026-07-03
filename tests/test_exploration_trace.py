@@ -17,5 +17,8 @@ def test_gap_and_project_argument_operations_are_read_only_checked_capabilities(
         assert fm["check_status"] == "checked"
         assert fm["operation_id"] == operation
         assert fm["allowed_tools"] == ["read_checked_concepts"]
-        assert fm["runner"] == "pydantic-ai"
+        assert fm["runner"] == {
+            "test": {"provider": "local", "model": "deterministic-fixture", "temperature": 0},
+            "live": {"provider": "gateway", "model": "deterministic-fixture", "temperature": 0},
+        }
         assert "write" not in text.lower()

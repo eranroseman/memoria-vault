@@ -11,8 +11,9 @@ composition contract.
 
 - Prompt operations are checked packaged operation manifests in
   `memoria_vault.product.capabilities.operations`.
-- `memoria operation run <pattern-id>` is the core runner: it reads checked input
-  refs, records request/journal provenance, and stages one unchecked report note.
+- `memoria operation run <pattern-id> --mode test|live` is the core runner: it
+  reads checked input refs, selects the manifest-pinned runner branch, records
+  request/journal provenance, and stages one unchecked report note.
 - `memoria_vault.runtime.patterns` is the compatibility prompt composer for tests
   and optional adapters ([ADR-53](../adr/53-pattern-library.md)).
 - To inspect the available pattern actions, see [System actions](system-actions.md).
@@ -60,7 +61,7 @@ The body is the prompt; `{{input}}` is the one substitution token.
 | `action` | str | The operation verb. |
 | `input` | str | Expected input shape; documentation for the caller, not enforced. |
 | `output_target` | path | Where the run's product is meant to land. Missing or gated targets force dry-run. |
-| `model_hint` | str (optional) | Suggested model tier; empty means caller default. |
+| `runner` | map | Required `test` and `live` branches; each branch pins `{provider, model, temperature}` and may include other runner params. |
 | `version` | str | Logged with every run for provenance. |
 | `adapted_from` | str (optional) | Upstream provenance of the prompt. |
 
@@ -71,16 +72,20 @@ other Concept files.
 
 ## The CLI Runner
 
-`memoria operation run <pattern-id>` loads the checked operation, accepts
-`input_text`, `input_ref`, or `input_refs` in `--payload-json`, and runs through
-the same SQLite request queue as other operations. File refs must be checked
-Concepts under the operation's `allowed_paths`.
+`memoria operation run <pattern-id> --mode test|live` loads the checked
+operation, accepts `input_text`, `input_ref`, or `input_refs` in
+`--payload-json`, and runs through the same SQLite request queue as other
+operations. File refs must be checked Concepts under the operation's
+`allowed_paths`. The selected mode must resolve to the operation manifest's
+declared `runner.test` or `runner.live` branch; the runner cannot choose an
+undeclared provider or model.
 
 The result stages one unchecked `note` report under `.memoria/staging/knowledge/`
 with `status: candidate`, an `evidence_set` pointing at the checked inputs, and
 request/journal rows for the run, model call, and derived output. The canonical
 `knowledge/notes/...` target is not materialized or checked until the normal
-promotion path accepts it.
+promotion path accepts it. `model_call` rows include resolved
+mode/provider/model/params and a prompt hash.
 
 ## Compatibility MCP Runner
 

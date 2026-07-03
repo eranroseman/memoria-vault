@@ -39,7 +39,12 @@ catalog source metadata and entities.
 
 ### API keys and rate limits
 
-Enrichment and search calls are rate-limited (or fail outright) without a free API key or contact email. Register a key per service and add it to the local environment used to run `memoria`. The DOI enrichment MVP reads `OPENALEX_API_KEY` and `NCBI_EMAIL` through `.memoria/config/providers.yaml`.
+Enrichment, search, and live runner calls are rate-limited or fail outright
+without the relevant API key/contact email. Register keys per service and add
+them to the local environment used to run `memoria`. DOI enrichment reads
+`OPENALEX_API_KEY` and `NCBI_EMAIL` through the `providers:` section of
+`.memoria/config/providers.yaml`; model runner connections use the same file's
+`runner_providers:` section (`local` and `gateway`).
 
 | Service | Where to register | Rate without key | Rate with free key |
 | --- | --- | --- | --- |
@@ -91,8 +96,8 @@ These are called during `find` to surface candidate sources.
 
 | Integration | Role |
 |---|---|
-| **Kilo Code gateway** | Optional model provider for the standalone runner, configured through workspace provider config/environment. No Hermes profile defaults ship in alpha.14. |
-| **pydantic-ai runner** | Required operation runner. `memoria doctor --check runner` verifies package/provider construction; `memoria doctor --check runner --live` performs an opt-in live dispatch against the configured OpenAI-compatible endpoint. |
+| **Kilo Code gateway** | Optional `gateway` model provider for the standalone runner, configured through `<workspace>/.memoria/config/providers.yaml` `runner_providers.gateway` plus its named key env var. No Hermes profile defaults ship in alpha.15. |
+| **pydantic-ai runner** | Required operation runner. Operation manifests pin both `runner.test` and `runner.live`; `--mode test\|live` selects the branch, and `memoria doctor --check runner` verifies package/provider construction. Add `--live` for an opt-in dispatch against the configured OpenAI-compatible endpoint. |
 | **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the alpha.14 baseline. |
 
 ---

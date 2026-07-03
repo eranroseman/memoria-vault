@@ -14,7 +14,11 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 from memoria_vault.runtime import state
-from memoria_vault.runtime.operations import load_operation_policy, required_promotion_checks
+from memoria_vault.runtime.operations import (
+    load_operation_policy,
+    required_promotion_checks,
+    resolve_operation_runner,
+)
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -52,12 +56,14 @@ def emit_note_candidates(
     candidates: Iterable[dict[str, Any]],
     *,
     operation_id: str = "propose-note-candidates",
+    mode: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Promote checked note candidates derived from one checked digest."""
     vault = Path(vault)
     policy = load_operation_policy(vault, operation_id)
+    runner = resolve_operation_runner(vault, policy, mode)
     _require_tool(policy, "trusted_writer")
     promotion_checks = required_promotion_checks(policy)
 
@@ -79,12 +85,15 @@ def emit_note_candidates(
         {
             "event": "model_call",
             "run_id": run_id,
-            "runner": policy["runner"],
-            "provider": policy.get("provider", "local"),
-            "model": policy["model"],
+            "mode": runner["mode"],
+            "runner": runner["runner"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "model_params": runner["params"],
             "route": policy.get("route", "note-candidates"),
             "purpose": "note_candidates",
             "prompt_version": policy["prompt_version"],
+            "prompt_hash": _sha256_text(repr(rows)),
             "toolset": policy["allowed_tools"],
             "fallback_used": False,
             "compression_used": False,

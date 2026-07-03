@@ -41,10 +41,11 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "worker@example.invalid")
     git(tmp_path, "config", "user.name", "Alpha Worker")
-    git(tmp_path, "add", ".memoria/schemas")
+    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
     git(tmp_path, "commit", "-m", "seed worker workspace")
     return tmp_path
 
@@ -812,6 +813,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
             "source_id": "source-alpha",
             "hub_topics": ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
             "run_id": "compile-alpha",
+            "mode": "live",
         },
         idempotency_key="compile-alpha",
     )
@@ -823,6 +825,10 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
     assert digest_done["digest_path"] == "knowledge/works/source-alpha.md"
     assert "check_status" not in read_frontmatter(vault / digest_done["digest_path"])
     assert state.concept_check_status(vault, digest_done["digest_path"]) == "checked"
+    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    model_call = next(event for event in events if event["event"] == "model_call")
+    assert model_call["mode"] == "live"
+    assert model_call["provider"] == "gateway"
     assert set(digest_done["hub_paths"]) == {
         "knowledge/hubs/framing.md",
         "knowledge/hubs/methods.md",
@@ -1190,6 +1196,7 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     queued = enqueue_operation(
         vault,
         "run-seeded-error-verdict",
+        payload={"mode": "live"},
         idempotency_key="seeded-verdict",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -1198,6 +1205,9 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     assert done is not None
     assert done["status"] == "done"
     assert done["passed"] is True
+    assert done["mode"] == "live"
+    assert done["provider"] == "gateway"
+    assert done["verdict_key"].startswith("sha256:")
     assert done["metrics"]["expected_errors"] == 13
     assert done["metrics"]["detected_errors"] == 13
     assert done["metrics"]["residual_errors"] == 0

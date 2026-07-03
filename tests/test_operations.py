@@ -15,6 +15,7 @@ from memoria_vault.runtime.operations import (
     load_operation_policy,
     record_copi_interview_turn,
     require_allowed_network,
+    resolve_operation_runner,
     validate_operation_policy,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
@@ -24,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "operations@example.invalid")
     git(tmp_path, "config", "user.name", "Operations")
@@ -45,6 +47,12 @@ def git(vault: Path, *args: str) -> str:
 
 def compile_policy(**updates):
     policy = deepcopy(load_operation_policy(Path(), "compile-source-digest"))
+    if "model" in updates:
+        model = updates.pop("model")
+        policy["runner"]["test"]["model"] = model
+    if "provider" in updates:
+        provider = updates.pop("provider")
+        policy["runner"]["test"]["provider"] = provider
     policy.update(updates)
     return policy
 
@@ -56,6 +64,23 @@ def patch_compile_policy(monkeypatch: pytest.MonkeyPatch, **updates) -> dict:
         lambda _vault, _operation_id: policy,
     )
     return policy
+
+
+def write_runner_provider_config(vault: Path, *, local_url: str = "http://model.test/v1") -> None:
+    config = vault / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "runner_providers:",
+                f"  local: {{url: {local_url}, key_env: null}}",
+                "  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_load_operation_policy_requires_io_schema_shape() -> None:
@@ -150,7 +175,11 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         "run",
     ]
     assert events[1]["runner"] == "pydantic-ai"
+    assert events[1]["mode"] == "test"
+    assert events[1]["provider"] == "local"
     assert events[1]["model"] == "deterministic-fixture"
+    assert events[1]["model_params"] == {"temperature": 0}
+    assert events[1]["prompt_hash"].startswith("sha256:")
     assert events[-1]["suggestions"] == result["hub_suggestions"]
     assert events[-1]["outputs"] == ["knowledge/works/source-alpha.md", *result["hub_paths"]]
 
@@ -306,6 +335,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
 
 def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
     patch_compile_policy(
         monkeypatch,
         allowed_network=["http://model.test/v1"],
@@ -380,7 +410,39 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
 @pytest.mark.parametrize("runner", ["local", "hermes", "raw-http"])
 def test_operation_policy_rejects_unsupported_runner_values(runner: str) -> None:
     policy = compile_policy(runner=runner)
-    with pytest.raises(ValueError, match=f"unsupported operation runner: {runner}"):
+    with pytest.raises(ValueError, match="runner must define test and live branches"):
+        validate_operation_policy("compile-source-digest", policy)
+
+
+def test_operation_policy_requires_both_runner_branches() -> None:
+    policy = compile_policy()
+    del policy["runner"]["live"]
+
+    with pytest.raises(ValueError, match="runner missing branches: live"):
+        validate_operation_policy("compile-source-digest", policy)
+
+
+def test_resolve_operation_runner_selects_declared_live_branch(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
+    policy = compile_policy()
+    policy["runner"]["live"]["model"] = "gateway-model"
+
+    runner = resolve_operation_runner(vault, policy, "live")
+
+    assert runner["mode"] == "live"
+    assert runner["provider"] == "gateway"
+    assert runner["model"] == "gateway-model"
+    assert runner["base_url"] == "https://gateway.test/v1"
+
+
+def test_resolve_operation_runner_rejects_undeclared_provider(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
+    policy = compile_policy()
+    policy["runner"]["test"]["provider"] = "shadow"
+
+    with pytest.raises(ValueError, match=r"runner\.test provider must be local or gateway"):
         validate_operation_policy("compile-source-digest", policy)
 
 
@@ -388,6 +450,7 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
     patch_compile_policy(
         monkeypatch,
         allowed_network=["http://model.test/v1"],
@@ -438,6 +501,7 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
+    write_runner_provider_config(vault)
     patch_compile_policy(
         monkeypatch,
         allowed_network=["http://model.test/v1"],

@@ -9,8 +9,9 @@ allowed_tools:
 allowed_paths:
 - system/eval/
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: eval-run.v1
 io_schema:
   input: eval_run_request

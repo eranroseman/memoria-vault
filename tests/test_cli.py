@@ -54,6 +54,25 @@ def mark_file_status(workspace: Path, rel: str, concept_type: str, status: str =
     state.set_concept_verdict(workspace, rel, status)
 
 
+def write_runner_provider_config(
+    workspace: Path, *, local_url: str = "http://model.test/v1"
+) -> None:
+    config = workspace / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "runner_providers:",
+                f"  local: {{url: {local_url}, key_env: null}}",
+                "  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+
 def _cli_command_surface() -> set[str]:
     parser = _build_parser()
     command_action = next(
@@ -1049,6 +1068,8 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
             "--workspace",
             str(workspace),
             "analyze-gaps",
+            "--mode",
+            "live",
             "--payload-json",
             json.dumps({"seed_terms": ["new area"], "dense_threshold": 1}),
             "--json",
@@ -1063,6 +1084,12 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["sleep"]["kind"] == "undigested"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT args_json FROM operation_requests WHERE request_id = ?",
+            ("operation-run-gaps",),
+        ).fetchone()
+    assert json.loads(row["args_json"])["mode"] == "live"
     assert gaps["sleep"]["score"] == 4
     assert gaps["new area"]["gap_type"] == "new-topic"
     assert output["result"]["summary"]["total"] == output["result"]["gap_count"]
@@ -1075,6 +1102,7 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     assert json.loads(row["args_json"]) == {
         "seed_terms": ["new area"],
         "dense_threshold": 1,
+        "mode": "live",
     }
 
 
@@ -1084,6 +1112,7 @@ def test_cli_operation_list_ignores_workspace_capability_files(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
+    write_runner_provider_config(workspace)
     asset_dir = workspace / "capabilities/operations/directory-only"
     asset_dir.mkdir(parents=True)
     (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
@@ -2174,11 +2203,13 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     assert (workspace / "system/eval/alpha12-seeded-errors.json").is_file()
 
     def fake_verdict(
-        vault: Path, *, template_root: Path, bundle_path: Path, machine: str
+        vault: Path, *, template_root: Path, bundle_path: Path, runner: dict, machine: str
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
         assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert runner["mode"] == "live"
+        assert runner["provider"] == "gateway"
         assert machine == "memoria-cli"
         return {"passed": True, "metrics": {"expected_errors": 1}}
 
@@ -2193,6 +2224,8 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
             "seeded-error-verdict",
             "--workspace",
             str(workspace),
+            "--mode",
+            "live",
             "--json",
             "--idempotency-key",
             "seeded-verdict",
@@ -2209,7 +2242,7 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
             ("seeded-verdict",),
         ).fetchone()
     assert row["operation_id"] == "run-seeded-error-verdict"
-    assert json.loads(row["args_json"]) == {}
+    assert json.loads(row["args_json"]) == {"mode": "live"}
 
     assert (
         main(
@@ -2470,6 +2503,7 @@ def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
 
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
+    write_runner_provider_config(workspace)
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
     monkeypatch.setenv("MEMORIA_MODEL", "live-test-model")
     monkeypatch.setattr(
