@@ -1075,7 +1075,8 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "links: {}\n"
         "source_id: catalog/sources/source-alpha\n"
         "---\n"
-        "Body.\n",
+        "Neural retrieval improves durable memory systems.\n"
+        "Neural retrieval also changes review timing.\n",
         encoding="utf-8",
     )
     mark_file_status(vault, "knowledge/works/source-alpha.md", "work")
@@ -1096,7 +1097,10 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert done["summary"]["total"] == 4
     assert done["saturation"]["ready"] is False
     assert done["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
+    assert done["tag_candidate_paths"] == ["inbox/candidate-tag-neural-retrieval.md"]
     assert (vault / done["full_text_attention_paths"][0]).is_file()
+    assert (vault / done["tag_candidate_paths"][0]).is_file()
+    assert done["tag_candidates"][0]["phrase"] == "neural retrieval"
     assert gaps["catalog-only"]["gap_type"] == "undigested"
     assert gaps["catalog-only"]["kind"] == "undigested"
     assert gaps["catalog-only"]["severity"] == "high"

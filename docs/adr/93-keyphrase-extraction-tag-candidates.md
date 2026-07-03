@@ -3,9 +3,9 @@ topic: decisions
 id: 93
 title: Keyphrase extraction for tag candidates
 nav_exclude: true
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-07-03
 assumes: [30]
 supersedes: []
 superseded_by: []
@@ -19,27 +19,34 @@ Memoria classifies paper metadata today, but controlled-vocabulary tag recall ca
 lag when new terms appear that a classifier has not seen. Keyphrase extraction can
 surface candidate vocabulary terms without asking an LLM to invent tags.
 
-## Proposal
+## Decision
 
-Memoria may use KeyBERT, YAKE, or a similar keyphrase extractor to propose tag
-candidates, then map those phrases onto the human's controlled vocabulary. This
-also requires defining the host tag-classification path it extends.
+Memoria uses the existing `analyze-gaps` operation to surface tag candidates.
+The alpha.15 implementation runs a deterministic stdlib phrase pass over checked
+Work text, suppresses phrases already present in `system/vocabulary.md` or
+checked frontmatter terms, and writes repeated off-vocabulary phrases as stable
+unchecked Inbox candidate cards. It never writes tags directly.
+
+KeyBERT, YAKE, or another extractor can replace the phrase pass only after real
+corpus misses show this cheap pass is insufficient.
 
 ## Consequences
 
-- Improves recall for vocabulary gaps and emerging terms.
-- Adds another classifier/extractor to tune and validate.
+- Improves recall for vocabulary gaps and emerging terms without a new model
+  dependency.
+- Keeps candidate generation in the existing gap-analysis path instead of adding
+  a second vocabulary scan.
 - Extracted phrases remain candidates; the controlled vocabulary remains the
   authority.
 
-## When this matters
-
-A tag classifier has been active for at least three months and the human notices
-recurrent vocabulary gaps.
-
 ## Alternatives considered
 
-**Use only existing metadata topics.** Simpler, but can miss domain-specific terms.
+**Use only existing metadata topics.** Simpler, but can miss domain-specific terms
+that appear in Work text.
+
+**Add KeyBERT or YAKE now.** Rejected for alpha.15 because a new extractor
+dependency is unnecessary until corpus evidence shows the deterministic pass
+misses useful terms.
 
 **Let the LLM freely create tags.** Rejected because it bypasses controlled
 vocabulary discipline.

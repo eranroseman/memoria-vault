@@ -9,7 +9,10 @@ allowed_tools:
 - read_checked_concepts
 allowed_paths:
 - catalog/
+- inbox/
+- journal/
 - knowledge/
+- system/vocabulary.md
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -32,4 +35,6 @@ links: {}
 
 Read checked current Concepts and return source/note mismatch gaps. When the
 payload includes `project_path`, also read that checked project's argument graph
-and return argument-health gaps.
+and return argument-health gaps. Repeated unchecked vocabulary phrases in checked
+Work text are emitted as stable `inbox/` tag-candidate attention; tags are never
+written directly.

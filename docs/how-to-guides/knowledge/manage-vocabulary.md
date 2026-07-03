@@ -50,6 +50,8 @@ Note the consumers: the ingest operation's automated classify stage rolls OpenAl
 2. Add it to `system/vocabulary.md`, then use it in the note you're classifying.
 3. If the list is already at ~30, ask whether an existing term covers the ground before adding.
 
+`memoria project gaps` can surface repeated off-vocabulary Work phrases as Inbox tag candidates; review those cards, then add only the terms you want to keep.
+
 ## Step 3 — Rename a term safely
 
 Renaming a vocabulary value across a fresh alpha.11 sandbox is a
