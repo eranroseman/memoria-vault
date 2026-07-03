@@ -17,7 +17,9 @@ Memoria is built on four converging ideas and informed by a full review of ~400 
 
 In standard retrieval-augmented generation, every question triggers a fresh search over raw documents. Useful synthesis is never stored; nothing compounds. The LLM-wiki pattern inverts this: the agent builds durable pages, and each new source improves those pages rather than sitting in isolation. The agent is a **compiler**, not just a retriever.
 
-Memoria takes this insight seriously. The vault is the compiled artifact. Ingest doesn't just add documents — it integrates sources into an existing graph of notes. A new source note connects to existing claims through typed wikilinks. The Librarian profile's job is essentially compilation.
+Memoria takes this insight seriously. The vault is the compiled artifact. Ingest
+doesn't just add documents — it integrates source Works into an existing graph
+of notes. Digest, note, and hub operations do the compilation work.
 
 What Memoria doesn't take from this pattern: Karpathy's framing implies an agent that autonomously decides what to synthesize and what to keep. Memoria refuses that — the human decides what enters the canonical graph. The compiler role belongs to the agent; the editorial role belongs to the human.
 
@@ -31,9 +33,18 @@ What Memoria doesn't take from this pattern: Karpathy's framing implies an agent
 
 **Explicit linking** — notes earn their place by connecting to existing notes. A note that connects to nothing has not been integrated into the system; it is still just a document.
 
-**Type distinction** — Luhmann distinguished _fleeting notes_ (raw capture), _literature notes_ (what a source says), and _permanent notes_ (the human's own durable claim). Each type has a different epistemic status and a different lifespan. Memoria preserves this three-way distinction under different names: `fleeting`, `source` (what the source says), and `claim` (what the human thinks). The rename reflects a software context; the distinction is unchanged.
+**Type distinction** — Luhmann distinguished _fleeting notes_ (raw capture),
+_literature notes_ (what a source says), and _permanent notes_ (the human's own
+durable claim). Each type has a different epistemic status and a different
+lifespan. Memoria preserves the distinction as catalog Work, generated digest
+Work, and PI-curated notes/hubs.
 
-Zettelkasten's weakness in modern workflows is that it is entirely human-maintained — the linking discipline breaks down under load. Memoria delegates the maintenance work to the agent. Classifying notes, detecting orphans, suggesting cross-links, enforcing schema — these are the tasks the Librarian and Linter handle. The _intellectual_ work of the Zettelkasten (writing claim notes, forming arguments, building hubs) remains human.
+Zettelkasten's weakness in modern workflows is that it is entirely
+human-maintained — the linking discipline breaks down under load. Memoria
+delegates maintenance work to deterministic operations and bounded runners:
+classifying Work, detecting orphans, suggesting cross-links, and enforcing
+schema. The _intellectual_ work of the Zettelkasten (writing notes, forming
+arguments, building hubs) remains human.
 
 ---
 

@@ -43,8 +43,8 @@ rows are governed by [ADR-122](../adr/122-sqlite-working-state-boundary.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |
-| `catalog.base` | `catalog/` | Checked and unchecked `source` Concepts under `catalog/sources/`. |
-| `knowledge.base` | `knowledge/views/` | `digest`, `note`, `hub`, and `project` Concepts by home and `check_status`. |
+| `catalog.base` | `catalog/` | Optional editor view over catalog Work projections; SQLite/read-API state remains authoritative. |
+| `knowledge.base` | `knowledge/views/` | Work, note, hub, and project Concepts by home and `check_status`. |
 
 ## Verdict band (Maintenance drift watch)
 

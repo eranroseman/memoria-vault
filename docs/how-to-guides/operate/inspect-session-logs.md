@@ -65,7 +65,7 @@ jq -r 'select(.actor == "adapter") | .decision' system/logs/audit.jsonl | sort |
 `after_hash`, matched by `request_id` + `path`:
 
 ```bash
-jq -c 'select(.path == "catalog/sources/smith-2024/source.md")' system/logs/audit.jsonl
+jq -c 'select(.path == "references.bib")' system/logs/audit.jsonl
 ```
 
 **Read the latest request summary** — what a request accomplished, digested:

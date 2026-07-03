@@ -37,8 +37,8 @@ The sweep scans the Catalog's DOIs against three sources, most authoritative fir
 **3. Read the alert item.**
 
 Each item leads with the `finding` — what was retracted, corrected, or flagged.
-Open the source Concept and the checked notes that cite it through
-`evidence_set`.
+Inspect the catalog Work with `memoria work export` and open the checked notes
+that cite it through `evidence_set`.
 
 **4. Decide per affected claim.** Three honest options:
 

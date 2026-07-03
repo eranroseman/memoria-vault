@@ -44,7 +44,10 @@ Open it and structure one section per field:
 
 Keep each list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable queries ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
-Note the consumers: the ingest operation's automated classify stage rolls OpenAlex topics into `research_area` on paper entities ([Ingest routing](../../reference/ingest.md)); you carry the same terms onto source notes and use `topics` on claims. Your list is what keeps the human side consistent with the automated side.
+Note the consumers: ingest/enrichment rolls OpenAlex topics into `research_area`
+on catalog Work rows ([Ingest routing](../../reference/ingest.md)); you carry the
+same terms into notes with `topics`. Your list is what keeps the human side
+consistent with the automated side.
 
 ## Step 2 — Add a new term
 

@@ -36,7 +36,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
-| `extract-path-broken` | HIGH | A source Concept whose extract/content path does not resolve. |
+| `extract-path-broken` | HIGH | A legacy `catalog/sources/**/source.md` file whose extract/content path does not resolve. Alpha.15 catalog Work rows use SQLite plus source-content blobs instead. |
 | `graph-analyze` | LOW | Orphan synthesis notes (claims/hubs with zero inlinks). |
 | `orphan-working-files` | LOW | Leftover working files (`*.tmp.*`, `*.bak`, `*.orig`, …) outside transient zones. |
 | `stale-fleeting` | LOW | Fleeting notes older than 7 days — promote or discard. |

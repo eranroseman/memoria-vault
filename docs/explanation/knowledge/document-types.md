@@ -50,9 +50,9 @@ accepted.
 notes are checked Concepts whose candidate state lives in journal/SQLite state;
 the PI still decides whether to accept, edit, reject, or link them.
 
-**Gap analysis.** The runtime compares checked source/digest signals with
+**Gap analysis.** The runtime compares checked Work and digest Work signals with
 checked notes. `new-topic` means no checked material exists for a seed term;
-`undigested` means sources/digests are dense but notes are absent;
+`undigested` means Works/digests are dense but notes are absent;
 `under-warranted` means notes exist without enough source support.
 
 **Readable boundaries.** A Concept can exist before checks pass. Consumers that

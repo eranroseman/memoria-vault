@@ -19,8 +19,8 @@ Library and Knowledge views that surface what to read, discuss, and reconcile â€
 
 ## Reading pipeline
 
-Reading pipeline shows Library work in flight: proposed source notes awaiting
-reading, provisional sources read but not yet distilled, and claims grouped by
+Reading pipeline shows Library work in flight: checked Work rows awaiting
+reading, Works discussed but not yet distilled, and claims grouped by
 maturity. It prevents intake from looking healthy when reading is not becoming
 synthesis.
 
@@ -28,9 +28,9 @@ It is not a board view. It reads note state, not cards.
 
 ## Discuss queue
 
-Discuss queue is the narrower read-but-not-distilled slice: source notes at
-`lifecycle: provisional`. A long queue means intake is outrunning thought; the
-next move is a Co-PI discussion followed by PI-authored claims.
+Discuss queue is the narrower read-but-not-distilled slice: checked Works with
+no digest yet. A long queue means intake is outrunning thought; the next move is
+a Co-PI discussion followed by PI-authored claims.
 
 ## Open questions
 

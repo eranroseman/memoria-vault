@@ -15,7 +15,7 @@ for degraded local runs ([External integrations](../../reference/integrations.md
 ## When to rebuild
 
 - `memoria ask` misses checked Concepts you know exist ([Query the vault](../knowledge/query-the-vault.md))
-- A checked source, digest, note, or hub was promoted and does not appear in search
+- A checked Work, digest Work, note, or hub was promoted and does not appear in search
 - `qmd search "known term"` returns empty or omits checked Concepts you know exist
 
 ## When a rebuild is the fix
@@ -45,8 +45,8 @@ qmd's model cache; run `qmd pull` if the doctor reports missing models.
 memoria workspace rebuild --workspace <workspace> --search
 ```
 
-This copies only checked, current Catalog and Knowledge Concepts plus checked
-Work text and graph neighborhoods into `.memoria/index/qmd/checked/`, writes
+This copies only checked, current catalog Work rows and Knowledge Concepts plus
+checked Work text and graph neighborhoods into `.memoria/index/qmd/checked/`, writes
 `.memoria/index/qmd/manifest.json`, registers the qmd collection, and runs
 `qmd update`. The index lives inside the workspace and is gitignored — never
 commit it.
@@ -73,7 +73,7 @@ Memoria's checked-read filtering.
 memoria ask --workspace <workspace> --question "term in checked Work or Concept"
 ```
 
-Returns the retrieval document, and Ask cites recently checked sources again.
+Returns the retrieval document, and Ask cites recently checked Works again.
 
 ## Related
 

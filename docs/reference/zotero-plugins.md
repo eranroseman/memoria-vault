@@ -20,7 +20,7 @@ Optional add-ons for users who keep references in Zotero.
 | Add-on | Install in | Status | Purpose |
 | --- | --- | --- | --- |
 | Better BibTeX | Zotero | Optional, recommended for Zotero users | Stable citekeys; local BibTeX snapshots when needed; `zotero.lua` Lua filter for live Word export. |
-| MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.15 nested source Concepts. |
+| MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.15 SQLite catalog rows and source-content blobs. |
 | RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
 
 ---
