@@ -64,3 +64,8 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria eval seeded-error-verdict [--mode test\|live]` | Run the seeded-error verdict gate for the selected manifest-pinned runner branch. |
 
 Run `memoria <command> --help` for exact flags.
+
+Common runtime flags include `--workspace <path>`, `--json`, and
+`--actor pi|agent`. The default actor is `pi`; shell agents should pass
+`--actor agent` so queued writes record the correct request-envelope actor while
+still landing unchecked.

@@ -14,6 +14,7 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import (
     _workspace_lock,
@@ -23,7 +24,6 @@ from memoria_vault.runtime.worker import (
 )
 
 DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications"]
-JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
 SEED_TREES = (
     ("vault-template/.memoria/schemas", ".memoria/schemas"),
     ("vault-template/.memoria/config", ".memoria/config"),
@@ -449,6 +449,7 @@ def _common(parser: argparse.ArgumentParser, *, workspace_required: bool = True)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--idempotency-key")
     parser.add_argument("--schedule-id")
+    parser.add_argument("--actor", choices=("pi", "agent"), default="pi")
 
 
 def _cmd_init(args: argparse.Namespace) -> int:
@@ -472,19 +473,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
 
 
 def _cmd_status(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    with state.connect(workspace) as conn:
-        requests = conn.execute(
-            "SELECT status, COUNT(*) AS count FROM operation_requests GROUP BY status"
-        ).fetchall()
-    return _emit(
-        {
-            "workspace": str(workspace),
-            "db": state.db_path(workspace).relative_to(workspace).as_posix(),
-            "requests": {row["status"]: row["count"] for row in requests},
-        },
-        args,
-    )
+    return _emit(engine_api.read_status(_workspace(args)), args)
 
 
 def _cmd_doctor(args: argparse.Namespace) -> int:
@@ -575,7 +564,7 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
 def _cmd_doctor_self_test(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     checks = _doctor_checks(workspace)
-    checks["operation_catalog"] = bool(_operation_rows(workspace))
+    checks["operation_catalog"] = bool(engine_api.read_operations(workspace)["operations"])
     return _emit({"ok": all(checks.values()), "workspace": str(workspace), "checks": checks}, args)
 
 
@@ -589,38 +578,58 @@ def _cmd_ask(args: argparse.Namespace) -> int:
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
-    return _write_new_concept(
+    return _emit(
+        engine_api.write_new_concept(
+            _workspace(args),
+            "note",
+            args.title,
+            body=args.body
+            if args.body is not None
+            else Path(args.file).read_text(encoding="utf-8"),
+            tags=args.tag,
+            extra={"mode": args.mode},
+            idempotency_key=args.idempotency_key,
+            schedule_id=args.schedule_id,
+            actor=args.actor,
+        ),
         args,
-        "note",
-        args.title,
-        body=args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8"),
-        tags=args.tag,
-        extra={"mode": args.mode},
     )
 
 
 def _cmd_new_hub(args: argparse.Namespace) -> int:
     title = args.title or args.tag
     body = f"# {title}\n\n"
-    return _write_new_concept(
+    return _emit(
+        engine_api.write_new_concept(
+            _workspace(args),
+            "hub",
+            title,
+            body=body,
+            tags=[args.tag],
+            extra={"tag": args.tag, "description": args.description},
+            idempotency_key=args.idempotency_key,
+            schedule_id=args.schedule_id,
+            actor=args.actor,
+        ),
         args,
-        "hub",
-        title,
-        body=body,
-        tags=[args.tag],
-        extra={"tag": args.tag, "description": args.description},
     )
 
 
 def _cmd_new_project(args: argparse.Namespace) -> int:
     body = f"# {args.name}\n\n"
-    return _write_new_concept(
+    return _emit(
+        engine_api.write_new_concept(
+            _workspace(args),
+            "project",
+            args.name,
+            body=body,
+            tags=[],
+            extra={"description": args.description},
+            idempotency_key=args.idempotency_key,
+            schedule_id=args.schedule_id,
+            actor=args.actor,
+        ),
         args,
-        "project",
-        args.name,
-        body=body,
-        tags=[],
-        extra={"description": args.description},
     )
 
 
@@ -686,14 +695,17 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
 
 def _cmd_work_export(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
-    work = state.catalog_source(workspace, args.work_id)
-    if work is None:
+    try:
+        payload = engine_api.read_work(workspace, args.work_id)
+    except FileNotFoundError:
         return _fail(f"work not found: {args.work_id}", json_output=args.json)
-    payload = {"ok": True, "work": work}
     if args.output:
         output = workspace / args.output
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(work, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output.write_text(
+            json.dumps(payload["work"], indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         payload["output_path"] = args.output
     return _emit(payload, args)
 
@@ -841,66 +853,6 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
     return _emit(result, args)
 
 
-def _write_new_concept(
-    args: argparse.Namespace,
-    concept_type: str,
-    title: str,
-    *,
-    body: str,
-    tags: list[str],
-    extra: dict[str, Any],
-) -> int:
-    from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.policy.audit import sha256_file
-    from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-    from memoria_vault.runtime.vaultio import (
-        apply_universal_concept_frontmatter,
-        write_frontmatter_doc,
-    )
-
-    workspace = _workspace(args)
-    homes = {
-        "note": "knowledge/notes",
-        "hub": "knowledge/hubs",
-        "project": "knowledge/projects",
-    }
-    slug = safe_filename(title.lower()).strip("._-") or concept_type
-    rel = _unique_rel(workspace, f"{homes[concept_type]}/{slug}.md")
-    frontmatter = {
-        "type": concept_type,
-        "title": title,
-        "tags": tags,
-        "links": {},
-    }
-    frontmatter.update({key: value for key, value in extra.items() if value not in (None, "")})
-    apply_universal_concept_frontmatter(frontmatter, rel)
-    write_frontmatter_doc(workspace / rel, frontmatter, body, create_parent=True)
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(workspace / rel),
-    )
-    event = append_journal_event(
-        workspace,
-        {
-            "event": "concept_created",
-            "operation": f"new-{concept_type}",
-            "concept_type": concept_type,
-            "output_id": rel,
-            "actor": "pi",
-        },
-        machine="memoria-cli",
-    )
-    commit = commit_writer_changes(
-        workspace, f"new {concept_type} {Path(rel).stem}", [rel], machine="memoria-cli"
-    )
-    return _emit(
-        {"ok": True, "path": rel, "concept": frontmatter, "event": event, "commit": commit},
-        args,
-    )
-
-
 def _cmd_link(args: argparse.Namespace) -> int:
     return _emit(
         _enqueue_and_run(
@@ -927,52 +879,14 @@ def _cmd_check(args: argparse.Namespace) -> int:
 
 
 def _cmd_show(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    path = _resolve_concept_path(workspace, args.target)
-    if path is None:
-        work = state.catalog_source(workspace, args.target)
-        if work is None:
-            return _fail(f"target not found: {args.target}", json_output=args.json)
-        return _emit({"ok": True, "target": args.target, "kind": "work", "work": work}, args)
-    from memoria_vault.runtime.vaultio import split_frontmatter
-
-    rel = path.relative_to(workspace).as_posix()
-    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    return _emit(
-        {
-            "ok": True,
-            "path": rel,
-            "type": frontmatter.get("type"),
-            "verdict": state.concept_check_status(workspace, rel),
-            "frontmatter": frontmatter,
-            "body": body,
-        },
-        args,
-    )
+    try:
+        return _emit(engine_api.read_concept(_workspace(args), args.target), args)
+    except FileNotFoundError:
+        return _fail(f"target not found: {args.target}", json_output=args.json)
 
 
 def _cmd_list(args: argparse.Namespace) -> int:
-    from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
-
-    workspace = _workspace(args)
-    rows = []
-    for path in iter_markdown(workspace):
-        rel = path.relative_to(workspace).as_posix()
-        frontmatter = read_frontmatter(path)
-        concept_type = str(frontmatter.get("type") or "")
-        if concept_type not in {"note", "work", "hub", "project"}:
-            continue
-        if args.type and concept_type != args.type:
-            continue
-        rows.append(
-            {
-                "path": rel,
-                "type": concept_type,
-                "title": frontmatter.get("title") or path.stem,
-                "verdict": state.concept_check_status(workspace, rel),
-            }
-        )
-    return _emit({"ok": True, "concepts": sorted(rows, key=lambda row: row["path"])}, args)
+    return _emit(engine_api.read_concepts(_workspace(args), concept_type=args.type or ""), args)
 
 
 def _cmd_export(args: argparse.Namespace) -> int:
@@ -997,7 +911,7 @@ def _cmd_export(args: argparse.Namespace) -> int:
 
 
 def _cmd_operation_list(args: argparse.Namespace) -> int:
-    return _emit({"ok": True, "operations": _operation_rows(_workspace(args))}, args)
+    return _emit(engine_api.read_operations(_workspace(args)), args)
 
 
 def _cmd_operation_run(args: argparse.Namespace) -> int:
@@ -1008,33 +922,14 @@ def _cmd_operation_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_request_list(args: argparse.Namespace) -> int:
-    sql = """
-        SELECT request_id, operation_id, status, created_at, completed_at, error
-        FROM operation_requests
-    """
-    params: tuple[str, ...] = ()
-    if args.status:
-        sql += " WHERE status = ?"
-        params = (args.status,)
-    sql += " ORDER BY created_at, request_id"
-    with state.connect(_workspace(args)) as conn:
-        requests = [_request_summary(row) for row in conn.execute(sql, params)]
-    return _emit({"ok": True, "requests": requests}, args)
+    return _emit(engine_api.read_requests(_workspace(args), status=args.status or ""), args)
 
 
 def _cmd_request_show(args: argparse.Namespace) -> int:
-    with state.connect(_workspace(args)) as conn:
-        row = conn.execute(
-            """
-            SELECT *
-            FROM operation_requests
-            WHERE request_id = ?
-            """,
-            (args.request_id,),
-        ).fetchone()
-    if row is None:
+    try:
+        return _emit(engine_api.read_request(_workspace(args), args.request_id), args)
+    except FileNotFoundError:
         return _fail(f"request not found: {args.request_id}", json_output=args.json)
-    return _emit({"ok": True, "request": _request_detail(row)}, args)
 
 
 def _cmd_request_resume(args: argparse.Namespace) -> int:
@@ -1142,55 +1037,41 @@ def _cmd_request_retry(args: argparse.Namespace) -> int:
 
 
 def _cmd_attention_list(args: argparse.Namespace) -> int:
-    cards = [
-        card
-        for card in _attention_cards(_workspace(args))
-        if (not args.status or card["status"] == args.status)
-        and (not args.kind or card["kind"] == args.kind)
-    ]
-    return _emit({"ok": True, "attention": cards}, args)
-
-
-def _cmd_attention_show(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    rel, path = _workspace_file(workspace, args.attention_path)
-    card = _attention_card(path, workspace)
-    if card is None:
-        return _fail(f"attention projection not found: {rel}", json_output=args.json)
-    return _emit({"ok": True, "attention": card}, args)
-
-
-def _cmd_attention_resolve(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    rel, path = _workspace_file(workspace, args.attention_path)
-    card = _attention_card(path, workspace)
-    if card is None:
-        return _fail(f"attention projection not found: {rel}", json_output=args.json)
-    outcome = args.resolution_outcome
-    reason = args.reason or f"PI chose to {outcome} attention"
     return _emit(
-        _enqueue_and_run(
-            args,
-            "resolve-attention",
-            {
-                "target_id": rel,
-                "reason": reason,
-                "outcome": outcome,
-                "routing_class": card["routing_class"],
-            },
-        ),
+        engine_api.read_attention(_workspace(args), status=args.status or "", kind=args.kind or ""),
         args,
     )
 
 
+def _cmd_attention_show(args: argparse.Namespace) -> int:
+    try:
+        return _emit(engine_api.read_attention_card(_workspace(args), args.attention_path), args)
+    except FileNotFoundError as exc:
+        return _fail(str(exc), json_output=args.json)
+
+
+def _cmd_attention_resolve(args: argparse.Namespace) -> int:
+    outcome = args.resolution_outcome
+    reason = args.reason or f"PI chose to {outcome} attention"
+    try:
+        return _emit(
+            engine_api.resolve_attention(
+                _workspace(args),
+                args.attention_path,
+                outcome=outcome,
+                reason=reason,
+                idempotency_key=args.idempotency_key,
+                schedule_id=args.schedule_id,
+                actor=args.actor,
+            ),
+            args,
+        )
+    except FileNotFoundError as exc:
+        return _fail(str(exc), json_output=args.json)
+
+
 def _cmd_attention_worklist(args: argparse.Namespace) -> int:
-    work_kinds = {"candidate", "gap", "work-prompt"}
-    cards = [
-        card
-        for card in _attention_cards(_workspace(args))
-        if card["status"] == "open" and card["kind"] in work_kinds
-    ]
-    return _emit({"ok": True, "attention": cards}, args)
+    return _emit(engine_api.read_attention(_workspace(args), worklist=True), args)
 
 
 def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
@@ -1411,83 +1292,39 @@ def _cmd_vocabulary_merge(args: argparse.Namespace) -> int:
 
 
 def _cmd_journal_tail(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    sql = """
-        SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-        FROM journal_events
-    """
-    clauses = []
-    params: list[str] = []
-    if args.operation:
-        operations = _journal_operation_values(args.operation)
-        placeholders = ", ".join("?" for _ in operations)
-        clauses.append(
-            "("
-            f"json_extract(payload_json, '$.operation') IN ({placeholders}) OR "
-            f"json_extract(payload_json, '$.workflow') IN ({placeholders})"
-            ")"
-        )
-        params.extend(operations)
-        params.extend(operations)
-    if args.request_id:
-        clauses.append("json_extract(payload_json, '$.request_id') = ?")
-        params.append(args.request_id)
-    if args.path:
-        path_fields = ("output_id", "target_id", "target_path", "linked_id", "quarantined_id")
-        clauses.append(
-            "("
-            + " OR ".join(f"json_extract(payload_json, '$.{field}') = ?" for field in path_fields)
-            + ")"
-        )
-        params.extend([args.path] * len(path_fields))
-    if args.decision:
-        clauses.append("json_extract(payload_json, '$.decision') = ?")
-        params.append(args.decision)
-    if args.date:
-        clauses.append("timestamp LIKE ?")
-        params.append(f"{args.date}%")
-    if clauses:
-        sql += " WHERE " + " AND ".join(clauses)
-    sql += " ORDER BY event_id DESC LIMIT ?"
-    params.append(str(max(args.limit, 1)))
-    with state.connect(workspace) as conn:
-        events = [_journal_row(row) for row in conn.execute(sql, params)]
-    return _emit({"ok": True, "events": events}, args)
+    return _emit(
+        engine_api.read_journal(
+            _workspace(args),
+            operation=args.operation or "",
+            request_id=args.request_id or "",
+            path=args.path or "",
+            decision=args.decision or "",
+            date=args.date or "",
+            limit=args.limit,
+        ),
+        args,
+    )
 
 
 def _cmd_journal_show(args: argparse.Namespace) -> int:
-    with state.connect(_workspace(args)) as conn:
-        row = conn.execute(
-            """
-            SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-            FROM journal_events
-            WHERE event_id = ?
-            """,
-            (args.event_id,),
-        ).fetchone()
-    if row is None:
+    try:
+        return _emit(engine_api.read_journal_event(_workspace(args), args.event_id), args)
+    except FileNotFoundError:
         return _fail(f"journal event not found: {args.event_id}", json_output=args.json)
-    return _emit({"ok": True, "event": _journal_row(row)}, args)
 
 
 def _enqueue_and_run(
     args: argparse.Namespace, operation_id: str, payload: dict[str, Any]
 ) -> dict[str, Any]:
-    workspace = _workspace(args)
-    job = enqueue_operation(
-        workspace,
+    return engine_api.run_operation(
+        _workspace(args),
         operation_id,
-        payload=payload,
+        payload,
         idempotency_key=args.idempotency_key,
-        provenance={"surface": "memoria-cli", "command": operation_id},
         schedule_id=args.schedule_id,
+        actor=args.actor,
+        command=operation_id,
     )
-    result = run_request(workspace, str(job["job_id"]), machine="memoria-cli")
-    return {
-        "ok": result is not None and result.get("status") == "done",
-        "job": job,
-        "result": result,
-    }
 
 
 def _queue_import_enrichment(
@@ -1578,17 +1415,6 @@ def _changed_generated_projection_paths(workspace: Path) -> list[str]:
     return changed_tracked_projection_paths(workspace)
 
 
-def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
-    raw = Path(value)
-    path = raw if raw.is_absolute() else workspace / raw
-    resolved = path.resolve()
-    try:
-        rel = resolved.relative_to(workspace.resolve()).as_posix()
-    except ValueError as exc:
-        raise ValueError(f"path must be inside workspace: {value}") from exc
-    return rel, resolved
-
-
 def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
     from memoria_vault.runtime.paths import safe_filename
     from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
@@ -1612,37 +1438,6 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
         if slug and slug == safe_filename(str(frontmatter.get("title") or "").lower()):
             return path.resolve()
     return None
-
-
-def _attention_cards(workspace: Path) -> list[dict[str, Any]]:
-    return [
-        card
-        for path in sorted((workspace / "inbox").glob("*.md"))
-        if (card := _attention_card(path, workspace)) is not None
-    ]
-
-
-def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
-    from memoria_vault.runtime.vaultio import split_frontmatter
-
-    if not path.is_file():
-        return None
-    text = path.read_text(encoding="utf-8")
-    frontmatter, body = split_frontmatter(text)
-    if frontmatter.get("projection") != "attention":
-        return None
-    rel = path.resolve().relative_to(workspace.resolve()).as_posix()
-    return {
-        "path": rel,
-        "title": frontmatter.get("title") or path.stem,
-        "kind": frontmatter.get("attention_kind") or "",
-        "status": frontmatter.get("attention_status") or "",
-        "routing_class": frontmatter.get("routing_class") or "ask",
-        "target": frontmatter.get("target") or frontmatter.get("target_id") or "",
-        "loudness": frontmatter.get("loudness") or "",
-        "frontmatter": frontmatter,
-        "body": body,
-    }
 
 
 def _workspace_plan(workspace: Path) -> list[str]:
@@ -1845,26 +1640,6 @@ def _interview_payload(args: argparse.Namespace) -> dict[str, Any]:
     return payload
 
 
-def _operation_rows(workspace: Path) -> list[dict[str, Any]]:
-    from memoria_vault.runtime.capabilities import render_capability_index
-
-    operations = []
-    catalog = json.loads(render_capability_index(workspace))
-    for row in catalog["capabilities"]:
-        if row.get("type") != "operation":
-            continue
-        operations.append(
-            {
-                "operation_id": row.get("operation_id") or row["id"],
-                "title": row.get("title") or row["id"],
-                "check_status": row.get("check_status") or "",
-                "risk_class": row.get("risk_class") or "",
-                "runner": row.get("runner") or "",
-            }
-        )
-    return operations
-
-
 def _doctor_checks(workspace: Path) -> dict[str, Any]:
     return {
         "workspace_exists": workspace.is_dir(),
@@ -1971,20 +1746,6 @@ def _present_updates(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
-def _unique_rel(workspace: Path, rel: str) -> str:
-    path = workspace / rel
-    if not path.exists():
-        return rel
-    stem = path.with_suffix("")
-    suffix = path.suffix
-    index = 2
-    while True:
-        candidate = Path(f"{stem}-{index}{suffix}")
-        if not candidate.exists():
-            return candidate.relative_to(workspace).as_posix()
-        index += 1
-
-
 def _concept_terms(frontmatter: dict[str, Any]) -> list[str]:
     terms = [*_string_list(frontmatter.get("tags"))]
     facets = frontmatter.get("facets") if isinstance(frontmatter.get("facets"), dict) else {}
@@ -2023,9 +1784,13 @@ def _workspace_export_payload(workspace: Path) -> dict[str, Any]:
         "requests": requests,
         "concepts": concepts,
         "journal_events": journal_events,
-        "operations": len(_operation_rows(workspace)),
+        "operations": len(engine_api.read_operations(workspace)["operations"]),
         "attention_open": len(
-            [card for card in _attention_cards(workspace) if card["status"] == "open"]
+            [
+                card
+                for card in engine_api.read_attention(workspace)["attention"]
+                if card["status"] == "open"
+            ]
         ),
     }
 
@@ -2159,22 +1924,6 @@ def _next_heading(lines: list[str], start: int) -> int:
         if lines[index].startswith("## "):
             return index
     return len(lines)
-
-
-def _journal_row(row: Any) -> dict[str, Any]:
-    return {
-        "event_id": row["event_id"],
-        "timestamp": row["timestamp"],
-        "event_type": row["event_type"],
-        "machine": row["machine"],
-        "payload": json.loads(row["payload_json"]),
-        "prev_hash": row["prev_hash"],
-        "row_hash": row["row_hash"],
-    }
-
-
-def _journal_operation_values(operation: str) -> list[str]:
-    return sorted({operation, *JOURNAL_OPERATION_ALIASES.get(operation, ())})
 
 
 def _request_summary(row: Any) -> dict[str, Any]:

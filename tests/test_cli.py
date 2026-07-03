@@ -125,6 +125,16 @@ def test_typer_console_entrypoint_delegates_current_commands(
     assert output["workspace"] == str(workspace)
 
 
+def test_typer_child_action_ignores_option_choices() -> None:
+    command_action = next(
+        action for action in _build_parser()._actions if getattr(action, "dest", None) == "command"
+    )
+
+    assert typer_cli._child_action(command_action.choices["init"]) is None
+    assert typer_cli._child_action(command_action.choices["status"]) is None
+    assert typer_cli._child_action(command_action.choices["new"]).dest == "new_command"
+
+
 def test_alpha15_cli_command_surface_is_exact() -> None:
     assert _cli_command_surface() == {
         "memoria init",
@@ -982,15 +992,52 @@ def test_cli_new_note_check_and_link_flow(
             "--json",
             "--idempotency-key",
             "note-new",
+            "--actor",
+            "agent",
         ]
     )
     created = json.loads(capsys.readouterr().out)
 
     assert rc == 0
     note_path = created["path"]
+    assert created["result"]["check_status"] == "unchecked"
     note_fm = read_frontmatter(workspace / note_path)
     assert "check_status" not in note_fm
     assert state.concept_check_status(workspace, note_path) == "unchecked"
+    with state.connect(workspace) as conn:
+        request = conn.execute(
+            "SELECT operation_id, actor, primary_target FROM operation_requests WHERE request_id = ?",
+            ("note-new",),
+        ).fetchone()
+    assert tuple(request) == ("create-concept", "agent", note_path)
+
+    assert main(["show", "--workspace", str(workspace), note_path, "--json"]) == 0
+    shown = json.loads(capsys.readouterr().out)
+    assert shown["check_status"] == "unchecked"
+    assert shown["body_data"] == {
+        "kind": "untrusted_text",
+        "text": "The source reframes the problem before measuring outcomes.\n",
+    }
+    assert (
+        main(
+            [
+                "new",
+                "note",
+                "Framing changes the question",
+                "--workspace",
+                str(workspace),
+                "--body",
+                "The source reframes the problem before measuring outcomes.",
+                "--json",
+                "--idempotency-key",
+                "note-new",
+            ]
+        )
+        == 0
+    )
+    repeated = json.loads(capsys.readouterr().out)
+    assert repeated["path"] == note_path
+    assert not (workspace / "knowledge/notes/framing-changes-the-question-2.md").exists()
 
     assert (
         main(
@@ -1040,6 +1087,65 @@ def test_cli_new_note_check_and_link_flow(
     assert read_frontmatter(workspace / note_path)["links"] == {
         "supports": ["knowledge/notes/target.md"]
     }
+
+
+@pytest.mark.parametrize(
+    ("argv", "request_id", "concept_type", "path_prefix"),
+    [
+        (
+            ["new", "hub", "framing", "--title", "Framing Hub", "--description", "Frame work."],
+            "hub-new",
+            "hub",
+            "knowledge/hubs/",
+        ),
+        (
+            ["new", "project", "Alpha Project", "--description", "Project brief."],
+            "project-new",
+            "project",
+            "knowledge/projects/",
+        ),
+    ],
+)
+def test_cli_new_hub_project_use_create_concept_request_boundary(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    argv: list[str],
+    request_id: str,
+    concept_type: str,
+    path_prefix: str,
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            *argv,
+            "--workspace",
+            str(workspace),
+            "--json",
+            "--idempotency-key",
+            request_id,
+            "--actor",
+            "agent",
+        ]
+    )
+    created = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    concept_path = created["path"]
+    assert concept_path.startswith(path_prefix)
+    assert created["result"]["check_status"] == "unchecked"
+    frontmatter = read_frontmatter(workspace / concept_path)
+    assert frontmatter["type"] == concept_type
+    assert "check_status" not in frontmatter
+    assert state.concept_check_status(workspace, concept_path) == "unchecked"
+    with state.connect(workspace) as conn:
+        request = conn.execute(
+            "SELECT operation_id, actor, primary_target FROM operation_requests WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+    assert tuple(request) == ("create-concept", "agent", concept_path)
 
 
 def test_cli_operation_list_and_run_use_workspace_operation_concepts(
