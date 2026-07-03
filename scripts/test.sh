@@ -99,7 +99,7 @@ l0() {
     fail=1
   fi
   mapfile -t runtime_py < <(find src/memoria_vault -name '*.py' | sort)
-  run python3 -m py_compile scripts/verify scripts/test_env_harness.py "${runtime_py[@]}"
+  run python3 -m py_compile scripts/verify scripts/test_env_harness.py scripts/alpha15_dogfood_checkpoint.py "${runtime_py[@]}"
   run bash -n scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh scripts/install-test-vault-local-llm.sh
   if command -v shellcheck >/dev/null 2>&1; then
     run shellcheck --severity=warning scripts/install.sh scripts/install/*.sh scripts/refresh-test-vault.sh vault-template/.githooks/pre-commit "$P"/scripts/*.sh
