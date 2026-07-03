@@ -7,7 +7,7 @@ nav_order: 4
 
 # Classify a source
 
-Settle a paper's `research_area` (and `methodology`) when ingest couldn't decide on its own.
+Settle a Work's `research_area` and `topics` when ingest couldn't decide on its own.
 
 Classifying tags a paper with its field of study. When a source comes in, ingest fills these tags in automatically wherever the answer is clear. Most of the time you do nothing. This guide covers the cases where the work lands on you.
 
@@ -16,54 +16,52 @@ Three situations bring you in:
 | Situation | What it means |
 | --- | --- |
 | Genuine ambiguity | Ingest left the field blank and raised a `flag` attention item with candidate values and scores. It reports; you decide. |
-| Draft to review | The Librarian parked a suggested value in `_proposed_classification`, separate from the real fields. |
-| Correction | Ingest applied a value you disagree with; edit the frontmatter directly. |
+| Draft to review | Attention carries suggested values separately from the catalog row. |
+| Correction | Ingest applied a value you disagree with; update the Work row through the CLI. |
 
 For what ingest decides and how, see [Ingest routing](../../reference/ingest.md).
 
 ## Prerequisites
 
-- A source ingested to `catalog/sources/<source_id>/source.md` ([Capture and ingest a source](capture-and-ingest.md))
+- A captured Work ID from `memoria work add`, `memoria work import`, or `memoria work export` ([Capture and ingest a source](capture-and-ingest.md))
 
 ## Steps
 
 **1. Handle any `flag` attention first.**
 
-Use `memoria status` or `memoria request list` to find source metadata attention.
-If ingest hit genuine ambiguity, you'll see a finding for the source. Pick the
-right value, write it into the source Concept frontmatter at
-`catalog/sources/<source_id>/source.md`, then resolve the attention item with
-`memoria attention resolve`.
+Use `memoria status`, `memoria request list`, or `memoria attention list` to find
+source metadata attention. If ingest hit genuine ambiguity, you'll see a finding
+for the Work. Pick the right value and update the catalog row:
 
-**2. Open the source and check what ingest applied.**
-
-In `catalog/sources/<source_id>/source.md`, compare source metadata against the
-source itself. If a value is wrong, edit the frontmatter directly; the worker
-observes and backfills the PI edit.
-
-Every decision, applied or flagged, is logged as one line in `system/logs/classify.jsonl`. That audit line is what makes a value safe to correct by hand. The thresholds ingest uses (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`.
-
-**3. Accept the classify draft, if there is one.**
-
-Look for a `_proposed_classification` block in the frontmatter. This is the
-classify draft, parked in a holding area apart from the real fields. Read each
-proposed value. Copy the ones you accept — edited for accuracy — into the main
-frontmatter, then delete the whole `_proposed_classification:` block. The block
-is temporary and should not be left behind.
-
-The `projects` sub-key inside the draft isn't a guess: it's derived from your optional [project hints](../setup/configure-project-hints.md).
-
-**4. Confirm the source reads `lifecycle: current`.**
-
-A source is created at `lifecycle: current` once checked. Classifying does not
-change the source lifecycle. Confirm it still reads `current`, then resolve the
-attention item:
-
-```yaml
-lifecycle: current
+```bash
+memoria work update --workspace <vault> <work-id> --research-area <term>
 ```
 
-**5. Reuse the same terms in notes and hubs.**
+Then resolve the attention item with `memoria attention resolve`.
+
+**2. Export the Work and check what ingest applied.**
+
+```bash
+memoria work export --workspace <vault> <work-id>
+```
+
+Compare the catalog metadata against the source itself. If a value is wrong,
+update it with `memoria work update`; the worker records the override in
+`.memoria/overrides.jsonl` and the journal.
+
+**3. Confirm the Work is checked/current.**
+
+Classifying does not move files or create source frontmatter. Confirm the Work
+still has checked DB/read-API state and current standing:
+
+```bash
+memoria work export --workspace <vault> <work-id>
+```
+
+If the exported row should be retired, use `--standing archived`, `--standing
+retracted`, or `--standing superseded` deliberately.
+
+**4. Reuse the same terms in notes and hubs.**
 
 When you write checked notes or hubs from this source, use the same vocabulary.
 Mismatched vocabulary between the catalog and knowledge graph is what makes
@@ -71,9 +69,9 @@ later queries miss results ([Vocabulary discipline](../../explanation/knowledge/
 
 ## Verify
 
-- The source reads `lifecycle: current`, has settled metadata, and no longer has a `_proposed_classification` block
+- The Work export reports settled metadata, `check_status: checked`, and current standing
 - No `flag` attention item for this citekey is still open in your queue
-- `system/logs/classify.jsonl` records the decision (applied or flagged) for this citekey
+- `.memoria/overrides.jsonl` and the journal record any PI override for this Work
 
 ## Related
 

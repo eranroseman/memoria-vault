@@ -47,7 +47,7 @@ keeps the work visible, traceable, and review-gated.
 
 1. Capture or find a source.
 2. Ingest and classify it into the Library.
-3. Distill source notes into claim notes.
+3. Distill checked Works into notes.
 4. Link claims into a project argument.
 5. Draft from current claims.
 6. Verify the draft and resolve findings.

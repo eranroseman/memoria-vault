@@ -48,7 +48,7 @@ For any item already in Zotero whose citekey might change if the formula is appl
 
 **5. Pin the key for every new item immediately after adding it.**
 
-Better BibTeX keys are **dynamic by default** — a generated key can change when you later correct an item's author, year, or title, silently breaking any source Concept or citation already using the old key. Pin each new item right after adding it: right-click → Better BibTeX → Pin BibTeX key. The lock icon in Zotero's item list confirms it.
+Better BibTeX keys are **dynamic by default** — a generated key can change when you later correct an item's author, year, or title, silently breaking any catalog citekey alias or citation already using the old key. Pin each new item right after adding it: right-click → Better BibTeX → Pin BibTeX key. The lock icon in Zotero's item list confirms it.
 
 **6. Verify the key is stable.**
 
@@ -70,8 +70,8 @@ not part of the standalone runtime.
 ## MarkDB-Connect
 
 Do not configure MarkDB-Connect for alpha.15. It assumes flat citekey-named note
-files, while Memoria source Concepts live under
-`catalog/sources/<source_id>/source.md` and are worker-owned.
+files, while Memoria source authority lives in SQLite catalog rows plus
+source-content blobs.
 
 ## API keys for enrichment
 

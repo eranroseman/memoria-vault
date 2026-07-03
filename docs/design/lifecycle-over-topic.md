@@ -7,39 +7,50 @@ nav_order: 20
 
 # Lifecycle, not topic — and state, not folders
 
-Two organizational decisions shape the vault: **a Concept's position in the system
-is its type, never its topic**, and **read state is frontmatter, not a folder**.
-Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`knowledge/`, with SQLite-backed catalog state). Where a Concept stands
-for reading is `check_status`, not a path move.
+Two organizational decisions shape the vault: **a Concept's position in the
+system is its type, never its topic**, and **read state is record state, not a
+folder**. Folders encode one thing only: the category and type home declared in
+`folders.yaml` (`knowledge/`, with SQLite-backed catalog state). Where a record
+stands for reading is `check_status`, not a path move.
 
 ---
 
 ## Why folders encode type
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
-folders for the one fact that is one-to-one: what kind of Concept this is — source,
-entity, digest, note, hub, or project. Topics live in frontmatter facets
-(`research_area`, `methodology`) and authored links, following the Zettelkasten
-link-first inheritance described in [Intellectual
+folders for the one fact that is one-to-one: what kind of checked bundle this is.
+Alpha.15 file-backed Concepts are Work, note, hub, and project; catalog Work
+records live in SQLite with blob-backed source content. Topics live in catalog
+metadata, Concept frontmatter facets, and authored links, following the
+Zettelkasten link-first inheritance described in [Intellectual
 foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
 ---
 
-## Read state lives in frontmatter
-The vault is organized by **category** ([ADR-119](../adr/119-schema-driven-document-creation.md)): `knowledge/` holds Work, note, hub, and project Concepts, SQLite holds catalog working state, and packaged product data holds operation manifests. It never mixes lifecycle state into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md). A note does not travel when the PI checks it; a source does not become a different kind of thing when it is read. What changes is its read state, and read state is a property, not a location.
+## Read state lives with the record
+The vault is organized by **category**
+([ADR-119](../adr/119-schema-driven-document-creation.md)): `knowledge/` holds
+Work, note, hub, and project Concepts, SQLite holds catalog working state, and
+packaged product data holds operation manifests. It never mixes lifecycle state
+into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md).
+A note does not travel when the PI checks it; a catalog Work does not become a
+different kind of thing when it is read. What changes is its read state, and read
+state is a property, not a location.
 
-Read standing lives in the `check_status` frontmatter property:
-`unchecked -> checked -> quarantined`. The exact per-type field inventory is defined
-in [Frontmatter fields](../reference/frontmatter.md). Type-specific workflow fields,
-such as `source.lifecycle` or `note.status`, stay local to the schema that declares
-them.
+For file-backed Concepts, read standing lives in `check_status` frontmatter:
+`unchecked -> checked -> quarantined`. For catalog Work rows, the same verdict
+lives in SQLite and read-API responses. The exact Concept field inventory is
+defined in [Frontmatter fields](../reference/frontmatter.md); catalog source
+record fields are defined in [Ingest routing](../reference/ingest.md).
 
 ---
 
 ## Why state-not-folders is strictly better
 
-**Promotion is a frontmatter edit, not a file move.** A state change does not move a file, so it cannot break wikilinks, lose Git history continuity, or invalidate saved queries. A note is born in its type-home and dies in its type-home.
+**Promotion is a record update, not a file move.** A state change does not move
+a file, so it cannot break wikilinks, lose Git history continuity, or invalidate
+saved queries. A note is born in its type-home and dies in its type-home; a
+catalog Work keeps the same `source_id`.
 
 **Links survive every transition.** A claim cited by twelve other notes can be retracted, superseded, and archived without a single inbound link breaking. Provenance — the property the whole system is built to protect — does not depend on link-rewriting tooling getting every move right.
 
@@ -64,13 +75,16 @@ One consequence to know: attention projections are separate from checked Concept
 
 ## Topics in frontmatter, not folders
 
-With folders carrying the type and frontmatter carrying the state, topics are encoded as **facets** on source and note Concepts:
+With folders carrying the type and record state carrying the verdict, topics are
+encoded as **facets** on catalog Work rows and note Concepts:
 
-- `research_area` — seeded from OpenAlex topics by the ingest operation
+- `research_area` — seeded from OpenAlex topics by the ingest/enrichment operation
 - `methodology` — a controlled vocabulary covering method and study design
 - `topics` on notes where the local schema supports them
 
-Topical *navigation* is built on top by **hubs** (`knowledge/hubs/`): curated notes that link the relevant sources and notes for an area, regardless of state or project. A hub is authored perspective over the graph, not a folder in disguise.
+Topical *navigation* is built on top by **hubs** (`knowledge/hubs/`): curated
+notes that link the relevant Works and notes for an area, regardless of state or
+project. A hub is authored perspective over the graph, not a folder in disguise.
 
 ---
 

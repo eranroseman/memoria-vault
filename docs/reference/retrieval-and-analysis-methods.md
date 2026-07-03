@@ -45,9 +45,9 @@ provides the eval harness. Rerank and broader global query expansion are later
 Ask/retrieval eval work; they count only after they beat the qmd or BM25
 baseline.
 
-Project gap analysis also reads SQLite catalog source terms, checked project
+Project gap analysis also reads SQLite catalog Work terms, checked project
 scope/facet terms, checked linked thesis terms, and first-order reference/related
-graph edges. When a checked source creates a source-only gap, the gap keeps that
+graph edges. When a checked Work creates a source-only gap, the gap keeps that
 source id and can emit unchecked candidate Work attention items from its graph
 edges without requiring qmd to rediscover the source.
 
@@ -59,16 +59,14 @@ read barrier.
 
 ### Project-hint overlap scoring
 
-**For:** proposing project membership from a small user-authored topic list.
+**Status:** not shipped in alpha.15.
 
-**Used by:** the ingest classify step when `.memoria/project-hints.yaml` exists.
-The proposal lands in `_proposed_classification.projects` for human review; it
-does not write project membership directly.
+The older project-hints idea proposed project membership from a small
+user-authored topic list. The current template does not ship a
+`.memoria/project-hints.yaml` file and ingest does not read one.
 
-**Implementation:** simple normalized term overlap between each project's
-`primary_topics` and the source's OpenAlex topic signals.
-
-**Cost:** free. Determinism: total.
+Use `memoria work update` and project-scoped notes for explicit project
+membership until a future design reintroduces this as an implemented operation.
 
 ---
 

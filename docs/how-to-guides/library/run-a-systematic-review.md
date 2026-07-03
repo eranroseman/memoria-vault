@@ -26,7 +26,9 @@ for ordinary exploratory work, capture sources one at a time.
 
 **1. Create a protocol note.**
 
-Author it as a project or source note attached to the review work. Record: review title, protocol date, reviewer, review type (Scoping / Systematic / Rapid).
+Author it as a project note or protocol note attached to the review work.
+Record: review title, protocol date, reviewer, review type (Scoping /
+Systematic / Rapid).
 
 **2. Write your research question and criteria.**
 
@@ -77,7 +79,7 @@ record the protocol outcome, and resolve the resulting attention item.
 ## Verify
 
 - The protocol note has all PRISMA counts filled in and `lifecycle: current`
-- Every included source has a Catalog entity in `catalog/sources/`
+- Every included source has a catalog Work row with a stable `source_id`
 - Every excluded source has a decision and reason recorded in the protocol
 
 ## Related

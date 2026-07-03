@@ -34,11 +34,11 @@ Link for usefulness, not completeness. Add a typed link only when "*what contrad
 
 **3. Record the link through the CLI or edit directly.**
 
-Run the link command with the source note path, link type, and target path. The
+Run the link command with the starting note path, link type, and target path. The
 worker records the journal row and commits the checked note update.
 
 ```bash
-memoria link --workspace <vault> knowledge/notes/source.md \
+memoria link --workspace <vault> knowledge/notes/receptivity-varies-by-burden.md \
   knowledge/notes/receptivity-decreases-under-high-cognitive-load.md --rel contradicts
 ```
 

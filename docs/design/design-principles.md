@@ -19,11 +19,18 @@ A useful output that lives only in a chat transcript has not been captured.
 
 **2. Compound, don't just collect.**
 
-Every source ingested should make the whole corpus more useful. A new source note that connects to existing claim notes, adds to a hub, and updates a comparative-brief is compounding. An isolated file that sits unlinked is just collection. The design distinguishes them: synthesis structures (claim notes and hubs) exist precisely to force compounding.
+Every source ingested should make the whole corpus more useful. A new Work that
+connects to existing notes, adds to a hub, and updates a comparative brief is
+compounding. An isolated file that sits unlinked is just collection. The design
+distinguishes them: synthesis structures (notes and hubs) exist precisely to
+force compounding.
 
 **3. Separate capture from synthesis.**
 
-Raw annotations are not synthesis. A source note is not a claim note. A fleeting thought is not a finished claim. The architecture preserves this distinction with folder structure, lifecycle fields, and separate templates. Blurring it produces a vault where everything is "sort of processed" and nothing is reliably citable.
+Raw annotations are not synthesis. A catalog Work is not a note. A fleeting
+thought is not a finished claim. The architecture preserves this distinction
+with catalog state, Concept homes, and separate schemas. Blurring it produces a
+vault where everything is "sort of processed" and nothing is reliably citable.
 
 **4. The agent writes narrowly.**
 

@@ -57,12 +57,12 @@ them to the local environment used to run `memoria`. DOI enrichment reads
 
 ## Entity resolution
 
-Used during capture/enrichment to link source Concepts to person, organization, and
-venue Concepts.
+Used during capture/enrichment to link catalog Work rows to person,
+organization, and venue graph records.
 
 | API | Role |
 |---|---|
-| **ORCID** | Unique author identifiers; links sources to `person` Concepts |
+| **ORCID** | Unique author identifiers; links sources to person graph records |
 | **ROR (Research Organization Registry)** | Institution identifiers; links to `organization` |
 | **GitHub API** | Repository metadata for `repository` (tools, packages, code) |
 

@@ -35,7 +35,10 @@ things that didn't demand attention mid-week. Resolve each or consciously defer.
 
 **Step 4 — Review the week's movement (5–10 min).**
 
-The **New this week** sections list catalog entries and notes created in the last 7 days. Scan for anything that landed and stalled: a kept paper with no source note, a source stuck at `proposed`, or a claim with no connections (cross-check Knowledge's **Open questions** view).
+The **New this week** sections list catalog entries and notes created in the
+last 7 days. Scan for anything that landed and stalled: a Work still unchecked
+after enrichment, a digest request that never ran, or a claim with no
+connections (cross-check Knowledge's **Open questions** view).
 
 **Step 5 — Clear unchecked note backlog (10–15 min).**
 
