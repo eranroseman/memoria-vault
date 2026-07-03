@@ -90,15 +90,15 @@ ADR-125 the engine is the product and every surface is a client.
   Elicit table pattern), and `--apply` is one click. Making each review
   cheaper is the other half of ADR-128's bargain.
 - **The tutorial arc principle carries** (112): one destination-first
-  deliverable-driven arc, rebuilt against the CLI + plugin at the 15 docs
-  pass.
+  deliverable-driven arc, rebuilt against the CLI/read-API surfaces at the 15
+  docs pass.
 
 ## Consequences
 
 - A daily UI is a clean client of a proven API; read-API completeness gates
   UI work (a completeness checklist over inbox, graph, gaps, provenance,
   journal, requests, records, project state).
-- The plugin is a few hundred lines (client + two views + verdict renderer);
+- Future UI adapters stay thin clients over the same read/view/enqueue contract;
   everything hard stays in the engine.
 - Four concurrent client paths share one SQLite authority; the workspace
   write lock and single-workspace contract (ADR-127) are the concurrency
@@ -116,4 +116,5 @@ ADR-125 the engine is the product and every surface is a client.
 ## Related
 
 - Design §1/§2/§5, Appendices H–J; ADR-128 (attention surface obligations);
-  exec-plan second wave (transports + plugin after the dogfood checkpoint).
+  exec-plan second wave (transports after the dogfood checkpoint; plugin
+  implementation requires a future adapter ADR).
