@@ -4,12 +4,15 @@
 ![Status](https://img.shields.io/badge/status-v0.1--alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Memoria is a research operating system for a single researcher: a Co-PI you
-converse with and four bounded background agents inside your Obsidian vault.
+Memoria is a standalone local CLI and research engine for a single researcher.
+It builds a checked Markdown workspace from sources, interviews, digests, notes,
+projects, citations, and attention items.
 
-Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired to an [Obsidian](https://obsidian.md) vault. A fail-closed policy gate audits lane writes, allows only lane-scoped staging/scratch paths, and keeps canonical synthesis review-gated.
+The engine owns requests, records, verdicts, and recovery state in SQLite. The
+Markdown workspace stays human-readable, while machine writes go through the
+request envelope, checks, quarantine, and read barrier before they are trusted.
 
-<!-- SCREENSHOT: Add a screenshot or GIF here showing the vault in action — e.g. an agent's audit callout in Obsidian.
+<!-- SCREENSHOT: Add a screenshot or GIF here showing the CLI/runtime workspace in action.
      Suggested path: assets/screenshot.png
      To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
      ![Memoria vault](assets/screenshot.png)                                                          -->
@@ -18,14 +21,22 @@ Built on the [Hermes Agent](https://hermes-agent.nousresearch.com) runtime wired
 
 ---
 
-For the system model, start at [Home](docs/README.md). For exact profile names,
-postures, and write-scope ceilings, see [Profile capabilities](docs/reference/profile-capabilities.md).
+For the system model, start at [Home](docs/README.md). For the command surface,
+see [CLI](docs/reference/cli.md); for the no-installed-profile boundary, see
+[Installed profiles](docs/reference/profile-capabilities.md).
 
 ## How it works
 
-The installer copies `vault-template/` to your chosen runtime folder (default `~/Memoria`, deliberately off OneDrive), installs Hermes, deploys the five `memoria-*` profiles, and sets you up to add your API keys — see [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
+The installer copies `vault-template/` to your chosen runtime folder (default
+`~/Memoria`, deliberately off OneDrive), creates a workspace-local venv,
+installs the `memoria` package, wires Git hooks, and registers qmd search. It
+does not install Hermes, profiles, Obsidian setup, Zotero integration, or a host
+scheduler. See [Installer (bootstrap)](docs/reference/installer.md) for exactly
+what it does.
 
-Each agent runs inside Hermes and communicates with Obsidian through the [obsidian-local-rest-api](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. The policy gate blocks denied paths, logs allowed writes, and turns review-gated synthesis edits into proposals.
+The CLI and thin transports call one engine API. Product reads return checked
+verdicts; product writes enqueue requests and land unchecked until the required
+checks pass.
 
 ---
 
@@ -100,7 +111,13 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 ## Development
 
-For fast UI/system-file iteration on the disposable sandbox, run `bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from `vault-template/`, preserve runtime state, and restage the golden copy. For release-candidate installer proof, rebuild the disposable vault from scratch with `bash scripts/install-test-vault-local-llm.sh`; it installs into `~/Memoria-test/vault`, wires profiles to a local OpenAI-compatible model endpoint, and runs the package/golden/detector/L2 smoke checks. After editing profile source, re-deploy without reinstalling via `bash scripts/install.sh --profiles-only` (redeploy all profiles, or scope to one with `--only`). Full flags: [Installer (bootstrap)](docs/reference/installer.md).
+For fast system-file iteration on the disposable sandbox, run
+`bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from
+`vault-template/` while preserving runtime state. For release-candidate installer
+proof, rebuild the disposable vault from scratch with
+`bash scripts/install-test-vault-local-llm.sh`; it installs into
+`~/Memoria-test/vault` and runs package, detector, and CLI doctor checks. Full
+flags: [Installer (bootstrap)](docs/reference/installer.md).
 
 ## Citation
 
