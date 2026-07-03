@@ -6,6 +6,7 @@ import argparse
 import base64
 import json
 import os
+import secrets
 import shutil
 import subprocess
 import sys
@@ -88,6 +89,9 @@ def _build_parser() -> argparse.ArgumentParser:
     serve = sub.add_parser("serve")
     _common(serve)
     serve.add_argument("--watch", action="store_true")
+    serve.add_argument("--http", action="store_true")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8765)
     serve.add_argument("--once", action="store_true")
     serve.add_argument("--poll-interval", type=float, default=1.0)
     serve.set_defaults(handler=_cmd_serve)
@@ -598,8 +602,12 @@ def _cmd_ask(args: argparse.Namespace) -> int:
 
 
 def _cmd_serve(args: argparse.Namespace) -> int:
+    if args.http:
+        if args.watch:
+            return _fail("serve accepts one transport at a time", json_output=args.json)
+        return _cmd_serve_http(args)
     if not args.watch:
-        return _fail("serve currently requires --watch", json_output=args.json)
+        return _fail("serve currently requires --watch or --http", json_output=args.json)
     if args.poll_interval <= 0:
         return _fail("serve --poll-interval must be positive", json_output=args.json)
     if args.once:
@@ -621,6 +629,40 @@ def _cmd_serve(args: argparse.Namespace) -> int:
             time.sleep(args.poll_interval)
     except KeyboardInterrupt:
         return 0
+
+
+def _cmd_serve_http(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.http_transport import make_http_server
+
+    if args.host not in {"127.0.0.1", "localhost", "::1"}:
+        return _fail("serve --http only binds loopback hosts", json_output=args.json)
+    env_token = os.environ.get("MEMORIA_HTTP_TOKEN")
+    token = env_token or secrets.token_urlsafe(32)
+    server = make_http_server(_workspace(args), host=args.host, port=args.port, token=token)
+    port = int(server.server_address[1])
+    payload = {
+        "ok": True,
+        "url": f"http://{args.host}:{port}",
+        "token": None if env_token else token,
+        "token_source": "env" if env_token else "generated",
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
+    elif not args.quiet:
+        print(f"Memoria HTTP serving {payload['url']}", flush=True)
+        if env_token:
+            print("Token loaded from MEMORIA_HTTP_TOKEN.", flush=True)
+        else:
+            print(f"Token: {token}", flush=True)
+    if args.once:
+        server.server_close()
+        return 0
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        return 0
+    finally:
+        server.server_close()
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:

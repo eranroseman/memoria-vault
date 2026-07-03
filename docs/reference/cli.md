@@ -21,6 +21,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
 | `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
+| `memoria serve --http` | Run the token-authenticated loopback HTTP transport over `engine/api`. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
