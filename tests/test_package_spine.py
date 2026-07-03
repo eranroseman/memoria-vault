@@ -20,6 +20,7 @@ def test_pyproject_declares_installable_memoria_package():
 
     assert data["project"]["name"] == "memoria-vault"
     assert data["project"]["version"] == memoria_vault.__version__
+    assert data["project"]["requires-python"] == ">=3.12"
     assert data["tool"]["setuptools"]["packages"]["find"]["where"] == ["src"]
     assert data["tool"]["setuptools"]["packages"]["find"]["include"] == ["memoria_vault*"]
     assert data["tool"]["setuptools"]["package-data"]["memoria_vault"] == ["runtime/*.sql"]

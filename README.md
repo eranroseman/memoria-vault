@@ -70,7 +70,7 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/installer.md)
 ### Requirements
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
-- **Python 3 with venv support** for the workspace-local runtime package.
+- **Python 3.12+ with venv support** for the workspace-local runtime package.
 - **Node 22** for required qmd search.
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
