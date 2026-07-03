@@ -7,27 +7,35 @@ nav_order: 3
 
 # Note body structure
 
-The three most important prose types — source notes, claim notes, and hubs — have distinct body structures because they answer different questions and serve different epistemic purposes. Understanding why each section exists helps explain what makes a note function as knowledge rather than as accumulated text.
+The main prose-facing knowledge types — works, notes, hubs, and projects — have
+distinct body structures because they answer different questions and serve
+different epistemic purposes. Understanding why each section exists helps
+explain what makes a note function as knowledge rather than as accumulated text.
 
 For the frontmatter fields, templates, and field-by-field reference, see [Document types](../../reference/document-types.md).
 
 ---
 
-## Why source notes are split between machine and human
+## Why source work is split between machine and human
 
 A source's record has two authorship layers, and the split between them is intentional, not a convenience.
 
-The mechanical layer is the **source Concept** in `catalog/sources/`: capture
-populates bibliographic facts, identifiers, hashes, and source text paths.
-These are derivable from the source metadata and existing corpus without PI
-judgment.
+The mechanical layer is the catalog source row: capture populates bibliographic
+facts, identifiers, hashes, source text paths, and source-derived aspects. These
+are derivable from the source metadata and existing corpus without PI judgment.
 
-The knowledge layer is checked `digest`, `note`, and `hub` Concepts under
-`knowledge/`. Digests are machine-owned checked records; notes and hub curation
-carry PI judgment. A useful note captures the thesis, the key findings that will
-actually be cited, and the source's relevance to the research direction.
+The knowledge layer is checked `work`, `note`, `hub`, and `project` Concepts
+under `knowledge/`. Work records hold machine-owned source summaries; notes,
+hubs, and project curation carry PI judgment. A useful note captures the thesis,
+the key findings that will actually be cited, and the source's relevance to the
+research direction.
 
-The Critique section is where a source note earns its place in a knowledge system rather than a bibliography. A source note without critical engagement — what is missing, what is methodologically weak, what you would push back on — is storage, not synthesis. The Open questions section completes the loop by recording what the source raises but doesn't answer, feeding the synthesis agenda.
+The Critique section is where source work earns its place in a knowledge system
+rather than a bibliography. A source summary without critical engagement — what
+is missing, what is methodologically weak, what you would push back on — is
+storage, not synthesis. The Open questions section completes the loop by
+recording what the source raises but doesn't answer, feeding the synthesis
+agenda.
 
 ---
 

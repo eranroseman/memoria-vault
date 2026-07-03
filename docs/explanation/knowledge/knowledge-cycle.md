@@ -34,13 +34,22 @@ catalog next is shaped by what you tried to write.
 
 ## Why the cycle is not a linear path
 
-The cycle describes the intended direction of flow, not a timeline or a required sequence. A claim can remain at `maturity: seedling` for months — that is normal, not broken. A source note can sit `current` for a year before there is enough surrounding context to extract claims from it. A new paper may arrive and retroactively change what an older claim was arguing.
+The cycle describes the intended direction of flow, not a timeline or a required
+sequence. A note can remain underdeveloped for months — that is normal, not
+broken. A checked source work can sit for a year before there is enough
+surrounding context to extract claims from it. A new paper may arrive and
+retroactively change what an older claim was arguing.
 
 What the cycle prevents is the two failure modes at opposite ends: notes that are captured but never synthesized (the vault grows but never compounds), and claims that are synthesized but never written from (the knowledge accumulates but never produces output). The cycle's shape names these as distinct failure modes because they look identical from the outside — both appear as an active vault — but indicate different structural problems.
 
 ## Why the vault compounds rather than accumulates
 
-The distinction between a vault that compounds and one that merely accumulates is in the density of the claim layer. A vault with 500 catalog entities and 10 claims is a sophisticated reading list — useful for finding sources but not for writing from. A vault with 50 source notes and 40 claims that link to each other and to hubs is a structure the PI can write from directly, navigating the graph of connected ideas rather than remembering what they read.
+The distinction between a vault that compounds and one that merely accumulates
+is in the density of the claim layer. A vault with 500 catalog entities and 10
+claims is a sophisticated reading list — useful for finding sources but not for
+writing from. A vault with 50 checked source works and 40 claims that link to
+each other and to hubs is a structure the PI can write from directly, navigating
+the graph of connected ideas rather than remembering what they read.
 
 A new source's value is not the text it contains but what it contributes to existing claims — the connections it makes explicit, the contradictions it names, the open questions it opens or closes. Compounding-through-connection is the **Zettelkasten** wager — that a densely linked note collection becomes a thinking partner rather than a filing cabinet. The claim density that separates a compounding vault from an accumulating one is the same density Luhmann's slip-box depended on (see [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten)).
 
@@ -57,15 +66,17 @@ attention; writability/readiness scoring is deferred future work.
 
 ## Why archiving preserves the cycle's integrity
 
-Notes that are no longer useful do not become invisible by deletion — they become gaps in the provenance graph. A deleted source note breaks every claim that cited it; a deleted claim leaves later notes without their grounding.
+Notes that are no longer useful do not become invisible by deletion — they
+become gaps in the provenance graph. A deleted source work breaks every claim
+that cited it; a deleted claim leaves later notes without their grounding.
 
-Archiving preserves the chain, and since state is frontmatter rather than a folder
-([ADR-119](../../adr/119-schema-driven-document-creation.md)), it costs nothing
-structurally: the note stays in its type-home, remains readable and in Git history,
-drops out of active views and the agents' working scope, and can still be traced from
-any note that linked to it. No file moves, so no links break. The cycle's integrity
-depends on every step being traceable backward, not just forward. Archiving itself is
-propose-only for every actor but the PI.
+Archiving preserves the chain, and since the archive marker is frontmatter rather
+than a folder move ([ADR-119](../../adr/119-schema-driven-document-creation.md)),
+it costs nothing structurally: the note stays in its type-home, remains readable
+and in Git history, drops out of active views and the agents' working scope, and
+can still be traced from any note that linked to it. No file moves, so no links
+break. The cycle's integrity depends on every step being traceable backward, not
+just forward. Archiving itself is propose-only for every actor but the PI.
 
 ## Related
 

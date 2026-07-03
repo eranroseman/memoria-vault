@@ -37,7 +37,10 @@ The same concept gets two names across notes — `topics: receptivity-detection`
 
 ## Summary without synthesis
 
-A source note's Summary section records findings and methods but contains no wikilinks to related notes, no tension with alternative views, and no statement of why the finding matters to current work. In six months it is useless because it doesn't connect to anything.
+A source summary records findings and methods but contains no wikilinks to
+related notes, no tension with alternative views, and no statement of why the
+finding matters to current work. In six months it is useless because it doesn't
+connect to anything.
 
 The failure is that summary and synthesis look identical in the moment of writing but diverge drastically in usefulness over time. A summary records what the source says. Synthesis connects what the source says to what you already believe — it is what makes the note compounding rather than merely stored.
 
