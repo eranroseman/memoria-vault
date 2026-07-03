@@ -277,10 +277,11 @@ function Install-Qmd {
 function Write-CliNextSteps {
     Write-Header 'Next steps'
     $py = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
+    $memoria = Join-Path (Split-Path -Parent $py) 'memoria.exe'
     Write-Line "  Workspace: $Vault"
-    Write-Line "  1. Check the bundle:  `"$py`" -m memoria_vault.cli doctor bundle --workspace `"$Vault`""
-    Write-Line "  2. Rebuild search:    `"$py`" -m memoria_vault.cli workspace rebuild --workspace `"$Vault`" --search"
-    Write-Line "  3. Ask from CLI:      `"$py`" -m memoria_vault.cli ask --workspace `"$Vault`" --question `"What needs attention?`""
+    Write-Line "  1. Check the bundle:  `"$memoria`" doctor bundle --workspace `"$Vault`""
+    Write-Line "  2. Rebuild search:    `"$memoria`" workspace rebuild --workspace `"$Vault`" --search"
+    Write-Line "  3. Ask from CLI:      `"$memoria`" ask --workspace `"$Vault`" --question `"What needs attention?`""
     Write-Line "  4. First checkpoint:  cd `"$Vault`"; git add -A; git commit -m `"Initial Memoria vault`""
     if ($DryRun) { Write-Warn 'This was a DRY RUN -- nothing above was actually changed.' }
 }

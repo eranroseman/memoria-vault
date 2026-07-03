@@ -1,6 +1,6 @@
 """Adapter hook helpers that route workspace writes through the policy gate.
 
-The standalone alpha.14 runtime does not require MCP or chat runtimes. Optional adapters
+The standalone runtime does not require MCP or chat runtimes. Optional adapters
 can still call these helpers before and after tool invocations so adapter writes
 reuse the same fail-closed policy and audit behavior as the runtime package.
 

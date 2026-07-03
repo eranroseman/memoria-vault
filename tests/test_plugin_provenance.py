@@ -1,4 +1,4 @@
-"""Standalone alpha.14 ships no bundled Obsidian plugin provenance payload."""
+"""Standalone runtime ships no bundled Obsidian plugin provenance payload."""
 
 import sys
 from pathlib import Path
