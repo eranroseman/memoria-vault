@@ -9,7 +9,8 @@ grand_parent: Reference
 The shipped prompt operations, the CLI worker runner, and the runtime prompt
 composition contract.
 
-- Prompt operations are checked `operation` Concepts in `capabilities/operations/`.
+- Prompt operations are checked packaged operation manifests in
+  `memoria_vault.product.capabilities.operations`.
 - `memoria operation run <pattern-id>` is the core runner: it reads checked input
   refs, records request/journal provenance, and stages one unchecked report note.
 - `memoria_vault.runtime.patterns` is the compatibility prompt composer for tests
@@ -22,7 +23,7 @@ composition contract.
 ## The shipped operations
 
 Nine prompt operations ship at `check_status: checked` and are runnable. Each
-is one file under `capabilities/operations/`; the file stem is its `pattern_id`.
+is one packaged Markdown manifest; the file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |

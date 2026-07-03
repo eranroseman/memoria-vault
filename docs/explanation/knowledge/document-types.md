@@ -19,7 +19,9 @@ as checked knowledge.
 | --- | --- | --- |
 | `catalog/` | Source records and named entities. | `source`, `person`, `organization`, `venue` |
 | `knowledge/` | Readable knowledge artifacts and PI curation. | `digest`, `note`, `hub`, `project` |
-| `capabilities/` | Things the system can run or expose. | `operation`, `skill`, `adapter`, `workflow` |
+
+Operation manifests are packaged product data under
+`memoria_vault.product.capabilities`, not runtime-vault Concepts.
 
 The exhaustive field lists live in [Document types](../../reference/document-types.md).
 

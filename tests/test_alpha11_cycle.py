@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "cycle@example.invalid")
     git(tmp_path, "config", "user.name", "Alpha Cycle")

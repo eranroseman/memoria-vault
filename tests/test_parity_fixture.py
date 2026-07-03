@@ -10,6 +10,7 @@ import pytest
 
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
+from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -219,13 +220,12 @@ def _cli_command_surface() -> set[str]:
 
 def _operation_manifest_rows(workspace: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    for path in sorted((workspace / "capabilities/operations").glob("*.md")):
-        frontmatter = read_frontmatter(path)
+    for frontmatter in json.loads(render_capability_index(workspace))["capabilities"]:
         if frontmatter.get("type") != "operation":
             continue
         rows.append(
             {
-                "operation_id": str(frontmatter.get("operation_id") or path.stem),
+                "operation_id": str(frontmatter.get("operation_id") or frontmatter["id"]),
                 "adapter_only": bool(frontmatter.get("adapter_only")),
                 "dropped": bool(frontmatter.get("dropped")),
                 "drop_reason": str(frontmatter.get("drop_reason") or ""),

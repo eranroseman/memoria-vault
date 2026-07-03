@@ -181,18 +181,16 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["workspace"] == str(workspace)
     assert output["workspace_exists"] is False
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
-    assert "capabilities" in output["skeleton"]["directories"]
+    assert "capabilities" not in output["skeleton"]["directories"]
     assert ".memoria/index/qmd/checked" in output["skeleton"]["missing"]
     assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
-    assert "capabilities" in output["package"]["seed_trees"]
+    assert "capabilities" not in output["package"]["seed_trees"]
     assert {
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
         "knowledge/_views/index.md",
-        "capabilities/index.md",
         "references.bib",
-        "capabilities/_generated/capability-index.json",
     } <= set(output["generated_targets"])
     assert output["concepts"] == {
         "steering": "steering.md",
@@ -1068,26 +1066,22 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     }
 
 
-def test_cli_operation_list_rejects_directory_only_manifest(
+def test_cli_operation_list_ignores_workspace_capability_files(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
     asset_dir = workspace / "capabilities/operations/directory-only"
-    asset_dir.mkdir()
+    asset_dir.mkdir(parents=True)
     (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
 
     rc = main(["operation", "list", "--workspace", str(workspace), "--json"])
     output = json.loads(capsys.readouterr().out)
 
-    assert rc == 2
-    assert output["ok"] is False
-    assert (
-        output["error"] == "directory-only capability manifest is invalid: "
-        "capabilities/operations/directory-only; "
-        "expected sibling capabilities/operations/directory-only.md"
-    )
+    assert rc == 0
+    assert output["ok"] is True
+    assert "directory-only" not in {row["operation_id"] for row in output["operations"]}
 
 
 def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
@@ -1839,18 +1833,15 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert shown["event"]["event_id"] == event_id
 
 
-def test_cli_doctor_repair_restores_packaged_seed_files(
+def test_cli_doctor_repair_restores_runtime_seed_files(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
     assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
     capsys.readouterr()
 
-    operation = workspace / "capabilities/operations/compile-source-digest.md"
     provider_config = workspace / ".memoria/config/providers.yaml"
-    template_operation = ROOT / "vault-template/capabilities/operations/compile-source-digest.md"
     template_provider_config = ROOT / "vault-template/.memoria/config/providers.yaml"
-    operation.unlink()
     provider_config.write_text("broken: true\n", encoding="utf-8")
 
     rc = main(["doctor", "--workspace", str(workspace), "--repair", "--json"])
@@ -1859,8 +1850,7 @@ def test_cli_doctor_repair_restores_packaged_seed_files(
     assert rc == 0
     assert output["ok"] is True
     assert output["checks"]["state_db"] is True
-    assert "capabilities" in output["repaired"]
-    assert operation.read_text(encoding="utf-8") == template_operation.read_text(encoding="utf-8")
+    assert "capabilities" not in output["repaired"]
     assert provider_config.read_text(encoding="utf-8") == template_provider_config.read_text(
         encoding="utf-8"
     )

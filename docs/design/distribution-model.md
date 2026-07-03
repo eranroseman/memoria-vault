@@ -44,8 +44,9 @@ At install time, every system file is also staged at `<vault>/.memoria/golden/` 
 
 ## Capabilities, Not Installed Profiles
 
-Alpha.14 ships capability manifests under `vault-template/capabilities/`, with
-one checked Markdown file per operation. Those manifests are the runtime
+Alpha.15 ships capability manifests inside the Python package under
+`src/memoria_vault/product/capabilities/`, with one checked Markdown file per
+operation. Those manifests are the runtime
 allowlist: they describe the operation id, input/output schema, allowed tools,
 allowed paths, network ceiling, runner, model policy, and required checks.
 
@@ -53,7 +54,7 @@ The repo deliberately does not ship `vault-template/.memoria/profiles/`,
 `vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The
 standalone `memoria` CLI and engine are the product surface. Optional future
 adapters may call the same CLI/engine, but they are not the source of truth for
-capabilities and they do not belong in the bootstrap installer.
+capabilities and they do not belong in the runtime vault bootstrap.
 
 The absence is test-pinned by [Installed profiles](../reference/profile-capabilities.md) and
 `scripts/alpha14_negative_gate.py`.

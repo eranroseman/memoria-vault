@@ -19,8 +19,9 @@ to current concepts this way:
 | Lane override | Operation `allowed_paths` / optional adapter policy |
 | Kanban card | Operation request and attention item |
 
-The durable source of truth is now `vault-template/capabilities/operations/`
-plus the standalone CLI/engine. Optional adapters may present chat or board
+The durable source of truth is now
+`src/memoria_vault/product/capabilities/operations/` plus the standalone
+CLI/engine. Optional adapters may present chat or board
 interfaces, but they must call the same engine and may not become the authority
 for capabilities, provider config, or write policy.
 

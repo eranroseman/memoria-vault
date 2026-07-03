@@ -41,7 +41,6 @@ SQLite catalog rows are governed by [ADR-122](../adr/122-sqlite-working-state-bo
 | --- | --- | --- |
 | `catalog.base` | `catalog/` | Checked and unchecked `source` Concepts under `catalog/sources/`. |
 | `knowledge.base` | `knowledge/views/` | `digest`, `note`, `hub`, and `project` Concepts by home and `check_status`. |
-| `capabilities.base` | `capabilities/` | `operation`, `skill`, `adapter`, and `workflow` Concepts by home and `check_status`. |
 
 ## Verdict band (Maintenance drift watch)
 

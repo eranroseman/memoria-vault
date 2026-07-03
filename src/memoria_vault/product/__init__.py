@@ -1,0 +1,1 @@
+"""Packaged Memoria product data."""

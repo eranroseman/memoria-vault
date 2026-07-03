@@ -5,7 +5,7 @@ from pathlib import Path
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
-OPERATIONS = ROOT / "vault-template" / "capabilities" / "operations"
+OPERATIONS = ROOT / "src/memoria_vault/product/capabilities/operations"
 
 
 def test_gap_and_project_argument_operations_are_read_only_checked_capabilities() -> None:

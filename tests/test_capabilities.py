@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 import subprocess
+import uuid
 from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import capabilities as capability_module
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import (
+    CAPABILITY_INDEX_PATH,
     check_capability_index,
     import_capability,
     render_capability_index,
@@ -23,8 +25,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
-    (tmp_path / "capabilities/_generated/capability-index.json").unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "capabilities@example.invalid")
     git(tmp_path, "config", "user.name", "Capabilities")
@@ -45,37 +45,33 @@ def git(vault: Path, *args: str) -> str:
 
 
 def test_capability_index_renderer_covers_shipped_operations() -> None:
-    vault = ROOT / "vault-template"
-
-    catalog = json.loads(render_capability_index(vault))
+    catalog = json.loads(render_capability_index())
     rows = {row["id"]: row for row in catalog["capabilities"]}
 
     assert catalog["schema_version"] == 1
-    assert (vault / "capabilities/_generated/capability-index.json").read_text(
-        encoding="utf-8"
-    ) == render_capability_index(vault)
     assert rows["compile-source-digest"]["allowed_tools"] == ["trusted_writer"]
     assert rows["enrich-source"]["allowed_network"] == [
         "https://api.crossref.org/",
         "https://api.openalex.org/",
         "https://api.unpaywall.org/",
     ]
+    assert rows["compile-source-digest"]["trust"]["source"] == "product"
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")
+    assert rows["compile-source-digest"]["path"].startswith("product/capabilities/operations/")
 
 
 def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
-    vault = ROOT / "vault-template"
     worker = (ROOT / "src/memoria_vault/runtime/worker.py").read_text(encoding="utf-8")
     worker_ids = set(re.findall(r'operation_id == "([^"]+)"', worker))
     for block in re.findall(r"operation_id in \{([^}]+)\}", worker):
         worker_ids.update(re.findall(r'"([^"]+)"', block))
-    catalog = json.loads(render_capability_index(vault))
+    catalog = json.loads(render_capability_index())
     catalog_ids = {row["id"] for row in catalog["capabilities"]}
 
     assert worker_ids <= catalog_ids
     assert catalog_ids <= worker_ids
     for operation_id in sorted(catalog_ids):
-        load_operation_policy(vault, operation_id)
+        load_operation_policy(Path(), operation_id)
 
 
 def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
@@ -86,12 +82,10 @@ def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
     assert result["changed"] is True
     assert check_capability_index(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {
-        "capabilities/_generated/capability-index.json",
-        state.JOURNAL_HEAD_REL,
-    }
+    assert result["path"] == CAPABILITY_INDEX_PATH
+    assert committed == {state.JOURNAL_HEAD_REL}
 
-    (vault / "capabilities/_generated/capability-index.json").write_text("{}\n", encoding="utf-8")
+    (vault / CAPABILITY_INDEX_PATH).write_text("{}\n", encoding="utf-8")
     assert not check_capability_index(vault)
 
 
@@ -109,56 +103,72 @@ def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) 
     assert done is not None
     assert done["status"] == "done"
     assert done["changed"] is True
-    assert done["output"] == "capabilities/_generated/capability-index.json"
+    assert done["output"] == CAPABILITY_INDEX_PATH
     assert check_capability_index(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {
-        "capabilities/_generated/capability-index.json",
-        state.JOURNAL_HEAD_REL,
-    }
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
-def test_directory_only_capability_manifest_fails_runtime_loader(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    asset_dir = vault / "capabilities/operations/directory-only"
-    asset_dir.mkdir()
-    (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
+def test_directory_only_capability_manifest_fails_runtime_loader(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_capability_package(
+        tmp_path,
+        monkeypatch,
+        "operation",
+        {"directory-only/prompt.md": "# Prompt\n"},
+    )
     message = (
         "directory-only capability manifest is invalid: "
-        "capabilities/operations/directory-only; "
-        "expected sibling capabilities/operations/directory-only.md"
+        "product/capabilities/operations/directory-only; "
+        "expected sibling product/capabilities/operations/directory-only.md"
     )
 
     with pytest.raises(ValueError, match=re.escape(message)):
-        render_capability_index(vault)
+        render_capability_index()
     with pytest.raises(ValueError, match=re.escape(message)):
-        load_operation_policy(vault, "directory-only")
+        load_operation_policy(Path(), "directory-only")
 
 
-def test_same_stem_capability_asset_folder_is_allowed(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    asset_dir = vault / "capabilities/operations/analyze-gaps"
-    asset_dir.mkdir()
-    (asset_dir / "prompt.md").write_text("# Prompt\n", encoding="utf-8")
+def test_same_stem_capability_asset_folder_is_allowed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _patch_capability_package(
+        tmp_path,
+        monkeypatch,
+        "operation",
+        {
+            "analyze-gaps.md": (
+                "---\n"
+                "type: operation\n"
+                "check_status: checked\n"
+                "title: Analyze gaps\n"
+                "description: Fixture.\n"
+                "operation_id: analyze-gaps\n"
+                "allowed_tools: [trusted_writer]\n"
+                "allowed_paths: []\n"
+                "allowed_network: []\n"
+                "runner: pydantic-ai\n"
+                "model: deterministic-fixture\n"
+                "prompt_version: fixture\n"
+                "io_schema: {input: fixture, output: fixture}\n"
+                "risk_class: low\n"
+                "required_checks: []\n"
+                "---\n"
+                "Body.\n"
+            ),
+            "analyze-gaps/prompt.md": "# Prompt\n",
+        },
+    )
 
-    rows = {row["id"] for row in json.loads(render_capability_index(vault))["capabilities"]}
+    rows = {row["id"] for row in json.loads(render_capability_index())["capabilities"]}
 
     assert "analyze-gaps" in rows
-    assert load_operation_policy(vault, "analyze-gaps")["operation_id"] == "analyze-gaps"
+    assert load_operation_policy(Path(), "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
 def test_adapter_capabilities_are_cataloged_and_mcp_type_is_rejected(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    (vault / "capabilities/adapters/local-editor.md").write_text(
-        "---\n"
-        "type: adapter\n"
-        "check_status: unchecked\n"
-        "title: Local editor\n"
-        "description: Optional editor adapter metadata.\n"
-        "---\n"
-        "Body.\n",
-        encoding="utf-8",
-    )
     legacy = tmp_path / "legacy-mcp.md"
     legacy.write_text(
         "---\n"
@@ -171,10 +181,6 @@ def test_adapter_capabilities_are_cataloged_and_mcp_type_is_rejected(tmp_path: P
         encoding="utf-8",
     )
 
-    rows = {row["id"]: row for row in json.loads(render_capability_index(vault))["capabilities"]}
-
-    assert rows["local-editor"]["type"] == "adapter"
-    assert rows["local-editor"]["path"] == "capabilities/adapters/local-editor.md"
     with pytest.raises(ValueError, match="unsupported capability type: mcp"):
         import_capability(vault, legacy)
 
@@ -202,7 +208,7 @@ def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: 
     assert (vault / result["quarantine_path"]).is_file()
     assert not (vault / "capabilities/operations/remote-danger.md").exists()
     assert "remote-danger" not in {
-        row["id"] for row in json.loads(render_capability_index(vault))["capabilities"]
+        row["id"] for row in json.loads(render_capability_index())["capabilities"]
     }
     event = list(iter_jsonl(vault / "journal/test-machine.jsonl"))[-1]
     assert event["check"] == "capability-import-trust"
@@ -216,3 +222,28 @@ def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: 
         pass
     else:
         raise AssertionError("unsigned imported operation should not be executable")
+
+
+def _patch_capability_package(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capability_type: str,
+    files: dict[str, str],
+) -> None:
+    home = capability_module.CAPABILITY_HOMES[capability_type]
+    package_name = f"test_caps_{uuid.uuid4().hex}"
+    package_root = tmp_path / "packages"
+    package = package_root / package_name / home
+    package.mkdir(parents=True)
+    (package_root / package_name / "__init__.py").write_text("", encoding="utf-8")
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    for rel, text in files.items():
+        path = package / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    monkeypatch.syspath_prepend(str(package_root))
+    monkeypatch.setitem(
+        capability_module.CAPABILITY_PACKAGES,
+        capability_type,
+        f"{package_name}.{home}",
+    )

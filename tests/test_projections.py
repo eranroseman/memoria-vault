@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -21,7 +20,6 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     (tmp_path / "catalog").mkdir()
     (tmp_path / "knowledge").mkdir()
     for rel in (
@@ -29,7 +27,6 @@ def workspace(tmp_path: Path) -> Path:
         "catalog/index.md",
         "knowledge/index.md",
         "knowledge/_views/index.md",
-        "capabilities/index.md",
     ):
         (tmp_path / rel).unlink(missing_ok=True)
     git(tmp_path, "init", "-q")
@@ -78,8 +75,6 @@ def test_shipped_workspace_indexes_are_current() -> None:
 
     assert check_workspace_indexes(vault)
     assert check_tracked_projections(vault)["ok"]
-    text = (vault / "capabilities/index.md").read_text(encoding="utf-8")
-    assert "[Compile source digest](operations/compile-source-digest.md)" in text
 
 
 def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
@@ -91,12 +86,10 @@ def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
-        "capabilities/index.md",
     ]
     assert check_workspace_indexes(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
-        "capabilities/index.md",
         "catalog/index.md",
         "index.md",
         state.JOURNAL_HEAD_REL,
@@ -216,13 +209,11 @@ def test_worker_runs_workspace_index_projection_operation_jobs(tmp_path: Path) -
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
-        "capabilities/index.md",
     ]
     assert done["outputs"] == [
         "index.md",
         "catalog/index.md",
         "knowledge/index.md",
-        "capabilities/index.md",
     ]
     assert check_workspace_indexes(vault)
 

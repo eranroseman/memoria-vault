@@ -44,10 +44,9 @@ Alpha.14 does not ship installed profiles; the current boundary is in
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
 
-**Workspace** — the alpha.12 runtime vault root containing `catalog/`,
-`knowledge/`, `capabilities/`, `journal/`, and `.memoria/`. Obsidian opens this
-root. `knowledge/` is the checked knowledge bundle inside the vault, not the
-Obsidian vault root.
+**Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
+`journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
+the checked knowledge bundle inside the vault, not the editor vault root.
 
 ---
 
@@ -134,9 +133,9 @@ adopts them.
 `.memoria/schemas/types/`; the full roster, categories, and folder homes are in
 [Document types](document-types.md).
 
-**Pattern** — compatibility name for a checked prompt operation stored as data
-in `capabilities/operations/` ([ADR-53](../adr/53-pattern-library.md)) and
-executed through `memoria operation run`; `memoria_vault.runtime.patterns`
+**Pattern** — compatibility name for a checked packaged prompt operation
+([ADR-53](../adr/53-pattern-library.md)) executed through
+`memoria operation run`; `memoria_vault.runtime.patterns`
 remains a compatibility prompt composer for tests and optional adapters.
 
 **State** — not a field name on its own; use the specific field. A Concept's
@@ -163,7 +162,7 @@ closed when adapter policy is missing. See [Policy gate](policy-mcp.md).
 **Review-gated zone** — an older policy term for folders where agent writes
 degrade to proposals. Alpha.11 replaces this with worker-owned staging and
 promotion: machine writes enter `.memoria/staging/`, and only checked Concepts
-are promoted into `catalog/`, `knowledge/`, or `capabilities/`.
+are promoted into `catalog/` or `knowledge/`.
 
 ---
 

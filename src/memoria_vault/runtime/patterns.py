@@ -12,9 +12,9 @@ from typing import Any
 
 import yaml
 
+from memoria_vault.runtime.capabilities import iter_capability_manifests, read_capability_manifest
 from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
-PATTERNS_RELDIR = "capabilities/operations"
 PREAMBLE_RELPATH = "system/patterns/_preamble.md"
 PROVENANCE_RELPATH = "system/logs/patterns.jsonl"
 _FM_RE = re.compile(r"^---\n(.*?)\n---\n?", re.S)
@@ -45,11 +45,8 @@ def _is_prompt_operation(body: str) -> bool:
 def list_patterns(vault: Path, mode: str = "") -> list[dict[str, Any]]:
     """Return checked prompt operations, optionally filtered by mode."""
     out = []
-    directory = vault / PATTERNS_RELDIR
-    for path in sorted(directory.glob("*.md")) if directory.is_dir() else []:
-        if path.name.startswith("_"):
-            continue
-        frontmatter, body = _parse(path)
+    for item in iter_capability_manifests("operation"):
+        frontmatter, body = item["frontmatter"], split_manifest_body(item["text"])
         if frontmatter.get("type") != "operation" or frontmatter.get("check_status") != "checked":
             continue
         if not _is_prompt_operation(body):
@@ -58,8 +55,8 @@ def list_patterns(vault: Path, mode: str = "") -> list[dict[str, Any]]:
             continue
         out.append(
             {
-                "id": path.stem,
-                "title": frontmatter.get("title", path.stem),
+                "id": frontmatter.get("operation_id") or Path(item["path"]).stem,
+                "title": frontmatter.get("title", Path(item["path"]).stem),
                 "mode": frontmatter.get("mode"),
                 "action": frontmatter.get("action"),
                 "posture": frontmatter.get("posture"),
@@ -73,14 +70,15 @@ def run_pattern(
     vault: Path, pattern_id: str, input_text: str, input_ref: str = ""
 ) -> dict[str, Any]:
     """Compose preamble plus operation body, enforce gated targets, and log provenance."""
-    path = vault / PATTERNS_RELDIR / f"{pattern_id}.md"
-    if not path.is_file():
+    try:
+        item = read_capability_manifest("operation", pattern_id)
+    except FileNotFoundError:
         return {
             "error": "unknown-pattern",
             "pattern": pattern_id,
             "available": [item["id"] for item in list_patterns(vault)],
         }
-    frontmatter, body = _parse(path)
+    frontmatter, body = item["frontmatter"], split_manifest_body(item["text"])
     if frontmatter.get("check_status") != "checked":
         return {
             "error": "operation-not-checked",
@@ -141,3 +139,8 @@ def run_pattern(
             "fix the operation file before promotion"
         )
     return result
+
+
+def split_manifest_body(text: str) -> str:
+    match = _FM_RE.match(text)
+    return text[match.end() :] if match else text

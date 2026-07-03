@@ -2,20 +2,20 @@
 title: Regenerate capability index
 type: operation
 check_status: checked
-description: Regenerate the tracked capability index projection.
+description: Regenerate the local packaged-capability index cache.
 operation_id: regenerate-capability-index
 allowed_tools:
 - projection_writer
 allowed_paths:
-- capabilities/
+- .memoria/index/
 - journal/
 allowed_network: []
 runner: pydantic-ai
 model: deterministic-fixture
 prompt_version: regenerate-capability-index.v1
 io_schema:
-  input: capability_concepts
-  output: capability_index_projection
+  input: packaged_capability_manifests
+  output: local_capability_index_cache
 risk_class: low
 required_checks:
 - projection-drift
@@ -29,4 +29,4 @@ links: {}
 
 # Operation
 
-Render `capabilities/_generated/capability-index.json` from checked capability Concepts.
+Render `.memoria/index/capability-index.json` from packaged capability manifests.

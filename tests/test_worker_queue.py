@@ -13,6 +13,7 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.projections import write_tracked_projections
 from memoria_vault.runtime.search_index import answer_query
@@ -40,11 +41,10 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "worker@example.invalid")
     git(tmp_path, "config", "user.name", "Alpha Worker")
-    git(tmp_path, "add", ".memoria/schemas", "capabilities")
+    git(tmp_path, "add", ".memoria/schemas")
     git(tmp_path, "commit", "-m", "seed worker workspace")
     return tmp_path
 
@@ -244,14 +244,17 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     assert output["payload"] == {"query": "alpha", "k": 1}
 
 
-def test_worker_requires_checked_operation_policy_before_dispatch(tmp_path: Path) -> None:
+def test_worker_requires_checked_operation_policy_before_dispatch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/answer-query.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "check_status: checked", "check_status: unchecked"
-        ),
-        encoding="utf-8",
+
+    def reject_unchecked(_vault: Path, _operation_id: str) -> dict:
+        raise ValueError("answer-query is not checked")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations.load_operation_policy",
+        reject_unchecked,
     )
 
     enqueue_operation(
@@ -657,13 +660,13 @@ def test_worker_rejects_capture_url_source_outside_allowed_network(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/capture-url-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- http://\n- https://",
-            "  - https://allowed.test/",
-        ),
-        encoding="utf-8",
+    policy = {
+        **load_operation_policy(vault, "capture-url-source"),
+        "allowed_network": ["https://allowed.test/"],
+    }
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations.load_operation_policy",
+        lambda _vault, _operation_id: policy,
     )
 
     def forbidden_fetch(_url: str, _timeout: float) -> bytes:
