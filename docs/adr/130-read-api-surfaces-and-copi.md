@@ -53,22 +53,23 @@ ADR-125 the engine is the product and every surface is a client.
   gated by the poisoned-read fixture family — with the threat model stated:
   **read scoping is a policy boundary for tool-limited/cooperating agents; a
   local agent with its own file tools is in the trusted-local class regardless
-  of transport** (any local bearer credential, incl. the plugin's ephemeral
-  per-launch HTTP token, is readable by it — the cross-channel credential-reuse
-  fixture documents the residual). Every agent exchange exposes its
+  of transport** (any local bearer credential, including a future adapter token,
+  is readable by it — the cross-channel credential-reuse fixture documents the
+  residual). Every agent exchange exposes its
   plan, sources read, assumptions, unknowns, and pending writes before any
   enqueue (the chat transparency contract); chat is additive, never the
   primary path.
 - **One engine API, thin transports, in dependency order**: `engine/api`
   typed functions are the single implementation; the CLI (`--json`,
-  transport 0), a FastMCP server (transport 1), and a loopback-HTTP server
-  (the plugin's backend) are pure marshalling skins — a wrapper holding logic
-  is a gate failure. Remote/OAuth transport is deferred (no consumer).
+  transport 0), a FastMCP server (transport 1), and a loopback-HTTP server are
+  pure marshalling skins — a wrapper holding logic is a gate failure.
+  Remote/OAuth transport is deferred (no consumer).
 - **PI direct access, carried from 72**: every routine action is reachable by
-  the researcher directly from a UI surface — the Obsidian Inspector's read
-  views + enqueue actions — without conversing with any agent. The CLI does
-  not count as the direct-access surface; the agent is additive, never the
-  only path.
+  the researcher directly without conversing with an agent. In alpha.15 the
+  direct-access surface is the CLI plus the read-API transports above. Future
+  UI adapters, including an Obsidian adapter, may expose the same read and
+  enqueue actions only as thin clients over this contract; adapter-specific UI
+  needs its own ADR before it is scheduled.
 - **Views are declarative and generated** (carrying 102/116's contract:
   one view definition, projections disposable and never a second truth):
   the read-API may attach a **declarative, graph-bound, verdict-carrying

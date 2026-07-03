@@ -42,6 +42,26 @@ CHECKS = (
         ),
         required_text=("memoria_vault.runtime.search_index", "include_stale=True"),
     ),
+    Check(
+        name="ADR-130 alpha.15 direct surface is CLI/read-API, not Obsidian UI",
+        adr="docs/adr/130-read-api-surfaces-and-copi.md",
+        required_paths=(
+            "src/memoria_vault/engine/api.py",
+            "src/memoria_vault/cli.py",
+            "src/memoria_vault/runtime/http_transport.py",
+            "src/memoria_vault/runtime/mcp_transport.py",
+        ),
+        required_text=(
+            "direct-access surface is the CLI plus the read-API transports",
+            "needs its own ADR before it is scheduled.",
+        ),
+        forbidden_text=(
+            "plugin's ephemeral per-launch HTTP token",
+            "the plugin's backend",
+            "the Obsidian Inspector's read",
+            "The CLI does not count as the direct-access surface",
+        ),
+    ),
 )
 
 
