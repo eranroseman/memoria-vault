@@ -275,7 +275,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {
         "inbox/flag-enrichment-source-alpha-source-enrichment.md",
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }
 
 
@@ -371,7 +371,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {
         *done["discovery_candidate_paths"],
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
         "references.bib",
     }
 
@@ -795,5 +795,5 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {
         "inbox/flag-enrichment-source-alpha-source-retraction.md",
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }

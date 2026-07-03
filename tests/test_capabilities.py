@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import (
     check_capability_index,
     import_capability,
@@ -87,7 +88,7 @@ def test_capability_index_projection_drift_check(tmp_path: Path) -> None:
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         "capabilities/_generated/capability-index.json",
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }
 
     (vault / "capabilities/_generated/capability-index.json").write_text("{}\n", encoding="utf-8")
@@ -113,7 +114,7 @@ def test_worker_runs_capability_index_projection_operation_jobs(tmp_path: Path) 
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {
         "capabilities/_generated/capability-index.json",
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }
 
 
@@ -208,7 +209,7 @@ def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: 
     assert event["status"] == "failed"
     assert event["quarantined_id"] == result["quarantine_path"]
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
     try:
         load_operation_policy(vault, "remote-danger")
     except FileNotFoundError:

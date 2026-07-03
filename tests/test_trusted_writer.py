@@ -81,7 +81,7 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
     assert "check_status" not in frontmatter
     assert is_ulid(frontmatter["id"])
     assert "standing" not in frontmatter
-    assert frontmatter["links"] == []
+    assert frontmatter["links"] == {}
     assert event["event"] == "derived"
     assert event["output_id"] == "knowledge/notes/alpha.md"
     assert events(vault) == [event]
@@ -191,7 +191,10 @@ def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) 
     )
 
     committed = set(git(vault, "show", "--name-only", "--format=", commit_hash).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/alpha.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/alpha.md"}
+    assert (vault / state.JOURNAL_HEAD_REL).read_text(
+        encoding="utf-8"
+    ).strip() == state.journal_head(vault)
     assert git(vault, "diff", "--cached", "--name-only") == "other.md"
 
 
@@ -215,7 +218,7 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
     assert "check_status" not in frontmatter
     assert is_ulid(frontmatter["id"])
     assert "standing" not in frontmatter
-    assert frontmatter["links"] == []
+    assert frontmatter["links"] == {}
     assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"][-1] == {
@@ -320,7 +323,7 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
     assert state.concept_check_status(vault, "knowledge/notes/pi-new.md") == "unchecked"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
         "knowledge/notes/pi-new.md",
         "knowledge/notes/pi.md",
     }
@@ -418,11 +421,11 @@ def test_two_device_git_writes_keep_per_machine_journals_mergeable(tmp_path: Pat
     git(device_a, "pull", "-q", "--ff-only", "origin", "main")
 
     assert (device_a / "journal/a.jsonl").is_file()
-    assert (device_a / "journal/b.jsonl").is_file()
+    assert (device_a / state.JOURNAL_HEAD_REL).is_file()
     assert (device_a / "knowledge/notes/from-a.md").is_file()
     assert (device_a / "knowledge/notes/from-b.md").is_file()
-    state = rebuild_trace_state(device_a)
-    assert set(state) >= {"knowledge/notes/from-a.md", "knowledge/notes/from-b.md"}
+    trace_state = rebuild_trace_state(device_a)
+    assert set(trace_state) == {"knowledge/notes/from-a.md"}
     assert git(device_a, "status", "--short") == ""
 
 
@@ -477,7 +480,7 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
         capture_output=True,
     )
     assert conflict.returncode != 0
+    assert "UU .memoria/journal-head" in git(device_b, "status", "--short")
     assert "UU knowledge/notes/shared.md" in git(device_b, "status", "--short")
     assert "<<<<<<<" in (device_b / "knowledge/notes/shared.md").read_text(encoding="utf-8")
-    assert (device_b / "journal/a.jsonl").is_file()
     assert (device_b / "journal/b.jsonl").is_file()

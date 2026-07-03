@@ -99,7 +99,7 @@ def test_workspace_index_projection_drift_check(tmp_path: Path) -> None:
         "capabilities/index.md",
         "catalog/index.md",
         "index.md",
-        "journal/test-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
         "knowledge/index.md",
     }
 
@@ -121,7 +121,7 @@ def test_tracked_projection_drift_check_covers_all_generated_outputs(tmp_path: P
         "findings": [],
     }
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {*TRACKED_PROJECTION_PATHS, "journal/test-machine.jsonl"}
+    assert committed == {*TRACKED_PROJECTION_PATHS, state.JOURNAL_HEAD_REL}
 
     (vault / "references.bib").write_text("stale\n", encoding="utf-8")
 

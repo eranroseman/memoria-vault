@@ -31,6 +31,7 @@ SEED_TREES = (
     ("vault-template/system/eval", "system/eval"),
 )
 SEED_FILES = (
+    ("vault-template/.gitignore", ".gitignore"),
     ("vault-template/steering.md", "steering.md"),
     ("vault-template/system/vocabulary.md", "system/vocabulary.md"),
 )
@@ -462,6 +463,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
         (workspace / rel).mkdir(parents=True, exist_ok=True)
     _seed_workspace(workspace, overwrite=False)
     state.connect(workspace).close()
+    _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections
 
     write_tracked_projections(workspace)
@@ -1557,7 +1559,8 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         machine="memoria-cli",
     )
     promote_checked(workspace, rel, machine="memoria-cli")
-    _git(workspace, "add", "--", rel, "journal/memoria-cli.jsonl")
+    state.write_journal_head_anchor(workspace)
+    _git(workspace, "add", "--", rel, state.JOURNAL_HEAD_REL)
     _git(workspace, "commit", "-m", "simulate recoverable materialization")
     path = workspace / rel
     if path.is_file():
@@ -1694,6 +1697,13 @@ def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, 
             "seeded": ".memoria/config" in seed_trees,
             "exists": (workspace / ".memoria/config/providers.yaml").is_file(),
         },
+        "git": {
+            "repo": ".git",
+            "would_init": not (workspace / ".git").exists(),
+            "journal_head": state.JOURNAL_HEAD_REL,
+            "overrides": ".memoria/overrides.jsonl",
+            "gitignore": ".gitignore",
+        },
     }
 
 
@@ -1709,6 +1719,7 @@ def _repair_workspace(workspace: Path) -> list[str]:
         (workspace / rel).mkdir(parents=True, exist_ok=True)
     _seed_workspace(workspace, overwrite=True)
     state.connect(workspace).close()
+    _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections
 
     write_tracked_projections(workspace)
@@ -1730,6 +1741,15 @@ def _copy_seed_file(source_rel: str, target: Path, *, overwrite: bool) -> None:
     if source.is_file() and (overwrite or not target.exists()):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
+
+
+def _ensure_control_files(workspace: Path) -> None:
+    from memoria_vault.runtime.vaultio import write_text_durable
+
+    state.write_journal_head_anchor(workspace)
+    overrides = workspace / ".memoria/overrides.jsonl"
+    if not overrides.exists():
+        write_text_durable(overrides, "", create_parent=True)
 
 
 def _ensure_git(workspace: Path) -> None:

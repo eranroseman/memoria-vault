@@ -158,7 +158,7 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert [event["event"] for event in journal_events] == ["derived", "check-fired"]
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/worker.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/worker.md"}
 
 
 def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path) -> None:
@@ -218,7 +218,7 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
     assert fm["evidence_set"] == ["knowledge/notes/claim.md"]
     assert "Alpha reduces beta" in staged.read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", done["staging_id"]}
+    assert committed == {state.JOURNAL_HEAD_REL, done["staging_id"]}
 
 
 def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
@@ -304,7 +304,7 @@ def test_worker_runs_integrity_operation_jobs(tmp_path: Path) -> None:
     assert done["finding_count"] == 1
     assert done["findings"][0]["route"] == "ask"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_claim_quote_integrity_operation_jobs(tmp_path: Path) -> None:
@@ -339,7 +339,7 @@ def test_worker_runs_claim_quote_integrity_operation_jobs(tmp_path: Path) -> Non
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "claim-quote-support"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> None:
@@ -390,7 +390,7 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "quote-anchor"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_prompt_injection_integrity_operation_jobs(tmp_path: Path) -> None:
@@ -424,7 +424,7 @@ def test_worker_runs_prompt_injection_integrity_operation_jobs(tmp_path: Path) -
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "prompt-injection"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
@@ -461,7 +461,7 @@ def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
     assert done["findings"][0]["check"] == "source-metadata"
     assert done["findings"][0]["reason"] == "missing citekey alias"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
@@ -500,7 +500,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
     assert (vault / done["content_path"]).read_text(encoding="utf-8") == "Extracted alpha text.\n"
     assert (vault / done["raw_path"]).read_text(encoding="utf-8") == "raw alpha bytes"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypatch) -> None:
@@ -615,7 +615,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
     assert tuple(enrich) == ("pending", "enrich-source")
     assert done["enrichment_job"]["job_id"] == "enrich-doi-10.1000_harness.2026"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypatch) -> None:
@@ -719,7 +719,7 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "contradiction-link"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_link_target_integrity_operation_jobs(tmp_path: Path) -> None:
@@ -754,7 +754,7 @@ def test_worker_runs_link_target_integrity_operation_jobs(tmp_path: Path) -> Non
     assert done["finding_count"] == 1
     assert done["findings"][0]["check"] == "link-target"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_trace_integrity_scan_operation_jobs(tmp_path: Path) -> None:
@@ -788,7 +788,7 @@ def test_worker_runs_trace_integrity_scan_operation_jobs(tmp_path: Path) -> None
     assert "check_status" not in read_frontmatter(quarantined)
     assert state.concept_check_status(vault, "knowledge/notes/foreign.md") == "quarantined"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/foreign.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/foreign.md"}
 
 
 def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path) -> None:
@@ -931,7 +931,7 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
     assert events[-1]["source_id"] == "source-alpha"
     assert events[-1]["response"] == "The PI cares about the methods caveat."
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
@@ -1222,7 +1222,7 @@ def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
     assert not (vault / "knowledge/notes/rollback.md").exists()
     assert (vault / ".memoria/quarantine/knowledge/notes/rollback.md").is_file()
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/rollback.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/rollback.md"}
 
 
 def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None:
@@ -1245,7 +1245,7 @@ def test_worker_runs_attention_resolution_operation_jobs(tmp_path: Path) -> None
     assert done["resolution"]["target_id"] == "knowledge/notes/attention.md"
     assert done["resolution"]["actor"] == "pi"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
@@ -1285,7 +1285,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert row["check_status"] == "unchecked"
     assert consumable is None
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/pi.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/pi.md"}
 
 
 def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
@@ -1415,7 +1415,7 @@ def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
     assert "check_status" not in read_frontmatter(vault / "knowledge/notes/pi.md")
     assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "checked"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "knowledge/notes/pi.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/pi.md"}
 
 
 def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
@@ -1447,6 +1447,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert done is not None
     assert done["status"] == "done"
     assert done["override_log"] == ".memoria/overrides.jsonl"
+    assert "commit" in done
     assert done["work"]["title"] == "Updated"
     assert done["work"]["csl_json"]["memoria"]["standing"] == "archived"
     assert done["work"]["csl_json"]["memoria"]["research_area"] == ["personal-informatics"]
@@ -1468,6 +1469,9 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert override["operation"] == "update-work"
     assert override["source_id"] == "alpha"
     assert override["updates"]["standing"] == "archived"
+    committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, ".memoria/overrides.jsonl"}
+    assert git(vault, "status", "--short", "--", ".memoria/overrides.jsonl") == ""
 
 
 def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) -> None:
@@ -1497,7 +1501,7 @@ def test_worker_runs_references_bib_projection_operation_jobs(tmp_path: Path) ->
     assert done["output"] == "references.bib"
     assert "@article{harness2026," in (vault / "references.bib").read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "references.bib"}
+    assert committed == {state.JOURNAL_HEAD_REL, "references.bib"}
 
 
 def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:

@@ -81,15 +81,15 @@ def commit_writer_changes(
     *,
     machine: str | None = None,
 ) -> str:
-    """Commit only the writer-touched bundle paths plus the per-machine journal."""
+    """Commit only writer-touched files plus the SQLite journal-head anchor."""
     vault = Path(vault)
-    rels = {_commit_relpath(vault, path) for path in paths}
-    rels.add(_rel(vault, _journal_path(vault, machine)))
-    selected = sorted(rels)
+    output_rels = {_commit_relpath(vault, path) for path in paths}
+    anchor = state.write_journal_head_anchor(vault)
+    selected = sorted({*output_rels, anchor})
     _git(vault, ["git", "add", "--", *selected])
     _git(vault, ["git", "commit", "-m", message, "--", *selected])
     commit = _git(vault, ["git", "rev-parse", "HEAD"])
-    for rel in selected:
+    for rel in sorted(output_rels):
         state.mark_materialized(vault, rel, commit=commit)
     return commit
 

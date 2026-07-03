@@ -18,6 +18,7 @@ from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
+JOURNAL_HEAD_REL = ".memoria/journal-head"
 SCHEMA_VERSION = 2
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
@@ -235,6 +236,15 @@ def journal_head(vault: Path) -> str:
             "SELECT row_hash FROM journal_events ORDER BY event_id DESC LIMIT 1"
         ).fetchone()
     return "" if row is None else str(row["row_hash"])
+
+
+def journal_head_anchor(vault: Path) -> str:
+    return journal_head(vault) or "GENESIS"
+
+
+def write_journal_head_anchor(vault: Path) -> str:
+    write_text_durable(Path(vault) / JOURNAL_HEAD_REL, journal_head_anchor(vault) + "\n")
+    return JOURNAL_HEAD_REL
 
 
 def set_concept_verdict(vault: Path, concept_id: str, check_status: str) -> None:

@@ -37,6 +37,13 @@ __pycache__/
 .memoria/memoria.sqlite
 .memoria/memoria.sqlite-*
 
+# Runtime product/config mirrors. The package and SQLite journal are authority;
+# workspace commits carry only the checked corpus and the journal-head anchor.
+.memoria/config/
+.memoria/locks/
+.memoria/schemas/
+journal/
+
 # Alpha.12 worker holding areas: runtime content is disposable, the skeleton
 # .gitkeep files are tracked so fresh installs create the directories.
 .memoria/index/**

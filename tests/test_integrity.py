@@ -28,6 +28,8 @@ from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     mark_checked,
     observe_pi_edit,
+    promote_checked,
+    stage_concept,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -785,8 +787,40 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
-        "journal/integrity-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
         digest["digest_path"],
         *digest["hub_paths"],
         notes["note_paths"][0],
     }
+
+
+def test_cascade_rollback_restores_previous_file_version_with_git(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    target = "knowledge/notes/versioned.md"
+    version_one = (
+        "---\ntype: note\ntitle: Version one\ntags: []\nlinks: {}\n---\nVersion one body.\n"
+    )
+    version_two = version_one.replace("Version one", "Version two")
+    stage_concept(vault, target, version_one, machine="writer")
+    promote_checked(vault, target, machine="writer")
+    commit_writer_changes(vault, "write version one", [target], machine="writer")
+    stage_concept(vault, target, version_two, machine="writer")
+    promote_checked(vault, target, machine="writer")
+    commit_writer_changes(vault, "write version two", [target], machine="writer")
+
+    result = cascade_rollback(
+        vault,
+        target,
+        reason="restore previous version",
+        include_target=True,
+        machine="integrity-machine",
+    )
+
+    assert result["reverted"] == [target]
+    assert "Version one" in (vault / target).read_text(encoding="utf-8")
+    assert "Version two" in (vault / ".memoria/quarantine" / target).read_text(encoding="utf-8")
+    rollback_events = list(iter_jsonl(vault / "journal/integrity-machine.jsonl"))
+    resolved = next(event for event in rollback_events if event["event"] == "resolved")
+    assert resolved["restore_source"]
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, target}
