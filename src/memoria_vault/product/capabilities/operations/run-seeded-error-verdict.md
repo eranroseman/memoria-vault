@@ -24,7 +24,7 @@ risk_class: high
 required_checks:
 - seeded-error-bar
 tags:
-- alpha11
+- alpha15
 - gate
 id: operations/run-seeded-error-verdict
 standing: current
@@ -33,4 +33,5 @@ links: {}
 
 # Operation
 
-Run the disposable seeded-error bundle and report per-class integrity metrics.
+Run the disposable seeded-error bundle and report per-class integrity metrics,
+including the live-only non-sandbox license flag.

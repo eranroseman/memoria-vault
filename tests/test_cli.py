@@ -2306,14 +2306,21 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    assert (workspace / "system/eval/alpha12-seeded-errors.json").is_file()
+    assert (workspace / "system/eval/alpha15-seeded-errors.json").is_file()
 
     def fake_verdict(
-        vault: Path, *, template_root: Path, bundle_path: Path, runner: dict, machine: str
+        vault: Path,
+        *,
+        template_root: Path,
+        bundle_path: Path,
+        runner: dict,
+        operation_id: str,
+        machine: str,
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
-        assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert bundle_path == workspace / "system/eval/alpha15-seeded-errors.json"
+        assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "live"
         assert runner["provider"] == "gateway"
         assert machine == "memoria-cli"
