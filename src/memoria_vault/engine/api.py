@@ -242,20 +242,22 @@ def run_operation(
     schedule_id: str | None = None,
     actor: str = "pi",
     command: str = "",
+    surface: str = "memoria-cli",
+    machine: str = "memoria-cli",
 ) -> dict[str, Any]:
     job = enqueue_operation(
         workspace,
         operation_id,
         payload=payload,
         idempotency_key=idempotency_key,
-        provenance={"surface": "memoria-cli", "command": command or operation_id},
+        provenance={"surface": surface, "command": command or operation_id},
         schedule_id=schedule_id,
         actor=actor,
     )
     result = (
         job
         if job.get("status") != "pending"
-        else run_request(workspace, str(job["job_id"]), machine="memoria-cli")
+        else run_request(workspace, str(job["job_id"]), machine=machine)
     )
     return {
         "ok": result is not None and result.get("status") == "done",

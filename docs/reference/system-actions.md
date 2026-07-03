@@ -137,6 +137,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Observe PI edits | `memoria workspace scan` / `memoria serve --watch` | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. `serve --watch` is only a stdlib polling trigger; the scan worker remains the correctness boundary. |
 | Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
+| Serve local HTTP | `memoria serve --http` | Starts an on-demand loopback HTTP server with bearer-token auth; handlers only marshal to `engine/api` reads and request-envelope writes. Remote/OAuth transport is not implemented. |
 
 ## Optional external adapters
 
