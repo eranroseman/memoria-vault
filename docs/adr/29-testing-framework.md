@@ -93,7 +93,7 @@ procedure lives in the release playbook.
 
 ## Why
 
-- The substrate of testing is *which behaviour is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without explicit gates, coverage erodes and nobody notices.
+- The substrate of testing is *which behavior is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without explicit gates, coverage erodes and nobody notices.
 - The pyramid pushes coverage to the cheapest layer that can assert it: a `--self-test` on every commit beats a manual GUI step per release.
 - Separating wiring (L0–L4) from quality (L5) keeps fast deterministic checks honest and quarantines the slow, judgement-heavy eval where it belongs.
 

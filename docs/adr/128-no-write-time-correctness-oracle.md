@@ -11,8 +11,6 @@ supersedes: [3, 21, 41, 54, 57]
 superseded_by: []
 ---
 
-<!-- cspell:words undoable checkpointed -->
-
 # ADR-128: No write-time correctness oracle — checked ≠ approved
 
 Consolidation ADR (see ADR-125 preamble). This is the deliberate reversal of

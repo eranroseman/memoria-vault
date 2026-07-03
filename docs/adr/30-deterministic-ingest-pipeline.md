@@ -119,7 +119,7 @@ Each subsystem is a chain; the note gets the data if *any* source has it, degrad
 
 ### Tier 2 — Optional (best-effort; absent-able)
 
-- **`[!brief]` comparative narrative** (LLM call #2) over deterministically-selected neighbours.
+- **`[!brief]` comparative narrative** (LLM call #2) over deterministically-selected neighbors.
 - **NLI contradiction signal** — *advisory, low-precision only*; a hint for the brief, never a fact.
 - **arXiv → code-repo** (Papers-with-Code / confidence-thresholded) → `item-note` + cross-link; proposed when uncertain.
 
@@ -133,7 +133,7 @@ Adds one value, **`captured`** (today `lifecycle` is `proposed · current · dor
 
 ### Reliability, re-ingest, serialization
 
-The capture-intake log + the `captured` stub mean a failure anywhere in Tiers 1–2 **leaves the note at `captured`** — recoverable, nothing lost. This supersedes the old "materialise a `capture-timeout` candidate" idea for the *deliberate-capture* path. There are **two distinct backstops, with distinct owners**:
+The capture-intake log + the `captured` stub mean a failure anywhere in Tiers 1–2 **leaves the note at `captured`** — recoverable, nothing lost. This supersedes the old "materialize a `capture-timeout` candidate" idea for the *deliberate-capture* path. There are **two distinct backstops, with distinct owners**:
 
 - **(a) log-reconciliation** — a pass that reconciles `capture-intake.jsonl` against created notes and re-drives any entry whose **Tier-0 stub never landed** (the durability anchor for a failed first write).
 - **(b) captured retry-sweep** — re-runs **Tier 1** on `captured` notes whose enrichment failed, with backoff and the `needs-human` floor.
@@ -148,7 +148,7 @@ per-citekey/per-entity lock; routing through the queue is the chosen mechanism.)
 
 ### Security (untrusted ingest surface)
 
-The gate bounds *where* writes land, not their *content*. So: local PDF/OCR parsing runs in a **subprocess with CPU/memory/time `rlimit`s and a temp working dir** — not in the worker's main process (MuPDF has a CVE history); pre-extracted API text (S2ORC/CORE/PMC) is preferred precisely because it avoids local parsing, leaving only the local-PDF floor as the residual untrusted-parse surface. For prompt injection: **classify (LLM #1) is hard-schema-constrained**, so a crafted PDF/abstract cannot steer the typed field. The **`[!brief]` (LLM #2) is free-text and *not* schema-constrained** — instruction-stripping is unreliable, so a crafted abstract/neighbour can steer its prose; this is a **lower-stakes, human-reviewed, acknowledged residual** injection surface, not one the schema defense covers.
+The gate bounds *where* writes land, not their *content*. So: local PDF/OCR parsing runs in a **subprocess with CPU/memory/time `rlimit`s and a temp working dir** — not in the worker's main process (MuPDF has a CVE history); pre-extracted API text (S2ORC/CORE/PMC) is preferred precisely because it avoids local parsing, leaving only the local-PDF floor as the residual untrusted-parse surface. For prompt injection: **classify (LLM #1) is hard-schema-constrained**, so a crafted PDF/abstract cannot steer the typed field. The **`[!brief]` (LLM #2) is free-text and *not* schema-constrained** — instruction-stripping is unreliable, so a crafted abstract/neighbor can steer its prose; this is a **lower-stakes, human-reviewed, acknowledged residual** injection surface, not one the schema defense covers.
 
 ### Cost / latency (per ingest)
 
@@ -186,5 +186,5 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 - **Files affected:** ingest runtime operation (source of truth for API field lists, chain order, and merge rules — kept out of the ADR so it can change without re-deciding), [Ingest routing](../reference/ingest.md) (type routing, fallback chains, extraction tiers, S2-not-GROBID), [Frontmatter fields](../reference/frontmatter.md) / [Document types](../reference/document-types.md) (`captured` + `ingest_status`), optional adapter importers, the seed-tag vocabulary format (tags carry definitions).
 - **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist ([ADR-120](120-profile-config-materialization.md)) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
 - **Related decisions / Depends on:** [ADR-120](120-profile-config-materialization.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).
-- **Supersession note:** deliberate-capture dead-letters stay `captured` rather than materialising a `capture-timeout` candidate.
+- **Supersession note:** deliberate-capture dead-letters stay `captured` rather than materializing a `capture-timeout` candidate.
 - **Source discussion:** design conversation + two red-team rounds + an 867-paper API merge spike, 2026-06-03.

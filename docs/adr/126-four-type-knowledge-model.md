@@ -11,8 +11,6 @@ supersedes: [14, 15, 19, 47, 50, 52, 71, 77, 78, 79, 83, 100, 117, 119]
 superseded_by: []
 ---
 
-<!-- cspell:words flippable journaled -->
-
 # ADR-126: Four concept types, meaning-only frontmatter, hub-owns-tag, project layer
 
 Consolidation ADR (see ADR-125 preamble). This is the knowledge model; it

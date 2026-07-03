@@ -93,7 +93,7 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 **Explanation**
 
 - Why specialist profiles support this: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
-- Why the vault won't autonomize synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
+- Why the vault won't automate synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - How request review state works: [Request states and the review gate](../explanation/kanban-board/states.md)
 - What the gate enforces at the synthesis boundary: [Why promotion is gated](../explanation/knowledge/promotion-and-gated-zones.md)
 

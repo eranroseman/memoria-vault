@@ -11,8 +11,6 @@ supersedes: []
 superseded_by: [130]
 ---
 
-<!-- cspell:words Gantt TTRPG Vikunja Thino -->
-
 # ADR-109: Project management uses native views over project notes
 
 > **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
