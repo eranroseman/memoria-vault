@@ -38,9 +38,9 @@ Hermes is an optional adapter.
 **Native Windows is supported without WSL2.** Keep two platform installers, but
 make the standalone CLI/runtime the default on both:
 
-- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. By default it lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, wires Git hooks, and registers qmd search. `-WithHermes` adds Hermes's native Windows installer, the five profiles with Windows paths, `.env` propagation, the policy-gate plugin, and Hermes cron wrappers.
-- **Linux/WSL provisioning** — `scripts/install.sh` installs the same standalone CLI/runtime workspace. `--with-hermes` adds the Linux/WSL Hermes/Obsidian adapter used by CI and disposable validation.
-- **Scheduling and always-on** — Hermes cron support belongs only to the optional adapter path. The standalone runtime exposes deterministic CLI/worker commands and can be invoked manually, by file-change hooks, or by any external scheduler.
+- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. It lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, wires Git hooks, and registers qmd search. It does not carry a `-WithHermes` mode in alpha.15.
+- **Linux/WSL provisioning** — `scripts/install.sh` installs the same standalone CLI/runtime workspace. It does not carry a `--with-hermes` adapter mode in alpha.15.
+- **Scheduling and always-on** — the standalone runtime exposes deterministic CLI/worker commands and can be invoked manually, by file-change hooks, or by any external scheduler. Hermes cron support is not an alpha.15 installer surface.
 - **Bridge removal** — the production path has no `/mnt/c` translation, no WSL2 gate, and no `windowsWslMode` requirement for ACP. The WSL bridge remains only in WSL-specific test docs.
 
 This **supersedes the WSL2-only rule** ([Bootstrap installer](../design/bootstrap-installer.md), the [installer platform matrix](../reference/installer.md)), **amends [ADR-26](26-repo-as-install-unit.md)** (`install.ps1` is a real installer), and **narrows [ADR-22](22-build-on-hermes-runtime.md)** to the optional adapter path.
@@ -54,8 +54,7 @@ This **supersedes the WSL2-only rule** ([Bootstrap installer](../design/bootstra
 ## Follow-up verification
 
 - Run `scripts/install.ps1 -DryRun` and a full attended native Windows standalone install against a disposable vault before release-candidate signoff.
-- When testing `-WithHermes`, confirm ACP launches `hermes` natively with `windowsWslMode: false`.
-- When testing `-WithHermes`, confirm the verified HTTPS Obsidian MCP works with `OBSIDIAN_MCP_SSL_VERIFY`.
+- Keep `-WithHermes` / `--with-hermes` absent from the alpha.15 installers until a future adapter ADR adds and tests that surface.
 - If [ADR-33](33-cluster-mcp-bertopic.md)'s stack ships, avoid base `hnswlib` on Windows: its sdist-only package needs MSVC to build. Swap to FAISS / `chroma-hnswlib` and pin Python 3.10-3.13.
 
 ## Related
