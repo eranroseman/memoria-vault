@@ -98,7 +98,7 @@ def catalog_db_source(vault: Path, source_id: str, content_text: str) -> str:
         description="A SQLite-only checked source.",
         citekey=f"{source_id}2026",
         csl_json={"id": f"{source_id}2026", "title": "DB Source"},
-        metadata_status="verified",
+        provider_coverage="full",
         text_status="full-text",
         check_status="checked",
         content_path=content_rel,
@@ -242,7 +242,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
             "title": "Retracted",
             "memoria": {"standing": "retracted"},
         },
-        metadata_status="verified",
+        provider_coverage="full",
         text_status="full-text",
         check_status="checked",
     )
@@ -360,7 +360,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/partial",
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         citekey="partial2026",
         machine="capture-machine",
     )
@@ -492,7 +492,7 @@ def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -
             "author": [{"family": "Ada", "given": "River"}],
             "issued": {"date-parts": [[2026]]},
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status="full-text",
         check_status="checked",
     )
@@ -523,7 +523,7 @@ def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
             "author": [{"family": "Ada", "given": "River"}],
             "issued": {"date-parts": [[2026]]},
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status="full-text",
         check_status="checked",
     )
@@ -552,7 +552,7 @@ def test_db_capture_does_not_create_legacy_entity_identity_findings(
         resource="https://doi.org/10.1000/identity.one",
         identifiers={"doi": "10.1000/identity.one"},
         citekey="identityOne2026",
-        metadata_status="verified",
+        provider_coverage="full",
         csl_json={
             "id": "identityOne2026",
             "type": "article-journal",
@@ -578,7 +578,7 @@ def test_db_capture_does_not_create_legacy_entity_identity_findings(
         resource="https://doi.org/10.1000/identity.two",
         identifiers={"doi": "10.1000/identity.two"},
         citekey="identityTwo2026",
-        metadata_status="verified",
+        provider_coverage="full",
         csl_json={
             "id": "identityTwo2026",
             "type": "article-journal",

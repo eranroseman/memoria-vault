@@ -436,7 +436,7 @@ def test_recapturing_source_merges_existing_metadata(tmp_path: Path) -> None:
             "title": "Alpha Source",
             "author": [{"family": "Lin", "given": "Morgan"}],
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         machine="test-machine",
     )
 
@@ -456,13 +456,13 @@ def test_recapturing_source_merges_existing_metadata(tmp_path: Path) -> None:
             "DOI": "10.1000/alpha",
             "issued": {"date-parts": [[2026]]},
         },
-        metadata_status="verified",
+        provider_coverage="full",
         machine="test-machine",
     )
 
     source = state.catalog_source(vault, "source-alpha")
     assert source is not None
-    assert source["metadata_status"] == "verified"
+    assert source["provider_coverage"] == "full"
     assert source["identifiers"] == {"pmid": "12345", "doi": "10.1000/alpha"}
     assert source["csl_json"]["author"] == [{"family": "Lin", "given": "Morgan"}]
     assert source["csl_json"]["DOI"] == "10.1000/alpha"

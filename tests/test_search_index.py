@@ -154,7 +154,7 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
         identifiers={"doi": "10.1000/alpha"},
         citekey="alpha2026",
         csl_json={"id": "alpha2026", "title": "Alpha Work", "DOI": "10.1000/alpha"},
-        metadata_status="verified",
+        provider_coverage="full",
         text_status="full-text",
         check_status="checked",
         content_path=content.relative_to(vault).as_posix(),

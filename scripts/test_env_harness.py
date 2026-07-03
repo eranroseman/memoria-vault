@@ -210,7 +210,7 @@ def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
                 "source_id": args["citekey"],
                 "citekey": args["citekey"],
                 "item_type": "article",
-                "metadata_status": "partial",
+                "provider_coverage": "partial",
             },
             note["body"],
         )

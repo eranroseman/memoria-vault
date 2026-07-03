@@ -357,7 +357,7 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
         description="Source text.",
         citekey="anchor2026",
         csl_json={"id": "anchor2026", "title": "Anchor source"},
-        metadata_status="verified",
+        provider_coverage="full",
         text_status="full-text",
         check_status="checked",
         content_path=content.relative_to(vault).as_posix(),
@@ -444,7 +444,7 @@ def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
             "author": [{"family": "Ada", "given": "River"}],
             "issued": {"date-parts": [[2026]]},
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status="full-text",
         check_status="checked",
     )

@@ -272,7 +272,7 @@ def test_pending_materialization_recovery_fails_uncommitted_file(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    git(vault, "add", "--", ".memoria/schemas", "capabilities")
+    git(vault, "add", "--", ".memoria/schemas")
     git(vault, "commit", "-m", "seed workspace")
     target = "knowledge/notes/uncommitted.md"
     stage_concept(vault, target, note_text("Uncommitted"), machine="writer")
@@ -347,7 +347,7 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
             "DOI": "10.1000/alpha",
         },
         citekey="alpha2026",
-        metadata_status="verified",
+        provider_coverage="full",
         machine="capture",
     )
 

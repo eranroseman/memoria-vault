@@ -100,7 +100,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/seed",
         },
-        metadata_status="verified",
+        provider_coverage="full",
         citekey="seed2026",
         machine="seeded-capture",
     )
@@ -135,7 +135,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/fresh",
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         citekey="fresh2026",
         machine="seeded-capture",
     )
@@ -247,7 +247,7 @@ def _checked_stale_source(vault: Path) -> dict[str, Any]:
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/stale",
         },
-        metadata_status="verified",
+        provider_coverage="full",
         citekey="stale2026",
         machine="seeded-source",
     )
@@ -272,7 +272,7 @@ def _checked_poisoned_source(vault: Path) -> dict[str, Any]:
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/poisoned",
         },
-        metadata_status="verified",
+        provider_coverage="full",
         citekey="poisoned2026",
         machine="seeded-source",
     )
@@ -412,7 +412,7 @@ def _checked_conflicting_doi_source(vault: Path) -> dict[str, Any]:
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/conflict-b",
         },
-        metadata_status="verified",
+        provider_coverage="full",
         citekey="conflict2026",
         machine="seeded-source",
     )
@@ -476,7 +476,7 @@ def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
             "DOI": "10.1000/ambiguous-entity",
             "memoria": {"links": {"authors": [entity]}},
         },
-        metadata_status="verified",
+        provider_coverage="full",
         citekey="ambiguousEntity2026",
         machine="seeded-source",
     )

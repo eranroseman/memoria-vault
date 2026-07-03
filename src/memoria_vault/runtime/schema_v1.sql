@@ -102,8 +102,7 @@ CREATE TABLE IF NOT EXISTS catalog_sources (
     identifiers_json TEXT NOT NULL DEFAULT '{}',
     citekey TEXT NOT NULL DEFAULT '',
     csl_json TEXT NOT NULL DEFAULT '{}',
-    metadata_status TEXT NOT NULL
-        CHECK (metadata_status IN ('verified', 'partial', 'unverified', 'not-indexed')),
+    provider_coverage TEXT NOT NULL CHECK (provider_coverage IN ('full', 'partial', 'degraded')),
     text_status TEXT NOT NULL
         CHECK (text_status IN ('full-text', 'abstract-only', 'metadata-only')),
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
