@@ -837,6 +837,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             machine=machine,
         )
         return {"commit": commit, "check": event}
+    if operation_id == "surface-tensions":
+        from memoria_vault.runtime.integrity import surface_tensions
+
+        return surface_tensions(
+            vault,
+            max_pairs=int(payload.get("max_pairs") or 20),
+            machine=machine,
+            commit=True,
+        )
     if operation_id in {
         "analyze-claims",
         "check-falsifiability",
@@ -844,7 +853,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         "extract-claim-stubs",
         "red-team-argument",
         "summarize-for-recall",
-        "surface-tensions",
     }:
         from memoria_vault.runtime.operations import run_prompt_operation
 
