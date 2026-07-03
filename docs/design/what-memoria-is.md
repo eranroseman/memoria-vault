@@ -71,7 +71,7 @@ Memoria addresses both: the agent handles the maintenance discipline that humans
 ## Autonomy boundary
 
 Memoria targets multi-step execution under human-set strategy and review. The
-agent can do unattended work inside a card; the PI still decides what becomes
+agent can do unattended work inside a request; the PI still decides what becomes
 canonical. The full autonomy argument lives in
 [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md).
 

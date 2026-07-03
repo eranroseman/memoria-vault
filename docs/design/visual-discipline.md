@@ -32,7 +32,9 @@ surface. The current answer lives in the rail's **Now**: the Inbox action count
 and Maintenance drift band stay visible without adding a separate always-on
 indicator.
 
-One Obsidian window per vault is a technical constraint as much as a discipline. The agent layer assumes a single active vault; multiple windows updating the same card through the policy gate produce race conditions in the audit log and board state.
+One editor window per workspace is a technical constraint as much as a discipline.
+The engine assumes one active workspace view; multiple editors updating the same
+attention item or Concept can produce audit and request-state races.
 
 ---
 

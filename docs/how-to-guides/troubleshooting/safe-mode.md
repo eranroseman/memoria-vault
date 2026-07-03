@@ -29,7 +29,7 @@ memoria request list --workspace <workspace>
 memoria request show --workspace <workspace> <request-id>
 ```
 
-Do not bulk-accept proposed notes or attention cards. Anything `proposed` still
+Do not bulk-accept proposed notes or attention items. Anything `proposed` still
 requires human review.
 
 ## Export A Draft

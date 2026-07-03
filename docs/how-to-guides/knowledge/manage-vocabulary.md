@@ -9,7 +9,9 @@ nav_order: 6
 
 Keep the `research_area`, `methodology`, and `topics` values consistent across your corpus — so Dataview and Bases views stay reliable and classification stays navigable as the vault grows. The controlled lists live in **`system/vocabulary.md`**, which ships with the vault and is checked by the schema/linter surfaces once you've made it yours.
 
-These vocabularies are deliberately **open** — yours to define. The fixed Memoria vocabularies (lifecycle, maturity, certainty, card types) are schema-enforced and not yours to extend.
+These vocabularies are deliberately **open** — yours to define. The fixed
+Memoria vocabularies, such as lifecycle, maturity, certainty, and attention
+routes, are schema-enforced and not yours to extend.
 
 ## When to do each task
 
@@ -50,7 +52,9 @@ Note the consumers: the ingest operation's automated classify stage rolls OpenAl
 2. Add it to `system/vocabulary.md`, then use it in the note you're classifying.
 3. If the list is already at ~30, ask whether an existing term covers the ground before adding.
 
-`memoria project gaps` can surface repeated off-vocabulary Work phrases as Inbox tag candidates; review those cards, then add only the terms you want to keep.
+`memoria project gaps` can surface repeated off-vocabulary Work phrases as Inbox
+tag candidates; review those attention items, then add only the terms you want
+to keep.
 
 ## Step 3 — Rename a term safely
 

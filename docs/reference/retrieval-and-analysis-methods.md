@@ -48,7 +48,7 @@ baseline.
 Project gap analysis also reads SQLite catalog source terms, checked project
 scope/facet terms, checked linked thesis terms, and first-order reference/related
 graph edges. When a checked source creates a source-only gap, the gap keeps that
-source id and can emit unchecked candidate Work attention cards from its graph
+source id and can emit unchecked candidate Work attention items from its graph
 edges without requiring qmd to rediscover the source.
 
 **Cost:** local index rebuild plus qmd query time. Determinism: total for the Python BM25

@@ -13,15 +13,15 @@ Views that surface drift, loose ends, board state, and the weekly maintenance ag
 | View | Question it answers |
 |---|---|
 | Maintenance collection | Which weekly structural-debt views should I review together? |
-| Drift watch | What drift have the Linter and the sweeps detected — which `flag`/`alert` cards are open? |
+| Drift watch | What drift have the Linter and the sweeps detected — which `flag`/`alert` attention items are open? |
 | Loose ends | Which `notice`-loudness `flag` findings are batched for the weekly pass? |
 | Board state | What work is in flight below the action queue? |
 | Weekly review | What Friday sequence keeps Inbox, Maintenance, and Knowledge from aging? |
 
 ## Drift watch
 
-Drift watch is the structural view over open `flag` and `alert` cards produced by
-the Linter and verification sweeps. It sorts loudest-first and feeds the rail
+Drift watch is the structural view over open `flag` and `alert` attention items
+produced by the Linter and verification sweeps. It sorts loudest-first and feeds the rail
 health band.
 
 It is not the audit log or eval trend. Those are operational views; Drift watch
@@ -29,9 +29,9 @@ is the structural layer over detectable integrity findings.
 
 ## Loose ends
 
-Loose ends is the weekly batch for `notice`-loudness `flag` cards. Louder findings
-belong higher in Drift watch; Notice findings wait here so daily work stays quiet
-without losing the debt.
+Loose ends is the weekly batch for `notice`-loudness `flag` attention items.
+Louder findings belong higher in Drift watch; Notice findings wait here so daily
+work stays quiet without losing the debt.
 
 ## Board state
 

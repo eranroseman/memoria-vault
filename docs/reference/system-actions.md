@@ -117,7 +117,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked packaged prompt operations, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
-| Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
+| Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block attention items to delegation and policy gates. |
 
 ## CLI requests
 
