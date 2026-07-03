@@ -12,6 +12,7 @@ from memoria_vault.cli import main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.http_transport import _dispatch, is_authorized
 from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.policy.audit import sha256_file
 
 
 @pytest.fixture
@@ -108,6 +109,30 @@ def test_http_transport_reads_attention_view_spec(workspace: Path) -> None:
     assert block["refs"] == ["inbox/alpha.md"]
 
 
+def test_http_transport_passes_read_scope_to_engine_reads(workspace: Path) -> None:
+    _write_note(workspace, "knowledge/notes/alpha.md", "Alpha")
+    _write_note(workspace, "knowledge/notes/beta.md", "Beta")
+
+    response, http_status = _dispatch(
+        workspace, "GET", "/concepts?read_scope=knowledge/notes/alpha.md", dict
+    )
+
+    assert http_status == HTTPStatus.OK
+    assert [row["path"] for row in response["concepts"]] == ["knowledge/notes/alpha.md"]
+    with pytest.raises(FileNotFoundError, match="target not found"):
+        _dispatch(
+            workspace,
+            "GET",
+            "/concept?target=knowledge/notes/beta.md&read_scope=knowledge/notes/alpha.md",
+            dict,
+        )
+
+
+def test_http_transport_rejects_root_read_scope(workspace: Path) -> None:
+    with pytest.raises(ValueError, match="http read_scope must be non-root"):
+        _dispatch(workspace, "GET", "/concepts?read_scope=/", dict)
+
+
 def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> None:
     response, http_status = _dispatch(
         workspace,
@@ -183,3 +208,16 @@ def _write_attention(workspace: Path, name: str) -> None:
         ),
         encoding="utf-8",
     )
+
+
+def _write_note(workspace: Path, rel: str, title: str) -> None:
+    path = workspace / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\nBody.\n")
+    state.record_observed_file_edit(
+        workspace,
+        output_id=rel,
+        concept_type="note",
+        output_sha256=sha256_file(path),
+    )
+    state.set_concept_verdict(workspace, rel, "checked")

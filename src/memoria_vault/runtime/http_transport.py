@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from memoria_vault.engine import api as engine_api
+from memoria_vault.runtime.policy.paths import normalize_path
 
 MAX_BODY_BYTES = 1_000_000
 
@@ -89,29 +90,37 @@ def _dispatch(
 
 
 def _read(workspace: Path, path: str, query: dict[str, list[str]]) -> dict[str, Any]:
+    read_scope = _read_scope(query)
     if path == "/status":
         return {"ok": True, **engine_api.read_status(workspace)}
     if path == "/operations":
         return engine_api.read_operations(workspace)
     if path == "/requests":
-        return engine_api.read_requests(workspace, status=_one(query, "status"))
+        return engine_api.read_requests(
+            workspace, status=_one(query, "status"), read_scope=read_scope
+        )
     if path == "/request":
-        return engine_api.read_request(workspace, _required(query, "id"))
+        return engine_api.read_request(workspace, _required(query, "id"), read_scope=read_scope)
     if path == "/attention":
         return engine_api.read_attention(
             workspace,
             status=_one(query, "status"),
             kind=_one(query, "kind"),
             worklist=_one(query, "worklist").lower() == "true",
+            read_scope=read_scope,
         )
     if path == "/attention/card":
-        return engine_api.read_attention_card(workspace, _required(query, "path"))
+        return engine_api.read_attention_card(
+            workspace, _required(query, "path"), read_scope=read_scope
+        )
     if path == "/concepts":
-        return engine_api.read_concepts(workspace, concept_type=_one(query, "type"))
+        return engine_api.read_concepts(
+            workspace, concept_type=_one(query, "type"), read_scope=read_scope
+        )
     if path == "/concept":
-        return engine_api.read_concept(workspace, _required(query, "target"))
+        return engine_api.read_concept(workspace, _required(query, "target"), read_scope=read_scope)
     if path == "/work":
-        return engine_api.read_work(workspace, _required(query, "id"))
+        return engine_api.read_work(workspace, _required(query, "id"), read_scope=read_scope)
     return {"ok": False, "error": "not found"}
 
 
@@ -145,3 +154,17 @@ def _required(query: dict[str, list[str]], key: str) -> str:
     if not value:
         raise ValueError(f"{key} is required")
     return value
+
+
+def _read_scope(query: dict[str, list[str]]) -> list[str] | None:
+    values = [*query.get("read_scope", []), *query.get("scope", [])]
+    scope: list[str] = []
+    for raw in values:
+        for item in str(raw).split(","):
+            if not item.strip():
+                continue
+            normalized = normalize_path(item)
+            if not normalized:
+                raise ValueError("http read_scope must be non-root")
+            scope.append(normalized)
+    return scope or None
