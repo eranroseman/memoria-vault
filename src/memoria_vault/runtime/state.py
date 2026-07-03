@@ -15,6 +15,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
+from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 SCHEMA_VERSION = 2
@@ -33,6 +34,7 @@ def connect(vault: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = FULL")
     _init(conn)
     return conn
 
@@ -164,6 +166,42 @@ def set_request_running(vault: Path, request_id: str, job: dict[str, Any]) -> No
 
 def finish_request(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:
     _set_request_state(vault, request_id, status, job)
+
+
+def recover_running_requests(vault: Path) -> list[str]:
+    recovered: list[str] = []
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT request_id, job_json
+            FROM operation_requests
+            WHERE status = 'running'
+            ORDER BY created_at, request_id
+            """
+        ).fetchall()
+        now = now_iso()
+        for row in rows:
+            job = json.loads(row["job_json"])
+            job.update(
+                {
+                    "status": "failed",
+                    "failed_at": now,
+                    "error": "interrupted during workspace recovery; retry required",
+                }
+            )
+            conn.execute(
+                """
+                UPDATE operation_requests
+                SET status = 'failed',
+                    completed_at = ?,
+                    job_json = ?,
+                    error = ?
+                WHERE request_id = ?
+                """,
+                (now, _json(job), job["error"], row["request_id"]),
+            )
+            recovered.append(str(row["request_id"]))
+    return recovered
 
 
 def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | None = None) -> None:
@@ -511,7 +549,19 @@ def recover_pending_materializations(vault: Path) -> list[str]:
         for row in rows:
             target = Path(vault) / str(row["target_path"])
             expected = str(row["output_sha256"])
+            commit = _committed_materialization_commit(vault, str(row["target_path"]), expected)
             if target.is_file() and sha256_file(target) == expected:
+                if not commit:
+                    conn.execute(
+                        """
+                        UPDATE outputs
+                        SET materialization_status = 'failed',
+                            failure_reason = 'materialization target is not committed'
+                        WHERE output_id = ?
+                        """,
+                        (row["output_id"],),
+                    )
+                    continue
                 conn.execute(
                     """
                     UPDATE outputs
@@ -520,14 +570,7 @@ def recover_pending_materializations(vault: Path) -> list[str]:
                         failure_reason = NULL
                     WHERE output_id = ?
                     """,
-                    (
-                        _committed_materialization_commit(
-                            vault,
-                            str(row["target_path"]),
-                            expected,
-                        ),
-                        row["output_id"],
-                    ),
+                    (commit, row["output_id"]),
                 )
                 continue
             payload = row["payload_text"]
@@ -553,11 +596,27 @@ def recover_pending_materializations(vault: Path) -> list[str]:
                     (row["output_id"],),
                 )
                 continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(payload, encoding="utf-8")
+            if not commit:
+                conn.execute(
+                    """
+                    UPDATE outputs
+                    SET materialization_status = 'failed',
+                        failure_reason = 'materialization target is not committed'
+                    WHERE output_id = ?
+                    """,
+                    (row["output_id"],),
+                )
+                continue
+            write_text_durable(target, payload, create_parent=True)
             conn.execute(
-                "UPDATE outputs SET materialization_status = 'materialized' WHERE output_id = ?",
-                (row["output_id"],),
+                """
+                UPDATE outputs
+                SET materialization_status = 'materialized',
+                    materialized_commit = ?,
+                    failure_reason = NULL
+                WHERE output_id = ?
+                """,
+                (commit, row["output_id"]),
             )
             restored.append(str(row["target_path"]))
     return restored

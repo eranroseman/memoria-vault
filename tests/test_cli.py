@@ -1903,6 +1903,36 @@ def test_cli_workspace_recover_fixture_replays_pending_materialization(
     assert consumable["output_id"] == target
 
 
+def test_cli_workspace_recover_fails_running_requests_for_retry(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+    job = enqueue_operation(
+        workspace,
+        "answer-query",
+        payload={"query": "status"},
+        idempotency_key="stuck-request",
+    )
+    state.set_request_running(workspace, "stuck-request", job)
+
+    assert main(["workspace", "recover", "--workspace", str(workspace), "--json"]) == 0
+    recovered = json.loads(capsys.readouterr().out)
+
+    assert recovered["failed_requests"] == ["stuck-request"]
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT status, error FROM operation_requests WHERE request_id = ?",
+            ("stuck-request",),
+        ).fetchone()
+    assert tuple(row) == ("failed", "interrupted during workspace recovery; retry required")
+
+    assert main(["request", "retry", "--workspace", str(workspace), "stuck-request", "--json"]) == 0
+    retried = json.loads(capsys.readouterr().out)
+    assert retried["request"]["status"] == "pending"
+
+
 def test_cli_workspace_check_asserts_no_legacy_work_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

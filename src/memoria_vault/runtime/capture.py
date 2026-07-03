@@ -17,6 +17,7 @@ from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
 )
+from memoria_vault.runtime.vaultio import write_bytes_durable, write_text_durable
 
 
 def source_requires_enrichment(
@@ -539,8 +540,7 @@ def write_references_bib(
     old = output.read_text(encoding="utf-8") if output.exists() else None
     changed = old != text
     if changed:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(text, encoding="utf-8")
+        write_text_durable(output, text, create_parent=True)
     event = None
     commit_id = ""
     if commit:
@@ -596,9 +596,8 @@ def _bibtex_default_source_id(fields: dict[str, str], citekey: str) -> str:
 def _write_immutable(path: Path, data: bytes) -> str:
     if path.exists() and path.read_bytes() != data:
         raise FileExistsError(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_bytes(data)
+        write_bytes_durable(path, data, create_parent=True)
     return sha256_file(path)
 
 

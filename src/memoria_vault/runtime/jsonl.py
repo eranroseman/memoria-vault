@@ -7,6 +7,8 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.vaultio import append_text_durable
+
 
 def iter_jsonl(path: Path) -> Iterator[dict[str, Any]]:
     """Yield JSON objects from ``path``, skipping missing files and bad lines."""
@@ -31,7 +33,5 @@ def append_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
     rows = list(rows)
     if not rows:
         return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as handle:
-        for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+    text = "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
+    append_text_durable(path, text, create_parent=True)

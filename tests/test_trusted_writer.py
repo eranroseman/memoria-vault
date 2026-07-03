@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import state, trusted_writer
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
@@ -115,6 +115,46 @@ def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) ->
     assert event["output_sha256"] == sha256_file(target)
     assert rebuild_trace_state(vault)["knowledge/notes/alpha.md"] == event
     assert quarantine_untraced(vault, ["knowledge/notes/alpha.md"], machine="test-machine") == []
+
+
+def test_promote_checked_records_payload_before_bundle_file_write(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    vault = workspace(tmp_path)
+    target = "knowledge/notes/crash.md"
+    stage_concept(vault, target, note_text(title="Crash"), machine="test-machine")
+
+    def crash_write(*_args, **_kwargs) -> None:
+        raise RuntimeError("simulated materialization crash")
+
+    monkeypatch.setattr(trusted_writer, "write_frontmatter_doc", crash_write)
+
+    with pytest.raises(RuntimeError, match="simulated materialization crash"):
+        promote_checked(vault, target, machine="test-machine")
+
+    assert not (vault / target).exists()
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT o.check_status, o.materialization_status, p.payload_text
+            FROM outputs o
+            JOIN materialization_payloads p ON p.output_id = o.output_id
+            WHERE o.output_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    assert row["check_status"] == "checked"
+    assert row["materialization_status"] == "pending"
+    assert "Crash" in row["payload_text"]
+    assert state.recover_pending_materializations(vault) == []
+    assert not (vault / target).exists()
+    with state.connect(vault) as conn:
+        failed = conn.execute(
+            "SELECT materialization_status, failure_reason FROM outputs WHERE output_id = ?",
+            (target,),
+        ).fetchone()
+    assert tuple(failed) == ("failed", "materialization target is not committed")
 
 
 def test_promote_checked_rejects_unsupported_promotion_check(tmp_path: Path) -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import platform
 import shutil
 import subprocess
@@ -19,6 +20,7 @@ from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     RETIRED_FRONTMATTER_FIELDS,
     apply_universal_concept_frontmatter,
+    frontmatter_doc,
     is_ulid,
     iter_markdown,
     retired_frontmatter_field_errors,
@@ -580,7 +582,8 @@ def _write_checked(
         for field in RETIRED_FRONTMATTER_FIELDS:
             frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
-    write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
+    payload_text = frontmatter_doc(frontmatter, body)
+    output_sha256 = "sha256:" + hashlib.sha256(payload_text.encode("utf-8")).hexdigest()
     events = []
     for check in promotion_checks:
         event = {
@@ -589,16 +592,12 @@ def _write_checked(
             "check": check,
             "status": "passed",
             "target_id": target,
-            "output_sha256": sha256_file(output_path),
+            "output_sha256": output_sha256,
         }
         _append_event(vault, machine, event)
         events.append(event)
-    state.mark_checked(
-        vault,
-        target,
-        sha256_file(output_path),
-        output_path.read_text(encoding="utf-8"),
-    )
+    state.mark_checked(vault, target, output_sha256, payload_text)
+    write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     if frontmatter.get("type") == "source":
         state.upsert_catalog_source(vault, target, frontmatter)
     return events[0]

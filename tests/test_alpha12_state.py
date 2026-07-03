@@ -47,6 +47,7 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
         assert conn.execute("PRAGMA journal_mode").fetchone()[0].lower() == "wal"
+        assert conn.execute("PRAGMA synchronous").fetchone()[0] == 2
         assert conn.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'operation_requests'"
         ).fetchone()
@@ -225,6 +226,9 @@ def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Pat
     vault = workspace(tmp_path)
     stage_concept(vault, "knowledge/notes/replay.md", note_text("Replay"), machine="writer")
     promote_checked(vault, "knowledge/notes/replay.md", machine="writer")
+    git(vault, "add", "--", "knowledge/notes/replay.md", "journal/writer.jsonl")
+    git(vault, "commit", "-m", "commit replay target")
+    commit = git(vault, "rev-parse", "HEAD")
     (vault / "knowledge/notes/replay.md").unlink()
 
     restored = state.recover_pending_materializations(vault)
@@ -233,11 +237,11 @@ def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Pat
     assert "check_status" not in read_frontmatter(vault / "knowledge/notes/replay.md")
     assert state.concept_check_status(vault, "knowledge/notes/replay.md") == "checked"
     with state.connect(vault) as conn:
-        status = conn.execute(
-            "SELECT materialization_status FROM outputs WHERE output_id = ?",
+        row = conn.execute(
+            "SELECT materialization_status, materialized_commit FROM outputs WHERE output_id = ?",
             ("knowledge/notes/replay.md",),
-        ).fetchone()["materialization_status"]
-    assert status == "materialized"
+        ).fetchone()
+    assert tuple(row) == ("materialized", commit)
 
 
 def test_pending_materialization_recovery_refinalizes_committed_file(tmp_path: Path) -> None:
@@ -261,6 +265,30 @@ def test_pending_materialization_recovery_refinalizes_committed_file(tmp_path: P
             (target,),
         ).fetchone()
     assert tuple(row) == ("materialized", commit, None)
+
+
+def test_pending_materialization_recovery_fails_uncommitted_file(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    git(vault, "add", "--", ".memoria/schemas", "capabilities")
+    git(vault, "commit", "-m", "seed workspace")
+    target = "knowledge/notes/uncommitted.md"
+    stage_concept(vault, target, note_text("Uncommitted"), machine="writer")
+    promote_checked(vault, target, machine="writer")
+
+    assert state.recover_pending_materializations(vault) == []
+
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT materialization_status, materialized_commit, failure_reason
+            FROM outputs
+            WHERE output_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    assert tuple(row) == ("failed", "", "materialization target is not committed")
 
 
 def test_hash_only_pending_materialization_fails_closed(tmp_path: Path) -> None:
