@@ -812,8 +812,50 @@ def test_worker_runs_surface_tensions_tier1_operation_jobs(tmp_path: Path) -> No
     assert done is not None
     assert done["status"] == "done"
     assert done["degraded"] is False
+    assert done["tier2_enabled"] is True
+    assert done["tier2_evaluated_count"] == 0
     assert done["candidate_count"] == 1
     assert done["candidates"][0]["verdict"] == "REFUTED"
+    assert done["candidates"][0]["tier"] == "tier1"
+    assert read_frontmatter(vault / "knowledge/notes/recall-up.md")["links"] == {}
+
+
+def test_worker_passes_surface_tensions_mode_to_tier2_runner(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    notes = {
+        "knowledge/notes/recall-up.md": "The field trial improved recall for novice readers.",
+        "knowledge/notes/recall-down.md": "The field trial reduced recall for novice readers.",
+    }
+    for rel, body in notes.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "---\n"
+            "type: note\n"
+            f"title: {Path(rel).stem}\n"
+            "tags: []\n"
+            "links: {}\n"
+            "---\n"
+            f"# {Path(rel).stem}\n\n{body}\n",
+            encoding="utf-8",
+        )
+        mark_file_status(vault, rel, "note")
+
+    enqueue_operation(
+        vault,
+        "surface-tensions",
+        payload={"mode": "live"},
+        idempotency_key="surface-tensions-live",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["tier2_evaluated_count"] == 1
+    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    model_call = next(event for event in events if event.get("route") == "surface-tensions-tier2")
+    assert model_call["mode"] == "live"
+    assert model_call["provider"] == "gateway"
     assert read_frontmatter(vault / "knowledge/notes/recall-up.md")["links"] == {}
 
 

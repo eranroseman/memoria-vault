@@ -916,6 +916,8 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             max_pairs=int(payload.get("max_pairs") or 20),
             machine=machine,
             commit=True,
+            tier2=_payload_bool(payload, "tier2", True),
+            mode=str(payload.get("mode") or "test"),
         )
     if operation_id in {
         "analyze-claims",
@@ -1322,6 +1324,21 @@ def _first_existing(*paths: Path) -> Path:
         if path.is_file():
             return path
     return paths[-1]
+
+
+def _payload_bool(payload: dict[str, Any], key: str, default: bool) -> bool:
+    value = payload.get(key)
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+    raise ValueError(f"{key} must be a boolean")
 
 
 def _git_path_tracked(vault: Path, relpath: str) -> bool:

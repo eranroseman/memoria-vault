@@ -348,6 +348,45 @@ def run_prompt_operation(
     }
 
 
+def run_operation_model_text(
+    vault: Path,
+    policy: dict[str, Any],
+    runner: dict[str, Any],
+    prompt: str,
+    *,
+    input_text: str,
+    run_id: str,
+    route: str,
+    purpose: str,
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Run a policy-scoped text model call and record the model-call event."""
+    output = _run_prompt_model(policy, runner, prompt, input_text)
+    model_call = append_journal_event(
+        Path(vault),
+        {
+            "event": "model_call",
+            "run_id": run_id,
+            "mode": runner["mode"],
+            "runner": runner["runner"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "model_params": runner["params"],
+            "route": route,
+            "purpose": purpose,
+            "prompt_version": policy["prompt_version"],
+            "prompt_hash": _sha256_text(prompt),
+            "toolset": policy["allowed_tools"],
+            "fallback_used": False,
+            "compression_used": False,
+            "input_hash": _sha256_text(input_text),
+            "output_hash": _sha256_text(output),
+        },
+        machine=machine,
+    )
+    return {"output": output, "model_call": model_call}
+
+
 def compile_source_digest(
     vault: Path,
     source_id: str,
