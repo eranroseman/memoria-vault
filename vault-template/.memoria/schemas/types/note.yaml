@@ -9,7 +9,7 @@ required:
   id: ulid
   title: str
   tags: list
-  links: map
+  links: links
 optional:
   aliases: list
   archived: bool

@@ -100,7 +100,7 @@ def test_alpha15_portable_fields_declared():
         assert required["title"] == "str", name
         assert required["id"] == "ulid", name
         assert required["tags"] == "list", name
-        assert required["links"] == "map", name
+        assert required["links"] == "links", name
         assert optional.get("archived") == "bool", name
         assert optional.get("x") == "map", name
     assert types["work"]["required"]["work_id"] == "str"
@@ -167,6 +167,26 @@ def test_note_links_are_typed_maps():
     }
     assert schema.validate_frontmatter(good, note) == []
     assert any("links" in e for e in schema.validate_frontmatter(dict(good, links=[]), note))
+    assert any(
+        "links.related: unknown relation" in e
+        for e in schema.validate_frontmatter(dict(good, links={"related": ["target"]}), note)
+    )
+    assert any(
+        "links.supports: expected list" in e
+        for e in schema.validate_frontmatter(
+            dict(good, links={"supports": "knowledge/notes/target.md"}), note
+        )
+    )
+    assert any(
+        "expected local Concept target" in e
+        for e in schema.validate_frontmatter(
+            dict(good, links={"supports": ["[[/knowledge/notes/target.md]]"]}), note
+        )
+    )
+    assert any(
+        "target must not escape the workspace" in e
+        for e in schema.validate_frontmatter(dict(good, links={"supports": ["../target"]}), note)
+    )
 
 
 def test_okf_core_empty_workspace_validates(tmp_path):

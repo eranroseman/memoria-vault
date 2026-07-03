@@ -48,7 +48,7 @@ Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub cr
 
 ## Authored links (`links:` map)
 
-Notes carry **authored** `links:` — the PI's thinking ([ADR-52](../adr/52-links-vs-relationships.md)). The `links:` vs `relationships` field contract (which document types carry each, and the authored-vs-given split) is specified in [Frontmatter fields](frontmatter.md). Available on `source`, `claim`, and `hub` notes; agent-proposed candidates are reviewed before they become canonical.
+Knowledge Concepts carry **authored** `links:` — the PI's thinking ([ADR-52](../adr/52-links-vs-relationships.md)). The `links:` vs `relationships` field contract (which document types carry each, and the authored-vs-given split) is specified in [Frontmatter fields](frontmatter.md). Agent-proposed candidates are reviewed before they become canonical.
 
 ```yaml
 links:
@@ -68,7 +68,7 @@ Allowed link types:
 | `contradicts` | This note contradicts the linked note. |
 | `extends` | This note builds on the linked note. |
 
-Catalog entities carry **given** `relationships:` instead, written by the ingest operation (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating this reference and the Linter's `frontmatter-link` detector.
+Catalog entities carry **given** `relationships:` instead, written by the ingest operation (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating the schema source, this reference, and the Linter's `frontmatter-link` detector.
 
 Plain-editor shorthand: an explicit typed body link such as
 `[[supports::knowledge/notes/target.md]]` emits an unchecked Inbox
