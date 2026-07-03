@@ -72,7 +72,6 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
             "---\n"
             "type: note\n"
             "title: Thesis\n"
-            "status: accepted\n"
             "tags: [Memory Consolidation]\n"
             "links: {}\n"
             "---\n"
@@ -219,7 +218,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     )
     note_path = notes["note_paths"][0]
     note_frontmatter = read_frontmatter(vault / note_path)
-    assert note_frontmatter["status"] == "candidate"
+    assert state.note_curation_status(vault, note_path) == "candidate"
     assert note_frontmatter["annotation_ref"] == {
         "source_path": source_ref,
         "page": 1,
