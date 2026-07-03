@@ -93,7 +93,7 @@ ensure_git_available() {
 }
 
 python_install_guidance() {
-  say "Python 3 is required for Memoria's standalone CLI and deterministic tools."
+  say "Python 3.12+ is required for Memoria's standalone CLI and deterministic tools."
   say "Ubuntu/WSL fix:"
   say "    sudo apt-get update && sudo apt-get install -y python3 python3-venv"
   say "Then re-run this installer."
@@ -108,9 +108,13 @@ cleanup() { [ -n "$STAGING_REPO" ] && [ -d "$STAGING_REPO" ] && rm -rf "$STAGING
 trap cleanup EXIT
 
 detect_python() {
-  if have python3; then PYTHON=python3
-  elif have python; then PYTHON=python
+  if have python3 && python_version_ok python3; then PYTHON=python3
+  elif have python && python_version_ok python; then PYTHON=python
   else PYTHON=""; fi
+}
+
+python_version_ok() {
+  "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1
 }
 
 load_install_modules() {
@@ -151,7 +155,7 @@ parse_args() {
 print_plan() {
   hdr "Memoria installer"
   say "This will set up the standalone CLI/runtime workspace:"
-  say "  1. ensure prerequisites (git, Python 3 + venv; pandoc optional for exports)"
+  say "  1. ensure prerequisites (git, Python 3.12+ + venv; pandoc optional for exports)"
   say "  2. fetch the Memoria vault repo"
   say "  3. copy the runtime vault to your chosen folder"
   say "  4. install runtime dependencies + the memoria CLI into .memoria/.venv"
@@ -199,7 +203,7 @@ ensure_prereqs() {
       die "Install$missing and re-run (Memoria needs them)."
     fi
   else
-    die "No apt-get found. This installer supports Ubuntu/Debian (or WSL2). Install$missing manually; if Python is missing, install Python 3.11+ plus venv support first."
+    die "No apt-get found. This installer supports Ubuntu/Debian (or WSL2). Install$missing manually; if Python is missing, install Python 3.12+ plus venv support first."
   fi
   have pandoc || warn "Pandoc not found — DOCX/PDF exports are unavailable until installed."
 }
@@ -298,7 +302,7 @@ install_runtime_deps() {
   fi
   if [ -z "$PYTHON" ]; then
     python_install_guidance
-    die "No Python found. Install python3 (for Ubuntu/WSL: sudo apt-get install -y python3 python3-venv), then re-run the installer."
+    die "No Python 3.12+ found. Install python3 (for Ubuntu/WSL: sudo apt-get install -y python3 python3-venv), then re-run the installer."
   fi
 
   local venv="$VAULT_PATH/.memoria/.venv"

@@ -106,16 +106,16 @@ function Get-CommandPath {
 function Get-PythonForVenv {
     $uv = Get-CommandPath @('uv.exe', 'uv')
     if ($uv) {
-        Invoke-Logged -FilePath $uv -ArgumentList @('python', 'install', '3.11')
-        return [pscustomobject]@{ Exe = $uv; Prefix = @('run', '--python', '3.11', 'python') }
+        Invoke-Logged -FilePath $uv -ArgumentList @('python', 'install', '3.12')
+        return [pscustomobject]@{ Exe = $uv; Prefix = @('run', '--python', '3.12', 'python') }
     }
 
     $python = Get-CommandPath @('py.exe', 'python.exe', 'python3.exe')
     if (-not $python) {
-        Stop-Install 'No uv or Python launcher found. Install uv or Python 3.11+, then retry.'
+        Stop-Install 'No uv or Python launcher found. Install uv or Python 3.12+, then retry.'
     }
     if ((Split-Path -Leaf $python) -ieq 'py.exe') {
-        return [pscustomobject]@{ Exe = $python; Prefix = @('-3.11') }
+        return [pscustomobject]@{ Exe = $python; Prefix = @('-3.12') }
     }
     return [pscustomobject]@{ Exe = $python; Prefix = @() }
 }
@@ -125,6 +125,20 @@ function Invoke-Python {
     $exe = $PythonSpec.Exe
     $prefix = @($PythonSpec.Prefix)
     Invoke-Logged -FilePath $exe -ArgumentList ($prefix + $ArgumentList)
+}
+
+function Assert-PythonRuntime {
+    param([pscustomobject]$PythonSpec)
+    $exe = $PythonSpec.Exe
+    $prefix = @($PythonSpec.Prefix)
+    $code = 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)'
+    $versionArgs = $prefix + @('-c', $code)
+    Write-Line ("  + {0} {1}" -f $exe, ($versionArgs -join ' '))
+    if ($DryRun) { return }
+    & $exe @versionArgs
+    if ($LASTEXITCODE -ne 0) {
+        Stop-Install 'Memoria requires Python 3.12+. Install uv or Python 3.12+, then retry.'
+    }
 }
 
 function Copy-VaultSource {
@@ -178,6 +192,7 @@ function Install-RuntimeDeps {
     }
     if (-not (Test-Path $script:VenvPython)) {
         $py = Get-PythonForVenv
+        Assert-PythonRuntime -PythonSpec $py
         Invoke-Python -PythonSpec $py -ArgumentList @('-m', 'venv', $venv)
     }
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-m', 'pip', 'install', '--upgrade', 'pip')
