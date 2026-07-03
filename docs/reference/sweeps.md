@@ -36,7 +36,8 @@ CLI when the re-ingest path is enabled.
 | Crossref `update-to` delta | Live DOI status check. |
 | Open Retractions | Cross-check source. |
 
-`retraction.py --sweep --vault V` scans the Catalog DOIs and raises Inbox `alert` cards on hits. It never flips a note lifecycle.
+`retraction.py --sweep --vault V` scans the Catalog DOIs and raises Inbox
+`alert` attention items on hits. It never flips a note lifecycle.
 
 ## Related
 
