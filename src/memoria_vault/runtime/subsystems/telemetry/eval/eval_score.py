@@ -75,7 +75,7 @@ _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(\{.*?\})\s*```", re.S)
 # Vault state the metrics check against
 # --------------------------------------------------------------------------- #
 def catalog_citekeys(vault: Path) -> set[str]:
-    """Every citekey/source id the alpha.11 catalog resolves."""
+    """Every citekey/source id the catalog resolves."""
     keys: set[str] = set()
     for p in (vault / "catalog").rglob("*.md"):
         fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))

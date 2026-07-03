@@ -1,4 +1,4 @@
-"""Alpha.12 trusted-writer primitives for staging, promotion, and trace scans."""
+"""Trusted-writer primitives for staging, promotion, and trace scans."""
 
 from __future__ import annotations
 

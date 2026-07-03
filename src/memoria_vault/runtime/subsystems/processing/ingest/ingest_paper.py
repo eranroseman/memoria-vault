@@ -23,7 +23,7 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
-# BibTeX entry-type -> alpha.11 source.item_type. Non-paper works remain source
+# BibTeX entry-type -> source.item_type. Non-paper works remain source
 # Concepts; item_type is the discriminator instead of separate catalog homes.
 TYPE_ROUTING = {
     "article": "article",

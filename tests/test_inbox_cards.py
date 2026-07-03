@@ -1,4 +1,4 @@
-"""Inbox helpers write alpha.11 attention projections, not Concept cards."""
+"""Inbox helpers write attention projections, not Concept cards."""
 
 import re
 

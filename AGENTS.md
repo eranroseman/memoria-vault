@@ -63,7 +63,7 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 | **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
-- Alpha.14's required surface is the `memoria` CLI plus the local workspace
+- Alpha.15's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
 - Test only against disposable workspaces such as `~/Memoria-test`; never use a
@@ -299,7 +299,7 @@ the manual security review and is a first line against the "never commit
 
 ## Platform & runtime facts
 
-- **Standalone baseline:** alpha.14 is a local `memoria` CLI/runtime workspace.
+- **Standalone baseline:** alpha.15 is a local `memoria` CLI/runtime workspace.
   Hermes, Obsidian, Zotero live APIs, installed profiles, and external adapter
   APIs are optional edges, not required product dependencies.
 - **Hermes adapter decisions:** if a future optional Hermes adapter is discussed,

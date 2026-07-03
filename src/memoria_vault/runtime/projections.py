@@ -1,4 +1,4 @@
-"""Generated alpha.12 workspace projection helpers."""
+"""Generated workspace projection helpers."""
 
 from __future__ import annotations
 

@@ -27,8 +27,10 @@ ADR-125 the engine is the product and every surface is a client.
 
 ## Decision
 
-- **The engine's JSON read-API is the sole read path for every Memoria-built
-  surface and every agent** — CLI, MCP, HTTP, plugin, TUI, web. Class split:
+- **The engine's JSON read-API is the sole read path for every implemented
+  Memoria-built surface and every agent**. Alpha.15 implements CLI, scoped MCP,
+  and loopback HTTP; plugin, TUI, and web adapters are future clients of this
+  same contract, not alpha.15 implementation scope. Class split:
   human editors and generic viewers read corpus files directly (the keep-test's
   point — out of contract, never a gate target); Memoria-built surfaces and
   agents are gate-targeted. No surface opens `memoria.sqlite` or reads
@@ -69,7 +71,9 @@ ADR-125 the engine is the product and every surface is a client.
   direct-access surface is the CLI plus the read-API transports above. Future
   UI adapters, including an Obsidian adapter, may expose the same read and
   enqueue actions only as thin clients over this contract; adapter-specific UI
-  needs its own ADR before it is scheduled.
+  needs its own ADR before it is scheduled. No alpha.15 slice adds, updates,
+  packages, or tests Obsidian plugin source, plugin manifests, command-palette
+  commands, Inspector panels, or Obsidian-specific adapter UI.
 - **Views are declarative and generated** (carrying 102/116's contract:
   one view definition, projections disposable and never a second truth):
   the read-API may attach a **declarative, graph-bound, verdict-carrying
