@@ -45,6 +45,17 @@ def test_undeclared_frontmatter_field_blocks(tmp_path):
     assert any("undeclared field: surprise" in error for error in errors)
 
 
+def test_nested_link_shape_blocks(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "knowledge/notes/bad.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks:\n  related:\n    - knowledge/notes/target.md\ntitle: T\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
+    assert any("links.related: unknown relation" in error for error in errors)
+
+
 def test_unknown_type_blocks(tmp_path):
     vault = _vault(tmp_path)
     (vault / "knowledge/notes/odd.md").write_text(

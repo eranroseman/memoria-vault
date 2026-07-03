@@ -33,6 +33,7 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `date` | a YAML date or an ISO-8601 date string |
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
+| `links` | a YAML mapping from `supports`, `contradicts`, or `extends` to target lists |
 | `literal:<value>` | exactly that value; for example, `type: literal:source` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
@@ -51,7 +52,7 @@ required:
   id: ulid
   title: str
   tags: list
-  links: map
+  links: links
 optional:
   aliases: list
   archived: bool
@@ -111,9 +112,9 @@ frontmatter verdict fields so a forged file field cannot grant a checked verdict
 ## Links and resources
 
 Concepts use `resource` for the backing source pointer when one exists. `links`
-is the required map-shaped relation field for knowledge Concepts. Catalog records
-may define their own optional link shape. The generated field inventory above
-owns the exact current contract.
+is the required relation field for knowledge Concepts. It is a map from
+`supports`, `contradicts`, or `extends` to lists of local Concept targets. The
+generated field inventory above owns the exact current contract.
 
 ## Other universal fields
 
@@ -122,7 +123,7 @@ owns the exact current contract.
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
 | `id` | `str` | Required ULID for knowledge Concepts. |
 | `title` | `str` | Human-readable Concept title. |
-| `links` | `map` | Required for knowledge Concepts, even when empty. |
+| `links` | `links` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
 | `resource` | `str` | Optional backing-resource pointer. |
 | `tags` | `list` | Optional local classification where the type supports it. |

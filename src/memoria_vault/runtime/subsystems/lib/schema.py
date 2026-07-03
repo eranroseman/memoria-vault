@@ -8,7 +8,7 @@ This module is the one reader every consumer shares — the Linter, the
 pre-commit hook, the installer-skeleton test, and the template/Bases tests —
 so a schema change is a one-file edit, never a hunt across hardcoded lists.
 
-Field kinds: str | int | bool | date | list | map | ulid | literal:<value> | enum:<name>.
+Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
 `required_any` lists field names of which at least one must be present.
 """
 
@@ -38,6 +38,7 @@ VOCABULARY_FIELDS = {
     "source": {"research_area": "research_area", "methodology": "methodology"},
     "note": {"topics": "topics"},
 }
+LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
 
 def _schemas_dir(schemas_dir: Path | None = None) -> Path:
@@ -155,9 +156,37 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
         return None if isinstance(value, list) else f"expected list, got {type(value).__name__}"
     if kind == "map":
         return None if isinstance(value, dict) else f"expected map, got {type(value).__name__}"
+    if kind == "links":
+        return _check_links(value)
     if kind == "ulid":
         return None if isinstance(value, str) and is_ulid(value) else "expected ULID"
     return f"unknown kind {kind!r}"
+
+
+def _check_links(value) -> str | None:
+    if not isinstance(value, dict):
+        return f"expected links map, got {type(value).__name__}"
+    for relation, targets in value.items():
+        if not isinstance(relation, str) or not relation.strip():
+            return "links relation keys must be non-empty strings"
+        if relation not in LINK_RELATIONS:
+            return f"links.{relation}: unknown relation; expected {sorted(LINK_RELATIONS)}"
+        if not isinstance(targets, list):
+            return f"links.{relation}: expected list, got {type(targets).__name__}"
+        for index, target in enumerate(targets):
+            if not isinstance(target, str) or not target.strip():
+                return f"links.{relation}[{index}]: expected non-empty target string"
+            raw = target.strip()
+            if raw.startswith("[[") and raw.endswith("]]"):
+                raw = raw[2:-2].split("|", 1)[0].split("#", 1)[0].strip()
+            if not raw:
+                return f"links.{relation}[{index}]: expected non-empty target string"
+            if "://" in raw or raw.startswith(("mailto:", "/")):
+                return f"links.{relation}[{index}]: expected local Concept target"
+            parts = [part for part in raw.replace("\\", "/").split("/") if part and part != "."]
+            if ".." in parts:
+                return f"links.{relation}[{index}]: target must not escape the workspace"
+    return None
 
 
 def validate_frontmatter(
