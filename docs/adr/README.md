@@ -88,7 +88,7 @@ status.
 | [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
 | [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | proposed |
 | [93](93-keyphrase-extraction-tag-candidates.md) | Keyphrase extraction for tag candidates | accepted |
-| [94](94-record-linkage-entity-deduplication.md) | Record linkage for entity deduplication | proposed |
+| [94](94-record-linkage-entity-deduplication.md) | Record linkage for entity deduplication | accepted |
 | [95](95-nightly-proactive-discovery-loop.md) | Nightly proactive discovery loop | rejected |
 | [96](96-code-lane-keep-revert-experiment-loop.md) | Code-lane keep/revert experiment loop | proposed |
 | [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | rejected |

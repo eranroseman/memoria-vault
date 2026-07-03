@@ -764,6 +764,93 @@ def test_source_metadata_check_routes_duplicate_entity_external_ids_to_attention
     assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
 
 
+def test_source_metadata_check_routes_duplicate_entity_name_blocks_to_attention(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    for source_id, title, doi, author in (
+        ("source-one", "First Authorship Fixture", "10.1000/entity.one", "One"),
+        ("source-two", "Second Authorship Fixture", "10.1000/entity.two", "Two"),
+    ):
+        state.upsert_catalog_record(
+            vault,
+            source_id=source_id,
+            title=title,
+            description="A fixture source.",
+            resource=f"https://doi.org/{doi}",
+            identifiers={"doi": doi},
+            citekey=f"{source_id}2026",
+            csl_json={
+                "id": f"{source_id}2026",
+                "type": "article-journal",
+                "title": title,
+                "DOI": doi,
+                "issued": {"date-parts": [[2026]]},
+                "author": [{"family": author, "given": "Ada"}],
+            },
+            provider_coverage="full",
+            text_status="full-text",
+            check_status="checked",
+        )
+    state.replace_work_graph_edges(
+        vault,
+        "source-one",
+        [
+            {
+                "relation_type": "authorship",
+                "target_id": "https://openalex.org/A1",
+                "target_title": "Ada River",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "source-two",
+        [
+            {
+                "relation_type": "authorship",
+                "target_id": "https://openalex.org/A2",
+                "target_title": "Ada River",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+
+    result = check_source_metadata(
+        vault,
+        shadow=False,
+        machine="integrity-machine",
+        commit=True,
+    )
+
+    assert [
+        (finding["check"], finding["target_id"], finding["reason"], finding["route"])
+        for finding in result["findings"]
+    ] == [
+        (
+            "record-linkage",
+            "catalog/entities/person-https___openalex.org_A1.md",
+            "possible duplicate person name Ada River also used by "
+            "https://openalex.org/A2 (name block)",
+            "ask",
+        ),
+        (
+            "record-linkage",
+            "catalog/entities/person-https___openalex.org_A2.md",
+            "possible duplicate person name Ada River also used by "
+            "https://openalex.org/A1 (name block)",
+            "ask",
+        ),
+    ]
+    assert result["attention_path"] == "inbox/work-prompt-record-linkage-entity-external-ids.md"
+    assert result["attention_paths"] == [result["attention_path"]]
+    card = read_frontmatter(vault / result["attention_path"])
+    assert card["target"] == "catalog/entities"
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
+
+
 def test_db_capture_does_not_create_legacy_entity_identity_findings(
     tmp_path: Path,
 ) -> None:
