@@ -23,7 +23,7 @@ terminal operation you run yourself — there is no export lane or palette comma
   `memoria project frame-paper --frame-file <json>` and the project checked
   afterward
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
-  of the alpha.11 shipped path
+  of the alpha.15 shipped path
 - `references.bib` current (generated from checked SQLite catalog rows)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 

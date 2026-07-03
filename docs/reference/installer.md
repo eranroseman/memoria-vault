@@ -42,14 +42,14 @@ and stages a golden copy of system files.
 
 ## Scheduled Work
 
-The alpha.14 installer does not register a host scheduler. Scheduled work is run
+The alpha.15 installer does not register a host scheduler. Scheduled work is run
 through ordinary CLI commands by whatever local scheduler the operator chooses.
 The shipped `.memoria/scripts/` wrappers remain template inputs for that later
 wiring; they are not installed as Hermes cron jobs.
 
-## The Crons It Wires
+## Host Scheduler Wiring
 
-None. Alpha.14 does not wire Hermes cron jobs or any other host scheduler during
+None. Alpha.15 does not wire Hermes cron jobs or any other host scheduler during
 bootstrap.
 
 ## User-Supplied Values

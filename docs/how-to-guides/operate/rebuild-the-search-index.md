@@ -8,7 +8,7 @@ nav_order: 5
 
 # Rebuild the search index
 
-Rebuild the checked-only qmd input tree and refresh qmd's local index. Alpha.14
+Rebuild the checked-only qmd input tree and refresh qmd's local index. Alpha.15
 uses qmd as the required local retrieval engine, with deterministic BM25 fallback
 for degraded local runs ([External integrations](../../reference/integrations.md)).
 

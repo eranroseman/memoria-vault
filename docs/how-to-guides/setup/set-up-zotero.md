@@ -62,14 +62,14 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 
 ## Export an item snapshot
 
-Alpha.14 capture reads portable files. Export a Zotero item to generic CSL JSON
+Alpha.15 capture reads portable files. Export a Zotero item to generic CSL JSON
 or copy BibTeX for the item, then import it with `memoria work import --format
 csl` or `memoria work import --format bibtex`. Live Zotero Local API capture is
 not part of the standalone runtime.
 
 ## MarkDB-Connect
 
-Do not configure MarkDB-Connect for alpha.11. It assumes flat citekey-named note
+Do not configure MarkDB-Connect for alpha.15. It assumes flat citekey-named note
 files, while Memoria source Concepts live under
 `catalog/sources/<source_id>/source.md` and are worker-owned.
 
@@ -77,9 +77,8 @@ files, while Memoria source Concepts live under
 
 DOI enrichment calls Crossref, OpenAlex, and Unpaywall. OpenAlex requires
 `OPENALEX_API_KEY`; Crossref and Unpaywall use the contact email from
-`NCBI_EMAIL`. Configure them in the workspace runtime environment or, when using
-the Hermes adapter, in [Set up Hermes](set-up-hermes.md). Semantic Scholar and
-PubMed enrichment are deferred beyond the DOI MVP.
+`NCBI_EMAIL`. Configure them in the workspace runtime environment. Semantic
+Scholar and PubMed enrichment are deferred beyond the DOI MVP.
 
 For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 

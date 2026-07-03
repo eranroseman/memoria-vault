@@ -8,7 +8,7 @@ permalink: /how-to-guides/project/
 
 # Project
 
-Steer an inquiry to output. Alpha.11 project Concepts live under
+Steer an inquiry to output. Alpha.15 project Concepts live under
 `knowledge/projects/`; project analysis and Canvas rendering run through the
 `memoria project` CLI commands.
 

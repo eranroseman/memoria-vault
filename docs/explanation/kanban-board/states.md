@@ -10,7 +10,7 @@ nav_order: 1
 This page explains why the control-plane state machine is shaped the way it is:
 why execution state stays separate from PI attention, and why rejected work
 creates a new request instead of rewriting the old one. For the current command
-lookup and the no-Hermes-board alpha.14 contract, see the
+lookup and the no-Hermes-board alpha.15 contract, see the
 [Kanban board reference](../../reference/kanban-board.md).
 
 ---

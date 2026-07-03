@@ -321,7 +321,7 @@ generated field inventory above owns the exact current contract.
 | Where | What |
 | --- | --- |
 | Pre-commit hook | Every staged `.md` Concept must pass its type schema. |
-| Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
+| Scheduled linter check | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
 | Exemptions | Most `system/` infrastructure and vault-root navigation pages are untyped and exempt. |
 
 ## Related
@@ -338,7 +338,7 @@ def render_inbox_cards() -> str:
     lines = [
         f"Generated from `{TYPES.relative_to(ROOT)}`.",
         "",
-        "Alpha.11 has no durable Inbox card Concept types. Attention and action state are",
+        "Alpha.15 has no durable Inbox card Concept types. Attention and action state are",
         "generated operational surfaces, not a separate checked Concept family.",
     ]
     return generated_block(lines)
@@ -353,7 +353,7 @@ grand_parent: Reference
 ---""",
         f"""# Inbox card fields
 
-Alpha.11 removes durable Inbox card schemas from the vault skeleton. The source
+Alpha.15 removes durable Inbox card schemas from the vault skeleton. The source
 of truth remains `vault-template/.memoria/schemas/types/`; this page is kept as a
 stable reference target and now records that no Inbox card Concept family ships.
 
@@ -448,7 +448,7 @@ files or this generator, not this page.
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
 | Scheduled-task wrappers | `vault-template/.memoria/scripts/*.sh` | workspace source for operator-managed scheduled tasks | Memoria | Edit source | shellcheck |
-| Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.14 baseline | adapter tests |
+| Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.15 baseline | adapter tests |
 
 {render_configuration().rstrip()}
 

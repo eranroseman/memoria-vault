@@ -7,7 +7,7 @@ nav_order: 3
 
 # Agent Client pane
 
-Alpha.14 does not ship an Agent Client/Hermes profile chat pane. Use the
+Alpha.15 does not ship an Agent Client/Hermes profile chat pane. Use the
 standalone CLI for the supported conversational query path:
 
 ```bash

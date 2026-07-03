@@ -7,8 +7,11 @@ nav_order: 5
 
 # Obsidian and Zotero
 
-Obsidian plugin settings, workspace files, callouts, and Zotero integration
-surfaces.
+Optional editor and reference-manager boundaries. Alpha.15 runs as a standalone
+CLI/engine; Obsidian and Zotero can supply human ergonomics or portable input
+files, but neither is a required authority.
 
-Start with [Obsidian plugins](obsidian-plugins.md) for the plugin roster and
-[Obsidian plugin settings](obsidian-plugin-settings.md) for load-bearing values.
+Start with [Obsidian plugins](obsidian-plugins.md) for the no-plugin baseline,
+[Zotero plugins](zotero-plugins.md) for optional reference-manager add-ons, and
+[External integrations](integrations.md) for the current import/enrichment
+contract.

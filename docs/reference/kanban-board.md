@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Kanban board reference
 
-Alpha.14 does not use a Hermes-native Kanban board as the core control plane.
+Alpha.15 does not use a Hermes-native Kanban board as the core control plane.
 The shipped control plane is the operation request table in
 `.memoria/memoria.sqlite`, surfaced through the `memoria request ...`,
 `memoria workspace ...`, and `memoria attention ...` commands.
@@ -30,7 +30,7 @@ memoria attention list --workspace <workspace>
 
 ## WIP Limits
 
-Alpha.14 does not enforce Hermes board WIP limits. Concurrency belongs to the
+Alpha.15 does not enforce Hermes board WIP limits. Concurrency belongs to the
 standalone engine/runner and any operator-managed scheduler that invokes it.
 
 ## Related

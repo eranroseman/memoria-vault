@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Obsidian plugin settings
 
-Alpha.14 has no required Obsidian plugin settings. The standalone workspace does
+Alpha.15 has no required Obsidian plugin settings. The standalone workspace does
 not ship plugin bundles, plugin settings, editor layouts, or per-plugin secrets.
 
 ## Adapter rule

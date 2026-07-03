@@ -7,7 +7,7 @@ nav_order: 2
 
 # The Agent Client pane
 
-Alpha.14 does not ship an Agent Client pane. The supported conversational path
+Alpha.15 does not ship an Agent Client pane. The supported conversational path
 is `memoria ask`, which reads checked retrieval documents through the engine and
 returns a sourced answer in the terminal.
 

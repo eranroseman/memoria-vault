@@ -11,7 +11,7 @@ Run a structural health check on the vault, or review the scheduled report. The 
 
 ## When it runs without you
 
-- **Daily cron** — the installer wires `memoria-lint` at 06:00: the detectors plus a golden-copy drift check. Findings feed Maintenance's Drift watch and Loose ends views.
+- **Operator-managed schedule** — wire `.memoria/scripts/lint-cron.sh` through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
 - **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
@@ -56,7 +56,7 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --va
 
 Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit hook re-validates what you staged.
 
-**5. Confirm scheduled wiring is alive** (occasionally):
+**5. Confirm scheduled wiring is alive** (if you configured it):
 
 ```bash
 .memoria/scripts/lint-cron.sh
@@ -67,7 +67,7 @@ memoria workspace check --workspace . --schedule-id lint-manual --json
 
 - A re-run reports no CRITICAL or HIGH findings
 - `golden_restore.py check` exits clean
-- Maintenance's Drift watch and Loose ends views show the improvement after the next cron pass
+- Maintenance's Drift watch and Loose ends views show the improvement after the next scheduled or manual pass
 
 ## Related
 

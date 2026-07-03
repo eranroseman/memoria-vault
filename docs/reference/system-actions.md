@@ -92,12 +92,12 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Run detectors | Linter (`detectors.py`, daily cron) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
+| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
 | Golden stage | Linter (`golden_restore.py stage`) | Snapshots every shipped system file (templates, dashboards, patterns, eval set, and root guidance files) into a SHA-256 manifest. |
-| Golden check | Linter (`golden_restore.py check`, daily cron) | Reports system files that drifted from or went missing against the golden manifest. |
+| Golden check | Linter (`golden_restore.py check`, manual or scheduled run) | Reports system files that drifted from or went missing against the golden manifest. |
 | Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
-| Session digests | Linter (`session_summary.py`, daily cron) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
+| Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; curated `knowledge/hubs/` stays PI-approved. |
 
 ### Sweeps (`memoria_vault.runtime.subsystems`)
@@ -160,7 +160,7 @@ same wrappers when always-on maintenance is desired.
 
 ## Skills and prompts
 
-Alpha.14 does not ship installed profile skill bundles or per-lane task routing.
+Alpha.15 does not ship installed profile skill bundles or per-lane task routing.
 Reusable prompt behavior lives as checked packaged operation manifests and runs
 through `memoria operation run`. Optional
 adapters may expose their own skills later, but those adapters are not current
@@ -174,4 +174,4 @@ product authority.
 | --- | --- |
 | Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set DB/read API `check_status = checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
-| Golden restore `--apply` | The PI (not the cron) decides to write golden bytes back over drifted system files. |
+| Golden restore `--apply` | The PI decides to write golden bytes back over drifted system files. |

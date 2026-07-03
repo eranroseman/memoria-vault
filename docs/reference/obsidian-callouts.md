@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Obsidian callouts
 
-Alpha.14 does not ship Obsidian or Callout Manager. The template still uses plain
+Alpha.15 does not ship Obsidian or Callout Manager. The template still uses plain
 Markdown callout syntax for readable orientation blocks; unsupported editors show
 them as quoted text.
 

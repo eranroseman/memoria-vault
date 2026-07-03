@@ -7,16 +7,16 @@ permalink: /tutorials/
 
 # Tutorials
 
-The tutorial arc is **deferred** for alpha.11. The alpha.10 walkthrough pages
+The tutorial arc is **deferred** for alpha.15. The alpha.10 walkthrough pages
 remain as deferred placeholders because they depended on the bundled
 Mediterranean-diet sample vault and QuickAdd commands that no longer ship.
 
-For alpha.11, use the current setup and task guides against a fresh vault:
+For alpha.15, use the current setup and task guides against a fresh vault:
 
 | Need | Start here |
 | --- | --- |
 | Install the system | [Quickstart](../how-to-guides/setup/quickstart.md) |
-| Use Obsidian commands | [Command palette](../how-to-guides/using-obsidian/obsidian-command-palette.md) |
+| Use Obsidian as an editor | [Using Obsidian](../how-to-guides/using-obsidian/README.md) |
 | Understand current types | [Document types](../reference/document-types.md) |
 | Understand the retired sample-vault status | [Sample vault](../reference/sample-vault.md) |
 

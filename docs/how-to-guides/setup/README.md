@@ -22,8 +22,8 @@ only when you need the extra detail.
 
 | Guide | What it covers |
 | --- | --- |
-| [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian and install adapter plugins |
-| [Set up Hermes](set-up-hermes.md) | Alpha.14 boundary for external Hermes adapter experiments |
+| [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian as a plain Markdown editor |
+| [Set up Hermes](set-up-hermes.md) | Alpha.15 no-Hermes setup boundary |
 | [Set up Zotero](set-up-zotero.md) | Better BibTeX citekey shape and portable export imports |
 | [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
 

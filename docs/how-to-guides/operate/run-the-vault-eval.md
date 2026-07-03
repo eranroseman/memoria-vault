@@ -55,13 +55,17 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 - A task with no machine-readable result shows as **unscored** — never a faked score
 - `system/eval/last-run.md` reflects the dispatch you just ran
 
-## The cron equivalent
+## Scheduled equivalent
 
-The scheduled `memoria-eval` wrapper dispatches the current quarter's local eval tasks. Scoring is explicit: run the scorer with `--from-json` once result payloads exist. The schedule and wrapper are owned by [Installer (bootstrap)](../../reference/installer.md).
+The `memoria-eval` wrapper dispatches the current quarter's local eval tasks when
+an operator-managed scheduler calls it. Scoring is explicit: run the scorer with
+`--from-json` once result payloads exist. The installer ships the wrapper
+boundary but does not register a host schedule; see
+[Installer (bootstrap)](../../reference/installer.md#host-scheduler-wiring).
 
 ## Related
 
 - The gold set, metrics, and result contract: [Vault eval](../../reference/vault-eval.md)
 - The trend dashboard and metric bands: [Dashboards](../../reference/dashboards.md)
 - The sibling deterministic maintenance job: [Run the Linter](run-the-linter.md)
-- The cron wiring: [Installer (bootstrap)](../../reference/installer.md)
+- Scheduler wiring boundary: [Installer (bootstrap)](../../reference/installer.md)

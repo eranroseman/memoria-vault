@@ -133,7 +133,7 @@ generated field inventory above owns the exact current contract.
 | Where | What |
 | --- | --- |
 | Pre-commit hook | Every staged `.md` Concept must pass its type schema. |
-| Daily Linter cron | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
+| Scheduled linter check | The `schema-check` and `frontmatter-link` detectors monitor between commits. |
 | Exemptions | Most `system/` infrastructure and vault-root navigation pages are untyped and exempt. |
 
 ## Related

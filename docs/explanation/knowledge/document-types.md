@@ -7,7 +7,7 @@ nav_order: 1
 
 # Document types and epistemic roles
 
-Alpha.11 treats durable vault records as **Concepts**. The folder root says what
+Alpha.15 treats durable vault records as **Concepts**. The folder root says what
 kind of work the Concept belongs to; `check_status` says whether it is readable
 as checked knowledge.
 

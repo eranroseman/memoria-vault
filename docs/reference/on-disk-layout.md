@@ -75,7 +75,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── design-system.md · project-hints.yaml.example
 ```
 
-Alpha.14 deliberately does **not** ship hidden operation-package homes, installed
+Alpha.15 deliberately does **not** ship hidden operation-package homes, installed
 profile packages, lane override packages, or profile tool registries. Operation
 manifests live under `memoria_vault.product.capabilities.operations`; operation
 code lives in the installed `memoria_vault` package.
@@ -98,7 +98,7 @@ Runtime-only (created in the deployed vault, never shipped):
 | --- | --- | --- |
 | `.memoria/golden/` | installer (`golden_restore.py stage`) | The restorable golden copy of every system file + `manifest.json` (SHA-256). |
 | `.memoria/data/extracts/` | runtime ingest helpers | Full-text extracts per citekey, when a workflow needs an intermediate extract store. |
-| `.memoria/data/retraction_watch.csv` | retraction refresh cron | The local Retraction Watch index. |
+| `.memoria/data/retraction_watch.csv` | retraction refresh wrapper | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |
 
@@ -106,7 +106,7 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## Editor configuration
 
-Alpha.14 ships no editor app configuration. Optional editors may keep local
+Alpha.15 ships no editor app configuration. Optional editors may keep local
 state beside or inside a working copy, but that state is not part of the
 standalone template, installer skeleton, golden copy, request lifecycle, or
 source-of-truth layout.

@@ -7,8 +7,8 @@ grand_parent: Reference
 # Zotero plugins
 
 Optional plugins that install in **Zotero** (not Obsidian), plus a historical
-Zotero↔Obsidian connector comparison. For the Obsidian adapter plugin set see
-[Obsidian plugins](obsidian-plugins.md). For setup steps see
+Zotero↔Obsidian connector comparison. Alpha.15 has no Obsidian adapter plugin
+set. For setup steps see
 [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ---
@@ -20,7 +20,7 @@ Optional add-ons for users who keep references in Zotero.
 | Add-on | Install in | Status | Purpose |
 | --- | --- | --- | --- |
 | Better BibTeX | Zotero | Optional, recommended for Zotero users | Stable citekeys; local BibTeX snapshots when needed; `zotero.lua` Lua filter for live Word export. |
-| MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.11 nested source Concepts. |
+| MarkDB-Connect | Zotero | Deferred | Legacy flat-note sync does not match alpha.15 nested source Concepts. |
 | RTF/ODF Scan | Zotero | Optional | Converts Scannable Cite markers in `.odt` exports to live LibreOffice citations. Needed only for the LibreOffice live-citation export route. |
 
 ---
@@ -33,7 +33,7 @@ adapter evaluation.
 
 | Plugin | Connects via | Zotero must run | Annotation import | Bulk import | Stability |
 | --- | --- | --- | --- | --- | --- |
-| **obsidian-citation-plugin** (hans) | `.bib` / CSL-JSON file | No | No | No | High — Memoria default |
+| **obsidian-citation-plugin** (hans) | `.bib` / CSL-JSON file | No | No | No | High — historical comparison only |
 | **zotero-integration** (mgmeyers) | BBT HTTP API | Yes | Yes | No | High — breaks on major updates |
 | **zotlit** (PKM-er) | Zotero SQLite DB | No (reads DB) | Yes | Yes | Medium — Zotero 9 issues reported |
 | **zotero-bridge + zotero-link** (vanakat) | Zotero Local API | Yes | No | No | Low — ~20 installs/day |
@@ -52,6 +52,6 @@ For guidance on choosing between these connectors see [Set up Zotero](../how-to-
 
 ## Related
 
-- Obsidian plugin set: [Obsidian plugins](obsidian-plugins.md)
-- Obsidian plugin settings: [Obsidian plugin settings](obsidian-plugin-settings.md)
+- Obsidian no-plugin baseline: [Obsidian plugins](obsidian-plugins.md)
+- Obsidian plugin-settings boundary: [Obsidian plugin settings](obsidian-plugin-settings.md)
 - Zotero setup how-to: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md)

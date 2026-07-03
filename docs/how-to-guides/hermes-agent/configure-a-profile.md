@@ -7,14 +7,14 @@ nav_order: 1
 
 # Configure a profile
 
-Alpha.14 does not ship installed Hermes profiles. There is no supported profile
+Alpha.15 does not ship installed Hermes profiles. There is no supported profile
 configuration workflow, profile skill directory, lane override package, or
 profile-only redeploy command.
 
 To change what the system can do, edit the checked packaged operation manifests
 under `src/memoria_vault/product/capabilities/operations/` and the corresponding
 CLI/engine code.
-Then run the capability and alpha.14 negative gates:
+Then run the capability and alpha.15 negative gates:
 
 ```bash
 python -m pytest tests/test_capabilities.py tests/test_operations.py

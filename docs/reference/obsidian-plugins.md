@@ -6,13 +6,13 @@ grand_parent: Reference
 
 # Obsidian plugins
 
-Alpha.14 does not ship or require Obsidian plugins. Memoria is a standalone CLI
+Alpha.15 does not ship or require Obsidian plugins. Memoria is a standalone CLI
 and engine; the workspace template contains Markdown keep-set files, SQLite
 state, qmd search state, and auxiliary Memoria files only.
 
 ## Baseline
 
-| Question | Alpha.14 answer |
+| Question | Alpha.15 answer |
 | --- | --- |
 | Are plugins bundled? | No. |
 | Does setup install Obsidian plugins? | No. |
@@ -21,9 +21,10 @@ state, qmd search state, and auxiliary Memoria files only.
 
 ## Optional adapters
 
-An optional Obsidian adapter may be designed later, but it must be a caller of
-the stable CLI/engine. It cannot own source authority, operation manifests,
-request lifecycle, write policy, qmd indexing, checks, or recovery.
+A future Obsidian adapter is specified as a thin client, but its implementation
+is excluded from alpha.15. It must be a caller of the stable CLI/engine and
+cannot own source authority, operation manifests, request lifecycle, write
+policy, qmd indexing, checks, or recovery.
 
 ## Related
 

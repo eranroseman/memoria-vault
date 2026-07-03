@@ -7,7 +7,7 @@ nav_order: 4
 
 # Optional board projections
 
-Alpha.14 does not ship an Obsidian board projection. Operational state lives in
+Alpha.15 does not ship an Obsidian board projection. Operational state lives in
 SQLite request tables, the journal, and generated attention/worklist views.
 
 ## What the PI sees

@@ -27,7 +27,7 @@ Memoria owns the checked qmd source tree and invokes qmd from CLI commands:
 `memoria workspace rebuild --search`, `memoria ask`, `memoria project ask`,
 project gap analysis, and diagnostics. Optional adapters may wrap the same
 checked tree later, but MCP, profiles, Obsidian, and Hermes are not required for
-alpha.14 search.
+alpha.15 search.
 
 | Property | Value |
 | --- | --- |

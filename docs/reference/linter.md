@@ -13,7 +13,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 | --- | --- |
 | What is it? | Deterministic, zero-LLM Python under `src/memoria_vault/runtime/subsystems/integrity/linter`. |
 | What blocks? | The pre-commit hook blocks schema-invalid notes from being committed. |
-| What reports? | The daily cron reports everything else, including live in-app edits caught by the next sweep. |
+| What reports? | A manual or operator-managed scheduled lint run reports everything else, including live in-app edits caught by the next sweep. |
 | What never happens? | Detectors do not auto-move or auto-archive files; findings surface for the PI. |
 
 ---
@@ -72,9 +72,9 @@ already routed through request checks and the policy gate (see
 | `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V stage` | Stage or refresh the golden copy from the live system files. |
 | `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
 | `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
-| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore --apply` | Write the golden bytes back (the PI or cron runs it deliberately). |
+| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore --apply` | Write the golden bytes back (the PI or an operator-managed scheduled job runs it deliberately). |
 
-Alpha.14 ships no editor plugin bundle, so editor app state is not part of the
+Alpha.15 ships no editor plugin bundle, so editor app state is not part of the
 golden manifest.
 
 ---
@@ -119,4 +119,4 @@ Auto-fix is class-gated at the policy layer — the four classes and their dispo
 - The schemas the detectors validate against: [Frontmatter fields](frontmatter.md)
 - The class gate enforcing auto-fix policy: [Policy auto-fix](policy-auto-fix.md)
 - Where the findings surface: [Dashboards](dashboards.md)
-- The crons the installer wires: [Installer (bootstrap)](installer.md)
+- Scheduler wiring boundary: [Installer (bootstrap)](installer.md)
