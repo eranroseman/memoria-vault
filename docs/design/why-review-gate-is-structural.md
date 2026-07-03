@@ -7,7 +7,11 @@ nav_order: 12
 
 # Why the review gate is structural
 
-Memoria's review gate is **structural**: the policy gate blocks writes to canonical zones regardless of profile. It is not an advisory suggestion, a setting the human can relax, or a prompt instruction. This page explains why.
+Memoria's review gate is **structural**: machine work can stage and check
+material, but promotion to checked knowledge goes through the engine's request
+envelope, trusted-writer checks, and PI action. It is not an advisory
+suggestion, a setting the human can relax, or a prompt instruction. This page
+explains why.
 
 Promotion makes content consumable by checked-only readers: structural checks
 passed and the required warrants resolve. It is not a claim that the PI approved
@@ -49,7 +53,15 @@ A prompt-based rule is subject to:
 - **Reasoning about exceptions**, where the agent argues to itself that this case is different.
 - **Session restart**, where the instruction isn't carried forward.
 
-A structural gate — enforced at the policy gate — is not subject to any of these. The MCP intercepts every write before it reaches disk and returns `dry_run` for review-gated zones. No reasoning happens; no context is consulted; no exception is possible. The write doesn't succeed. The agent that "decides" to canonize cannot, because the file-system call returns before any content reaches disk.
+A structural gate — enforced by the request envelope, trusted writer, read
+barrier, and optional adapter policy hook — is not subject to any of these. A
+machine path can create an unchecked proposal, run declared checks, or ask for
+attention; it cannot silently promote synthesis as checked knowledge. Optional
+adapters that try to write around the engine are denied or audited by the policy
+hook. No reasoning happens; no context is consulted; no exception is possible in
+the write path. The agent that "decides" to canonize cannot, because the engine
+will not materialize checked knowledge until the required checks and PI action
+exist as recorded state.
 
 The practical difference: prompt discipline has a mean time to failure. Structural enforcement doesn't degrade.
 
@@ -67,7 +79,9 @@ The request/attention projection carries exactly this: awaiting action, acted, o
 
 ## The agent verdict is not the review
 
-The Peer-reviewer and the operations (the Linter, the sweeps) can attach a recommendation — `metadata.agent_recommendation` — to a finished card. This recommendation is separate from the review decision:
+The Peer-reviewer and the operations (the Linter, the sweeps) can attach a
+machine recommendation to a request or attention item. This recommendation is
+separate from the review decision:
 
 - **The recommendation can be wrong.** A clean Peer-reviewer report doesn't mean the draft is good; it means the citations trace and the schema is valid. The human judgment about whether the synthesis is correct, useful, and worth keeping is separate.
 - **They can disagree.** The Peer-reviewer reports clean; the human reads the draft and rejects it. The separation makes this case coherent — there's no confusion about which verdict counts.
@@ -77,7 +91,9 @@ The Peer-reviewer and the operations (the Linter, the sweeps) can attach a recom
 
 ## The trade-off
 
-The structural gate makes the human a bottleneck. Review doesn't auto-scale; if the human doesn't review, done cards pile up in the `awaiting-review` state and the WIP cap eventually slows new work.
+The structural gate makes the human a bottleneck. Review doesn't auto-scale; if
+the human doesn't act, attention items pile up in the awaiting-action projection
+and WIP pressure slows new work.
 
 That visible slowness is deliberate. A full review queue should slow the system
 rather than silently redefine "reviewed" as "agent finished."
@@ -92,12 +108,12 @@ The cost reduction that an advisory gate would buy (less time in review) is not 
 
 **Explanation**
 
-- Why specialist profiles support this: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
+- Why operation postures support this: [Why operation postures, not a generalist agent](why-specialist-profiles.md)
 - Why the vault won't automate synthesis: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - How request review state works: [Request states and the review gate](../explanation/kanban-board/states.md)
 - What the gate enforces at the synthesis boundary: [Why promotion is gated](../explanation/knowledge/promotion-and-gated-zones.md)
 
 **Reference**
 
-- Policy gate enforcement details: [Policy gate](../reference/policy-mcp.md) · [Memory substrates](../reference/memory-substrates.md) (audit log)
-- The enforcement mechanism: [Policy gate](../reference/policy-mcp.md)
+- Runtime and optional-adapter enforcement details: [Policy gate](../reference/policy-mcp.md) · [Memory substrates](../reference/memory-substrates.md) (audit log)
+- Request and attention state: [Request states and the review gate](../explanation/kanban-board/states.md)
