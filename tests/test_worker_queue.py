@@ -1474,6 +1474,25 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
     assert done["machine"] == "test-machine"
 
 
+def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    eval_dir = vault / "system/eval"
+    eval_dir.mkdir(parents=True)
+    (eval_dir / "alpha12-seeded-errors.json").write_text("{}", encoding="utf-8")
+
+    enqueue_operation(
+        vault,
+        "run-seeded-error-verdict",
+        payload={"mode": "test"},
+        idempotency_key="seeded-no-legacy-fallback",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "failed"
+    assert "system/eval/alpha15-seeded-errors.json" in done["error"]
+
+
 def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_trusted_write(

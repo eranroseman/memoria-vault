@@ -2444,6 +2444,32 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     assert (workspace / "system/eval/last-run.md").is_file()
 
 
+def test_cli_eval_select_models_requires_alpha15_seeded_bundle(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    (workspace / "system/eval/alpha15-seeded-errors.json").unlink()
+    (workspace / "system/eval/alpha12-seeded-errors.json").write_text("{}", encoding="utf-8")
+
+    rc = main(
+        [
+            "eval",
+            "select-models",
+            "--workspace",
+            str(workspace),
+            "--operation",
+            "run-seeded-error-verdict",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 2
+    assert "system/eval/alpha15-seeded-errors.json" in output["error"]
+
+
 def test_cli_eval_select_models_selects_manifest_runner(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -1569,15 +1569,10 @@ def _workspace(args: argparse.Namespace) -> Path:
 
 
 def _seeded_error_bundle_path(workspace: Path) -> Path:
-    for rel in (
-        "system/eval/alpha15-seeded-errors.json",
-        "system/eval/alpha12-seeded-errors.json",
-        "system/eval/alpha11-seeded-errors.json",
-    ):
-        path = workspace / rel
-        if path.is_file():
-            return path
-    raise FileNotFoundError("system/eval seeded-error bundle")
+    path = workspace / "system/eval/alpha15-seeded-errors.json"
+    if path.is_file():
+        return path
+    raise FileNotFoundError(path)
 
 
 def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
