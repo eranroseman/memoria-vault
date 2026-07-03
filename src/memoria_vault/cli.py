@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import uuid
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -82,6 +83,13 @@ def _build_parser() -> argparse.ArgumentParser:
     _common(ask)
     ask.add_argument("--question", required=True)
     ask.set_defaults(handler=_cmd_ask)
+
+    serve = sub.add_parser("serve")
+    _common(serve)
+    serve.add_argument("--watch", action="store_true")
+    serve.add_argument("--once", action="store_true")
+    serve.add_argument("--poll-interval", type=float, default=1.0)
+    serve.set_defaults(handler=_cmd_serve)
 
     _new_commands(sub)
     _work_commands(sub)
@@ -581,6 +589,32 @@ def _cmd_ask(args: argparse.Namespace) -> int:
         {"query": args.question, "k": 5},
     )
     return _emit(result, args)
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    if not args.watch:
+        return _fail("serve currently requires --watch", json_output=args.json)
+    if args.poll_interval <= 0:
+        return _fail("serve --poll-interval must be positive", json_output=args.json)
+    if args.once:
+        return _emit(_workspace_scan_payload(args, schedule_id="file-watch"), args)
+
+    workspace = _workspace(args)
+    previous = ""
+    try:
+        while True:
+            current = _workspace_change_signature(workspace)
+            if current != previous:
+                payload = _workspace_scan_payload(
+                    args,
+                    schedule_id="file-watch",
+                    idempotency_key=f"file-watch-{uuid.uuid4()}",
+                )
+                _emit_scan_event(payload, args)
+                previous = current
+            time.sleep(args.poll_interval)
+    except KeyboardInterrupt:
+        return 0
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
@@ -1117,22 +1151,37 @@ def _cmd_workspace_recover(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_scan(args: argparse.Namespace) -> int:
+    return _emit(_workspace_scan_payload(args), args)
+
+
+def _workspace_scan_payload(
+    args: argparse.Namespace,
+    *,
+    schedule_id: str | None = None,
+    idempotency_key: str | None = None,
+) -> dict[str, Any]:
+    scan_args = argparse.Namespace(**vars(args))
+    if schedule_id is not None:
+        scan_args.schedule_id = schedule_id
+    if idempotency_key is not None:
+        scan_args.idempotency_key = idempotency_key
     workspace = _workspace(args)
-    fixture = _workspace_scan_fixture(workspace, args.fixture) if args.fixture else None
+    fixture_name = getattr(args, "fixture", "")
+    fixture = _workspace_scan_fixture(workspace, fixture_name) if fixture_name else None
     projection_paths = _changed_generated_projection_paths(workspace)
     quarantine = None
     regeneration = None
     if projection_paths:
         quarantine = _enqueue_and_run(
-            args,
+            scan_args,
             "trace-integrity-scan",
             {
                 "paths": projection_paths,
                 "reason": "workspace-scan-generated-projection",
             },
         )
-        regeneration = _enqueue_and_run(args, "regenerate-tracked-projections", {})
-    observed = _enqueue_and_run(args, "observe-pi-edits", {})
+        regeneration = _enqueue_and_run(scan_args, "regenerate-tracked-projections", {})
+    observed = _enqueue_and_run(scan_args, "observe-pi-edits", {})
     needs_check_paths = list(observed["result"].get("paths") or [])
     payload = {
         "ok": (
@@ -1153,9 +1202,30 @@ def _cmd_workspace_scan(args: argparse.Namespace) -> int:
         payload["regeneration_job"] = regeneration["job"]
     if fixture is not None:
         payload["fixture"] = fixture
-    if args.schedule_id:
-        payload["schedule_id"] = args.schedule_id
-    return _emit(payload, args)
+    if scan_args.schedule_id:
+        payload["schedule_id"] = scan_args.schedule_id
+    return payload
+
+
+def _workspace_change_signature(workspace: Path) -> str:
+    proc = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=workspace,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    return proc.stdout if proc.returncode == 0 else str(uuid.uuid4())
+
+
+def _emit_scan_event(payload: dict[str, Any], args: argparse.Namespace) -> None:
+    if args.quiet:
+        return
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True), flush=True)
+    else:
+        count = payload.get("needs_check_count", 0)
+        print(f"file-watch scan: {count} path(s) need check", flush=True)
 
 
 def _cmd_workspace_rollback(args: argparse.Namespace) -> int:

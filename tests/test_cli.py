@@ -143,6 +143,7 @@ def test_alpha15_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
+        "memoria serve",
         "memoria new hub",
         "memoria new note",
         "memoria new project",
@@ -1304,6 +1305,39 @@ def test_cli_workspace_scan_reports_schedule_id_for_file_watch(
         row = conn.execute(
             "SELECT operation_id, schedule_id FROM operation_requests WHERE request_id = ?",
             ("scheduled-scan",),
+        ).fetchone()
+    assert tuple(row) == ("observe-pi-edits", "file-watch")
+
+
+def test_cli_serve_watch_once_runs_file_watch_scan(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    rc = main(
+        [
+            "serve",
+            "--workspace",
+            str(workspace),
+            "--watch",
+            "--once",
+            "--idempotency-key",
+            "serve-watch-once",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["schedule_id"] == "file-watch"
+    assert output["job"]["request_envelope"]["schedule_id"] == "file-watch"
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id, schedule_id FROM operation_requests WHERE request_id = ?",
+            ("serve-watch-once",),
         ).fetchone()
     assert tuple(row) == ("observe-pi-edits", "file-watch")
 
