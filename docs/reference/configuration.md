@@ -61,7 +61,6 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 | --- | --- |
 | `entity_resolution` | `confidence_floor` · `model_version` |
 | `classify` | `confidence_floor` · `model_version` · `near_tie_margin` |
-| `clustering` | `embedding_model` · `full_cluster_min_documents` · `hdbscan_min_cluster_size` · `quality_thresholds` · `seed` · `umap_n_neighbors` |
 | `hybrid_scores` | `candidate_rank` · `outline_score` |
 
 <!-- REFERENCE:END -->

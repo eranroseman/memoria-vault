@@ -15,9 +15,8 @@ to query conversationally, see [Query the vault](../how-to-guides/knowledge/quer
 `qmd` is an external local tool, not a workspace database. Memoria builds qmd's
 input tree from checked retrieval documents and uses qmd from the standalone CLI
 engine. The raw qmd CLI still exists for operator debugging, but product reads
-go through Memoria's checked-only read barrier. The clustering surface that
-consumes the *typed graph* rather than text-ranked retrieval is documented
-separately in [Clustering](clustering.md).
+go through Memoria's checked-only read barrier. The non-shipped clustering
+boundary is documented separately in [Clustering](clustering.md).
 
 ---
 

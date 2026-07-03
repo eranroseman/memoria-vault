@@ -37,16 +37,11 @@ Add a Memoria-authored **cluster MCP** (`vault/.memoria/mcp/cluster_mcp.py`) and
 
 ## Current implementation mapping
 
-`vault-template/.memoria/mcp/cluster_mcp.py` is the shipped cluster MCP. Its default,
-PR-safe surface is lightweight and deterministic: `cluster_build_graph` builds a
-typed NetworkX graph from authored note `links:` and entity `relationships`,
-computes communities/centrality/layout, and `cluster_emit_canvas` writes a staged
-claim-debate Canvas under the allowed maps home. `cluster_model_topics` is the
-optional BERTopic surface. If BERTopic or its heavy dependencies are absent, it
-returns a structured `bertopic-not-installed` error instead of requiring the default
-vault install to carry the ML stack. `tests/test_cluster_mcp.py` locks that split:
-graph/canvas behavior must run deterministically, and the topic-modeling path must
-either run with enough data and dependencies or degrade cleanly.
+No alpha.15 implementation mapping remains. ADR-125 supersedes this cluster-MCP
+shape with the standalone CLI/engine baseline: qmd search, project gap/argument
+reports, and a reference boundary for non-shipped clustering. The template ships
+no `cluster_mcp.py`, BERTopic/UMAP/HDBSCAN stack, `--with-cluster` installer
+flag, or cluster calibration block.
 
 ## Alternatives considered
 
