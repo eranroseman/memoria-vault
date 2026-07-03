@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import date
+from itertools import pairwise
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -23,6 +25,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
+from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
@@ -51,6 +54,23 @@ GAP_KINDS = {
     "paper-readiness",
     "bounded-universe-incomplete",
 }
+_TAG_CANDIDATE_MIN_COUNT = 2
+_TAG_CANDIDATE_LIMIT = 5
+_TAG_CANDIDATE_STOPWORDS = frozenset(
+    {
+        "about",
+        "also",
+        "and",
+        "are",
+        "but",
+        "for",
+        "from",
+        "into",
+        "the",
+        "this",
+        "with",
+    }
+)
 PAPER_PLAN_REQUIRED_FIELDS = (
     "target",
     "audience",
@@ -483,6 +503,12 @@ def analyze_gaps(
         vault, full_text_gaps, machine=machine
     )
     candidate_paths, commit = _write_gap_discovery_candidates(vault, gaps, machine=machine)
+    tag_candidates = _tag_candidates(vault)
+    tag_candidate_paths, tag_candidate_commit = _write_tag_candidate_attention(
+        vault,
+        tag_candidates,
+        machine=machine,
+    )
     result = {
         "checked_topics": len(counts),
         "dense_threshold": dense_threshold,
@@ -496,6 +522,10 @@ def analyze_gaps(
         "paper_readiness_gap_count": len(paper_gaps),
         "discovery_candidate_paths": candidate_paths,
         "discovery_commit": commit,
+        "tag_candidate_count": len(tag_candidates),
+        "tag_candidate_paths": tag_candidate_paths,
+        "tag_candidate_commit": tag_candidate_commit,
+        "tag_candidates": tag_candidates,
         "gap_findings": gaps,
         "gaps": gaps,
     }
@@ -1030,6 +1060,136 @@ def _write_gap_discovery_candidates(
         if related:
             gap["discovery_candidate_paths"] = related
     return sorted(new_paths), commit
+
+
+def _tag_candidates(vault: Path) -> list[dict[str, Any]]:
+    existing_tags = {
+        normalized
+        for _rel, frontmatter in _checked_concepts(vault)
+        for term in _frontmatter_gap_terms(frontmatter)
+        for normalized in _tag_term_forms(term)
+    }
+    existing_tags.update(_controlled_tag_terms(vault))
+    counts: dict[str, int] = defaultdict(int)
+    refs: dict[str, set[str]] = defaultdict(set)
+    for rel, frontmatter in _checked_concepts(vault):
+        if frontmatter.get("type") != "work":
+            continue
+        path = vault / rel
+        _frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+        text = " ".join(
+            str(value)
+            for value in (frontmatter.get("title"), frontmatter.get("description"), body)
+            if str(value).strip()
+        )
+        tokens = [
+            token
+            for token in re.findall(r"[a-z][a-z0-9]+", text.casefold())
+            if len(token) > 2 and token not in _TAG_CANDIDATE_STOPWORDS
+        ]
+        for left, right in pairwise(tokens):
+            phrase = f"{left} {right}"
+            if phrase in existing_tags:
+                continue
+            counts[phrase] += 1
+            refs[phrase].add(rel)
+    rows = [
+        {"phrase": phrase, "count": count, "refs": sorted(refs[phrase])}
+        for phrase, count in counts.items()
+        if count >= _TAG_CANDIDATE_MIN_COUNT
+    ]
+    return sorted(rows, key=lambda row: (-int(row["count"]), str(row["phrase"])))[
+        :_TAG_CANDIDATE_LIMIT
+    ]
+
+
+def _write_tag_candidate_attention(
+    vault: Path,
+    candidates: list[dict[str, Any]],
+    *,
+    machine: str | None,
+) -> tuple[list[str], str]:
+    if machine is None or not candidates:
+        return [], ""
+    new_paths = []
+    for candidate in candidates:
+        phrase = str(candidate["phrase"])
+        rel = _tag_candidate_rel(phrase)
+        path = vault / rel
+        if path.exists():
+            continue
+        refs = [str(ref) for ref in candidate.get("refs") or []]
+        target = refs[0] if refs else "knowledge/works"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "\n".join(
+                [
+                    "---",
+                    f'title: "Review tag candidate: {_yaml_str(phrase)}"',
+                    "projection: attention",
+                    "attention_kind: candidate",
+                    "attention_status: open",
+                    f'candidate_tag: "{_yaml_str(phrase)}"',
+                    f'target: "{_yaml_str(target)}"',
+                    f"source_count: {len(refs)}",
+                    "raised_by: analyze-gaps",
+                    "loudness: notice",
+                    f"created: {date.today().isoformat()}",
+                    "---",
+                    "",
+                    "# Candidate Tag",
+                    "",
+                    phrase,
+                    "",
+                    "# Evidence",
+                    "",
+                    "\n".join(f"- `{ref}`" for ref in refs),
+                    "",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        new_paths.append(rel)
+    if not new_paths:
+        return [], ""
+    append_journal_event(
+        vault,
+        {
+            "event": "derived",
+            "operation": "analyze-gaps",
+            "outputs": sorted(new_paths),
+        },
+        machine=machine,
+    )
+    commit = commit_writer_changes(
+        vault,
+        "propose tag candidates",
+        sorted(new_paths),
+        machine=machine,
+    )
+    return sorted(new_paths), commit
+
+
+def _tag_candidate_rel(phrase: str) -> str:
+    slug = safe_filename(phrase.replace(" ", "-"))
+    return normalize_path(f"inbox/candidate-tag-{slug}.md")
+
+
+def _controlled_tag_terms(vault: Path) -> set[str]:
+    vocabulary = schema_lib.load_vocabulary(vault / "system/vocabulary.md")
+    return {
+        normalized
+        for terms in vocabulary.values()
+        for term in terms
+        for normalized in _tag_term_forms(term)
+    }
+
+
+def _tag_term_forms(term: str) -> set[str]:
+    text = str(term).strip().casefold()
+    if not text:
+        return set()
+    return {text, text.replace("-", " ")}
 
 
 def _candidate_edges(vault: Path, source_ids: Iterable[str]) -> dict[str, list[dict[str, Any]]]:

@@ -585,6 +585,47 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     }
 
 
+def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    shutil.copytree(ROOT / "vault-template/system", vault / "system")
+    work_rel = "knowledge/works/source-alpha.md"
+    work = vault / work_rel
+    work.parent.mkdir(parents=True, exist_ok=True)
+    work.write_text(
+        "---\n"
+        "type: work\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FC0\n"
+        "title: Retrieval practice digest\n"
+        "tags: []\n"
+        "links: {}\n"
+        "work_id: source-alpha\n"
+        "source_id: catalog/sources/source-alpha\n"
+        "---\n"
+        "Neural retrieval improves durable memory systems.\n"
+        "Neural retrieval also changes review timing.\n"
+        "Personal informatics covers behavior data.\n"
+        "Personal informatics supports reflection.\n",
+        encoding="utf-8",
+    )
+    _checked(vault, work_rel, "work")
+
+    result = analyze_gaps(vault, machine="gap-machine")
+
+    assert result["tag_candidate_paths"] == ["inbox/candidate-tag-neural-retrieval.md"]
+    candidate = vault / result["tag_candidate_paths"][0]
+    fm = read_frontmatter(candidate)
+    assert fm["attention_kind"] == "candidate"
+    assert fm["attention_status"] == "open"
+    assert fm["candidate_tag"] == "neural retrieval"
+    assert fm["target"] == work_rel
+    assert "check_status" not in fm
+    assert read_frontmatter(work)["tags"] == []
+    committed = set(
+        git(vault, "show", "--name-only", "--format=", result["tag_candidate_commit"]).splitlines()
+    )
+    assert committed == {result["tag_candidate_paths"][0], state.JOURNAL_HEAD_REL}
+
+
 def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
     tmp_path: Path,
 ) -> None:
