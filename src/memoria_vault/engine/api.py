@@ -26,6 +26,7 @@ CONCEPT_HOMES = {
     "hub": "knowledge/hubs",
     "project": "knowledge/projects",
 }
+VIEW_SPEC_VERSION = "view-spec.v1"
 
 
 def read_status(workspace: Path) -> dict[str, Any]:
@@ -114,7 +115,7 @@ def read_attention(
             for card in cards
             if (not status or card["status"] == status) and (not kind or card["kind"] == kind)
         ]
-    return {"ok": True, "attention": cards}
+    return {"ok": True, "attention": cards, "view": _attention_table_view(cards, worklist=worklist)}
 
 
 def read_attention_card(
@@ -126,7 +127,7 @@ def read_attention_card(
         raise FileNotFoundError(f"attention projection not found: {rel}")
     if not _attention_in_scope(card, read_scope):
         raise FileNotFoundError(f"attention projection not found: {rel}")
-    return {"ok": True, "attention": card}
+    return {"ok": True, "attention": card, "view": _attention_card_view(card)}
 
 
 def read_concept(
@@ -495,6 +496,7 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
         "routing_class": frontmatter.get("routing_class") or "ask",
         "target": frontmatter.get("target") or frontmatter.get("target_id") or "",
         "loudness": frontmatter.get("loudness") or "",
+        "check_status": frontmatter.get("check_status") or "unchecked",
         "frontmatter": frontmatter,
         "body": body,
         "body_data": _untrusted_text(body),
@@ -505,6 +507,72 @@ def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> b
     return read_scope is None or any(
         _scope_allows(str(card.get(key) or ""), read_scope) for key in ("path", "target")
     )
+
+
+def _attention_table_view(cards: list[dict[str, Any]], *, worklist: bool) -> dict[str, Any]:
+    rows = [
+        {
+            "ref": card["path"],
+            "check_status": _view_check_status(card),
+            "cells": {
+                "title": card["title"],
+                "kind": card["kind"],
+                "status": card["status"],
+                "target": card["target"],
+            },
+        }
+        for card in cards
+    ]
+    return {
+        "version": VIEW_SPEC_VERSION,
+        "kind": "attention",
+        "blocks": [
+            {
+                "id": "attention-table",
+                "kind": "table",
+                "title": "Attention worklist" if worklist else "Attention",
+                "check_status": _combined_check_status(row["check_status"] for row in rows),
+                "refs": [row["ref"] for row in rows],
+                "columns": ["title", "kind", "status", "target"],
+                "rows": rows,
+            }
+        ],
+    }
+
+
+def _attention_card_view(card: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "version": VIEW_SPEC_VERSION,
+        "kind": "attention-card",
+        "blocks": [
+            {
+                "id": safe_filename(card["path"]),
+                "kind": "card",
+                "title": card["title"],
+                "check_status": _view_check_status(card),
+                "refs": [card["path"]],
+                "fields": {
+                    "kind": card["kind"],
+                    "status": card["status"],
+                    "target": card["target"],
+                    "routing_class": card["routing_class"],
+                    "loudness": card["loudness"],
+                },
+                "body_data": card["body_data"],
+            }
+        ],
+    }
+
+
+def _view_check_status(card: dict[str, Any]) -> str:
+    return str(card.get("check_status") or "unchecked")
+
+
+def _combined_check_status(statuses: Any) -> str:
+    values = {str(status or "unchecked") for status in statuses}
+    if len(values) == 1:
+        return values.pop()
+    return "mixed" if values else "unchecked"
 
 
 def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
