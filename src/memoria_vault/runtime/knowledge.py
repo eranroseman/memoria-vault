@@ -18,6 +18,7 @@ from memoria_vault.runtime.operations import load_operation_policy, required_pro
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
@@ -181,6 +182,7 @@ def curate_note_candidate(
 
     frontmatter["status"] = status
     write_frontmatter_doc(note, frontmatter, body)
+    state.mark_checked(vault, note_rel, sha256_file(note), note.read_text(encoding="utf-8"))
     event = append_journal_event(
         vault,
         {
@@ -238,6 +240,12 @@ def curate_note_link(
         bucket.append(target_rel)
         frontmatter["links"] = links
         write_frontmatter_doc(source_note, frontmatter, body)
+        state.mark_checked(
+            vault,
+            source_rel,
+            sha256_file(source_note),
+            source_note.read_text(encoding="utf-8"),
+        )
 
     event = append_journal_event(
         vault,
@@ -1554,7 +1562,7 @@ def _checked_concept(vault: Path, relpath: str) -> dict[str, Any]:
 
 
 def _has_checked_verdict(vault: Path, relpath: str) -> bool:
-    return state.concept_check_status(vault, relpath) == "checked"
+    return is_consumable_checked_file(vault, relpath)
 
 
 def _require_tool(policy: dict[str, Any], tool: str) -> None:

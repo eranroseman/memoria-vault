@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -95,6 +96,33 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/forged.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
     assert manifest["qmd_commands"][-1] == "qmd update"
+
+
+def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    path = note(vault, "checked", "checked", "alpha beta")
+    rel = path.relative_to(vault).as_posix()
+    path.write_text(
+        "---\ntype: note\ncheck_status: checked\ntitle: checked\n---\ntampered alpha\n",
+        encoding="utf-8",
+    )
+
+    assert checked_concepts(vault) == []
+    assert answer_query(vault, "tampered alpha")["sources"] == []
+    assert state.concept_check_status(vault, rel) == "checked"
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT operation_id, status, schedule_id, args_json
+            FROM operation_requests
+            WHERE operation_id = 'observe-pi-edits'
+            """
+        ).fetchone()
+    assert row is not None
+    assert row["operation_id"] == "observe-pi-edits"
+    assert row["status"] == "pending"
+    assert row["schedule_id"] == "read-guard"
+    assert json.loads(row["args_json"])["target_path"] == rel
 
 
 def test_rebuild_checked_qmd_source_records_embedding_mode(tmp_path: Path) -> None:

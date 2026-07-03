@@ -17,6 +17,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 
 QMD_INPUT_ROOT = ".memoria/index/qmd/checked"
@@ -162,7 +163,7 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
             continue
         for path in iter_markdown(base, skip_dirs=frozenset()):
             rel = path.relative_to(vault).as_posix()
-            if state.concept_check_status(vault, rel) != "checked":
+            if not is_consumable_checked_file(vault, rel):
                 continue
             frontmatter = parse_frontmatter(safe_read(path))
             if _is_searchable_frontmatter(frontmatter, include_stale=include_stale):
@@ -206,14 +207,14 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
     path = Path(vault) / rel
     if (
         path.is_file()
-        and state.concept_check_status(vault, rel) == "checked"
+        and is_consumable_checked_file(vault, rel)
         and _is_searchable_frontmatter(parse_frontmatter(safe_read(path)))
     ):
         return True
     qmd_path = Path(vault) / QMD_INPUT_ROOT / rel
     return (
         qmd_path.is_file()
-        and state.concept_check_status(vault, rel) == "checked"
+        and is_consumable_checked_file(vault, rel)
         and _is_searchable_frontmatter(parse_frontmatter(safe_read(qmd_path)))
     )
 
