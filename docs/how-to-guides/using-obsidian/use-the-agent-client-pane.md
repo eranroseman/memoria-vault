@@ -15,9 +15,9 @@ memoria ask --workspace <workspace> --question "What needs attention?"
 ```
 
 Obsidian remains useful as a human reading and editing surface, but the core
-runtime does not depend on the Agent Client plugin. Any future pane adapter must
-call the same `memoria` CLI/engine and must not become the authority for
-operation manifests, write policy, or scheduled work.
+runtime does not depend on the Agent Client plugin. Any future pane adapter
+needs its own ADR, must call the same `memoria` CLI/engine, and must not become
+the authority for operation manifests, write policy, or scheduled work.
 
 ## Related
 
