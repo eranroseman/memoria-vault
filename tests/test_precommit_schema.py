@@ -106,7 +106,7 @@ def test_hook_script_ships_executable():
 
 def test_hidden_runtime_exempt(tmp_path):
     vault = _vault(tmp_path)
-    (vault / ".memoria/golden/system/templates").mkdir(parents=True)
-    tpl = vault / ".memoria/golden/system/templates/note.md"
+    (vault / ".memoria/staging/system/templates").mkdir(parents=True)
+    tpl = vault / ".memoria/staging/system/templates/note.md"
     tpl.write_text("---\ntype: note\ncreated: {{DATE}}\n---\n", encoding="utf-8")
-    assert precommit_check.check_paths(vault, [".memoria/golden/system/templates/note.md"]) == []
+    assert precommit_check.check_paths(vault, [".memoria/staging/system/templates/note.md"]) == []

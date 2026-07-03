@@ -34,7 +34,6 @@ vault_assembly() {
   "$PY" "$HELPER" vault-skeleton "$ROOT" "$V"
 
   echo "== $(stage vault-assembly-2) =="
-  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" stage
   git -C "$V" init -q
   git -C "$V" config user.email "e2e@example.invalid"
   git -C "$V" config user.name "Memoria E2E Smoke"
@@ -45,7 +44,6 @@ vault_assembly() {
 
   echo "== $(stage vault-assembly-3) =="
   "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$V" | tail -1 | grep -q "PASS" || fail "detectors not clean on the fresh vault"
-  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" check || fail "golden drift on a fresh vault"
 }
 
 commit_gate() {
@@ -88,7 +86,6 @@ final_integrity() {
   verdict=$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$V" | tail -1)
   echo "   $verdict"
   "$PY" "$HELPER" final-verdict "$verdict" || fail "worked vault verdict: $verdict"
-  "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$V" check || fail "golden drift after the loop"
 }
 
 vault_assembly

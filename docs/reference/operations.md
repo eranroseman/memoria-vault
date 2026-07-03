@@ -33,7 +33,7 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 | MCP transport | `memoria_vault.runtime.mcp_transport` | `memoria mcp --read-scope <path>` | MCP hosts, tests, debug sessions | Exposes an optional FastMCP stdio skin over `engine/api` read functions, including additive view-spec fields, and generic request-envelope writes. It requires at least one non-root read scope, passes that scope into engine reads, and records MCP provenance for writes. |
 | Integrity retraction | `memoria_vault.runtime.subsystems.integrity.retraction.retraction` | None | Scheduled task, CI, PI | Runs retraction lookups, surfacing findings as Inbox cards. |
 | Eval telemetry | `memoria eval run`; `memoria_vault.runtime.subsystems.telemetry.eval.*` | None | Scheduled task, CI, PI | Dispatches and scores vault-eval runs. |
-| Linter | `memoria_vault.runtime.subsystems.integrity.linter.detectors`; `hub_handoff` | None | Scheduled task, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, golden-copy drift, session digests, and opt-in hub-threshold handoffs. |
+| Linter | `memoria_vault.runtime.subsystems.integrity.linter.detectors`; `hub_handoff` | None | Scheduled task, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, session digests, and opt-in hub-threshold handoffs. |
 | Batch worklists | `memoria_vault.runtime.subsystems.lib.worklists` | None | Reports, tests, PI | Emits ADR-54 `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
 
 ## Related

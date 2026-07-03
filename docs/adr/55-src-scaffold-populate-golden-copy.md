@@ -13,13 +13,13 @@ superseded_by: [125]
 
 # ADR-55: The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; the current product no longer ships golden-copy restore. Package/template refresh is the restore path for product files.
 
 
-> **Verified on-box 2026-06-21.** The shipped mechanism is the SHA-256 golden
+> **Historical implementation note, verified on-box 2026-06-21.** The shipped mechanism was the SHA-256 golden
 > manifest plus `check` and `restore`; `restore` is propose-only unless the caller
-> passes `--apply`, and the absence of any release-upgrade reconcile command is
-> test-pinned by `tests/test_golden_restore.py::test_upgrade_command_is_not_shipped`.
+> passes `--apply`, and the absence of any release-upgrade reconcile command was
+> test-pinned in the then-current test suite.
 
 ## Context
 
@@ -81,8 +81,7 @@ shipped shape (`vault-template/`, not a live vault) and the new restore capabili
   `allow.write` / `write_scope` / auto-fix scope reaches into `system/`, enforced
   by the write gate ([ADR-28](28-write-gate-as-plugin.md)); an accidental *human*
   overwrite (or deletion) is detected as golden-copy drift and restored via
-  `lint:restore`. Both halves are test-pinned (`tests/test_policy_mcp.py`,
-  `tests/test_golden_restore.py`).
+  `lint:restore`. Both halves were test-pinned in the then-current test suite.
 
 ## Alternatives considered
 

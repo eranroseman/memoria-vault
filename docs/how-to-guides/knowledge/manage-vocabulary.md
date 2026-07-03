@@ -7,7 +7,7 @@ nav_order: 6
 
 # Manage your topic vocabulary
 
-Keep the `research_area`, `methodology`, and `topics` values consistent across your corpus — so Dataview and Bases views stay reliable and classification stays navigable as the vault grows. The controlled lists live in **`system/vocabulary.md`**, which ships with the vault (and is golden-copied, so the Linter can detect drift from the shipped scaffold once you've made it yours).
+Keep the `research_area`, `methodology`, and `topics` values consistent across your corpus — so Dataview and Bases views stay reliable and classification stays navigable as the vault grows. The controlled lists live in **`system/vocabulary.md`**, which ships with the vault and is checked by the schema/linter surfaces once you've made it yours.
 
 These vocabularies are deliberately **open** — yours to define. The fixed Memoria vocabularies (lifecycle, maturity, certainty, card types) are schema-enforced and not yours to extend.
 

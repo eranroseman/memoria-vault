@@ -153,8 +153,5 @@ for rel in folders.get("skeleton", []):
     (vault / rel).mkdir(parents=True, exist_ok=True)
 PY
 
-hdr "Restage golden copy"
-run env PYTHONPATH="$PYTHONPATH_VALUE" "$python_cmd" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" stage
-
 hdr "Done"
 say "Refreshed $VAULT from $SRC"

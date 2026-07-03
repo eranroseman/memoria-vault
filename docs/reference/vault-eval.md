@@ -39,7 +39,7 @@ The shipped set (nine tasks) references well-known papers — the Transformer, B
 | `verify` | `verify` | a supported BLEU figure (positive control); a contradicted positional-encoding claim; a BERT-Base/Large parameter swap |
 
 Eval tasks are authored directly — the files *are* the instances, no template.
-They are golden-copied ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+They are shipped template files; product-file repair is package/template refresh.
 A gold task whose wikilinked target no longer resolves surfaces as a
 broken-reference finding; gold-set rot is caught by machinery already running.
 

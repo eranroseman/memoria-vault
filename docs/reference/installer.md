@@ -11,12 +11,12 @@ The bootstrap installers (`scripts/install.sh` for Linux/WSL and
 workspace. They do not install Hermes profiles, lane overrides, Obsidian setup, or
 live Zotero integration.
 
-The install model is **scaffold -> populate -> golden copy**
-([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): the repo ships the
-workspace template under `vault-template/`, the installer copies it to the target
-workspace, recreates schema-owned empty folders from `folders.yaml`, installs the
-CLI package into the workspace venv, wires local Git hooks, registers qmd search,
-and stages a golden copy of system files.
+The install model is **scaffold -> populate -> install package**: the repo ships
+the workspace template under `vault-template/`, the installer copies it to the
+target workspace, recreates schema-owned empty folders from `folders.yaml`,
+installs the CLI package into the workspace venv, wires local Git hooks, and
+registers qmd search. Product-file repair is a package/template reinstall or
+fresh workspace refresh, not an in-vault migration path.
 
 ## Flags
 
@@ -36,7 +36,6 @@ and stages a golden copy of system files.
 | Skeleton | Recreates schema-owned empty folders from `folders.yaml`. |
 | Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
 | Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. The installer never commits, sets identity, or adds a remote. File-change work is observed with `memoria workspace scan`. |
-| Golden copy | Stages `.memoria/golden/` using `memoria_vault.runtime.subsystems.integrity.linter.golden_restore`. |
 | qmd | Registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index state. |
 | Next steps | Prints vault-local Python commands for `memoria doctor bundle`, `memoria workspace rebuild --search`, and `memoria ask`. |
 

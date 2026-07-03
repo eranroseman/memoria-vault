@@ -55,7 +55,6 @@ def test_harness_runs_integrity_and_cli_doctor_checks() -> None:
     text = _script()
     for marker in (
         "memoria_vault.typer_cli doctor bundle",
-        "golden_restore",
         "detectors",
         "verdict: PASS",
         "Disposable Memoria standalone install verified",

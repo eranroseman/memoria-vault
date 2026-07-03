@@ -10,9 +10,9 @@ state or design-repo git. All checks are REPORT-ONLY; none mutates the vault.
     python detectors.py --vault <path> --jsonl-out system/logs/lint-findings.jsonl
 
 The drift procedures in scope here (ADR-67): skeleton-drift and vault-hash-drift
-need only the vault tree and live here; plugin-config-drift is covered by the
-golden copy (golden_restore.py). Profile-install-drift and command-vocab-drift
-are out of scope -- they are repo/package concerns, not vault-side linter checks.
+need only the vault tree and live here. Profile-install-drift and
+command-vocab-drift are out of scope -- they are repo/package concerns, not
+vault-side linter checks.
 """
 
 from __future__ import annotations
@@ -650,19 +650,17 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
 def skeleton_drift(vault: Path) -> list[Finding]:
     """A folder from the installer skeleton is missing from the vault.
 
-    Verifies the `skeleton` list of `.memoria/schemas/folders.yaml` (the one
-    schema home, ADR-47/ADR-55) exists as directories in the vault. The fix is
-    mechanical -- re-run the idempotent installer (mkdir -p) or create the dir --
+    Verifies the `skeleton` list of `.memoria/schemas/folders.yaml` exists as
+    directories in the vault. The fix is mechanical -- re-run the installer or create the dir --
     so the finding is MEDIUM, not CRITICAL. Needs the schema home + PyYAML;
     without them (the dependency-free fallback path) the check is skipped.
 
     Only meaningful for an *installed* vault: the repo's src/ tree deliberately
-    ships no empty dirs (ADR-55 dropped the .gitkeep placeholders), so the check
-    keys on the golden manifest the installer stages -- absent manifest, no
-    skeleton was ever scaffolded, and the check is skipped."""
+    ships no empty dirs, so the check keys on the vault Git repo the installer
+    creates -- absent `.git`, no skeleton was ever scaffolded, and the check is skipped."""
     if _FOLDERS is None:
         return []
-    if not (vault / ".memoria" / "golden" / "manifest.json").is_file():
+    if not (vault / ".git").is_dir():
         return []
     out = []
     for d in _FOLDERS.get("skeleton") or []:

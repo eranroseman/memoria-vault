@@ -40,7 +40,6 @@ TEST_LEVELS = {
     "test_extract.py": "unit",
     "test_gen_adr_index.py": "static",
     "test_github_doctor.py": "static",
-    "test_golden_restore.py": "contract",
     "test_hub_handoff.py": "contract",
     "test_http_transport.py": "contract",
     "test_inbox_cards.py": "contract",

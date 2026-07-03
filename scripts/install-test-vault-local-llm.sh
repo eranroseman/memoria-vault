@@ -21,7 +21,7 @@ usage() {
 Usage: scripts/install-test-vault-local-llm.sh [options]
 
 Rebuild the disposable Memoria test workspace and run the standalone installer,
-package, golden-copy, detector, and CLI doctor checks. The optional local-LLM
+package, detector, and CLI doctor checks. The optional local-LLM
 check only verifies that an OpenAI-compatible endpoint is reachable; alpha.15
 does not install Hermes profiles or drive a Hermes dispatch.
 
@@ -149,7 +149,6 @@ PY="$VAULT/.memoria/.venv/bin/python"
 hdr "Install checks"
 run "$PY" -c "import memoria_vault; print(memoria_vault.__version__)"
 run "$PY" -m memoria_vault.typer_cli doctor bundle --workspace "$VAULT" --json
-run "$PY" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT" check
 verdict="$("$PY" -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$VAULT" | tail -1)"
 say "  detectors: $verdict"
 case "$verdict" in

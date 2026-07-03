@@ -7,7 +7,10 @@ nav_order: 24
 
 # Distribution model
 
-Memoria ships as a single repo (`memoria-vault`). **The repo is the install unit** ([ADR-26](../adr/26-repo-as-install-unit.md), as amended by [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)) — you clone it (or run the one-line bootstrap, which clones it for you), and the bootstrap installer at the repo root deploys everything. The repo has three parts:
+Memoria ships from the `memoria-vault` repo as a workspace template plus an
+installable Python package ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)).
+You clone it, or run the one-line bootstrap that clones it for you, and the
+bootstrap installer at the repo root deploys the standalone workspace.
 
 | Path | Contents | Audience |
 | --- | --- | --- |
@@ -25,7 +28,11 @@ whole repo. See [Bootstrap installer](bootstrap-installer.md) for the installer'
 design and [Installer (bootstrap)](../reference/installer.md) for the component
 inventories.
 
-Shipping `vault-template/` rather than a live `vault/` template is deliberate ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)): a live-vault template blurs "source of truth" with "a running instance," invites accidental edits to the template, and offers no recovery path. With `vault-template/`, authoring (the repo) and restoring (the runtime golden copy) stay cleanly separate, and user content and system files are structurally distinct from the first minute.
+Shipping `vault-template/` rather than a live `vault/` template is deliberate:
+a live-vault template blurs "source of truth" with "a running instance" and
+invites accidental edits to the template. With `vault-template/`, authoring
+(the repo/package) and runtime use stay cleanly separate, and user content and
+system files are structurally distinct from the first minute.
 
 ---
 
@@ -36,9 +43,12 @@ The full directory catalog is [On-disk layout](../reference/on-disk-layout.md);
 the category-tree rationale is [The vault](../explanation/architecture/vault.md).
 Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
 
-## The golden copy: the restore source
+## Product-file refresh
 
-At install time, every system file is also staged at `<vault>/.memoria/golden/` with a hash manifest. The Linter can compare live system files against that baseline, flag drift, and restore corrupted system files without re-running the installer. Releases refresh the golden copy by fresh install, not in-place migration ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+Alpha.15 does not maintain an in-vault product-file restore baseline. Product
+files come from `vault-template/` and the installed `memoria_vault` package;
+repair is a fresh workspace refresh or package reinstall, not migration or
+three-way reconciliation inside the vault.
 
 ---
 
@@ -75,6 +85,6 @@ the write path.
 ## Related
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)
-- The decisions: [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md), [ADR-26](../adr/26-repo-as-install-unit.md)
+- The decisions: [ADR-125](../adr/125-standalone-cli-engine-architecture.md), [ADR-26](../adr/26-repo-as-install-unit.md)
 - Capability reference: [Operations](../reference/operations.md)
 - On-disk layout reference: [On-disk layout](../reference/on-disk-layout.md)
