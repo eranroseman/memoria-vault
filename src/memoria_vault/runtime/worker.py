@@ -580,6 +580,9 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         out = {
             "checked_topics": result["checked_topics"],
             "dense_threshold": result["dense_threshold"],
+            "summary": result["summary"],
+            "saturation": result["saturation"],
+            "citation_neighborhood_gap_count": result["citation_neighborhood_gap_count"],
             "full_text_gap_count": result["full_text_gap_count"],
             "full_text_attention_paths": result["full_text_attention_paths"],
             "full_text_attention_commit": result["full_text_attention_commit"],
@@ -587,6 +590,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "discovery_candidate_paths": result["discovery_candidate_paths"],
             "discovery_commit": result["discovery_commit"],
             "gap_count": len(result["gaps"]),
+            "gap_findings": result["gap_findings"],
             "gaps": result["gaps"],
         }
         if project_path:

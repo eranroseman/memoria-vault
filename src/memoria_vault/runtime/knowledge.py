@@ -33,6 +33,18 @@ from memoria_vault.runtime.vaultio import (
     write_frontmatter_doc,
 )
 
+GAP_KINDS = {
+    "new-topic",
+    "undigested",
+    "under-warranted",
+    "citation-neighborhood",
+    "full-text-missing",
+    "argument-unsupported",
+    "argument-uncountered",
+    "argument-fragile",
+    "bounded-universe-incomplete",
+}
+
 
 def emit_note_candidates(
     vault: Path,
@@ -327,30 +339,52 @@ def analyze_gaps(
         source_count = counts[key]["sources"] + counts[key]["digests"]
         note_count = counts[key]["notes"]
         if source_count == 0 and note_count == 0:
-            gap_type = "new-topic"
+            kind = "new-topic"
             seed = "capture a seed source or project note"
+            why = "No checked works, digests, or notes are present for this requested topic."
+            impact, confidence, actionability = 1, 2, 1
         elif source_count >= dense_threshold and note_count == 0:
-            gap_type = "undigested"
+            kind = "undigested"
             seed = "distill note candidates from checked digests"
+            why = (
+                f"{source_count} checked work input(s) mention this topic, "
+                "but no checked notes cover it."
+            )
+            impact, confidence, actionability = 2, 2, 1
         elif note_count >= dense_threshold and source_count == 0:
-            gap_type = "under-warranted"
+            kind = "under-warranted"
             seed = "capture or link supporting sources"
+            why = (
+                f"{note_count} checked note(s) mention this topic, "
+                "but no checked works or digests warrant it."
+            )
+            impact, confidence, actionability = 2, 2, 1
         else:
             continue
-        gap = {
-            "topic": labels[key],
-            "gap_type": gap_type,
-            "source_count": counts[key]["sources"],
-            "digest_count": counts[key]["digests"],
-            "note_count": note_count,
-            "proposed_seed": seed,
-        }
+        gap = _gap_payload(
+            {
+                "topic": labels[key],
+                "source_count": counts[key]["sources"],
+                "digest_count": counts[key]["digests"],
+                "note_count": note_count,
+                "proposed_seed": seed,
+            },
+            kind=kind,
+            target=f"topic:{labels[key]}",
+            why=why,
+            next_actions=[seed],
+            impact=impact,
+            confidence=confidence,
+            actionability=actionability,
+        )
         if source_ids := _source_ids_from_seen(seen[key]["sources"]):
             gap["source_ids"] = source_ids
         if key in retrieval:
             gap["retrieval_engine"] = retrieval[key]["engine"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
         gaps.append(gap)
+    citation_gaps = _citation_neighborhood_gaps(vault)
+    gaps.extend(citation_gaps)
     full_text_gaps = _missing_full_text_gaps(vault)
     gaps.extend(full_text_gaps)
     gaps.extend(argument_gaps)
@@ -361,12 +395,16 @@ def analyze_gaps(
     result = {
         "checked_topics": len(counts),
         "dense_threshold": dense_threshold,
+        "summary": _gap_summary(gaps),
+        "saturation": _saturation_block(project_argument),
+        "citation_neighborhood_gap_count": len(citation_gaps),
         "full_text_gap_count": len(full_text_gaps),
         "full_text_attention_paths": full_text_attention_paths,
         "full_text_attention_commit": full_text_attention_commit,
         "argument_gap_count": len(argument_gaps),
         "discovery_candidate_paths": candidate_paths,
         "discovery_commit": commit,
+        "gap_findings": gaps,
         "gaps": gaps,
     }
     if project_argument is not None:
@@ -380,6 +418,115 @@ def analyze_gaps(
             }
         )
     return result
+
+
+def _gap_payload(
+    row: dict[str, Any],
+    *,
+    kind: str,
+    target: str,
+    why: str,
+    next_actions: Iterable[str],
+    impact: int,
+    confidence: int,
+    actionability: int,
+    candidate_work_ids: Iterable[str] = (),
+) -> dict[str, Any]:
+    if kind not in GAP_KINDS:
+        raise ValueError(f"unknown gap kind: {kind}")
+    for name, value in (
+        ("impact", impact),
+        ("confidence", confidence),
+        ("actionability", actionability),
+    ):
+        if value not in {0, 1, 2}:
+            raise ValueError(f"{name} must be 0, 1, or 2")
+    score = impact * confidence * actionability
+    out = dict(row)
+    out["kind"] = kind
+    out["gap_type"] = kind
+    out["target"] = target
+    out["why"] = why
+    out["next_actions"] = [action for action in next_actions if str(action).strip()]
+    out["candidate_work_ids"] = sorted(
+        {str(candidate).strip() for candidate in candidate_work_ids if str(candidate).strip()}
+    )
+    out["impact"] = impact
+    out["confidence"] = confidence
+    out["actionability"] = actionability
+    out["score"] = score
+    out["severity"] = _gap_severity(score)
+    out["advisory"] = actionability == 0
+    return out
+
+
+def _gap_severity(score: int) -> str:
+    if score >= 4:
+        return "high"
+    if score >= 2:
+        return "medium"
+    return "low"
+
+
+def _gap_summary(gaps: list[dict[str, Any]]) -> dict[str, Any]:
+    by_kind = dict.fromkeys(sorted(GAP_KINDS), 0)
+    by_severity = {"high": 0, "medium": 0, "low": 0}
+    blocking = 0
+    advisories = 0
+    for gap in gaps:
+        kind = str(gap.get("kind") or gap.get("gap_type") or "")
+        if kind in by_kind:
+            by_kind[kind] += 1
+        severity = str(gap.get("severity") or "low")
+        if severity in by_severity:
+            by_severity[severity] += 1
+        if gap.get("advisory"):
+            advisories += 1
+        else:
+            blocking += 1
+    return {
+        "total": len(gaps),
+        "blocking": blocking,
+        "advisories": advisories,
+        "by_kind": by_kind,
+        "by_severity": by_severity,
+    }
+
+
+def _saturation_block(argument: dict[str, Any] | None) -> dict[str, Any]:
+    if argument is None:
+        return {
+            "claims": 0,
+            "saturated": 0,
+            "unsupported": 0,
+            "uncountered": 0,
+            "ready": False,
+            "claim_saturation": [],
+        }
+    thesis = str(argument.get("thesis_path") or "").strip()
+    claims = 1 if thesis and argument.get("node_count", 0) > 0 else 0
+    has_support = int(argument.get("supports_count") or 0) > 0
+    has_counterpoint = int(argument.get("contradicts_count") or 0) > 0
+    claim_ready = claims > 0 and has_support and has_counterpoint
+    return {
+        "claims": claims,
+        "saturated": 1 if claim_ready else 0,
+        "unsupported": 1 if claims and not has_support else 0,
+        "uncountered": 1 if claims and not has_counterpoint else 0,
+        "ready": claim_ready,
+        "claim_saturation": [
+            {
+                "claim": thesis,
+                "has_support": has_support,
+                "has_counterpoint": has_counterpoint,
+                "saturated": claim_ready,
+            }
+        ]
+        if claims
+        else [],
+        "conditions": argument.get("saturation_conditions") or {},
+        "evidence_saturation": argument.get("evidence_saturation") or "unknown",
+    }
 
 
 def _add_catalog_source_gap_terms(
@@ -487,25 +634,77 @@ def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
         ("gap_findings", "argument-gap"),
     ):
         for finding in argument.get(source_key) or []:
-            kind = str(finding.get("kind") or "finding")
-            gap = {
-                "topic": f"Project argument: {kind}",
-                "gap_type": finding_type,
-                "project_path": argument["project_path"],
-                "thesis_path": argument["thesis_path"],
-                "finding_kind": kind,
-                "severity": str(finding.get("severity") or "info"),
-                "source_count": 0,
-                "digest_count": 0,
-                "note_count": argument["node_count"],
-                "proposed_seed": "curate checked notes or links around the project thesis",
-            }
+            finding_kind = str(finding.get("kind") or "finding")
             advice = str(finding.get("advice") or "").strip()
+            seed = advice or _argument_next_action(finding_kind)
+            canonical = _argument_gap_kind(finding_kind)
+            gap = _gap_payload(
+                {
+                    "topic": f"Project argument: {finding_kind}",
+                    "project_path": argument["project_path"],
+                    "thesis_path": argument["thesis_path"],
+                    "finding_kind": finding_kind,
+                    "finding_source": finding_type,
+                    "source_count": 0,
+                    "digest_count": 0,
+                    "note_count": argument["node_count"],
+                    "proposed_seed": seed,
+                },
+                kind=canonical,
+                target=argument["thesis_path"] or argument["project_path"],
+                why=_argument_gap_why(finding_kind, argument),
+                next_actions=[seed] if seed else [],
+                impact=_argument_impact(finding),
+                confidence=2,
+                actionability=1 if seed else 0,
+            )
             if advice:
                 gap["advice"] = advice
-                gap["proposed_seed"] = advice
             rows.append(gap)
     return rows
+
+
+def _argument_gap_kind(finding_kind: str) -> str:
+    if finding_kind in {"no-refutation"}:
+        return "argument-uncountered"
+    if finding_kind in {"fragility", "conflict"}:
+        return "argument-fragile"
+    return "argument-unsupported"
+
+
+def _argument_next_action(finding_kind: str) -> str:
+    if finding_kind == "no-refutation":
+        return "add or preserve checked counterpoint notes"
+    if finding_kind == "conflict":
+        return "resolve or preserve the contradiction"
+    if finding_kind == "fragility":
+        return "add independent support"
+    if finding_kind == "unstated-warrant":
+        return "add supporting evidence notes"
+    if finding_kind == "structural":
+        return "seed checked notes around the thesis"
+    return "curate checked notes or links around the project thesis"
+
+
+def _argument_gap_why(finding_kind: str, argument: dict[str, Any]) -> str:
+    if finding_kind == "no-refutation":
+        return "The checked project argument has support but no checked counterpoint."
+    if finding_kind == "conflict":
+        return "The checked project argument contains a contradiction that needs disposition."
+    if finding_kind == "fragility":
+        return "The checked project argument depends on too little independent support."
+    if finding_kind == "no-support":
+        return "The checked project argument has no checked supporting note."
+    if finding_kind == "thin-argument":
+        return (
+            f"The checked project argument has only {argument['relation_count']} "
+            "curated relation(s)."
+        )
+    return "The checked project argument is missing an actionable structural element."
+
+
+def _argument_impact(finding: dict[str, Any]) -> int:
+    return 2 if str(finding.get("severity") or "").lower() == "high" else 1
 
 
 def _add_qmd_gap_hits(
@@ -541,20 +740,34 @@ def _add_qmd_gap_hits(
 
 def _missing_full_text_gaps(vault: Path) -> list[dict[str, Any]]:
     gaps = []
-    for source in state.catalog_sources(vault, checked_only=False):
-        if source["text_status"] == "full-text" or source["check_status"] == "quarantined":
+    for source in state.catalog_sources(vault):
+        if source["text_status"] == "full-text" or not _is_current_catalog_source(source):
             continue
+        source_id = str(source["source_id"])
+        text_status = str(source.get("text_status") or "missing")
         gaps.append(
-            {
-                "topic": source["title"],
-                "gap_type": "missing-full-text",
-                "source_count": 1,
-                "digest_count": 0,
-                "note_count": 0,
-                "proposed_seed": "acquire full text or attach user-supplied text",
-                "source_id": source["source_id"],
-                "text_status": source["text_status"],
-            }
+            _gap_payload(
+                {
+                    "topic": source["title"],
+                    "source_count": 1,
+                    "digest_count": 0,
+                    "note_count": 0,
+                    "proposed_seed": "acquire full text or attach user-supplied text",
+                    "source_id": source_id,
+                    "source_ids": [source_id],
+                    "text_status": text_status,
+                },
+                kind="full-text-missing",
+                target=f"catalog/sources/{source_id}",
+                why=(
+                    f"`catalog/sources/{source_id}` is checked but has "
+                    f"`text_status: {text_status}`."
+                ),
+                next_actions=["acquire full text or attach user-supplied text"],
+                impact=2,
+                confidence=2,
+                actionability=1,
+            )
         )
     return gaps
 
@@ -759,9 +972,62 @@ def _candidate_paths_for_gap(
     ]
 
 
+def _citation_neighborhood_gaps(vault: Path) -> list[dict[str, Any]]:
+    sources = [
+        source for source in state.catalog_sources(vault) if _is_current_catalog_source(source)
+    ]
+    source_ids = [str(source["source_id"]) for source in sources]
+    edges_by_source = _candidate_edges(vault, source_ids)
+    if not edges_by_source:
+        return []
+    captured = _captured_work_ids(vault)
+    source_by_id = {str(source["source_id"]): source for source in sources}
+    gaps = []
+    for source_id in sorted(edges_by_source):
+        source = source_by_id.get(source_id)
+        if source is None:
+            continue
+        candidate_ids = sorted(
+            {
+                str(edge["target_id"])
+                for edge in edges_by_source[source_id]
+                if not _edge_is_captured(edge, captured)
+            }
+        )
+        if not candidate_ids:
+            continue
+        count = len(candidate_ids)
+        seed = "review discovered citation-neighborhood candidates"
+        gaps.append(
+            _gap_payload(
+                {
+                    "topic": f"Citation neighborhood: {source['title']}",
+                    "source_count": 1,
+                    "digest_count": 0,
+                    "note_count": 0,
+                    "proposed_seed": seed,
+                    "source_id": source_id,
+                    "source_ids": [source_id],
+                },
+                kind="citation-neighborhood",
+                target=f"catalog/sources/{source_id}",
+                why=(
+                    f"`catalog/sources/{source_id}` has {count} uncaptured "
+                    "references or related Works in provider metadata."
+                ),
+                next_actions=[seed],
+                impact=1,
+                confidence=2,
+                actionability=1,
+                candidate_work_ids=candidate_ids,
+            )
+        )
+    return gaps
+
+
 def _captured_work_ids(vault: Path) -> set[str]:
     captured = set()
-    for source in state.catalog_sources(vault, checked_only=False):
+    for source in state.catalog_sources(vault):
         captured.add(str(source["source_id"]).casefold())
         if source.get("doi"):
             captured.add(str(source["doi"]).casefold())

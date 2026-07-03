@@ -964,7 +964,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         source_id="metadata-only",
         title="Metadata Only",
         text_status="metadata-only",
-        check_status="unchecked",
+        check_status="checked",
     )
     (vault / "knowledge/works").mkdir(parents=True)
     (vault / "knowledge/works/source-alpha.md").write_text(
@@ -994,11 +994,18 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     assert done["status"] == "done"
     gaps = {gap["topic"]: gap for gap in done["gaps"]}
     assert done["gap_count"] == 4
+    assert done["summary"]["total"] == 4
+    assert done["saturation"]["ready"] is False
     assert done["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
     assert (vault / done["full_text_attention_paths"][0]).is_file()
     assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["kind"] == "undigested"
+    assert gaps["catalog-only"]["severity"] == "high"
     assert gaps["catalog-only"]["source_count"] == 1
-    assert gaps["Metadata Only"]["gap_type"] == "missing-full-text"
+    assert gaps["Metadata Only"]["gap_type"] == "full-text-missing"
+    assert gaps["Metadata Only"]["kind"] == "full-text-missing"
+    assert gaps["Metadata Only"]["why"]
+    assert gaps["Metadata Only"]["next_actions"]
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
 
@@ -1049,6 +1056,9 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
     assert done["thesis_path"] == "knowledge/notes/thesis.md"
     assert done["argument_gap_count"] == 2
     assert {gap["finding_kind"] for gap in done["gaps"]} == {"thin-argument", "conflict"}
+    assert {gap["kind"] for gap in done["gaps"]} == {"argument-unsupported", "argument-fragile"}
+    assert done["saturation"]["claims"] == 1
+    assert done["saturation"]["ready"] is True
 
 
 def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) -> None:
