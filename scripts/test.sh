@@ -82,6 +82,7 @@ l0() {
   run ruff format --check src/memoria_vault scripts vault-template/.memoria .github/scripts tests
   run python3 scripts/docs_doctor.py docs
   run python3 scripts/alpha14_negative_gate.py
+  run python3 scripts/checked_terminology_gate.py
   run python3 scripts/gen_reference_refs.py --check
   run python3 scripts/docs_doctor.py --vault-links
   run python3 scripts/status_doctor.py

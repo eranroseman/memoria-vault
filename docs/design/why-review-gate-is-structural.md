@@ -9,10 +9,10 @@ nav_order: 12
 
 Memoria's review gate is **structural**: the policy gate blocks writes to canonical zones regardless of profile. It is not an advisory suggestion, a setting the human can relax, or a prompt instruction. This page explains why.
 
-Promotion makes content canonical: a claim, hub, link, or project thesis now
-represents a PI decision and downstream work may trust it. The rule is
-**propose, not dispose**. Agents and operations can stage proposals; the PI
-decides what becomes part of the record.
+Promotion makes content consumable by checked-only readers: structural checks
+passed and the required warrants resolve. It is not a claim that the PI approved
+the content as true. The rule is **propose, not dispose**. Agents and operations
+can stage proposals; the PI decides how attention items are handled.
 
 ---
 
@@ -57,11 +57,11 @@ The practical difference: prompt discipline has a mean time to failure. Structur
 
 ## The review state as structured data
 
-Because review is structural rather than conversational, the review state is queryable. A Dataview query can ask "which cards are awaiting review?" A dashboard can show review queue depth. A WIP cap can enforce back-pressure when the done-awaiting-review queue grows too long.
+Because review is structural rather than conversational, attention state is queryable. A read API query can ask "which items need action?" A dashboard can show attention queue depth. A WIP cap can enforce back-pressure when the done-awaiting-action queue grows too long.
 
-None of this is possible if review lives in comments, tags, or conversation. "The human reviewed this" must be a field, not a convention.
+None of this is possible if review lives in comments, tags, or conversation. "The human acted on this" must be recorded state, not a convention.
 
-The card's `review_status` field carries exactly this: `unreviewed` (initial state), `requested` (worker finished, human's turn), `approved` (human accepted), `rejected` (human declined). These are states in a state machine, not annotations.
+The request/attention projection carries exactly this: awaiting action, acted, or archived. These are states in a state machine, not annotations, and they are separate from `check_status`.
 
 ---
 
@@ -84,7 +84,7 @@ rather than silently redefine "reviewed" as "agent finished."
 
 This is the design. The bottleneck is the point: the human must stay in contact with what the agents produce. A system that can autonomously move synthesis to canonical without human attention has removed the epistemic guarantee that makes the vault trustworthy.
 
-The cost reduction that an advisory gate would buy (less time in review) is not worth the structural guarantee it would spend (canonical synthesis is always human-approved).
+The cost reduction that an advisory gate would buy (less time in review) is not worth the structural guarantee it would spend: machine output is never treated as self-disposing.
 
 ---
 

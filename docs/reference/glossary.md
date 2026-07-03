@@ -123,9 +123,9 @@ the owning state is journal/check/queue data.
 members and links. Machine-curated hub changes are suggestions until the PI
 adopts them.
 
-**Check status** — the read-state field on every Concept:
-`unchecked`, `checked`, or `quarantined`. Values are specified in
-[Frontmatter fields](frontmatter.md).
+**Check status** — the runtime read-state verdict for Concepts:
+`unchecked`, `checked`, or `quarantined`. It lives in SQLite/read API surfaces,
+not Concept frontmatter.
 
 **Links vs relationships** — the two kinds of connection: authored `links:` edges on notes versus given `relationships` edges on catalog entities. The distinction and its rationale are explained in [Wikilink and link conventions](wikilink-and-link-conventions.md); the field contract is specified in [Frontmatter fields](frontmatter.md).
 
@@ -139,10 +139,9 @@ adopts them.
 remains a compatibility prompt composer for tests and optional adapters.
 
 **State** — not a field name on its own; use the specific field. A Concept's
-read state is **`check_status`**; request state lives in SQLite; ingest carries
-**`ingest_status`**. Prefer the precise field name over a bare "state". Field
-contracts are specified in
-[Frontmatter fields](frontmatter.md).
+read verdict is **`check_status`** in runtime state; request state lives in
+SQLite; ingest carries **`ingest_status`**. Prefer the precise field name over a
+bare "state".
 
 ---
 

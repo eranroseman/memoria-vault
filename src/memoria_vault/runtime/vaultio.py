@@ -25,6 +25,9 @@ RETIRED_FRONTMATTER_FIELDS = frozenset(
         "contested",
         "created",
         "updated",
+        "status",
+        "verdict",
+        "review_status",
     }
 )
 

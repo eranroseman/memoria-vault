@@ -495,6 +495,35 @@ def concept_flags(vault: Path, concept_id: str) -> dict[str, dict[str, str]]:
     }
 
 
+def note_curation_status(vault: Path, concept_id: str) -> str:
+    """Return note-candidate lifecycle from journal events, not frontmatter."""
+    target = normalize_path(concept_id)
+    if not db_path(vault).is_file():
+        return ""
+    status = ""
+    with connect(vault) as conn:
+        rows = conn.execute("SELECT payload_json FROM journal_events ORDER BY event_id").fetchall()
+    # ponytail: journal scan is fine for alpha.15; project if candidate volume matters.
+    for row in rows:
+        try:
+            payload = json.loads(row["payload_json"])
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if (
+            payload.get("event") == "derived"
+            and payload.get("operation") == "propose-note-candidates"
+            and payload.get("output_id") == target
+        ):
+            status = "candidate"
+        elif (
+            payload.get("event") == "resolved"
+            and payload.get("operation") == "curate-note-candidate"
+            and payload.get("target_id") == target
+        ):
+            status = str(payload.get("resolution") or "").strip().lower()
+    return status
+
+
 def record_projection_output(
     vault: Path,
     *,

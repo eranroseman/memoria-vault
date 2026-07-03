@@ -115,7 +115,7 @@ neighborhood documents when results go stale. The rebuild procedure is owned by
 | Limit | Meaning | User symptom |
 | --- | --- | --- |
 | Read-only and local | Search never mutates the workspace or calls a network service. | It cannot cause a denied write or leaked note. |
-| Checked-current by default | Only current `check_status: checked` retrieval documents are returned; raw qmd checks can bypass Memoria filtering. | Raw qmd and `memoria ask` results may differ. |
+| Checked-current by default | Only current retrieval documents with DB/read API `check_status = checked` are returned; raw qmd checks can bypass Memoria filtering. | Raw qmd and `memoria ask` results may differ. |
 | Index can lag | A new Concept, checked Work text, or graph neighborhood is not searchable until the checked-only input tree and qmd index are rebuilt. | `memoria ask` misses Concepts you know exist ([Failure modes](failure-modes.md)). |
 | No standalone duplicate sweep | Retrospective duplicate detection is still operation/sub-check work. | The shipped search surface is retrieval, not dedupe. |
 | Text-ranked graph context | `qmd` ranks textual Work, Concept, and graph-neighborhood documents; it does not run graph algorithms. | Relationship-aware retrieval beyond first-order neighborhoods belongs to [Clustering](clustering.md). |

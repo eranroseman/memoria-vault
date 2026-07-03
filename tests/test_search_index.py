@@ -62,14 +62,29 @@ def set_db_status(vault: Path, path: Path, concept_type: str, status: str) -> No
     state.set_concept_verdict(vault, path.relative_to(vault).as_posix(), status)
 
 
+def mark_note_candidate(vault: Path, path: Path) -> None:
+    state.append_journal_event(
+        vault,
+        {
+            "event": "derived",
+            "operation": "propose-note-candidates",
+            "output_id": path.relative_to(vault).as_posix(),
+        },
+    )
+
+
 def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     note(vault, "checked", "checked", "alpha beta")
     note(vault, "unchecked", "unchecked", "poison alpha")
     note(vault, "quarantined", "quarantined", "poison beta")
     note(vault, "forged", "checked", "forged alpha", db_status=None)
-    note(vault, "candidate", "checked", "candidate alpha", "status: candidate\n")
-    note(vault, "superseded", "checked", "stale alpha", "status: superseded\n")
+    candidate = note(vault, "candidate", "checked", "candidate alpha")
+    stale = note(vault, "superseded", "checked", "stale alpha")
+    mark_note_candidate(vault, candidate)
+    state.set_concept_flag(
+        vault, stale.relative_to(vault).as_posix(), "stale", reason="test", trigger_id="test"
+    )
     capability = vault / "capabilities/operations/checked-operation.md"
     capability.parent.mkdir(parents=True)
     capability.write_text(
@@ -87,14 +102,17 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
 
     assert manifest["mode"] == "bm25"
     assert manifest["embeddings"] is False
-    assert [row["path"] for row in manifest["documents"]] == ["knowledge/notes/checked.md"]
+    assert [row["path"] for row in manifest["documents"]] == [
+        "knowledge/notes/checked.md",
+        "knowledge/notes/superseded.md",
+    ]
     assert (vault / ".memoria/index/qmd/checked/knowledge/notes/checked.md").is_file()
+    assert (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").is_file()
     assert not (vault / ".memoria/index/qmd/checked/capabilities").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/candidate.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/unchecked.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
     assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/forged.md").exists()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").exists()
     assert manifest["qmd_commands"][-1] == "qmd update"
 
 
@@ -287,15 +305,28 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
         "alpha beta",
         "contradictions:\n  - knowledge/notes/tension.md\n",
     )
-    note(vault, "superseded", "checked", "alpha stale", "status: superseded\n")
-    note(vault, "candidate", "checked", "alpha candidate", "status: candidate\n")
+    stale = note(vault, "superseded", "checked", "alpha stale")
+    candidate = note(vault, "candidate", "checked", "alpha candidate")
+    state.set_concept_flag(
+        vault, stale.relative_to(vault).as_posix(), "stale", reason="test", trigger_id="test"
+    )
+    mark_note_candidate(vault, candidate)
 
     answer = answer_query(vault, "alpha")
 
     assert answer["engine"] == "bm25"
     assert answer["unknowns"] == []
-    assert [source["path"] for source in answer["sources"]] == ["knowledge/notes/checked.md"]
-    assert answer["staleness"] == []
+    assert [source["path"] for source in answer["sources"]] == [
+        "knowledge/notes/superseded.md",
+        "knowledge/notes/checked.md",
+    ]
+    assert answer["staleness"] == [
+        {
+            "path": "knowledge/notes/superseded.md",
+            "field": "stale",
+            "value": True,
+        }
+    ]
     assert answer["contradictions"] == [
         {
             "path": "knowledge/notes/checked.md",
@@ -311,13 +342,13 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
     assert stale_answer["staleness"] == [
         {
             "path": "knowledge/notes/candidate.md",
-            "field": "status",
+            "field": "note_curation_status",
             "value": "candidate",
         },
         {
             "path": "knowledge/notes/superseded.md",
-            "field": "status",
-            "value": "superseded",
+            "field": "stale",
+            "value": True,
         },
     ]
 

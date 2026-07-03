@@ -53,8 +53,8 @@ readers can consume them.
 
 ## Archived is a state, not a folder
 
-Archive/retraction state is frontmatter, not a folder move. Current readers use
-`check_status: checked`; unchecked and quarantined Concepts stay out of the
+Archive/retraction state is runtime state, not a folder move. Current readers use
+the DB/read API `check_status = checked` verdict; unchecked and quarantined Concepts stay out of the
 checked index and Ask path.
 
 The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-52](../../adr/52-links-vs-relationships.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).

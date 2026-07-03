@@ -27,7 +27,8 @@ templates, dashboards, eval, and logs. `archived` is a *state*, not a folder.
 
 ## State and signals (ADR-119)
 
-State lives in schema fields such as `check_status`, `lifecycle`, and note `status`.
+Concept frontmatter carries meaning fields such as `type`, `id`, `links`, and
+`tags`; runtime verdicts and request state live in SQLite/read API surfaces.
 `agent_recommendation` is a soft signal, never a gate; your `clean` verdict never
 substitutes for the worker check or PI direction.
 

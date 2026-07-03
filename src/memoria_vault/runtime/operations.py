@@ -305,7 +305,6 @@ def run_prompt_operation(
         "type": "note",
         "title": f"{policy['title']} report",
         "description": str(policy.get("description") or policy["title"]),
-        "status": "candidate",
         "evidence_set": [row["id"] for row in inputs],
         "tags": ["prompt-operation", operation_id],
     }

@@ -126,7 +126,8 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert fm["type"] == "note"
     assert "check_status" not in fm
     assert state.concept_check_status(vault, note_rel) == "checked"
-    assert fm["status"] == "candidate"
+    assert "status" not in fm
+    assert state.note_curation_status(vault, note_rel) == "candidate"
     assert fm["source_id"] == "catalog/sources/source-alpha"
     assert fm["evidence_set"] == ["catalog/sources/source-alpha"]
     assert fm["claim_text"] == "Framing changes which outcomes matter."
@@ -227,7 +228,8 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
     note_rel = notes["note_paths"][0]
     assert result["note_path"] == note_rel
     assert result["status"] == "accepted"
-    assert read_frontmatter(vault / note_rel)["status"] == "accepted"
+    assert "status" not in read_frontmatter(vault / note_rel)
+    assert state.note_curation_status(vault, note_rel) == "accepted"
     assert "The body stays intact." in (vault / note_rel).read_text(encoding="utf-8")
     event = list(iter_jsonl(vault / "journal/curator.jsonl"))[-1]
     assert event["event"] == "resolved"
@@ -236,7 +238,7 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
     assert event["resolution"] == "accepted"
     assert event["reason"] == "PI approved"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, note_rel}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
@@ -281,7 +283,8 @@ def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
     assert observed["actor"] == "pi"
     assert check["status"] == "passed"
     assert result["status"] == "accepted"
-    assert read_frontmatter(note)["status"] == "accepted"
+    assert "status" not in read_frontmatter(note)
+    assert state.note_curation_status(vault, note_rel) == "accepted"
     assert "PI-edited claim." in note.read_text(encoding="utf-8")
 
 
@@ -289,7 +292,7 @@ def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> N
     vault = workspace(tmp_path)
     _md(
         vault / "knowledge/notes/already.md",
-        "type: note\ncheck_status: checked\ntitle: Already\nstatus: accepted\n",
+        "type: note\ncheck_status: checked\ntitle: Already\n",
     )
 
     try:
@@ -398,10 +401,18 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         "lifecycle: retracted\ntags: [stale-only]\n",
     )
     for idx in range(2):
+        path = tmp_path / f"knowledge/notes/candidate-{idx}.md"
         _md(
-            tmp_path / f"knowledge/notes/candidate-{idx}.md",
-            f"type: note\ncheck_status: checked\ntitle: Candidate {idx}\n"
-            "status: candidate\ntags: [candidate-only]\n",
+            path,
+            f"type: note\ncheck_status: checked\ntitle: Candidate {idx}\ntags: [candidate-only]\n",
+        )
+        state.append_journal_event(
+            tmp_path,
+            {
+                "event": "derived",
+                "operation": "propose-note-candidates",
+                "output_id": path.relative_to(tmp_path).as_posix(),
+            },
         )
 
     result = analyze_gaps(tmp_path, seed_terms=["new area"], dense_threshold=2)
@@ -663,22 +674,31 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     )
     _md(
         tmp_path / "knowledge/notes/thesis.md",
-        "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
     )
     _md(
         tmp_path / "knowledge/notes/support.md",
-        "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+        "type: note\ncheck_status: checked\ntitle: Support\n"
         "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
     )
     _md(
         tmp_path / "knowledge/notes/refute.md",
-        "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
+        "type: note\ncheck_status: checked\ntitle: Refute\n"
         "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n",
     )
+    candidate = tmp_path / "knowledge/notes/candidate.md"
     _md(
-        tmp_path / "knowledge/notes/candidate.md",
-        "type: note\ncheck_status: checked\ntitle: Candidate\nstatus: candidate\n"
+        candidate,
+        "type: note\ncheck_status: checked\ntitle: Candidate\n"
         "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+    )
+    state.append_journal_event(
+        tmp_path,
+        {
+            "event": "derived",
+            "operation": "propose-note-candidates",
+            "output_id": candidate.relative_to(tmp_path).as_posix(),
+        },
     )
 
     result = analyze_project_argument(tmp_path, "project-alpha")

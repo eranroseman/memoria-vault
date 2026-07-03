@@ -24,7 +24,7 @@ Before rebuilding, rule out cheaper causes:
 
 | Symptom | Likely cause | What to do |
 | --- | --- | --- |
-| One new Concept is not found | It is not `check_status: checked`, or the checked input tree is stale | Confirm the Concept is checked; then rebuild |
+| One new Concept is not found | Its DB/read API verdict is not `check_status = checked`, or the checked input tree is stale | Confirm the Concept is checked; then rebuild |
 | Search misses many checked Concepts or returns empty | Stale or missing checked input tree / qmd index | Run this guide |
 | Raw `qmd search` finds it but `memoria ask` does not cite it | Not an index problem | Use [Query the vault](../knowledge/query-the-vault.md) troubleshooting |
 

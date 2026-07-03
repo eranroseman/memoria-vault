@@ -23,8 +23,8 @@ composition contract.
 
 ## The shipped operations
 
-Eight prompt operations ship at `check_status: checked` and are runnable. Each
-is one packaged Markdown manifest; the file stem is its `pattern_id`.
+Eight prompt operations ship as checked packaged operation manifests and are
+runnable. Each file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -80,8 +80,8 @@ declared `runner.test` or `runner.live` branch; the runner cannot choose an
 undeclared provider or model.
 
 The result stages one unchecked `note` report under `.memoria/staging/knowledge/`
-with `status: candidate`, an `evidence_set` pointing at the checked inputs, and
-request/journal rows for the run, model call, and derived output. The canonical
+with an `evidence_set` pointing at the checked inputs and request/journal rows
+for the run, model call, derived output, and note-candidate status. The canonical
 `knowledge/notes/...` target is not materialized or checked until the normal
 promotion path accepts it. `model_call` rows include resolved
 mode/provider/model/params and a prompt hash.

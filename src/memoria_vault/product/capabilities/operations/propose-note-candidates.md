@@ -36,5 +36,6 @@ links: {}
 # Pattern
 
 From the checked digest identified by {{input}}, propose atomic notes grounded in
-the digest's source evidence. The note candidates are machine-authored with
-`status: candidate`; the PI decides whether to accept, edit, reject, or link them.
+the digest's source evidence. The note candidates are machine-authored; candidate
+state lives in journal/SQLite state, and the PI decides whether to accept, edit,
+reject, or link them.

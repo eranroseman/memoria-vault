@@ -78,10 +78,6 @@ def field_names(fields: Any) -> str:
     return cell(list((fields or {}).keys()))
 
 
-def check_status(schema: dict[str, Any]) -> str:
-    return cell((schema.get("enums") or {}).get("check_status") or [])
-
-
 def enum_values(schema: dict[str, Any], kind: str) -> str:
     if not kind.startswith("enum:"):
         return "-"
@@ -121,8 +117,8 @@ def render_document_types() -> str:
             [
                 f"## {CATEGORY_LABELS[category]} ({len(rows)})",
                 "",
-                "| Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |",
-                "| --- | --- | --- | --- | --- | --- | --- | --- |",
+                "| Type | Folder | Gated | Required fields | Required-any | Optional fields |",
+                "| --- | --- | --- | --- | --- | --- |",
             ]
         )
         for schema in rows:
@@ -134,8 +130,6 @@ def render_document_types() -> str:
                         cell(doc_type),
                         cell(home_map.get(doc_type)),
                         cell(schema.get("gated", False)),
-                        cell(schema.get("initial_check_status")),
-                        check_status(schema),
                         field_names(schema.get("required")),
                         cell(schema.get("required_any") or []),
                         field_names(schema.get("optional")),
@@ -159,8 +153,8 @@ grand_parent: Reference
 The Concept schemas are authoritative: every type is defined by one YAML file
 under `vault-template/.memoria/schemas/types`, and the type-to-folder map lives
 in `vault-template/.memoria/schemas/folders.yaml`.
-This generated page is the lookup view for folder homes, check status, and
-field presence. For field semantics, see [Frontmatter fields](frontmatter.md).
+This generated page is the lookup view for folder homes and field presence. For
+field semantics, see [Frontmatter fields](frontmatter.md).
 
 Regenerate with `python scripts/gen_reference_refs.py --write`; edit the schema
 sources, not this page.
@@ -169,7 +163,7 @@ sources, not this page.
 
 ## Related
 
-- Field kinds, check status values, enums, and per-type field inventory:
+- Field kinds, enums, and per-type field inventory:
   [Frontmatter fields](frontmatter.md)
 - Retired Inbox card contracts: [Inbox card fields](inbox-card-fields.md)
 - The folder tree the homes map into: [On-disk layout](on-disk-layout.md)
@@ -181,21 +175,9 @@ sources, not this page.
 
 def render_frontmatter() -> str:
     schemas = type_schemas()
-    check_status_groups: dict[str, list[str]] = defaultdict(list)
-    for schema in schemas:
-        check_status_groups[check_status(schema)].append(schema["type"])
-
     lines = [
         f"Generated from `{TYPES.relative_to(ROOT)}`.",
-        "",
-        "## Check status subsets",
-        "",
-        "| Check status subset | Types |",
-        "| --- | --- |",
     ]
-    for subset, names in sorted(check_status_groups.items(), key=lambda item: item[0]):
-        lines.append(f"| {subset} | {cell(names)} |")
-
     lines.extend(
         [
             "",
@@ -263,28 +245,28 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `literal:<value>` | exactly that value; for example, `type: literal:source` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are **allowed**. A schema example (`types/source.yaml`):
+Unknown extra fields are **allowed**. A schema example (`types/note.yaml`):
 
 ```yaml
-type: source
-category: catalog
+type: note
+category: knowledge
 gated: false
-initial_check_status: unchecked
 enums:
-  check_status: [unchecked, checked, quarantined]
-  item_type:
-    [article, book, webpage, dataset, repository, software, audio, video, note, report]
+  mode: [claim, question]
+  question_status: [open, resolved]
 required:
-  type: literal:source
-  check_status: enum:check_status
+  type: literal:note
+  id: ulid
   title: str
-  description: str
-  source_id: str
-optional:
-  resource: str
-  item_type: enum:item_type
-  links: map
   tags: list
+  links: map
+optional:
+  aliases: list
+  archived: bool
+  description: str
+  mode: enum:mode
+  question_status: enum:question_status
+  x: map
 ```
 
 {render_frontmatter().rstrip()}
@@ -303,23 +285,15 @@ convention. Templates and deterministic emitters put fields in this order:
 
 1. Human identity: `title` or `name`.
 2. Schema identity: `type`, then `id` where the bundle requires it.
-3. Read state: `check_status`, then `standing` where the bundle requires it.
-4. Human summary and pointer fields: `description`, `resource`, `source_id`.
-5. Type-specific state and references.
-6. Relations and classification: `links`, `tags`, and type-specific maps.
+3. Human summary and pointer fields: `description`, `resource`, `source_id`.
+4. Type-specific state and references.
+5. Relations and classification: `links`, `tags`, and type-specific maps.
 
-## `check_status`
+## Verdict state is not frontmatter
 
-Every Concept carries `check_status`, drawn from the same read-state enum:
-
-```text
-unchecked → checked → quarantined
-```
-
-`unchecked` is ingestible but not promoted as checked knowledge. `checked` is
-the read barrier for machine-owned records and curated PI views. `quarantined`
-records failed validation, provenance, or foreign-write checks and stay out of
-normal read surfaces until repaired.
+`check_status` lives in `.memoria/memoria.sqlite`, worker requests, and read API
+responses. It is not written to Concept frontmatter. Writers reject retired
+frontmatter verdict fields so a forged file field cannot grant a checked verdict.
 
 ## Links and resources
 
@@ -335,7 +309,6 @@ owns the exact current contract.
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
 | `id` | `str` | Required ULID for knowledge Concepts. |
 | `title` | `str` | Human-readable Concept title. |
-| `check_status` | `enum` | Read-state gate: `unchecked`, `checked`, or `quarantined`. |
 | `links` | `map` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
 | `resource` | `str` | Optional backing-resource pointer. |
