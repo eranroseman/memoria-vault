@@ -144,6 +144,7 @@ def test_alpha15_cli_command_surface_is_exact() -> None:
         "memoria doctor self-test",
         "memoria ask",
         "memoria serve",
+        "memoria mcp",
         "memoria new hub",
         "memoria new note",
         "memoria new project",
