@@ -25,6 +25,7 @@ from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
+from memoria_vault.runtime.vaultio import write_text_durable
 
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 
@@ -274,7 +275,7 @@ def enrich_source(
     ]
     references_path = "references.bib"
     references_text = render_references_bib(vault)
-    (vault / references_path).write_text(references_text, encoding="utf-8")
+    write_text_durable(vault / references_path, references_text, create_parent=True)
     state.record_projection_output(
         vault,
         output_id=references_path,
@@ -362,7 +363,7 @@ def _write_attention_flag(
             "",
         ]
     )
-    path.write_text(text, encoding="utf-8")
+    write_text_durable(path, text, create_parent=True)
     return rel
 
 
@@ -384,7 +385,6 @@ def _write_discovery_candidate(
     path = vault / rel
     if path.exists():
         return rel
-    path.parent.mkdir(parents=True, exist_ok=True)
     text = "\n".join(
         [
             "---",
@@ -410,7 +410,7 @@ def _write_discovery_candidate(
             "",
         ]
     )
-    path.write_text(text, encoding="utf-8")
+    write_text_durable(path, text, create_parent=True)
     return rel
 
 
@@ -487,9 +487,8 @@ def _write_provider_blob(vault: Path, provider: str, payload: dict[str, Any]) ->
         f".memoria/blobs/provider-payloads/{provider}/{raw_hash.removeprefix('sha256:')}.json"
     )
     path = vault / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_text(text, encoding="utf-8")
+        write_text_durable(path, text, create_parent=True)
     return raw_hash, rel
 
 
@@ -644,9 +643,8 @@ def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[s
         f"{safe_filename(source_id)}/full-text/{content_hash.removeprefix('sha256:')}.txt"
     )
     path = vault / rel
-    path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_text(normalized, encoding="utf-8")
+        write_text_durable(path, normalized, create_parent=True)
     return content_hash, rel
 
 

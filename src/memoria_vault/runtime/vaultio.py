@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import secrets
+import tempfile
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -151,9 +152,54 @@ def write_frontmatter_doc(
     *,
     create_parent: bool = False,
 ) -> None:
+    write_text_durable(path, frontmatter_doc(frontmatter, body), create_parent=create_parent)
+
+
+def write_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None:
+    write_bytes_durable(path, text.encode("utf-8"), create_parent=create_parent)
+
+
+def write_bytes_durable(path: Path, data: bytes, *, create_parent: bool = False) -> None:
     if create_parent:
         path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(frontmatter_doc(frontmatter, body), encoding="utf-8")
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    tmp_path = Path(tmp_name)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_path, path)
+        _fsync_dir(path.parent)
+    except BaseException:
+        try:
+            tmp_path.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def append_text_durable(path: Path, text: str, *, create_parent: bool = False) -> None:
+    if create_parent:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(text)
+        handle.flush()
+        os.fsync(handle.fileno())
+    _fsync_dir(path.parent)
+
+
+def _fsync_dir(path: Path) -> None:
+    try:
+        fd = os.open(path, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
 
 
 def iter_markdown(

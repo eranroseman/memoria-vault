@@ -16,6 +16,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import (
+    _workspace_lock,
     enqueue_operation,
     run_pending_jobs,
     run_request,
@@ -1201,8 +1202,10 @@ def _cmd_workspace_run(args: argparse.Namespace) -> int:
 def _cmd_workspace_recover(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     fixture = _workspace_recover_fixture(workspace, args.fixture) if args.fixture else None
-    restored = state.recover_pending_materializations(workspace)
-    payload = {"ok": True, "restored": restored}
+    with _workspace_lock(workspace):
+        restored = state.recover_pending_materializations(workspace)
+        failed_requests = state.recover_running_requests(workspace)
+    payload = {"ok": True, "restored": restored, "failed_requests": failed_requests}
     if fixture is not None:
         payload["fixture"] = fixture
     return _emit(payload, args)
@@ -1543,7 +1546,7 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         "tags: []\n"
         "links: {}\n"
         "---\n\n"
-        "This note exists to prove pending file materializations replay from SQLite.\n"
+        "This note exists to prove pending file materializations recover from Git and SQLite.\n"
     )
     stage_concept(
         workspace,
@@ -1554,6 +1557,8 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         machine="memoria-cli",
     )
     promote_checked(workspace, rel, machine="memoria-cli")
+    _git(workspace, "add", "--", rel, "journal/memoria-cli.jsonl")
+    _git(workspace, "commit", "-m", "simulate recoverable materialization")
     path = workspace / rel
     if path.is_file():
         path.unlink()
