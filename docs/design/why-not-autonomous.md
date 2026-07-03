@@ -60,7 +60,12 @@ So a bounded code experiment loop could be admissible in principle.
 
 **But no autonomy exception exists anywhere in the current system** ([ADR-21](../adr/21-l3-autonomy-ceiling.md), [ADR-48](../adr/48-copi-and-agent-consolidation.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
 
-The synthesis gate remains structurally untouched. The policy gate's review-gated-zone deny rule still blocks checked synthesis writes. Whether to admit a bounded code-experiment loop will be revisited only when the external-coding-agent path is defined beyond the current project handoff — and reopening it requires a superseding decision, not an incremental relaxation.
+The synthesis gate remains structurally untouched. The request envelope,
+trusted-writer checks, read barrier, and optional adapter policy hook still block
+unchecked machine output from becoming checked synthesis. Whether to admit a
+bounded code-experiment loop will be revisited only when the
+external-coding-agent path is defined beyond the current project handoff — and
+reopening it requires a superseding decision, not an incremental relaxation.
 
 ---
 
