@@ -93,7 +93,7 @@ status.
 | [96](96-code-lane-keep-revert-experiment-loop.md) | Code-lane keep/revert experiment loop | proposed |
 | [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | rejected |
 | [98](98-relation-vocabulary-expansion.md) | Relation-vocabulary expansion | proposed |
-| [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | proposed |
+| [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | accepted |
 | [100](100-exploration-trace-capture.md) | Exploration-trace capture | superseded → ADR-126 |
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 | [102](102-disposable-projection-engine.md) | Disposable projection engine | superseded → ADR-130 |

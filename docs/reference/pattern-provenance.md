@@ -35,7 +35,7 @@ used as framing, or rejected. The design argument is
 | Hypothesis-feedback taxonomy | [MOOSE](bibliography.md#yang2026moose) | Autonomous judgment; used as a verification rubric. |
 | Chain-of-Evidence taxonomy | [ScientistOne](bibliography.md#meng2026scientistone) | Score-as-gate; reserved for Peer-reviewer claim trace. |
 | Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Extended relation vocabulary remains deferred. |
-| Per-paper structured representation | [Knows](bibliography.md#yu2026knows) | Automatic ingest population; `_aspects.*` slots exist. |
+| Per-paper structured representation | [Knows](bibliography.md#yu2026knows) | Automatic ingest population; `work_aspects` read-model rows are queryable. |
 | Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM | Scores can change what reaches the gate, never where the gate sits. |
 
 ## Reference

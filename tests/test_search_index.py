@@ -219,6 +219,17 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
             },
         ],
     )
+    state.replace_work_aspects(
+        vault,
+        "source-alpha",
+        [
+            {
+                "aspect_type": "method",
+                "aspect_text": "coordination-aspect interviews",
+                "check_status": "checked",
+            }
+        ],
+    )
 
     manifest = rebuild_checked_qmd_source(vault)
 
@@ -230,6 +241,7 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     work = vault / ".memoria/index/qmd/checked/works/source-alpha.md"
     graph = vault / ".memoria/index/qmd/checked/graph-neighborhoods/source-alpha.md"
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
+    assert "coordination-aspect interviews" in work.read_text(encoding="utf-8")
     assert '"doi": "10.1000/alpha"' in work.read_text(encoding="utf-8")
     graph_text = graph.read_text(encoding="utf-8")
     assert "Ada River" in graph_text
@@ -244,6 +256,9 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
         {"file": graph.as_posix()}
     ]
     assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "works/source-alpha.md"
+    assert (
+        answer_query(vault, "coordination-aspect")["sources"][0]["path"] == "works/source-alpha.md"
+    )
     concept_only = [
         (path.relative_to(vault).as_posix(), _tokens(path.read_text(encoding="utf-8")))
         for path in checked_concepts(vault)

@@ -180,6 +180,18 @@ CREATE TABLE IF NOT EXISTS work_graph_edges (
     discovered_at TEXT NOT NULL,
     PRIMARY KEY (work_id, relation_type, target_id)
 );
+CREATE TABLE IF NOT EXISTS work_aspects (
+    source_id TEXT NOT NULL,
+    aspect_type TEXT NOT NULL CHECK (
+        aspect_type IN ('context', 'key_idea', 'method', 'outcome', 'limitation', 'assumption')
+    ),
+    aspect_text TEXT NOT NULL,
+    anchor_text TEXT NOT NULL DEFAULT '',
+    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    source_provider TEXT NOT NULL DEFAULT 'deterministic',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (source_id, aspect_type)
+);
 CREATE TABLE IF NOT EXISTS derivations (
     input_id TEXT NOT NULL,
     output_id TEXT NOT NULL,
@@ -194,4 +206,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 2;
+PRAGMA user_version = 3;
