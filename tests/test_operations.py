@@ -13,6 +13,7 @@ from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
     compile_source_digest,
     load_operation_policy,
+    load_runner_provider_config,
     record_copi_interview_turn,
     require_allowed_network,
     resolve_operation_runner,
@@ -102,6 +103,22 @@ def test_allowed_network_rejects_host_prefix_bypass() -> None:
     require_allowed_network(policy, "http://example.test/source")
     with pytest.raises(PermissionError, match=r"api\.openalex\.org\.evil"):
         require_allowed_network(policy, "https://api.openalex.org.evil/works/W1")
+
+
+def test_runner_provider_config_rejects_legacy_root_providers(tmp_path: Path) -> None:
+    config = tmp_path / ".memoria/config/providers.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text(
+        """version: 1
+providers:
+  local: {url: http://model.test/v1, key_env: null}
+  gateway: {url: https://gateway.test/v1, key_env: KILOCODE_API_KEY}
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="runner_providers must be a map"):
+        load_runner_provider_config(tmp_path)
 
 
 def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
