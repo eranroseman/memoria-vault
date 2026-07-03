@@ -2,7 +2,7 @@
 title: Integrity prompt injection check
 type: operation
 check_status: checked
-description: Detect fixture prompt-injection markers in checked source text.
+description: Detect fixture prompt-injection markers in checked Work text.
 operation_id: integrity-prompt-injection-check
 allowed_tools:
 - integrity_checker
@@ -15,7 +15,7 @@ runner:
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: integrity-prompt-injection-check.v1
 io_schema:
-  input: checked_sources
+  input: checked_works
   output: injection_findings
 risk_class: medium
 required_checks: []
@@ -29,4 +29,4 @@ links: {}
 
 # Operation
 
-Flag checked sources that contain seeded prompt-injection markers.
+Flag checked Works that contain seeded prompt-injection markers.

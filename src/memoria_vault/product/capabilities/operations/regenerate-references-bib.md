@@ -17,7 +17,7 @@ runner:
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: regenerate-references-bib.v1
 io_schema:
-  input: checked_sources
+  input: checked_catalog_works
   output: references_bib_projection
 risk_class: low
 required_checks:
@@ -32,5 +32,4 @@ links: {}
 
 # Operation
 
-Render `references.bib` from checked SQLite catalog rows, falling back to
-checked source Concepts only when no catalog rows exist.
+Render `references.bib` from checked SQLite catalog rows.

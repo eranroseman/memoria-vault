@@ -9,9 +9,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - .memoria/blobs/source-content/
-- catalog/
 - journal/
-- references.bib
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -19,7 +17,7 @@ runner:
 prompt_version: capture-source.v1
 io_schema:
   input: source_payload
-  output: checked_source
+  output: catalog_work_row
 risk_class: medium
 required_checks:
 - memoria-runtime
@@ -33,6 +31,6 @@ links: {}
 
 # Operation
 
-Write supplied source content into the catalog path. Scholarly DOI/ISBN inputs
-are staged in SQLite and `.memoria/blobs/source-content/` for later enrichment;
-portable file/text inputs write a catalog DB row plus immutable blob payloads.
+Write supplied source content into a SQLite catalog Work row plus immutable
+`.memoria/blobs/source-content/` payloads. Scholarly DOI/ISBN inputs are staged
+for later enrichment; portable file/text inputs use the same catalog/blob path.
