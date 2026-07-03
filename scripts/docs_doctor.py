@@ -545,7 +545,7 @@ def _load_schema_types(repo: Path) -> dict[str, dict]:
         import yaml
     except ImportError:
         return {}
-    schema_dir = repo / "src" / ".memoria" / "schemas" / "types"
+    schema_dir = repo / "vault-template" / ".memoria" / "schemas" / "types"
     out: dict[str, dict] = {}
     for path in sorted(schema_dir.glob("*.yaml")):
         try:
@@ -587,12 +587,12 @@ def check_document_type_reference_mirror(repo: Path, errors: list[str]) -> None:
     missing = sorted(set(types) - mentioned)
     if missing:
         errors.append(f"{doc}: document-type mirror omits schema type(s): {', '.join(missing)}")
-    check_status_mentions = _markdown_code_values(frontmatter_text)
-    missing_check_status = sorted(set(types) - check_status_mentions)
-    if missing_check_status:
+    frontmatter_mentions = _markdown_code_values(frontmatter_text)
+    missing_frontmatter = sorted(set(types) - frontmatter_mentions)
+    if missing_frontmatter:
         errors.append(
-            f"{frontmatter}: check-status subset mirror omits schema type(s): "
-            f"{', '.join(missing_check_status)}"
+            f"{frontmatter}: per-type frontmatter mirror omits schema type(s): "
+            f"{', '.join(missing_frontmatter)}"
         )
 
 

@@ -25,11 +25,12 @@ In `knowledge/hubs/`, create a new note from `system/templates/hub.md`:
 
 ```yaml
 type: hub
-check_status: unchecked
+id: <ULID>
 title: <topic title>
 description: <one-sentence topic shape>
-members: []
+tags: []
 links: {}
+tag: <topic-tag>
 ```
 
 **2. Name it after the topic.**

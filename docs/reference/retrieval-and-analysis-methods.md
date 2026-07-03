@@ -35,8 +35,8 @@ today.
 
 **Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_qmd_source()`
 writes checked Concepts plus generated checked Work text and graph neighborhoods into
-`.memoria/index/qmd/checked/`; Memoria filters qmd results back through
-`check_status: checked`. `answer_query()` first uses qmd when the checked
+`.memoria/index/qmd/checked/`; Memoria filters qmd results back through the
+DB/read API `check_status = checked` verdict. `answer_query()` first uses qmd when the checked
 manifest and qmd binary are ready, then falls back to deterministic Python BM25.
 For project-scoped Ask, it expands the query with checked project scope/facet
 terms and checked linked thesis terms before querying qmd. `run_bm25_eval()`

@@ -8,7 +8,7 @@ nav_order: 4
 # Promotion and the write boundary
 
 Promotion is the act of making content readable as checked knowledge. In
-alpha.14, that means a worker-owned transition into `check_status: checked`
+alpha.14, that means a worker-owned transition to DB/read API `check_status = checked`
 with a journal row. The PI still decides what claims, links, and hub curation
 mean; the worker owns the mechanical write boundary.
 

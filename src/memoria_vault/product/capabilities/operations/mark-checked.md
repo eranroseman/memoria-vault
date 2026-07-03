@@ -32,4 +32,5 @@ links: {}
 
 # Operation
 
-Record a worker-owned `check_status: checked` transition for an observed PI edit.
+Record a worker-owned DB/read API `check_status = checked` transition for an
+observed PI edit.

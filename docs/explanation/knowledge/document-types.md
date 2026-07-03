@@ -48,16 +48,16 @@ instead of silently accepted.
 views; machine-generated hub changes are suggestions until accepted.
 
 **Note candidates.** `note` is the single atomic note type. Machine-proposed
-notes are checked Concepts with `status: candidate`; the PI still decides
-whether to accept, edit, reject, or link them.
+notes are checked Concepts whose candidate state lives in journal/SQLite state;
+the PI still decides whether to accept, edit, reject, or link them.
 
 **Gap analysis.** The runtime compares checked source/digest signals with
 checked notes. `new-topic` means no checked material exists for a seed term;
 `undigested` means sources/digests are dense but notes are absent;
 `under-warranted` means notes exist without enough source support.
 
-**Readable boundaries.** A Concept can exist before it is trusted. Consumers that
-need checked knowledge filter to `check_status: checked`; repair surfaces can
+**Readable boundaries.** A Concept can exist before checks pass. Consumers that
+need checked knowledge filter to DB/read API `check_status = checked`; repair surfaces can
 show `unchecked` and `quarantined` records explicitly.
 
 **Capability audit.** Prompt operations, optional adapter servers, skills, and workflows are

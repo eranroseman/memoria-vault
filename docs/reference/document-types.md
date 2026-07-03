@@ -11,8 +11,8 @@ grand_parent: Reference
 The Concept schemas are authoritative: every type is defined by one YAML file
 under `vault-template/.memoria/schemas/types`, and the type-to-folder map lives
 in `vault-template/.memoria/schemas/folders.yaml`.
-This generated page is the lookup view for folder homes, check status, and
-field presence. For field semantics, see [Frontmatter fields](frontmatter.md).
+This generated page is the lookup view for folder homes and field presence. For
+field semantics, see [Frontmatter fields](frontmatter.md).
 
 Regenerate with `python scripts/gen_reference_refs.py --write`; edit the schema
 sources, not this page.
@@ -25,19 +25,19 @@ Total types: **4** (Knowledge Concepts: 4).
 
 ## Knowledge Concepts (4)
 
-| Type | Folder | Gated | Initial check status | Check status values | Required fields | Required-any | Optional fields |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `hub` | `knowledge/hubs` | `false` | `null` | - | `type` · `id` · `title` · `tags` · `links` · `tag` | - | `aliases` · `archived` · `description` · `x` |
-| `note` | `knowledge/notes` | `false` | `null` | - | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `mode` · `question_status` · `temporal_scope` · `tense` · `qualifier` · `anchors` · `x` |
-| `project` | `knowledge/projects` | `false` | `null` | - | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `thesis` · `outcome_frame` · `paper_plan` · `x` |
-| `work` | `knowledge/works` | `false` | `null` | - | `type` · `id` · `title` · `tags` · `links` · `work_id` | - | `aliases` · `archived` · `description` · `x` |
+| Type | Folder | Gated | Required fields | Required-any | Optional fields |
+| --- | --- | --- | --- | --- | --- |
+| `hub` | `knowledge/hubs` | `false` | `type` · `id` · `title` · `tags` · `links` · `tag` | - | `aliases` · `archived` · `description` · `x` |
+| `note` | `knowledge/notes` | `false` | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `mode` · `question_status` · `temporal_scope` · `tense` · `qualifier` · `anchors` · `x` |
+| `project` | `knowledge/projects` | `false` | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `thesis` · `outcome_frame` · `paper_plan` · `x` |
+| `work` | `knowledge/works` | `false` | `type` · `id` · `title` · `tags` · `links` · `work_id` | - | `aliases` · `archived` · `description` · `x` |
 
 
 <!-- REFERENCE:END -->
 
 ## Related
 
-- Field kinds, check status values, enums, and per-type field inventory:
+- Field kinds, enums, and per-type field inventory:
   [Frontmatter fields](frontmatter.md)
 - Retired Inbox card contracts: [Inbox card fields](inbox-card-fields.md)
 - The folder tree the homes map into: [On-disk layout](on-disk-layout.md)

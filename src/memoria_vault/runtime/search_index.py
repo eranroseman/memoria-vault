@@ -209,14 +209,14 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
     if (
         path.is_file()
         and is_consumable_checked_file(vault, rel)
-        and _is_searchable_frontmatter(parse_frontmatter(safe_read(path)))
+        and _is_searchable_frontmatter(_frontmatter_with_flags(vault, rel, safe_read(path)))
     ):
         return True
     qmd_path = Path(vault) / QMD_INPUT_ROOT / rel
     return (
         qmd_path.is_file()
         and is_consumable_checked_file(vault, rel)
-        and _is_searchable_frontmatter(parse_frontmatter(safe_read(qmd_path)))
+        and _is_searchable_frontmatter(_frontmatter_with_flags(vault, rel, safe_read(qmd_path)))
     )
 
 
@@ -497,6 +497,9 @@ def _frontmatter_with_flags(vault: Path, relpath: str, text: str) -> dict[str, A
     frontmatter = parse_frontmatter(text)
     if "stale" in state.concept_flags(vault, relpath):
         frontmatter["_memoria_stale"] = True
+    note_status = state.note_curation_status(vault, relpath)
+    if note_status:
+        frontmatter["_memoria_note_status"] = note_status
     return frontmatter
 
 
@@ -511,11 +514,11 @@ def _staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
 
 def _hard_staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
     lifecycle = str(frontmatter.get("lifecycle") or "")
-    status = str(frontmatter.get("status") or "")
+    status = str(frontmatter.get("_memoria_note_status") or "")
     if lifecycle in {"retracted", "archived"}:
         return {"path": path, "field": "lifecycle", "value": lifecycle}
-    if status in {"candidate", "needs_review", "rejected", "superseded"}:
-        return {"path": path, "field": "status", "value": status}
+    if status in {"candidate", "rejected"}:
+        return {"path": path, "field": "note_curation_status", "value": status}
     return {}
 
 

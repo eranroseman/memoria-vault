@@ -97,6 +97,13 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
             "---\ntype: note\ncheck_status: checked\ntitle: Alpha note\ntags: []\nlinks: {}\n---\nAlpha body.\n",
             machine="test-machine",
         )
+    with pytest.raises(ValueError, match="retired frontmatter field is ignored: status"):
+        stage_concept(
+            vault,
+            "knowledge/notes/alpha.md",
+            "---\ntype: note\ntitle: Alpha note\nstatus: candidate\ntags: []\nlinks: {}\n---\nAlpha body.\n",
+            machine="test-machine",
+        )
 
 
 def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) -> None:

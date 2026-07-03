@@ -40,7 +40,7 @@ def _expected_outputs(topic: str) -> str:
     return "\n".join(
         [
             f"- Draft one unchecked note proposal at knowledge/notes/maps/hub-proposal-{proposal}.md.",
-            "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, check_status: unchecked, members: [].",
+            "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, id, tags: [], links: {}, tag.",
             "- Include only candidate member links and the threshold evidence; do not write curation prose or annotations as if approved.",
             "- Do not write, move, or create files under knowledge/hubs/; the PI curates the final hub.",
         ]

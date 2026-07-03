@@ -117,7 +117,6 @@ def emit_note_candidates(
         frontmatter = {
             "type": "note",
             "title": title,
-            "status": "candidate",
             "source_id": row.get("source_id") or digest_source_ref,
             "evidence_set": row.get("evidence_set")
             or digest_fm.get("evidence_set")
@@ -195,15 +194,12 @@ def curate_note_candidate(
     note = vault / note_rel
     if not note.is_file():
         raise FileNotFoundError(note)
-    frontmatter, body = split_frontmatter(note.read_text(encoding="utf-8"))
+    frontmatter, _body = split_frontmatter(note.read_text(encoding="utf-8"))
     if frontmatter.get("type") != "note" or not _has_checked_verdict(vault, note_rel):
         raise ValueError(f"{note_rel} is not a checked note")
-    if frontmatter.get("status") != "candidate":
+    if state.note_curation_status(vault, note_rel) != "candidate":
         raise ValueError(f"{note_rel} is not a candidate note")
 
-    frontmatter["status"] = status
-    write_frontmatter_doc(note, frontmatter, body)
-    state.mark_checked(vault, note_rel, sha256_file(note), note.read_text(encoding="utf-8"))
     event = append_journal_event(
         vault,
         {
@@ -1113,7 +1109,7 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
     notes = {
         rel: frontmatter
         for rel, frontmatter in _checked_concepts(vault)
-        if frontmatter.get("type") == "note" and _is_current_note(frontmatter)
+        if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
     }
     thesis = notes.get(thesis_rel)
     if thesis is None:
@@ -1413,7 +1409,7 @@ def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
         if (
             frontmatter.get("type") == "hub"
             and _has_checked_verdict(vault, rel)
-            and _is_current_concept(rel, frontmatter)
+            and _is_current_concept(vault, rel, frontmatter)
             and _frontmatter_mentions_project(frontmatter, project_rel)
         ):
             rows.append(
@@ -1495,7 +1491,7 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
         for path in iter_markdown(base, skip_dirs=frozenset()):
             frontmatter = read_frontmatter(path)
             rel = path.relative_to(vault).as_posix()
-            if _has_checked_verdict(vault, rel) and _is_current_concept(rel, frontmatter):
+            if _has_checked_verdict(vault, rel) and _is_current_concept(vault, rel, frontmatter):
                 yield rel, frontmatter
 
 
@@ -1742,23 +1738,21 @@ def _link_target(value: Any) -> str:
         return ""
 
 
-def _is_current_concept(relpath: str, frontmatter: dict[str, Any]) -> bool:
+def _is_current_concept(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> bool:
     if not _is_current_frontmatter(frontmatter):
         return False
-    return not relpath.startswith("knowledge/notes/") or _is_current_note(frontmatter)
+    return not relpath.startswith("knowledge/notes/") or _is_current_note(
+        vault, relpath, frontmatter
+    )
 
 
 def _is_current_frontmatter(frontmatter: dict[str, Any]) -> bool:
-    return frontmatter.get("lifecycle") not in {"retracted", "archived"} and frontmatter.get(
-        "status"
-    ) not in {"rejected", "superseded"}
+    return frontmatter.get("lifecycle") not in {"retracted", "archived"}
 
 
-def _is_current_note(frontmatter: dict[str, Any]) -> bool:
-    return _is_current_frontmatter(frontmatter) and frontmatter.get("status") not in {
-        "candidate",
-        "needs_review",
-    }
+def _is_current_note(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> bool:
+    status = state.note_curation_status(vault, relpath)
+    return _is_current_frontmatter(frontmatter) and status not in {"candidate", "rejected"}
 
 
 def _digest_rel(path: str) -> str:

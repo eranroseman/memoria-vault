@@ -268,7 +268,7 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
     fm = read_frontmatter(staged)
     assert "check_status" not in fm
     assert state.concept_check_status(vault, done["output_path"]) == "unchecked"
-    assert fm["status"] == "candidate"
+    assert "status" not in fm
     assert fm["evidence_set"] == ["knowledge/notes/claim.md"]
     assert "Alpha reduces beta" in staged.read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
@@ -954,7 +954,8 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
     note_fm = read_frontmatter(vault / note_rel)
     assert "check_status" not in note_fm
     assert state.concept_check_status(vault, note_rel) == "checked"
-    assert note_fm["status"] == "candidate"
+    assert "status" not in note_fm
+    assert state.note_curation_status(vault, note_rel) == "candidate"
     assert note_fm["source_id"] == "catalog/sources/source-alpha"
 
     curate_job = enqueue_operation(
@@ -970,7 +971,8 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
     assert curate_done["status"] == "done"
     assert curate_done["note_path"] == note_rel
     assert curate_done["curation_status"] == "accepted"
-    assert read_frontmatter(vault / note_rel)["status"] == "accepted"
+    assert "status" not in read_frontmatter(vault / note_rel)
+    assert state.note_curation_status(vault, note_rel) == "accepted"
 
     target_note = write_note(vault, "linked-target", "checked", "Target body.")
     link_job = enqueue_operation(

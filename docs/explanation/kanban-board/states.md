@@ -23,7 +23,8 @@ events, and retry/blocking history. Those fields make work persistent,
 queryable, recoverable, and safe to resume without sharing profile memory.
 
 The key invariant: **a request never closes on a worker's say-so**. The worker can
-finish execution; the human still decides whether the result becomes trusted.
+finish execution; the human still decides whether any attention item has been
+handled.
 
 ## The execution chain is the hidden mechanic
 
@@ -44,10 +45,9 @@ judgment become attention, with a reason, for the PI to clear or amend.
 ## The PI sees only action state
 
 The human-facing state is an attention projection over request/journal state, not
-a durable Concept lifecycle. Concept read state is `check_status`, defined in
-[Frontmatter fields](../../reference/frontmatter.md) and
-[ADR-119](../../adr/119-schema-driven-document-creation.md). For an action prompt
-the path the PI walks is just awaiting action -> acted -> archived.
+a durable Concept lifecycle. Concept read state is the DB/read API `check_status`
+verdict; Concept frontmatter stays meaning-only. For an action prompt the path the
+PI walks is just awaiting action -> acted -> archived.
 
 An action prompt awaiting you appears in the Inbox projection. You act on it, then it
 leaves the active queue when no action remains. There is no separate `review-request`
@@ -68,9 +68,9 @@ decision:
   or clean; never a gate.
 
 A worker finishing implies nothing about acceptance; a clean recommendation
-never substitutes for the PI acting. The review gate is enforced, not advisory:
-approval flows through explicit accept/update actions and checked materialization
-- a worker cannot declare its own output approved.
+never substitutes for the PI acting. The read barrier is enforced, not advisory:
+checked materialization means checks passed and warrants resolve, while PI action
+is recorded separately.
 
 **Rejection creates a new request, not a revision of the old one.** A rejected
 attempt is closed; rework begins on a fresh request or amended request that
@@ -84,8 +84,8 @@ A request is **work**: transient, queued in the engine, and closed when the
 attempt is over. A note is **knowledge**: durable, linkable, and preserved in the
 workspace. A request can reference or produce a note, but it never *is* a note.
 Mixing request fields (`status`, `request_id`, output intents) with note fields
-(`check_status`, `type`, `citekey`) confuses what has been done with what has
-been established.
+(`type`, `links`, `tags`) confuses what has been done with what has been
+established.
 
 That split is why the engine can retry and block work without polluting the
 knowledge graph, and why the workspace can preserve provenance without becoming

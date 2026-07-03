@@ -58,8 +58,8 @@ reference pages; docs checks keep the mirror linked.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, promotes checked `note` Concepts with `status: candidate`, and commits notes plus journal together. |
-| Curate note candidate | worker operation `curate-note-candidate` + runtime helper (`curate_note_candidate`) | Records a PI accept/reject decision for one checked candidate `note`, updates `status`, and commits the note plus a journal `resolved` row together. |
+| Emit note candidates | worker operation `propose-note-candidates` + runtime helper (`emit_note_candidates`) | Reads one checked digest, records resolved runner provenance in `model_call`, promotes checked `note` Concepts, and records note-candidate state in the journal/SQLite state rather than frontmatter. |
+| Curate note candidate | worker operation `curate-note-candidate` + runtime helper (`curate_note_candidate`) | Records a PI accept/reject decision for one checked candidate `note` as a journal `resolved` row without mutating Concept frontmatter. |
 | Curate note link | worker operation `curate-note-link` + runtime helper (`curate_note_link`) | Records one PI-authored `supports`, `contradicts`, or `extends` link from a checked note to a checked Concept, updating the note's `links` map and committing it with a journal `resolved` row. |
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Counts checked-current source/digest/accepted-note topic signals and reports `new-topic`, `undigested`, and `under-warranted` gaps with proposed seed actions; when a project path is supplied, it also seeds project scope/facet terms, counts checked linked thesis terms, and includes checked project argument-health gaps. |
 | Analyze project argument | worker operation `analyze-project-argument` + runtime helper (`analyze_project_argument`) | Follows checked, non-candidate note links around a checked project's `thesis` note and returns relation counts, stage, saturation, gap/advisory taxonomy, nodes, and edges. |
@@ -169,6 +169,6 @@ product authority.
 
 | Action | What it does |
 | --- | --- |
-| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set `check_status: checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
+| Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set DB/read API `check_status = checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
 | Golden restore `--apply` | The PI (not the cron) decides to write golden bytes back over drifted system files. |

@@ -32,8 +32,9 @@ cssclasses: memoria-space
 
 ![[knowledge.base#Projects]]
 
-> [!verification] `check_status: checked` is the read barrier. Unchecked notes,
-> digests, and hubs stay out of retrieval until the worker/check loop promotes them.
+> [!brief] The DB/read API `check_status = checked` verdict is the read barrier.
+> Unchecked notes, digests, and hubs stay out of retrieval until the worker/check
+> loop promotes them.
 
 ## Guides
 
