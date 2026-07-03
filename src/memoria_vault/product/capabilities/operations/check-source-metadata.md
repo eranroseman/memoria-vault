@@ -8,6 +8,7 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - catalog/
+- inbox/
 - journal/
 allowed_network: []
 runner:
@@ -29,4 +30,6 @@ links: {}
 
 # Operation
 
-Inspect checked source metadata and emit shadow or routed findings.
+Inspect checked source metadata, including exact duplicate source external IDs,
+and emit shadow or routed findings. Active duplicate-ID findings surface one
+stable `inbox/` work prompt for PI review; the operation never merges records.

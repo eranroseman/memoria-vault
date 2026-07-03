@@ -72,7 +72,7 @@ reference pages; docs checks keep the mirror linked.
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Check evidence integrity | runtime integrity helper (`check_evidence_integrity`) | Scans checked `digest` and `note` Concepts and flags unresolved `source_id` or `evidence_set` references. |
-| Check source metadata | runtime integrity helper (`check_source_metadata`) | Flags checked `source` Concepts that lack citekey, CSL-JSON basics, issued year, an external resource/identifier, or carry conflicting DOI metadata. |
+| Check source metadata | runtime integrity helper (`check_source_metadata`) | Flags checked `source` Concepts that lack citekey, CSL-JSON basics, issued year, an external resource/identifier, carry conflicting DOI metadata, or share an exact source external ID with another catalog row; active duplicate-ID findings also emit one stable `inbox/` work prompt for PI review without merging records. |
 | Check quote anchors | runtime integrity helper (`check_quote_anchor_support`) | Flags checked notes whose quoted span is absent from checked source text declared by `source_id` or `evidence_set`. |
 | Record integrity check | runtime integrity helper (`record_integrity_check`) | Appends a `check-fired` event with shadow-first `drop` routing by default; active failures route `ask`, and explicit auto-revert checks route `act`. |
 | Check claim quote support | runtime integrity helper (`check_claim_quote_support`) | Flags checked notes whose claim and cited quote share no substantive terms; this is a high-precision first pass for unwarranted-claim seeded errors, not a full NLI replacement. |
