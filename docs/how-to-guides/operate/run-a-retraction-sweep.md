@@ -7,7 +7,7 @@ nav_order: 2
 
 # Run a retraction sweep
 
-Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps operation** — deterministic, read-only runtime code in `memoria_vault.runtime.subsystems.integrity.retraction.retraction`; flag-don't-fix: it raises Inbox **`alert`** cards and never flips a note.
+Check the papers in your Catalog against retraction registries and act on the hits. The sweep is part of the **sweeps operation** — deterministic, read-only runtime code in `memoria_vault.runtime.subsystems.integrity.retraction.retraction`; flag-don't-fix: it raises Inbox **`alert`** attention items and never flips a note.
 
 ## When it runs without you
 
@@ -32,11 +32,11 @@ Downloads the Retraction Watch CSV to `.memoria/data/retraction_watch.csv`.
 python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --sweep --vault .
 ```
 
-The sweep scans the Catalog's DOIs against three sources, most authoritative first: the local Retraction Watch index, the live Crossref `update-to` delta, and Open Retractions as a cross-check. Each hit raises one finding-first **`alert`** card in `inbox/`.
+The sweep scans the Catalog's DOIs against three sources, most authoritative first: the local Retraction Watch index, the live Crossref `update-to` delta, and Open Retractions as a cross-check. Each hit raises one finding-first **`alert`** attention item.
 
-**3. Read the alert cards.**
+**3. Read the alert item.**
 
-Each card leads with the `finding` — what was retracted, corrected, or flagged.
+Each item leads with the `finding` — what was retracted, corrected, or flagged.
 Open the source Concept and the checked notes that cite it through
 `evidence_set`.
 
@@ -56,7 +56,11 @@ Set the entity's lifecycle to match the record:
 lifecycle: retracted
 ```
 
-Then resolve the alert card (`Cmd/Ctrl-P` → **Memoria: resolve inbox card**).
+Then resolve the alert attention item:
+
+```bash
+memoria attention resolve --workspace . <attention-path>
+```
 
 **6. Check for new tensions.**
 
@@ -64,7 +68,7 @@ A retraction sometimes resolves — or creates — a contradiction. Glance at Kn
 
 ## Verify
 
-- Every alert card from the sweep is resolved
+- Every alert attention item from the sweep is resolved
 - Affected paper entities carry `lifecycle: retracted`
 - Each citing claim was softened, superseded, or caveated — and a re-run raises no new alerts
 
