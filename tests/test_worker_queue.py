@@ -1365,6 +1365,69 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     assert not (vault / "catalog/sources/seed-source/source.md").exists()
 
 
+def test_seeded_error_verdict_resolves_target_operation_runner(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    vault = workspace(tmp_path)
+    eval_dir = vault / "system/eval"
+    eval_dir.mkdir(parents=True)
+    shutil.copyfile(
+        ROOT / "vault-template/system/eval/alpha15-seeded-errors.json",
+        eval_dir / "alpha15-seeded-errors.json",
+    )
+    resolved = []
+
+    def fake_resolve(vault_path: Path, policy: dict, mode: str) -> dict[str, object]:
+        resolved.append(policy["operation_id"])
+        return {
+            "mode": mode,
+            "runner": "pydantic-ai",
+            "provider": "gateway",
+            "model": f"{policy['operation_id']}-model",
+            "base_url": "https://model.test/v1",
+            "key_env": None,
+            "params": {"temperature": 0},
+        }
+
+    def fake_verdict(
+        vault_path: Path,
+        *,
+        template_root: Path,
+        bundle_path: Path,
+        runner: dict,
+        operation_id: str,
+        machine: str,
+    ) -> dict[str, object]:
+        return {
+            "operation_id": operation_id,
+            "mode": runner["mode"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "machine": machine,
+        }
+
+    monkeypatch.setattr("memoria_vault.runtime.operations.resolve_operation_runner", fake_resolve)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
+        fake_verdict,
+    )
+
+    enqueue_operation(
+        vault,
+        "run-seeded-error-verdict",
+        payload={"mode": "live", "target_operation_id": "compile-source-digest"},
+        idempotency_key="seeded-target-runner",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert resolved == ["compile-source-digest"]
+    assert done["operation_id"] == "compile-source-digest"
+    assert done["model"] == "compile-source-digest-model"
+    assert done["machine"] == "test-machine"
+
+
 def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_trusted_write(

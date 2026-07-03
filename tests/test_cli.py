@@ -195,6 +195,7 @@ def test_alpha15_cli_command_surface_is_exact() -> None:
         "memoria workspace export",
         "memoria eval run",
         "memoria eval seeded-error-verdict",
+        "memoria eval select-models",
     }
 
 
@@ -2412,6 +2413,116 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     assert eval_run["result"]["outputs"] == ["system/eval/last-run.md"]
     assert eval_run["result"]["dry_run"] is False
     assert (workspace / "system/eval/last-run.md").is_file()
+
+
+def test_cli_eval_select_models_selects_manifest_runner(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    calls = []
+
+    def fake_verdict(
+        vault: Path,
+        *,
+        template_root: Path,
+        bundle_path: Path,
+        runner: dict,
+        operation_id: str,
+        machine: str,
+    ) -> dict[str, object]:
+        calls.append(
+            {
+                "vault": vault,
+                "template_root": template_root,
+                "bundle_path": bundle_path,
+                "runner": runner,
+                "operation_id": operation_id,
+                "machine": machine,
+            }
+        )
+        return {
+            "passed": True,
+            "bar_failures": [],
+            "verdict_key": "sha256:pass",
+            "non_sandbox_licensed": True,
+        }
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
+        fake_verdict,
+    )
+
+    rc = main(
+        [
+            "eval",
+            "select-models",
+            "--workspace",
+            str(workspace),
+            "--operation",
+            "run-seeded-error-verdict",
+            "--mode",
+            "live",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    assert output["selection_count"] == 1
+    assert output["failed_count"] == 0
+    assert output["selection"]["candidate_count"] == 1
+    assert output["selection"]["candidate_source"] == "operation_manifest_runner"
+    assert output["selection"]["selected"]["mode"] == "live"
+    assert output["selection"]["selected"]["provider"] == "gateway"
+    assert output["selection"]["selected"]["model"] == "deterministic-fixture"
+    assert output["selection"]["non_sandbox_licensed"] is True
+    assert calls[0]["vault"] != workspace
+    assert calls[0]["template_root"] == workspace
+    assert calls[0]["bundle_path"] == workspace / "system/eval/alpha15-seeded-errors.json"
+    assert calls[0]["operation_id"] == "run-seeded-error-verdict"
+    assert calls[0]["machine"] == "memoria-cli"
+
+
+def test_cli_eval_select_models_refuses_failed_candidate(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
+        lambda *args, **kwargs: {
+            "passed": False,
+            "bar_failures": ["recall"],
+            "verdict_key": "sha256:fail",
+            "non_sandbox_licensed": False,
+        },
+    )
+
+    rc = main(
+        [
+            "eval",
+            "select-models",
+            "--workspace",
+            str(workspace),
+            "--operation",
+            "run-seeded-error-verdict",
+            "--json",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 1
+    assert output["ok"] is False
+    assert output["selection_count"] == 0
+    assert output["failed_count"] == 1
+    assert output["selection"]["selected"] is None
+    assert output["selection"]["attention_required"] is True
+    assert output["selection"]["bar_failures"] == ["recall"]
 
 
 def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
