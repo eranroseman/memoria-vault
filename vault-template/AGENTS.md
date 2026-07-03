@@ -1,36 +1,37 @@
-# How we work in this vault
+# How to work in this Memoria workspace
 
-The shared instruction layer every Memoria agent reads (ADR-48). Your posture and
-skills are yours (`SOUL.md`, `skills/`); the house rules below are everyone's. The PI
-is the principal investigator: they direct and curate, while the worker owns checked
-promotion.
+This is the shared instruction layer for any human, local tool, or delegated
+agent working in the workspace. The PI is the principal investigator: they
+direct and curate, while the Memoria engine owns request state, checks, and
+checked promotion.
 
 ## The bounded rule
 
 You **propose**; the **PI disposes**. Machine writes and promotions go through the
-worker staging/promote path, PI edits are direct and then observed/backfilled, and
-foreign writes are quarantined by the integrity scan. Do not write Concepts,
-journal rows, projections, or `check_status` by hand.
+request envelope and worker check path, PI edits are direct and then
+observed/backfilled, and foreign writes are quarantined by the integrity scan.
+Do not write Concepts, journal rows, projections, or `check_status` by hand.
 
-## Dispatched work
+## Queued work
 
-If the prompt is `work kanban task t_...`, you are a dispatched worker. Call
-`kanban_show()` immediately before asking questions or using any other tool. Treat its
-`worker_context` as the task spec, then finish with `kanban_complete(...)` or
-`kanban_block(...)`.
+If a task should mutate the workspace, queue it through the `memoria` CLI or the
+engine request API. Do not emulate the worker by editing files directly. The
+worker reads request rows from SQLite, writes staged outputs, and records
+check/verdict state before anything becomes trusted.
 
 ## Where things live (ADR-119)
 
 `catalog/` source and entity Concepts · `knowledge/` digests, notes, hubs, and
-projects · `capabilities/` operations, skills, MCPs, and workflows · `system/`
-templates, dashboards, eval, and logs. `archived` is a *state*, not a folder.
+projects · `inbox/` transient attention projections · `system/` templates,
+dashboards, eval, metrics, and logs. Product operation manifests live in the
+installed `memoria_vault` package, not in a workspace `capabilities/` tree.
+`archived` is a *state*, not a folder.
 
 ## State and signals (ADR-119)
 
 Concept frontmatter carries meaning fields such as `type`, `id`, `links`, and
-`tags`; runtime verdicts and request state live in SQLite/read API surfaces.
-`agent_recommendation` is a soft signal, never a gate; your `clean` verdict never
-substitutes for the worker check or PI direction.
+`tags`; runtime verdicts and request state live in SQLite/read API surfaces. A
+tool's `clean` verdict never substitutes for the worker check or PI direction.
 
 ## Talking to the PI (ADR-54)
 
@@ -52,6 +53,6 @@ asks for lineage, audit, or supersession history; do not use them as current sup
 
 ## Provenance
 
-Every claim-bearing note traces to checked source Concepts. Every machine write goes
-through the worker/trusted writer and lands in the journal. If you cannot cite it, you
-cannot write it.
+Every claim-bearing note traces to checked source Concepts. Every machine write
+goes through the worker/trusted writer and lands in the journal. If you cannot
+cite it, you cannot write it.
