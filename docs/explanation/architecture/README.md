@@ -33,7 +33,7 @@ Three kinds of actor work across the structural layers:
 | --- | --- | --- |
 | **PI** | the human (L1) | judgment; the only actor who promotes to canonical |
 | **Agents** | runner-backed operations or optional adapters | posture + LLM judgment; propose, never dispose |
-| **Operations** | ingest · search · clustering · sweeps · Linter (L6) | deterministic, no posture; never on the board |
+| **Operations** | ingest · search · sweeps · Linter (L6) | deterministic, no posture; never on the board |
 
 The "is it an agent or an operation?" question is decided by posture and LLM
 judgment, not invocation style. Agents propose and only the PI disposes; why

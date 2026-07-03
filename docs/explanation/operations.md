@@ -8,7 +8,7 @@ permalink: /explanation/operations/
 
 # Operations — the deterministic layer
 
-Operations are Memoria's deterministic mechanisms. They ingest, lint, cluster,
+Operations are Memoria's deterministic mechanisms. They ingest, lint, search,
 sweep, clean up, and measure without adopting an agent posture. An operation
 should produce the same result for the same input; anything requiring a stance,
 judgment, or recommendation belongs to an agent or to the PI.

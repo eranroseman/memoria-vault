@@ -63,7 +63,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── schemas/                 THE single schema source (ADR-119)
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
-│   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores, cluster params)
+│   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores)
 ├── config/                  provider and runtime policy (`providers.yaml`)
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters

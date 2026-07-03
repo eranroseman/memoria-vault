@@ -17,7 +17,7 @@ The vault organizes notes by type and carries topic in links and frontmatter, no
 
 | Surface | Answers | Lifespan |
 | --- | --- | --- |
-| Search, clustering, Bases | "What notes touch this topic?" | Re-derived on demand. |
+| Search, graph/gap reports, Bases | "What notes touch this topic?" | Re-derived on demand. |
 | Hub | "What does this topic hold, and where should I look first?" | Durable, curated note. |
 
 A hub adds perspective a query cannot produce: framing, curation, and a diagnosis of thin or contested areas ([Note body structure](../explanation/knowledge/note-body-structure.md#why-hubs-answer-three-distinct-questions)). A flat link list is a failed hub; a Base can list links faster.
@@ -29,9 +29,10 @@ A hub adds perspective a query cannot produce: framing, curation, and a diagnosi
 Hubs live under `knowledge/hubs/`, a review-gated Concept home: a machine write
 there degrades to a proposal ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
 
-So the engine stops at the threshold of judgment. A map or gap-analysis
-operation may propose that a dense cluster needs a hub, but only as a **bare
-member list plus threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)). The human writes the framing, curates membership, and names gaps.
+So the engine stops at the threshold of judgment. A gap-analysis operation may
+propose that a topic needs a hub, but only as a **bare member list plus
+threshold evidence** in staging ([Agent-proposed hubs](../adr/19-moc-threshold-alert.md)).
+The human writes the framing, curates membership, and names gaps.
 
 ---
 

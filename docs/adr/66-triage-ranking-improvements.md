@@ -41,9 +41,9 @@ Memoria will, when scheduled, add:
 [`calibration.yaml`](../reference/calibration.md): `hybrid_scores.candidate_rank`
 and `hybrid_scores.outline_score` are present but `production_enabled: false` with
 null thresholds until real PI decisions/outcomes fill the grounding dataset and
-error budget. The clustering quality thresholds live under
-`clustering.quality_thresholds` with the same shadow-first rule. No score from this
-ADR may change routing or review visibility until those fields are filled.
+error budget. The old clustering-threshold path is not present in alpha.15
+because no clustering adapter or heavy topic-modeling stack ships. No score from
+this ADR may change routing or review visibility until its fields are filled.
 
 ## When this matters
 
