@@ -171,6 +171,6 @@ A failed provenance write does not abort the run; the return value carries
 ## Related
 
 - Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)
-- The palette commands that invoke the runner: [Obsidian command palette](obsidian-command-palette.md)
+- CLI and future-adapter command boundary: [Obsidian command palette](obsidian-command-palette.md)
 - Every action the system performs: [System actions](system-actions.md)
 - The picker view over the library: [Dashboards](dashboards.md)

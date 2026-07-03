@@ -29,10 +29,11 @@ For what ingest decides and how, see [Ingest routing](../../reference/ingest.md)
 
 **1. Handle any `flag` card first.**
 
-Open the Inspector or queue surface for source metadata findings. If ingest hit
-genuine ambiguity, you'll see a finding for the source. Pick the right value,
-write it into the source Concept frontmatter at
-`catalog/sources/<source_id>/source.md`, then resolve the attention item.
+Use `memoria status` or `memoria request list` to find source metadata attention.
+If ingest hit genuine ambiguity, you'll see a finding for the source. Pick the
+right value, write it into the source Concept frontmatter at
+`catalog/sources/<source_id>/source.md`, then resolve the attention item with
+`memoria attention resolve`.
 
 **2. Open the source and check what ingest applied.**
 
