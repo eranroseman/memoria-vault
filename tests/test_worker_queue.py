@@ -12,6 +12,12 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.search_index import answer_query
+from memoria_vault.runtime.trusted_writer import (
+    commit_writer_changes,
+    mark_checked,
+    observe_pi_edit,
+)
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import (
     enqueue_integrity_sweep,
@@ -54,6 +60,12 @@ def git(vault: Path, *args: str) -> str:
 
 def note_text(status: str = "checked") -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
+
+
+def work_text(title: str, body: str) -> str:
+    return (
+        f"---\ntype: work\ntitle: {title}\ntags: []\nlinks: {{}}\nwork_id: {title}\n---\n{body}\n"
+    )
 
 
 def write_note(vault: Path, name: str, status: str, body: str) -> Path:
@@ -1243,6 +1255,79 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert consumable is None
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {"journal/test-machine.jsonl", "knowledge/notes/pi.md"}
+
+
+def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    source_rel = "knowledge/notes/source.md"
+    direct_rel = "knowledge/works/direct.md"
+    depth_two_rel = "knowledge/works/depth-two.md"
+    pi_rel = "knowledge/notes/pi-downstream.md"
+
+    enqueue_trusted_write(vault, source_rel, note_text(), idempotency_key="write-source")
+    run_next_job(vault, machine="test-machine")
+    enqueue_trusted_write(
+        vault,
+        direct_rel,
+        work_text("direct", "Direct digest from source."),
+        inputs=[{"id": source_rel, "sha256": sha256_file(vault / source_rel)}],
+        idempotency_key="write-direct",
+    )
+    run_next_job(vault, machine="test-machine")
+    enqueue_trusted_write(
+        vault,
+        depth_two_rel,
+        work_text("depth-two", "Depth two keeps the depthtwomarker answer."),
+        inputs=[{"id": direct_rel, "sha256": sha256_file(vault / direct_rel)}],
+        idempotency_key="write-depth-two",
+    )
+    run_next_job(vault, machine="test-machine")
+
+    pi_path = vault / pi_rel
+    pi_path.parent.mkdir(parents=True, exist_ok=True)
+    pi_path.write_text(note_text(), encoding="utf-8")
+    prior_sha = sha256_file(pi_path)
+    pi_path.write_text(note_text() + "\nPI downstream.\n", encoding="utf-8")
+    observe_pi_edit(
+        vault,
+        pi_rel,
+        prior_sha,
+        inputs=[{"id": source_rel, "sha256": sha256_file(vault / source_rel)}],
+        machine="pi-machine",
+    )
+    mark_checked(vault, pi_rel, machine="pi-machine")
+    commit_writer_changes(vault, "observe pi downstream", [pi_rel], machine="pi-machine")
+
+    source_path = vault / source_rel
+    source_path.write_text(note_text() + "\nEdited source.\n", encoding="utf-8")
+    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-source-edit")
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["paths"] == [source_rel]
+    assert state.concept_check_status(vault, source_rel) == "unchecked"
+    assert state.concept_check_status(vault, direct_rel) == "unchecked"
+    assert state.concept_check_status(vault, pi_rel) == "checked"
+    assert state.concept_check_status(vault, depth_two_rel) == "checked"
+    assert state.concept_flags(vault, depth_two_rel)["stale"]["trigger_id"] == source_rel
+
+    answer = answer_query(vault, "depthtwomarker")
+    assert [source["path"] for source in answer["sources"]] == [depth_two_rel]
+    assert answer["staleness"] == [{"path": depth_two_rel, "field": "stale", "value": True}]
+    journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    assert any(
+        event.get("check") == "scan-demotion-propagation"
+        and event.get("target_id") == direct_rel
+        and event.get("route") == "act"
+        for event in journal_events
+    )
+    assert any(
+        event.get("check") == "cascade-rollback"
+        and event.get("target_id") == pi_rel
+        and event.get("route") == "ask"
+        for event in journal_events
+    )
 
 
 def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:

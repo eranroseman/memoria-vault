@@ -470,6 +470,52 @@ def check_link_targets(
 
 def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
     """Return latest derived events whose inputs descend from ``target_id``."""
+    return [event for _depth, event in _downstream_events(vault, target_id)]
+
+
+def propagate_scan_demotion(
+    vault: Path,
+    target_id: str,
+    *,
+    reason: str,
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Propagate a scan-side demotion through checked downstream Concepts."""
+    vault = Path(vault)
+    target = normalize_path(target_id)
+    demoted: list[str] = []
+    needs_human: list[str] = []
+    stale: list[str] = []
+    skipped: list[str] = []
+    for depth, event in _downstream_events(vault, target):
+        output_id = event.get("output_id")
+        if not isinstance(output_id, str):
+            continue
+        output_id = normalize_path(output_id)
+        status = state.concept_check_status(vault, output_id)
+        if status != "checked":
+            skipped.append(output_id)
+            continue
+        actor = str(event.get("actor") or "")
+        if actor == "pi":
+            _flag_human_descendant(vault, output_id, target, reason, machine)
+            needs_human.append(output_id)
+        elif depth == 1:
+            _demote_machine_descendant(vault, output_id, target, reason, machine)
+            demoted.append(output_id)
+        else:
+            _flag_stale_machine_descendant(vault, output_id, target, reason, machine)
+            stale.append(output_id)
+    return {
+        "target_id": target,
+        "demoted": demoted,
+        "needs_human": needs_human,
+        "stale": stale,
+        "skipped": skipped,
+    }
+
+
+def _downstream_events(vault: Path, target_id: str) -> list[tuple[int, dict[str, Any]]]:
     target = normalize_path(target_id)
     target_aliases = _trace_aliases(vault, target)
     derived = _latest_derived(Path(vault))
@@ -480,12 +526,12 @@ def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
             if isinstance(input_id, str):
                 by_input.setdefault(normalize_path(input_id), []).append(output_id)
 
-    found: list[dict[str, Any]] = []
+    found: list[tuple[int, dict[str, Any]]] = []
     seen: set[str] = set()
-    queue: deque[str] = deque(sorted(target_aliases))
+    queue: deque[tuple[str, int]] = deque((alias, 0) for alias in sorted(target_aliases))
     expanded: set[str] = set()
     while queue:
-        current = queue.popleft()
+        current, depth = queue.popleft()
         if current in expanded:
             continue
         expanded.add(current)
@@ -493,8 +539,8 @@ def trace_downstream(vault: Path, target_id: str) -> list[dict[str, Any]]:
             if output_id in seen:
                 continue
             seen.add(output_id)
-            found.append(derived[output_id])
-            queue.append(output_id)
+            found.append((depth + 1, derived[output_id]))
+            queue.append((output_id, depth + 1))
     return found
 
 
@@ -639,6 +685,54 @@ def _flag_human_descendant(
             "trigger_id": target,
             "shadow": False,
             "route": "ask",
+        },
+        machine=machine,
+    )
+
+
+def _demote_machine_descendant(
+    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+) -> None:
+    path = vault / output_id
+    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
+    state.set_concept_verdict(vault, output_id, "unchecked")
+    append_journal_event(
+        vault,
+        {
+            "event": EVENT_CHECK_FIRED,
+            "check": "scan-demotion-propagation",
+            "status": "failed",
+            "reason": reason,
+            "target_id": output_id,
+            "target_sha256": target_sha,
+            "output_sha256": target_sha,
+            "trigger_id": target,
+            "shadow": False,
+            "route": "act",
+        },
+        machine=machine,
+    )
+
+
+def _flag_stale_machine_descendant(
+    vault: Path, output_id: str, target: str, reason: str, machine: str | None
+) -> None:
+    path = vault / output_id
+    target_sha = sha256_file(path) if path.is_file() else EMPTY_SHA256
+    state.set_concept_flag(vault, output_id, "stale", reason=reason, trigger_id=target)
+    append_journal_event(
+        vault,
+        {
+            "event": EVENT_CHECK_FIRED,
+            "check": "scan-demotion-stale",
+            "status": "failed",
+            "reason": reason,
+            "target_id": output_id,
+            "target_sha256": target_sha,
+            "output_sha256": target_sha,
+            "trigger_id": target,
+            "shadow": False,
+            "route": "log",
         },
         machine=machine,
     )
