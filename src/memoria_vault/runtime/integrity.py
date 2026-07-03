@@ -355,11 +355,18 @@ def check_source_metadata(
             machine=machine,
         ),
     ]
-    entity_record_linkage_findings = _duplicate_entity_external_id_findings(
-        vault,
-        shadow=shadow,
-        machine=machine,
-    )
+    entity_record_linkage_findings = [
+        *_duplicate_entity_external_id_findings(
+            vault,
+            shadow=shadow,
+            machine=machine,
+        ),
+        *_duplicate_entity_name_block_findings(
+            vault,
+            shadow=shadow,
+            machine=machine,
+        ),
+    ]
     record_linkage_findings = [*source_record_linkage_findings, *entity_record_linkage_findings]
     findings.extend(record_linkage_findings)
     attention_paths: list[str] = []
@@ -630,6 +637,83 @@ def _entity_external_id_value(namespace: str, value: str) -> str:
     return text
 
 
+def _duplicate_entity_name_block_findings(
+    vault: Path,
+    *,
+    shadow: bool,
+    machine: str | None,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for entity_type, display_name, entity_ids in _duplicate_entity_name_block_groups(vault):
+        for entity_id in entity_ids:
+            others = [other for other in entity_ids if other != entity_id]
+            if not others:
+                continue
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    _entity_record_linkage_target(entity_type, entity_id),
+                    check="record-linkage",
+                    status="failed",
+                    reason=(
+                        f"possible duplicate {entity_type} name {display_name} also used by "
+                        f"{', '.join(others)} (name block)"
+                    ),
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
+    return findings
+
+
+def _duplicate_entity_name_block_groups(vault: Path) -> list[tuple[str, str, list[str]]]:
+    if not state.db_path(vault).is_file():
+        return []
+    relation_types = {
+        "authorship": "person",
+        "institution": "organization",
+        "source": "venue",
+    }
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT e.relation_type, e.target_id, e.target_title
+            FROM work_graph_edges e
+            JOIN catalog_sources s ON s.source_id = e.work_id
+            WHERE s.check_status = 'checked'
+              AND e.relation_type IN ('authorship', 'institution', 'source')
+            ORDER BY e.relation_type, e.target_title, e.target_id
+            """
+        ).fetchall()
+    groups: dict[tuple[str, str], dict[str, set[str]]] = {}
+    for row in rows:
+        entity_type = relation_types.get(str(row["relation_type"] or ""))
+        entity_id = str(row["target_id"] or "").strip()
+        display_name = str(row["target_title"] or "").strip()
+        key = _entity_name_block_key(display_name)
+        if not entity_type or not entity_id or not key:
+            continue
+        group = groups.setdefault((entity_type, key), {"ids": set(), "names": set()})
+        group["ids"].add(entity_id)
+        group["names"].add(display_name)
+    return [
+        (entity_type, sorted(group["names"], key=str.casefold)[0], sorted(group["ids"]))
+        for (entity_type, _key), group in sorted(groups.items())
+        if len(group["ids"]) > 1
+    ]
+
+
+def _entity_name_block_key(name: str) -> str:
+    terms = [
+        term
+        for term in re.findall(r"[a-z0-9]+", name.casefold())
+        if len(term) > 1 and term not in _STOP_TERMS
+    ]
+    if len(terms) < 2:
+        return ""
+    return " ".join(terms)
+
+
 def _entity_record_linkage_target(owner_type: str, owner_id: str) -> str:
     return normalize_path(f"catalog/entities/{owner_type}-{safe_filename(owner_id)}.md")
 
@@ -670,7 +754,7 @@ def _write_entity_record_linkage_attention(
         (
             f"The source metadata check found {len(findings)} active entity "
             "record-linkage candidate(s). The check-fired events list each affected "
-            "person identity and duplicate external ID."
+            "entity identity and duplicate evidence."
         ),
         "check-source-metadata",
         target="catalog/entities",

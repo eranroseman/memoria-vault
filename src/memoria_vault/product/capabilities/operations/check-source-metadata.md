@@ -32,6 +32,6 @@ links: {}
 
 Inspect checked source metadata, including exact duplicate source external IDs,
 deterministic title/year/first-author duplicate blocks, and duplicate person
-ORCID/OpenAlex IDs, and emit shadow or routed findings. Active record-linkage
-findings surface stable `inbox/` work prompts for PI review; the operation never
-merges records.
+ORCID/OpenAlex IDs or entity-name blocks, and emit shadow or routed findings.
+Active record-linkage findings surface stable `inbox/` work prompts for PI
+review; the operation never merges records.

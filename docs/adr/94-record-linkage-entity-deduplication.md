@@ -3,9 +3,9 @@ topic: decisions
 id: 94
 title: Record linkage for entity deduplication
 nav_exclude: true
-status: proposed
+status: accepted
 date_proposed: 2026-06-19
-date_resolved:
+date_resolved: 2026-07-03
 assumes: [30, 122]
 supersedes: []
 superseded_by: []
@@ -20,11 +20,16 @@ inconsistent. Memoria already prefers deterministic ingest and catalog integrity
 record linkage should use identifiers and string-similarity blocking before any
 LLM judgment.
 
-## Proposal
+## Decision
 
-Memoria may add record linkage for entity deduplication: ORCID/OpenAlex IDs first,
-then string-similarity blocking over by-name collisions, with human review before
-merge when identity is uncertain.
+Memoria adds record linkage for entity deduplication through the existing
+`check-source-metadata` integrity path. The alpha.15 implementation flags exact
+person ORCID/OpenAlex external-ID collisions and exact normalized by-name blocks
+from checked graph entities. Findings route to stable unchecked Inbox attention
+for human review; the operation never merges identities automatically.
+
+Fuzzy string matching, thresholds, and automatic merge actions stay out until
+real corpus misses justify them.
 
 ## Consequences
 
