@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import subprocess
 from collections import deque
 from pathlib import Path
 from typing import Any
@@ -746,6 +747,7 @@ def _quarantine_machine_descendant(
     quarantine_path = _unique_path(vault / ".memoria/quarantine" / output_id)
     quarantine_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(source), quarantine_path)
+    restore_source = _restore_pre_materialization(vault, output_id)
     quarantine_id = quarantine_path.relative_to(vault).as_posix()
     state.set_concept_verdict(vault, output_id, "quarantined")
     append_journal_event(
@@ -757,6 +759,7 @@ def _quarantine_machine_descendant(
             "target_sha256": original_sha,
             "quarantined_id": quarantine_id,
             "quarantined_sha256": original_sha,
+            "restore_source": restore_source,
             "trigger_id": target,
             "reason": reason,
         },
@@ -775,9 +778,43 @@ def _quarantine_machine_descendant(
             "operation": "cascade-rollback",
             "actor": "integrity",
             "quarantined_id": quarantine_id,
+            "restore_source": restore_source,
         },
         machine=machine,
     )
+
+
+def _restore_pre_materialization(vault: Path, output_id: str) -> str:
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT materialized_commit FROM outputs WHERE output_id = ?",
+            (output_id,),
+        ).fetchone()
+    commit = "" if row is None else str(row["materialized_commit"] or "")
+    parent = _git_stdout(vault, "rev-parse", f"{commit}^") if commit else ""
+    if parent:
+        proc = subprocess.run(
+            ["git", "restore", "--source", parent, "--", output_id],
+            cwd=vault,
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        if proc.returncode == 0:
+            return parent
+    (vault / output_id).unlink(missing_ok=True)
+    return ""
+
+
+def _git_stdout(vault: Path, *args: str) -> str:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=vault,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    return proc.stdout.strip() if proc.returncode == 0 else ""
 
 
 def _quarantine_catalog_source(

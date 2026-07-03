@@ -149,7 +149,7 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
-        "journal/op-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
         "knowledge/works/source-alpha.md",
         "knowledge/hubs/gaps.md",
         "knowledge/hubs/impact.md",
@@ -297,7 +297,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
     committed = set(
         git(vault, "show", "--name-only", "--format=", interview["commit"]).splitlines()
     )
-    assert committed == {"journal/copi-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkeypatch) -> None:

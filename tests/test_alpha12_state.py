@@ -226,7 +226,8 @@ def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Pat
     vault = workspace(tmp_path)
     stage_concept(vault, "knowledge/notes/replay.md", note_text("Replay"), machine="writer")
     promote_checked(vault, "knowledge/notes/replay.md", machine="writer")
-    git(vault, "add", "--", "knowledge/notes/replay.md", "journal/writer.jsonl")
+    state.write_journal_head_anchor(vault)
+    git(vault, "add", "--", "knowledge/notes/replay.md", state.JOURNAL_HEAD_REL)
     git(vault, "commit", "-m", "commit replay target")
     commit = git(vault, "rev-parse", "HEAD")
     (vault / "knowledge/notes/replay.md").unlink()
@@ -249,7 +250,8 @@ def test_pending_materialization_recovery_refinalizes_committed_file(tmp_path: P
     target = "knowledge/notes/refinalize.md"
     stage_concept(vault, target, note_text("Refinalize"), machine="writer")
     promote_checked(vault, target, machine="writer")
-    git(vault, "add", "--", target, "journal/writer.jsonl")
+    state.write_journal_head_anchor(vault)
+    git(vault, "add", "--", target, state.JOURNAL_HEAD_REL)
     git(vault, "commit", "-m", "simulate writer crash")
     commit = git(vault, "rev-parse", "HEAD")
 
@@ -358,7 +360,7 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
     assert "@article{alpha2026," in (vault / "references.bib").read_text(encoding="utf-8")
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/capture.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:

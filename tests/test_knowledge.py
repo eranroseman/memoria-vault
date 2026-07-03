@@ -129,7 +129,7 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert events[1]["runner"] == "pydantic-ai"
     assert events[-1]["outputs"] == [note_rel]
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/note-machine.jsonl", note_rel}
+    assert committed == {state.JOURNAL_HEAD_REL, note_rel}
 
 
 def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) -> None:
@@ -223,7 +223,7 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
     assert event["resolution"] == "accepted"
     assert event["reason"] == "PI approved"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/curator.jsonl", note_rel}
+    assert committed == {state.JOURNAL_HEAD_REL, note_rel}
 
 
 def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
@@ -319,7 +319,7 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert event["linked_id"] == "knowledge/notes/target.md"
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/curator.jsonl", "knowledge/notes/source.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/source.md"}
 
 
 def _md(path: Path, frontmatter: str) -> None:
@@ -531,7 +531,7 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     )
     assert committed == {
         "inbox/candidate-work-source-alpha-references-https___openalex.org_W999.md",
-        "journal/gap-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }
 
 
@@ -608,7 +608,7 @@ def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     )
     assert committed == {
         "inbox/flag-gap-full-text-metadata-only.md",
-        "journal/gap-machine.jsonl",
+        state.JOURNAL_HEAD_REL,
     }
 
 

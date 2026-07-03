@@ -88,7 +88,7 @@ def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     assert events[0]["status"] == "started"
     assert events[-1]["status"] == "done"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl"}
+    assert committed == {state.JOURNAL_HEAD_REL}
 
 
 def test_capture_source_rejects_legacy_required_check_argument(
@@ -600,7 +600,7 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
     assert result["changed"] is True
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {"journal/test-machine.jsonl", "references.bib"}
+    assert committed == {state.JOURNAL_HEAD_REL, "references.bib"}
 
     (vault / "references.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)

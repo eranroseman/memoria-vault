@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -18,6 +19,19 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def git(workspace: Path, *args: str) -> str:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=workspace,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if proc.returncode:
+        raise AssertionError(proc.stderr or proc.stdout)
+    return proc.stdout.strip()
 
 
 def _assert_alpha14_request_columns(columns: set[str]) -> None:
@@ -169,7 +183,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
     assert "capabilities" in output["skeleton"]["directories"]
     assert ".memoria/index/qmd/checked" in output["skeleton"]["missing"]
-    assert output["package"]["seed_files"] == ["steering.md", "system/vocabulary.md"]
+    assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
     assert "capabilities" in output["package"]["seed_trees"]
     assert {
         "index.md",
@@ -196,6 +210,13 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "seeded": True,
         "exists": False,
     }
+    assert output["git"] == {
+        "repo": ".git",
+        "would_init": True,
+        "journal_head": state.JOURNAL_HEAD_REL,
+        "overrides": ".memoria/overrides.jsonl",
+        "gitignore": ".gitignore",
+    }
     assert not workspace.exists()
 
 
@@ -206,6 +227,26 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
 
     assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
     capsys.readouterr()
+    tracked = set(git(workspace, "ls-files").splitlines())
+    assert state.JOURNAL_HEAD_REL in tracked
+    assert ".memoria/overrides.jsonl" in tracked
+    assert (workspace / state.JOURNAL_HEAD_REL).read_text(encoding="utf-8").strip() == "GENESIS"
+    assert (workspace / ".memoria/overrides.jsonl").read_text(encoding="utf-8") == ""
+    assert git(
+        workspace,
+        "check-ignore",
+        ".memoria/memoria.sqlite",
+        ".memoria/config/providers.yaml",
+        ".memoria/locks/worker.lock",
+        ".memoria/schemas/folders.yaml",
+        "journal/test-machine.jsonl",
+    ).splitlines() == [
+        ".memoria/memoria.sqlite",
+        ".memoria/config/providers.yaml",
+        ".memoria/locks/worker.lock",
+        ".memoria/schemas/folders.yaml",
+        "journal/test-machine.jsonl",
+    ]
 
     rc = main(
         [

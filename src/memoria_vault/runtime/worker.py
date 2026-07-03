@@ -933,7 +933,18 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             },
             machine=machine,
         )
-        return {"source_id": source["source_id"], "work": updated, "override_log": OVERRIDE_LOG_REL}
+        commit = commit_writer_changes(
+            vault,
+            f"update work {source['source_id']}",
+            [OVERRIDE_LOG_REL],
+            machine=machine,
+        )
+        return {
+            "source_id": source["source_id"],
+            "work": updated,
+            "override_log": OVERRIDE_LOG_REL,
+            "commit": commit,
+        }
     if operation_id == "capture-source":
         from memoria_vault.runtime.capture import stage_catalog_source
 
