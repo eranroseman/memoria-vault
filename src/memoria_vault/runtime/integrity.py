@@ -298,10 +298,10 @@ def check_source_metadata(
     """Flag checked sources whose bibliographic metadata is too thin."""
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
-    for row in state.catalog_sources(vault):
-        if row.get("check_status") != "checked":
-            continue
+    for row in state.catalog_sources(vault, checked_only=False):
         target_id = f"catalog/sources/{row['source_id']}"
+        if state.concept_check_status(vault, target_id) != "checked":
+            continue
         frontmatter = _source_row_frontmatter(row)
         for reason in [
             *_source_metadata_issues(frontmatter),
@@ -1247,7 +1247,7 @@ def _concept_status(vault: Path, rel: str) -> dict[str, str]:
     if source_ref := _source_ref(rel):
         row = state.catalog_source(vault, source_ref)
         if row is not None:
-            return _source_row_status(row)
+            return _source_row_status(vault, row)
         return {"status": "missing"}
     path = vault / rel
     if not path.is_file():
@@ -1267,9 +1267,13 @@ def _frontmatter_status(frontmatter: dict[str, Any]) -> dict[str, str]:
     return {"status": "checked"}
 
 
-def _source_row_status(row: dict[str, Any]) -> dict[str, str]:
-    if row.get("check_status") != "checked":
+def _source_row_status(vault: Path, row: dict[str, Any]) -> dict[str, str]:
+    source_ref = f"catalog/sources/{row.get('source_id') or ''}"
+    if state.concept_check_status(vault, source_ref) != "checked":
         return {"status": "unchecked"}
+    flags = state.concept_flags(vault, source_ref)
+    if "stale" in flags:
+        return {"status": "stale", "lifecycle": "stale"}
     csl_json = row.get("csl_json") if isinstance(row.get("csl_json"), dict) else {}
     memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
     standing = str(memoria.get("standing") or "")

@@ -338,11 +338,18 @@ def _fake_runner(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> None:
     def fake_verdict(
-        vault: Path, *, template_root: Path, bundle_path: Path, runner: dict, machine: str
+        vault: Path,
+        *,
+        template_root: Path,
+        bundle_path: Path,
+        runner: dict,
+        operation_id: str,
+        machine: str,
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
-        assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert bundle_path == workspace / "system/eval/alpha15-seeded-errors.json"
+        assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "test"
         assert machine == "memoria-cli"
         return {"passed": True, "metrics": {"expected_errors": 1, "detected_errors": 1}}
@@ -396,7 +403,7 @@ def _write_project_fixture(workspace: Path) -> None:
         "---\n"
         "Body.\n"
     )
-    note = "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n---\nBody.\n"
+    note = "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\n---\nBody.\n"
     stage_concept(
         workspace,
         "knowledge/projects/project-alpha.md",

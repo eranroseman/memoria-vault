@@ -1,4 +1,4 @@
-"""Alpha.11 seeded-error verdict runner."""
+"""Seeded-error verdict runner."""
 
 from __future__ import annotations
 
@@ -41,6 +41,7 @@ REQUIRED_BARS = (
     "checkpoint_value_rate_min",
 )
 REQUIRED_CASE_FIELDS = ("id", "error_class", "target_id", "expected_check", "rollback")
+DEFAULT_OPERATION_ID = "run-seeded-error-verdict"
 
 
 def load_seeded_error_bundle(path: Path) -> dict[str, Any]:
@@ -76,7 +77,7 @@ def load_seeded_error_bundle(path: Path) -> dict[str, Any]:
 
 
 def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, Any]:
-    """Create the frozen disposable fixture used by the alpha.11 verdict gate."""
+    """Create the disposable fixture used by the seeded-error verdict gate."""
     vault = Path(vault)
     template_root = Path(template_root)
     _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
@@ -253,7 +254,7 @@ def _checked_stale_source(vault: Path) -> dict[str, Any]:
         citekey="stale2026",
         machine="seeded-source",
     )
-    _set_catalog_standing(vault, "stale-source", "retracted")
+    _set_catalog_stale(vault, "stale-source")
     return source
 
 
@@ -296,21 +297,15 @@ def _set_catalog_check_status(vault: Path, source_id: str, check_status: str) ->
         )
 
 
-def _set_catalog_standing(vault: Path, source_id: str, standing: str) -> None:
-    source = state.catalog_source(vault, source_id)
-    if source is None:
+def _set_catalog_stale(vault: Path, source_id: str) -> None:
+    if state.catalog_source(vault, source_id) is None:
         return
-    csl_json = dict(source["csl_json"])
-    memoria = csl_json.get("memoria") if isinstance(csl_json.get("memoria"), dict) else {}
-    csl_json["memoria"] = {**memoria, "standing": standing}
-    with state.connect(vault) as conn:
-        conn.execute(
-            "UPDATE catalog_sources SET csl_json = ? WHERE source_id = ?",
-            (
-                json.dumps(csl_json, ensure_ascii=False, sort_keys=True, separators=(",", ":")),
-                source_id,
-            ),
-        )
+    state.set_concept_flag(
+        vault,
+        f"catalog/sources/{source_id}",
+        "stale",
+        reason="seeded retraction fixture",
+    )
 
 
 def _checked_broken_digest(vault: Path) -> dict[str, Any]:
@@ -503,10 +498,12 @@ def run_seeded_error_verdict(
     template_root: Path,
     bundle_path: Path,
     runner: dict[str, Any] | None = None,
+    operation_id: str = DEFAULT_OPERATION_ID,
     machine: str = "seeded-gate",
 ) -> dict[str, Any]:
-    """Run the frozen alpha.11 seeded-error check against a disposable vault."""
+    """Run the seeded-error check against a disposable vault."""
     vault = Path(vault)
+    operation_id = str(operation_id or DEFAULT_OPERATION_ID).strip() or DEFAULT_OPERATION_ID
     bundle = load_seeded_error_bundle(bundle_path)
     fixture = prepare_seeded_error_fixture(vault, template_root)
     expected = {str(case["target_id"]): case for case in bundle["cases"]}
@@ -588,15 +585,18 @@ def run_seeded_error_verdict(
     bars = bundle.get("bars") or {}
     bar_failures = _bar_failures(metrics, bars)
     runner_identity = _runner_identity(runner)
+    passed = not bar_failures
     return {
+        "operation_id": operation_id,
         "version": bundle["version"],
-        "verdict_key": _verdict_key(bundle["version"], runner_identity),
+        "verdict_key": _verdict_key(bundle["version"], runner_identity, operation_id),
         "mode": runner_identity["mode"],
         "runner": runner_identity["runner"],
         "provider": runner_identity["provider"],
         "model": runner_identity["model"],
         "model_params": runner_identity["params"],
-        "passed": not bar_failures,
+        "passed": passed,
+        "non_sandbox_licensed": passed and runner_identity["mode"] == "live",
         "duration_ms": duration_ms,
         "check_timings": [
             {
@@ -638,9 +638,13 @@ def _runner_identity(runner: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def _verdict_key(bundle_version: str, runner: dict[str, Any]) -> str:
+def _verdict_key(
+    bundle_version: str,
+    runner: dict[str, Any],
+    operation_id: str = DEFAULT_OPERATION_ID,
+) -> str:
     identity = {
-        "operation_id": "run-seeded-error-verdict",
+        "operation_id": operation_id,
         "bundle_version": bundle_version,
         **runner,
     }

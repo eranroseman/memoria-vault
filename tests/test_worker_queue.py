@@ -1282,14 +1282,14 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     eval_dir = vault / "system/eval"
     eval_dir.mkdir(parents=True)
     shutil.copyfile(
-        ROOT / "vault-template/system/eval/alpha11-seeded-errors.json",
-        eval_dir / "alpha11-seeded-errors.json",
+        ROOT / "vault-template/system/eval/alpha15-seeded-errors.json",
+        eval_dir / "alpha15-seeded-errors.json",
     )
 
     queued = enqueue_operation(
         vault,
         "run-seeded-error-verdict",
-        payload={"mode": "live"},
+        payload={"mode": "live", "target_operation_id": "compile-source-digest"},
         idempotency_key="seeded-verdict",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -1300,6 +1300,8 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     assert done["passed"] is True
     assert done["mode"] == "live"
     assert done["provider"] == "gateway"
+    assert done["operation_id"] == "compile-source-digest"
+    assert done["non_sandbox_licensed"] is True
     assert done["verdict_key"].startswith("sha256:")
     assert done["metrics"]["expected_errors"] == 13
     assert done["metrics"]["detected_errors"] == 13

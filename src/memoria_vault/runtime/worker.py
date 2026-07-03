@@ -735,9 +735,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
 
-        bundle_path = vault / "system/eval/alpha12-seeded-errors.json"
-        if not bundle_path.is_file():
-            bundle_path = vault / "system/eval/alpha11-seeded-errors.json"
+        bundle_path = _first_existing(
+            vault / "system/eval/alpha15-seeded-errors.json",
+            vault / "system/eval/alpha12-seeded-errors.json",
+            vault / "system/eval/alpha11-seeded-errors.json",
+        )
         runner = resolve_operation_runner(vault, policy, str(payload.get("mode") or "test"))
         with tempfile.TemporaryDirectory(prefix="memoria-seeded-gate-") as tmpdir:
             return run_seeded_error_verdict(
@@ -745,6 +747,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 template_root=vault,
                 bundle_path=bundle_path,
                 runner=runner,
+                operation_id=str(payload.get("target_operation_id") or operation_id),
                 machine=machine or "seeded-gate",
             )
     if operation_id == "eval-run":
@@ -1278,6 +1281,13 @@ def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any]:
 
 def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:
     state.finish_request(vault, str(job["job_id"]), status, job)
+
+
+def _first_existing(*paths: Path) -> Path:
+    for path in paths:
+        if path.is_file():
+            return path
+    return paths[-1]
 
 
 def _git_path_tracked(vault: Path, relpath: str) -> bool:

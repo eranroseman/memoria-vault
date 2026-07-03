@@ -5,21 +5,24 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.seeded_errors import (
     _metrics_by_error_class,
     _verdict_key,
     load_seeded_error_bundle,
+    prepare_seeded_error_fixture,
     run_seeded_error_verdict,
 )
+from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
-BUNDLE = ROOT / "vault-template/system/eval/alpha11-seeded-errors.json"
+BUNDLE = ROOT / "vault-template/system/eval/alpha15-seeded-errors.json"
 
 
-def test_seeded_error_bundle_is_frozen_alpha11_contract() -> None:
+def test_seeded_error_bundle_is_frozen_contract() -> None:
     bundle = load_seeded_error_bundle(BUNDLE)
 
-    assert bundle["version"] == "0.1.0-alpha.11"
+    assert bundle["version"] == "0.1.0-alpha.15"
     assert bundle["bars"]["recall_min"] == 1.0
     assert bundle["bars"]["checkpoint_value_rate_min"] == 1.0
     assert [case["id"] for case in bundle["cases"]] == [
@@ -94,6 +97,22 @@ def test_seeded_error_verdict_key_changes_with_mode_or_model() -> None:
 
     assert _verdict_key("bundle", base) != _verdict_key("bundle", {**base, "mode": "live"})
     assert _verdict_key("bundle", base) != _verdict_key("bundle", {**base, "model": "fixture-b"})
+    assert _verdict_key("bundle", base, "operation-a") != _verdict_key(
+        "bundle", base, "operation-b"
+    )
+
+
+def test_seeded_fixture_uses_db_stale_flag_not_csl_standing(tmp_path: Path) -> None:
+    prepare_seeded_error_fixture(tmp_path, ROOT / "vault-template")
+
+    source = state.catalog_source(tmp_path, "stale-source")
+    assert source is not None
+    assert source["csl_json"].get("memoria", {}).get("standing") is None
+    assert "stale" in state.concept_flags(tmp_path, "catalog/sources/stale-source")
+
+    retired = {"check_status", "standing", "status", "review_status", "verdict"}
+    for path in sorted((tmp_path / "knowledge").rglob("*.md")):
+        assert retired.isdisjoint(read_frontmatter(path)), path
 
 
 @pytest.mark.slow
@@ -122,6 +141,8 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     control = "knowledge/notes/seeded-valid-evidence.md"
     assert result["passed"] is True
     assert result["mode"] == "test"
+    assert result["operation_id"] == "run-seeded-error-verdict"
+    assert result["non_sandbox_licensed"] is False
     assert result["runner"] == "pydantic-ai"
     assert result["provider"] == "local"
     assert result["model"] == "deterministic-fixture"
