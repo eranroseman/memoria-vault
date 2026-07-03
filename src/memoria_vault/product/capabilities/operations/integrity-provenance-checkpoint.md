@@ -29,5 +29,5 @@ links: {}
 
 # Operation
 
-Flag checked notes or digests that depend on checked sources whose metadata is
-still partial, unverified, or not indexed.
+Flag checked notes or digests that depend on checked sources whose provider
+coverage is still partial or degraded.

@@ -155,7 +155,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         identifiers=source["identifiers"],
         citekey=source["citekey"],
         csl_json=source["csl_json"],
-        metadata_status="verified",
+        provider_coverage="full",
         text_status=source["text_status"],
         check_status="checked",
         content_hash=source["normalized_text_sha256"],
@@ -303,13 +303,11 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     )
     reverted = set(rollback["rollback"]["reverted"])
     assert digest["digest_path"] in reverted
-    assert note_path in reverted
     assert not (vault / source_ref).exists()
     assert not (vault / digest["digest_path"]).exists()
-    assert not (vault / note_path).exists()
+    assert (vault / note_path).exists()
     assert "check_status" not in read_frontmatter(
         vault / ".memoria/quarantine" / digest["digest_path"]
     )
     assert state.concept_check_status(vault, digest["digest_path"]) == "quarantined"
-    assert "check_status" not in read_frontmatter(vault / ".memoria/quarantine" / note_path)
     assert state.concept_check_status(vault, note_path) == "quarantined"

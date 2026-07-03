@@ -431,7 +431,7 @@ def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
         "identifiers": row.get("identifiers") or {},
         "citekey": row.get("citekey") or "",
         "csl_json": row.get("csl_json") or {},
-        "metadata_status": row.get("metadata_status") or "partial",
+        "provider_coverage": row.get("provider_coverage") or "partial",
         "text_status": row.get("text_status") or "metadata-only",
         "normalized_text_sha256": row.get("normalized_text_sha256") or "",
         "raw_text_sha256": row.get("raw_text_sha256") or "",

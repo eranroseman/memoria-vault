@@ -178,9 +178,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     update.add_argument("--resource")
     update.add_argument("--doi")
     update.add_argument("--citekey")
-    update.add_argument(
-        "--metadata-status", choices=("verified", "partial", "unverified", "not-indexed")
-    )
+    update.add_argument("--provider-coverage", choices=("full", "partial", "degraded"))
     update.add_argument("--check-status", choices=("unchecked", "checked", "quarantined"))
     update.add_argument("--standing", choices=("current", "archived", "retracted", "superseded"))
     update.add_argument("--research-area", action="append", default=[])
@@ -1952,7 +1950,7 @@ def _present_updates(args: argparse.Namespace) -> dict[str, Any]:
         "resource",
         "doi",
         "citekey",
-        "metadata_status",
+        "provider_coverage",
         "check_status",
         "standing",
         "research_area",

@@ -19,7 +19,7 @@ RETIRED_FRONTMATTER_FIELDS = frozenset(
         "check_status",
         "standing",
         "lifecycle",
-        "metadata_status",
+        "provider_coverage",
         "text_status",
         "confidence",
         "contested",

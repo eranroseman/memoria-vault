@@ -63,7 +63,7 @@ def add_catalog_work(vault: Path, source_id: str = "db-source") -> str:
             "issued": {"date-parts": [[2026]]},
             "DOI": "10.1000/db",
         },
-        metadata_status="verified",
+        provider_coverage="full",
         text_status="full-text",
         check_status="checked",
     )

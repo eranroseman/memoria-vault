@@ -1,21 +1,30 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
+from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.enrichment import (
     _provider_endpoint,
     load_provider_config,
     provider_allowlist_issues,
+    replay_enrichment_run,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def sha_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -318,7 +327,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert "@article{alpha2026," in (vault / "references.bib").read_text(encoding="utf-8")
     with state.connect(vault) as conn:
         source = conn.execute(
-            "SELECT check_status, metadata_status, csl_json FROM catalog_sources"
+            "SELECT check_status, provider_coverage, csl_json FROM catalog_sources"
         ).fetchone()
         payload_rows = conn.execute(
             "SELECT provider, raw_hash, raw_path FROM provider_payloads ORDER BY provider"
@@ -348,7 +357,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         ).fetchall()
 
     assert source["check_status"] == "checked"
-    assert source["metadata_status"] == "verified"
+    assert source["provider_coverage"] == "full"
     assert json.loads(source["csl_json"])["title"] == "Alpha Source"
     assert [(row["provider"], row["raw_hash"].startswith("sha256:")) for row in payload_rows] == [
         ("crossref", True),
@@ -391,6 +400,112 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
         state.JOURNAL_HEAD_REL,
         "references.bib",
     }
+
+
+def test_enrich_source_replays_provider_payload_blobs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault, "capture-source", payload=doi_payload(), idempotency_key="capture-alpha"
+    )
+    run_next_job(vault, machine="test-machine")
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    replay = replay_enrichment_run(vault, done["run_id"])
+
+    with state.connect(vault) as conn:
+        source = conn.execute("SELECT csl_json FROM catalog_sources").fetchone()
+        normalized = conn.execute(
+            "SELECT provider, normalized_json FROM provider_payloads ORDER BY provider"
+        ).fetchall()
+        projection = conn.execute(
+            "SELECT output_sha256 FROM outputs WHERE output_id = 'references.bib'"
+        ).fetchone()
+        [payload_row] = conn.execute(
+            "SELECT raw_path FROM provider_payloads WHERE provider = 'openalex'"
+        ).fetchall()
+
+    assert replay["canonical"]["csl_json"] == json.loads(source["csl_json"])
+    assert replay["normalized"] == {
+        row["provider"]: json.loads(row["normalized_json"]) for row in normalized
+    }
+    assert projection["output_sha256"] == sha_text(render_references_bib(vault))
+
+    (vault / payload_row["raw_path"]).unlink()
+    with pytest.raises(RuntimeError, match="provider payload blob missing"):
+        replay_enrichment_run(vault, done["run_id"])
+
+
+def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault, "capture-source", payload=doi_payload(), idempotency_key="capture-alpha"
+    )
+    run_next_job(vault, machine="test-machine")
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={
+            "source_id": "source-alpha",
+            "provider_payloads": provider_payloads(title="Crossref Disagreement"),
+        },
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done["enrichment_status"] == "needs_human"
+    assert done["attention_path"] == "inbox/flag-enrichment-source-alpha-source-enrichment.md"
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            "SELECT check_status, provider_coverage FROM catalog_sources WHERE source_id = ?",
+            ("source-alpha",),
+        ).fetchone()
+        title_provenance = conn.execute(
+            """
+            SELECT evidence_payload_id, alternatives_json, conflict_status
+            FROM field_provenance
+            WHERE source_id = ? AND field_path = 'title'
+            """,
+            ("source-alpha",),
+        ).fetchone()
+        payload_hashes = {
+            row["provider"]: row["raw_hash"]
+            for row in conn.execute("SELECT provider, raw_hash FROM provider_payloads")
+        }
+    assert tuple(row) == ("unchecked", "degraded")
+    assert title_provenance["evidence_payload_id"] == payload_hashes["crossref"]
+    assert title_provenance["conflict_status"] == "conflict"
+    assert json.loads(title_provenance["alternatives_json"]) == [
+        {
+            "provider": "openalex",
+            "value": "Alpha Source",
+            "evidence_payload_id": payload_hashes["openalex"],
+        }
+    ]
+    attention_text = (vault / done["attention_path"]).read_text(encoding="utf-8")
+    assert payload_hashes["crossref"] in attention_text
+    assert payload_hashes["openalex"] in attention_text
+
+    enqueue_operation(
+        vault,
+        "update-work",
+        payload={
+            "source_id": "source-alpha",
+            "provider_coverage": "degraded",
+            "check_status": "checked",
+        },
+        idempotency_key="accept-degraded-alpha",
+    )
+    failed = run_next_job(vault, machine="test-machine")
+
+    assert failed["status"] == "failed"
+    assert "degraded provider coverage cannot set checked" in failed["error"]
 
 
 def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
@@ -766,9 +881,9 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     assert done["enrichment_status"] == "contested"
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status, metadata_status FROM catalog_sources WHERE source_id = 'source-alpha'"
+            "SELECT check_status, provider_coverage FROM catalog_sources WHERE source_id = 'source-alpha'"
         ).fetchone()
-    assert tuple(row) == ("unchecked", "unverified")
+    assert tuple(row) == ("unchecked", "full")
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[-1]["event"] == "check-fired"
     assert events[-1]["check"] == "source-retraction"

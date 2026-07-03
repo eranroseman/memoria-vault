@@ -209,7 +209,7 @@ def assemble(citekey: str, etype: str, f: dict) -> dict:
             "DOI": doi,
             "URL": f.get("url", ""),
         },
-        "metadata_status": "partial",
+        "provider_coverage": "partial",
         "doi": doi,
         "url": f.get("url", ""),
         "authors": _authors(f.get("author", "") or f.get("editor", "")),

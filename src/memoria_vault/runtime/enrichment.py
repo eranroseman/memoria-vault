@@ -89,6 +89,7 @@ def enrich_source(
     )
 
     payloads: dict[str, dict[str, Any]] = {}
+    payload_hashes: dict[str, str] = {}
     missing: list[str] = []
     for provider in required:
         try:
@@ -100,6 +101,7 @@ def enrich_source(
             continue
         payloads[provider] = payload
         raw_hash, raw_path = _write_provider_blob(vault, provider, payload)
+        payload_hashes[provider] = raw_hash
         state.store_provider_payload(
             vault,
             run_id=run_id,
@@ -144,7 +146,8 @@ def enrich_source(
             source,
             check="source-enrichment",
             finding=reason,
-            evidence="Required DOI provider payloads did not all resolve.",
+            evidence="Required DOI provider payloads did not all resolve."
+            + _provider_hash_evidence(payload_hashes),
         )
         commit = commit_writer_changes(
             vault,
@@ -160,7 +163,7 @@ def enrich_source(
             "commit": commit,
         }
 
-    canonical = _merge_doi_source(source, payloads)
+    canonical = _merge_doi_source(source, payloads, payload_hashes)
     state.replace_external_ids(vault, canonical["external_ids"])
     state.replace_field_provenance(vault, source["source_id"], canonical["provenance"])
     graph_edges = _first_order_work_graph(source["source_id"], payloads)
@@ -182,7 +185,7 @@ def enrich_source(
     check_status = "unchecked" if blocked_status else "checked"
     if full_text_block:
         check_status = "unchecked"
-    metadata_status = "unverified" if blocked_status else "verified"
+    provider_coverage = _provider_coverage(canonical)
     state.upsert_catalog_record(
         vault,
         source_id=source["source_id"],
@@ -194,7 +197,7 @@ def enrich_source(
         identifiers=canonical["identifiers"],
         citekey=source.get("citekey") or canonical["csl_json"].get("id") or "",
         csl_json=canonical["csl_json"],
-        metadata_status=metadata_status,
+        provider_coverage=provider_coverage,
         text_status=text_status,
         check_status=check_status,
         content_hash=content_hash,
@@ -220,7 +223,8 @@ def enrich_source(
             source,
             check=check,
             finding=canonical["block_reason"],
-            evidence="Provider evidence blocked checked promotion.",
+            evidence="Provider evidence blocked checked promotion."
+            + _provider_hash_evidence(payload_hashes),
         )
         commit = commit_writer_changes(
             vault,
@@ -308,6 +312,46 @@ def enrich_source(
         "discovery_candidate_paths": candidate_paths,
         "text_status": text_status,
         "commit": commit,
+    }
+
+
+def replay_enrichment_run(vault: Path, run_id: str) -> dict[str, Any]:
+    vault = Path(vault)
+    with state.connect(vault) as conn:
+        run = conn.execute(
+            "SELECT source_id FROM enrichment_runs WHERE run_id = ?",
+            (run_id,),
+        ).fetchone()
+        rows = conn.execute(
+            """
+            SELECT provider, raw_hash, raw_path
+            FROM provider_payloads
+            WHERE run_id = ?
+            ORDER BY provider
+            """,
+            (run_id,),
+        ).fetchall()
+    if run is None:
+        raise RuntimeError(f"unknown enrichment run: {run_id}")
+    source = state.catalog_source(vault, str(run["source_id"]))
+    if source is None:
+        raise RuntimeError(f"unknown catalog source: {run['source_id']}")
+    payloads = {str(row["provider"]): _read_provider_blob(vault, dict(row)) for row in rows}
+    if not payloads:
+        raise RuntimeError(f"no provider payload blobs recorded for run: {run_id}")
+    return {
+        "source_id": source["source_id"],
+        "provider_payloads": payloads,
+        "normalized": {
+            provider: _normalize_provider(provider, payload)
+            for provider, payload in sorted(payloads.items())
+        },
+        "canonical": _merge_doi_source(
+            source,
+            payloads,
+            {str(row["provider"]): str(row["raw_hash"]) for row in rows},
+        ),
+        "graph_edges": _first_order_work_graph(source["source_id"], payloads),
     }
 
 
@@ -492,6 +536,30 @@ def _write_provider_blob(vault: Path, provider: str, payload: dict[str, Any]) ->
     return raw_hash, rel
 
 
+def _provider_hash_evidence(payload_hashes: dict[str, str]) -> str:
+    if not payload_hashes:
+        return ""
+    rows = "\n".join(
+        f"- {provider}: {raw_hash}" for provider, raw_hash in sorted(payload_hashes.items())
+    )
+    return "\n\nProvider payload hashes:\n" + rows
+
+
+def _read_provider_blob(vault: Path, row: dict[str, Any]) -> dict[str, Any]:
+    rel = normalize_path(str(row["raw_path"]))
+    path = vault / rel
+    if not path.is_file():
+        raise RuntimeError(f"provider payload blob missing: {rel}")
+    text = path.read_text(encoding="utf-8")
+    actual_hash = _hash_text(text)
+    if actual_hash != row["raw_hash"]:
+        raise RuntimeError(f"provider payload blob hash mismatch: {rel}")
+    payload = json.loads(text)
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"provider payload blob is not an object: {rel}")
+    return payload
+
+
 def _fixture_full_text(
     payloads: dict[str, dict[str, Any]], fixture_payloads: dict[str, Any]
 ) -> str:
@@ -649,13 +717,18 @@ def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[s
 
 
 def _merge_doi_source(
-    source: dict[str, Any], payloads: dict[str, dict[str, Any]]
+    source: dict[str, Any],
+    payloads: dict[str, dict[str, Any]],
+    payload_hashes: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    payload_hashes = dict(payload_hashes or {})
     crossref = _crossref_message(payloads["crossref"])
     openalex = payloads["openalex"]
     unpaywall = payloads["unpaywall"]
     doi = _doi(source)
     title = _first(crossref.get("title")) or str(source.get("title") or "")
+    openalex_title = str(openalex.get("title") or "").strip()
+    title_conflict = _title_conflict(title, openalex)
     csl_json = {
         "id": source.get("citekey") or source["source_id"],
         "type": crossref.get("type") or "article-journal",
@@ -674,11 +747,41 @@ def _merge_doi_source(
     if openalex_id := str(openalex.get("id") or "").strip():
         identifiers["openalex"] = openalex_id
     provenance = [
-        _provenance("title", title, "crossref"),
-        _provenance("author", csl_json["author"], "crossref"),
-        _provenance("issued", csl_json["issued"], "crossref"),
-        _provenance("DOI", doi, "crossref"),
-        _provenance("oa_location", unpaywall.get("best_oa_location") or {}, "unpaywall"),
+        _provenance(
+            "title",
+            title,
+            "crossref",
+            evidence_payload_id=payload_hashes.get("crossref", ""),
+            alternatives=[
+                {
+                    "provider": "openalex",
+                    "value": openalex_title,
+                    "evidence_payload_id": payload_hashes.get("openalex", ""),
+                }
+            ]
+            if title_conflict
+            else [],
+            conflict_status="conflict" if title_conflict else "none",
+        ),
+        _provenance(
+            "author",
+            csl_json["author"],
+            "crossref",
+            evidence_payload_id=payload_hashes.get("crossref", ""),
+        ),
+        _provenance(
+            "issued",
+            csl_json["issued"],
+            "crossref",
+            evidence_payload_id=payload_hashes.get("crossref", ""),
+        ),
+        _provenance("DOI", doi, "crossref", evidence_payload_id=payload_hashes.get("crossref", "")),
+        _provenance(
+            "oa_location",
+            unpaywall.get("best_oa_location") or {},
+            "unpaywall",
+            evidence_payload_id=payload_hashes.get("unpaywall", ""),
+        ),
     ]
     external_ids = [
         _external_id("source", source["source_id"], "doi", doi, "crossref"),
@@ -692,7 +795,7 @@ def _merge_doi_source(
     block_reason = ""
     if _is_retracted(crossref):
         block_reason = "retracted or contested source"
-    elif _title_conflict(title, openalex):
+    elif title_conflict:
         block_reason = "high-authority title conflict"
     return {
         "title": title,
@@ -928,6 +1031,12 @@ def _blocked_status(canonical: dict[str, Any]) -> str:
     return "needs_human"
 
 
+def _provider_coverage(canonical: dict[str, Any]) -> str:
+    if canonical["block_reason"] and "retracted" not in canonical["block_reason"]:
+        return "degraded"
+    return "full"
+
+
 def _doi(source: dict[str, Any]) -> str:
     identifiers = source.get("identifiers") if isinstance(source.get("identifiers"), dict) else {}
     csl_json = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
@@ -1004,11 +1113,22 @@ def _external_id(
     }
 
 
-def _provenance(field_path: str, value: Any, provider: str) -> dict[str, str]:
+def _provenance(
+    field_path: str,
+    value: Any,
+    provider: str,
+    *,
+    evidence_payload_id: str = "",
+    alternatives: list[dict[str, Any]] | None = None,
+    conflict_status: str = "none",
+) -> dict[str, Any]:
     return {
         "field_path": field_path,
         "value_hash": _hash_json(value),
         "winning_provider": provider,
+        "evidence_payload_id": evidence_payload_id,
+        "alternatives": alternatives or [],
+        "conflict_status": conflict_status,
     }
 
 

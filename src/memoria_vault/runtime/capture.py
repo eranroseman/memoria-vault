@@ -68,7 +68,7 @@ def stage_catalog_source(
     item_type: str = "article",
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
-    metadata_status: str = "partial",
+    provider_coverage: str = "partial",
     text_status: str = "full-text",
     citekey: str = "",
     machine: str | None = None,
@@ -89,9 +89,9 @@ def stage_catalog_source(
     if existing:
         identifiers = _merge_mapping(existing.get("identifiers"), identifiers)
         csl_json = _merge_mapping(existing.get("csl_json"), csl_json)
-        metadata_status = _best_metadata_status(
-            str(existing.get("metadata_status") or ""),
-            metadata_status,
+        provider_coverage = _best_provider_coverage(
+            str(existing.get("provider_coverage") or ""),
+            provider_coverage,
         )
         resource = resource or str(existing.get("resource") or "")
         citekey = citekey or str(existing.get("citekey") or "")
@@ -122,7 +122,7 @@ def stage_catalog_source(
         identifiers=identifiers,
         citekey=citekey,
         csl_json=csl_json,
-        metadata_status=metadata_status,
+        provider_coverage=provider_coverage,
         text_status=text_status,
         check_status=check_status,
         content_hash=content_sha,
@@ -175,7 +175,7 @@ def capture_source(
     item_type: str = "article",
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
-    metadata_status: str = "partial",
+    provider_coverage: str = "partial",
     text_status: str = "full-text",
     citekey: str = "",
     machine: str | None = None,
@@ -195,7 +195,7 @@ def capture_source(
         item_type=item_type,
         identifiers=identifiers,
         csl_json=csl_json,
-        metadata_status=metadata_status,
+        provider_coverage=provider_coverage,
         text_status=text_status,
         citekey=citekey,
         machine=machine,
@@ -241,7 +241,7 @@ def capture_bibtex_source(
         item_type=_item_type(entry["entry_type"]),
         identifiers=identifiers or None,
         csl_json=_csl_json(entry),
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status=_fallback_text_status(content_text, abstract),
         citekey=citekey,
         machine=machine,
@@ -281,7 +281,7 @@ def bibtex_capture_payload(
         "item_type": _item_type(entry["entry_type"]),
         "identifiers": identifiers,
         "csl_json": _csl_json(entry),
-        "metadata_status": "partial",
+        "provider_coverage": "partial",
         "text_status": _fallback_text_status(content_text, abstract),
         "citekey": citekey,
         "stage_only": True,
@@ -317,7 +317,7 @@ def csl_capture_payload(
         "item_type": str(csl_json.get("type") or "article"),
         "identifiers": identifiers,
         "csl_json": csl_json,
-        "metadata_status": "partial",
+        "provider_coverage": "partial",
         "text_status": _fallback_text_status(content_text, abstract),
         "citekey": str(csl_json.get("id") or ""),
         "stage_only": True,
@@ -357,7 +357,7 @@ def capture_url_source(
             "title": final_title,
             "URL": resource,
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status="full-text",
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
@@ -399,7 +399,7 @@ def stage_url_source(
             "title": final_title,
             "URL": resource,
         },
-        metadata_status="partial",
+        provider_coverage="partial",
         text_status="full-text",
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
@@ -419,7 +419,7 @@ def capture_pdf_source(
     item_type: str = "article",
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
-    metadata_status: str = "partial",
+    provider_coverage: str = "partial",
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
@@ -442,7 +442,7 @@ def capture_pdf_source(
         item_type=item_type,
         identifiers=identifiers,
         csl_json=csl_json,
-        metadata_status=metadata_status,
+        provider_coverage=provider_coverage,
         text_status="full-text",
         citekey=citekey,
         machine=machine,
@@ -463,7 +463,7 @@ def stage_pdf_source(
     item_type: str = "article",
     identifiers: dict[str, Any] | None = None,
     csl_json: dict[str, Any] | None = None,
-    metadata_status: str = "partial",
+    provider_coverage: str = "partial",
     citekey: str = "",
     machine: str | None = None,
     run_id: str | None = None,
@@ -486,7 +486,7 @@ def stage_pdf_source(
         item_type=item_type,
         identifiers=identifiers,
         csl_json=csl_json,
-        metadata_status=metadata_status,
+        provider_coverage=provider_coverage,
         text_status="full-text",
         citekey=citekey,
         machine=machine,
@@ -610,8 +610,8 @@ def _merge_mapping(old: Any, new: Any) -> dict[str, Any]:
     return merged
 
 
-def _best_metadata_status(old: str, new: str) -> str:
-    rank = {"": 0, "not-indexed": 1, "unverified": 2, "partial": 3, "verified": 4}
+def _best_provider_coverage(old: str, new: str) -> str:
+    rank = {"": 0, "partial": 1, "degraded": 2, "full": 3}
     return new if rank.get(new, 0) >= rank.get(old, 0) else old
 
 

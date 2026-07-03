@@ -877,12 +877,16 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         if memoria:
             csl_json["memoria"] = memoria
 
-        metadata_status = str(payload.get("metadata_status") or source["metadata_status"])
-        if metadata_status not in {"verified", "partial", "unverified", "not-indexed"}:
-            raise ValueError(f"update-work metadata_status is invalid: {metadata_status}")
+        provider_coverage = str(payload.get("provider_coverage") or source["provider_coverage"])
+        if provider_coverage not in {"full", "partial", "degraded"}:
+            raise ValueError(f"update-work provider_coverage is invalid: {provider_coverage}")
         check_status = str(payload.get("check_status") or source["check_status"])
         if check_status not in {"unchecked", "checked", "quarantined"}:
             raise ValueError(f"update-work check_status is invalid: {check_status}")
+        if provider_coverage == "degraded" and check_status == "checked":
+            if "check_status" in payload:
+                raise ValueError("update-work degraded provider coverage cannot set checked")
+            check_status = "unchecked"
 
         state.upsert_catalog_record(
             vault,
@@ -897,7 +901,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             identifiers=identifiers,
             citekey=str(payload["citekey"]) if "citekey" in payload else source["citekey"],
             csl_json=csl_json,
-            metadata_status=metadata_status,
+            provider_coverage=provider_coverage,
             text_status=source["text_status"],
             check_status=check_status,
             content_hash=source["normalized_text_sha256"],
@@ -975,7 +979,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "item_type": str(payload.get("item_type") or "article"),
             "identifiers": identifiers,
             "csl_json": csl_json,
-            "metadata_status": str(payload.get("metadata_status") or "partial"),
+            "provider_coverage": str(payload.get("provider_coverage") or "partial"),
             "text_status": str(payload.get("text_status") or "full-text"),
             "citekey": str(payload.get("citekey") or ""),
             "machine": machine,
@@ -1055,7 +1059,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             item_type=str(capture_payload.get("item_type") or "article"),
             identifiers=capture_payload.get("identifiers"),
             csl_json=capture_payload.get("csl_json"),
-            metadata_status=str(capture_payload.get("metadata_status") or "partial"),
+            provider_coverage=str(capture_payload.get("provider_coverage") or "partial"),
             text_status=str(capture_payload.get("text_status") or "metadata-only"),
             citekey=str(capture_payload.get("citekey") or ""),
             machine=machine,
@@ -1143,7 +1147,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             item_type=str(payload.get("item_type") or "article"),
             identifiers=identifiers,
             csl_json=csl_json,
-            metadata_status=str(payload.get("metadata_status") or "partial"),
+            provider_coverage=str(payload.get("provider_coverage") or "partial"),
             citekey=str(payload.get("citekey") or ""),
             machine=machine,
             run_id=str(payload.get("run_id") or "") or None,

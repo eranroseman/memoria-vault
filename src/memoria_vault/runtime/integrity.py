@@ -365,8 +365,8 @@ def check_provenance_checkpoint(
         if frontmatter.get("type") not in {"work", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
-            source_ref, status = _source_metadata_status(vault, evidence_rel)
-            if status in {"partial", "unverified", "not-indexed"}:
+            source_ref, status = _source_provider_coverage(vault, evidence_rel)
+            if status in {"partial", "degraded"}:
                 findings.append(
                     record_integrity_check(
                         vault,
@@ -1030,13 +1030,13 @@ def _append_content_path_text(vault: Path, texts: list[str], content_path: str) 
         texts.append(content.read_text(encoding="utf-8"))
 
 
-def _source_metadata_status(vault: Path, rel: str) -> tuple[str, str]:
+def _source_provider_coverage(vault: Path, rel: str) -> tuple[str, str]:
     if source_ref := _source_ref(rel):
         row = state.catalog_source(vault, source_ref)
         if row is not None:
             if row.get("check_status") != "checked":
                 return source_ref, ""
-            return source_ref, str(row.get("metadata_status") or "")
+            return source_ref, str(row.get("provider_coverage") or "")
         return source_ref, ""
     source_ref = rel
     path = vault / rel
@@ -1045,7 +1045,7 @@ def _source_metadata_status(vault: Path, rel: str) -> tuple[str, str]:
     source_fm = read_frontmatter(path)
     if source_fm.get("type") != "source" or source_fm.get("check_status") != "checked":
         return source_ref, ""
-    return source_ref, str(source_fm.get("metadata_status") or "")
+    return source_ref, str(source_fm.get("provider_coverage") or "")
 
 
 def _source_row_frontmatter(row: dict[str, Any]) -> dict[str, Any]:
@@ -1058,7 +1058,7 @@ def _source_row_frontmatter(row: dict[str, Any]) -> dict[str, Any]:
         "description": row.get("description") or "",
         "source_id": f"catalog/sources/{row.get('source_id') or ''}",
         "citekey": row.get("citekey") or "",
-        "metadata_status": row.get("metadata_status") or "",
+        "provider_coverage": row.get("provider_coverage") or "",
         "text_status": row.get("text_status") or "",
         "resource": row.get("resource") or "",
         "identifiers": row.get("identifiers") if isinstance(row.get("identifiers"), dict) else {},
@@ -1096,9 +1096,9 @@ def _source_ref(value: str) -> str:
 
 def _source_metadata_issues(frontmatter: dict[str, Any]) -> list[str]:
     issues: list[str] = []
-    metadata_status = str(frontmatter.get("metadata_status") or "")
-    if metadata_status in {"unverified", "not-indexed"}:
-        issues.append(f"metadata_status is {metadata_status}")
+    provider_coverage = str(frontmatter.get("provider_coverage") or "")
+    if provider_coverage == "degraded":
+        issues.append(f"provider_coverage is {provider_coverage}")
     if not str(frontmatter.get("citekey") or "").strip():
         issues.append("missing citekey alias")
     csl_json = frontmatter.get("csl_json")
