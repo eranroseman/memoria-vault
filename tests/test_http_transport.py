@@ -96,6 +96,18 @@ def test_http_transport_reads_status(workspace: Path) -> None:
     assert status["workspace"] == str(workspace)
 
 
+def test_http_transport_reads_attention_view_spec(workspace: Path) -> None:
+    _write_attention(workspace, "alpha")
+
+    response, http_status = _dispatch(workspace, "GET", "/attention?worklist=true", dict)
+
+    assert http_status == HTTPStatus.OK
+    block = response["view"]["blocks"][0]
+    assert block["kind"] == "table"
+    assert block["title"] == "Attention worklist"
+    assert block["refs"] == ["inbox/alpha.md"]
+
+
 def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> None:
     response, http_status = _dispatch(
         workspace,
@@ -150,3 +162,24 @@ def test_http_transport_unknown_write_does_not_create_request(workspace: Path) -
     with state.connect(workspace) as conn:
         count = conn.execute("SELECT COUNT(*) FROM operation_requests").fetchone()[0]
     assert count == 0
+
+
+def _write_attention(workspace: Path, name: str) -> None:
+    path = workspace / "inbox" / f"{name}.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "\n".join(
+            [
+                "---",
+                "projection: attention",
+                f"title: {name}",
+                "attention_kind: work-prompt",
+                "attention_status: open",
+                "routing_class: ask",
+                "---",
+                "Review.",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )

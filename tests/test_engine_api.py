@@ -48,6 +48,48 @@ def test_engine_read_scope_filters_attention_by_card_or_target(workspace: Path) 
         api.read_attention_card(workspace, "inbox/beta.md", read_scope=["knowledge/notes/alpha.md"])
 
 
+def test_engine_attention_read_api_returns_table_and_card_view_specs(workspace: Path) -> None:
+    _write_attention(workspace, "alpha", target="knowledge/notes/alpha.md")
+    _write_attention(workspace, "beta", target="knowledge/notes/beta.md")
+
+    listed = api.read_attention(workspace, read_scope=["knowledge/notes/alpha.md"])
+    shown = api.read_attention_card(
+        workspace, "inbox/alpha.md", read_scope=["knowledge/notes/alpha.md"]
+    )
+
+    assert listed["view"] == {
+        "version": "view-spec.v1",
+        "kind": "attention",
+        "blocks": [
+            {
+                "id": "attention-table",
+                "kind": "table",
+                "title": "Attention",
+                "check_status": "unchecked",
+                "refs": ["inbox/alpha.md"],
+                "columns": ["title", "kind", "status", "target"],
+                "rows": [
+                    {
+                        "ref": "inbox/alpha.md",
+                        "check_status": "unchecked",
+                        "cells": {
+                            "title": "alpha",
+                            "kind": "gap",
+                            "status": "open",
+                            "target": "knowledge/notes/alpha.md",
+                        },
+                    }
+                ],
+            }
+        ],
+    }
+    card = shown["view"]["blocks"][0]
+    assert card["kind"] == "card"
+    assert card["refs"] == ["inbox/alpha.md"]
+    assert card["body_data"] == {"kind": "untrusted_text", "text": "Review.\n"}
+    assert "body" not in card
+
+
 def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
     alpha = api.write_new_concept(
         workspace,
