@@ -162,6 +162,59 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/worker.md"}
 
 
+def test_worker_create_concept_operation_materializes_unchecked(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    queued = enqueue_operation(
+        vault,
+        "create-concept",
+        payload={
+            "target_path": "knowledge/notes/agent.md",
+            "content": note_text(status="unchecked"),
+            "concept_type": "note",
+        },
+        idempotency_key="agent-create",
+        output_intents=[{"id": "knowledge/notes/agent.md", "kind": "note"}],
+        primary_target="knowledge/notes/agent.md",
+        actor="agent",
+    )
+
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["status"] == "pending"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["check_status"] == "unchecked"
+    target = vault / "knowledge/notes/agent.md"
+    assert "check_status" not in read_frontmatter(target)
+    assert state.concept_check_status(vault, "knowledge/notes/agent.md") == "unchecked"
+    committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/agent.md"}
+
+
+def test_worker_create_concept_rejects_generic_work_bypass(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault,
+        "create-concept",
+        payload={
+            "target_path": "knowledge/works/bypass.md",
+            "content": work_text("bypass", "Bypass body."),
+            "concept_type": "work",
+        },
+        idempotency_key="agent-create-work",
+        output_intents=[{"id": "knowledge/works/bypass.md", "kind": "work"}],
+        primary_target="knowledge/works/bypass.md",
+        actor="agent",
+    )
+
+    failed = run_next_job(vault, machine="test-machine")
+
+    assert failed is not None
+    assert failed["status"] == "failed"
+    assert "create-concept concept_type must be one of" in failed["error"]
+    assert not (vault / "knowledge/works/bypass.md").exists()
+
+
 def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 

@@ -116,7 +116,7 @@ def _child_action(
     parser: argparse.ArgumentParser,
 ) -> argparse._SubParsersAction[argparse.ArgumentParser] | None:
     return next(
-        (action for action in parser._actions if getattr(action, "choices", None)),
+        (action for action in parser._actions if isinstance(action, argparse._SubParsersAction)),
         None,
     )
 

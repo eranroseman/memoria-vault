@@ -388,6 +388,20 @@ def promote_checked(
     return event
 
 
+def materialize_unchecked(vault: Path, target_path: str) -> dict[str, Any]:
+    """Move a staged unchecked Concept into its bundle without promotion."""
+    vault = Path(vault)
+    target = _target_path(target_path)
+    staged_path = _staged_path(vault, target)
+    if not staged_path.is_file():
+        raise FileNotFoundError(staged_path)
+    frontmatter, body = split_frontmatter(staged_path.read_text(encoding="utf-8"))
+    output_path = vault / target
+    write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
+    staged_path.unlink()
+    return {"output_id": target, "output_sha256": sha256_file(output_path)}
+
+
 def quarantine_untraced(
     vault: Path,
     paths: Iterable[str],

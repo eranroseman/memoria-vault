@@ -26,12 +26,15 @@ except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
+    materialize_unchecked,
     promote_checked,
     stage_concept,
 )
+from memoria_vault.runtime.vaultio import split_frontmatter
 
 INTEGRITY_SWEEP_OPERATIONS = (
     "trace-integrity-scan",
@@ -46,6 +49,11 @@ INTEGRITY_SWEEP_OPERATIONS = (
     "integrity-link-target-check",
 )
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
+CREATE_CONCEPT_HOMES = {
+    "note": "knowledge/notes",
+    "hub": "knowledge/hubs",
+    "project": "knowledge/projects",
+}
 
 
 @contextlib.contextmanager
@@ -297,6 +305,32 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     )
 
     policy = load_operation_policy(vault, operation_id)
+    if operation_id == "create-concept":
+        target, content = _create_concept_payload(payload)
+        envelope = (
+            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+        )
+        actor = str(envelope.get("actor") or "pi")
+        stage_concept(
+            vault,
+            target,
+            content,
+            operation=operation_id,
+            run_id=str(job.get("job_id") or ""),
+            actor=actor,
+            machine=machine,
+        )
+        materialized = materialize_unchecked(vault, target)
+        commit = commit_writer_changes(
+            vault, f"create {Path(target).stem}", [target], machine=machine
+        )
+        return {
+            "commit": commit,
+            "outputs": [target],
+            "output_path": target,
+            "check_status": state.concept_check_status(vault, target),
+            "materialized": materialized,
+        }
     if operation_id == "integrity-evidence-check":
         from memoria_vault.runtime.integrity import check_evidence_integrity
 
@@ -1215,6 +1249,24 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "outputs": result["paths"],
         }
     raise ValueError(f"unsupported operation: {operation_id!r}")
+
+
+def _create_concept_payload(payload: dict[str, Any]) -> tuple[str, str]:
+    target = normalize_path(str(payload.get("target_path") or ""))
+    content = str(payload.get("content") or "")
+    if not target or not content:
+        raise ValueError("create-concept requires target_path and content")
+    concept_type = str(payload.get("concept_type") or "").strip()
+    if concept_type not in CREATE_CONCEPT_HOMES:
+        allowed = ", ".join(sorted(CREATE_CONCEPT_HOMES))
+        raise ValueError(f"create-concept concept_type must be one of: {allowed}")
+    expected_home = CREATE_CONCEPT_HOMES[concept_type]
+    if not target.startswith(f"{expected_home}/"):
+        raise ValueError(f"create-concept {concept_type} target must be under {expected_home}/")
+    frontmatter, _body = split_frontmatter(content)
+    if str(frontmatter.get("type") or "") != concept_type:
+        raise ValueError("create-concept content type must match concept_type")
+    return target, content
 
 
 def _claim_sqlite_job(vault: Path, job: dict[str, Any]) -> dict[str, Any]:
