@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -15,6 +16,7 @@ from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
@@ -36,6 +38,7 @@ from memoria_vault.runtime.vaultio import (
 NLI_SUPPORTED = "SUPPORTED"
 NLI_REFUTED = "REFUTED"
 NLI_NOTENOUGHINFO = "NOTENOUGHINFO"
+TIER2_MIN_CONFIDENCE = 0.7
 _NEGATORS = frozenset({"no", "not", "never", "without"})
 _STOP_TERMS = frozenset(
     {
@@ -930,6 +933,9 @@ def surface_tensions(
     machine: str | None = None,
     commit: bool = False,
     comparator: Any | None = None,
+    tier2: bool = True,
+    tier2_judge: Any | None = None,
+    mode: str | None = None,
 ) -> dict[str, Any]:
     """Propose unchecked contradiction candidates; never writes contradiction links."""
     vault = Path(vault)
@@ -938,6 +944,9 @@ def surface_tensions(
     rows = _checked_tension_rows(vault)
     candidates: list[dict[str, Any]] = []
     abstain_count = 0
+    tier2_evaluated_count = 0
+    tier2_candidate_count = 0
+    tier2_abstain_count = 0
     seen: set[tuple[str, str]] = set()
     for left_index, left in enumerate(rows):
         for right in rows[left_index + 1 :]:
@@ -948,8 +957,9 @@ def surface_tensions(
             overlap = _lexical_overlap(left["text"], right["text"])
             if overlap < min_overlap:
                 continue
+            tier2_reason = ""
             if not gate["passed"]:
-                candidates.append(_tension_candidate(left, right, overlap, verdict="DEGRADED"))
+                tier2_reason = "tier1-degraded"
             else:
                 verdict = compare(left["text"], right["text"])
                 if verdict["verdict"] == NLI_REFUTED:
@@ -959,11 +969,60 @@ def surface_tensions(
                             right,
                             overlap,
                             verdict=NLI_REFUTED,
+                            tier="tier1",
                             warrant=str(verdict.get("warrant") or ""),
                         )
                     )
                 elif verdict["verdict"] == NLI_NOTENOUGHINFO:
                     abstain_count += 1
+                    tier2_reason = "tier1-abstain"
+            if tier2_reason:
+                tier2_result = (
+                    _run_tier2_tension_judge(
+                        vault,
+                        left,
+                        right,
+                        overlap,
+                        reason=tier2_reason,
+                        judge=tier2_judge,
+                        mode=mode,
+                        machine=machine,
+                    )
+                    if tier2
+                    else _tier2_abstain("Tier-2 disabled by operation payload")
+                )
+                tier2_evaluated_count += int(tier2)
+                if tier2_result["verdict"] == NLI_REFUTED:
+                    candidates.append(
+                        _tension_candidate(
+                            left,
+                            right,
+                            overlap,
+                            verdict=NLI_REFUTED,
+                            tier="tier2",
+                            warrant=str(tier2_result.get("warrant") or ""),
+                            evidence=tier2_result.get("evidence"),
+                            judge=tier2_result.get("judge"),
+                            escalation=tier2_reason,
+                        )
+                    )
+                    tier2_candidate_count += 1
+                elif not gate["passed"]:
+                    candidates.append(
+                        _tension_candidate(
+                            left,
+                            right,
+                            overlap,
+                            verdict="DEGRADED",
+                            tier="degraded",
+                            warrant=str(tier2_result.get("warrant") or ""),
+                            judge=tier2_result.get("judge"),
+                            escalation=tier2_reason,
+                        )
+                    )
+                    tier2_abstain_count += int(tier2)
+                else:
+                    tier2_abstain_count += int(tier2)
             if len(candidates) >= max_pairs:
                 break
         if len(candidates) >= max_pairs:
@@ -1007,6 +1066,10 @@ def surface_tensions(
         "degraded": not gate["passed"],
         "candidate_count": len(candidates),
         "abstain_count": abstain_count,
+        "tier2_enabled": tier2,
+        "tier2_evaluated_count": tier2_evaluated_count,
+        "tier2_candidate_count": tier2_candidate_count,
+        "tier2_abstain_count": tier2_abstain_count,
         "candidates": candidates,
         "attention_path": attention_path,
         "finding": finding,
@@ -1490,7 +1553,7 @@ def _checked_tension_rows(vault: Path) -> list[dict[str, str]]:
         frontmatter, body = split_frontmatter(safe_read(path))
         if frontmatter.get("type") not in {"note", "work"}:
             continue
-        if not _is_checked_concept(vault, rel):
+        if not is_consumable_checked_file(vault, rel):
             continue
         title = str(frontmatter.get("title") or path.stem).strip()
         text = " ".join(
@@ -1543,6 +1606,188 @@ def _compare_claims(premise: str, hypothesis: str) -> dict[str, Any]:
     }
 
 
+def _run_tier2_tension_judge(
+    vault: Path,
+    left: dict[str, str],
+    right: dict[str, str],
+    overlap: float,
+    *,
+    reason: str,
+    judge: Any | None,
+    mode: str | None,
+    machine: str | None,
+) -> dict[str, Any]:
+    if judge is not None:
+        return _normalize_tier2_judge_result(judge(left, right), left, right, judge="callable")
+    policy, runner = _tier2_runner(vault, mode)
+    prompt = _tier2_prompt(left, right, overlap, reason)
+    run_id = f"surface-tensions:tier2:{_sha256_text(left['id'] + right['id'])[:12]}"
+    if runner["model"] == "deterministic-fixture":
+        raw = _deterministic_tier2_judge(left, right)
+        output = json.dumps(raw, sort_keys=True)
+        _record_tier2_model_call(vault, policy, runner, prompt, output, run_id, machine)
+        return _normalize_tier2_judge_result(raw, left, right, judge="deterministic-fixture")
+    try:
+        from memoria_vault.runtime.operations import run_operation_model_text
+
+        call = run_operation_model_text(
+            vault,
+            policy,
+            runner,
+            prompt,
+            input_text=f"{left['text']}\n\n{right['text']}",
+            run_id=run_id,
+            route="surface-tensions-tier2",
+            purpose="surface-tensions",
+            machine=machine,
+        )
+        raw = json.loads(str(call["output"]))
+    except Exception as exc:  # noqa: BLE001 -- judge failure degrades to human review.
+        return _tier2_abstain(f"Tier-2 judge unavailable: {exc}")
+    return _normalize_tier2_judge_result(raw, left, right, judge=runner["model"])
+
+
+def _tier2_runner(vault: Path, mode: str | None) -> tuple[dict[str, Any], dict[str, Any]]:
+    from memoria_vault.runtime.operations import load_operation_policy, resolve_operation_runner
+
+    policy = load_operation_policy(vault, "surface-tensions")
+    return policy, resolve_operation_runner(vault, policy, mode)
+
+
+def _tier2_prompt(left: dict[str, str], right: dict[str, str], overlap: float, reason: str) -> str:
+    return "\n\n".join(
+        [
+            "You are a conservative contradiction judge. Use only the two checked "
+            "Memoria excerpts below. Return JSON only.",
+            "Allowed verdicts: REFUTED or NOTENOUGHINFO. Prefer NOTENOUGHINFO unless "
+            "the two excerpts make claims about the same proposition and cannot both "
+            "be true.",
+            "For REFUTED, include confidence >= 0.7, a one-sentence warrant, and exact "
+            "left_quote/right_quote substrings copied from the excerpts. Without both "
+            "grounding quotes, return NOTENOUGHINFO.",
+            f"Escalation reason: {reason}",
+            f"Lexical overlap: {overlap:.3f}",
+            f"LEFT id={left['id']} title={left['title']}:\n{left['text']}",
+            f"RIGHT id={right['id']} title={right['title']}:\n{right['text']}",
+            (
+                '{"verdict":"NOTENOUGHINFO","confidence":0.0,"warrant":"",'
+                '"left_quote":"","right_quote":""}'
+            ),
+        ]
+    )
+
+
+def _deterministic_tier2_judge(left: dict[str, str], right: dict[str, str]) -> dict[str, Any]:
+    verdict = _compare_claims(left["text"], right["text"])
+    if verdict["verdict"] != NLI_REFUTED:
+        return _tier2_abstain("deterministic fixture abstained")
+    return {
+        "verdict": NLI_REFUTED,
+        "confidence": verdict.get("confidence", TIER2_MIN_CONFIDENCE),
+        "warrant": verdict.get("warrant") or "deterministic fixture contradiction",
+        "left_quote": _grounding_quote(left["text"]),
+        "right_quote": _grounding_quote(right["text"]),
+    }
+
+
+def _normalize_tier2_judge_result(
+    raw: Any, left: dict[str, str], right: dict[str, str], *, judge: str
+) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        return _tier2_abstain("Tier-2 judge returned a non-object payload", judge=judge)
+    verdict = str(raw.get("verdict") or "").strip().upper()
+    if verdict not in {NLI_REFUTED, NLI_NOTENOUGHINFO}:
+        return _tier2_abstain("Tier-2 judge returned an unsupported verdict", judge=judge)
+    confidence = _bounded_confidence(raw.get("confidence"))
+    warrant = str(raw.get("warrant") or "").strip()
+    left_quote = str(raw.get("left_quote") or "").strip()
+    right_quote = str(raw.get("right_quote") or "").strip()
+    if verdict != NLI_REFUTED:
+        return _tier2_abstain(warrant or "Tier-2 judge abstained", judge=judge)
+    if confidence < TIER2_MIN_CONFIDENCE:
+        return _tier2_abstain("Tier-2 judge confidence below floor", judge=judge)
+    if not warrant:
+        return _tier2_abstain("Tier-2 judge omitted warrant", judge=judge)
+    if not _quote_in_text(left_quote, left["text"]) or not _quote_in_text(
+        right_quote, right["text"]
+    ):
+        return _tier2_abstain("Tier-2 judge evidence quotes were not grounded", judge=judge)
+    return {
+        "verdict": NLI_REFUTED,
+        "confidence": confidence,
+        "warrant": warrant,
+        "judge": judge,
+        "evidence": {"left_quote": left_quote, "right_quote": right_quote},
+    }
+
+
+def _tier2_abstain(reason: str, *, judge: str = "") -> dict[str, Any]:
+    return {
+        "verdict": NLI_NOTENOUGHINFO,
+        "confidence": 0.0,
+        "warrant": reason,
+        "judge": judge,
+        "evidence": {},
+    }
+
+
+def _record_tier2_model_call(
+    vault: Path,
+    policy: dict[str, Any],
+    runner: dict[str, Any],
+    prompt: str,
+    output: str,
+    run_id: str,
+    machine: str | None,
+) -> None:
+    append_journal_event(
+        vault,
+        {
+            "event": "model_call",
+            "run_id": run_id,
+            "mode": runner["mode"],
+            "runner": runner["runner"],
+            "provider": runner["provider"],
+            "model": runner["model"],
+            "model_params": runner["params"],
+            "route": "surface-tensions-tier2",
+            "purpose": "surface-tensions",
+            "prompt_version": policy["prompt_version"],
+            "prompt_hash": _sha256_text(prompt),
+            "toolset": policy["allowed_tools"],
+            "fallback_used": False,
+            "compression_used": False,
+            "input_hash": _sha256_text(prompt),
+            "output_hash": _sha256_text(output),
+        },
+        machine=machine,
+    )
+
+
+def _bounded_confidence(value: Any) -> float:
+    try:
+        return max(0.0, min(1.0, float(value)))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _grounding_quote(text: str) -> str:
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text) if part.strip()]
+    if sentences:
+        return sentences[0][:240]
+    return " ".join(text.split())[:240]
+
+
+def _quote_in_text(quote: str, text: str) -> bool:
+    quote_norm = " ".join(quote.lower().split())
+    text_norm = " ".join(text.lower().split())
+    return bool(quote_norm) and quote_norm in text_norm
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def _lexical_baseline_verdict(premise: str, hypothesis: str) -> str:
     if _lexical_overlap(premise, hypothesis) >= 0.55:
         return NLI_SUPPORTED
@@ -1555,19 +1800,31 @@ def _tension_candidate(
     overlap: float,
     *,
     verdict: str,
+    tier: str,
     warrant: str = "",
+    evidence: Any | None = None,
+    judge: Any | None = None,
+    escalation: str = "",
 ) -> dict[str, Any]:
     route = "ask"
-    return {
+    candidate = {
         "left": left["id"],
         "right": right["id"],
         "left_title": left["title"],
         "right_title": right["title"],
         "verdict": verdict,
+        "tier": tier,
         "route": route,
         "lexical_overlap": round(overlap, 3),
         "warrant": warrant or "Tier-1 unavailable; route lexical candidate to PI review",
     }
+    if evidence:
+        candidate["evidence"] = evidence
+    if judge:
+        candidate["judge"] = judge
+    if escalation:
+        candidate["escalation"] = escalation
+    return candidate
 
 
 def _lexical_overlap(left: str, right: str) -> float:
