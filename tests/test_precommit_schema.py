@@ -44,6 +44,22 @@ def test_unknown_type_blocks(tmp_path):
     assert any("unknown type" in e for e in errors)
 
 
+def test_vault_local_schema_overrides_packaged_default(tmp_path):
+    vault = _vault(tmp_path)
+    schemas = vault / ".memoria/schemas/types"
+    schemas.mkdir(parents=True)
+    (schemas / "local-note.yaml").write_text(
+        "type: local-note\nrequired:\n  type: literal:local-note\n  title: str\n",
+        encoding="utf-8",
+    )
+    (vault / "knowledge/notes/local.md").write_text(
+        "---\ntype: local-note\ntitle: Local\n---\nBody.\n",
+        encoding="utf-8",
+    )
+
+    assert precommit_check.check_paths(vault, ["knowledge/notes/local.md"]) == []
+
+
 def test_untyped_infra_and_outside_paths_exempt(tmp_path):
     vault = _vault(tmp_path)
     (vault / "system/vocab.md").write_text("---\nfoo: bar\n---\n", encoding="utf-8")
