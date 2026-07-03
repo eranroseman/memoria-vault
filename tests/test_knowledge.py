@@ -73,6 +73,19 @@ def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
 
 
+def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
+    assert gap["kind"] == kind
+    assert gap["gap_type"] == kind
+    assert gap["severity"] in {"high", "medium", "low"}
+    assert gap["impact"] in {0, 1, 2}
+    assert gap["confidence"] in {0, 1, 2}
+    assert gap["actionability"] in {0, 1, 2}
+    assert gap["score"] == gap["impact"] * gap["confidence"] * gap["actionability"]
+    assert isinstance(gap["why"], str) and gap["why"]
+    assert isinstance(gap["next_actions"], list)
+    assert isinstance(gap["candidate_work_ids"], list)
+
+
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_source(
@@ -398,9 +411,15 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     assert gaps["sleep"]["source_count"] == 1
     assert gaps["sleep"]["digest_count"] == 1
     assert gaps["sleep"]["note_count"] == 0
+    _assert_gap_contract(gaps["sleep"], "undigested")
     assert gaps["warrant"]["gap_type"] == "under-warranted"
     assert gaps["warrant"]["note_count"] == 2
+    _assert_gap_contract(gaps["warrant"], "under-warranted")
     assert gaps["new area"]["gap_type"] == "new-topic"
+    _assert_gap_contract(gaps["new area"], "new-topic")
+    assert result["summary"]["total"] == 3
+    assert result["summary"]["by_severity"]["high"] == 2
+    assert result["saturation"]["ready"] is False
     assert result["checked_topics"] == 5
 
 
@@ -515,8 +534,15 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
 
     gap = {row["topic"]: row for row in result["gaps"]}["rare alpha"]
     assert gap["gap_type"] == "undigested"
+    _assert_gap_contract(gap, "undigested")
     assert gap["retrieval_engine"] == "qmd"
     assert gap["retrieval_sources"][0]["path"] == "works/source-alpha.md"
+    citation_gap = {row["topic"]: row for row in result["gaps"]}[
+        "Citation neighborhood: Alpha Source"
+    ]
+    _assert_gap_contract(citation_gap, "citation-neighborhood")
+    assert citation_gap["candidate_work_ids"] == ["https://openalex.org/W999"]
+    assert result["citation_neighborhood_gap_count"] == 1
     assert result["discovery_candidate_paths"] == [
         "inbox/candidate-work-source-alpha-references-https___openalex.org_W999.md"
     ]
@@ -525,6 +551,8 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     assert fm["attention_kind"] == "candidate"
     assert fm["raised_by"] == "analyze-gaps"
     assert fm["discovered_work_id"] == "https://openalex.org/W999"
+    assert "check_status" not in fm
+    assert state.catalog_source(vault, "https://openalex.org/W999") is None
     committed = set(
         git(vault, "show", "--name-only", "--format=", result["discovery_commit"]).splitlines()
     )
@@ -563,33 +591,48 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
     result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
 
     gap = {row["topic"]: row for row in result["gaps"]}["catalog-only"]
+    _assert_gap_contract(gap, "undigested")
     assert gap["source_ids"] == ["db-alpha"]
     assert gap["discovery_candidate_paths"] == [
         "inbox/candidate-work-db-alpha-related-https___openalex.org_W777.md"
     ]
+    citation_gap = {row["topic"]: row for row in result["gaps"]}["Citation neighborhood: DB Alpha"]
+    _assert_gap_contract(citation_gap, "citation-neighborhood")
+    assert citation_gap["candidate_work_ids"] == ["https://openalex.org/W777"]
+    assert result["citation_neighborhood_gap_count"] == 1
     assert result["discovery_candidate_paths"] == gap["discovery_candidate_paths"]
     candidate = vault / result["discovery_candidate_paths"][0]
     fm = read_frontmatter(candidate)
     assert fm["raised_by"] == "analyze-gaps"
     assert fm["discovered_work_id"] == "https://openalex.org/W777"
+    assert "check_status" not in fm
+    assert state.catalog_source(vault, "https://openalex.org/W777") is None
 
 
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     state.upsert_catalog_record(
         vault,
+        source_id="unchecked-metadata",
+        title="Unchecked Metadata",
+        text_status="metadata-only",
+        check_status="unchecked",
+    )
+    state.upsert_catalog_record(
+        vault,
         source_id="metadata-only",
         title="Metadata Only",
         text_status="metadata-only",
-        check_status="unchecked",
+        check_status="checked",
     )
 
     result = analyze_gaps(vault, machine="gap-machine")
 
     assert result["full_text_gap_count"] == 1
     gap = result["gaps"][0]
-    assert gap["gap_type"] == "missing-full-text"
+    _assert_gap_contract(gap, "full-text-missing")
     assert gap["source_id"] == "metadata-only"
+    assert "unchecked-metadata" not in json.dumps(result["gaps"])
     assert result["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
     attention = vault / result["full_text_attention_paths"][0]
     fm = read_frontmatter(attention)
@@ -691,10 +734,31 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     assert result["argument_stage"] == "developing"
     assert result["argument_gap_count"] == 2
     gaps = {gap["finding_kind"]: gap for gap in result["gaps"]}
-    assert gaps["thin-argument"]["gap_type"] == "argument-finding"
+    _assert_gap_contract(gaps["thin-argument"], "argument-unsupported")
     assert gaps["thin-argument"]["note_count"] == 3
-    assert gaps["conflict"]["gap_type"] == "argument-gap"
+    _assert_gap_contract(gaps["conflict"], "argument-fragile")
     assert gaps["conflict"]["advice"] == "resolve or preserve the contradiction"
+    assert result["saturation"] == {
+        "claims": 1,
+        "saturated": 1,
+        "unsupported": 0,
+        "uncountered": 0,
+        "ready": True,
+        "claim_saturation": [
+            {
+                "claim": "knowledge/notes/thesis.md",
+                "has_support": True,
+                "has_counterpoint": True,
+                "saturated": True,
+            }
+        ],
+        "conditions": {
+            "mature_graph": False,
+            "has_support": True,
+            "has_refutation": True,
+        },
+        "evidence_saturation": "unsaturated",
+    }
 
 
 def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> None:

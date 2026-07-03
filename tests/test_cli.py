@@ -835,16 +835,25 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     assert output["ok"] is True
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
     assert gaps["catalog-only"]["gap_type"] == "undigested"
+    assert gaps["catalog-only"]["kind"] == "undigested"
+    assert gaps["catalog-only"]["why"]
+    assert gaps["catalog-only"]["next_actions"]
     assert gaps["catalog-only"]["source_count"] == 1
     assert gaps["sleep"]["gap_type"] == "undigested"
     assert gaps["new area"]["gap_type"] == "new-topic"
     assert output["result"]["project_path"] == "knowledge/projects/project-alpha.md"
     assert output["result"]["argument_gap_count"] == 2
+    assert output["result"]["summary"]["total"] == output["result"]["gap_count"]
+    assert output["result"]["saturation"]["claims"] == 1
+    assert output["result"]["saturation"]["ready"] is True
     assert {
         gap["finding_kind"]
         for gap in output["result"]["gaps"]
         if gap["gap_type"].startswith("argument-")
     } == {"thin-argument", "conflict"}
+    assert {
+        gap["kind"] for gap in output["result"]["gaps"] if gap["gap_type"].startswith("argument-")
+    } == {"argument-unsupported", "argument-fragile"}
     with state.connect(workspace) as conn:
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(operation_requests)")}
         row = conn.execute(
@@ -1053,7 +1062,10 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     assert output["ok"] is True
     gaps = {gap["topic"]: gap for gap in output["result"]["gaps"]}
     assert gaps["sleep"]["gap_type"] == "undigested"
+    assert gaps["sleep"]["kind"] == "undigested"
+    assert gaps["sleep"]["score"] == 4
     assert gaps["new area"]["gap_type"] == "new-topic"
+    assert output["result"]["summary"]["total"] == output["result"]["gap_count"]
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
