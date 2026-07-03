@@ -11,10 +11,12 @@ folder targets. For choosing between routes and failure modes see
 [Export a draft](../how-to-guides/project/export-a-draft.md).
 
 `memoria project export` is the checked-project export surface: it renders a
-project Concept, its argument state, linked checked hubs, and `references.bib`
-to Markdown by default, with `.docx`, `.pdf`, and `.odt` available when Pandoc
-is installed. For citation-rich manuscript drafts, live Zotero field workflows,
-or custom CSL routes, use the direct Pandoc routes below.
+project Concept, its paper plan when present, its argument state, linked checked
+hubs, and `references.bib` to Markdown by default, with `.docx`, `.pdf`, and
+`.odt` available when Pandoc is installed. Add `--ready-only` when the export
+must fail closed unless the project has required paper framing and checked
+support. For citation-rich manuscript drafts, live Zotero field workflows, or
+custom CSL routes, use the direct Pandoc routes below.
 
 ---
 
@@ -35,7 +37,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 
 | Option | Output format | Use case | Tool chain |
 | --- | --- | --- | --- |
-| **Memoria project export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked project composition or review packet | `memoria project export <project> --format <format> --output <path>` |
+| **Memoria project export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked project composition or review packet | `memoria project export <project> --format <format> --output <path> [--ready-only]` |
 | **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography references.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |

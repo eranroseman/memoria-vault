@@ -624,6 +624,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "full_text_attention_paths": result["full_text_attention_paths"],
             "full_text_attention_commit": result["full_text_attention_commit"],
             "argument_gap_count": result["argument_gap_count"],
+            "paper_readiness_gap_count": result["paper_readiness_gap_count"],
             "discovery_candidate_paths": result["discovery_candidate_paths"],
             "discovery_commit": result["discovery_commit"],
             "gap_count": len(result["gaps"]),
@@ -641,6 +642,31 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 }
             )
         return out
+    if operation_id == "frame-paper":
+        from memoria_vault.runtime.knowledge import frame_project_paper
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("frame-paper requires project_path")
+        envelope = (
+            job.get("request_envelope") if isinstance(job.get("request_envelope"), dict) else {}
+        )
+        result = frame_project_paper(
+            vault,
+            project_path,
+            paper_plan=payload,
+            run_id=str(job.get("job_id") or ""),
+            actor=str(envelope.get("actor") or "pi"),
+            machine=machine,
+        )
+        return {
+            "commit": result["commit"],
+            "project_path": result["project_path"],
+            "paper_plan": result["paper_plan"],
+            "outcome_frame": result["outcome_frame"],
+            "check_status": result["check_status"],
+            "materialized": result["materialized"],
+        }
     if operation_id == "analyze-project-argument":
         from memoria_vault.runtime.knowledge import analyze_project_argument
 
@@ -696,12 +722,14 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             project_path,
             export_format=str(payload.get("format") or "markdown"),
             output_path=str(payload.get("output_path") or ""),
+            ready_only=bool(payload.get("ready_only")),
         )
         return {
             "project_path": result["project_path"],
             "format": result["format"],
             "output_path": result["output_path"],
             "content": result["content"],
+            "readiness": result["readiness"],
             "node_count": result["node_count"],
             "edge_count": result["edge_count"],
             "relation_count": result["relation_count"],

@@ -1154,10 +1154,66 @@ def test_worker_runs_project_scoped_gap_analysis(tmp_path: Path) -> None:
     assert done["project_path"] == "knowledge/projects/project-alpha.md"
     assert done["thesis_path"] == "knowledge/notes/thesis.md"
     assert done["argument_gap_count"] == 2
-    assert {gap["finding_kind"] for gap in done["gaps"]} == {"thin-argument", "conflict"}
-    assert {gap["kind"] for gap in done["gaps"]} == {"argument-unsupported", "argument-fragile"}
+    assert done["paper_readiness_gap_count"] == 1
+    assert {gap["finding_kind"] for gap in done["gaps"] if "finding_kind" in gap} == {
+        "thin-argument",
+        "conflict",
+    }
+    assert {gap["kind"] for gap in done["gaps"]} == {
+        "argument-unsupported",
+        "argument-fragile",
+        "paper-readiness",
+    }
     assert done["saturation"]["claims"] == 1
     assert done["saturation"]["ready"] is True
+
+
+def test_worker_runs_frame_paper_operation(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    project_rel = "knowledge/projects/project-alpha.md"
+    project = vault / project_rel
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "title: Alpha project\n"
+        "tags: []\n"
+        "links: {}\n"
+        "paper_plan: {}\n"
+        "outcome_frame: {}\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    mark_file_status(vault, project_rel, "project")
+
+    queued = enqueue_operation(
+        vault,
+        "frame-paper",
+        payload={
+            "project_path": "project-alpha",
+            "target": "Journal of Testable Systems",
+            "audience": "local-first tool builders",
+            "research_question": "Can Memoria support standalone CLI research?",
+            "central_contribution": "A checked CLI loop can produce usable evidence.",
+            "gap_statement": "Existing PKM loops lack local checked export.",
+            "claim_evidence_map": {"CLI loop works": "knowledge/notes/support.md"},
+            "figure_plan": {"Figure 1": "CLI loop stages"},
+            "limitations": "Single-corpus dogfood run.",
+        },
+        idempotency_key="frame-paper",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["project_path"] == project_rel
+    assert done["check_status"] == "unchecked"
+    frontmatter = read_frontmatter(project)
+    assert frontmatter["paper_plan"]["target"] == "Journal of Testable Systems"
+    assert frontmatter["outcome_frame"]["status"] == "framed"
 
 
 def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) -> None:

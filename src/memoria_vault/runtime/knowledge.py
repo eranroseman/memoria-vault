@@ -26,11 +26,13 @@ from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.trusted_writer import (
     append_journal_event,
     commit_writer_changes,
+    materialize_unchecked,
     promote_checked,
     stage_concept,
 )
 from memoria_vault.runtime.vaultio import (
     concept_text,
+    frontmatter_doc,
     iter_markdown,
     read_frontmatter,
     split_frontmatter,
@@ -46,8 +48,89 @@ GAP_KINDS = {
     "argument-unsupported",
     "argument-uncountered",
     "argument-fragile",
+    "paper-readiness",
     "bounded-universe-incomplete",
 }
+PAPER_PLAN_REQUIRED_FIELDS = (
+    "target",
+    "audience",
+    "research_question",
+    "central_contribution",
+    "gap_statement",
+    "claim_evidence_map",
+    "figure_plan",
+    "limitations",
+)
+
+
+def frame_project_paper(
+    vault: Path,
+    project_path: str,
+    *,
+    paper_plan: dict[str, Any],
+    machine: str | None = None,
+    run_id: str = "",
+    actor: str = "pi",
+) -> dict[str, Any]:
+    """Record PI-supplied paper framing fields on a project and leave it unchecked."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    path = vault / project_rel
+    if not path.is_file():
+        raise FileNotFoundError(path)
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    if frontmatter.get("type") != "project":
+        raise ValueError(f"{project_rel} is not a project")
+    plan = _normalize_paper_plan(paper_plan)
+    frontmatter["paper_plan"] = plan
+    frontmatter["outcome_frame"] = {
+        "kind": "paper",
+        "target": plan["target"],
+        "audience": plan["audience"],
+        "research_question": plan["research_question"],
+        "status": "framed",
+    }
+    stage_concept(
+        vault,
+        project_rel,
+        frontmatter_doc(frontmatter, body),
+        operation="frame-paper",
+        run_id=run_id,
+        actor=actor,
+        machine=machine,
+    )
+    materialized = materialize_unchecked(vault, project_rel)
+    commit = commit_writer_changes(
+        vault, f"frame paper {Path(project_rel).stem}", [project_rel], machine=machine
+    )
+    return {
+        "project_path": project_rel,
+        "paper_plan": plan,
+        "outcome_frame": frontmatter["outcome_frame"],
+        "check_status": state.concept_check_status(vault, project_rel),
+        "materialized": materialized,
+        "commit": commit,
+    }
+
+
+def _normalize_paper_plan(raw: dict[str, Any]) -> dict[str, Any]:
+    plan = {
+        field: raw.get(field)
+        for field in PAPER_PLAN_REQUIRED_FIELDS
+        if field in {"claim_evidence_map", "figure_plan"}
+    }
+    for field in PAPER_PLAN_REQUIRED_FIELDS:
+        if field in plan:
+            continue
+        plan[field] = str(raw.get(field) or "").strip()
+    if not isinstance(plan["claim_evidence_map"], dict) or not plan["claim_evidence_map"]:
+        raise ValueError("paper_plan.claim_evidence_map must be a non-empty map")
+    if not isinstance(plan["figure_plan"], dict) or not plan["figure_plan"]:
+        raise ValueError("paper_plan.figure_plan must be a non-empty map")
+    missing = [field for field in PAPER_PLAN_REQUIRED_FIELDS if not plan[field]]
+    if missing:
+        raise ValueError(f"paper_plan missing required field(s): {', '.join(missing)}")
+    return plan
 
 
 def emit_note_candidates(
@@ -305,9 +388,11 @@ def analyze_gaps(
     project_path = project_path.strip()
     project_argument: dict[str, Any] | None = None
     argument_gaps: list[dict[str, Any]] = []
+    paper_gaps: list[dict[str, Any]] = []
     if project_path:
         project_argument = analyze_project_argument(vault, project_path)
         argument_gaps = _project_argument_gaps(project_argument)
+        paper_gaps = _project_paper_readiness_gaps(vault, project_path)
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sources": 0, "digests": 0, "notes": 0}
     )
@@ -393,6 +478,7 @@ def analyze_gaps(
     full_text_gaps = _missing_full_text_gaps(vault)
     gaps.extend(full_text_gaps)
     gaps.extend(argument_gaps)
+    gaps.extend(paper_gaps)
     full_text_attention_paths, full_text_attention_commit = _write_full_text_gap_attention(
         vault, full_text_gaps, machine=machine
     )
@@ -407,6 +493,7 @@ def analyze_gaps(
         "full_text_attention_paths": full_text_attention_paths,
         "full_text_attention_commit": full_text_attention_commit,
         "argument_gap_count": len(argument_gaps),
+        "paper_readiness_gap_count": len(paper_gaps),
         "discovery_candidate_paths": candidate_paths,
         "discovery_commit": commit,
         "gap_findings": gaps,
@@ -667,6 +754,33 @@ def _project_argument_gaps(argument: dict[str, Any]) -> list[dict[str, Any]]:
                 gap["advice"] = advice
             rows.append(gap)
     return rows
+
+
+def _project_paper_readiness_gaps(vault: Path, project_path: str) -> list[dict[str, Any]]:
+    readiness = project_export_readiness(vault, project_path)
+    if readiness["ready"]:
+        return []
+    missing = ", ".join(readiness["missing"])
+    return [
+        _gap_payload(
+            {
+                "topic": "Project paper readiness",
+                "project_path": readiness["project_path"],
+                "missing": readiness["missing"],
+                "source_count": 0,
+                "digest_count": 0,
+                "note_count": 0,
+                "proposed_seed": "run project frame-paper and check supporting notes",
+            },
+            kind="paper-readiness",
+            target=readiness["project_path"],
+            why=f"Project is not export-ready: {missing}",
+            next_actions=["run project frame-paper and check supporting notes"],
+            impact=2,
+            confidence=2,
+            actionability=1,
+        )
+    ]
 
 
 def _argument_gap_kind(finding_kind: str) -> str:
@@ -1257,6 +1371,7 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     body = project_body.strip()
     if body:
         lines.extend(["## Project", "", body, ""])
+    _append_project_export_paper_plan(lines, project_frontmatter.get("paper_plan"))
 
     lines.extend(
         [
@@ -1291,18 +1406,49 @@ def render_project_export_markdown(vault: Path, project_path: str) -> dict[str, 
     }
 
 
+def _append_project_export_paper_plan(lines: list[str], paper_plan: object) -> None:
+    if not isinstance(paper_plan, dict) or not any(paper_plan.values()):
+        return
+    labels = {
+        "target": "Target",
+        "audience": "Audience",
+        "research_question": "Research question",
+        "central_contribution": "Central contribution",
+        "gap_statement": "Gap statement",
+        "limitations": "Limitations",
+    }
+    lines.extend(["## Paper Plan", ""])
+    for key, label in labels.items():
+        value = str(paper_plan.get(key) or "").strip()
+        if value:
+            lines.append(f"- {label}: {value}")
+    for key, label in (("claim_evidence_map", "Claim evidence"), ("figure_plan", "Figure plan")):
+        value = paper_plan.get(key)
+        if isinstance(value, dict) and value:
+            rendered = "; ".join(
+                f"{claim}: {evidence}" for claim, evidence in sorted(value.items())
+            )
+            lines.append(f"- {label}: {rendered}")
+    lines.append("")
+
+
 def write_project_export(
     vault: Path,
     project_path: str,
     *,
     export_format: str = "markdown",
     output_path: str = "",
+    ready_only: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
     vault = Path(vault)
     export_format = export_format.strip().lower() or "markdown"
     if export_format not in {"markdown", "docx", "pdf", "odt"}:
         raise ValueError(f"unsupported project export format: {export_format}")
+    readiness = project_export_readiness(vault, project_path)
+    if ready_only and not readiness["ready"]:
+        missing = ", ".join(readiness["missing"])
+        raise ValueError(f"project is not export-ready: {missing}")
 
     rendered = render_project_export_markdown(vault, project_path)
     content = str(rendered["content"])
@@ -1314,6 +1460,7 @@ def write_project_export(
             "format": export_format,
             "output_path": display_path,
             "content": "" if display_path else content,
+            "readiness": readiness,
         }
 
     if not output:
@@ -1338,6 +1485,28 @@ def write_project_export(
         "format": export_format,
         "output_path": _project_export_display_path(vault, target),
         "content": "",
+        "readiness": readiness,
+    }
+
+
+def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
+    """Return structural export readiness for a checked paper project."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    project = _checked_frontmatter(vault, project_rel, "project")
+    plan = project.get("paper_plan") if isinstance(project.get("paper_plan"), dict) else {}
+    missing = [field for field in PAPER_PLAN_REQUIRED_FIELDS if not plan.get(field)]
+    argument = analyze_project_argument(vault, project_rel)
+    # ponytail: structural gate only; semantic claim-evidence grading needs the aspect model.
+    if not argument["thesis_path"]:
+        missing.append("thesis")
+    if argument["supports_count"] < 1:
+        missing.append("checked support")
+    return {
+        "ready": not missing,
+        "status": "export-ready" if not missing else "needs-work",
+        "missing": missing,
+        "project_path": project_rel,
     }
 
 
