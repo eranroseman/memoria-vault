@@ -169,8 +169,6 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
     if not isinstance(data, dict):
         raise ValueError(f"{PROVIDER_CONFIG} must be a map")
     providers = data.get("runner_providers")
-    if providers is None:
-        providers = _runner_providers_from_legacy_root(data)
     if not isinstance(providers, dict):
         raise ValueError(f"{PROVIDER_CONFIG} runner_providers must be a map")
     missing = [name for name in RUNNER_PROVIDER_NAMES if name not in providers]
@@ -189,15 +187,6 @@ def load_runner_provider_config(vault: Path) -> dict[str, dict[str, Any]]:
             raise ValueError(f"{PROVIDER_CONFIG} runner provider {name}.key_env must be a string")
         resolved[name] = {"url": url, "key_env": key_env}
     return resolved
-
-
-def _runner_providers_from_legacy_root(data: dict[str, Any]) -> dict[str, Any] | None:
-    providers = data.get("providers")
-    if not isinstance(providers, dict):
-        return None
-    if all(name in providers for name in RUNNER_PROVIDER_NAMES):
-        return providers
-    return None
 
 
 def _validate_runner_policy(operation_id: str, runner_policy: Any) -> dict[str, dict[str, Any]]:
