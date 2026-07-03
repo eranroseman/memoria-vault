@@ -141,6 +141,21 @@ def test_validate_frontmatter_round_trip():
     assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), work))
 
 
+def test_schema_rejects_undeclared_fields_but_allows_x():
+    note = schema.load_types()["note"]
+    good = {
+        "id": "01KBN6V6KX0000000000000001",
+        "type": "note",
+        "title": "T",
+        "tags": [],
+        "links": {},
+        "x": {"local": "ok"},
+    }
+    assert schema.validate_frontmatter(good, note) == []
+    errors = schema.validate_frontmatter(dict(good, surprise=True), note)
+    assert any("undeclared field: surprise" in error for error in errors)
+
+
 def test_note_links_are_typed_maps():
     note = schema.load_types()["note"]
     good = {

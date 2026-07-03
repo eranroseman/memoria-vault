@@ -24,7 +24,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 
 | Detector | Severity | Catches |
 | --- | --- | --- |
-| `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, bad field kind/enum). |
+| `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum). |
 | `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
