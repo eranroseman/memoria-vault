@@ -1561,27 +1561,9 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
 
 
 def _changed_generated_projection_paths(workspace: Path) -> list[str]:
-    from memoria_vault.runtime.projections import TRACKED_PROJECTION_PATHS
+    from memoria_vault.runtime.projections import changed_tracked_projection_paths
 
-    paths = TRACKED_PROJECTION_PATHS
-    proc = _git(
-        workspace,
-        "status",
-        "--porcelain",
-        "--untracked-files=all",
-        "--",
-        *paths,
-    )
-    changed: list[str] = []
-    for line in proc.stdout.splitlines():
-        if len(line) < 4 or "D" in line[:2]:
-            continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.rsplit(" -> ", 1)[1]
-        if path in paths:
-            changed.append(path)
-    return sorted(set(changed))
+    return changed_tracked_projection_paths(workspace)
 
 
 def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:

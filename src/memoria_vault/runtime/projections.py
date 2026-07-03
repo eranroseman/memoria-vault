@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
@@ -74,6 +75,38 @@ def check_tracked_projections(vault: Path) -> dict[str, Any]:
         "paths": list(TRACKED_PROJECTION_PATHS),
         "findings": findings,
     }
+
+
+def changed_tracked_projection_paths(vault: Path) -> list[str]:
+    """Return tracked generated projections changed in git status."""
+    vault = Path(vault)
+    proc = subprocess.run(
+        [
+            "git",
+            "status",
+            "--porcelain",
+            "--untracked-files=all",
+            "--",
+            *TRACKED_PROJECTION_PATHS,
+        ],
+        cwd=vault,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if proc.returncode:
+        detail = proc.stderr.strip() or proc.stdout.strip()
+        raise RuntimeError(f"git status failed: {detail}")
+    changed: list[str] = []
+    for line in proc.stdout.splitlines():
+        if len(line) < 4 or "D" in line[:2]:
+            continue
+        path = line[3:]
+        if " -> " in path:
+            path = path.rsplit(" -> ", 1)[1]
+        if path in TRACKED_PROJECTION_PATHS:
+            changed.append(path)
+    return sorted(set(changed))
 
 
 def write_tracked_projections(

@@ -12,6 +12,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_bibtex_source, capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
+from memoria_vault.runtime.projections import write_tracked_projections
 from memoria_vault.runtime.search_index import answer_query
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
@@ -1328,6 +1329,27 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
         and event.get("route") == "ask"
         for event in journal_events
     )
+
+
+def test_observe_pi_edits_quarantines_changed_tracked_projection(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    write_tracked_projections(vault, commit=True, machine="test-machine")
+    references = vault / "references.bib"
+    references.write_text(
+        references.read_text(encoding="utf-8") + "\n% direct projection edit\n",
+        encoding="utf-8",
+    )
+
+    enqueue_operation(vault, "observe-pi-edits", idempotency_key="observe-projection-edit")
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["observed_count"] == 0
+    assert done["projection_quarantine_count"] == 1
+    assert done["projection_paths"] == ["references.bib"]
+    assert "% direct projection edit" not in references.read_text(encoding="utf-8")
+    assert (vault / ".memoria/quarantine/references.bib").is_file()
 
 
 def test_worker_runs_mark_checked_operation_jobs(tmp_path: Path) -> None:
