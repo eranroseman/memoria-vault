@@ -45,6 +45,7 @@ TEST_LEVELS = {
     "test_http_transport.py": "contract",
     "test_inbox_cards.py": "contract",
     "test_ingest_paper.py": "contract",
+    "test_mcp_transport.py": "contract",
     "test_installer_skeleton.py": "package",
     "test_install_test_vault_local_llm.py": "package",
     "test_integrity.py": "runtime",

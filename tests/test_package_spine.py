@@ -34,6 +34,8 @@ def test_alpha15_stack_dependencies_use_typer_and_no_orm():
 
     assert {"click", "typer"} <= dependencies
     assert dependencies.isdisjoint({"alembic", "django", "peewee", "sqlalchemy"})
+    assert "mcp" not in dependencies
+    assert data["project"]["optional-dependencies"]["mcp"] == ["mcp>=1.27"]
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():

@@ -96,6 +96,12 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--poll-interval", type=float, default=1.0)
     serve.set_defaults(handler=_cmd_serve)
 
+    mcp = sub.add_parser("mcp")
+    mcp.add_argument("--workspace", required=True)
+    mcp.add_argument("--read-scope", action="append", default=[])
+    mcp.add_argument("--actor", default="agent")
+    mcp.set_defaults(handler=_cmd_mcp)
+
     _new_commands(sub)
     _work_commands(sub)
     _lifecycle_commands(sub)
@@ -663,6 +669,15 @@ def _cmd_serve_http(args: argparse.Namespace) -> int:
         return 0
     finally:
         server.server_close()
+
+
+def _cmd_mcp(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.mcp_transport import run_mcp_server
+
+    if not args.read_scope:
+        return _fail("mcp requires at least one --read-scope", json_output=False)
+    run_mcp_server(_workspace(args), read_scope=args.read_scope, actor=args.actor)
+    return 0
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
