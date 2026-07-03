@@ -31,6 +31,7 @@ reference pages; docs checks keep the mirror linked.
 | Capture PDF source | worker operation `capture-pdf-source` + runtime helper (`capture_pdf_source`) | Uses the optional PyMuPDF parser to extract page text from raw PDF bytes and writes the same checked source Concept path. |
 | Regenerate bibliography | runtime capture helper (`write_references_bib`) / worker operation `regenerate-references-bib` | Rebuilds `references.bib` from checked SQLite catalog rows, falling back to checked source Concepts only when no catalog rows exist, and can commit the projection plus journal event through the worker. |
 | Capture trace | trusted writer + journal | Records `run`, `derived`, and `check-fired` events for the source Concept; raw blobs stay gitignored and are referenced by path + hash. |
+| Extract typed edge candidates | trusted writer materialization (`commit_writer_changes`) | Parses explicit argument-class body links such as `[[supports::knowledge/notes/x.md]]` into unchecked `edge-candidate` attention prompts in the same commit; bare `[[wikilink]]` body links do not create `supports`, `contradicts`, or `extends` edges. |
 | Foreign-write quarantine | worker operation `trace-integrity-scan` + trusted writer (`quarantine_untraced_from_status` / `quarantine_untraced`) | Scans git-status or explicit bundle paths, moves untraced bundle files into `.memoria/quarantine/`, and records a failed `trace-integrity` check event. |
 
 ### Operation runner (`memoria_vault.runtime.operations`)

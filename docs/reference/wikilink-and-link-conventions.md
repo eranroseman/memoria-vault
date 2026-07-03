@@ -70,6 +70,12 @@ Allowed link types:
 
 Catalog entities carry **given** `relationships:` instead, written by the ingest operation (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating this reference and the Linter's `frontmatter-link` detector.
 
+Plain-editor shorthand: an explicit typed body link such as
+`[[supports::knowledge/notes/target.md]]` emits an unchecked Inbox
+`edge-candidate` prompt at materialization. It never writes `links:` by itself.
+A bare `[[wikilink]]` remains a body reference and never becomes a `supports`,
+`contradicts`, or `extends` edge automatically.
+
 ---
 
 ## Cross-link topology

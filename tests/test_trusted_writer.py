@@ -198,6 +198,38 @@ def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) 
     assert git(vault, "diff", "--cached", "--name-only") == "other.md"
 
 
+def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    git(vault, "init", "-q")
+    git(vault, "config", "user.email", "writer@example.invalid")
+    git(vault, "config", "user.name", "Trusted Writer")
+    content = note_text().replace(
+        "Alpha body.",
+        "Typed [[supports::knowledge/notes/beta.md]] and bare [[knowledge/notes/gamma.md]].",
+    )
+
+    stage_concept(vault, "knowledge/notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "knowledge/notes/alpha.md", machine="test-machine")
+    commit_hash = commit_writer_changes(
+        vault,
+        "trusted write alpha",
+        ["knowledge/notes/alpha.md"],
+        machine="test-machine",
+    )
+
+    prompts = sorted((vault / "inbox").glob("work-prompt-edge-candidate-*.md"))
+    assert len(prompts) == 1
+    prompt_text = prompts[0].read_text(encoding="utf-8")
+    assert "supports" in prompt_text
+    assert "knowledge/notes/beta.md" in prompt_text
+    assert "knowledge/notes/gamma.md" not in prompt_text
+    assert read_frontmatter(vault / "knowledge/notes/alpha.md")["links"] == {}
+    committed = set(git(vault, "show", "--name-only", "--format=", commit_hash).splitlines())
+    assert prompts[0].relative_to(vault).as_posix() in committed
+
+
 def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     target = vault / "knowledge/notes/pi.md"

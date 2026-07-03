@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import platform
+import re
 import shutil
 import subprocess
 from collections.abc import Iterable
@@ -16,6 +17,7 @@ from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     RETIRED_FRONTMATTER_FIELDS,
@@ -35,6 +37,8 @@ EVENT_CHECK_FIRED = "check-fired"
 EVENT_RESOLVED = "resolved"
 TRACE_OUTPUT_EVENTS = frozenset({EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT})
 SUPPORTED_PROMOTION_CHECKS = frozenset({"memoria-runtime"})
+ARGUMENT_EDGE_TYPES = frozenset({"supports", "contradicts", "extends"})
+TYPED_WIKILINK_RE = re.compile(r"\[\[([a-z][a-z0-9-]*)::([^\]\|]+)(?:\|[^\]]*)?\]\]")
 
 
 def normalize_promotion_checks(
@@ -84,14 +88,52 @@ def commit_writer_changes(
     """Commit only writer-touched files plus the SQLite journal-head anchor."""
     vault = Path(vault)
     output_rels = {_commit_relpath(vault, path) for path in paths}
+    edge_rels = _write_edge_candidate_prompts(vault, output_rels)
     anchor = state.write_journal_head_anchor(vault)
-    selected = sorted({*output_rels, anchor})
+    selected = sorted({*output_rels, *edge_rels, anchor})
     _git(vault, ["git", "add", "--", *selected])
     _git(vault, ["git", "commit", "-m", message, "--", *selected])
     commit = _git(vault, ["git", "rev-parse", "HEAD"])
     for rel in sorted(output_rels):
         state.mark_materialized(vault, rel, commit=commit)
     return commit
+
+
+def _write_edge_candidate_prompts(vault: Path, output_rels: set[str]) -> list[str]:
+    prompts: list[str] = []
+    for source_rel in sorted(output_rels):
+        if not source_rel.endswith(".md"):
+            continue
+        source_path = vault / source_rel
+        if not source_path.is_file():
+            continue
+        frontmatter, body = split_frontmatter(source_path.read_text(encoding="utf-8"))
+        if frontmatter.get("type") not in {"note", "work", "hub", "project"}:
+            continue
+        title = str(frontmatter.get("title") or Path(source_rel).stem)
+        for match in TYPED_WIKILINK_RE.finditer(body):
+            edge_type = match.group(1).strip().lower()
+            target = match.group(2).strip()
+            if edge_type not in ARGUMENT_EDGE_TYPES or not target:
+                continue
+            # ponytail: unchecked prompt per explicit edge; add DB edge rows only with act tuning.
+            prompt = write_work_prompt(
+                vault,
+                f"Review extracted {edge_type} link",
+                f"Review `{edge_type}` from `{source_rel}` to `{target}`.",
+                (
+                    f"`{title}` contains explicit typed link `[[{edge_type}::{target}]]`. "
+                    "It is an unchecked candidate; curate it with `memoria link` if correct."
+                ),
+                "edge-extraction",
+                target=source_rel,
+                posture="co-pi",
+                dedupe_slug=f"edge-candidate-{source_rel}-{edge_type}-{target}",
+                prompt_kind="edge-candidate",
+            )
+            if prompt:
+                prompts.append(prompt.relative_to(vault).as_posix())
+    return prompts
 
 
 def observe_pi_edit(

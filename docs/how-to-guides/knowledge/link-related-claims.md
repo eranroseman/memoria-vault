@@ -53,6 +53,12 @@ links:
 
 Both keys can carry lists — a claim may support one claim and contradict another.
 
+Plain-editor shorthand is also available: writing
+`[[supports::knowledge/notes/target.md]]` in a checked Concept body creates an
+unchecked Inbox prompt for review. It does not update `links:` until you curate
+it; a bare `[[wikilink]]` never becomes a `supports`, `contradicts`, or
+`extends` edge automatically.
+
 **4. Point with the exact note name.**
 
 The target is the vault-relative path to the other checked note. Copy it from
