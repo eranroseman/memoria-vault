@@ -20,6 +20,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria doctor bundle` | Emit a diagnostic bundle. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
+| `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
 
 ## Work
 
