@@ -2457,7 +2457,7 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
         "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
         encoding="utf-8",
     )
-    state.set_concept_verdict(workspace, "knowledge/notes/qmd.md", "checked")
+    mark_file_status(workspace, "knowledge/notes/qmd.md", "note")
 
     rc = main(
         [

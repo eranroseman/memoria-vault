@@ -221,6 +221,23 @@ def concept_check_status(vault: Path, concept_id: str) -> str:
     return "unchecked" if row is None else str(row["check_status"])
 
 
+def output_record(vault: Path, output_id: str) -> dict[str, Any] | None:
+    target = normalize_path(output_id)
+    if not db_path(vault).is_file():
+        return None
+    with connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT output_id, concept_type, store, target_path, check_status,
+                   materialization_status, output_sha256
+            FROM outputs
+            WHERE output_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    return None if row is None else dict(row)
+
+
 def rebuild_file_concept_mirror(vault: Path, rows: Iterable[dict[str, str]]) -> dict[str, int]:
     rows = list(rows)
     with connect(vault) as conn:
