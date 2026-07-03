@@ -15,18 +15,18 @@ For the short version of the core terms, see [Home](../README.md).
 ## System
 
 **ACP** (Agent Client Protocol) — an optional editor-level protocol for external
-chat adapters. Alpha.14 does not ship an ACP/Hermes profile setup.
+chat adapters. Alpha.15 does not ship an ACP/Hermes profile setup.
 
-**Co-PI** — the research-partner role exposed in alpha.14 through the
+**Co-PI** — the research-partner role exposed in alpha.15 through the
 standalone `memoria ask` / `memoria project ask` commands. Older designs mapped
-this role to a Hermes profile; alpha.14 does not ship that profile.
+this role to a Hermes profile; alpha.15 does not ship that profile.
 
 **Operation** — a checked capability manifest plus runner behavior invoked by
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](operations.md).
 
 **Hermes** — an optional external agent runtime that may wrap the CLI/engine in
-future adapter work. It is not required by alpha.14.
+future adapter work. It is not required by alpha.15.
 
 **Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
@@ -34,12 +34,12 @@ runtime state.
 
 **PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
 
-**Agent** — a model-backed process doing work. Alpha.14 exposes agents through
+**Agent** — a model-backed process doing work. Alpha.15 exposes agents through
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
 **Profile** — historical Hermes role configuration from earlier designs.
-Alpha.14 does not ship installed profiles; the current boundary is in
+Alpha.15 does not ship installed profiles; the current boundary is in
 [Installed profiles](profile-capabilities.md).
 
 **Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
@@ -85,20 +85,20 @@ Maintenance.
 
 ## Board and delegation
 
-**Card** — historical task-board representation from earlier designs. Alpha.14
+**Card** — historical task-board representation from earlier designs. Alpha.15
 uses SQLite request rows and attention projections for product state.
 
 **Ceiling** — the maximum write scope an optional adapter policy grants. Request
 payloads may narrow that scope, but never widen it.
 
-**Dispatcher** — alpha.14 dispatcher behavior lives in the local worker queue:
+**Dispatcher** — alpha.15 dispatcher behavior lives in the local worker queue:
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
 **Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
 
 **Lane** — historical background-agent execution path from earlier profile
-designs. Alpha.14 does not ship installed lanes; operations run through the
+designs. Alpha.15 does not ship installed lanes; operations run through the
 standalone CLI/runtime queue.
 
 **Task/request** — a unit of work represented by a SQLite request row. Attention
@@ -152,14 +152,14 @@ bare "state".
 **Extraction-uncertainty flag** — the near-tie rule ([ADR-56](../adr/56-extraction-uncertainty-flag.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
 **Lane-override file** — optional adapter YAML read by the legacy Policy gate
-shim when an external adapter supplies it. Alpha.14 does not ship lane overrides.
+shim when an external adapter supplies it. Alpha.15 does not ship lane overrides.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails
 closed when adapter policy is missing. See [Policy gate](policy-mcp.md).
 
 **Review-gated zone** — an older policy term for folders where agent writes
-degrade to proposals. Alpha.11 replaces this with worker-owned staging and
+degrade to proposals. Alpha.15 replaces this with worker-owned staging and
 promotion: machine writes enter `.memoria/staging/`, and only checked Concepts
 are promoted into `catalog/` or `knowledge/`.
 

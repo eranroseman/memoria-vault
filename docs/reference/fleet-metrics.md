@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Fleet metrics
 
-Alpha.14 drops the installed profile/lane/fleet runtime model. There is no
+Alpha.15 drops the installed profile/lane/fleet runtime model. There is no
 shipped fleet-metrics aggregator and no lane trust-score note is part of the
 standalone baseline.
 

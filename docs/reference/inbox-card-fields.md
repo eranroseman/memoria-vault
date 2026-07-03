@@ -8,7 +8,7 @@ grand_parent: Reference
 
 # Inbox card fields
 
-Alpha.11 removes durable Inbox card schemas from the vault skeleton. The source
+Alpha.15 removes durable Inbox card schemas from the vault skeleton. The source
 of truth remains `vault-template/.memoria/schemas/types/`; this page is kept as a
 stable reference target and now records that no Inbox card Concept family ships.
 
@@ -20,7 +20,7 @@ schemas, not this page.
 
 Generated from `vault-template/.memoria/schemas/types`.
 
-Alpha.11 has no durable Inbox card Concept types. Attention and action state are
+Alpha.15 has no durable Inbox card Concept types. Attention and action state are
 generated operational surfaces, not a separate checked Concept family.
 
 <!-- REFERENCE:END -->

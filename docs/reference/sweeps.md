@@ -22,7 +22,7 @@ deduplication, backoff, and the failure circuit-breaker.
 | `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk. |
 | `--retry` | A captured note stuck at `ingest_status: tier0`. |
 
-`--dry-run` reports without creating requests. Alpha.14 does not install a host
+`--dry-run` reports without creating requests. Alpha.15 does not install a host
 scheduler; an operator-managed scheduled task can invoke the sweep through the
 CLI when the re-ingest path is enabled.
 
@@ -32,7 +32,7 @@ CLI when the re-ingest path is enabled.
 
 | Source | Role |
 | --- | --- |
-| Local Retraction Watch CSV | Primary source; `--refresh` downloads it to `.memoria/data/retraction_watch.csv`, refreshed monthly by cron. |
+| Local Retraction Watch CSV | Primary source; `--refresh` downloads it to `.memoria/data/retraction_watch.csv`, refreshed by manual or operator-managed scheduled runs. |
 | Crossref `update-to` delta | Live DOI status check. |
 | Open Retractions | Cross-check source. |
 
@@ -41,5 +41,5 @@ CLI when the re-ingest path is enabled.
 ## Related
 
 - The ingest stage that creates the source records these sweeps monitor: [Ingest routing](ingest.md)
-- The cron wiring for installed vaults: [Installer (bootstrap)](installer.md)
+- Scheduler wiring boundary: [Installer (bootstrap)](installer.md)
 - The retired Inbox card contract: [Inbox card fields](inbox-card-fields.md)

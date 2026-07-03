@@ -46,6 +46,6 @@ evidence streams and diagnostics, not a second state store.
 
 Old workspaces or archived release artifacts may contain board, cost, blind
 review, lane-metric, or cron-heartbeat logs from the pre-alpha.14 Hermes/fleet
-runtime. Alpha.14 does not ship the exporters that produced those logs. Current
+runtime. Alpha.15 does not ship the exporters that produced those logs. Current
 dashboards and gates should read the runtime request/journal database and the log
 inventory above.

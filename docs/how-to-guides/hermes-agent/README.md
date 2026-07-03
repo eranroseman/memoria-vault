@@ -8,12 +8,12 @@ permalink: /how-to-guides/hermes-agent/
 
 # Hermes Agent
 
-Boundary notes for optional Hermes adapter experiments. Alpha.14 does not ship
-installed Hermes profiles.
+Boundary notes for external Hermes experiments. Alpha.15 does not ship Hermes
+profiles or a Memoria Hermes adapter.
 
 | Guide                                       | What it covers                                        |
 | ------------------------------------------- | ----------------------------------------------------- |
-| [Configure a profile](configure-a-profile.md)     | Why profile configuration is not part of alpha.14    |
+| [Configure a profile](configure-a-profile.md)     | Why profile configuration is not part of alpha.15    |
 | [Run a CLI chat session](run-a-cli-chat-session.md) | Optional external chat experiment notes |
 
 Use the standalone [CLI](../../reference/cli.md) for the current product surface.

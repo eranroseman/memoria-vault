@@ -7,7 +7,7 @@ nav_order: 5
 
 # The Engineer
 
-The Engineer is not an installed alpha.14 profile or code runner. It is the
+The Engineer is not an installed alpha.15 profile or code runner. It is the
 handoff posture for external coding work: Memoria can prepare and record a
 handoff, but the external coding agent does the coding
 ([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).

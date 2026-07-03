@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Policy gate
 
-The alpha.14 write boundary is the standalone CLI/engine: operation manifests,
+The alpha.15 write boundary is the standalone CLI/engine: operation manifests,
 request rows, staging, checks, promotion, and journal entries control machine
 mutations. Optional adapters may call
 `memoria_vault.runtime.policy.hook` before and after tool calls so external writes

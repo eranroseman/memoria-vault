@@ -21,7 +21,7 @@ manual mirrors.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter fields: type, allowed values, owner, namespace | Generated |
-| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.14 has no durable Inbox-card Concept schemas | Generated |
+| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.15 has no durable Inbox-card Concept schemas | Generated |
 | [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map | Generated |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
@@ -37,11 +37,11 @@ manual mirrors.
 | [CLI](cli.md) | Alpha.15 `memoria` command surface | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Installed profiles](profile-capabilities.md) | Alpha.14 no-installed-profile contract | Manual |
+| [Installed profiles](profile-capabilities.md) | Alpha.15 no-installed-profile contract | Manual |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
-| [Obsidian command palette](obsidian-command-palette.md) | Obsidian `Memoria:` command-palette entries | Guarded mirror |
-| [Hermes CLI](hermes-cli.md) | Alpha.14 boundary for the optional future Hermes adapter | Manual |
+| [Obsidian command palette](obsidian-command-palette.md) | Alpha.15 no-command-palette boundary and CLI equivalents | Guarded mirror |
+| [Hermes CLI](hermes-cli.md) | Alpha.15 no-Hermes-command boundary | Manual |
 | [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
@@ -49,7 +49,7 @@ manual mirrors.
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
-| [Clustering](clustering.md) | Alpha.14 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
+| [Clustering](clustering.md) | Alpha.15 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)
 
@@ -63,7 +63,7 @@ manual mirrors.
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs plus historical log boundaries | Manual |
 | [Board export](board-export.md) | Alpha.15 no-board-export boundary and replacement request/journal surfaces | Manual |
-| [Fleet metrics](fleet-metrics.md) | Alpha.14 no-fleet-runtime boundary and replacement runtime signals | Manual |
+| [Fleet metrics](fleet-metrics.md) | Alpha.15 no-fleet-runtime boundary and replacement runtime signals | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 
 ## [System and infrastructure](system-and-infrastructure.md)
@@ -76,7 +76,7 @@ manual mirrors.
 | [System artifacts](system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views | Manual |
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
 | [Failure modes](failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
-| [Sample vault](sample-vault.md) | Retired alpha.10 tutorial corpus; not shipped in alpha.11 | Manual |
+| [Sample vault](sample-vault.md) | Retired alpha.10 tutorial corpus; not shipped in alpha.15 | Manual |
 | [Pattern provenance table](pattern-provenance.md) | Borrow/adapt/reference/ignore judgments for surveyed AI-research-system patterns | Manual |
 | [Bibliography](bibliography.md) | Works cited across the docs in ACM author-date style | Manual |
 
@@ -84,9 +84,9 @@ manual mirrors.
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [Obsidian plugins](obsidian-plugins.md) | Obsidian plugin inventory, install status, and evaluated alternatives | Guarded mirror |
-| [Obsidian plugin settings](obsidian-plugin-settings.md) | Load-bearing per-plugin settings | Manual |
-| [Obsidian plugin data files](obsidian-plugin-data-files.md) | `data.json`, `.example`, generated, and secret-bearing config conventions | Manual |
+| [Obsidian plugins](obsidian-plugins.md) | Alpha.15 no-plugin baseline and optional adapter boundary | Guarded mirror |
+| [Obsidian plugin settings](obsidian-plugin-settings.md) | No required plugin settings and optional adapter boundary | Manual |
+| [Obsidian plugin data files](obsidian-plugin-data-files.md) | No shipped plugin data files and optional adapter boundary | Manual |
 | [Zotero plugins](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison | Manual |
 | [Obsidian callouts](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema | Manual |
 | [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and navigation-rail space-switching model | Manual |

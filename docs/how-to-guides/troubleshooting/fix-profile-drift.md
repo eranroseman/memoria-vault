@@ -7,7 +7,7 @@ nav_order: 6
 
 # Fix profile drift
 
-Alpha.14 should not have profile drift because it does not ship installed
+Alpha.15 should not have profile drift because it does not ship installed
 profiles. If you see `vault-template/.memoria/profiles/` or
 `vault-template/.memoria/lane-overrides/`, a pre-alpha.14 package was copied
 back into the tree.

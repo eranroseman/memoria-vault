@@ -7,7 +7,7 @@ nav_order: 3
 
 # The Writer
 
-The Writer is not an installed alpha.14 profile. It is the future
+The Writer is not an installed alpha.15 profile. It is the future
 draft-proposal posture for turning checked evidence into structured prose:
 section drafts with bound citations and competing outlines. Its posture remains
 **generative, draft-only**: every output is a proposal, and nothing becomes

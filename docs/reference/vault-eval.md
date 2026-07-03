@@ -14,7 +14,7 @@ grand_parent: Reference
 
 Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They retain
 `type: eval-task` frontmatter for dispatcher compatibility, but `eval-task` is
-not an alpha.14 Concept type and has no schema under
+not an alpha.15 Concept type and has no schema under
 `vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
 `## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
 runtime eval operation can run and score it with nothing but the file.
@@ -98,7 +98,11 @@ python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <va
 
 ## Cadence
 
-The installer wires the scheduled `memoria-eval` wrapper (schedule and wrapper owned by [Installer (bootstrap)](installer.md#the-crons-it-wires)), following the same pattern as the lint and metrics wrappers. The wrapper dispatches the current quarter's local eval task plans. Scoring is explicit and uses `eval_score --from-json` once result payloads exist.
+The template includes a `memoria-eval` wrapper that an operator-managed scheduler
+may call. The installer does not register the schedule; see
+[Installer (bootstrap)](installer.md#host-scheduler-wiring). The wrapper
+dispatches the current quarter's local eval task plans. Scoring is explicit and
+uses `eval_score --from-json` once result payloads exist.
 
 ---
 
@@ -108,4 +112,4 @@ The installer wires the scheduled `memoria-eval` wrapper (schedule and wrapper o
 - The operation/posture boundary: [Installed profiles](profile-capabilities.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
-- The other scheduled jobs: [Installer (bootstrap)](installer.md)
+- Scheduler wiring boundary: [Installer (bootstrap)](installer.md)

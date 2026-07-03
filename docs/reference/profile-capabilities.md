@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Installed profiles
 
-Alpha.14 does not ship installed Hermes profile packages or lane overrides.
+Alpha.15 does not ship installed Hermes profile packages or lane overrides.
 `vault-template/.memoria/profiles/` and `vault-template/.memoria/lane-overrides/`
 must be absent.
 

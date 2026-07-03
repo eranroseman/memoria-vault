@@ -29,7 +29,7 @@ history, see [Developers](../developers.md).
 
 1. **[Architecture](architecture/README.md)** — the seven-layer model and the structural pages.
 2. **[Knowledge](knowledge/README.md)** — how the vault organizes durable knowledge.
-3. **[Operation postures](profiles/README.md)** — how old profile language maps to alpha.14 requests and operations.
+3. **[Operation postures](profiles/README.md)** — how old profile language maps to alpha.15 requests and operations.
 4. **[Operations](operations.md)** — the deterministic layer below the agents.
 5. **[Request control plane](kanban-board/README.md)** — request state, attention, and the old board boundary.
 6. **[Obsidian](obsidian/README.md)** — optional editor integration boundaries.

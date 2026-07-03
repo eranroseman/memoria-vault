@@ -8,7 +8,7 @@ permalink: /how-to-guides/knowledge/
 
 # Knowledge
 
-Build durable synthesis. Alpha.11 uses checked Concepts under `knowledge/`;
+Build durable synthesis. Alpha.15 uses checked Concepts under `knowledge/`;
 machine-written candidates become visible only after the worker checks them, and
 PI edits are direct then observed/backfilled.
 

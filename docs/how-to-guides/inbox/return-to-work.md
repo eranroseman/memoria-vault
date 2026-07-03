@@ -34,7 +34,7 @@ memoria request list --workspace <workspace>
 
 Provider settings live under `<workspace>/.memoria/config/providers.yaml` and
 environment variables consumed by the standalone CLI/engine. There is no
-profile `.env` propagation step in alpha.14.
+profile `.env` propagation step in alpha.15.
 
 **3. Confirm the workspace is synced and clean.**
 

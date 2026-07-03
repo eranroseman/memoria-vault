@@ -7,7 +7,7 @@ nav_order: 2
 
 # Reset workspace
 
-Alpha.14 ships no saved Obsidian workspace. If you use Obsidian, open the
+Alpha.15 ships no saved Obsidian workspace. If you use Obsidian, open the
 workspace folder and navigate with ordinary Markdown links.
 
 ## Steps

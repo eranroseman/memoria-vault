@@ -9,7 +9,7 @@ nav_order: 1
 
 The vault is where durable knowledge lives. Everything else in Memoria - the
 CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
-This page explains the alpha.14 workspace shape, Concept homes, and write boundary.
+This page explains the alpha.15 workspace shape, Concept homes, and write boundary.
 
 ---
 
@@ -67,7 +67,7 @@ and optional editor views. Views are projections; Concept frontmatter is governe
 feed bibliography/materialization are governed by
 [ADR-122](../../adr/122-sqlite-working-state-boundary.md).
 
-Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through cron/CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. System-file drift can be restored from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
+Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. System-file drift can be restored from the golden copy ([ADR-55](../../adr/55-src-scaffold-populate-golden-copy.md)).
 
 ---
 

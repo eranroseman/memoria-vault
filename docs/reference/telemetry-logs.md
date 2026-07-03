@@ -77,7 +77,7 @@ One row per `memoria eval run` score pass. The exact metric definitions are in
 
 ## Historical Schemas
 
-Pre-alpha.14 workspaces may contain board-state, board-transition, cost,
+Pre-alpha.15 workspaces may contain board-state, board-transition, cost,
 cost-miss, blind-review, lane-metric, or cron-heartbeat logs. They are historical
-import data only; alpha.14 does not ship the exporters or scheduled jobs that
+import data only; alpha.15 does not ship the exporters or scheduled jobs that
 produce them.

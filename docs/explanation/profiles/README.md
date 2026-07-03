@@ -8,10 +8,10 @@ permalink: /explanation/profiles/
 
 # Operation postures
 
-Alpha.14 does not ship installed Hermes profiles. The old profile language maps
+Alpha.15 does not ship installed Hermes profiles. The old profile language maps
 to current concepts this way:
 
-| Old profile concept | Alpha.14 replacement |
+| Old profile concept | Alpha.15 replacement |
 | --- | --- |
 | Co-PI profile | `memoria ask` / `memoria project ask` query flow |
 | Background lane profile | Checked operation manifest plus request row |
@@ -27,7 +27,7 @@ for capabilities, provider config, or write policy.
 
 ## Delegation posture
 
-Delegation is request based in alpha.14. A request can narrow scope through input
+Delegation is request based in alpha.15. A request can narrow scope through input
 refs, output intents, and required checks, but it cannot widen the operation
 manifest's authority.
 

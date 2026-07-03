@@ -45,7 +45,11 @@ Don't create hubs just to clear a queue.
 
 **Step 7 — Check structural health (5 min).**
 
-Use Maintenance's **Drift watch** and **Loose ends** views — the Linter operation's daily 06:00 cron feeds them. Address HIGH findings this session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until it isn't. To re-check after fixes, run the detectors directly ([Run the Linter](../operate/run-the-linter.md)).
+Use Maintenance's **Drift watch** and **Loose ends** views — a manual or
+operator-managed scheduled Linter run feeds them. Address HIGH findings this
+session; MEDIUM can wait for a maintenance pass; LOW is aggregated noise until
+it isn't. To re-check after fixes, run the detectors directly
+([Run the Linter](../operate/run-the-linter.md)).
 
 ## Verify
 

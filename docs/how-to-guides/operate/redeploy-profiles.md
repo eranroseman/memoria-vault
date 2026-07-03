@@ -7,7 +7,7 @@ nav_order: 4
 
 # Redeploy profiles
 
-Alpha.14 has no installed profile packages and no profile redeploy command.
+Alpha.15 has no installed profile packages and no profile redeploy command.
 
 Do not run `--profiles-only`; that installer mode was removed with the
 pre-alpha.14 Hermes profile packaging. The shipped runtime is the standalone

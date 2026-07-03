@@ -54,7 +54,7 @@ Note the consumers: the ingest operation's automated classify stage rolls OpenAl
 
 ## Step 3 — Rename a term safely
 
-Renaming a vocabulary value across a fresh alpha.11 sandbox is a
+Renaming a vocabulary value across a fresh alpha.15 sandbox is a
 git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
 vocabulary-specific points:
 

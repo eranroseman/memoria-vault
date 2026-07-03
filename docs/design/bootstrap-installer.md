@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, stage the golden copy, install the `memoria` package into the vault-local venv, register qmd search, and wire local integrity hooks. Alpha.14 does not install Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, stage the golden copy, install the `memoria` package into the vault-local venv, register qmd search, and wire local integrity hooks. Alpha.15 does not install Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -55,9 +55,9 @@ The primary path is inspect-first: download, read, then run. The one-liner is co
 - **Windows default:** `scripts/install.ps1` installs the standalone CLI/runtime workspace.
 
 The production path has no `/mnt/c` vault path and no WSL2 gate in the
-PowerShell installer. Any future Obsidian/Hermes adapter is separate from the
-bootstrap contract and must not reintroduce installed profiles or profile-only
-redeploy modes into the core installer.
+PowerShell installer. Any future editor adapter or external runtime experiment is
+separate from the bootstrap contract and must not reintroduce installed profiles
+or profile-only redeploy modes into the core installer.
 
 ## Simplifying decisions
 
@@ -85,5 +85,5 @@ Each trades breadth for less installer code:
 
 - **Reference:** [Installer (bootstrap)](../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
 - **Decisions:** [ADR-55](../adr/55-src-scaffold-populate-golden-copy.md) (vault source + scaffold-populate + golden copy), [ADR-26](../adr/26-repo-as-install-unit.md) (the repo is the install unit).
-- **Design:** [Distribution model](distribution-model.md), [Why Hermes](why-hermes.md) (the optional adapter runtime).
+- **Design:** [Distribution model](distribution-model.md), [Hermes boundary](why-hermes.md).
 - **How-to:** [Quickstart](../how-to-guides/setup/quickstart.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).

@@ -7,7 +7,7 @@ nav_order: 2
 
 # Run a CLI chat session
 
-Alpha.14 does not ship Hermes profile chat sessions. Use the standalone Memoria
+Alpha.15 does not ship Hermes profile chat sessions. Use the standalone Memoria
 CLI for the supported query path:
 
 ```bash
@@ -20,9 +20,9 @@ For project-scoped questions:
 memoria project ask <project-id> --workspace <workspace> --question "What are the gaps?"
 ```
 
-If you experiment with Hermes externally, treat it as an adapter that calls the
-same `memoria` CLI/engine. Do not rely on Hermes profile aliases, profile skills,
-or Hermes board commands as alpha.14 product surfaces.
+If you experiment with Hermes externally, keep it outside Memoria's product
+surface. Do not rely on Hermes profile aliases, profile skills, or Hermes board
+commands as alpha.15 behavior.
 
 ## Related
 

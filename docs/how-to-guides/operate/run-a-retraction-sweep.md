@@ -11,11 +11,14 @@ Check the papers in your Catalog against retraction registries and act on the hi
 
 ## When it runs without you
 
-The installer ships a monthly cron wrapper (`retraction-refresh-cron.sh`) that refreshes the local Retraction Watch dataset and sweeps. Run it by hand before citing a cluster of older papers in a draft, or right after hearing of a retraction in your field.
+The template ships a wrapper (`retraction-refresh-cron.sh`) that an
+operator-managed monthly schedule can call to refresh the local Retraction Watch
+dataset and sweep. Run it by hand before citing a cluster of older papers in a
+draft, or right after hearing of a retraction in your field.
 
 ## Steps
 
-**1. Refresh the local dataset** (skippable if the monthly cron just ran):
+**1. Refresh the local dataset** (skippable if your monthly schedule just ran):
 
 ```bash
 python3 -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh
