@@ -7,6 +7,7 @@ import pytest
 
 from memoria_vault.runtime.seeded_errors import (
     _metrics_by_error_class,
+    _verdict_key,
     load_seeded_error_bundle,
     run_seeded_error_verdict,
 )
@@ -82,6 +83,19 @@ def test_metrics_by_error_class_counts_matching_check_false_positives() -> None:
     assert by_class["structural:quote-anchor"]["false_positive_rate"] == 0.5
 
 
+def test_seeded_error_verdict_key_changes_with_mode_or_model() -> None:
+    base = {
+        "mode": "test",
+        "runner": "pydantic-ai",
+        "provider": "local",
+        "model": "fixture-a",
+        "params": {"temperature": 0},
+    }
+
+    assert _verdict_key("bundle", base) != _verdict_key("bundle", {**base, "mode": "live"})
+    assert _verdict_key("bundle", base) != _verdict_key("bundle", {**base, "model": "fixture-b"})
+
+
 @pytest.mark.slow
 def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     tmp_path: Path,
@@ -107,6 +121,11 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     extraction_target = "knowledge/notes/seeded-wrong-extraction.md"
     control = "knowledge/notes/seeded-valid-evidence.md"
     assert result["passed"] is True
+    assert result["mode"] == "test"
+    assert result["runner"] == "pydantic-ai"
+    assert result["provider"] == "local"
+    assert result["model"] == "deterministic-fixture"
+    assert result["verdict_key"].startswith("sha256:")
     assert result["bar_failures"] == []
     assert result["metrics"] == {
         "expected_errors": 13,

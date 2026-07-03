@@ -10,8 +10,9 @@ allowed_paths:
 - journal/
 - .memoria/index/
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: resolve-attention.v1
 io_schema:
   input: attention_target

@@ -10,8 +10,9 @@ allowed_paths:
 - knowledge/
 - references.bib
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: export-project.v1
 io_schema:
   input: checked_project

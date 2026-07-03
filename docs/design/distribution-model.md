@@ -48,7 +48,8 @@ Alpha.15 ships capability manifests inside the Python package under
 `src/memoria_vault/product/capabilities/`, with one checked Markdown file per
 operation. Those manifests are the runtime
 allowlist: they describe the operation id, input/output schema, allowed tools,
-allowed paths, network ceiling, runner, model policy, and required checks.
+allowed paths, network ceiling, runner test/live branch policy, and required
+checks.
 
 The repo deliberately does not ship `vault-template/.memoria/profiles/`,
 `vault-template/.memoria/lane-overrides/`, or a profile-rendering script. The

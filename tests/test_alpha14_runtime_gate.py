@@ -338,11 +338,12 @@ def _fake_runner(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> None:
     def fake_verdict(
-        vault: Path, *, template_root: Path, bundle_path: Path, machine: str
+        vault: Path, *, template_root: Path, bundle_path: Path, runner: dict, machine: str
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
         assert bundle_path == workspace / "system/eval/alpha12-seeded-errors.json"
+        assert runner["mode"] == "test"
         assert machine == "memoria-cli"
         return {"passed": True, "metrics": {"expected_errors": 1, "detected_errors": 1}}
 

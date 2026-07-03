@@ -1,4 +1,4 @@
-"""Opt-in live runner checks for alpha.14."""
+"""Opt-in live runner checks for alpha.15."""
 
 from __future__ import annotations
 
@@ -13,7 +13,8 @@ from memoria_vault.cli import main
 
 @pytest.mark.live
 def test_live_runner_doctor_dispatches(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    if not (os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get("OPENAI_BASE_URL")):
+    base_url = os.environ.get("MEMORIA_MODEL_BASE_URL") or os.environ.get("OPENAI_BASE_URL")
+    if not base_url:
         pytest.skip("set MEMORIA_MODEL_BASE_URL or OPENAI_BASE_URL to run live runner proof")
 
     workspace = tmp_path / "workspace"
@@ -22,6 +23,19 @@ def test_live_runner_doctor_dispatches(tmp_path: Path, capsys: pytest.CaptureFix
     capsys.readouterr()
 
     provider = os.environ.get("MEMORIA_MODEL_PROVIDER", "local")
+    provider_config = workspace / ".memoria/config/providers.yaml"
+    provider_config.write_text(
+        "\n".join(
+            [
+                "version: 1",
+                "runner_providers:",
+                f"  local: {{url: {base_url.rstrip('/')}, key_env: null}}",
+                f"  gateway: {{url: {base_url.rstrip('/')}, key_env: KILOCODE_API_KEY}}",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
     rc = main(
         [
             "doctor",

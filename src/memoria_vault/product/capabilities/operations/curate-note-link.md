@@ -10,8 +10,9 @@ allowed_paths:
 - knowledge/notes/
 - journal/
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: curate-note-link.v1
 io_schema:
   input: typed_note_link

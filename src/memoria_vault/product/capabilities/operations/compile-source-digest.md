@@ -13,8 +13,9 @@ allowed_paths:
 - knowledge/works/
 - knowledge/hubs/
 allowed_network: []
-runner: pydantic-ai
-model: deterministic-fixture
+runner:
+  test: {provider: local, model: deterministic-fixture, temperature: 0}
+  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: compile-source-digest.v1
 io_schema:
   input: checked_source_id

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -79,6 +80,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
     vault = Path(vault)
     template_root = Path(template_root)
     _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
+    _copy_once(template_root / ".memoria/config", vault / ".memoria/config")
     _ensure_git(vault)
 
     source = capture_source(
@@ -500,6 +502,7 @@ def run_seeded_error_verdict(
     *,
     template_root: Path,
     bundle_path: Path,
+    runner: dict[str, Any] | None = None,
     machine: str = "seeded-gate",
 ) -> dict[str, Any]:
     """Run the frozen alpha.11 seeded-error check against a disposable vault."""
@@ -584,8 +587,15 @@ def run_seeded_error_verdict(
     )
     bars = bundle.get("bars") or {}
     bar_failures = _bar_failures(metrics, bars)
+    runner_identity = _runner_identity(runner)
     return {
         "version": bundle["version"],
+        "verdict_key": _verdict_key(bundle["version"], runner_identity),
+        "mode": runner_identity["mode"],
+        "runner": runner_identity["runner"],
+        "provider": runner_identity["provider"],
+        "model": runner_identity["model"],
+        "model_params": runner_identity["params"],
         "passed": not bar_failures,
         "duration_ms": duration_ms,
         "check_timings": [
@@ -608,6 +618,34 @@ def run_seeded_error_verdict(
         "rollback_results": rollback_results,
         "fixture": fixture,
     }
+
+
+def _runner_identity(runner: dict[str, Any] | None) -> dict[str, Any]:
+    if not runner:
+        return {
+            "mode": "test",
+            "runner": "pydantic-ai",
+            "provider": "local",
+            "model": "deterministic-fixture",
+            "params": {},
+        }
+    return {
+        "mode": str(runner.get("mode") or "test"),
+        "runner": str(runner.get("runner") or "pydantic-ai"),
+        "provider": str(runner.get("provider") or "local"),
+        "model": str(runner.get("model") or "deterministic-fixture"),
+        "params": runner.get("params") if isinstance(runner.get("params"), dict) else {},
+    }
+
+
+def _verdict_key(bundle_version: str, runner: dict[str, Any]) -> str:
+    identity = {
+        "operation_id": "run-seeded-error-verdict",
+        "bundle_version": bundle_version,
+        **runner,
+    }
+    payload = json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
 def _matches_expected(finding: dict[str, Any], expected: dict[str, dict[str, Any]]) -> bool:

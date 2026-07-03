@@ -158,6 +158,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     _common(digest)
     digest.add_argument("work_id")
     digest.add_argument("--hub-topic", action="append", default=[])
+    digest.add_argument("--mode", choices=("test", "live"), default="test")
     digest.set_defaults(handler=_cmd_work_digest)
 
     interview = work_sub.add_parser("interview")
@@ -334,6 +335,7 @@ def _operation_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     run = operation_sub.add_parser("run")
     _common(run)
     run.add_argument("operation_id")
+    run.add_argument("--mode", choices=("test", "live"), default="test")
     payload = run.add_mutually_exclusive_group()
     payload.add_argument("--payload-json", default="{}")
     payload.add_argument("--payload-file")
@@ -386,6 +388,7 @@ def _eval_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     eval_sub = eval_cmd.add_subparsers(dest="eval_command", required=True)
     seeded = eval_sub.add_parser("seeded-error-verdict")
     _common(seeded)
+    seeded.add_argument("--mode", choices=("test", "live"), default="test")
     seeded.set_defaults(handler=_cmd_eval_seeded_error_verdict)
     run = eval_sub.add_parser("run")
     _common(run)
@@ -517,7 +520,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     if args.live and args.check != "runner":
         return _fail("doctor --live is only valid with --check runner", json_output=args.json)
     if args.check == "runner":
-        status = _runner_status(args.provider, live=args.live)
+        status = _runner_status(workspace, args.provider, live=args.live)
         checks.update(status["checks"])
         return _emit(
             {
@@ -725,7 +728,11 @@ def _cmd_work_digest(args: argparse.Namespace) -> int:
         _enqueue_and_run(
             args,
             "compile-source-digest",
-            {"source_id": args.work_id, "hub_topics": args.hub_topic or DEFAULT_DIGEST_TOPICS},
+            {
+                "source_id": args.work_id,
+                "hub_topics": args.hub_topic or DEFAULT_DIGEST_TOPICS,
+                "mode": args.mode,
+            },
         ),
         args,
     )
@@ -1187,7 +1194,7 @@ def _cmd_attention_worklist(args: argparse.Namespace) -> int:
 
 
 def _cmd_eval_seeded_error_verdict(args: argparse.Namespace) -> int:
-    return _emit(_enqueue_and_run(args, "run-seeded-error-verdict", {}), args)
+    return _emit(_enqueue_and_run(args, "run-seeded-error-verdict", {"mode": args.mode}), args)
 
 
 def _cmd_workspace_run(args: argparse.Namespace) -> int:
@@ -1813,6 +1820,7 @@ def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
     payload = json.loads(raw)
     if not isinstance(payload, dict):
         raise ValueError("operation payload must be a JSON object")
+    payload.setdefault("mode", args.mode)
     return payload
 
 
@@ -2241,20 +2249,27 @@ def _qmd_status(workspace: Path, *, include_collection: bool = True) -> dict[str
     }
 
 
-def _runner_status(provider: str | None, *, live: bool = False) -> dict[str, Any]:
+def _runner_status(workspace: Path, provider: str | None, *, live: bool = False) -> dict[str, Any]:
     from memoria_vault.runtime.operations import (
         _load_pydantic_ai_openai,
         _pydantic_ai_chat,
-        model_base_url,
+        load_runner_provider_config,
     )
 
-    provider_name = (provider or "default").strip() or "default"
-    base_url = model_base_url(provider_name)
-    api_key = (
-        os.environ.get("MEMORIA_MODEL_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-        or os.environ.get("KILOCODE_API_KEY")
-    )
+    provider_name = (provider or "local").strip() or "local"
+    providers = load_runner_provider_config(workspace)
+    if provider_name not in providers:
+        raise ValueError(f"unknown runner provider: {provider_name}")
+    provider_spec = providers[provider_name]
+    base_url = str(provider_spec["url"])
+    key_env = provider_spec.get("key_env")
+    api_key = os.environ.get(key_env) if isinstance(key_env, str) and key_env else None
+    if not api_key:
+        api_key = (
+            os.environ.get("MEMORIA_MODEL_API_KEY")
+            or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("KILOCODE_API_KEY")
+        )
     model_name = os.environ.get("MEMORIA_MODEL") or os.environ.get("OPENAI_MODEL") or "doctor"
     checks = {
         "runner_dependency": False,
@@ -2277,10 +2292,16 @@ def _runner_status(provider: str | None, *, live: bool = False) -> dict[str, Any
             _pydantic_ai_chat(
                 {
                     "operation_id": "doctor-runner-live",
+                    "allowed_network": [base_url],
+                },
+                {
+                    "mode": "live" if live else "test",
                     "runner": "pydantic-ai",
                     "provider": provider_name,
                     "model": model_name,
-                    "allowed_network": [base_url],
+                    "base_url": base_url,
+                    "key_env": key_env,
+                    "params": {"temperature": 0},
                 },
                 "Reply with a short confirmation that the Memoria runner is reachable.",
             )
