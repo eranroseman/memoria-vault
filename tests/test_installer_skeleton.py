@@ -313,8 +313,14 @@ def test_installer_has_no_profile_template_replacement_layer():
 def test_installer_treats_python_as_a_hard_prerequisite():
     text = INSTALL.read_text(encoding="utf-8")
     assert "python_install_guidance()" in text
-    assert "Python 3 is required for Memoria's standalone CLI and deterministic tools." in text
+    assert "Python 3.12+ + venv" in text
+    assert "Python 3.12+ is required for Memoria's standalone CLI and deterministic tools." in text
     assert "sudo apt-get update && sudo apt-get install -y python3 python3-venv" in text
+    assert "python_version_ok python3" in text
+    assert "sys.version_info >= (3, 12)" in text
+    ps = INSTALL_PS.read_text(encoding="utf-8")
+    assert "Assert-PythonRuntime" in ps
+    assert "Memoria requires Python 3.12+" in ps
     ensure_prereqs = re.search(
         r"ensure_prereqs\(\) \{(?P<body>.*?)\n\}",
         text,
@@ -344,7 +350,7 @@ def test_runtime_deps_fail_loudly_without_python():
         text,
         re.S,
     ).group("body")
-    assert "No Python found" in install_runtime_deps
+    assert "No Python 3.12+ found" in install_runtime_deps
     assert "python_install_guidance" in install_runtime_deps
     assert "sudo apt-get install -y python3 python3-venv" in install_runtime_deps
     assert "skipping MCP deps" not in install_runtime_deps

@@ -30,7 +30,7 @@ fresh workspace refresh, not an in-vault migration path.
 
 | Step | What happens |
 | --- | --- |
-| Prerequisites | Ensures `git` and Python 3 with venv support. `pandoc` is optional and only needed for DOCX/PDF exports. |
+| Prerequisites | Ensures `git` and Python 3.12+ with venv support. `pandoc` is optional and only needed for DOCX/PDF exports. |
 | Source | Uses the local checkout or clones `memoria-vault` to a temporary staging directory. |
 | Workspace copy | Copies `vault-template/` into a fresh target. The installer refuses an existing Memoria workspace. |
 | Skeleton | Recreates schema-owned empty folders from `folders.yaml`. |
