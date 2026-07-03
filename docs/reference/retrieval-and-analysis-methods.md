@@ -18,7 +18,8 @@ For the rationale — why deterministic over LLM, cost, and audit implications �
 
 **For:** parsing structured text (citations, frontmatter, wikilinks), pattern detection in filenames, deterministic transformations (normalize whitespace, sort YAML keys).
 
-**Used by:** Linter structural detectors, Peer-reviewer `verify-check-citation`, schema validation, Librarian ingest type-detection dispatch table.
+**Used by:** Linter structural detectors, Peer-reviewer `verify-check-citation`,
+schema validation, and ingest type-detection dispatch.
 
 **Cost:** free. Latency: microseconds. Determinism: total.
 
@@ -56,47 +57,18 @@ read barrier.
 
 ---
 
-### Classical clustering (HDBSCAN, k-means)
+### Project-hint overlap scoring
 
-**For:** corpus density analysis, identifying conceptual clusters in a project scope, gap detection.
+**For:** proposing project membership from a small user-authored topic list.
 
-**Used by:** map and gap-analysis operations such as corpus clustering, project
-scope mapping, and coverage reports.
+**Used by:** the ingest classify step when `.memoria/project-hints.yaml` exists.
+The proposal lands in `_proposed_classification.projects` for human review; it
+does not write project membership directly.
 
-**Implementation:** HDBSCAN over note vectors when the optional stack is installed (no need to pre-specify cluster count). UMAP for 2D projection if visualization is needed. HDBSCAN is deterministic for fixed parameters; fix UMAP's random seed for reproducibility.
+**Implementation:** simple normalized term overlap between each project's
+`primary_topics` and the source's OpenAlex topic signals.
 
-**Cost:** seconds to minutes for thousands of notes. Determinism: total for fixed parameters.
-
----
-
-### Topic modeling (LDA, NMF, BERTopic)
-
-**For:** identifying underrepresented topics, comparing topic distributions across projects, surfacing methodological themes.
-
-**Used by:** coverage reports and project gap analysis.
-
-**Implementation:** BERTopic is the modern default (combines embeddings + clustering + class-based TF-IDF for topic labels). Classical LDA over TF-IDF works for smaller corpora.
-
-**Cost:** minutes for thousands of documents (one-time per analysis). Determinism: same data + same parameters → same topics.
-
----
-
-### Small classifiers (logistic regression, gradient boosting, fine-tuned BERT)
-
-**For:** proposing `_proposed_classification` labels, scoring whether a note belongs to a project, predicting reading priority.
-
-**Used by:** `_proposed_classification` proposal (with LLM fallback for low-confidence cases), reading-priority ranking when sufficient training data exists.
-
-**Implementation:** `scikit-learn` for tabular and TF-IDF features; fine-tuned DistilBERT for deeper text. Trained on the human's past classification decisions — the human-confirmed `lifecycle: current` notes are the training set.
-
-Training characteristics:
-
-- Multi-label (one-vs-rest) for `research_area`, `methodology`, and `topics` — all list-valued.
-- Retrain cadence: monthly, or when the human-override rate on proposed labels exceeds 25%.
-- Training set: `lifecycle: current` notes only — `proposed` notes are not yet ground truth.
-- Useful at ~200–500 classified notes; well-calibrated at ~1,000.
-
-**Cost:** training is occasional and offline; inference is sub-millisecond. Determinism: total once trained.
+**Cost:** free. Determinism: total.
 
 ---
 
@@ -112,11 +84,13 @@ Training characteristics:
 
 ---
 
-### API calls (Zotero, OpenAlex, PubMed, CrossRef, GitHub)
+### API calls
 
 **For:** metadata enrichment, retraction monitoring, citation graph traversal.
 
-**Used by:** Librarian catalog enrichment and discovery skills, ingest enrichment, retraction sweep operations, and external metadata lookups.
+**Used by:** source enrichment, metadata checks, retraction sweep operations, and
+external metadata lookups. Zotero is not a live API dependency in alpha.15;
+portable BibTeX/CSL exports are file inputs.
 
 **Cost:** per-call API budget. Determinism: most APIs are stable; some return ranked results that drift across calls.
 
@@ -128,5 +102,5 @@ Training characteristics:
 - Operation postures that use these methods: [Librarian](../explanation/profiles/librarian.md),
   [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and
   [Operations - the deterministic layer](../explanation/operations.md)
-  (Linter, clustering, sweeps)
+  (Linter, retrieval, sweeps)
 - Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)

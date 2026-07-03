@@ -45,7 +45,7 @@ manual mirrors.
 | [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
-| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, classifiers, clustering, API calls, and graph algorithms | Manual |
+| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, project-hint scoring, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |

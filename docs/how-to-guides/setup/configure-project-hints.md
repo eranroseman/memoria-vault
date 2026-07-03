@@ -8,14 +8,18 @@ nav_order: 6
 
 # Configure project hints
 
-`project-hints.yaml` gives the Librarian a lightweight per-project topic list so it can **propose** which project a newly ingested paper belongs to — you confirm or correct that at triage, exactly like every other proposed field. It is **optional**: with no file, project membership is tagged fully by hand. This guide creates it from the shipped example and tunes it.
+`project-hints.yaml` gives the ingest classify step a lightweight per-project
+topic list so it can **propose** which project a newly ingested paper belongs
+to. You confirm or correct that at triage, exactly like every other proposed
+field. It is **optional**: with no file, project membership is tagged fully by
+hand. This guide creates it from the shipped example and tunes it.
 
 A hint is just a topic list — no weights, no expected-method/design fields. Don't turn it into a scoring matrix ([ADR-15](../../adr/15-project-membership-from-topic-hint.md)).
 
 ## Prerequisites
 
 - The starter vault (ships `.memoria/project-hints.yaml.example`)
-- The auto-proposal takes effect once the Librarian's `classify` step runs; the file is editable any time before that
+- The auto-proposal takes effect once the ingest `classify` step runs; the file is editable any time before that
 
 ## Steps
 
@@ -25,7 +29,8 @@ A hint is just a topic list — no weights, no expected-method/design fields. Do
 cp .memoria/project-hints.yaml.example .memoria/project-hints.yaml
 ```
 
-Copy-on-first-use. (Memoria-authored examples use lowercase `.example`; Hermes-generated ones like `.env.EXAMPLE` stay uppercase.) An absent `project-hints.yaml` simply means manual project tagging — nothing breaks without it.
+Copy-on-first-use. An absent `project-hints.yaml` simply means manual project
+tagging — nothing breaks without it.
 
 **2. Declare one entry per active project.**
 
@@ -53,7 +58,10 @@ Do **not** add `expected_study_designs` or `expected_methods` blocks ([ADR-15](.
 
 **5. Re-tune when classification mis-routes.**
 
-This is the file to edit when the symptom appears: if the Librarian keeps proposing the wrong project (or none) for papers that clearly belong somewhere, broaden or narrow that project's `primary_topics` so the overlap reflects how you actually tag. It's a hint you edit freely — no migration, no schema bump.
+This is the file to edit when the symptom appears: if classify keeps proposing
+the wrong project (or none) for papers that clearly belong somewhere, broaden or
+narrow that project's `primary_topics` so the overlap reflects how you actually
+tag. It's a hint you edit freely — no migration, no schema bump.
 
 ## Verify
 
@@ -65,6 +73,6 @@ This is the file to edit when the symptom appears: if the Librarian keeps propos
 
 - Where the proposed project is confirmed: [Classify a source](../library/classify-a-source.md)
 - Topic vocabulary discipline: [Wikilink and link conventions — Vocabulary discipline](../../reference/wikilink-and-link-conventions.md#vocabulary-discipline)
-- The profile that reads it: [The Librarian](../../explanation/profiles/librarian.md)
+- The operation posture behind intake: [The Librarian](../../explanation/profiles/librarian.md)
 - The ~30-term topic vocabulary discipline: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)
 - The decision and its rationale: [ADR-15](../../adr/15-project-membership-from-topic-hint.md)

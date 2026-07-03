@@ -25,7 +25,7 @@ only when you need the extra detail.
 | [Set up Obsidian](set-up-obsidian.md) | Open the workspace in Obsidian as a plain Markdown editor |
 | [Set up Hermes](set-up-hermes.md) | Alpha.15 no-Hermes setup boundary |
 | [Set up Zotero](set-up-zotero.md) | Better BibTeX citekey shape and portable export imports |
-| [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for Librarian classification |
+| [Configure project hints](configure-project-hints.md) | Optional per-project topic hints for ingest classification |
 
 ## Advanced setup
 
