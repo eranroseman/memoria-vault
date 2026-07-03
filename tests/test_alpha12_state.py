@@ -240,6 +240,29 @@ def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Pat
     assert status == "materialized"
 
 
+def test_pending_materialization_recovery_refinalizes_committed_file(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    target = "knowledge/notes/refinalize.md"
+    stage_concept(vault, target, note_text("Refinalize"), machine="writer")
+    promote_checked(vault, target, machine="writer")
+    git(vault, "add", "--", target, "journal/writer.jsonl")
+    git(vault, "commit", "-m", "simulate writer crash")
+    commit = git(vault, "rev-parse", "HEAD")
+
+    assert state.recover_pending_materializations(vault) == []
+
+    with state.connect(vault) as conn:
+        row = conn.execute(
+            """
+            SELECT materialization_status, materialized_commit, failure_reason
+            FROM outputs
+            WHERE output_id = ?
+            """,
+            (target,),
+        ).fetchone()
+    assert tuple(row) == ("materialized", commit, None)
+
+
 def test_hash_only_pending_materialization_fails_closed(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     with state.connect(vault) as conn:

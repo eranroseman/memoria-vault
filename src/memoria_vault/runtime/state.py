@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
+import subprocess
 from collections.abc import Iterable
 from importlib.resources import files
 from pathlib import Path
@@ -493,6 +494,7 @@ def record_projection_output(
 
 
 def recover_pending_materializations(vault: Path) -> list[str]:
+    vault = Path(vault)
     restored: list[str] = []
     with connect(vault) as conn:
         rows = conn.execute(
@@ -511,8 +513,21 @@ def recover_pending_materializations(vault: Path) -> list[str]:
             expected = str(row["output_sha256"])
             if target.is_file() and sha256_file(target) == expected:
                 conn.execute(
-                    "UPDATE outputs SET materialization_status = 'materialized' WHERE output_id = ?",
-                    (row["output_id"],),
+                    """
+                    UPDATE outputs
+                    SET materialization_status = 'materialized',
+                        materialized_commit = ?,
+                        failure_reason = NULL
+                    WHERE output_id = ?
+                    """,
+                    (
+                        _committed_materialization_commit(
+                            vault,
+                            str(row["target_path"]),
+                            expected,
+                        ),
+                        row["output_id"],
+                    ),
                 )
                 continue
             payload = row["payload_text"]
@@ -1141,6 +1156,31 @@ def _json(value: Any) -> str:
 
 def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _committed_materialization_commit(vault: Path, relpath: str, expected_sha256: str) -> str:
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=vault,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if head.returncode:
+        return ""
+    commit = head.stdout.strip()
+    blob = subprocess.run(
+        ["git", "show", f"{commit}:{normalize_path(relpath)}"],
+        cwd=vault,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if blob.returncode:
+        return ""
+    if "sha256:" + hashlib.sha256(blob.stdout).hexdigest() != expected_sha256:
+        return ""
+    return commit
 
 
 def _journal_hash(
