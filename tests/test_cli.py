@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -47,7 +48,11 @@ def _cli_command_surface() -> set[str]:
     commands: set[str] = set()
     for name, subparser in command_action.choices.items():
         child_action = next(
-            (action for action in subparser._actions if getattr(action, "choices", None)),
+            (
+                action
+                for action in subparser._actions
+                if isinstance(action, argparse._SubParsersAction)
+            ),
             None,
         )
         if child_action is None:
@@ -87,7 +92,7 @@ def test_typer_console_entrypoint_delegates_current_commands(
     assert output["workspace"] == str(workspace)
 
 
-def test_alpha14_cli_command_surface_is_exact() -> None:
+def test_alpha15_cli_command_surface_is_exact() -> None:
     assert _cli_command_surface() == {
         "memoria init",
         "memoria status",
@@ -95,17 +100,21 @@ def test_alpha14_cli_command_surface_is_exact() -> None:
         "memoria doctor bundle",
         "memoria doctor self-test",
         "memoria ask",
-        "memoria work capture",
+        "memoria new hub",
+        "memoria new note",
+        "memoria new project",
+        "memoria work add",
         "memoria work import",
         "memoria work enrich",
         "memoria work digest",
         "memoria work interview",
         "memoria work update",
-        "memoria note capture",
-        "memoria note propose",
-        "memoria note accept",
-        "memoria note reject",
-        "memoria note link",
+        "memoria work export",
+        "memoria link",
+        "memoria check",
+        "memoria show",
+        "memoria list",
+        "memoria export",
         "memoria project ask",
         "memoria project trace",
         "memoria project gaps",
@@ -126,10 +135,11 @@ def test_alpha14_cli_command_surface_is_exact() -> None:
         "memoria operation run",
         "memoria steering show",
         "memoria steering edit",
-        "memoria vocabulary list",
-        "memoria vocabulary add",
-        "memoria vocabulary rename",
-        "memoria journal list",
+        "memoria vocab list",
+        "memoria vocab add",
+        "memoria vocab merge",
+        "memoria vocab rename",
+        "memoria journal tail",
         "memoria journal show",
         "memoria workspace scan",
         "memoria workspace run",
@@ -189,7 +199,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert not workspace.exists()
 
 
-def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
+def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -200,7 +210,7 @@ def test_cli_init_and_work_capture_use_request_envelope_without_trigger_type(
     rc = main(
         [
             "work",
-            "capture",
+            "add",
             "--workspace",
             str(workspace),
             "--doi",
@@ -291,7 +301,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
     assert tuple(enrich) == ("enrich-source", "pending")
 
 
-def test_cli_work_capture_file_stages_text_without_legacy_markdown(
+def test_cli_work_add_file_stages_text_without_legacy_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -303,7 +313,7 @@ def test_cli_work_capture_file_stages_text_without_legacy_markdown(
     rc = main(
         [
             "work",
-            "capture",
+            "add",
             "--workspace",
             str(workspace),
             "--file",
@@ -323,7 +333,7 @@ def test_cli_work_capture_file_stages_text_without_legacy_markdown(
     )
 
 
-def test_cli_work_capture_url_fetches_text_without_legacy_markdown(
+def test_cli_work_add_url_fetches_text_without_legacy_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -340,7 +350,7 @@ def test_cli_work_capture_url_fetches_text_without_legacy_markdown(
     rc = main(
         [
             "work",
-            "capture",
+            "add",
             "--workspace",
             str(workspace),
             "--url",
@@ -359,7 +369,7 @@ def test_cli_work_capture_url_fetches_text_without_legacy_markdown(
     )
 
 
-def test_cli_work_capture_pdf_extracts_text_without_legacy_markdown(
+def test_cli_work_add_pdf_extracts_text_without_legacy_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -376,7 +386,7 @@ def test_cli_work_capture_pdf_extracts_text_without_legacy_markdown(
     rc = main(
         [
             "work",
-            "capture",
+            "add",
             "--workspace",
             str(workspace),
             "--pdf",
@@ -420,7 +430,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
         main(
             [
                 "work",
-                "capture",
+                "add",
                 "--workspace",
                 str(workspace),
                 "--doi",
@@ -444,7 +454,6 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
                 "enrich",
                 "--workspace",
                 str(workspace),
-                "--work-id",
                 "doi-10.1000_alpha",
                 "--provider-replay",
                 str(replay),
@@ -463,7 +472,6 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
                 "interview",
                 "--workspace",
                 str(workspace),
-                "--work-id",
                 "doi-10.1000_alpha",
                 "--fixture",
                 str(interview_fixture),
@@ -484,7 +492,6 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
             "digest",
             "--workspace",
             str(workspace),
-            "--work-id",
             "doi-10.1000_alpha",
             "--json",
             "--idempotency-key",
@@ -548,7 +555,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
 
     run_json(
         "work",
-        "capture",
+        "add",
         "--workspace",
         str(workspace),
         "--doi",
@@ -565,7 +572,6 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "enrich",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--provider-replay",
         str(replay),
@@ -577,7 +583,6 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "update",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--topic",
         "framing",
@@ -590,7 +595,6 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "interview",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--fixture",
         str(interview_fixture),
@@ -602,45 +606,44 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "digest",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--idempotency-key",
         "loop-digest",
     )
     digest_path = digest["result"]["digest_path"]
 
-    proposed = run_json(
+    note = run_json(
+        "new",
         "note",
-        "propose",
+        "Loop note",
         "--workspace",
         str(workspace),
-        "--work-id",
-        "doi-10.1000_alpha",
+        "--body",
+        "Framing changes which outcomes matter.",
+        "--tag",
+        "framing",
         "--idempotency-key",
-        "loop-note-propose",
+        "loop-note-new",
     )
-    [note_path] = proposed["result"]["note_paths"]
+    note_path = note["path"]
     run_json(
-        "note",
-        "accept",
+        "check",
         "--workspace",
         str(workspace),
         note_path,
-        "--reason",
-        "PI accepted the loop note",
         "--idempotency-key",
-        "loop-note-accept",
+        "loop-note-check",
     )
     run_json(
-        "note",
         "link",
         "--workspace",
         str(workspace),
         note_path,
-        "supports",
         "knowledge/notes/thesis.md",
+        "--rel",
+        "supports",
         "--reason",
-        "PI linked the accepted note to the thesis",
+        "PI linked the checked note to the thesis",
         "--idempotency-key",
         "loop-note-link",
     )
@@ -733,8 +736,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
         "update-work",
         "record-copi-interview",
         "compile-source-digest",
-        "propose-note-candidates",
-        "curate-note-candidate",
+        "mark-checked",
         "curate-note-link",
         "answer-query",
         "analyze-gaps",
@@ -892,108 +894,53 @@ def test_cli_project_trace_and_export_markdown(
     ]
 
 
-def test_cli_note_candidate_accept_and_link_flow(
+def test_cli_new_note_check_and_link_flow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/works/source-alpha.md"
-    digest.parent.mkdir(parents=True, exist_ok=True)
-    digest.write_text(
-        "---\n"
-        "type: work\n"
-        "title: Alpha digest\n"
-        "description: Alpha\n"
-        "work_id: source-alpha\n"
-        "tags: []\n"
-        "links: {}\n"
-        "source_id: catalog/sources/source-alpha\n"
-        "---\n"
-        "Body.\n",
-        encoding="utf-8",
-    )
-    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
 
     rc = main(
         [
+            "new",
             "note",
-            "propose",
+            "Framing changes the question",
             "--workspace",
             str(workspace),
-            "--digest-path",
-            "knowledge/works/source-alpha.md",
-            "--candidate-json",
-            json.dumps(
-                {
-                    "title": "Framing changes the question",
-                    "body": "The source reframes the problem before measuring outcomes.",
-                    "claim_text": "Framing changes which outcomes matter.",
-                    "tags": ["Framing"],
-                }
-            ),
-            "--candidate-json",
-            json.dumps(
-                {
-                    "title": "Rejected framing aside",
-                    "body": "This weaker candidate should be rejected.",
-                }
-            ),
+            "--body",
+            "The source reframes the problem before measuring outcomes.",
+            "--tag",
+            "framing",
             "--json",
             "--idempotency-key",
-            "note-propose",
+            "note-new",
         ]
     )
-    proposed = json.loads(capsys.readouterr().out)
+    created = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    note_path, rejected_note_path = proposed["result"]["note_paths"]
+    note_path = created["path"]
     note_fm = read_frontmatter(workspace / note_path)
     assert "check_status" not in note_fm
-    assert state.concept_check_status(workspace, note_path) == "checked"
-    assert note_fm["status"] == "candidate"
+    assert state.concept_check_status(workspace, note_path) == "unchecked"
 
     assert (
         main(
             [
-                "note",
-                "accept",
+                "check",
                 "--workspace",
                 str(workspace),
                 note_path,
-                "--reason",
-                "PI approved",
                 "--json",
                 "--idempotency-key",
-                "note-accept",
+                "note-check",
             ]
         )
         == 0
     )
-    accepted = json.loads(capsys.readouterr().out)
-    assert accepted["result"]["curation_status"] == "accepted"
-    assert read_frontmatter(workspace / note_path)["status"] == "accepted"
-
-    assert (
-        main(
-            [
-                "note",
-                "reject",
-                "--workspace",
-                str(workspace),
-                rejected_note_path,
-                "--reason",
-                "PI rejected",
-                "--json",
-                "--idempotency-key",
-                "note-reject",
-            ]
-        )
-        == 0
-    )
-    rejected = json.loads(capsys.readouterr().out)
-    assert rejected["result"]["curation_status"] == "rejected"
-    assert read_frontmatter(workspace / rejected_note_path)["status"] == "rejected"
+    capsys.readouterr()
+    assert state.concept_check_status(workspace, note_path) == "checked"
 
     target = workspace / "knowledge/notes/target.md"
     target.write_text(
@@ -1004,13 +951,13 @@ def test_cli_note_candidate_accept_and_link_flow(
     assert (
         main(
             [
-                "note",
                 "link",
                 "--workspace",
                 str(workspace),
                 note_path,
-                "supports",
                 "knowledge/notes/target.md",
+                "--rel",
+                "supports",
                 "--reason",
                 "PI linked notes",
                 "--json",
@@ -1026,55 +973,6 @@ def test_cli_note_candidate_accept_and_link_flow(
     assert read_frontmatter(workspace / note_path)["links"] == {
         "supports": ["knowledge/notes/target.md"]
     }
-
-
-def test_cli_note_propose_can_derive_candidate_from_work_digest(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    workspace = tmp_path / "workspace"
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-    digest = workspace / "knowledge/works/source-alpha.md"
-    digest.parent.mkdir(parents=True, exist_ok=True)
-    digest.write_text(
-        "---\n"
-        "type: work\n"
-        "title: Alpha source\n"
-        "description: Alpha\n"
-        "work_id: source-alpha\n"
-        "tags: []\n"
-        "links: {}\n"
-        "source_id: catalog/sources/source-alpha\n"
-        "---\n"
-        "## Synthesis\n\nFraming changes which outcomes matter.\n",
-        encoding="utf-8",
-    )
-    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
-
-    rc = main(
-        [
-            "note",
-            "propose",
-            "--workspace",
-            str(workspace),
-            "--work-id",
-            "source-alpha",
-            "--json",
-            "--idempotency-key",
-            "note-propose-work",
-        ]
-    )
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    [note_path] = output["result"]["note_paths"]
-    note = workspace / note_path
-    note_fm = read_frontmatter(note)
-    assert "check_status" not in note_fm
-    assert state.concept_check_status(workspace, note_path) == "checked"
-    assert note_fm["status"] == "candidate"
-    assert note_fm["source_id"] == "catalog/sources/source-alpha"
-    assert "Framing changes which outcomes matter." in note.read_text(encoding="utf-8")
 
 
 def test_cli_operation_list_and_run_use_workspace_operation_concepts(
@@ -1426,6 +1324,7 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
         "attention_kind: flag\n"
         "attention_status: open\n"
         "target: knowledge/notes/alpha.md\n"
+        "routing_class: ask\n"
         "---\n"
         "# Finding\n\nCheck this.\n",
         encoding="utf-8",
@@ -1438,6 +1337,7 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
         "attention_kind: work-prompt\n"
         "attention_status: open\n"
         "target: knowledge/projects/alpha.md\n"
+        "routing_class: act\n"
         "---\n"
         "# Action\n\nWork this.\n",
         encoding="utf-8",
@@ -1478,6 +1378,7 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
             "--workspace",
             str(workspace),
             "inbox/flag-alpha.md",
+            "--apply",
             "--reason",
             "PI resolved",
             "--json",
@@ -1490,9 +1391,14 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
     assert rc == 0
     assert resolved["result"]["resolution"]["target_id"] == "inbox/flag-alpha.md"
     assert resolved["result"]["resolution"]["reason"] == "PI resolved"
-    assert resolved["result"]["resolution"]["outcome"] == "resolved"
+    assert resolved["result"]["resolution"]["outcome"] == "apply"
+    assert resolved["result"]["resolution"]["resolution_outcome"] == "apply"
+    assert resolved["result"]["resolution"]["routing_class"] == "ask"
+    assert "decided_at" in resolved["result"]["resolution"]
     fm = read_frontmatter(attention)
     assert fm["attention_status"] == "resolved"
+    assert fm["resolution_outcome"] == "apply"
+    assert fm["routing_class"] == "ask"
     assert "resolved_at" in fm
     with state.connect(workspace) as conn:
         row = conn.execute(
@@ -1503,7 +1409,8 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
     assert json.loads(row["args_json"]) == {
         "target_id": "inbox/flag-alpha.md",
         "reason": "PI resolved",
-        "outcome": "resolved",
+        "outcome": "apply",
+        "routing_class": "ask",
     }
 
     rc = main(
@@ -1513,33 +1420,37 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
             "--workspace",
             str(workspace),
             "inbox/work-alpha.md",
-            "--outcome",
-            "dismissed",
+            "--defer",
             "--json",
             "--idempotency-key",
-            "attention-dismiss",
+            "attention-defer",
         ]
     )
-    dismissed = json.loads(capsys.readouterr().out)
+    deferred = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert dismissed["result"]["resolution"]["target_id"] == "inbox/work-alpha.md"
-    assert dismissed["result"]["resolution"]["resolution"] == "resolved"
-    assert dismissed["result"]["resolution"]["outcome"] == "dismissed"
-    assert dismissed["result"]["resolution"]["reason"] == "PI dismissed attention"
+    assert deferred["result"]["resolution"]["target_id"] == "inbox/work-alpha.md"
+    assert deferred["result"]["resolution"]["resolution"] == "resolved"
+    assert deferred["result"]["resolution"]["outcome"] == "defer"
+    assert deferred["result"]["resolution"]["resolution_outcome"] == "defer"
+    assert deferred["result"]["resolution"]["routing_class"] == "act"
+    assert deferred["result"]["resolution"]["reason"] == "PI chose to defer attention"
     fm = read_frontmatter(work_prompt)
-    assert fm["attention_status"] == "resolved"
+    assert fm["attention_status"] == "deferred"
+    assert fm["resolution_outcome"] == "defer"
+    assert fm["routing_class"] == "act"
     assert "resolved_at" in fm
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
-            ("attention-dismiss",),
+            ("attention-defer",),
         ).fetchone()
     assert row["operation_id"] == "resolve-attention"
     assert json.loads(row["args_json"]) == {
         "target_id": "inbox/work-alpha.md",
-        "reason": "PI dismissed attention",
-        "outcome": "dismissed",
+        "reason": "PI chose to defer attention",
+        "outcome": "defer",
+        "routing_class": "act",
     }
 
 
@@ -1607,7 +1518,6 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
                 "update",
                 "--workspace",
                 str(workspace),
-                "--work-id",
                 "portable-work",
                 "--title",
                 "Updated Portable Work",
@@ -1635,12 +1545,11 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert (
         main(
             [
+                "new",
                 "note",
-                "capture",
+                "Captured PI note",
                 "--workspace",
                 str(workspace),
-                "--title",
-                "Captured PI note",
                 "--body",
                 "The PI captured this.",
                 "--tag",
@@ -1651,8 +1560,8 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
         == 0
     )
     captured = json.loads(capsys.readouterr().out)
-    assert "check_status" not in read_frontmatter(workspace / captured["note_path"])
-    assert state.concept_check_status(workspace, captured["note_path"]) == "unchecked"
+    assert "check_status" not in read_frontmatter(workspace / captured["path"])
+    assert state.concept_check_status(workspace, captured["path"]) == "unchecked"
 
     digest = workspace / "knowledge/works/hub-seed.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
@@ -1802,14 +1711,14 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     capsys.readouterr()
     assert "Updated." in (workspace / "steering.md").read_text(encoding="utf-8")
 
-    assert main(["vocabulary", "list", "--workspace", str(workspace), "--json"]) == 0
+    assert main(["vocab", "list", "--workspace", str(workspace), "--json"]) == 0
     vocabulary = json.loads(capsys.readouterr().out)
     assert "research_area" in vocabulary["vocabulary"]
 
     assert (
         main(
             [
-                "vocabulary",
+                "vocab",
                 "add",
                 "--workspace",
                 str(workspace),
@@ -1824,7 +1733,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert (
         main(
             [
-                "vocabulary",
+                "vocab",
                 "rename",
                 "--workspace",
                 str(workspace),
@@ -1881,7 +1790,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert exported["export"]["output"] == str(export_path)
     assert export_path.is_file()
 
-    assert main(["journal", "list", "--workspace", str(workspace), "--limit", "5", "--json"]) == 0
+    assert main(["journal", "tail", "--workspace", str(workspace), "--limit", "5", "--json"]) == 0
     journal = json.loads(capsys.readouterr().out)
     event_id = journal["events"][0]["event_id"]
     assert main(["journal", "show", "--workspace", str(workspace), str(event_id), "--json"]) == 0
@@ -2054,7 +1963,7 @@ def test_cli_journal_list_operation_alias_includes_digest_workflow(
         main(
             [
                 "journal",
-                "list",
+                "tail",
                 "--workspace",
                 str(workspace),
                 "--operation",
@@ -2082,7 +1991,7 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
         main(
             [
                 "work",
-                "capture",
+                "add",
                 "--workspace",
                 str(workspace),
                 "--doi",
@@ -2110,7 +2019,6 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
                 "digest",
                 "--workspace",
                 str(workspace),
-                "--work-id",
                 source_id,
                 "--json",
             ]
@@ -2161,7 +2069,7 @@ def test_cli_journal_list_filters_by_request_path_decision_and_date(
         main(
             [
                 "journal",
-                "list",
+                "tail",
                 "--workspace",
                 str(workspace),
                 "--operation",

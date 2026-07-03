@@ -1,4 +1,4 @@
-"""Alpha.14 stdlib CLI entry point."""
+"""Alpha.15 stdlib CLI entry point."""
 
 from __future__ import annotations
 
@@ -82,35 +82,64 @@ def _build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--question", required=True)
     ask.set_defaults(handler=_cmd_ask)
 
+    _new_commands(sub)
     _work_commands(sub)
-    _note_commands(sub)
+    _lifecycle_commands(sub)
     _project_commands(sub)
     _request_commands(sub)
     _attention_commands(sub)
     _operation_commands(sub)
     _simple_resource(sub, "steering", {"show", "edit"})
-    _simple_resource(sub, "vocabulary", {"list", "add", "rename"})
-    _simple_resource(sub, "journal", {"list", "show"})
+    _simple_resource(sub, "vocab", {"list", "add", "merge", "rename"})
+    _simple_resource(sub, "journal", {"show", "tail"})
     _workspace_commands(sub)
     _eval_commands(sub)
     return parser
+
+
+def _new_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    new = sub.add_parser("new")
+    new_sub = new.add_subparsers(dest="new_command", required=True)
+
+    note = new_sub.add_parser("note")
+    _common(note)
+    note.add_argument("title")
+    body = note.add_mutually_exclusive_group(required=True)
+    body.add_argument("--body")
+    body.add_argument("--file")
+    note.add_argument("--mode", choices=("claim", "question"), default="claim")
+    note.add_argument("--tag", action="append", default=[])
+    note.set_defaults(handler=_cmd_new_note)
+
+    hub = new_sub.add_parser("hub")
+    _common(hub)
+    hub.add_argument("tag")
+    hub.add_argument("--title")
+    hub.add_argument("--description", default="")
+    hub.set_defaults(handler=_cmd_new_hub)
+
+    project = new_sub.add_parser("project")
+    _common(project)
+    project.add_argument("name")
+    project.add_argument("--description", default="")
+    project.set_defaults(handler=_cmd_new_project)
 
 
 def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     work = sub.add_parser("work")
     work_sub = work.add_subparsers(dest="work_command", required=True)
 
-    capture = work_sub.add_parser("capture")
-    _common(capture)
-    source = capture.add_mutually_exclusive_group(required=True)
+    add = work_sub.add_parser("add")
+    _common(add)
+    source = add.add_mutually_exclusive_group(required=True)
     source.add_argument("--doi")
     source.add_argument("--url")
     source.add_argument("--pdf")
     source.add_argument("--file")
-    capture.add_argument("--title")
-    capture.add_argument("--description")
-    capture.add_argument("--text")
-    capture.set_defaults(handler=_cmd_work_capture)
+    add.add_argument("--title")
+    add.add_argument("--description")
+    add.add_argument("--text")
+    add.set_defaults(handler=_cmd_work_add)
 
     import_cmd = work_sub.add_parser("import")
     _common(import_cmd)
@@ -120,19 +149,19 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 
     enrich = work_sub.add_parser("enrich")
     _common(enrich)
-    enrich.add_argument("--work-id", required=True)
+    enrich.add_argument("work_id")
     enrich.add_argument("--provider-replay")
     enrich.set_defaults(handler=_cmd_work_enrich)
 
     digest = work_sub.add_parser("digest")
     _common(digest)
-    digest.add_argument("--work-id", required=True)
+    digest.add_argument("work_id")
     digest.add_argument("--hub-topic", action="append", default=[])
     digest.set_defaults(handler=_cmd_work_digest)
 
     interview = work_sub.add_parser("interview")
     _common(interview)
-    interview.add_argument("--work-id", required=True)
+    interview.add_argument("work_id")
     response = interview.add_mutually_exclusive_group(required=True)
     response.add_argument("--response")
     response.add_argument("--fixture")
@@ -142,7 +171,7 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
 
     update = work_sub.add_parser("update")
     _common(update)
-    update.add_argument("--work-id", required=True)
+    update.add_argument("work_id")
     update.add_argument("--title")
     update.add_argument("--description")
     update.add_argument("--resource")
@@ -157,44 +186,50 @@ def _work_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> 
     update.add_argument("--topic", action="append", default=[])
     update.set_defaults(handler=_cmd_work_update)
 
+    export = work_sub.add_parser("export")
+    _common(export)
+    export.add_argument("work_id")
+    export.add_argument("--output")
+    export.set_defaults(handler=_cmd_work_export)
 
-def _note_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
-    note = sub.add_parser("note")
-    note_sub = note.add_subparsers(dest="note_command", required=True)
-    propose = note_sub.add_parser("propose")
-    _common(propose)
-    digest = propose.add_mutually_exclusive_group(required=True)
-    digest.add_argument("--digest-path")
-    digest.add_argument("--work-id")
-    candidates = propose.add_mutually_exclusive_group()
-    candidates.add_argument("--candidate-json", action="append")
-    candidates.add_argument("--candidates-file")
-    propose.set_defaults(handler=_cmd_note_propose)
-    accept = note_sub.add_parser("accept")
-    _common(accept)
-    accept.add_argument("note_path")
-    accept.add_argument("--reason", default="")
-    accept.set_defaults(handler=_cmd_note_accept)
-    reject = note_sub.add_parser("reject")
-    _common(reject)
-    reject.add_argument("note_path")
-    reject.add_argument("--reason", default="")
-    reject.set_defaults(handler=_cmd_note_reject)
-    link = note_sub.add_parser("link")
+
+def _lifecycle_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
+    link = sub.add_parser("link")
     _common(link)
-    link.add_argument("source_note_path")
-    link.add_argument("link_type", choices=("supports", "contradicts", "extends"))
+    link.add_argument("source_path")
     link.add_argument("target_path")
+    link.add_argument("--rel", required=True, choices=("supports", "contradicts", "extends"))
     link.add_argument("--reason", default="")
-    link.set_defaults(handler=_cmd_note_link)
-    capture = note_sub.add_parser("capture")
-    _common(capture)
-    capture.add_argument("--title", required=True)
-    body = capture.add_mutually_exclusive_group(required=True)
-    body.add_argument("--body")
-    body.add_argument("--file")
-    capture.add_argument("--tag", action="append", default=[])
-    capture.set_defaults(handler=_cmd_note_capture)
+    link.set_defaults(handler=_cmd_link)
+
+    check = sub.add_parser("check")
+    _common(check)
+    check.add_argument("target_path", nargs="?")
+    check.add_argument("--shadow", action="store_true", default=True)
+    check.add_argument(
+        "--assert",
+        dest="assertions",
+        action="append",
+        choices=("no-legacy-work-markdown",),
+        default=[],
+    )
+    check.set_defaults(handler=_cmd_check)
+
+    show = sub.add_parser("show")
+    _common(show)
+    show.add_argument("target")
+    show.set_defaults(handler=_cmd_show)
+
+    list_cmd = sub.add_parser("list")
+    _common(list_cmd)
+    list_cmd.add_argument("--type", choices=("note", "work", "hub", "project"))
+    list_cmd.set_defaults(handler=_cmd_list)
+
+    export = sub.add_parser("export")
+    _common(export)
+    export.add_argument("target")
+    export.add_argument("--output")
+    export.set_defaults(handler=_cmd_export)
 
 
 def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
@@ -278,7 +313,12 @@ def _attention_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
     resolve = attention_sub.add_parser("resolve")
     _common(resolve)
     resolve.add_argument("attention_path")
-    resolve.add_argument("--outcome", choices=("resolved", "dismissed"), default="resolved")
+    outcome = resolve.add_mutually_exclusive_group(required=True)
+    outcome.add_argument("--apply", action="store_const", const="apply", dest="resolution_outcome")
+    outcome.add_argument(
+        "--reject", action="store_const", const="reject", dest="resolution_outcome"
+    )
+    outcome.add_argument("--defer", action="store_const", const="defer", dest="resolution_outcome")
     resolve.add_argument("--reason")
     resolve.set_defaults(handler=_cmd_attention_resolve)
     worklist = attention_sub.add_parser("worklist")
@@ -369,25 +409,30 @@ def _simple_resource(
             body.add_argument("--body")
             body.add_argument("--file")
             cmd.set_defaults(handler=_cmd_steering_edit)
-        elif name == "vocabulary" and action == "list":
+        elif name == "vocab" and action == "list":
             cmd.set_defaults(handler=_cmd_vocabulary_list)
-        elif name == "vocabulary" and action == "add":
+        elif name == "vocab" and action == "add":
             cmd.add_argument("field")
             cmd.add_argument("term")
             cmd.set_defaults(handler=_cmd_vocabulary_add)
-        elif name == "vocabulary" and action == "rename":
+        elif name == "vocab" and action == "rename":
             cmd.add_argument("field")
             cmd.add_argument("old")
             cmd.add_argument("new")
             cmd.set_defaults(handler=_cmd_vocabulary_rename)
-        elif name == "journal" and action == "list":
+        elif name == "vocab" and action == "merge":
+            cmd.add_argument("field")
+            cmd.add_argument("old")
+            cmd.add_argument("new")
+            cmd.set_defaults(handler=_cmd_vocabulary_merge)
+        elif name == "journal" and action == "tail":
             cmd.add_argument("--operation")
             cmd.add_argument("--request-id")
             cmd.add_argument("--path")
             cmd.add_argument("--decision")
             cmd.add_argument("--date")
             cmd.add_argument("--limit", type=int, default=50)
-            cmd.set_defaults(handler=_cmd_journal_list)
+            cmd.set_defaults(handler=_cmd_journal_tail)
         elif name == "journal" and action == "show":
             cmd.add_argument("event_id", type=int)
             cmd.set_defaults(handler=_cmd_journal_show)
@@ -540,7 +585,43 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     return _emit(result, args)
 
 
-def _cmd_work_capture(args: argparse.Namespace) -> int:
+def _cmd_new_note(args: argparse.Namespace) -> int:
+    return _write_new_concept(
+        args,
+        "note",
+        args.title,
+        body=args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8"),
+        tags=args.tag,
+        extra={"mode": args.mode},
+    )
+
+
+def _cmd_new_hub(args: argparse.Namespace) -> int:
+    title = args.title or args.tag
+    body = f"# {title}\n\n"
+    return _write_new_concept(
+        args,
+        "hub",
+        title,
+        body=body,
+        tags=[args.tag],
+        extra={"tag": args.tag, "description": args.description},
+    )
+
+
+def _cmd_new_project(args: argparse.Namespace) -> int:
+    body = f"# {args.name}\n\n"
+    return _write_new_concept(
+        args,
+        "project",
+        args.name,
+        body=body,
+        tags=[],
+        extra={"description": args.description},
+    )
+
+
+def _cmd_work_add(args: argparse.Namespace) -> int:
     if args.url:
         payload = {
             "url": args.url,
@@ -598,6 +679,20 @@ def _cmd_work_capture(args: argparse.Namespace) -> int:
         ),
         args,
     )
+
+
+def _cmd_work_export(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    work = state.catalog_source(workspace, args.work_id)
+    if work is None:
+        return _fail(f"work not found: {args.work_id}", json_output=args.json)
+    payload = {"ok": True, "work": work}
+    if args.output:
+        output = workspace / args.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(work, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        payload["output_path"] = args.output
+    return _emit(payload, args)
 
 
 def _cmd_work_import(args: argparse.Namespace) -> int:
@@ -739,8 +834,17 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
     return _emit(result, args)
 
 
-def _cmd_note_capture(args: argparse.Namespace) -> int:
+def _write_new_concept(
+    args: argparse.Namespace,
+    concept_type: str,
+    title: str,
+    *,
+    body: str,
+    tags: list[str],
+    extra: dict[str, Any],
+) -> int:
     from memoria_vault.runtime.paths import safe_filename
+    from memoria_vault.runtime.policy.audit import sha256_file
     from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
     from memoria_vault.runtime.vaultio import (
         apply_universal_concept_frontmatter,
@@ -748,82 +852,141 @@ def _cmd_note_capture(args: argparse.Namespace) -> int:
     )
 
     workspace = _workspace(args)
-    body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
-    slug = safe_filename(args.title.lower()).strip("._-") or "note"
-    rel = _unique_rel(workspace, f"knowledge/notes/{slug}.md")
+    homes = {
+        "note": "knowledge/notes",
+        "hub": "knowledge/hubs",
+        "project": "knowledge/projects",
+    }
+    slug = safe_filename(title.lower()).strip("._-") or concept_type
+    rel = _unique_rel(workspace, f"{homes[concept_type]}/{slug}.md")
     frontmatter = {
-        "type": "note",
-        "title": args.title,
-        "tags": args.tag,
+        "type": concept_type,
+        "title": title,
+        "tags": tags,
         "links": {},
     }
+    frontmatter.update({key: value for key, value in extra.items() if value not in (None, "")})
     apply_universal_concept_frontmatter(frontmatter, rel)
     write_frontmatter_doc(workspace / rel, frontmatter, body, create_parent=True)
+    state.record_observed_file_edit(
+        workspace,
+        output_id=rel,
+        concept_type=concept_type,
+        output_sha256=sha256_file(workspace / rel),
+    )
     event = append_journal_event(
         workspace,
         {
-            "event": "note_captured",
-            "operation": "note-capture",
+            "event": "concept_created",
+            "operation": f"new-{concept_type}",
+            "concept_type": concept_type,
             "output_id": rel,
             "actor": "pi",
         },
         machine="memoria-cli",
     )
     commit = commit_writer_changes(
-        workspace, f"capture note {Path(rel).stem}", [rel], machine="memoria-cli"
+        workspace, f"new {concept_type} {Path(rel).stem}", [rel], machine="memoria-cli"
     )
-    return _emit({"ok": True, "note_path": rel, "event": event, "commit": commit}, args)
-
-
-def _cmd_note_propose(args: argparse.Namespace) -> int:
-    workspace = _workspace(args)
-    digest_path = args.digest_path or _digest_path_for_work(args.work_id)
     return _emit(
-        _enqueue_and_run(
-            args,
-            "propose-note-candidates",
-            {
-                "digest_path": digest_path,
-                "candidates": _note_candidates(args, workspace, digest_path),
-            },
-        ),
+        {"ok": True, "path": rel, "concept": frontmatter, "event": event, "commit": commit},
         args,
     )
 
 
-def _cmd_note_accept(args: argparse.Namespace) -> int:
-    return _cmd_note_curate(args, "accepted")
-
-
-def _cmd_note_reject(args: argparse.Namespace) -> int:
-    return _cmd_note_curate(args, "rejected")
-
-
-def _cmd_note_curate(args: argparse.Namespace, status: str) -> int:
-    return _emit(
-        _enqueue_and_run(
-            args,
-            "curate-note-candidate",
-            {"note_path": args.note_path, "status": status, "reason": args.reason},
-        ),
-        args,
-    )
-
-
-def _cmd_note_link(args: argparse.Namespace) -> int:
+def _cmd_link(args: argparse.Namespace) -> int:
     return _emit(
         _enqueue_and_run(
             args,
             "curate-note-link",
             {
-                "source_note_path": args.source_note_path,
-                "link_type": args.link_type,
+                "source_note_path": args.source_path,
+                "link_type": args.rel,
                 "target_path": args.target_path,
                 "reason": args.reason,
             },
         ),
         args,
     )
+
+
+def _cmd_check(args: argparse.Namespace) -> int:
+    if args.target_path:
+        return _emit(
+            _enqueue_and_run(args, "mark-checked", {"target_path": args.target_path}),
+            args,
+        )
+    return _cmd_workspace_check(args)
+
+
+def _cmd_show(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    path = _resolve_concept_path(workspace, args.target)
+    if path is None:
+        work = state.catalog_source(workspace, args.target)
+        if work is None:
+            return _fail(f"target not found: {args.target}", json_output=args.json)
+        return _emit({"ok": True, "target": args.target, "kind": "work", "work": work}, args)
+    from memoria_vault.runtime.vaultio import split_frontmatter
+
+    rel = path.relative_to(workspace).as_posix()
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    return _emit(
+        {
+            "ok": True,
+            "path": rel,
+            "type": frontmatter.get("type"),
+            "verdict": state.concept_check_status(workspace, rel),
+            "frontmatter": frontmatter,
+            "body": body,
+        },
+        args,
+    )
+
+
+def _cmd_list(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
+
+    workspace = _workspace(args)
+    rows = []
+    for path in iter_markdown(workspace):
+        rel = path.relative_to(workspace).as_posix()
+        frontmatter = read_frontmatter(path)
+        concept_type = str(frontmatter.get("type") or "")
+        if concept_type not in {"note", "work", "hub", "project"}:
+            continue
+        if args.type and concept_type != args.type:
+            continue
+        rows.append(
+            {
+                "path": rel,
+                "type": concept_type,
+                "title": frontmatter.get("title") or path.stem,
+                "verdict": state.concept_check_status(workspace, rel),
+            }
+        )
+    return _emit({"ok": True, "concepts": sorted(rows, key=lambda row: row["path"])}, args)
+
+
+def _cmd_export(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    path = _resolve_concept_path(workspace, args.target)
+    if path is None:
+        return _fail(f"target not found: {args.target}", json_output=args.json)
+    content = path.read_text(encoding="utf-8")
+    payload = {"ok": True, "path": path.relative_to(workspace).as_posix(), "content": content}
+    if args.output:
+        output = workspace / args.output
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(content, encoding="utf-8")
+        payload["output_path"] = args.output
+    if not args.json and not args.quiet:
+        if args.output:
+            print(payload["output_path"])
+        else:
+            print(content, end="" if content.endswith("\n") else "\n")
+        return 0
+    return _emit(payload, args)
 
 
 def _cmd_operation_list(args: argparse.Namespace) -> int:
@@ -993,16 +1156,21 @@ def _cmd_attention_show(args: argparse.Namespace) -> int:
 def _cmd_attention_resolve(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     rel, path = _workspace_file(workspace, args.attention_path)
-    if _attention_card(path, workspace) is None:
+    card = _attention_card(path, workspace)
+    if card is None:
         return _fail(f"attention projection not found: {rel}", json_output=args.json)
-    reason = args.reason or (
-        "PI dismissed attention" if args.outcome == "dismissed" else "PI resolved attention"
-    )
+    outcome = args.resolution_outcome
+    reason = args.reason or f"PI chose to {outcome} attention"
     return _emit(
         _enqueue_and_run(
             args,
             "resolve-attention",
-            {"target_id": rel, "reason": reason, "outcome": args.outcome},
+            {
+                "target_id": rel,
+                "reason": reason,
+                "outcome": outcome,
+                "routing_class": card["routing_class"],
+            },
         ),
         args,
     )
@@ -1229,7 +1397,11 @@ def _cmd_vocabulary_rename(args: argparse.Namespace) -> int:
     return _update_vocabulary(args, mode="rename")
 
 
-def _cmd_journal_list(args: argparse.Namespace) -> int:
+def _cmd_vocabulary_merge(args: argparse.Namespace) -> int:
+    return _update_vocabulary(args, mode="merge")
+
+
+def _cmd_journal_tail(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     sql = """
         SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
@@ -1423,6 +1595,31 @@ def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
     return rel, resolved
 
 
+def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
+    from memoria_vault.runtime.paths import safe_filename
+    from memoria_vault.runtime.vaultio import iter_markdown, read_frontmatter
+
+    raw = Path(target)
+    direct = raw if raw.is_absolute() else workspace / raw
+    if direct.is_file():
+        return direct.resolve()
+    slug = safe_filename(target.strip().lower())
+    for path in iter_markdown(workspace):
+        frontmatter = read_frontmatter(path)
+        if frontmatter.get("type") not in {"note", "work", "hub", "project"}:
+            continue
+        if target in {
+            str(frontmatter.get("id") or ""),
+            str(frontmatter.get("title") or ""),
+            path.stem,
+            path.relative_to(workspace).as_posix(),
+        }:
+            return path.resolve()
+        if slug and slug == safe_filename(str(frontmatter.get("title") or "").lower()):
+            return path.resolve()
+    return None
+
+
 def _attention_cards(workspace: Path) -> list[dict[str, Any]]:
     return [
         card
@@ -1446,6 +1643,7 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
         "title": frontmatter.get("title") or path.stem,
         "kind": frontmatter.get("attention_kind") or "",
         "status": frontmatter.get("attention_status") or "",
+        "routing_class": frontmatter.get("routing_class") or "ask",
         "target": frontmatter.get("target") or frontmatter.get("target_id") or "",
         "loudness": frontmatter.get("loudness") or "",
         "frontmatter": frontmatter,
@@ -1634,52 +1832,6 @@ def _interview_payload(args: argparse.Namespace) -> dict[str, Any]:
             }
         )
     return payload
-
-
-def _note_candidates(
-    args: argparse.Namespace, workspace: Path, digest_path: str
-) -> list[dict[str, Any]]:
-    if args.candidates_file:
-        data = json.loads(Path(args.candidates_file).read_text(encoding="utf-8"))
-        rows = data if isinstance(data, list) else [data]
-    elif args.candidate_json:
-        rows = [json.loads(raw) for raw in args.candidate_json or []]
-    else:
-        rows = [_candidate_from_digest(workspace, digest_path)]
-    if not rows or not all(isinstance(row, dict) for row in rows):
-        raise ValueError("note candidates must be JSON objects")
-    return rows
-
-
-def _digest_path_for_work(work_id: str) -> str:
-    from memoria_vault.runtime.paths import safe_filename
-
-    source_id = safe_filename(work_id.strip())
-    if not source_id:
-        raise ValueError("work-id is required")
-    return f"knowledge/works/{source_id}.md"
-
-
-def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
-    from memoria_vault.runtime.vaultio import split_frontmatter
-
-    digest = workspace / digest_path
-    frontmatter, body = split_frontmatter(digest.read_text(encoding="utf-8"))
-    if (
-        frontmatter.get("type") != "work"
-        or state.concept_check_status(workspace, digest_path) != "checked"
-    ):
-        raise ValueError(f"{digest_path} is not a checked work digest")
-    title = str(frontmatter.get("title") or Path(digest_path).stem).removeprefix("Digest: ").strip()
-    excerpt = " ".join(body.split())
-    if not excerpt:
-        excerpt = str(frontmatter.get("description") or title)
-    return {
-        "title": f"Candidate from {title}",
-        "body": excerpt[:600],
-        "claim_text": excerpt[:240],
-        "tags": ["candidate"],
-    }
 
 
 def _operation_rows(workspace: Path) -> list[dict[str, Any]]:
@@ -1894,9 +2046,13 @@ def _update_vocabulary(args: argparse.Namespace, *, mode: str) -> int:
         text = _vocabulary_add(text, args.field, args.term)
         event_name = "vocabulary_added"
         payload = {"field": args.field, "term": args.term}
-    else:
+    elif mode == "rename":
         text = _vocabulary_rename(text, args.field, args.old, args.new)
         event_name = "vocabulary_renamed"
+        payload = {"field": args.field, "old": args.old, "new": args.new}
+    else:
+        text = _vocabulary_merge(text, args.field, args.old, args.new)
+        event_name = "vocabulary_merged"
         payload = {"field": args.field, "old": args.old, "new": args.new}
     path.write_text(text, encoding="utf-8")
     event = append_journal_event(
@@ -1947,6 +2103,36 @@ def _vocabulary_rename(text: str, field: str, old: str, new: str) -> str:
             lines[index] = f"- {new}{f' — {rest}' if sep else ''}"
             return "\n".join(lines) + "\n"
     raise ValueError(f"vocabulary term not found in {field}: {old}")
+
+
+def _vocabulary_merge(text: str, field: str, old: str, new: str) -> str:
+    lines = text.splitlines()
+    start = _heading_index(lines, field)
+    if start is None:
+        raise ValueError(f"vocabulary field not found: {field}")
+    end = _next_heading(lines, start)
+    found_old = False
+    found_new = False
+    out = lines[: start + 1]
+    for line in lines[start + 1 : end]:
+        if not line.startswith("- "):
+            out.append(line)
+            continue
+        term = line.removeprefix("- ").split(" — ", 1)[0].strip()
+        if term == new:
+            if not found_new:
+                found_new = True
+                out.append(line)
+        elif term == old:
+            found_old = True
+            if not found_new:
+                out.append(line.replace(f"- {old}", f"- {new}", 1))
+                found_new = True
+        else:
+            out.append(line)
+    if not found_old:
+        raise ValueError(f"vocabulary term not found in {field}: {old}")
+    return "\n".join([*out, *lines[end:]]) + "\n"
 
 
 def _heading_index(lines: list[str], heading: str) -> int | None:

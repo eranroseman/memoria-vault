@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # CLI
 
-`memoria` is the alpha.14 product surface. It operates on a standalone workspace
+`memoria` is the alpha.15 product surface. It operates on a standalone workspace
 through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 ## Core
@@ -25,12 +25,13 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria work capture` | Capture a DOI, URL, PDF, file, or supplied text. |
+| `memoria work add` | Add a DOI, URL, PDF, file, or supplied text. |
 | `memoria work import` | Import portable BibTeX or CSL JSON files. |
-| `memoria work enrich` | Enrich a work from provider replay/payload inputs. |
-| `memoria work digest` | Compile a source digest. |
-| `memoria work interview` | Record source interview responses. |
+| `memoria work enrich <work-id>` | Enrich a work from provider replay/payload inputs. |
+| `memoria work digest <work-id>` | Compile a source digest. |
+| `memoria work interview <work-id>` | Record source interview responses. |
 | `memoria work update` | Update source/work metadata. |
+| `memoria work export <work-id>` | Export a catalog work record. |
 
 ## Requests And Workspace
 
@@ -45,11 +46,14 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria note capture/propose/accept/reject/link` | Manage PI notes and proposed note candidates. |
+| `memoria new note/hub/project` | Author new Concepts. |
+| `memoria link` | Curate a typed relation between checked Concepts. |
+| `memoria check` | Mark a Concept checked, or run workspace checks when no target is given. |
+| `memoria show/list/export` | Inspect and export Concepts. |
 | `memoria project ask/trace/gaps/suggest-hubs/export` | Query and maintain project-level knowledge. |
 | `memoria steering show/edit` | Read or update steering. |
-| `memoria vocabulary list/add/rename` | Maintain controlled vocabulary. |
-| `memoria journal list/show` | Inspect journal entries. |
+| `memoria vocab list/add/rename/merge` | Maintain controlled vocabulary. |
+| `memoria journal tail/show` | Inspect journal entries. |
 
 ## Operations And Eval
 

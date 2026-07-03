@@ -9,7 +9,7 @@ permalink: /how-to-guides/using-obsidian/
 # Using Obsidian
 
 Optional guidance for reading and editing the Memoria Markdown workspace in
-Obsidian. Alpha.14 actions run through the `memoria` CLI; Obsidian is not the
+Obsidian. Alpha.15 actions run through the `memoria` CLI; Obsidian is not the
 required UI, scheduler, model runner, operation API, or write-policy boundary.
 
 | Guide | What it covers |
@@ -18,4 +18,4 @@ required UI, scheduler, model runner, operation API, or write-policy boundary.
 | [Navigate Memoria surfaces](navigate-memoria-surfaces.md) | Which Markdown space or CLI command to use for each situation |
 | [Reset workspace](reset-workspace.md) | What changed now that no saved editor workspace ships |
 | [Agent Client pane](use-the-agent-client-pane.md) | Why the pane is not part of alpha.14 |
-| [Command palette](obsidian-command-palette.md) | Why palette shortcuts are not part of alpha.14 |
+| [Command palette](obsidian-command-palette.md) | Why palette shortcuts are not part of alpha.15 |

@@ -570,6 +570,7 @@ def resolve_attention(
     *,
     resolution: str,
     outcome: str | None = None,
+    routing_class: str = "ask",
     reason: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
@@ -578,16 +579,22 @@ def resolve_attention(
         raise ValueError(f"unsupported attention resolution: {resolution!r}")
     outcome = outcome or resolution
     supported_outcomes = (
-        {"acknowledged"} if resolution == "acknowledged" else {"resolved", "dismissed"}
+        {"acknowledged"} if resolution == "acknowledged" else {"apply", "reject", "defer"}
     )
     if outcome not in supported_outcomes:
         raise ValueError(f"unsupported attention outcome for {resolution}: {outcome!r}")
+    if routing_class not in {"act", "ask", "log"}:
+        raise ValueError(f"unsupported attention routing class: {routing_class!r}")
     vault = Path(vault)
     target = normalize_path(target_id)
+    decided_at = now_iso()
     event = {
         "event": EVENT_RESOLVED,
         "resolution": resolution,
         "outcome": outcome,
+        "resolution_outcome": outcome,
+        "routing_class": routing_class,
+        "decided_at": decided_at,
         "target_id": target,
         "reason": reason,
         "actor": "pi",
@@ -599,8 +606,10 @@ def resolve_attention(
     if resolution == "resolved" and target_path.is_file():
         frontmatter, body = split_frontmatter(target_path.read_text(encoding="utf-8"))
         if frontmatter.get("projection") == "attention":
-            frontmatter["attention_status"] = "resolved"
-            frontmatter["resolved_at"] = now_iso()
+            frontmatter["attention_status"] = "deferred" if outcome == "defer" else "resolved"
+            frontmatter["resolution_outcome"] = outcome
+            frontmatter["routing_class"] = routing_class
+            frontmatter["resolved_at"] = decided_at
             write_frontmatter_doc(target_path, frontmatter, body)
             touched.append(target)
     commit = commit_writer_changes(

@@ -15,7 +15,7 @@ source Concepts after the worker checks them.
 **1. Capture a URL from the CLI.**
 
 ```bash
-memoria work capture --workspace <vault> --url https://example.test/source
+memoria work add --workspace <vault> --url https://example.test/source
 ```
 
 The CLI writes one SQLite request for `capture-url-source`; the worker fetches,
@@ -50,7 +50,7 @@ gitignored and synced out of band.
 
 ## Deferred UI
 
-Reference-manager adapters are not part of the standalone alpha.14 runtime.
+Reference-manager adapters are not part of the standalone alpha.15 runtime.
 
 ## Related
 

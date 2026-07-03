@@ -14,12 +14,12 @@ Git directly.
 ## Capture Or Import
 
 ```bash
-memoria work capture --workspace <workspace> --doi <doi>
+memoria work add --workspace <workspace> --doi <doi>
 memoria work import --workspace <workspace> --format bibtex --file sources.bib
 ```
 
 If enrichment providers are unavailable, keep the work unchecked and rerun
-`memoria work enrich --work-id <id>` when provider inputs are available.
+`memoria work enrich <id>` when provider inputs are available.
 
 ## Review And Triage
 

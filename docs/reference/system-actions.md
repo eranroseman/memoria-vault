@@ -123,15 +123,15 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Run integrity check | `memoria operation run <operation-id>` | Inserts one SQLite request and runs worker-owned integrity operations such as `integrity-evidence-check`, `integrity-quote-anchor-check`, `integrity-claim-quote-check`, `integrity-link-target-check`, and `check-source-metadata`; the worker owns journal rows and routing. |
-| Capture or enrich source | `memoria work capture`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
+| Capture or enrich source | `memoria work add`, `memoria work import`, `memoria work enrich` | Creates the request envelope in `.memoria/memoria.sqlite`, runs capture/enrichment, writes provider/raw payloads, and materializes checked source/catalog outputs through the worker boundary. |
 | Compile digest or record interview | `memoria work digest`, `memoria work interview` | Queues and runs source synthesis jobs, recording Co-PI interview takeaways and digest materialization through the same request/journal path. |
 | Ask query | `memoria ask --question ...` / `memoria project ask <project-id> --question ...` | Runs `answer-query` and returns the Ask/Query response contract over checked retrieval documents; project Ask includes checked project context when available. |
-| Curate notes and links | `memoria note propose`, `accept`, `reject`, `link` | Runs note proposal, accept/reject, and typed-link curation through worker-owned requests and journal rows. |
+| Author and curate Concepts | `memoria new note`, `memoria check`, `memoria link` | Authors PI Concepts, promotes checked Concepts through the request boundary, and records typed-link curation through worker-owned requests and journal rows. |
 | Analyze project | `memoria project gaps <project-path>`, `trace`, `export` | Runs checked graph, project-scope, linked-thesis, and project-argument gap analysis, argument tracing, and deterministic Markdown/Pandoc project export from the CLI control plane. Project Concepts are authored as checked Markdown under `knowledge/projects/` and observed by `memoria workspace scan`. |
 | Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, capability index, indexes, and checked-only qmd inputs from worker-readable state. |
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
-| Resolve attention | `memoria attention resolve [--outcome resolved\|dismissed]` | Runs the attention-disposition request, closes the attention projection, and records the PI outcome in the committed journal row. |
+| Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
 | Inspect requests | `memoria status`, `memoria request list`, `memoria doctor bundle` | Reads SQLite request state and diagnostic bundles; no file queue mirror exists. |
 
 ## Optional external adapters

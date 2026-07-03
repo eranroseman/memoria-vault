@@ -38,8 +38,8 @@ Run the link command with the source note path, link type, and target path. The
 worker records the journal row and commits the checked note update.
 
 ```bash
-memoria note link --workspace <vault> knowledge/notes/source.md \
-  contradicts knowledge/notes/receptivity-decreases-under-high-cognitive-load.md
+memoria link --workspace <vault> knowledge/notes/source.md \
+  knowledge/notes/receptivity-decreases-under-high-cognitive-load.md --rel contradicts
 ```
 
 For a direct PI edit, extend the note's `links:` map:
