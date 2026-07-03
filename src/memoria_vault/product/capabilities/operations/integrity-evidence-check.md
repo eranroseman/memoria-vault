@@ -2,7 +2,7 @@
 title: Integrity evidence check
 type: operation
 check_status: checked
-description: Check that note evidence references resolve to checked source Concepts.
+description: Check that note evidence references resolve through checked catalog Works.
 operation_id: integrity-evidence-check
 allowed_tools:
 - integrity_checker

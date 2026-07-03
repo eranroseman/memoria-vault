@@ -2,14 +2,13 @@
 title: Capture PDF source
 type: operation
 check_status: checked
-description: Capture a supplied PDF blob as a checked catalog source.
+description: Capture a supplied PDF blob as a catalog Work row.
 operation_id: capture-pdf-source
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- catalog/
+- .memoria/blobs/source-content/
 - journal/
-- references.bib
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -17,7 +16,7 @@ runner:
 prompt_version: capture-pdf-source.v1
 io_schema:
   input: pdf_blob
-  output: checked_source
+  output: catalog_work_row
 risk_class: medium
 required_checks:
 - memoria-runtime
@@ -31,5 +30,5 @@ links: {}
 
 # Operation
 
-Store a PDF raw copy, extracted page text, and checked source metadata through
-the worker.
+Store a PDF raw copy and extracted page text as an unchecked catalog Work row
+plus source-content blobs through the worker.

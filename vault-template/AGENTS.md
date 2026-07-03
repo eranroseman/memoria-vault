@@ -53,6 +53,6 @@ asks for lineage, audit, or supersession history; do not use them as current sup
 
 ## Provenance
 
-Every claim-bearing note traces to checked source Concepts. Every machine write
+Every claim-bearing note traces to checked catalog Works. Every machine write
 goes through the worker/trusted writer and lands in the journal. If you cannot
 cite it, you cannot write it.

@@ -85,7 +85,7 @@ def write_runner_provider_config(vault: Path, *, local_url: str = "http://model.
 
 
 def test_load_operation_policy_requires_io_schema_shape() -> None:
-    policy = compile_policy(io_schema={"input": "checked_source_id", "output": []})
+    policy = compile_policy(io_schema={"input": "checked_work_id", "output": []})
     with pytest.raises(
         ValueError,
         match=r"compile-source-digest io_schema\.output must be a non-empty string",

@@ -2,14 +2,13 @@
 title: Capture URL source
 type: operation
 check_status: checked
-description: Fetch a URL snapshot and capture it as a checked catalog source.
+description: Fetch a URL snapshot and stage it as a catalog Work row.
 operation_id: capture-url-source
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- catalog/
+- .memoria/blobs/source-content/
 - journal/
-- references.bib
 allowed_network:
 - http://
 - https://
@@ -19,7 +18,7 @@ runner:
 prompt_version: capture-url-source.v1
 io_schema:
   input: url
-  output: checked_source
+  output: catalog_work_row
 risk_class: medium
 required_checks:
 - memoria-runtime
@@ -33,4 +32,5 @@ links: {}
 
 # Operation
 
-Fetch a source URL and capture the snapshot through the trusted writer.
+Fetch a source URL and stage the snapshot as an unchecked catalog Work row plus
+source-content blobs.

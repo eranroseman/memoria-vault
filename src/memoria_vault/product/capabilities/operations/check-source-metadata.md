@@ -2,7 +2,7 @@
 title: Check source metadata
 type: operation
 check_status: checked
-description: Run bibliographic metadata checks over checked sources.
+description: Run bibliographic metadata checks over checked catalog Works.
 operation_id: check-source-metadata
 allowed_tools:
 - integrity_checker
@@ -16,7 +16,7 @@ runner:
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: check-source-metadata.v1
 io_schema:
-  input: checked_sources
+  input: checked_catalog_works
   output: metadata_findings
 risk_class: low
 required_checks: []
@@ -30,7 +30,7 @@ links: {}
 
 # Operation
 
-Inspect checked source metadata, including exact duplicate source external IDs,
+Inspect checked catalog Work metadata, including exact duplicate source external IDs,
 deterministic title/year/first-author duplicate blocks, and duplicate person
 ORCID/OpenAlex IDs or entity-name blocks, and emit shadow or routed findings.
 Active record-linkage findings surface stable `inbox/` work prompts for PI

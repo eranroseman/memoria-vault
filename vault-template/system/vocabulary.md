@@ -1,11 +1,11 @@
 # Vocabulary
 
 The single source of truth for the controlled values used by catalog sources and
-claim-bearing notes. `research_area` and `methodology` describe source Concepts;
-`topics` describes claim-bearing `note` Concepts. Keep this note and
-`.memoria/schemas/types/{source,note}.yaml` in lockstep. The Librarian's ingest
-classifier reads this note and applies only a term defined here; when nothing fits,
-it leaves the field unset and raises an attention flag for consolidation.
+claim-bearing notes. `research_area` and `methodology` describe catalog Work
+rows; `topics` describes claim-bearing `note` Concepts. Keep this note, catalog
+Work metadata, and `.memoria/schemas/types/note.yaml` aligned. The ingest
+classifier reads this note and applies only a term defined here; when nothing
+fits, it leaves the field unset and raises an attention flag for consolidation.
 
 How each field is populated:
 
