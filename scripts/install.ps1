@@ -10,7 +10,7 @@
       1. Copies vault-template/ into the runtime vault.
       2. Creates the vault-local runtime venv.
       3. Installs the Memoria package.
-      4. Stages the golden copy and wires Git hooks.
+      4. Ensures the folder skeleton and wires Git hooks.
       5. Registers the workspace-local qmd search collection.
       6. Prints CLI next steps.
 
@@ -189,10 +189,8 @@ function Install-RuntimeScaffold {
     Write-Header 'Runtime scaffold'
     $script:VenvPython = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
     $schema = Join-Path $Vault '.memoria/schemas/folders.yaml'
-    $goldenModule = 'memoria_vault.runtime.subsystems.integrity.linter.golden_restore'
     if ($DryRun) {
         Write-Line "  + ensure skeleton directories from $schema"
-        Write-Line "  + $script:VenvPython -m $goldenModule --vault $Vault stage"
         return
     }
     if (-not (Test-Path $script:VenvPython)) { Stop-Install "Missing venv Python at $script:VenvPython" }
@@ -203,14 +201,6 @@ function Install-RuntimeScaffold {
         "[(v/d).mkdir(parents=True, exist_ok=True) for d in (data.get('skeleton') or [])]"
     Invoke-Logged -FilePath $script:VenvPython -ArgumentList @('-c', $code, $Vault)
     Write-Ok 'Folder skeleton ensured from folders.yaml'
-    Invoke-Logged -FilePath $script:VenvPython -ArgumentList @(
-        '-m',
-        $goldenModule,
-        '--vault',
-        $Vault,
-        'stage'
-    )
-    Write-Ok 'Golden copy staged (.memoria/golden/)'
 }
 
 function Resolve-Qmd {

@@ -24,7 +24,6 @@ case "$job" in
     ;;
   lint)
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
-    run_py -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$vault" check
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault "$vault"
     run_py -m memoria_vault.typer_cli workspace check --workspace "$vault" --schedule-id lint-integrity --json
     ;;

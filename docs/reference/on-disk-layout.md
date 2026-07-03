@@ -9,7 +9,7 @@ grand_parent: Reference
 Where every file lives.
 
 - The repo ships the vault source under **`vault-template/`**.
-- The installer scaffolds a runtime vault, then populates it from `vault-template/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
+- The installer scaffolds a runtime vault, then populates it from `vault-template/`.
 - Product operation manifests ship inside the installed Python package, not the runtime vault.
 - The legal root categories come from [ADR-119](../adr/119-schema-driven-document-creation.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
@@ -96,7 +96,6 @@ Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
 | --- | --- | --- |
-| `.memoria/golden/` | installer (`golden_restore.py stage`) | The restorable golden copy of every system file + `manifest.json` (SHA-256). |
 | `.memoria/data/extracts/` | runtime ingest helpers | Full-text extracts per citekey, when a workflow needs an intermediate extract store. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh wrapper | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
@@ -108,8 +107,8 @@ Runtime-only (created in the deployed vault, never shipped):
 
 Alpha.15 ships no editor app configuration. Optional editors may keep local
 state beside or inside a working copy, but that state is not part of the
-standalone template, installer skeleton, golden copy, request lifecycle, or
-source-of-truth layout.
+standalone template, installer skeleton, request lifecycle, or source-of-truth
+layout.
 
 ### The Bases views
 

@@ -38,7 +38,7 @@ Hermes is an optional adapter.
 **Native Windows is supported without WSL2.** Keep two platform installers, but
 make the standalone CLI/runtime the default on both:
 
-- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. By default it lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, stages the golden copy, wires Git hooks, and registers qmd search. `-WithHermes` adds Hermes's native Windows installer, the five profiles with Windows paths, `.env` propagation, the policy-gate plugin, and Hermes cron wrappers.
+- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. By default it lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, wires Git hooks, and registers qmd search. `-WithHermes` adds Hermes's native Windows installer, the five profiles with Windows paths, `.env` propagation, the policy-gate plugin, and Hermes cron wrappers.
 - **Linux/WSL provisioning** — `scripts/install.sh` installs the same standalone CLI/runtime workspace. `--with-hermes` adds the Linux/WSL Hermes/Obsidian adapter used by CI and disposable validation.
 - **Scheduling and always-on** — Hermes cron support belongs only to the optional adapter path. The standalone runtime exposes deterministic CLI/worker commands and can be invoked manually, by file-change hooks, or by any external scheduler.
 - **Bridge removal** — the production path has no `/mnt/c` translation, no WSL2 gate, and no `windowsWslMode` requirement for ACP. The WSL bridge remains only in WSL-specific test docs.

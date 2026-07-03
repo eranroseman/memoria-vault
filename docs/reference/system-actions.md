@@ -94,9 +94,6 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | --- | --- | --- |
 | Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
-| Golden stage | Linter (`golden_restore.py stage`) | Snapshots every shipped system file (templates, dashboards, patterns, eval set, and root guidance files) into a SHA-256 manifest. |
-| Golden check | Linter (`golden_restore.py check`, manual or scheduled run) | Reports system files that drifted from or went missing against the golden manifest. |
-| Golden restore | Linter (`golden_restore.py restore`) | Lists what restoring would change; writes the golden bytes back only with `--apply` (a PI decision). |
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; curated `knowledge/hubs/` stays PI-approved. |
 

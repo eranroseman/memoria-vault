@@ -333,14 +333,6 @@ install_runtime_deps() {
   ok "Runtime dependencies installed into $venv"
 }
 
-stage_golden_copy() {
-  hdr "Golden copy"
-  local pybin="${VENV_PYTHON:-python3}"
-  run "$pybin" -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$VAULT_PATH" stage \
-    || warn "golden copy not staged — run memoria runtime golden_restore stage manually (lint:restore needs it)"
-  ok "Golden copy staged (.memoria/golden/)"
-}
-
 print_cli_next_steps() {
   hdr "Next steps"
   local clicmd="memoria"
@@ -369,7 +361,6 @@ main() {
   load_install_modules
   copy_vault
   install_runtime_deps
-  stage_golden_copy
   ensure_qmd
   print_cli_next_steps
   hdr "Done"

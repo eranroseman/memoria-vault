@@ -30,5 +30,5 @@ knowledge view `index.md` files are generated from checked Concept files. The
 tracked projection drift check covers all committed projections. Packaged
 capability manifests can be inspected through the ignored local cache
 `.memoria/index/capability-index.json`.
-The installer copies them into the runtime vault and stages a golden copy for
-drift detection.
+The installer copies template-owned artifacts into the runtime vault; package or
+template refresh is the product-file repair path.

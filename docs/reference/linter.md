@@ -30,7 +30,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
-| `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — re-run the idempotent installer or create it ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). Checked only in installed vaults (golden manifest present); the repo's `vault-template/` ships no empty dirs. |
+| `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — rerun the installer/refresh helper or create it. Checked only in installed vaults (`.git` present); the repo's `vault-template/` ships no empty dirs. |
 | `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
@@ -58,27 +58,6 @@ The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): 
 
 ---
 
-## The golden copy
-
-`memoria_vault.runtime.subsystems.integrity.linter.golden_restore` turns the Linter into a _repairer_ ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The installer stages a canonical copy of every system file - `system/templates|dashboards|patterns|eval/` plus `home.md`, `system/vocabulary.md`, and `AGENTS.md` - at `.memoria/golden/` with a SHA-256 `manifest.json`.
-
-This is the human-facing half of template protection (#179): machine writes are
-already routed through request checks and the policy gate (see
-[Policy gate](policy-mcp.md)), so the golden copy exists to catch and repair an
-*accidental human* edit or deletion of a system file.
-
-| Command | Effect |
-| --- | --- |
-| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V stage` | Stage or refresh the golden copy from the live system files. |
-| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V check` | Report drifted/missing system files vs the manifest (exit 1 if any). |
-| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore [PATH …]` | **Propose-only by default** — lists what it would restore. |
-| `python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault V restore --apply` | Write the golden bytes back (the PI or an operator-managed scheduled job runs it deliberately). |
-
-Alpha.15 ships no editor plugin bundle, so editor app state is not part of the
-golden manifest.
-
----
-
 ## Per-request digests
 
 `memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
@@ -102,15 +81,15 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --v
 The standalone baseline can run linter checks on demand through
 `memoria workspace check`. Operators may wire the same check through cron,
 systemd timers, launchd, Task Scheduler, or another local scheduler. The lint
-wrapper runs the detectors, `golden_restore.py check`, the per-session digests,
-and the worker `integrity-sweep` over the vault. Findings surface in Maintenance
-views and CLI output; no Hermes scheduler is required.
+wrapper runs the detectors, the per-session digests, and the worker
+`integrity-sweep` over the vault. Findings surface in Maintenance views and CLI
+output; no Hermes scheduler is required.
 
 ---
 
 ## Auto-fix classes
 
-Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy auto-fix](policy-auto-fix.md). The Linter operation is report-only; the gate exists for any future fixer, including `golden_restore.py restore --apply`, which is the shipped repair path.
+Auto-fix is class-gated at the policy layer — the four classes and their dispositions are owned by [Policy auto-fix](policy-auto-fix.md). The Linter operation is report-only; any future fixer must go through that gate.
 
 ---
 

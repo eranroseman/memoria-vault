@@ -511,8 +511,7 @@ def test_skeleton_drift(tmp_path):
     v = tmp_path
     for d in skeleton:
         (v / d).mkdir(parents=True, exist_ok=True)
-    (v / ".memoria/golden").mkdir(parents=True)  # installed-vault marker
-    (v / ".memoria/golden/manifest.json").write_text("{}", encoding="utf-8")
+    (v / ".git").mkdir()
     assert _m.skeleton_drift(v) == []
     # remove one skeleton dir -> MEDIUM finding for exactly that path
     (v / "system/logs/sessions").rmdir()

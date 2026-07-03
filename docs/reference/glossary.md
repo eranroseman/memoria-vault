@@ -113,8 +113,6 @@ sweep in Bases.
 
 ## Notes and lifecycle
 
-**Golden copy** — the canonical, hash-manifested copy of every system file at `.memoria/golden/`, staged by the installer ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)). The Linter checks drift against it and can restore from it (propose-only by default).
-
 **Attention projection** — a generated Inbox row (`candidate`, `gap`, `flag`,
 `alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
 the owning state is journal/check/queue data.

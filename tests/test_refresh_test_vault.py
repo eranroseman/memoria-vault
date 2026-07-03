@@ -40,7 +40,7 @@ def test_refresh_helper_preserves_runtime_only_state():
     assert 'rsync -a --delete "$SRC"/ "$VAULT"/' not in text
 
 
-def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
+def test_refresh_helper_updates_source_owned_surfaces():
     text = _script()
     for marker in (
         "system/dashboards",
@@ -55,8 +55,6 @@ def test_refresh_helper_updates_source_owned_surfaces_and_golden_copy():
         "knowledge/index.md",
         "knowledge/_views/index.md",
         "references.bib",
-        "golden_restore",
-        "stage",
     ):
         assert marker in text
 

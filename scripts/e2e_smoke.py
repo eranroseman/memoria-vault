@@ -17,7 +17,7 @@ for path in (ROOT / "src", ROOT):
 
 STAGE_LABELS = {
     "vault-assembly-1": "1. vault-assembly: scaffold + populate (installer-equivalent, from vault-template/)",
-    "vault-assembly-2": "2. vault-assembly: golden copy + git hook wiring",
+    "vault-assembly-2": "2. vault-assembly: git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
     "offline-ingest-1": "5. offline-ingest: checked source + references projection",

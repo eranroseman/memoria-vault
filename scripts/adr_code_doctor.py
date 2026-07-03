@@ -24,20 +24,6 @@ class Check:
 
 CHECKS = (
     Check(
-        name="ADR-55 golden restore has no shipped upgrade command",
-        adr="docs/adr/55-src-scaffold-populate-golden-copy.md",
-        required_paths=(
-            "src/memoria_vault/runtime/subsystems/integrity/linter/golden_restore.py",
-            "tests/test_golden_restore.py",
-        ),
-        required_text=(
-            "test_upgrade_command_is_not_shipped",
-            "There is no shipped in-place release-upgrade reconcile",
-        ),
-        forbidden_text=("golden_restore.py upgrade --source",),
-        forbidden_regex=(r"three-way\s+reconcile\s+in\s+`golden_restore\.py\s+upgrade",),
-    ),
-    Check(
         name="ADR-41 review gate names the write mechanism, not board motion",
         adr="docs/adr/41-configurable-review-gate-mode.md",
         required_paths=("src/memoria_vault/runtime/policy/decision.py",),

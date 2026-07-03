@@ -39,24 +39,11 @@ Add `--json` for machine-readable output. The detectors cover schema validity, b
 
 The verdict band rolls up as **PASS** (LOW only or clean) / **REVIEW** (any MEDIUM or HIGH) / **FAIL** (any CRITICAL) — the same band Maintenance's Drift watch shows.
 
-**3. Check golden-copy drift.**
-
-```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . check
-```
-
-Reports any system file (templates, dashboards, patterns, eval tasks, scripts, `home.md`, `system/vocabulary.md`, `AGENTS.md`) that drifted from the installer-staged golden copy. To repair:
-
-```bash
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . restore          # propose-only: lists what it would restore
-python3 -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault . restore --apply  # write the golden bytes back, deliberately
-```
-
-**4. Fix findings by hand.**
+**3. Fix findings by hand.**
 
 Every detector is report-only — fixes are yours, in Obsidian or the editor. The most common ones have dedicated recovery guides (see Related). Commit when done; the pre-commit hook re-validates what you staged.
 
-**5. Confirm scheduled wiring is alive** (if you configured it):
+**4. Confirm scheduled wiring is alive** (if you configured it):
 
 ```bash
 .memoria/scripts/lint-cron.sh
@@ -66,7 +53,6 @@ memoria workspace check --workspace . --schedule-id lint-manual --json
 ## Verify
 
 - A re-run reports no CRITICAL or HIGH findings
-- `golden_restore.py check` exits clean
 - Maintenance's Drift watch and Loose ends views show the improvement after the next scheduled or manual pass
 
 ## Related
