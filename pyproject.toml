@@ -73,7 +73,7 @@ docstring-code-format = true
 #   W    pycodestyle warnings (invalid escapes, ...)
 #   B    flake8-bugbear -- likely bugs (mutable defaults, except ordering, ...)
 #   I    import sorting (isort) -- the formatter does NOT do this
-#   UP   pyupgrade -- modern syntax for the target Python (py311)
+#   UP   pyupgrade -- modern syntax for the target Python (py312)
 #   C4   flake8-comprehensions -- clearer/faster comprehensions
 #   PIE  flake8-pie -- misc small correctness/clarity rules
 #   RUF  ruff-specific (mutable class defaults, unused noqa, ...)
