@@ -718,13 +718,51 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         )
         return {"commit": result["commit"], "resolution": result["event"]}
     if operation_id == "observe-pi-edits":
-        from memoria_vault.runtime.trusted_writer import observe_pi_edits_from_status
+        from memoria_vault.runtime.projections import (
+            changed_tracked_projection_paths,
+            write_tracked_projections,
+        )
+        from memoria_vault.runtime.trusted_writer import (
+            observe_pi_edits_from_status,
+            quarantine_untraced,
+        )
 
+        projection_paths = changed_tracked_projection_paths(vault)
+        projection_events = quarantine_untraced(
+            vault,
+            projection_paths,
+            reason="workspace-scan-generated-projection",
+            machine=machine,
+        )
+        projection_commit = ""
+        regeneration: dict[str, Any] = {}
+        if projection_events:
+            tracked_targets = [
+                str(event["target_id"])
+                for event in projection_events
+                if _git_path_tracked(vault, str(event["target_id"]))
+            ]
+            projection_commit = commit_writer_changes(
+                vault, "trace integrity scan", tracked_targets, machine=machine
+            )
+            regeneration = write_tracked_projections(vault, commit=True, machine=machine)
         result = observe_pi_edits_from_status(vault, machine=machine)
+        commits = [
+            commit
+            for commit in (
+                projection_commit,
+                str(regeneration.get("commit") or ""),
+                result["commit"],
+            )
+            if commit
+        ]
         return {
-            "commit": result["commit"],
+            "commit": commits[-1] if commits else "",
             "observed_count": len(result["observed"]),
             "paths": result["paths"],
+            "projection_quarantine_count": len(projection_events),
+            "projection_paths": projection_paths,
+            "regeneration": regeneration,
         }
     if operation_id == "mark-checked":
         from memoria_vault.runtime.trusted_writer import mark_checked

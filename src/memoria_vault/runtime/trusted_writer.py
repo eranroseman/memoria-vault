@@ -355,8 +355,9 @@ def quarantine_untraced(
     vault = Path(vault)
     known = _known_current_hashes(vault)
     events: list[dict[str, Any]] = []
+    contract = _load_contract(vault, None)
     for raw_path in paths:
-        target = _target_path(raw_path)
+        target = normalize_path(raw_path)
         source_path = vault / target
         if not source_path.is_file():
             continue
@@ -364,13 +365,12 @@ def quarantine_untraced(
         if known.get(target) == original_sha:
             continue
 
-        frontmatter, _body = split_frontmatter(source_path.read_text(encoding="utf-8"))
-        concept_type = str(frontmatter.get("type") or "")
+        concept_type = _concept_type_for_quarantine(vault, contract, target)
         quarantined_sha = original_sha
         quarantine_path = _unique_quarantine_path(vault / ".memoria/quarantine" / target)
         quarantine_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), quarantine_path)
-        if concept_type in _load_contract(vault, None)["types"]:
+        if concept_type:
             state.record_observed_file_edit(
                 vault,
                 output_id=target,
@@ -392,6 +392,14 @@ def quarantine_untraced(
         _append_event(vault, machine, event)
         events.append(event)
     return events
+
+
+def _concept_type_for_quarantine(vault: Path, contract: dict[str, Any], target: str) -> str:
+    if not target.endswith(".md") or not _is_bundle_target(contract, target):
+        return ""
+    frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
+    concept_type = str(frontmatter.get("type") or "")
+    return concept_type if concept_type in contract["types"] else ""
 
 
 def quarantine_untraced_from_status(
