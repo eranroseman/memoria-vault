@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import json
+import multiprocessing
+import queue
 import shutil
 import subprocess
 from pathlib import Path
@@ -21,6 +23,7 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import (
+    _workspace_lock,
     enqueue_integrity_sweep,
     enqueue_operation,
     enqueue_trusted_write,
@@ -61,6 +64,33 @@ def git(vault: Path, *args: str) -> str:
 
 def note_text(status: str = "checked") -> str:
     return "---\ntype: note\ntitle: Worker note\ntags: []\nlinks: {}\n---\nBody.\n"
+
+
+def _claim_workspace_lock(vault: Path, started, acquired) -> None:
+    started.put("started")
+    with _workspace_lock(vault):
+        acquired.put("acquired")
+
+
+def test_worker_workspace_lock_serializes_processes(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    context = multiprocessing.get_context()
+    started = context.Queue()
+    acquired = context.Queue()
+    process = context.Process(target=_claim_workspace_lock, args=(vault, started, acquired))
+    try:
+        with _workspace_lock(vault):
+            process.start()
+            assert started.get(timeout=2) == "started"
+            with pytest.raises(queue.Empty):
+                acquired.get(timeout=0.2)
+        assert acquired.get(timeout=2) == "acquired"
+        process.join(timeout=2)
+        assert process.exitcode == 0
+    finally:
+        if process.is_alive():
+            process.terminate()
+            process.join(timeout=2)
 
 
 def work_text(title: str, body: str) -> str:

@@ -3,13 +3,25 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import json
 import subprocess
 import tempfile
+import time
 import uuid
 from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback is exercised only on Windows.
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:  # pragma: no cover - POSIX path is exercised in CI.
+    msvcrt = None
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
@@ -34,6 +46,38 @@ INTEGRITY_SWEEP_OPERATIONS = (
     "integrity-link-target-check",
 )
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
+
+
+@contextlib.contextmanager
+def _workspace_lock(vault: Path):
+    # ponytail: one workspace-wide worker lock; split only if throughput requires it.
+    lock_path = Path(vault) / ".memoria/locks/worker.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+b") as lock_file:
+        if fcntl is not None:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            return
+        if msvcrt is not None:
+            lock_file.write(b"\0")
+            lock_file.flush()
+            lock_file.seek(0)
+            while True:
+                try:
+                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    time.sleep(0.05)
+            try:
+                yield
+            finally:
+                lock_file.seek(0)
+                msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+            return
+        yield
 
 
 def _payload_doi(payload: dict[str, Any]) -> str:
@@ -138,23 +182,25 @@ def enqueue_operation(
 def run_next_job(vault: Path, *, machine: str | None = None) -> dict[str, Any] | None:
     """Claim and run the oldest pending worker request."""
     vault = Path(vault)
-    sqlite_job = state.next_pending_job(vault)
-    if sqlite_job is None:
-        return None
-    running = _claim_sqlite_job(vault, sqlite_job)
-    return _run_claimed_job(vault, running, machine)
+    with _workspace_lock(vault):
+        sqlite_job = state.next_pending_job(vault)
+        if sqlite_job is None:
+            return None
+        running = _claim_sqlite_job(vault, sqlite_job)
+        return _run_claimed_job(vault, running, machine)
 
 
 def run_request(vault: Path, request_id: str, *, machine: str | None = None) -> dict[str, Any]:
     """Claim and run one pending operation request."""
     vault = Path(vault)
-    job = state.request_job(vault, request_id)
-    if job is None:
-        raise FileNotFoundError(f"request not found: {request_id}")
-    if job.get("status") != "pending":
-        raise ValueError(f"request {request_id} is not pending")
-    running = _claim_sqlite_job(vault, job)
-    return _run_claimed_job(vault, running, machine)
+    with _workspace_lock(vault):
+        job = state.request_job(vault, request_id)
+        if job is None:
+            raise FileNotFoundError(f"request not found: {request_id}")
+        if job.get("status") != "pending":
+            raise ValueError(f"request {request_id} is not pending")
+        running = _claim_sqlite_job(vault, job)
+        return _run_claimed_job(vault, running, machine)
 
 
 def _run_claimed_job(vault: Path, job: dict[str, Any], machine: str | None) -> dict[str, Any]:
