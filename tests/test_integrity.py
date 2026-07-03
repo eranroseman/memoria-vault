@@ -648,6 +648,66 @@ def test_source_metadata_check_routes_duplicate_source_external_ids_to_attention
     assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
 
 
+def test_source_metadata_check_routes_string_block_duplicates_to_attention(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    for source_id, title, doi in (
+        ("source-one", "Neural Retrieval in Memory Systems", "10.1000/block.one"),
+        ("source-two", "Neural retrieval in memory systems!", "10.1000/block.two"),
+    ):
+        state.upsert_catalog_record(
+            vault,
+            source_id=source_id,
+            title=title,
+            description="A fixture source.",
+            resource=f"https://doi.org/{doi}",
+            identifiers={"doi": doi},
+            citekey=f"{source_id}2026",
+            csl_json={
+                "id": f"{source_id}2026",
+                "type": "article-journal",
+                "title": title,
+                "DOI": doi,
+                "issued": {"date-parts": [[2026]]},
+                "author": [{"family": "River", "given": "Ada"}],
+            },
+            provider_coverage="full",
+            text_status="full-text",
+            check_status="checked",
+        )
+
+    result = check_source_metadata(
+        vault,
+        shadow=False,
+        machine="integrity-machine",
+        commit=True,
+    )
+
+    assert [
+        (finding["check"], finding["target_id"], finding["reason"], finding["route"])
+        for finding in result["findings"]
+    ] == [
+        (
+            "record-linkage",
+            "catalog/sources/source-one",
+            "possible duplicate source metadata block also matches catalog/sources/source-two "
+            "(title/year/first-author)",
+            "ask",
+        ),
+        (
+            "record-linkage",
+            "catalog/sources/source-two",
+            "possible duplicate source metadata block also matches catalog/sources/source-one "
+            "(title/year/first-author)",
+            "ask",
+        ),
+    ]
+    assert result["attention_path"] == "inbox/work-prompt-record-linkage-source-external-ids.md"
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
+
+
 def test_db_capture_does_not_create_legacy_entity_identity_findings(
     tmp_path: Path,
 ) -> None:

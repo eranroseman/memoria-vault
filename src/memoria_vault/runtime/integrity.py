@@ -341,11 +341,18 @@ def check_source_metadata(
                     machine=machine,
                 )
             )
-    record_linkage_findings = _duplicate_source_external_id_findings(
-        vault,
-        shadow=shadow,
-        machine=machine,
-    )
+    record_linkage_findings = [
+        *_duplicate_source_external_id_findings(
+            vault,
+            shadow=shadow,
+            machine=machine,
+        ),
+        *_duplicate_source_string_block_findings(
+            vault,
+            shadow=shadow,
+            machine=machine,
+        ),
+    ]
     findings.extend(record_linkage_findings)
     attention_path = ""
     commit_paths: list[str] = []
@@ -425,6 +432,114 @@ def _duplicate_source_external_id_groups(vault: Path) -> list[tuple[str, str, li
     ]
 
 
+def _duplicate_source_string_block_findings(
+    vault: Path,
+    *,
+    shadow: bool,
+    machine: str | None,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for source_ids in _duplicate_source_string_block_groups(vault):
+        for source_id in source_ids:
+            target_id = f"catalog/sources/{source_id}"
+            if state.concept_check_status(vault, target_id) != "checked":
+                continue
+            others = [f"catalog/sources/{other}" for other in source_ids if other != source_id]
+            if not others:
+                continue
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    target_id,
+                    check="record-linkage",
+                    status="failed",
+                    reason=(
+                        "possible duplicate source metadata block also matches "
+                        f"{', '.join(others)} (title/year/first-author)"
+                    ),
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
+    return findings
+
+
+def _duplicate_source_string_block_groups(vault: Path) -> list[list[str]]:
+    groups: dict[tuple[str, str, str], set[str]] = {}
+    for row in state.catalog_sources(vault, checked_only=False):
+        source_id = str(row.get("source_id") or "").strip()
+        if not source_id:
+            continue
+        if state.concept_check_status(vault, f"catalog/sources/{source_id}") != "checked":
+            continue
+        frontmatter = _source_row_frontmatter(row)
+        key = _source_string_block_key(frontmatter)
+        if key:
+            groups.setdefault(key, set()).add(source_id)
+    return [
+        sorted(source_ids) for _key, source_ids in sorted(groups.items()) if len(source_ids) > 1
+    ]
+
+
+def _source_string_block_key(frontmatter: dict[str, Any]) -> tuple[str, str, str] | None:
+    csl_json = frontmatter.get("csl_json")
+    if not isinstance(csl_json, dict):
+        return None
+    title = _metadata_title_key(
+        str(csl_json.get("title") or frontmatter.get("title") or "").strip()
+    )
+    year = _csl_year_key(csl_json)
+    author = _csl_first_author_key(csl_json)
+    if not title or not year or not author:
+        return None
+    return title, year, author
+
+
+def _metadata_title_key(title: str) -> str:
+    terms = [
+        term
+        for term in re.findall(r"[a-z0-9]+", title.casefold())
+        if len(term) > 2 and term not in _STOP_TERMS
+    ]
+    if len(terms) < 3:
+        return ""
+    return " ".join(terms)
+
+
+def _csl_year_key(csl_json: dict[str, Any]) -> str:
+    issued = csl_json.get("issued")
+    if not isinstance(issued, dict):
+        return ""
+    parts = issued.get("date-parts")
+    if isinstance(parts, list) and parts and isinstance(parts[0], list) and parts[0]:
+        return str(parts[0][0])
+    match = re.search(r"\b(1[5-9]\d{2}|20\d{2})\b", str(issued.get("raw") or ""))
+    return match.group(1) if match else ""
+
+
+def _csl_first_author_key(csl_json: dict[str, Any]) -> str:
+    authors = csl_json.get("author")
+    if not isinstance(authors, list):
+        return ""
+    for author in authors:
+        if not isinstance(author, dict):
+            continue
+        name = str(author.get("literal") or "").strip()
+        if not name:
+            name = " ".join(
+                part
+                for part in (
+                    str(author.get("family") or "").strip(),
+                    str(author.get("given") or "").strip(),
+                )
+                if part
+            )
+        key = " ".join(re.findall(r"[a-z0-9]+", name.casefold()))
+        if key:
+            return key
+    return ""
+
+
 def _write_source_record_linkage_attention(
     vault: Path,
     findings: list[dict[str, Any]],
@@ -434,8 +549,8 @@ def _write_source_record_linkage_attention(
         "Review source record-linkage candidates",
         "Review duplicate source records before merging or treating them as separate works.",
         (
-            f"The source metadata check found {len(findings)} active exact external ID "
-            "collision(s). The check-fired events list each affected source and duplicate ID."
+            f"The source metadata check found {len(findings)} active record-linkage "
+            "candidate(s). The check-fired events list each affected source and evidence."
         ),
         "check-source-metadata",
         target="catalog/sources",
