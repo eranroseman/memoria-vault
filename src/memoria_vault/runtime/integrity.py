@@ -14,6 +14,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.trusted_writer import (
     EVENT_CHECK_FIRED,
@@ -26,8 +27,43 @@ from memoria_vault.runtime.trusted_writer import (
 from memoria_vault.runtime.vaultio import (
     iter_markdown,
     read_frontmatter,
+    safe_read,
     split_frontmatter,
     write_frontmatter_doc,
+)
+
+NLI_SUPPORTED = "SUPPORTED"
+NLI_REFUTED = "REFUTED"
+NLI_NOTENOUGHINFO = "NOTENOUGHINFO"
+_NEGATORS = frozenset({"no", "not", "never", "without"})
+_STOP_TERMS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "for",
+        "in",
+        "is",
+        "of",
+        "on",
+        "the",
+        "to",
+        "with",
+    }
+)
+_HANS_ACCEPTANCE = (
+    (
+        "The intervention improved recall.",
+        "The intervention did not improve recall.",
+        NLI_REFUTED,
+    ),
+    (
+        "The archive contains complete correspondence.",
+        "The archive contains no complete correspondence.",
+        NLI_REFUTED,
+    ),
 )
 
 
@@ -429,6 +465,130 @@ def check_contradiction_links(
             vault, "integrity contradiction check", [], machine=machine
         )
     return {"findings": findings, "commit": commit_hash}
+
+
+def contradiction_tier1_gate(
+    *, comparator: Any | None = None, min_accuracy: float = 1.0
+) -> dict[str, Any]:
+    """Run the high-overlap/opposite-meaning gate before Tier-1 may classify pairs."""
+    compare = comparator or _compare_claims
+    failures: list[dict[str, Any]] = []
+    baseline_failures = 0
+    for premise, hypothesis, expected in _HANS_ACCEPTANCE:
+        verdict = compare(premise, hypothesis)
+        baseline = _lexical_baseline_verdict(premise, hypothesis)
+        if baseline != expected:
+            baseline_failures += 1
+        if verdict["verdict"] != expected:
+            failures.append(
+                {
+                    "premise": premise,
+                    "hypothesis": hypothesis,
+                    "expected": expected,
+                    "actual": verdict["verdict"],
+                }
+            )
+    total = len(_HANS_ACCEPTANCE)
+    accuracy = (total - len(failures)) / total
+    return {
+        "passed": accuracy >= min_accuracy and baseline_failures > 0,
+        "accuracy": accuracy,
+        "total": total,
+        "failures": failures,
+        "baseline_failures": baseline_failures,
+    }
+
+
+def surface_tensions(
+    vault: Path,
+    *,
+    max_pairs: int = 20,
+    min_overlap: float = 0.55,
+    machine: str | None = None,
+    commit: bool = False,
+    comparator: Any | None = None,
+) -> dict[str, Any]:
+    """Propose unchecked contradiction candidates; never writes contradiction links."""
+    vault = Path(vault)
+    compare = comparator or _compare_claims
+    gate = contradiction_tier1_gate(comparator=compare)
+    rows = _checked_tension_rows(vault)
+    candidates: list[dict[str, Any]] = []
+    abstain_count = 0
+    seen: set[tuple[str, str]] = set()
+    for left_index, left in enumerate(rows):
+        for right in rows[left_index + 1 :]:
+            pair_key = tuple(sorted((left["canonical_id"], right["canonical_id"])))
+            if pair_key in seen or pair_key[0] == pair_key[1]:
+                continue
+            seen.add(pair_key)
+            overlap = _lexical_overlap(left["text"], right["text"])
+            if overlap < min_overlap:
+                continue
+            if not gate["passed"]:
+                candidates.append(_tension_candidate(left, right, overlap, verdict="DEGRADED"))
+            else:
+                verdict = compare(left["text"], right["text"])
+                if verdict["verdict"] == NLI_REFUTED:
+                    candidates.append(
+                        _tension_candidate(
+                            left,
+                            right,
+                            overlap,
+                            verdict=NLI_REFUTED,
+                            warrant=str(verdict.get("warrant") or ""),
+                        )
+                    )
+                elif verdict["verdict"] == NLI_NOTENOUGHINFO:
+                    abstain_count += 1
+            if len(candidates) >= max_pairs:
+                break
+        if len(candidates) >= max_pairs:
+            break
+    attention_path = ""
+    finding: dict[str, Any] | None = None
+    commit_hash = ""
+    if not gate["passed"]:
+        finding = record_integrity_check(
+            vault,
+            "knowledge",
+            check="contradiction-tier1-hans",
+            status="failed",
+            reason="contradiction detection degraded: NLI below HANS bar",
+            shadow=False,
+            route="ask",
+            machine=machine,
+        )
+        if commit:
+            path = write_work_prompt(
+                vault,
+                "Contradiction detection degraded",
+                "Review lexical tension candidates before setting contradiction links.",
+                (
+                    "Tier-1 contradiction detection did not pass the HANS-style "
+                    "overlap-but-opposite gate, so lexical candidates require PI review."
+                ),
+                "surface-tensions",
+                target="knowledge",
+                posture="co-pi",
+                loudness="alert",
+                dedupe_slug="contradiction-detection-degraded",
+            )
+            attention_path = path.relative_to(vault).as_posix() if path else ""
+            commit_paths = [attention_path] if attention_path else []
+            commit_hash = commit_writer_changes(
+                vault, "surface degraded contradiction detection", commit_paths, machine=machine
+            )
+    return {
+        "gate": gate,
+        "degraded": not gate["passed"],
+        "candidate_count": len(candidates),
+        "abstain_count": abstain_count,
+        "candidates": candidates,
+        "attention_path": attention_path,
+        "finding": finding,
+        "commit": commit_hash,
+    }
 
 
 def check_link_targets(
@@ -898,6 +1058,121 @@ def _trace_aliases(vault: Path, target: str) -> set[str]:
     if concept_path:
         aliases.add(normalize_path(concept_path))
     return aliases
+
+
+def _checked_tension_rows(vault: Path) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for path in iter_markdown(vault):
+        rel = path.relative_to(vault).as_posix()
+        frontmatter, body = split_frontmatter(safe_read(path))
+        if frontmatter.get("type") not in {"note", "work"}:
+            continue
+        if not _is_checked_concept(vault, rel):
+            continue
+        title = str(frontmatter.get("title") or path.stem).strip()
+        text = " ".join(
+            str(value).strip()
+            for value in (
+                frontmatter.get("claim_text"),
+                frontmatter.get("description"),
+                title,
+                body,
+            )
+            if value
+        )
+        if len(_claim_terms(text)) < 3:
+            continue
+        rows.append(
+            {
+                "id": rel,
+                "canonical_id": str(frontmatter.get("id") or frontmatter.get("source_id") or rel),
+                "title": title,
+                "text": text,
+            }
+        )
+    return rows
+
+
+def _compare_claims(premise: str, hypothesis: str) -> dict[str, Any]:
+    premise_terms = set(_claim_terms(premise))
+    hypothesis_terms = set(_claim_terms(hypothesis))
+    overlap = _lexical_overlap_terms(premise_terms, hypothesis_terms)
+    premise_negated = bool(premise_terms & _NEGATORS)
+    hypothesis_negated = bool(hypothesis_terms & _NEGATORS)
+    shared_non_negated = (premise_terms - _NEGATORS) & (hypothesis_terms - _NEGATORS)
+    # ponytail: local negation-NLI stand-in; replace with a pinned model when packaged.
+    if overlap >= 0.55 and premise_negated != hypothesis_negated and len(shared_non_negated) >= 3:
+        return {
+            "verdict": NLI_REFUTED,
+            "confidence": 0.9,
+            "warrant": "high lexical overlap with opposite negation",
+        }
+    if overlap >= 0.75 and premise_negated == hypothesis_negated:
+        return {
+            "verdict": NLI_SUPPORTED,
+            "confidence": 0.8,
+            "warrant": "high lexical overlap with matching polarity",
+        }
+    return {
+        "verdict": NLI_NOTENOUGHINFO,
+        "confidence": 0.0,
+        "warrant": "insufficient deterministic support",
+    }
+
+
+def _lexical_baseline_verdict(premise: str, hypothesis: str) -> str:
+    if _lexical_overlap(premise, hypothesis) >= 0.55:
+        return NLI_SUPPORTED
+    return NLI_NOTENOUGHINFO
+
+
+def _tension_candidate(
+    left: dict[str, str],
+    right: dict[str, str],
+    overlap: float,
+    *,
+    verdict: str,
+    warrant: str = "",
+) -> dict[str, Any]:
+    route = "ask"
+    return {
+        "left": left["id"],
+        "right": right["id"],
+        "left_title": left["title"],
+        "right_title": right["title"],
+        "verdict": verdict,
+        "route": route,
+        "lexical_overlap": round(overlap, 3),
+        "warrant": warrant or "Tier-1 unavailable; route lexical candidate to PI review",
+    }
+
+
+def _lexical_overlap(left: str, right: str) -> float:
+    return _lexical_overlap_terms(set(_claim_terms(left)), set(_claim_terms(right)))
+
+
+def _lexical_overlap_terms(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    return len(left & right) / min(len(left), len(right))
+
+
+def _claim_terms(text: str) -> list[str]:
+    terms: list[str] = []
+    for raw in re.findall(r"[a-z0-9]+", text.lower()):
+        if raw in _STOP_TERMS:
+            continue
+        terms.append(_stem_claim_term(raw))
+    return terms
+
+
+def _stem_claim_term(term: str) -> str:
+    for suffix in ("ing", "ed", "es", "s"):
+        if len(term) > len(suffix) + 3 and term.endswith(suffix):
+            return term[: -len(suffix)]
+    if len(term) > 4 and term.endswith("e"):
+        return term[:-1]
+    return term
 
 
 def _evidence_refs(frontmatter: dict[str, Any]) -> list[str]:

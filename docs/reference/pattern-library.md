@@ -23,7 +23,7 @@ composition contract.
 
 ## The shipped operations
 
-Nine prompt operations ship at `check_status: checked` and are runnable. Each
+Eight prompt operations ship at `check_status: checked` and are runnable. Each
 is one packaged Markdown manifest; the file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
@@ -36,7 +36,6 @@ is one packaged Markdown manifest; the file stem is its `pattern_id`.
 | `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/knowledge/` |
 | `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/knowledge/` |
 | `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/knowledge/` |
-| `surface-tensions` | Surface tensions | librarian | link | library | note-set | `.memoria/staging/knowledge/` |
 
 `mode` filters the picker: `library` operations are for ongoing reading,
 `project` operations for a writing project, `knowledge` operations for the

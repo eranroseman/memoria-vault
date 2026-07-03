@@ -2,12 +2,14 @@
 title: Surface tensions
 type: operation
 check_status: checked
-description: List candidate tensions across notes without writing links.
+description: List Tier-1 contradiction candidates across checked notes without writing links.
 operation_id: surface-tensions
 allowed_tools:
+- read_checked_concepts
 - trusted_writer
 allowed_paths:
 - catalog/
+- inbox/
 - knowledge/
 allowed_network: []
 runner:
@@ -15,17 +17,11 @@ runner:
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: surface-tensions.v1
 io_schema:
-  input: selected_concepts
+  input: checked_workspace
   output: tension_candidates
 risk_class: medium
 required_checks:
 - memoria-runtime
-posture: librarian
-mode: library
-action: link
-input: note-set
-output_target: .memoria/staging/knowledge/
-model_hint: ''
 version: '1.0'
 adapted_from: open-notebook/transformations
 created: 2026-06-10
@@ -36,7 +32,7 @@ links: {}
 
 # Pattern
 
-Across the notes in {{input}}, list candidate tensions: pairs that cannot both be fully
-right. For each pair: the two statements verbatim with citekeys; whether the conflict is
-empirical, definitional, or scope; and the narrowest question that would resolve it.
-Propose each as a `contradicts` link candidate for the link gate -- never write the link.
+Across checked notes and works, list candidate tensions: pairs that cannot both be
+fully right. Tier-1 must pass the HANS-style high-overlap/opposite-meaning gate
+before it may classify candidates. When Tier-1 is degraded, lexical candidates
+route to PI review through attention. Never write the `contradicts` link.

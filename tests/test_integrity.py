@@ -7,6 +7,7 @@ from pathlib import Path
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.integrity import (
+    NLI_NOTENOUGHINFO,
     cascade_rollback,
     check_claim_quote_support,
     check_contradiction_links,
@@ -16,8 +17,10 @@ from memoria_vault.runtime.integrity import (
     check_provenance_checkpoint,
     check_quote_anchor_support,
     check_source_metadata,
+    contradiction_tier1_gate,
     record_integrity_check,
     route_check,
+    surface_tensions,
     trace_downstream,
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
@@ -65,6 +68,12 @@ def note_text(title: str, *, status: str = "checked") -> str:
         "status: accepted\n---\n"
         f"# {title}\n\nBody.\n"
     )
+
+
+def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
+    content = f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\n{body}\n"
+    stage_concept(vault, rel, content, machine="writer")
+    promote_checked(vault, rel, machine="writer")
 
 
 def sync_file_verdicts(vault: Path) -> None:
@@ -658,6 +667,76 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     assert finding["target_id"] == target
     assert finding["reason"] == "unresolved contradiction target: knowledge/works/missing.md"
     assert finding["route"] == "ask"
+
+
+def test_contradiction_tier1_gate_beats_lexical_overlap_baseline() -> None:
+    gate = contradiction_tier1_gate()
+
+    assert gate["passed"] is True
+    assert gate["accuracy"] == 1.0
+    assert gate["baseline_failures"] == gate["total"]
+
+
+def test_surface_tensions_degraded_gate_writes_attention_without_links(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    left = "knowledge/notes/recall-up.md"
+    right = "knowledge/notes/recall-not-up.md"
+    _stage_checked_note(vault, left, "Recall up", "The intervention improved recall.")
+    _stage_checked_note(vault, right, "Recall not up", "The intervention did not improve recall.")
+
+    def abstain(_premise: str, _hypothesis: str) -> dict:
+        return {
+            "verdict": NLI_NOTENOUGHINFO,
+            "confidence": 0.0,
+            "warrant": "fixture abstain",
+        }
+
+    result = surface_tensions(vault, comparator=abstain, commit=True, machine="integrity-machine")
+
+    assert result["degraded"] is True
+    assert result["finding"]["route"] == "ask"
+    assert result["candidate_count"] == 1
+    assert result["candidates"][0]["verdict"] == "DEGRADED"
+    assert (vault / result["attention_path"]).is_file()
+    assert (
+        "contradiction detection degraded"
+        in (vault / result["attention_path"]).read_text(encoding="utf-8").lower()
+    )
+    assert read_frontmatter(vault / left)["links"] == {}
+    assert read_frontmatter(vault / right)["links"] == {}
+
+
+def test_surface_tensions_dedupes_same_canonical_id(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    shared_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
+    for rel, body in {
+        "knowledge/notes/recall-up.md": "The intervention improved recall.",
+        "knowledge/notes/recall-not-up.md": "The intervention did not improve recall.",
+    }.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "---\n"
+            "type: note\n"
+            f"id: {shared_id}\n"
+            f"title: {Path(rel).stem}\n"
+            "tags: []\n"
+            "links: {}\n"
+            "---\n"
+            f"# {Path(rel).stem}\n\n{body}\n",
+            encoding="utf-8",
+        )
+        state.record_observed_file_edit(
+            vault,
+            output_id=rel,
+            concept_type="note",
+            output_sha256=sha256_file(path),
+        )
+        state.set_concept_verdict(vault, rel, "checked")
+
+    result = surface_tensions(vault)
+
+    assert result["candidate_count"] == 0
 
 
 def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:

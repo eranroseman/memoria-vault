@@ -726,6 +726,44 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
     assert committed == {state.JOURNAL_HEAD_REL}
 
 
+def test_worker_runs_surface_tensions_tier1_operation_jobs(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    notes = {
+        "knowledge/notes/recall-up.md": "The intervention improved recall.",
+        "knowledge/notes/recall-not-up.md": "The intervention did not improve recall.",
+    }
+    for rel, body in notes.items():
+        path = vault / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            "---\n"
+            "type: note\n"
+            f"title: {Path(rel).stem}\n"
+            "tags: []\n"
+            "links: {}\n"
+            "---\n"
+            f"# {Path(rel).stem}\n\n{body}\n",
+            encoding="utf-8",
+        )
+        mark_file_status(vault, rel, "note")
+
+    queued = enqueue_operation(
+        vault,
+        "surface-tensions",
+        payload={},
+        idempotency_key="surface-tensions",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert queued["kind"] == "operation"
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["degraded"] is False
+    assert done["candidate_count"] == 1
+    assert done["candidates"][0]["verdict"] == "REFUTED"
+    assert read_frontmatter(vault / "knowledge/notes/recall-up.md")["links"] == {}
+
+
 def test_worker_runs_link_target_integrity_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     bad = vault / "knowledge/notes/bad-link.md"
