@@ -19,17 +19,17 @@ case "$job" in
     run_py -m memoria_vault.runtime.subsystems.cleanup.reconcile --vault "$vault"
     ;;
   worker)
-    run_py -m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json
-    run_py -m memoria_vault.cli workspace run --workspace "$vault" --schedule-id worker-drain --limit 10 --json
+    run_py -m memoria_vault.typer_cli workspace scan --workspace "$vault" --schedule-id worker-scan --json
+    run_py -m memoria_vault.typer_cli workspace run --workspace "$vault" --schedule-id worker-drain --limit 10 --json
     ;;
   lint)
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault "$vault" --jsonl-out "$vault/system/logs/lint-findings.jsonl"
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.golden_restore --vault "$vault" check
     run_py -m memoria_vault.runtime.subsystems.integrity.linter.session_summary --vault "$vault"
-    run_py -m memoria_vault.cli workspace check --workspace "$vault" --schedule-id lint-integrity --json
+    run_py -m memoria_vault.typer_cli workspace check --workspace "$vault" --schedule-id lint-integrity --json
     ;;
   eval)
-    run_py -m memoria_vault.cli eval run --workspace "$vault" --schedule-id eval-dispatch --json
+    run_py -m memoria_vault.typer_cli eval run --workspace "$vault" --schedule-id eval-dispatch --json
     ;;
   retraction-refresh)
     run_py -m memoria_vault.runtime.subsystems.integrity.retraction.retraction --refresh

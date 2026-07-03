@@ -171,7 +171,8 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
     assert "--with-hermes" not in text
     assert "--with-cluster" not in text
     assert "Proceed with the standalone Memoria install?" in text
-    assert "memoria_vault.cli doctor bundle --workspace" in text
+    assert "doctor bundle --workspace" in text
+    assert "memoria_vault.cli" not in text
     for required in (
         "ensure_prereqs",
         "resolve_repo",
@@ -204,8 +205,10 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
     assert "[switch]$WithHermes" not in text
     assert "[switch]$WithCluster" not in text
     assert "Default path: standalone CLI/runtime workspace" in text
-    assert "memoria_vault.cli doctor bundle --workspace" in text
-    assert "memoria_vault.cli workspace rebuild --workspace" in text
+    assert "memoria.exe" in text
+    assert "doctor bundle --workspace" in text
+    assert "workspace rebuild --workspace" in text
+    assert "memoria_vault.cli" not in text
     for required in (
         "Assert-RequiredCommands",
         "Get-RepoRoot",
@@ -235,7 +238,7 @@ def test_lint_cron_writes_lint_findings_telemetry():
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
     assert (
-        '-m memoria_vault.cli workspace check --workspace "$vault" '
+        '-m memoria_vault.typer_cli workspace check --workspace "$vault" '
         "--schedule-id lint-integrity --json"
     ) in text
 
@@ -243,10 +246,10 @@ def test_lint_cron_writes_lint_findings_telemetry():
 def test_worker_cron_runs_pi_observer_and_pending_queue():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert (
-        '-m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
+        '-m memoria_vault.typer_cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
     ) in text
     assert (
-        '-m memoria_vault.cli workspace run --workspace "$vault" '
+        '-m memoria_vault.typer_cli workspace run --workspace "$vault" '
         "--schedule-id worker-drain --limit 10 --json"
     ) in text
 
@@ -254,7 +257,7 @@ def test_worker_cron_runs_pi_observer_and_pending_queue():
 def test_eval_cron_dispatches_through_cli_with_schedule_id():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert (
-        '-m memoria_vault.cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
+        '-m memoria_vault.typer_cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
     ) in text
 
 

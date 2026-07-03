@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that alpha.14 ships no bundled Obsidian plugin provenance payload."""
+"""Validate that the standalone runtime ships no bundled Obsidian plugin payload."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def check(root: Path = ROOT) -> list[Finding]:
     for rel in FORBIDDEN_REL:
         path = root / rel
         if path.exists():
-            findings.append(Finding(rel.as_posix(), "not shipped in standalone alpha.14"))
+            findings.append(Finding(rel.as_posix(), "not shipped in standalone runtime"))
     return findings
 
 

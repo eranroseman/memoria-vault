@@ -343,11 +343,14 @@ stage_golden_copy() {
 
 print_cli_next_steps() {
   hdr "Next steps"
-  local pycmd="${VENV_PYTHON:-$VAULT_PATH/.memoria/.venv/bin/python}"
+  local clicmd="memoria"
+  if [ -n "${VENV_PYTHON:-}" ] && [ -x "$(dirname "$VENV_PYTHON")/memoria" ]; then
+    clicmd="$(dirname "$VENV_PYTHON")/memoria"
+  fi
   [ -n "$VAULT_PATH" ] && say "  Workspace: $VAULT_PATH"
-  say "  1. Check the bundle:  \"$pycmd\" -m memoria_vault.cli doctor bundle --workspace \"$VAULT_PATH\""
-  say "  2. Rebuild search:    \"$pycmd\" -m memoria_vault.cli workspace rebuild --workspace \"$VAULT_PATH\" --search"
-  say "  3. Ask from CLI:      \"$pycmd\" -m memoria_vault.cli ask --workspace \"$VAULT_PATH\" --question \"What needs attention?\""
+  say "  1. Check the bundle:  \"$clicmd\" doctor bundle --workspace \"$VAULT_PATH\""
+  say "  2. Rebuild search:    \"$clicmd\" workspace rebuild --workspace \"$VAULT_PATH\" --search"
+  say "  3. Ask from CLI:      \"$clicmd\" ask --workspace \"$VAULT_PATH\" --question \"What needs attention?\""
   say "  4. First checkpoint:  cd \"$VAULT_PATH\" && git add -A && git commit -m \"Initial Memoria vault\""
   [ "$DRY_RUN" -eq 1 ] && warn "This was a DRY RUN — nothing above was actually changed."
   return 0

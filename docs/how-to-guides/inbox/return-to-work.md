@@ -22,7 +22,7 @@ memoria status --workspace <workspace>
 If `memoria` is not on `PATH`, run the workspace-local command:
 
 ```bash
-<workspace>/.memoria/.venv/bin/python -m memoria_vault.cli doctor bundle --workspace <workspace>
+<workspace>/.memoria/.venv/bin/memoria doctor bundle --workspace <workspace>
 ```
 
 **2. Confirm provider config and search are ready.**

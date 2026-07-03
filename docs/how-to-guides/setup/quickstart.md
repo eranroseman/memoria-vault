@@ -43,8 +43,8 @@ The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%
 ```
 
 ```powershell
-& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\python.exe" -m memoria_vault.cli doctor bundle --workspace "$env:USERPROFILE\Memoria"
-& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\python.exe" -m memoria_vault.cli workspace rebuild --workspace "$env:USERPROFILE\Memoria" --search
+& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\memoria.exe" doctor bundle --workspace "$env:USERPROFILE\Memoria"
+& "$env:USERPROFILE\Memoria\.memoria\.venv\Scripts\memoria.exe" workspace rebuild --workspace "$env:USERPROFILE\Memoria" --search
 ```
 
 **3. Make the first checkpoint.** The installer initializes Git and wires hooks, but it does not create the first commit or set a remote:

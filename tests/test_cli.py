@@ -125,6 +125,34 @@ def test_typer_console_entrypoint_delegates_current_commands(
     assert output["workspace"] == str(workspace)
 
 
+def test_typer_console_entrypoint_delegates_nested_options(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    captured: list[list[str]] = []
+    args = [
+        "workspace",
+        "run",
+        "--workspace",
+        str(tmp_path),
+        "--schedule-id",
+        "worker-drain",
+        "--limit",
+        "10",
+        "--json",
+    ]
+
+    def fake_main(argv: list[str]) -> int:
+        captured.append(argv)
+        return 0
+
+    monkeypatch.setattr(typer_cli.legacy_cli, "main", fake_main)
+
+    rc = typer_cli.main(args)
+
+    assert rc == 0
+    assert captured == [args]
+
+
 def test_typer_child_action_ignores_option_choices() -> None:
     command_action = next(
         action for action in _build_parser()._actions if getattr(action, "dest", None) == "command"
