@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write alpha.11 Inbox attention projections.
+"""Write Inbox attention projections.
 
 Attention is generated visibility, not a durable Concept type. These helpers keep
 the old filenames and bodies useful while writing projection frontmatter instead

@@ -104,7 +104,7 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 
 | Quadrant | For when you want to… |
 | --- | --- |
-| [Tutorials](docs/tutorials/README.md) | Deferred for alpha.11; use Quickstart and current task guides |
+| [Tutorials](docs/tutorials/README.md) | Deferred for alpha.15; use Quickstart and current task guides |
 | [How-to guides](docs/how-to-guides/README.md) | Accomplish a specific task you already understand |
 | [Reference](docs/reference/README.md) | Look up exact commands, fields, schemas, and config |
 | [Explanation](docs/explanation/README.md) | Understand why the system is shaped the way it is |

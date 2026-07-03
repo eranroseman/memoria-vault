@@ -1,4 +1,4 @@
-"""Alpha.11 integrity check routing and trace rollback helpers."""
+"""Integrity check routing and trace rollback helpers."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def record_integrity_check(
     auto_revert: bool = False,
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Record one check verdict with alpha.11 shadow-first routing metadata."""
+    """Record one check verdict with shadow-first routing metadata."""
     vault = Path(vault)
     target = normalize_path(target_id)
     target_path = vault / target

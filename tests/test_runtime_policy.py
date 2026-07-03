@@ -380,7 +380,7 @@ def test_runtime_policy_core():
 
 
 def test_template_no_longer_ships_adapter_policy_config():
-    """Alpha.14 removed shipped adapter policy; adapters must supply it explicitly."""
+    """The standalone template ships no adapter policy config."""
     if yaml is None:
         pytest.skip("PyYAML not installed")
     src = Path(__file__).resolve().parent.parent / "vault-template"

@@ -1,4 +1,4 @@
-"""Alpha.14 does not ship installed Hermes profiles or lane override packages."""
+"""The standalone runtime ships no installed Hermes profiles or lane overrides."""
 
 from pathlib import Path
 

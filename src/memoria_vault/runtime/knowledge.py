@@ -1,4 +1,4 @@
-"""Alpha.11 note-candidate and gap-analysis helpers."""
+"""Note-candidate, gap-analysis, and project-export helpers."""
 
 from __future__ import annotations
 

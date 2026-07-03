@@ -1,4 +1,4 @@
-"""Alpha.11 operation runner primitives."""
+"""Operation runner primitives for the standalone Memoria engine."""
 
 from __future__ import annotations
 

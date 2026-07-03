@@ -1,4 +1,4 @@
-"""The pre-commit hook validates staged alpha.11 Concepts against their schema."""
+"""The pre-commit hook validates staged Concepts against their schema."""
 
 from pathlib import Path
 

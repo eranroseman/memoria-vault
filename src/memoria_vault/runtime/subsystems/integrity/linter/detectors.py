@@ -535,7 +535,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
 
 
 def fama_exposure(vault: Path) -> list[Finding]:
-    """FAMA exposure: a downstream note wikilinks a superseded alpha.11 note."""
+    """FAMA exposure: a downstream note wikilinks a superseded note."""
     notes = list(iter_notes(vault))
     superseded: dict[str, str] = {}
     for p in notes:
@@ -603,7 +603,7 @@ def misplaced_note(vault: Path) -> list[Finding]:
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     """A topic crossed the hub-creation threshold with no hub (ADR-19 Tier 1).
 
-    Report-only: counts alpha.11 sources and notes per topic/tag term and flags
+    Report-only: counts sources and notes per topic/tag term and flags
     any term with >= `threshold` records that no existing hub already covers.
     Never auto-creates -- the finding suggests the PI consider a hub."""
     counts: dict[str, int] = {}
