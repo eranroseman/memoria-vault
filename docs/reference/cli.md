@@ -50,7 +50,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria link` | Curate a typed relation between checked Concepts. |
 | `memoria check` | Mark a Concept checked, or run workspace checks when no target is given. |
 | `memoria show/list/export` | Inspect and export Concepts. |
-| `memoria project ask/trace/gaps/suggest-hubs/export` | Query and maintain project-level knowledge. |
+| `memoria project ask/trace/gaps/frame-paper/suggest-hubs/export` | Query, frame, and maintain project-level knowledge. |
 | `memoria steering show/edit` | Read or update steering. |
 | `memoria vocab list/add/rename/merge` | Maintain controlled vocabulary. |
 | `memoria journal tail/show` | Inspect journal entries. |

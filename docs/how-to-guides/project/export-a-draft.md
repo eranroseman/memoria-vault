@@ -19,6 +19,9 @@ terminal operation you run yourself — there is no export lane or palette comma
   `.docx`, `.pdf`, `.odt`, or direct manuscript routes
 - A checked project Concept under `knowledge/projects/`; author it as Markdown,
   then run `memoria workspace scan --workspace <vault>`
+- For readiness-gated exports, a paper frame recorded with
+  `memoria project frame-paper --frame-file <json>` and the project checked
+  afterward
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
   of the alpha.11 shipped path
 - `references.bib` current (generated from checked SQLite catalog rows)
@@ -39,11 +42,13 @@ memoria project export \
   --workspace /path/to/workspace \
   project-alpha \
   --format markdown \
-  --output knowledge/projects/project-alpha/exports/project-alpha.md
+  --output knowledge/projects/project-alpha/exports/project-alpha.md \
+  --ready-only
 ```
 
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
-`--output`; Memoria fails clearly if Pandoc is not installed.
+`--output`; Memoria fails clearly if Pandoc is not installed. Omit
+`--ready-only` for a review packet before the paper plan is complete.
 
 **3. Export a manuscript draft to Word (`.docx`) — the default static route.**
 

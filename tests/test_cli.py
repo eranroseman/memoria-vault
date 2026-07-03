@@ -160,6 +160,7 @@ def test_alpha15_cli_command_surface_is_exact() -> None:
         "memoria export",
         "memoria project ask",
         "memoria project trace",
+        "memoria project frame-paper",
         "memoria project gaps",
         "memoria project suggest-hubs",
         "memoria project export",

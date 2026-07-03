@@ -246,6 +246,11 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     gaps.add_argument("--seed-term", action="append", default=[])
     gaps.add_argument("--dense-threshold", type=int, default=2)
     gaps.set_defaults(handler=_cmd_project_gaps)
+    frame = project_sub.add_parser("frame-paper")
+    _common(frame)
+    frame.add_argument("project_path")
+    frame.add_argument("--frame-file", required=True)
+    frame.set_defaults(handler=_cmd_project_frame_paper)
     trace = project_sub.add_parser("trace")
     _common(trace)
     trace.add_argument("project_path")
@@ -255,6 +260,7 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     export.add_argument("project_path")
     export.add_argument("--format", choices=("markdown", "docx", "pdf", "odt"), default="markdown")
     export.add_argument("--output")
+    export.add_argument("--ready-only", action="store_true")
     export.set_defaults(handler=_cmd_project_export)
     suggest = project_sub.add_parser("suggest-hubs")
     _common(suggest)
@@ -795,6 +801,17 @@ def _cmd_project_gaps(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_project_frame_paper(args: argparse.Namespace) -> int:
+    try:
+        frame = _read_json_object(Path(args.frame_file), "frame file")
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        return _fail(str(exc), json_output=args.json)
+    return _emit(
+        _enqueue_and_run(args, "frame-paper", {"project_path": args.project_path, **frame}),
+        args,
+    )
+
+
 def _cmd_project_suggest_hubs(args: argparse.Namespace) -> int:
     from collections import Counter
 
@@ -840,6 +857,7 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
             "project_path": args.project_path,
             "format": args.format,
             "output_path": args.output or "",
+            "ready_only": args.ready_only,
         },
     )
     if result.get("ok") and not args.json and not args.quiet:
@@ -1604,6 +1622,13 @@ def _read_provider_replay(path: Path) -> dict[str, Any]:
     for child in sorted(path.glob("*.json")):
         payloads[child.stem] = json.loads(child.read_text(encoding="utf-8"))
     return payloads
+
+
+def _read_json_object(path: Path, label: str) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must contain a JSON object")
+    return data
 
 
 def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:

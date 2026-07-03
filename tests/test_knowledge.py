@@ -18,6 +18,7 @@ from memoria_vault.runtime.knowledge import (
     curate_note_candidate,
     curate_note_link,
     emit_note_candidates,
+    frame_project_paper,
     write_project_argument_canvas,
     write_project_export,
 )
@@ -85,6 +86,16 @@ def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
     assert isinstance(gap["why"], str) and gap["why"]
     assert isinstance(gap["next_actions"], list)
     assert isinstance(gap["candidate_work_ids"], list)
+
+
+def _checked(vault: Path, rel: str, concept_type: str) -> None:
+    state.record_observed_file_edit(
+        vault,
+        output_id=rel,
+        concept_type=concept_type,
+        output_sha256=sha256_file(vault / rel),
+    )
+    state.set_concept_verdict(vault, rel, "checked")
 
 
 def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -> None:
@@ -754,11 +765,14 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     assert result["thesis_path"] == "knowledge/notes/thesis.md"
     assert result["argument_stage"] == "developing"
     assert result["argument_gap_count"] == 2
-    gaps = {gap["finding_kind"]: gap for gap in result["gaps"]}
+    assert result["paper_readiness_gap_count"] == 1
+    gaps = {gap["finding_kind"]: gap for gap in result["gaps"] if "finding_kind" in gap}
     _assert_gap_contract(gaps["thin-argument"], "argument-unsupported")
     assert gaps["thin-argument"]["note_count"] == 3
     _assert_gap_contract(gaps["conflict"], "argument-fragile")
     assert gaps["conflict"]["advice"] == "resolve or preserve the contradiction"
+    paper_gap = next(gap for gap in result["gaps"] if gap["kind"] == "paper-readiness")
+    assert "target" in paper_gap["missing"]
     assert result["saturation"] == {
         "claims": 1,
         "saturated": 1,
@@ -877,6 +891,110 @@ def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -
     assert "- Support --supports--> Thesis" in text
     assert "- Alpha hub: `knowledge/hubs/alpha-hub.md` -- Curated project context" in text
     assert "```bibtex\n@article{alpha,title={Alpha}}\n```" in text
+
+
+def _valid_paper_plan() -> dict[str, object]:
+    return {
+        "target": "Journal of Testable Systems",
+        "audience": "local-first tool builders",
+        "research_question": "Can Memoria support standalone CLI research?",
+        "central_contribution": "A checked CLI loop can produce usable evidence.",
+        "gap_statement": "Existing PKM loops lack local checked export.",
+        "claim_evidence_map": {"CLI loop works": "knowledge/notes/support.md"},
+        "figure_plan": {"Figure 1": "CLI loop stages"},
+        "limitations": "Single-corpus dogfood run.",
+    }
+
+
+def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    project = vault / "knowledge/projects/project-alpha.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        "---\n"
+        "type: project\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "title: Alpha project\n"
+        "tags: []\n"
+        "links: {}\n"
+        "paper_plan: {}\n"
+        "outcome_frame: {}\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    _checked(vault, "knowledge/projects/project-alpha.md", "project")
+
+    result = frame_project_paper(
+        vault,
+        "project-alpha",
+        paper_plan=_valid_paper_plan(),
+        machine="frame-test",
+        run_id="frame-run",
+    )
+
+    assert result["project_path"] == "knowledge/projects/project-alpha.md"
+    assert result["check_status"] == "unchecked"
+    frontmatter = read_frontmatter(project)
+    assert frontmatter["paper_plan"]["research_question"].startswith("Can Memoria")
+    assert frontmatter["outcome_frame"] == {
+        "kind": "paper",
+        "target": "Journal of Testable Systems",
+        "audience": "local-first tool builders",
+        "research_question": "Can Memoria support standalone CLI research?",
+        "status": "framed",
+    }
+    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
+    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/projects/project-alpha.md"}
+
+
+def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Path) -> None:
+    vault = tmp_path
+    _md(
+        vault / "knowledge/projects/project-alpha.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+    )
+    _md(
+        vault / "knowledge/notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\n",
+    )
+    with pytest.raises(ValueError, match="target"):
+        write_project_export(vault, "project-alpha", ready_only=True)
+
+    project = vault / "knowledge/projects/project-alpha.md"
+    frontmatter, body = project.read_text(encoding="utf-8").split("---\n", 2)[1:]
+    project.write_text(
+        "---\n"
+        + frontmatter
+        + "paper_plan:\n"
+        + "  target: Journal of Testable Systems\n"
+        + "  audience: local-first tool builders\n"
+        + "  research_question: Can Memoria support standalone CLI research?\n"
+        + "  central_contribution: A checked CLI loop can produce usable evidence.\n"
+        + "  gap_statement: Existing PKM loops lack local checked export.\n"
+        + "  claim_evidence_map:\n"
+        + "    CLI loop works: knowledge/notes/support.md\n"
+        + "  figure_plan:\n"
+        + "    Figure 1: CLI loop stages\n"
+        + "  limitations: Single-corpus dogfood run.\n"
+        + "---\n"
+        + body,
+        encoding="utf-8",
+    )
+    _checked(vault, "knowledge/projects/project-alpha.md", "project")
+    _md(
+        vault / "knowledge/notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\n"
+        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+    )
+
+    result = write_project_export(vault, "project-alpha", ready_only=True)
+
+    assert result["readiness"]["ready"] is True
+    assert result["readiness"]["status"] == "export-ready"
+    assert "# Alpha project" in result["content"]
+    assert "## Paper Plan" in result["content"]
 
 
 def test_write_project_export_requires_pandoc_for_non_markdown(
