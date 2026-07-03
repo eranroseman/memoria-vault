@@ -486,7 +486,7 @@ def evaluate_bm25(
 
 
 def _is_searchable_frontmatter(frontmatter: dict[str, Any], *, include_stale: bool = False) -> bool:
-    if frontmatter.get("type") not in {"digest", "note", "hub", "project"}:
+    if frontmatter.get("type") not in {"work", "note", "hub", "project"}:
         return False
     return include_stale or not _staleness("", frontmatter)
 
@@ -528,9 +528,10 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
             continue
         work_frontmatter = {
             "type": "work",
-            "check_status": "checked",
             "title": source["title"],
-            "source_id": source_id,
+            "work_id": source_id,
+            "tags": [],
+            "links": {},
         }
         docs.append(
             _generated_doc(
@@ -563,7 +564,6 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
                     f"graph-neighborhoods/{safe_filename(source_id)}.md",
                     {
                         "type": "graph-neighborhood",
-                        "check_status": "checked",
                         "title": f"Graph neighborhood: {source['title']}",
                         "source_id": source_id,
                     },

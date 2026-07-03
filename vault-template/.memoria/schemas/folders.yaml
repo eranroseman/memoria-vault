@@ -1,27 +1,17 @@
-# Canonical alpha.12 workspace layout.
+# Canonical alpha.15 workspace layout.
 # Read by: schema validators, the installer skeleton, and worker/promotion code.
-categories: [catalog, knowledge, capabilities]
-bundle_roots: [catalog, knowledge, capabilities]
+categories: [knowledge]
+bundle_roots: [knowledge]
 
 # type → folder-home (relative to the vault root)
 homes:
-  source: catalog/sources
-  person: catalog/entities
-  organization: catalog/entities
-  venue: catalog/entities
-  digest: knowledge/digests
   note: knowledge/notes
+  work: knowledge/works
   hub: knowledge/hubs
   project: knowledge/projects
-  adapter: capabilities/adapters
-  operation: capabilities/operations
-  skill: capabilities/skills
-  workflow: capabilities/workflows
 
 machine_staging_roots:
-  - .memoria/staging/catalog
   - .memoria/staging/knowledge
-  - .memoria/staging/capabilities
 
 quarantine_root: .memoria/quarantine
 
@@ -39,15 +29,13 @@ skeleton:
   - .memoria/blobs
   - .memoria/blobs/provider-payloads
   - .memoria/blobs/source-content
-  - .memoria/staging/catalog
   - .memoria/staging/knowledge
-  - .memoria/staging/capabilities
   - journal
   - catalog
   - catalog/sources
   - catalog/entities
   - knowledge
-  - knowledge/digests
+  - knowledge/works
   - knowledge/notes
   - knowledge/hubs
   - knowledge/projects

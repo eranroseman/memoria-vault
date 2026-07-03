@@ -19,6 +19,7 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors import (
     parse_frontmatter,
 )
 from memoria_vault.runtime.subsystems.lib import schema
+from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
 
 
 def check_paths(vault: Path, paths: list[str]) -> list[str]:
@@ -48,6 +49,8 @@ def check_paths(vault: Path, paths: list[str]) -> list[str]:
         if sc is None:
             errors.append(f"{rel}: unknown type '{ntype}'")
             continue
+        for err in retired_frontmatter_field_errors(fm):
+            errors.append(f"{rel}: {ntype}: {err}")
         for err in schema.validate_frontmatter(fm, sc):
             errors.append(f"{rel}: {ntype}: {err}")
     return errors

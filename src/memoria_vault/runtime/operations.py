@@ -193,7 +193,6 @@ def run_prompt_operation(
     output_path = f"knowledge/notes/{safe_filename(operation_id)}-{safe_filename(run_id)}.md"
     frontmatter = {
         "type": "note",
-        "check_status": "unchecked",
         "title": f"{policy['title']} report",
         "description": str(policy.get("description") or policy["title"]),
         "status": "candidate",
@@ -269,7 +268,7 @@ def compile_source_digest(
     if not content_path.is_file():
         raise FileNotFoundError(content_path)
 
-    digest_rel = f"knowledge/digests/{source_id}.md"
+    digest_rel = f"knowledge/works/{source_id}.md"
     _require_path(policy, source_ref)
     _require_path(policy, content_rel)
     _require_path(policy, digest_rel)
@@ -307,20 +306,13 @@ def compile_source_digest(
     )
 
     digest_frontmatter = {
-        "type": "digest",
-        "check_status": "unchecked",
+        "type": "work",
         "title": f"Digest: {source_fm['title']}",
         "description": source_fm["description"],
-        "source_id": source_ref,
-        "confidence": "medium",
+        "work_id": source_id,
+        "tags": topics,
+        "links": {},
         "evidence_set": [source_ref],
-        "massw": {
-            "context": source_fm["title"],
-            "key_idea": topics[0],
-            "method": "compile-source-digest",
-            "outcome": topics[1],
-            "projected_impact": topics[2],
-        },
     }
     if citation:
         digest_frontmatter["citations"] = [citation]
@@ -359,12 +351,11 @@ def compile_source_digest(
         hub_exists = (vault / hub_rel).exists()
         hub_frontmatter = {
             "type": "hub",
-            "check_status": "unchecked",
             "title": topic,
             "description": f"Machine suggestion from {source_fm['title']}.",
-            "members": [digest_rel, source_ref],
-            "confidence": "low",
+            "tag": _topic_slug(topic),
             "tags": ["suggestion"],
+            "links": {},
         }
         if citation:
             hub_frontmatter["citations"] = [citation]
@@ -559,8 +550,7 @@ def _checked_prompt_input(vault: Path, relpath: str) -> tuple[str, dict[str, str
     path = vault / normalize_path(relpath)
     if not path.is_file():
         raise FileNotFoundError(path)
-    frontmatter = read_frontmatter(path)
-    if frontmatter.get("check_status") != "checked":
+    if state.concept_check_status(vault, normalize_path(relpath)) != "checked":
         raise ValueError(f"{relpath} is not checked")
     return safe_read(path), {"id": normalize_path(relpath), "sha256": sha256_file(path)}
 

@@ -32,6 +32,7 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
 )
 from memoria_vault.runtime.subsystems.integrity.linter.detectors_design import design_system_drift
 from memoria_vault.runtime.subsystems.lib.markdown import parse_frontmatter
+from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/", "inbox/")
@@ -44,7 +45,7 @@ TYPE_HOME = {
     "person": "catalog/entities/",
     "organization": "catalog/entities/",
     "venue": "catalog/entities/",
-    "digest": "knowledge/digests/",
+    "work": "knowledge/works/",
     "note": "knowledge/notes/",
     "hub": "knowledge/hubs/",
     "project": "knowledge/projects/",
@@ -65,7 +66,7 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 def is_untyped_infra(rp: str) -> bool:
     """Infrastructure, navigation, and attention projections are not Concepts."""
-    return rp.startswith(("spaces/", "system/", "inbox/"))
+    return rp.startswith(("catalog/", "spaces/", "system/", "inbox/", "capabilities/"))
 
 
 LEFTOVER_PATTERNS = [
@@ -82,8 +83,10 @@ LEFTOVER_PATTERNS = [
     )
 ]
 REQUIRED_FIELDS = {
-    "source": ["check_status", "title", "description", "source_id"],
-    "note": ["check_status", "title"],
+    "work": ["id", "title", "tags", "links", "work_id"],
+    "note": ["id", "title", "tags", "links"],
+    "hub": ["id", "title", "tags", "links", "tag"],
+    "project": ["id", "title", "tags", "links"],
 }
 DATAVIEW_BUILTINS = {
     "file",
@@ -352,6 +355,8 @@ def frontmatter_schema_check(vault: Path) -> list[Finding]:
                     )
                 )
                 continue
+            for err in retired_frontmatter_field_errors(fm):
+                out.append(Finding("schema-check", "LOW", rp, err))
             for err in _schema.validate_frontmatter(fm, sc, vocabulary_terms):
                 out.append(Finding("schema-check", "MEDIUM", rp, f"{ntype}: {err}"))
         else:
@@ -516,7 +521,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("knowledge/digests/", "knowledge/notes/", "knowledge/hubs/")
+    synth = ("knowledge/works/", "knowledge/notes/", "knowledge/hubs/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):

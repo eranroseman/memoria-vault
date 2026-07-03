@@ -1,27 +1,17 @@
 type: project
 category: knowledge
 gated: false
-initial_check_status: unchecked
-enums:
-  check_status:
-  - unchecked
-  - checked
-  - quarantined
-  standing:
-  - current
-  - superseded
-  - retracted
-  - archived
 required:
   type: literal:project
-  id: str
-  check_status: enum:check_status
-  standing: enum:standing
-  links: map
+  id: ulid
   title: str
-  description: str
-optional:
-  resource: str
-  thesis: str
-  scope: map
   tags: list
+  links: map
+optional:
+  aliases: list
+  archived: bool
+  description: str
+  thesis: str
+  outcome_frame: map
+  paper_plan: map
+  x: map

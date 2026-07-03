@@ -378,7 +378,7 @@ def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
         "elif sys.argv[1:] == ['doctor']:\n"
         "    print('model cache: ready')\n"
         "elif sys.argv[1:2] == ['query']:\n"
-        '    print(\'[{"file": "qmd://memoria-checked/knowledge/digests/doi-10.1000_alpha.md", "score": 9}]\')\n',
+        '    print(\'[{"file": "qmd://memoria-checked/knowledge/works/doi-10.1000_alpha.md", "score": 9}]\')\n',
         encoding="utf-8",
     )
     node.chmod(0o755)
@@ -391,14 +391,15 @@ def _write_project_fixture(workspace: Path) -> None:
     project = (
         "---\n"
         "type: project\n"
-        "check_status: checked\n"
         "title: Alpha project\n"
         "description: Runtime gate project\n"
+        "tags: []\n"
+        "links: {}\n"
         "thesis: knowledge/notes/thesis.md\n"
         "---\n"
         "Body.\n"
     )
-    note = "---\ntype: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n---\nBody.\n"
+    note = "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n---\nBody.\n"
     stage_concept(
         workspace,
         "knowledge/projects/project-alpha.md",

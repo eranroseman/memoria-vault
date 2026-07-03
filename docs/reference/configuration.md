@@ -38,30 +38,22 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 
 | Setting | Value |
 | --- | --- |
-| Categories | `catalog` · `knowledge` · `capabilities` |
-| Bundle roots | `catalog` · `knowledge` · `capabilities` |
-| Machine staging roots | `.memoria/staging/catalog` · `.memoria/staging/knowledge` · `.memoria/staging/capabilities` |
+| Categories | `knowledge` |
+| Bundle roots | `knowledge` |
+| Machine staging roots | `.memoria/staging/knowledge` |
 | Quarantine root | `.memoria/quarantine` |
 | Gated prefixes | - |
 | Transient prefixes | `inbox/` |
-| Skeleton entries | `32` |
+| Skeleton entries | `30` |
 
 ## Type homes
 
 | Type | Folder |
 | --- | --- |
-| `adapter` | `capabilities/adapters` |
-| `digest` | `knowledge/digests` |
 | `hub` | `knowledge/hubs` |
 | `note` | `knowledge/notes` |
-| `operation` | `capabilities/operations` |
-| `organization` | `catalog/entities` |
-| `person` | `catalog/entities` |
 | `project` | `knowledge/projects` |
-| `skill` | `capabilities/skills` |
-| `source` | `catalog/sources` |
-| `venue` | `catalog/entities` |
-| `workflow` | `capabilities/workflows` |
+| `work` | `knowledge/works` |
 
 ## Calibration blocks
 

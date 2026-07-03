@@ -61,7 +61,7 @@ commit_gate() {
   fi
   echo "   malformed note blocked at commit"
   git -C "$V" reset -q HEAD knowledge/notes/bad.md && rm "$V/knowledge/notes/bad.md"
-  printf -- '---\ntype: note\nid: notes/good\ncheck_status: checked\nstanding: current\nlinks: {}\ntitle: "Good"\n---\nBody.\n' > "$V/knowledge/notes/good.md"
+  printf -- '---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\ntags: []\nlinks: {}\ntitle: "Good"\n---\nBody.\n' > "$V/knowledge/notes/good.md"
   git -C "$V" add knowledge/notes/good.md
   git -C "$V" -c user.email=e2e@ci -c user.name=e2e commit -qm good || fail "valid note blocked"
   echo "   valid note passes"

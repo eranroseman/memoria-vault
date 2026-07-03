@@ -3,13 +3,29 @@
 from __future__ import annotations
 
 import os
+import secrets
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
-UNIVERSAL_CONCEPT_BUNDLES = frozenset({"knowledge", "capabilities"})
-UNIVERSAL_CONCEPT_STANDINGS = frozenset({"current", "superseded", "retracted", "archived"})
+UNIVERSAL_CONCEPT_BUNDLES = frozenset({"knowledge"})
+UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "work", "hub", "project"})
+ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
+RETIRED_FRONTMATTER_FIELDS = frozenset(
+    {
+        "check_status",
+        "standing",
+        "lifecycle",
+        "metadata_status",
+        "text_status",
+        "confidence",
+        "contested",
+        "created",
+        "updated",
+    }
+)
 
 
 def safe_read(path: Path) -> str:
@@ -75,16 +91,17 @@ def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
 def apply_universal_concept_frontmatter(
     frontmatter: dict[str, Any], rel_path: str
 ) -> dict[str, Any]:
-    """Add alpha.14 universal fields for knowledge/capability Concepts."""
+    """Add alpha.15 universal meaning fields for knowledge Concepts."""
     normalized = rel_path.replace("\\", "/")
     if not normalized.endswith(".md"):
         return frontmatter
     parts = normalized.split("/", 1)
     if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
         return frontmatter
-    frontmatter.setdefault("id", parts[1].removesuffix(".md"))
-    frontmatter.setdefault("standing", "current")
-    frontmatter.setdefault("links", {})
+    if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
+        frontmatter.setdefault("id", new_ulid())
+        frontmatter.setdefault("tags", [])
+        frontmatter.setdefault("links", {})
     return frontmatter
 
 
@@ -95,15 +112,32 @@ def universal_concept_frontmatter_errors(frontmatter: dict[str, Any], rel_path: 
     parts = normalized.split("/", 1)
     if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
         return []
-    concept_id = parts[1].removesuffix(".md")
     errors: list[str] = []
-    if frontmatter.get("id") != concept_id:
-        errors.append(f"id must be {concept_id!r}")
-    if frontmatter.get("standing") not in UNIVERSAL_CONCEPT_STANDINGS:
-        errors.append(f"standing must be one of {sorted(UNIVERSAL_CONCEPT_STANDINGS)}")
-    if not isinstance(frontmatter.get("links"), dict):
-        errors.append("links must be a map")
+    if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
+        if not is_ulid(str(frontmatter.get("id") or "")):
+            errors.append("id must be a ULID")
+        if not isinstance(frontmatter.get("links"), dict):
+            errors.append("links must be a map")
     return errors
+
+
+def retired_frontmatter_field_errors(frontmatter: dict[str, Any]) -> list[str]:
+    return [
+        f"retired frontmatter field is ignored: {field}"
+        for field in sorted(RETIRED_FRONTMATTER_FIELDS & set(frontmatter))
+    ]
+
+
+def is_ulid(value: str) -> bool:
+    return len(value) == 26 and all(ch in ULID_ALPHABET for ch in value)
+
+
+def new_ulid() -> str:
+    value = ((int(time.time() * 1000) & ((1 << 48) - 1)) << 80) | secrets.randbits(80)
+    chars = []
+    for shift in range(125, -1, -5):
+        chars.append(ULID_ALPHABET[(value >> shift) & 31])
+    return "".join(chars)
 
 
 def concept_text(frontmatter: dict[str, Any], title: str, body: str) -> str:

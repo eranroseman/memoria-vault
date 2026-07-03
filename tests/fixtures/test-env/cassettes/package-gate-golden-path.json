@@ -63,11 +63,13 @@
       "tool": "vault.write_markdown",
       "arg_shape": {
         "content": "str",
-        "path": "str"
+        "path": "str",
+        "verdict": "str"
       },
       "args": {
         "path": "knowledge/projects/harness.md",
-        "content": "---\ntype: project\nid: projects/harness\ncheck_status: checked\nstanding: current\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.11 project.\nthesis: knowledge/notes/harness-thesis.md\n---\n\n# Harness project\n"
+        "verdict": "checked",
+        "content": "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC0\ntags: []\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.15 project.\nthesis: knowledge/notes/harness-thesis.md\n---\n\n# Harness project\n"
       },
       "expect": {
         "writes": ["knowledge/projects/harness.md"]
@@ -78,11 +80,13 @@
       "tool": "vault.write_markdown",
       "arg_shape": {
         "content": "str",
-        "path": "str"
+        "path": "str",
+        "verdict": "str"
       },
       "args": {
         "path": "knowledge/notes/harness-thesis.md",
-        "content": "---\ntype: note\nid: notes/harness-thesis\ncheck_status: checked\nstanding: current\nlinks: {}\ntitle: Harness thesis\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\n---\n\nHarnessed workflows make durable research systems testable.\n"
+        "verdict": "checked",
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC1\ntags: []\nlinks: {}\ntitle: Harness thesis\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\n---\n\nHarnessed workflows make durable research systems testable.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-thesis.md"]
@@ -93,11 +97,13 @@
       "tool": "vault.write_markdown",
       "arg_shape": {
         "content": "str",
-        "path": "str"
+        "path": "str",
+        "verdict": "str"
       },
       "args": {
         "path": "knowledge/notes/harness-support.md",
-        "content": "---\ntype: note\nid: notes/harness-support\ncheck_status: checked\nstanding: current\ntitle: Harness support\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
+        "verdict": "checked",
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC2\ntags: []\ntitle: Harness support\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-support.md"]
@@ -108,11 +114,13 @@
       "tool": "vault.write_markdown",
       "arg_shape": {
         "content": "str",
-        "path": "str"
+        "path": "str",
+        "verdict": "str"
       },
       "args": {
         "path": "knowledge/notes/harness-refutation.md",
-        "content": "---\ntype: note\nid: notes/harness-refutation\ncheck_status: checked\nstanding: current\ntitle: Harness refutation\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
+        "verdict": "checked",
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC3\ntags: []\ntitle: Harness refutation\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-refutation.md"]

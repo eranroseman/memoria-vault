@@ -699,7 +699,7 @@ def _cmd_project_suggest_hubs(args: argparse.Namespace) -> int:
             for tag in _string_list(frontmatter.get("tags")):
                 existing.add(tag.lower())
             continue
-        if frontmatter.get("type") not in {"digest", "note"}:
+        if frontmatter.get("type") not in {"work", "note"}:
             continue
         for term in _concept_terms(frontmatter):
             counts[term] += 1
@@ -741,7 +741,6 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
 
 def _cmd_note_capture(args: argparse.Namespace) -> int:
     from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.time import now_iso
     from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
     from memoria_vault.runtime.vaultio import (
         apply_universal_concept_frontmatter,
@@ -755,9 +754,8 @@ def _cmd_note_capture(args: argparse.Namespace) -> int:
     frontmatter = {
         "type": "note",
         "title": args.title,
-        "check_status": "unchecked",
         "tags": args.tag,
-        "created": now_iso(),
+        "links": {},
     }
     apply_universal_concept_frontmatter(frontmatter, rel)
     write_frontmatter_doc(workspace / rel, frontmatter, body, create_parent=True)
@@ -1369,8 +1367,9 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
     content = (
         "---\n"
         "type: note\n"
-        "check_status: unchecked\n"
         "title: Crash-before-materialization fixture\n"
+        "tags: []\n"
+        "links: {}\n"
         "---\n\n"
         "This note exists to prove pending file materializations replay from SQLite.\n"
     )
@@ -1658,7 +1657,7 @@ def _digest_path_for_work(work_id: str) -> str:
     source_id = safe_filename(work_id.strip())
     if not source_id:
         raise ValueError("work-id is required")
-    return f"knowledge/digests/{source_id}.md"
+    return f"knowledge/works/{source_id}.md"
 
 
 def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
@@ -1667,10 +1666,10 @@ def _candidate_from_digest(workspace: Path, digest_path: str) -> dict[str, Any]:
     digest = workspace / digest_path
     frontmatter, body = split_frontmatter(digest.read_text(encoding="utf-8"))
     if (
-        frontmatter.get("type") != "digest"
+        frontmatter.get("type") != "work"
         or state.concept_check_status(workspace, digest_path) != "checked"
     ):
-        raise ValueError(f"{digest_path} is not a checked digest")
+        raise ValueError(f"{digest_path} is not a checked work digest")
     title = str(frontmatter.get("title") or Path(digest_path).stem).removeprefix("Digest: ").strip()
     excerpt = " ".join(body.split())
     if not excerpt:

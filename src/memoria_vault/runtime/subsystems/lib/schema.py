@@ -8,7 +8,7 @@ This module is the one reader every consumer shares — the Linter, the
 pre-commit hook, the installer-skeleton test, and the template/Bases tests —
 so a schema change is a one-file edit, never a hunt across hardcoded lists.
 
-Field kinds: str | int | bool | date | list | map | literal:<value> | enum:<name>.
+Field kinds: str | int | bool | date | list | map | ulid | literal:<value> | enum:<name>.
 `required_any` lists field names of which at least one must be present.
 """
 
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-from memoria_vault.runtime.vaultio import universal_concept_frontmatter_errors
+from memoria_vault.runtime.vaultio import is_ulid, universal_concept_frontmatter_errors
 
 
 def _default_schemas_dir() -> Path:
@@ -155,6 +155,8 @@ def _check_kind(value, kind: str, enums: dict) -> str | None:
         return None if isinstance(value, list) else f"expected list, got {type(value).__name__}"
     if kind == "map":
         return None if isinstance(value, dict) else f"expected map, got {type(value).__name__}"
+    if kind == "ulid":
+        return None if isinstance(value, str) and is_ulid(value) else "expected ULID"
     return f"unknown kind {kind!r}"
 
 

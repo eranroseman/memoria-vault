@@ -94,8 +94,8 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
 
     target = "knowledge/notes/seeded-missing-evidence.md"
     unchecked_target = "knowledge/notes/seeded-unchecked-evidence.md"
-    contradiction_target = "knowledge/digests/seeded-missing-contradiction.md"
-    digest_target = "knowledge/digests/seeded-missing-digest-evidence.md"
+    contradiction_target = "knowledge/works/seeded-missing-contradiction.md"
+    digest_target = "knowledge/works/seeded-missing-digest-evidence.md"
     false_link_target = "knowledge/notes/seeded-false-link.md"
     conflicting_doi_target = "catalog/sources/conflicting-doi"
     ambiguous_entity_target = "catalog/sources/ambiguous-entity"
@@ -197,8 +197,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         ambiguous_entity_target,
         conflicting_doi_target,
         poisoned_target,
-        contradiction_target,
-        digest_target,
         injection_target,
         false_link_target,
         target,
@@ -207,13 +205,13 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         unchecked_target,
         claim_target,
         extraction_target,
+        contradiction_target,
+        digest_target,
     ]
     assert result["rolled_back"] == [
         ambiguous_entity_target,
         conflicting_doi_target,
         poisoned_target,
-        contradiction_target,
-        digest_target,
         injection_target,
         false_link_target,
         target,
@@ -222,6 +220,8 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         unchecked_target,
         claim_target,
         extraction_target,
+        contradiction_target,
+        digest_target,
     ]
     assert result["false_positives"] == []
     assert not (tmp_path / target).exists()

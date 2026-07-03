@@ -17,8 +17,11 @@ from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
+    RETIRED_FRONTMATTER_FIELDS,
     apply_universal_concept_frontmatter,
+    is_ulid,
     iter_markdown,
+    retired_frontmatter_field_errors,
     split_frontmatter,
     universal_concept_frontmatter_errors,
     write_frontmatter_doc,
@@ -107,10 +110,8 @@ def observe_pi_edit(
     _bundle_for_target(contract, target)
 
     path = vault / target
-    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    frontmatter["check_status"] = "unchecked"
-    _validate_concept(contract, target, frontmatter)
-    write_frontmatter_doc(path, frontmatter, body, create_parent=True)
+    frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
+    _validate_concept(contract, target, frontmatter, strict_writer=False)
 
     output_sha256 = sha256_file(path)
     state.record_observed_file_edit(
@@ -209,9 +210,8 @@ def rebuild_concept_mirror_from_files(
         for path in iter_markdown(base, skip_dirs=frozenset()):
             target = path.relative_to(vault).as_posix()
             frontmatter, _body = split_frontmatter(path.read_text(encoding="utf-8"))
-            frontmatter["check_status"] = "unchecked"
             try:
-                _validate_concept(contract, target, frontmatter)
+                _validate_concept(contract, target, frontmatter, strict_writer=False)
             except ValueError:
                 continue
             rows.append({"concept_id": target, "concept_type": str(frontmatter["type"])})
@@ -244,6 +244,7 @@ def mark_checked(
         promotion_checks,
         machine,
         contract,
+        allow_retired_input=True,
     )
 
 
@@ -266,7 +267,6 @@ def stage_concept(
     _bundle_for_target(contract, target)
 
     frontmatter, body = split_frontmatter(content)
-    frontmatter["check_status"] = "unchecked"
     _validate_concept(contract, target, frontmatter)
 
     staged_path = _staged_path(vault, target)
@@ -288,7 +288,7 @@ def stage_concept(
         vault,
         output_id=target,
         concept_type=str(frontmatter["type"]),
-        check_status=str(frontmatter["check_status"]),
+        check_status="unchecked",
         output_sha256=event["output_sha256"],
         staging_id=event["staging_id"],
         payload_text=staged_path.read_text(encoding="utf-8"),
@@ -353,13 +353,20 @@ def quarantine_untraced(
         if known.get(target) == original_sha:
             continue
 
-        frontmatter, body = split_frontmatter(source_path.read_text(encoding="utf-8"))
-        frontmatter["check_status"] = "quarantined"
-        write_frontmatter_doc(source_path, frontmatter, body, create_parent=True)
-        quarantined_sha = sha256_file(source_path)
+        frontmatter, _body = split_frontmatter(source_path.read_text(encoding="utf-8"))
+        concept_type = str(frontmatter.get("type") or "")
+        quarantined_sha = original_sha
         quarantine_path = _unique_quarantine_path(vault / ".memoria/quarantine" / target)
         quarantine_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), quarantine_path)
+        if concept_type in _load_contract(vault, None)["types"]:
+            state.record_observed_file_edit(
+                vault,
+                output_id=target,
+                concept_type=concept_type,
+                output_sha256=quarantined_sha,
+            )
+            state.set_concept_verdict(vault, target, "quarantined")
         event = {
             "event": EVENT_CHECK_FIRED,
             "timestamp": now_iso(),
@@ -499,16 +506,25 @@ def _git_status_paths(vault: Path, contract: dict[str, Any]) -> list[str]:
 
 def _validate_pi_edit_target(vault: Path, contract: dict[str, Any], target: str) -> None:
     frontmatter, _body = split_frontmatter((vault / target).read_text(encoding="utf-8"))
-    frontmatter["check_status"] = "unchecked"
-    _validate_concept(contract, target, frontmatter)
+    _validate_concept(contract, target, frontmatter, strict_writer=False)
 
 
 def _staged_path(vault: Path, target: str) -> Path:
     return vault / ".memoria/staging" / target
 
 
-def _validate_concept(contract: dict[str, Any], target: str, frontmatter: dict[str, Any]) -> None:
+def _validate_concept(
+    contract: dict[str, Any],
+    target: str,
+    frontmatter: dict[str, Any],
+    *,
+    strict_writer: bool = True,
+) -> None:
     apply_universal_concept_frontmatter(frontmatter, target)
+    if strict_writer:
+        retired = retired_frontmatter_field_errors(frontmatter)
+        if retired:
+            raise ValueError("; ".join(retired))
     concept_type = str(frontmatter.get("type") or "")
     schema = contract["types"].get(concept_type)
     if not schema:
@@ -516,15 +532,14 @@ def _validate_concept(contract: dict[str, Any], target: str, frontmatter: dict[s
     home = str(contract["folders"].get("homes", {}).get(concept_type) or "").strip("/")
     if not home or not target.startswith(home + "/"):
         raise ValueError(f"{concept_type} must live under {home or '<missing home>'}: {target}")
+    if not strict_writer:
+        return
     enums = schema.get("enums") or {}
     for field, spec in (schema.get("required") or {}).items():
         if field not in frontmatter:
             raise ValueError(f"missing required field {field!r} for {concept_type}")
         if not _matches(frontmatter[field], str(spec), enums):
             raise ValueError(f"invalid {field!r} for {concept_type}: expected {spec}")
-    check_status = frontmatter.get("check_status")
-    if check_status not in {"unchecked", "checked", "quarantined"}:
-        raise ValueError(f"invalid check_status: {check_status!r}")
     for error in universal_concept_frontmatter_errors(frontmatter, target):
         raise ValueError(error)
 
@@ -538,9 +553,13 @@ def _write_checked(
     checks: Iterable[str],
     machine: str | None,
     contract: dict[str, Any],
+    *,
+    allow_retired_input: bool = False,
 ) -> dict[str, Any]:
     promotion_checks = normalize_promotion_checks(checks)
-    frontmatter["check_status"] = "checked"
+    if allow_retired_input:
+        for field in RETIRED_FRONTMATTER_FIELDS:
+            frontmatter.pop(field, None)
     _validate_concept(contract, target, frontmatter)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     events = []
@@ -583,6 +602,8 @@ def _matches(value: Any, spec: str, enums: dict[str, list[Any]]) -> bool:
         return isinstance(value, list)
     if spec == "map":
         return isinstance(value, dict)
+    if spec == "ulid":
+        return isinstance(value, str) and is_ulid(value)
     return True
 
 

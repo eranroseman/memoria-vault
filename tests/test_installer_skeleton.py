@@ -44,15 +44,13 @@ def test_alpha11_fresh_package_contract_is_shipped():
         ".memoria/index/qmd",
         ".memoria/config",
         ".memoria/quarantine",
-        ".memoria/staging/catalog",
         ".memoria/staging/knowledge",
-        ".memoria/staging/capabilities",
         "journal",
         "catalog",
         "catalog/sources",
         "catalog/entities",
         "knowledge",
-        "knowledge/digests",
+        "knowledge/works",
         "knowledge/notes",
         "knowledge/hubs",
         "knowledge/projects",
@@ -83,9 +81,7 @@ def test_alpha11_fresh_package_contract_is_shipped():
     for rel in (
         ".memoria/index/qmd",
         ".memoria/quarantine",
-        ".memoria/staging/catalog",
         ".memoria/staging/knowledge",
-        ".memoria/staging/capabilities",
         "journal",
     ):
         assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel

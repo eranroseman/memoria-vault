@@ -56,7 +56,7 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
 
 
 def note_text(title: str = "Alpha note") -> str:
-    return f"---\ntype: note\ncheck_status: unchecked\ntitle: {title}\n---\n# {title}\n\nBody.\n"
+    return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\nBody.\n"
 
 
 def mark_file_verdict(vault: Path, rel: str, concept_type: str, status: str) -> None:
@@ -145,7 +145,8 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
     assert done["status"] == "done"
     assert done["job_id"] == queued["job_id"]
     assert not (vault / ".memoria/queue").exists()
-    assert read_frontmatter(vault / "knowledge/notes/sqlite-worker.md")["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/sqlite-worker.md")
+    assert state.concept_check_status(vault, "knowledge/notes/sqlite-worker.md") == "checked"
     with state.connect(vault) as conn:
         status = conn.execute(
             "SELECT status FROM operation_requests WHERE request_id = 'sqlite-worker'"
@@ -229,7 +230,8 @@ def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Pat
     restored = state.recover_pending_materializations(vault)
 
     assert restored == ["knowledge/notes/replay.md"]
-    assert read_frontmatter(vault / "knowledge/notes/replay.md")["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/replay.md")
+    assert state.concept_check_status(vault, "knowledge/notes/replay.md") == "checked"
     with state.connect(vault) as conn:
         status = conn.execute(
             "SELECT materialization_status FROM outputs WHERE output_id = ?",
@@ -310,11 +312,11 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
 
 def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "knowledge/digests/missing-citation.md"
+    target = vault / "knowledge/works/missing-citation.md"
     target.parent.mkdir(parents=True)
     target.write_text(
         "---\n"
-        "type: digest\n"
+        "type: work\n"
         "check_status: checked\n"
         "title: Missing citation\n"
         "description: Bad fixture.\n"
@@ -323,12 +325,12 @@ def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> N
         "# Missing citation\n",
         encoding="utf-8",
     )
-    mark_file_verdict(vault, "knowledge/digests/missing-citation.md", "digest", "checked")
+    mark_file_verdict(vault, "knowledge/works/missing-citation.md", "work", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "knowledge/digests/missing-citation.md"
+    assert result["findings"][0]["target_id"] == "knowledge/works/missing-citation.md"
 
 
 def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> None:

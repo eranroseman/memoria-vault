@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import (
@@ -99,12 +100,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         run_id="compile-alpha",
     )
 
-    digest = vault / "knowledge/digests/source-alpha.md"
+    digest = vault / "knowledge/works/source-alpha.md"
     digest_fm = read_frontmatter(digest)
-    assert digest_fm["type"] == "digest"
-    assert digest_fm["check_status"] == "checked"
-    assert digest_fm["source_id"] == "catalog/sources/source-alpha"
-    assert digest_fm["evidence_set"] == ["catalog/sources/source-alpha"]
+    assert digest_fm["type"] == "work"
+    assert "check_status" not in digest_fm
+    assert digest_fm["work_id"] == "source-alpha"
+    assert state.concept_check_status(vault, "knowledge/works/source-alpha.md") == "checked"
     assert result["derived"]["inputs"][0]["id"] == "catalog/sources/source-alpha"
     assert result["hub_paths"] == [
         "knowledge/hubs/methods.md",
@@ -117,15 +118,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
 
     staged_hub = vault / ".memoria/staging/knowledge/hubs/framing.md"
     assert staged_hub.is_file()
-    assert read_frontmatter(staged_hub)["check_status"] == "unchecked"
     assert read_frontmatter(staged_hub)["tags"] == ["suggestion"]
     promoted_hub = vault / "knowledge/hubs/methods.md"
     promoted_hub_fm = read_frontmatter(promoted_hub)
-    assert promoted_hub_fm["check_status"] == "checked"
-    assert promoted_hub_fm["members"] == [
-        "knowledge/digests/source-alpha.md",
-        "catalog/sources/source-alpha",
-    ]
+    assert "check_status" not in promoted_hub_fm
+    assert promoted_hub_fm["tag"] == "methods"
+    assert state.concept_check_status(vault, "knowledge/hubs/methods.md") == "checked"
 
     events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
     assert [event["event"] for event in events] == [
@@ -147,12 +145,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert events[1]["runner"] == "pydantic-ai"
     assert events[1]["model"] == "deterministic-fixture"
     assert events[-1]["suggestions"] == result["hub_suggestions"]
-    assert events[-1]["outputs"] == ["knowledge/digests/source-alpha.md", *result["hub_paths"]]
+    assert events[-1]["outputs"] == ["knowledge/works/source-alpha.md", *result["hub_paths"]]
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         "journal/op-machine.jsonl",
-        "knowledge/digests/source-alpha.md",
+        "knowledge/works/source-alpha.md",
         "knowledge/hubs/gaps.md",
         "knowledge/hubs/impact.md",
         "knowledge/hubs/methods.md",
@@ -219,7 +217,7 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
 
     assert f"text_status is {text_status}" in str(exc.value)
     assert "attention_path is inbox/flag-digest-full-text-source-alpha.md" in str(exc.value)
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert not (vault / "knowledge/works/source-alpha.md").exists()
     attention = vault / "inbox/flag-digest-full-text-source-alpha.md"
     attention_fm = read_frontmatter(attention)
     assert attention_fm["projection"] == "attention"
@@ -261,7 +259,7 @@ def test_compile_source_digest_rejects_unsupported_required_promotion_check(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert not (vault / "knowledge/works/source-alpha.md").exists()
 
 
 def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
@@ -439,7 +437,7 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert not (vault / "knowledge/works/source-alpha.md").exists()
 
 
 def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
@@ -500,4 +498,4 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/digests/source-alpha.md").exists()
+    assert not (vault / "knowledge/works/source-alpha.md").exists()

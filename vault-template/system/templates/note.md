@@ -1,13 +1,10 @@
 ---
 title: "{{VALUE:note title}}"
 type: note
-id: "notes/{{VALUE:note slug}}"
-check_status: unchecked
-standing: current
+id: "{{VALUE:ulid}}"
 description: "{{VALUE:note description}}"
-links: {}
-evidence_set: []
 tags: []
+links: {}
 ---
 # {{VALUE:note title}}
 

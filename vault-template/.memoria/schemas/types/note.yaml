@@ -1,44 +1,23 @@
 type: note
 category: knowledge
 gated: false
-initial_check_status: unchecked
 enums:
-  check_status:
-  - unchecked
-  - checked
-  - quarantined
-  note_status:
-  - candidate
-  - accepted
-  - rejected
-  - superseded
-  - needs_review
-  standing:
-  - current
-  - superseded
-  - retracted
-  - archived
+  mode: [claim, question]
+  question_status: [open, resolved]
 required:
   type: literal:note
-  id: str
-  check_status: enum:check_status
-  standing: enum:standing
-  links: map
+  id: ulid
   title: str
-optional:
-  description: str
-  resource: str
-  quote: str
-  text_sha256: str
-  source_id: str
-  annotation_ref: map
-  claim_text: str
-  qualifier: str
-  tense: str
-  temporal_scope_start: date
-  temporal_scope_end: date
-  status: enum:note_status
-  evidence_set: list
-  citations: list
-  extraction_confidence: str
   tags: list
+  links: map
+optional:
+  aliases: list
+  archived: bool
+  description: str
+  mode: enum:mode
+  question_status: enum:question_status
+  temporal_scope: map
+  tense: str
+  qualifier: str
+  anchors: list
+  x: map

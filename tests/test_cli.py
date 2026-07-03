@@ -495,7 +495,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["digest_path"] == "knowledge/digests/doi-10.1000_alpha.md"
+    assert output["result"]["digest_path"] == "knowledge/works/doi-10.1000_alpha.md"
     assert output["result"]["interview_count"] == 1
     digest = workspace / output["result"]["digest_path"]
     assert digest.is_file()
@@ -748,19 +748,20 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
+        "type: work\n"
         "title: Alpha digest\n"
+        "work_id: source-alpha\n"
         "tags: [sleep]\n"
+        "links: {}\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
     state.upsert_catalog_record(
         workspace,
         source_id="db-alpha",
@@ -897,20 +898,22 @@ def test_cli_note_candidate_accept_and_link_flow(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
+        "type: work\n"
         "title: Alpha digest\n"
         "description: Alpha\n"
+        "work_id: source-alpha\n"
+        "tags: []\n"
+        "links: {}\n"
         "source_id: catalog/sources/source-alpha\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
 
     rc = main(
         [
@@ -919,7 +922,7 @@ def test_cli_note_candidate_accept_and_link_flow(
             "--workspace",
             str(workspace),
             "--digest-path",
-            "knowledge/digests/source-alpha.md",
+            "knowledge/works/source-alpha.md",
             "--candidate-json",
             json.dumps(
                 {
@@ -946,7 +949,8 @@ def test_cli_note_candidate_accept_and_link_flow(
     assert rc == 0
     note_path, rejected_note_path = proposed["result"]["note_paths"]
     note_fm = read_frontmatter(workspace / note_path)
-    assert note_fm["check_status"] == "checked"
+    assert "check_status" not in note_fm
+    assert state.concept_check_status(workspace, note_path) == "checked"
     assert note_fm["status"] == "candidate"
 
     assert (
@@ -993,7 +997,7 @@ def test_cli_note_candidate_accept_and_link_flow(
 
     target = workspace / "knowledge/notes/target.md"
     target.write_text(
-        "---\ntype: note\ncheck_status: checked\ntitle: Target\n---\nTarget body.\n",
+        "---\ntype: note\ntitle: Target\ntags: []\nlinks: {}\n---\nTarget body.\n",
         encoding="utf-8",
     )
     mark_file_status(workspace, "knowledge/notes/target.md", "note")
@@ -1030,20 +1034,22 @@ def test_cli_note_propose_can_derive_candidate_from_work_digest(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
+        "type: work\n"
         "title: Alpha source\n"
         "description: Alpha\n"
+        "work_id: source-alpha\n"
+        "tags: []\n"
+        "links: {}\n"
         "source_id: catalog/sources/source-alpha\n"
         "---\n"
         "## Synthesis\n\nFraming changes which outcomes matter.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
 
     rc = main(
         [
@@ -1064,7 +1070,8 @@ def test_cli_note_propose_can_derive_candidate_from_work_digest(
     [note_path] = output["result"]["note_paths"]
     note = workspace / note_path
     note_fm = read_frontmatter(note)
-    assert note_fm["check_status"] == "checked"
+    assert "check_status" not in note_fm
+    assert state.concept_check_status(workspace, note_path) == "checked"
     assert note_fm["status"] == "candidate"
     assert note_fm["source_id"] == "catalog/sources/source-alpha"
     assert "Framing changes which outcomes matter." in note.read_text(encoding="utf-8")
@@ -1076,19 +1083,13 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
-        "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
-        "title: Alpha digest\n"
-        "tags: [sleep]\n"
-        "---\n"
-        "Body.\n",
+        "---\ntype: work\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
 
     assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
@@ -1156,19 +1157,13 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
-        "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
-        "title: Alpha digest\n"
-        "tags: [sleep]\n"
-        "---\n"
-        "Body.\n",
+        "---\ntype: work\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1238,7 +1233,7 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    note = "---\ntype: note\ncheck_status: unchecked\ntitle: PI scan note\n---\nOriginal.\n"
+    note = "---\ntype: note\ntitle: PI scan note\ntags: []\nlinks: {}\n---\nOriginal.\n"
     enqueue_trusted_write(
         workspace,
         "knowledge/notes/pi-scan.md",
@@ -1248,7 +1243,8 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
     main(["workspace", "run", "--workspace", str(workspace), "--limit", "1", "--json"])
     capsys.readouterr()
     path = workspace / "knowledge/notes/pi-scan.md"
-    assert read_frontmatter(path)["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(path)
+    assert state.concept_check_status(workspace, "knowledge/notes/pi-scan.md") == "checked"
 
     path.write_text(path.read_text(encoding="utf-8") + "\nPI edit.\n", encoding="utf-8")
 
@@ -1271,7 +1267,8 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
     assert scanned["needs_check_count"] == 1
     assert scanned["needs_check_paths"] == ["knowledge/notes/pi-scan.md"]
     assert scanned["result"]["observed_count"] == 1
-    assert read_frontmatter(path)["check_status"] == "unchecked"
+    assert "check_status" not in read_frontmatter(path)
+    assert state.concept_check_status(workspace, "knowledge/notes/pi-scan.md") == "unchecked"
     with state.connect(workspace) as conn:
         row = conn.execute(
             "SELECT check_status FROM outputs WHERE output_id = ?",
@@ -1315,7 +1312,8 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
 
     assert promoted["ok"] is True
     assert promoted["result"]["check"]["status"] == "passed"
-    assert read_frontmatter(path)["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(path)
+    assert state.concept_check_status(workspace, "knowledge/notes/pi-scan.md") == "checked"
     with state.connect(workspace) as conn:
         consumable = conn.execute(
             "SELECT output_id FROM consumable_outputs WHERE output_id = ?",
@@ -1330,19 +1328,13 @@ def test_cli_request_list_show_and_resume_pending_request(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "knowledge/digests/source-alpha.md"
+    digest = workspace / "knowledge/works/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
-        "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
-        "title: Alpha digest\n"
-        "tags: [sleep]\n"
-        "---\n"
-        "Body.\n",
+        "---\ntype: work\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/source-alpha.md", "digest")
+    mark_file_status(workspace, "knowledge/works/source-alpha.md", "work")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1395,7 +1387,7 @@ def test_cli_request_cancel_preserves_trusted_write_envelope_args(
     enqueue_trusted_write(
         workspace,
         "knowledge/notes/queued.md",
-        "---\ntype: note\ncheck_status: unchecked\ntitle: Queued\n---\nBody.\n",
+        "---\ntype: note\ntitle: Queued\ntags: []\nlinks: {}\n---\nBody.\n",
         idempotency_key="trusted-request",
     )
 
@@ -1659,23 +1651,25 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
         == 0
     )
     captured = json.loads(capsys.readouterr().out)
-    assert read_frontmatter(workspace / captured["note_path"])["check_status"] == "unchecked"
+    assert "check_status" not in read_frontmatter(workspace / captured["note_path"])
+    assert state.concept_check_status(workspace, captured["note_path"]) == "unchecked"
 
-    digest = workspace / "knowledge/digests/hub-seed.md"
+    digest = workspace / "knowledge/works/hub-seed.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
+        "type: work\n"
         "title: Hub seed\n"
         "description: Hub seed\n"
+        "work_id: hub-seed\n"
         "source_id: catalog/sources/ZOT1\n"
         "tags: [personal-informatics]\n"
+        "links: {}\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/digests/hub-seed.md", "digest")
+    mark_file_status(workspace, "knowledge/works/hub-seed.md", "work")
     assert (
         main(
             [
@@ -1848,7 +1842,7 @@ def test_cli_wires_alpha14_maintenance_and_pi_commands(
     assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
     scan = json.loads(capsys.readouterr().out)
     assert scan["result"]["observed_count"] == 1
-    assert scan["result"]["paths"] == ["knowledge/digests/hub-seed.md"]
+    assert scan["result"]["paths"] == ["knowledge/works/hub-seed.md"]
 
     assert (
         main(
@@ -1991,7 +1985,8 @@ def test_cli_workspace_recover_fixture_replays_pending_materialization(
     target = "knowledge/notes/crash-before-materialization.md"
     assert recovered["fixture"] == {"name": "crash-before-materialization", "path": target}
     assert recovered["restored"] == [target]
-    assert read_frontmatter(workspace / target)["check_status"] == "checked"
+    assert "check_status" not in read_frontmatter(workspace / target)
+    assert state.concept_check_status(workspace, target) == "checked"
     with state.connect(workspace) as conn:
         consumable = conn.execute(
             "SELECT output_id FROM consumable_outputs WHERE output_id = ?", (target,)
@@ -2128,7 +2123,7 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
     assert output["result"]["status"] == "failed"
     assert "checked digest requires full-text source content" in output["result"]["error"]
     assert "attention_path is inbox/flag-digest-full-text-" in output["result"]["error"]
-    assert not (workspace / f"knowledge/digests/{source_id}.md").exists()
+    assert not (workspace / f"knowledge/works/{source_id}.md").exists()
     attention = workspace / f"inbox/flag-digest-full-text-{source_id}.md"
     assert read_frontmatter(attention)["target"] == f"catalog/sources/{source_id}"
 

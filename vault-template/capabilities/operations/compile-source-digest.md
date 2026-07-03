@@ -10,7 +10,7 @@ allowed_tools:
 allowed_paths:
 - catalog/sources/
 - .memoria/blobs/source-content/
-- knowledge/digests/
+- knowledge/works/
 - knowledge/hubs/
 allowed_network: []
 runner: pydantic-ai

@@ -59,7 +59,8 @@ def test_palette_actions_have_standalone_cli_parity(
         == 0
     )
     note = json.loads(capsys.readouterr().out)
-    assert read_frontmatter(workspace / note["note_path"])["check_status"] == "unchecked"
+    assert "check_status" not in read_frontmatter(workspace / note["note_path"])
+    assert state.concept_check_status(workspace, note["note_path"]) == "unchecked"
 
     assert main(["attention", "list", "--workspace", str(workspace), "--json"]) == 0
     attention = json.loads(capsys.readouterr().out)
@@ -255,8 +256,9 @@ def _write_project_argument_fixture(workspace: Path) -> None:
     project.write_text(
         "---\n"
         "type: project\n"
-        "check_status: checked\n"
         "title: Alpha project\n"
+        "tags: []\n"
+        "links: {}\n"
         "thesis: knowledge/notes/thesis.md\n"
         "---\n"
         "Body.\n",
@@ -267,15 +269,15 @@ def _write_project_argument_fixture(workspace: Path) -> None:
     support = workspace / "knowledge/notes/support.md"
     thesis.parent.mkdir(parents=True, exist_ok=True)
     thesis.write_text(
-        "---\ntype: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n---\nThesis.\n",
+        "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n---\nThesis.\n",
         encoding="utf-8",
     )
     mark_file_status(workspace, "knowledge/notes/thesis.md", "note")
     support.write_text(
         "---\n"
         "type: note\n"
-        "check_status: checked\n"
         "title: Support\n"
+        "tags: []\n"
         "status: accepted\n"
         "links:\n"
         "  supports:\n"

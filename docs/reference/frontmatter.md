@@ -69,57 +69,23 @@ Generated from `vault-template/.memoria/schemas/types`.
 
 | Check status subset | Types |
 | --- | --- |
-| `unchecked` · `checked` · `quarantined` | `organization` · `person` · `source` · `venue` · `digest` · `hub` · `note` · `project` · `adapter` · `operation` · `skill` · `workflow` |
+| - | `hub` · `note` · `project` · `work` |
 
 ## Enum values
 
 | Type | Enum | Values |
 | --- | --- | --- |
-| `organization` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `person` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `source` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `source` | `item_type` | `article` · `book` · `webpage` · `dataset` · `repository` · `software` · `audio` · `video` · `note` · `report` |
-| `source` | `lifecycle` | `current` · `retracted` · `archived` |
-| `source` | `metadata_status` | `verified` · `partial` · `unverified` · `not-indexed` |
-| `source` | `text_status` | `full-text` · `abstract-only` · `metadata-only` |
-| `venue` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `digest` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `digest` | `confidence` | `high` · `medium` · `low` |
-| `digest` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `hub` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `hub` | `confidence` | `high` · `medium` · `low` |
-| `hub` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `note` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `note` | `note_status` | `candidate` · `accepted` · `rejected` · `superseded` · `needs_review` |
-| `note` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `project` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `project` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `adapter` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `adapter` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `operation` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `operation` | `risk_class` | `low` · `medium` · `high` |
-| `operation` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `skill` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `skill` | `standing` | `current` · `superseded` · `retracted` · `archived` |
-| `workflow` | `check_status` | `unchecked` · `checked` · `quarantined` |
-| `workflow` | `standing` | `current` · `superseded` · `retracted` · `archived` |
+| `note` | `mode` | `claim` · `question` |
+| `note` | `question_status` | `open` · `resolved` |
 
 ## Per-type fields
 
 | Type | Required | Required-any | Optional |
 | --- | --- | --- | --- |
-| `organization` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `person` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `source` | `type` · `check_status` · `title` · `description` · `source_id` | - | `resource` · `lifecycle` · `citekey` · `item_type` · `identifiers` · `csl_json` · `raw_copy_path` · `content_path` · `raw_text_sha256` · `normalized_text_sha256` · `metadata_status` · `text_status` · `links` · `tags` |
-| `venue` | `type` · `check_status` · `title` · `description` · `canonical_name` | - | `resource` · `external_ids` · `metadata` · `links` · `tags` |
-| `digest` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` · `source_id` | - | `resource` · `confidence` · `contested` · `contradictions` · `massw` · `evidence_set` · `citations` · `tags` |
-| `hub` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `members` · `project` · `confidence` · `contested` · `citations` · `tags` |
-| `note` | `type` · `id` · `check_status` · `standing` · `links` · `title` | - | `description` · `resource` · `quote` · `text_sha256` · `source_id` · `annotation_ref` · `claim_text` · `qualifier` · `tense` · `temporal_scope_start` · `temporal_scope_end` · `status` · `evidence_set` · `citations` · `extraction_confidence` · `tags` |
-| `project` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `thesis` · `scope` · `tags` |
-| `adapter` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `endpoint` · `allowed_tools` · `tags` |
-| `operation` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_id` · `allowed_tools` · `allowed_paths` · `allowed_network` · `runner` · `model` · `prompt_version` · `io_schema` · `risk_class` · `required_checks` · `tags` |
-| `skill` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `trust` · `allowed_tools` · `tags` |
-| `workflow` | `type` · `id` · `check_status` · `standing` · `links` · `title` · `description` | - | `resource` · `operation_ids` · `required_checks` · `tags` |
+| `hub` | `type` · `id` · `title` · `tags` · `links` · `tag` | - | `aliases` · `archived` · `description` · `x` |
+| `note` | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `mode` · `question_status` · `temporal_scope` · `tense` · `qualifier` · `anchors` · `x` |
+| `project` | `type` · `id` · `title` · `tags` · `links` | - | `aliases` · `archived` · `description` · `thesis` · `outcome_frame` · `paper_plan` · `x` |
+| `work` | `type` · `id` · `title` · `tags` · `links` · `work_id` | - | `aliases` · `archived` · `description` · `x` |
 
 <!-- REFERENCE:END -->
 
