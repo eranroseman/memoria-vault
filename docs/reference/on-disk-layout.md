@@ -10,7 +10,7 @@ Where every file lives.
 
 - The repo ships the vault source under **`vault-template/`**.
 - The installer scaffolds a runtime vault, then populates it from `vault-template/` ([ADR-55](../adr/55-src-scaffold-populate-golden-copy.md)).
-- Repo and runtime vault share the same internal shape; runtime-only artifacts are listed below.
+- Product operation manifests ship inside the installed Python package, not the runtime vault.
 - The legal root categories come from [ADR-119](../adr/119-schema-driven-document-creation.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
@@ -35,10 +35,6 @@ Where every file lives.
 │   ├── index.md              generated knowledge index
 │   ├── digests/  notes/  hubs/  projects/
 │   └── views/knowledge.base
-├── capabilities/            operation, skill, adapter, and workflow Concepts
-│   ├── index.md              generated capabilities index
-│   ├── capabilities.base
-│   ├── operations/  skills/  adapters/  workflows/
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
@@ -50,10 +46,9 @@ Where every file lives.
     └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
 ```
 
-The three bundle roots (`catalog`, `knowledge`, `capabilities`) are declared in
-`folders.yaml`, along with the transient `inbox/` projection root, machine staging
-roots under `.memoria/staging/`, and the quarantine root `.memoria/quarantine`.
-The Linter flags stray root folders.
+The workspace bundle roots are declared in `folders.yaml`, along with the
+transient `inbox/` projection root, machine staging roots under `.memoria/staging/`,
+and the quarantine root `.memoria/quarantine`. The Linter flags stray root folders.
 What the Concept homes mean is in [Document types](document-types.md).
 
 ---
@@ -82,8 +77,8 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 
 Alpha.14 deliberately does **not** ship hidden operation-package homes, installed
 profile packages, lane override packages, or profile tool registries. Operation
-manifests live under `capabilities/operations/`; operation code lives in the
-installed `memoria_vault` package.
+manifests live under `memoria_vault.product.capabilities.operations`; operation
+code lives in the installed `memoria_vault` package.
 
 The policy gate's stable implementation lives in the installed
 `memoria_vault.runtime.policy` package. Optional adapters may ship their own
@@ -118,10 +113,9 @@ source-of-truth layout.
 
 ### The Bases views
 
-The `.base` files sit alongside their data: `catalog/catalog.base`,
-`knowledge/views/knowledge.base`, and `capabilities/capabilities.base`
-([ADR-116](../adr/116-obsidian-surface-architecture.md)). What each view shows is in
-[Dashboards](dashboards.md#the-bases-views).
+The `.base` files sit alongside their data: `catalog/catalog.base` and
+`knowledge/views/knowledge.base` ([ADR-116](../adr/116-obsidian-surface-architecture.md)).
+What each view shows is in [Dashboards](dashboards.md#the-bases-views).
 
 ---
 

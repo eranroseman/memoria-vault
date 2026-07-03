@@ -49,13 +49,9 @@ TYPE_HOME = {
     "note": "knowledge/notes/",
     "hub": "knowledge/hubs/",
     "project": "knowledge/projects/",
-    "operation": "capabilities/operations/",
-    "skill": "capabilities/skills/",
-    "mcp": "capabilities/mcp/",
-    "workflow": "capabilities/workflows/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"catalog", "knowledge", "capabilities", "spaces", "system", "inbox"}
+KNOWN_TOP_DIRS = {"catalog", "knowledge", "spaces", "system", "inbox"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
@@ -66,7 +62,7 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 def is_untyped_infra(rp: str) -> bool:
     """Infrastructure, navigation, and attention projections are not Concepts."""
-    return rp.startswith(("catalog/", "spaces/", "system/", "inbox/", "capabilities/"))
+    return rp.startswith(("catalog/", "spaces/", "system/", "inbox/"))
 
 
 LEFTOVER_PATTERNS = [
@@ -122,7 +118,7 @@ DATAVIEW_KEYWORDS = {
 }
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
-NOTE_FOLDERS = ("catalog", "knowledge", "capabilities")
+NOTE_FOLDERS = ("catalog", "knowledge")
 
 # --------------------------------------------------------------------------- #
 # Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the

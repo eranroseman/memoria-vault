@@ -10,7 +10,6 @@ allowed_paths:
 - index.md
 - catalog/
 - knowledge/
-- capabilities/
 - references.bib
 - journal/
 allowed_network: []
@@ -33,5 +32,5 @@ links: {}
 
 # Operation
 
-Render `index.md`, bundle indexes, `knowledge/_views/index.md`, `references.bib`,
-and `capabilities/_generated/capability-index.json`.
+Render `index.md`, bundle indexes, `knowledge/_views/index.md`, and
+`references.bib`.

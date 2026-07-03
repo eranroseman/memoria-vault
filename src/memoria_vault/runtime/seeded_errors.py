@@ -79,7 +79,6 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
     vault = Path(vault)
     template_root = Path(template_root)
     _copy_once(template_root / ".memoria/schemas", vault / ".memoria/schemas")
-    _copy_once(template_root / "capabilities", vault / "capabilities")
     _ensure_git(vault)
 
     source = capture_source(

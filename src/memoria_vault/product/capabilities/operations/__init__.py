@@ -1,0 +1,1 @@
+"""Packaged operation capability manifests."""

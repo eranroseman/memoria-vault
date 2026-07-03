@@ -44,7 +44,7 @@ Generated from `vault-template/.memoria/schemas/folders.yaml`.
 | Quarantine root | `.memoria/quarantine` |
 | Gated prefixes | - |
 | Transient prefixes | `inbox/` |
-| Skeleton entries | `30` |
+| Skeleton entries | `25` |
 
 ## Type homes
 

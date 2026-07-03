@@ -11,8 +11,9 @@ Alpha.14 does not ship installed Hermes profiles. There is no supported profile
 configuration workflow, profile skill directory, lane override package, or
 profile-only redeploy command.
 
-To change what the system can do, edit the checked capability manifests under
-`vault-template/capabilities/operations/` and the corresponding CLI/engine code.
+To change what the system can do, edit the checked packaged operation manifests
+under `src/memoria_vault/product/capabilities/operations/` and the corresponding
+CLI/engine code.
 Then run the capability and alpha.14 negative gates:
 
 ```bash

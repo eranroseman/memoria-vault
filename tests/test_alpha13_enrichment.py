@@ -21,11 +21,10 @@ ROOT = Path(__file__).resolve().parent.parent
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
     shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "alpha13@example.invalid")
     git(tmp_path, "config", "user.name", "Alpha13")
-    git(tmp_path, "add", ".memoria/schemas", ".memoria/config", "capabilities")
+    git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
     git(tmp_path, "commit", "-m", "seed alpha13 workspace")
     return tmp_path
 
@@ -41,6 +40,24 @@ def git(vault: Path, *args: str) -> str:
     if proc.returncode:
         raise AssertionError(proc.stderr or proc.stdout)
     return proc.stdout.strip()
+
+
+def allow_example_full_text(monkeypatch) -> None:
+    original = load_operation_policy
+    policy = {
+        **original(Path(), "enrich-source"),
+        "allowed_network": [
+            *original(Path(), "enrich-source")["allowed_network"],
+            "https://example.test/",
+        ],
+    }
+
+    def load_policy(vault: Path, operation_id: str) -> dict:
+        if operation_id == "enrich-source":
+            return policy
+        return original(vault, operation_id)
+
+    monkeypatch.setattr("memoria_vault.runtime.operations.load_operation_policy", load_policy)
 
 
 def doi_payload() -> dict:
@@ -443,14 +460,7 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
 
 def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/enrich-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- https://api.unpaywall.org/",
-            "- https://api.unpaywall.org/\n- https://example.test/",
-        ),
-        encoding="utf-8",
-    )
+    allow_example_full_text(monkeypatch)
     payload = {
         **doi_payload(),
         "content_text": "Only the abstract.",
@@ -499,14 +509,7 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
 
 def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/enrich-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- https://api.unpaywall.org/",
-            "- https://api.unpaywall.org/\n- https://example.test/",
-        ),
-        encoding="utf-8",
-    )
+    allow_example_full_text(monkeypatch)
     payload = {
         **doi_payload(),
         "content_text": "Only the abstract.",
@@ -561,14 +564,7 @@ def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypat
 
 def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/enrich-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- https://api.unpaywall.org/",
-            "- https://api.unpaywall.org/\n- https://example.test/",
-        ),
-        encoding="utf-8",
-    )
+    allow_example_full_text(monkeypatch)
     payload = {
         **doi_payload(),
         "content_text": "Only the abstract.",
@@ -623,14 +619,7 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
 
 def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/enrich-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- https://api.unpaywall.org/",
-            "- https://api.unpaywall.org/\n- https://example.test/",
-        ),
-        encoding="utf-8",
-    )
+    allow_example_full_text(monkeypatch)
     payload = {
         **doi_payload(),
         "content_text": "Only the abstract.",
@@ -695,14 +684,7 @@ def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, mon
 
 def test_enrich_source_fetches_crossref_full_text_link(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/enrich-source.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "- https://api.unpaywall.org/",
-            "- https://api.unpaywall.org/\n- https://example.test/",
-        ),
-        encoding="utf-8",
-    )
+    allow_example_full_text(monkeypatch)
     payload = {
         **doi_payload(),
         "content_text": "Only the abstract.",

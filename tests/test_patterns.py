@@ -11,7 +11,9 @@ from memoria_vault.runtime.subsystems.lib import schema
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
 PATTERNS = SRC / "system" / "patterns"
-OPERATIONS = SRC / "capabilities" / "operations"
+OPERATIONS = (
+    Path(__file__).resolve().parent.parent / "src/memoria_vault/product/capabilities/operations"
+)
 
 
 def _frontmatter(path: Path) -> dict:
@@ -29,6 +31,22 @@ def _prompt_operation_files() -> list[Path]:
 
 def _targeted_operation_files() -> list[Path]:
     return [p for p in _operation_files() if _frontmatter(p).get("output_target")]
+
+
+def _patch_operation_manifest(monkeypatch, operation_id: str, text: str) -> None:
+    item = {
+        "path": f"product/capabilities/operations/{operation_id}.md",
+        "text": text,
+        "frontmatter": yaml.safe_load(re.match(r"^---\n(.*?)\n---", text, re.S).group(1)),
+    }
+
+    def read_manifest(capability_type: str, capability_id: str) -> dict:
+        if capability_type == "operation" and capability_id == operation_id:
+            return item
+        raise FileNotFoundError(capability_id)
+
+    monkeypatch.setattr(patterns, "iter_capability_manifests", lambda _type: [item])
+    monkeypatch.setattr(patterns, "read_capability_manifest", read_manifest)
 
 
 def test_shipped_operations_validate_against_policy_loader():
@@ -64,17 +82,16 @@ def test_runner_hides_local_worker_operations_from_patterns():
     assert "render-project-argument-canvas" not in result["available"]
 
 
-def test_runner_composes_and_logs(tmp_path):
-    pd = tmp_path / "capabilities/operations"
-    pd.mkdir(parents=True)
+def test_runner_composes_and_logs(tmp_path, monkeypatch):
     (tmp_path / "system/patterns").mkdir(parents=True)
     (tmp_path / "system/patterns/_preamble.md").write_text("VOICE", encoding="utf-8")
-    (pd / "x.md").write_text(
+    _patch_operation_manifest(
+        monkeypatch,
+        "x",
         "---\ntitle: X\ntype: operation\ncheck_status: checked\n"
         "description: Test operation.\nposture: librarian\n"
         "mode: library\naction: a\ninput: note\noutput_target: 'knowledge/projects/'\n---\n"
         "P {{input}} Q\n",
-        encoding="utf-8",
     )
     r = patterns.run_pattern(tmp_path, "x", "BODY", "ref.md")
     assert "VOICE" in r["prompt"] and "P BODY Q" in r["prompt"]
@@ -83,31 +100,29 @@ def test_runner_composes_and_logs(tmp_path):
     assert '"pattern": "x"' in log
 
 
-def test_runner_degrades_gated_targets_to_dry_run(tmp_path):
-    pd = tmp_path / "capabilities/operations"
-    pd.mkdir(parents=True)
-    (pd / "bad.md").write_text(
+def test_runner_degrades_gated_targets_to_dry_run(tmp_path, monkeypatch):
+    _patch_operation_manifest(
+        monkeypatch,
+        "bad",
         "---\ntitle: B\ntype: operation\ncheck_status: checked\n"
         "description: Test operation.\nposture: librarian\n"
         "mode: library\naction: a\ninput: note\noutput_target: 'knowledge/notes/'\n---\n"
         "Z {{input}}\n",
-        encoding="utf-8",
     )
     r = patterns.run_pattern(tmp_path, "bad", "x")
     assert r["dry_run"] is True and "note" in r
 
 
-def test_runner_survives_provenance_write_failure(tmp_path, capsys):
+def test_runner_survives_provenance_write_failure(tmp_path, capsys, monkeypatch):
     """An unwritable provenance log degrades loudly: the run (the prompt) is still
     returned, flagged provenance_logged: false, with a stderr warning."""
-    pd = tmp_path / "capabilities/operations"
-    pd.mkdir(parents=True)
-    (pd / "x.md").write_text(
+    _patch_operation_manifest(
+        monkeypatch,
+        "x",
         "---\ntitle: X\ntype: operation\ncheck_status: checked\n"
         "description: Test operation.\nposture: librarian\n"
         "mode: library\naction: a\ninput: note\noutput_target: 'knowledge/projects/'\n---\n"
         "P {{input}} Q\n",
-        encoding="utf-8",
     )
     # system/logs exists as a FILE -> the jsonl append cannot create the dir
     (tmp_path / "system").mkdir()
@@ -118,13 +133,12 @@ def test_runner_survives_provenance_write_failure(tmp_path, capsys):
     assert "provenance" in capsys.readouterr().err
 
 
-def test_runner_refuses_non_current_and_unknown(tmp_path):
-    pd = tmp_path / "capabilities/operations"
-    pd.mkdir(parents=True)
-    (pd / "draft.md").write_text(
+def test_runner_refuses_non_current_and_unknown(tmp_path, monkeypatch):
+    _patch_operation_manifest(
+        monkeypatch,
+        "draft",
         "---\ntitle: Draft\ntype: operation\ncheck_status: unchecked\n"
         "description: Draft operation.\n---\nP {{input}} Q\n",
-        encoding="utf-8",
     )
     assert patterns.run_pattern(tmp_path, "draft", "x")["error"] == "operation-not-checked"
     assert patterns.run_pattern(tmp_path, "ghost", "x")["error"] == "unknown-pattern"

@@ -15,7 +15,6 @@ SKELETON_DIRS=(
   .memoria/blobs/source-content
   .memoria/staging/catalog
   .memoria/staging/knowledge
-  .memoria/staging/capabilities
   journal
   catalog
   catalog/sources
@@ -26,11 +25,6 @@ SKELETON_DIRS=(
   knowledge/hubs
   knowledge/projects
   knowledge/views
-  capabilities
-  capabilities/adapters
-  capabilities/operations
-  capabilities/skills
-  capabilities/workflows
   system/exports
   system/exports/assets
   system/logs

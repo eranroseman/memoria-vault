@@ -5,4 +5,3 @@ Generated workspace projection. Edit Concept files, not this file.
 
 - [catalog](catalog/index.md)
 - [knowledge](knowledge/index.md)
-- [capabilities](capabilities/index.md)

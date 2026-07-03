@@ -1,0 +1,1 @@
+"""Packaged skill capability manifests."""

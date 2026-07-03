@@ -24,7 +24,6 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 ├── steering.md     ← PI-authored program memory
 ├── catalog/        ← sources and entities
 ├── knowledge/      ← digests, notes, hubs, projects
-├── capabilities/   ← operations, skills, adapters, workflows
 ├── system/         ← visible infrastructure: templates, dashboards, eval, logs
 └── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
 ```

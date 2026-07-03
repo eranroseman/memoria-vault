@@ -100,8 +100,7 @@ for rel in \
   system/dashboards \
   system/eval \
   system/patterns \
-  system/templates \
-  capabilities
+  system/templates
 do
   sync_dir "$rel"
 done
@@ -120,7 +119,6 @@ for rel in \
   catalog/index.md \
   knowledge/index.md \
   knowledge/_views/index.md \
-  capabilities/index.md \
   references.bib \
   system/vocabulary.md
 do

@@ -26,6 +26,7 @@ include = ["memoria_vault*"]
 
 [tool.setuptools.package-data]
 memoria_vault = ["runtime/*.sql"]
+"memoria_vault.product.capabilities.operations" = ["*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

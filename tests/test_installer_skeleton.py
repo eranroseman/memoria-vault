@@ -54,11 +54,6 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "knowledge/notes",
         "knowledge/hubs",
         "knowledge/projects",
-        "capabilities",
-        "capabilities/adapters",
-        "capabilities/operations",
-        "capabilities/skills",
-        "capabilities/workflows",
     }
     skeleton = set(schema.load_folders()["skeleton"])
     installed = _skeleton_dirs()
@@ -72,7 +67,6 @@ def test_alpha11_fresh_package_contract_is_shipped():
         "catalog/index.md",
         "knowledge/index.md",
         "knowledge/_views/index.md",
-        "capabilities/index.md",
         "references.bib",
         "steering.md",
         ".memoria/config/providers.yaml",

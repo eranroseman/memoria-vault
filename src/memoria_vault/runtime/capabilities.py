@@ -1,9 +1,11 @@
-"""Generated alpha.14 capability index projection."""
+"""Packaged alpha.15 capability catalog helpers."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +13,7 @@ from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-from memoria_vault.runtime.vaultio import parse_frontmatter, read_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
 CAPABILITY_TYPES = {"operation", "skill", "adapter", "workflow"}
 CAPABILITY_HOMES = {
@@ -20,16 +22,19 @@ CAPABILITY_HOMES = {
     "skill": "skills",
     "workflow": "workflows",
 }
-CAPABILITY_INDEX_PATH = "capabilities/_generated/capability-index.json"
+CAPABILITY_PACKAGES = {
+    kind: f"memoria_vault.product.capabilities.{home}" for kind, home in CAPABILITY_HOMES.items()
+}
+CAPABILITY_INDEX_PATH = ".memoria/index/capability-index.json"
+PRODUCT_CAPABILITY_PREFIX = "product/capabilities"
 
 
-def render_capability_index(vault: Path) -> str:
-    """Render capability Concepts as the generated capability index projection."""
-    vault = Path(vault)
+def render_capability_index(vault: Path | None = None) -> str:
+    """Render packaged capability manifests as a product catalog."""
     payload = {
         "schema_version": 1,
         "generated_by": "memoria_vault.runtime.capabilities.render_capability_index",
-        "capabilities": [_catalog_row(vault, path) for path in _capability_paths(vault)],
+        "capabilities": [_catalog_row(item) for item in _capability_resources()],
     }
     return json.dumps(payload, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
 
@@ -41,7 +46,7 @@ def write_capability_index(
     commit: bool = False,
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Write the generated capability index projection."""
+    """Write an ignored local cache of the product capability catalog."""
     vault = Path(vault)
     output = vault / normalize_path(output_path)
     text = render_capability_index(vault)
@@ -67,7 +72,7 @@ def write_capability_index(
         commit_id = commit_writer_changes(
             vault,
             "regenerate capability-index.json",
-            [output_path],
+            [],
             machine=machine,
         )
     return {
@@ -83,16 +88,44 @@ def check_capability_index(vault: Path, *, output_path: str = CAPABILITY_INDEX_P
     return path.is_file() and path.read_text(encoding="utf-8") == render_capability_index(vault)
 
 
-def capability_manifest_path(vault: Path, capability_type: str, capability_id: str) -> Path:
+def read_capability_manifest(capability_type: str, capability_id: str) -> dict[str, Any]:
+    """Return one packaged capability manifest with text, frontmatter, and display path."""
+    item = _capability_resource(capability_type, capability_id)
+    return {
+        "path": item["path"],
+        "text": item["text"],
+        "frontmatter": item["frontmatter"],
+        "sha256": _sha256_text(item["text"]),
+    }
+
+
+def iter_capability_manifests(capability_type: str) -> list[dict[str, Any]]:
+    """Return packaged manifests for one capability type."""
+    if capability_type not in CAPABILITY_HOMES:
+        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
+    return [
+        item
+        for item in _capability_resources()
+        if item["frontmatter"].get("type") == capability_type
+    ]
+
+
+def _capability_resource(capability_type: str, capability_id: str) -> dict[str, Any]:
     home = CAPABILITY_HOMES.get(capability_type)
     if home is None:
         raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
-    root = Path(vault) / "capabilities" / home
+    root = resources.files(CAPABILITY_PACKAGES[capability_type])
     stem = safe_filename(capability_id)
-    path = root / f"{stem}.md"
-    if not path.is_file() and path.with_suffix("").is_dir():
-        _raise_directory_only(path.with_suffix(""), path, base=Path(vault))
-    return path
+    resource = root / f"{stem}.md"
+    display = f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{stem}.md"
+    asset_dir = root / stem
+    if not resource.is_file() and asset_dir.is_dir():
+        _raise_directory_only(f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{stem}", display)
+    if not resource.is_file():
+        raise FileNotFoundError(display)
+    text = resource.read_text(encoding="utf-8")
+    frontmatter = parse_frontmatter(text)
+    return {"path": display, "text": text, "frontmatter": frontmatter}
 
 
 def import_capability(
@@ -143,52 +176,53 @@ def import_capability(
     }
 
 
-def _capability_paths(vault: Path) -> list[Path]:
-    root = vault / "capabilities"
-    if not root.is_dir():
-        return []
-    _reject_directory_only_manifests(root)
-    return sorted(
-        path
-        for home in CAPABILITY_HOMES.values()
-        for path in (root / home).glob("*.md")
-        if read_frontmatter(path).get("type") in CAPABILITY_TYPES
-    )
+def _capability_resources() -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    for capability_type, home in CAPABILITY_HOMES.items():
+        root = resources.files(CAPABILITY_PACKAGES[capability_type])
+        for child in sorted(root.iterdir(), key=lambda item: item.name):
+            if child.is_dir():
+                sibling = root / f"{child.name}.md"
+                if not sibling.is_file() and child.name != "__pycache__":
+                    _raise_directory_only(
+                        f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}",
+                        f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}.md",
+                    )
+                continue
+            if not child.name.endswith(".md"):
+                continue
+            text = child.read_text(encoding="utf-8")
+            frontmatter = parse_frontmatter(text)
+            if frontmatter.get("type") in CAPABILITY_TYPES:
+                items.append(
+                    {
+                        "path": f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}",
+                        "text": text,
+                        "frontmatter": frontmatter,
+                    }
+                )
+    return items
 
 
-def _reject_directory_only_manifests(root: Path) -> None:
-    for home in CAPABILITY_HOMES.values():
-        home_path = root / home
-        if not home_path.is_dir():
-            continue
-        for asset_dir in sorted(path for path in home_path.iterdir() if path.is_dir()):
-            sibling = asset_dir.with_suffix(".md")
-            if not sibling.is_file():
-                _raise_directory_only(asset_dir, sibling, base=root.parent)
-
-
-def _raise_directory_only(asset_dir: Path, sibling: Path, *, base: Path) -> None:
-    asset_display = asset_dir.relative_to(base).as_posix()
-    sibling_display = sibling.relative_to(base).as_posix()
+def _raise_directory_only(asset_display: str, sibling_display: str) -> None:
     raise ValueError(
         "directory-only capability manifest is invalid: "
         f"{asset_display}; expected sibling {sibling_display}"
     )
 
 
-def _catalog_row(vault: Path, path: Path) -> dict[str, Any]:
-    frontmatter = read_frontmatter(path)
-    rel = path.relative_to(vault).as_posix()
+def _catalog_row(item: dict[str, Any]) -> dict[str, Any]:
+    frontmatter = item["frontmatter"]
     row = {
-        "id": _capability_id(path, frontmatter),
+        "id": _capability_id(item["path"], frontmatter),
         "type": frontmatter["type"],
-        "path": rel,
+        "path": item["path"],
         "title": frontmatter.get("title", ""),
         "description": frontmatter.get("description", ""),
         "check_status": frontmatter.get("check_status", ""),
         "trust": {
-            "source": "local",
-            "sha256": sha256_file(path),
+            "source": "product",
+            "sha256": _sha256_text(item["text"]),
         },
     }
     for key in (
@@ -209,10 +243,14 @@ def _catalog_row(vault: Path, path: Path) -> dict[str, Any]:
     return row
 
 
-def _capability_id(path: Path, frontmatter: dict[str, Any]) -> str:
+def _capability_id(path: str, frontmatter: dict[str, Any]) -> str:
     if frontmatter.get("operation_id"):
         return str(frontmatter["operation_id"])
-    return path.stem
+    return Path(path).stem
+
+
+def _sha256_text(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def _unique_path(path: Path) -> Path:

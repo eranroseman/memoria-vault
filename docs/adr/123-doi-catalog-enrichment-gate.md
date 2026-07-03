@@ -88,7 +88,7 @@ promotion; direct SQLite edits are not a supported PI surface.
   `src/memoria_vault/runtime/enrichment.py`,
   `src/memoria_vault/runtime/state.py`,
   `src/memoria_vault/runtime/worker.py`,
-  `vault-template/capabilities/operations/enrich-source.md`,
+  `src/memoria_vault/product/capabilities/operations/enrich-source.md`,
   `vault-template/.memoria/config/providers.yaml`
 - **Checks:** `tests/test_alpha13_enrichment.py`, `tests/test_capabilities.py`,
   `tests/test_projections.py`, `tests/test_operations.py`

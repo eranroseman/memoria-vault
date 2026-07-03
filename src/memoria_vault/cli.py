@@ -26,7 +26,6 @@ DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
 SEED_TREES = (
     ("vault-template/.memoria/schemas", ".memoria/schemas"),
-    ("vault-template/capabilities", "capabilities"),
     ("vault-template/.memoria/config", ".memoria/config"),
     ("vault-template/system/eval", "system/eval"),
 )
@@ -1644,7 +1643,6 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
 def _workspace_plan(workspace: Path) -> list[str]:
     return [
         "knowledge",
-        "capabilities",
         "system",
         "system/eval",
         ".memoria/blobs",

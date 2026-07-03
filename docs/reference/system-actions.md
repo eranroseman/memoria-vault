@@ -37,12 +37,12 @@ reference pages; docs checks keep the mirror linked.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Load operation policy | runtime operation helper (`load_operation_policy`) | Loads a checked `operation` Concept and requires the WP5 policy contract: tools, paths, network, runner/model, prompt version, `io_schema.input`/`io_schema.output`, risk class, and checks. |
+| Load operation policy | runtime operation helper (`load_operation_policy`) | Loads a checked packaged operation manifest and requires the WP5 policy contract: tools, paths, network, runner/model, prompt version, `io_schema.input`/`io_schema.output`, risk class, and checks. |
 | Record Co-PI interview | worker operation `record-copi-interview` + runtime helper (`record_copi_interview_turn`) | Records a PI interview takeaway for a checked source as a committed `copi-interview` journal event; digest compile can consume it as traced context. |
 | Compile source digest | worker operation `compile-source-digest` + runtime helper (`compile_source_digest`) | Reads one checked source, uses deterministic fixture output or an allowed OpenAI-compatible pydantic-ai runner for digest markdown that passes the required section contract and a lexical source-grounding smoke check, records a `model_call`, embeds compact citation survival payloads, promotes a machine-owned checked `digest` plus brand-new hubs, and stages curated hub suggestions without overwriting curated hubs. |
-| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, bundle indexes, `knowledge/_views/index.md`, `references.bib`, and `capabilities/_generated/capability-index.json` in one worker-owned projection run. |
+| Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, bundle indexes, `knowledge/_views/index.md`, and `references.bib` in one worker-owned projection run. |
 | Regenerate workspace indexes | runtime projection helper (`write_workspace_indexes`) / worker operation `regenerate-indexes` | Rebuilds the root and bundle `index.md` projections from checked Concept files. |
-| Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds `capabilities/_generated/capability-index.json` from capability Concepts and records local SHA-256 trust hashes. |
+| Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds ignored `.memoria/index/capability-index.json` from packaged capability manifests and records product SHA-256 trust hashes. |
 | Import capability | runtime capability helper (`import_capability`) | Quarantines unsigned imported capability files under `.memoria/quarantine/`, records a failed `capability-import-trust` check, and does not make them executable or catalog-visible. Signed promotion is not implemented. |
 
 ### Search input and query (`memoria_vault.runtime.search_index`)
@@ -115,7 +115,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
-| List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked prompt operations from `capabilities/operations/`, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
+| List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked packaged prompt operations, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block cards to delegation and policy gates. |
 
 ## CLI requests
@@ -128,7 +128,7 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 | Ask query | `memoria ask --question ...` / `memoria project ask <project-id> --question ...` | Runs `answer-query` and returns the Ask/Query response contract over checked retrieval documents; project Ask includes checked project context when available. |
 | Author and curate Concepts | `memoria new note`, `memoria check`, `memoria link` | Authors PI Concepts, promotes checked Concepts through the request boundary, and records typed-link curation through worker-owned requests and journal rows. |
 | Analyze project | `memoria project gaps <project-path>`, `trace`, `export` | Runs checked graph, project-scope, linked-thesis, and project-argument gap analysis, argument tracing, and deterministic Markdown/Pandoc project export from the CLI control plane. Project Concepts are authored as checked Markdown under `knowledge/projects/` and observed by `memoria workspace scan`. |
-| Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, capability index, indexes, and checked-only qmd inputs from worker-readable state. |
+| Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, workspace indexes, and checked-only qmd inputs from worker-readable state. |
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | Worker / file-watch trigger | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. |
 | Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
@@ -155,8 +155,8 @@ same wrappers when always-on maintenance is desired.
 ## Skills and prompts
 
 Alpha.14 does not ship installed profile skill bundles or per-lane task routing.
-Reusable prompt behavior lives as checked operation Concepts under
-`capabilities/operations/` and runs through `memoria operation run`. Optional
+Reusable prompt behavior lives as checked packaged operation manifests and runs
+through `memoria operation run`. Optional
 adapters may expose their own skills later, but those adapters are not current
 product authority.
 

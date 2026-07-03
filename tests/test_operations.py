@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -14,15 +15,15 @@ from memoria_vault.runtime.operations import (
     load_operation_policy,
     record_copi_interview_turn,
     require_allowed_network,
+    validate_operation_policy,
 )
-from memoria_vault.runtime.vaultio import read_frontmatter, split_frontmatter, write_frontmatter_doc
+from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def workspace(tmp_path: Path) -> Path:
     shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/capabilities", tmp_path / "capabilities")
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "operations@example.invalid")
     git(tmp_path, "config", "user.name", "Operations")
@@ -42,22 +43,28 @@ def git(vault: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def test_load_operation_policy_requires_io_schema_shape(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace(
-            "  output: digest_plus_hubs_and_suggestions",
-            "  output: []",
-        ),
-        encoding="utf-8",
-    )
+def compile_policy(**updates):
+    policy = deepcopy(load_operation_policy(Path(), "compile-source-digest"))
+    policy.update(updates)
+    return policy
 
+
+def patch_compile_policy(monkeypatch: pytest.MonkeyPatch, **updates) -> dict:
+    policy = compile_policy(**updates)
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations.load_operation_policy",
+        lambda _vault, _operation_id: policy,
+    )
+    return policy
+
+
+def test_load_operation_policy_requires_io_schema_shape() -> None:
+    policy = compile_policy(io_schema={"input": "checked_source_id", "output": []})
     with pytest.raises(
         ValueError,
         match=r"compile-source-digest io_schema\.output must be a non-empty string",
     ):
-        load_operation_policy(vault, "compile-source-digest")
+        validate_operation_policy("compile-source-digest", policy)
 
 
 def test_allowed_network_rejects_host_prefix_bypass() -> None:
@@ -231,13 +238,10 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
 
 
 def test_compile_source_digest_rejects_unsupported_required_promotion_check(
-    tmp_path: Path,
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    frontmatter, body = split_frontmatter(policy.read_text(encoding="utf-8"))
-    frontmatter["required_checks"] = ["later-integrity"]
-    write_frontmatter_doc(policy, frontmatter, body)
+    patch_compile_policy(monkeypatch, required_checks=["later-integrity"])
     capture_source(
         vault,
         "source-alpha",
@@ -302,12 +306,10 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
 
 def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkeypatch) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8")
-        .replace("allowed_network: []", "allowed_network:\n  - http://model.test/v1")
-        .replace("model: deterministic-fixture", "model: memoria-test-model"),
-        encoding="utf-8",
+    patch_compile_policy(
+        monkeypatch,
+        allowed_network=["http://model.test/v1"],
+        model="memoria-test-model",
     )
     capture_source(
         vault,
@@ -376,28 +378,20 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
 
 
 @pytest.mark.parametrize("runner", ["local", "hermes", "raw-http"])
-def test_operation_policy_rejects_unsupported_runner_values(tmp_path: Path, runner: str) -> None:
-    vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8").replace("runner: pydantic-ai", f"runner: {runner}"),
-        encoding="utf-8",
-    )
-
+def test_operation_policy_rejects_unsupported_runner_values(runner: str) -> None:
+    policy = compile_policy(runner=runner)
     with pytest.raises(ValueError, match=f"unsupported operation runner: {runner}"):
-        load_operation_policy(vault, "compile-source-digest")
+        validate_operation_policy("compile-source-digest", policy)
 
 
 def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8")
-        .replace("allowed_network: []", "allowed_network:\n  - http://model.test/v1")
-        .replace("model: deterministic-fixture", "model: memoria-test-model"),
-        encoding="utf-8",
+    patch_compile_policy(
+        monkeypatch,
+        allowed_network=["http://model.test/v1"],
+        model="memoria-test-model",
     )
     capture_source(
         vault,
@@ -444,12 +438,10 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
     tmp_path: Path, monkeypatch
 ) -> None:
     vault = workspace(tmp_path)
-    policy = vault / "capabilities/operations/compile-source-digest.md"
-    policy.write_text(
-        policy.read_text(encoding="utf-8")
-        .replace("allowed_network: []", "allowed_network:\n  - http://model.test/v1")
-        .replace("model: deterministic-fixture", "model: memoria-test-model"),
-        encoding="utf-8",
+    patch_compile_policy(
+        monkeypatch,
+        allowed_network=["http://model.test/v1"],
+        model="memoria-test-model",
     )
     capture_source(
         vault,

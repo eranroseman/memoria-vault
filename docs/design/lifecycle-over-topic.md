@@ -10,7 +10,7 @@ nav_order: 20
 Two organizational decisions shape the vault: **a Concept's position in the system
 is its type, never its topic**, and **read state is frontmatter, not a folder**.
 Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`catalog/`, `knowledge/`, `capabilities/`). Where a Concept stands
+`folders.yaml` (`knowledge/`, with SQLite-backed catalog state). Where a Concept stands
 for reading is `check_status`, not a path move.
 
 ---
@@ -19,7 +19,7 @@ for reading is `check_status`, not a path move.
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of Concept this is — source,
-entity, digest, note, hub, project, or capability. Topics live in frontmatter facets
+entity, digest, note, hub, or project. Topics live in frontmatter facets
 (`research_area`, `methodology`) and authored links, following the Zettelkasten
 link-first inheritance described in [Intellectual
 foundations](intellectual-foundations.md#luhmanns-zettelkasten).
@@ -27,7 +27,7 @@ foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 ---
 
 ## Read state lives in frontmatter
-The vault is organized by **category** ([ADR-119](../adr/119-schema-driven-document-creation.md)): `catalog/` holds source and entity Concepts, `knowledge/` holds digest, note, hub, and project Concepts, `capabilities/` holds operation, skill, MCP, and workflow Concepts, and `system/` holds visible infrastructure. It never mixes two categories, and it has no lifecycle-number or archive folders. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md). A note does not travel when the PI checks it; a source does not become a different kind of thing when it is read. What changes is its *standing* — and standing is a property, not a location.
+The vault is organized by **category** ([ADR-119](../adr/119-schema-driven-document-creation.md)): `knowledge/` holds Work, note, hub, and project Concepts, SQLite holds catalog working state, and packaged product data holds operation manifests. It never mixes lifecycle state into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md). A note does not travel when the PI checks it; a source does not become a different kind of thing when it is read. What changes is its read state, and read state is a property, not a location.
 
 Read standing lives in the `check_status` frontmatter property:
 `unchecked -> checked -> quarantined`. The exact per-type field inventory is defined
