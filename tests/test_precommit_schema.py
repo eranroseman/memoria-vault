@@ -34,6 +34,17 @@ def test_schema_violation_blocks(tmp_path):
     assert any("links" in error for error in errors)
 
 
+def test_undeclared_frontmatter_field_blocks(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "knowledge/notes/bad.md").write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\nlinks: {}\ntitle: T\nsurprise: true\n---\nBody.\n",
+        encoding="utf-8",
+    )
+    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
+    assert any("undeclared field: surprise" in error for error in errors)
+
+
 def test_unknown_type_blocks(tmp_path):
     vault = _vault(tmp_path)
     (vault / "knowledge/notes/odd.md").write_text(

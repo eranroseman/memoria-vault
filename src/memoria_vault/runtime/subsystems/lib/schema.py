@@ -166,10 +166,13 @@ def validate_frontmatter(
     """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
-    Unknown extra fields are allowed — the schema constrains, it does not enumerate.
+    Unknown extra fields are rejected; use the schema-declared ``x`` map for extensions.
     """
     errors: list[str] = []
     enums = schema.get("enums", {})
+    declared = set(schema.get("required") or {}) | set(schema.get("optional") or {})
+    for field in sorted(set(fm) - declared):
+        errors.append(f"undeclared field: {field} (put custom data under x)")
     for field, kind in (schema.get("required") or {}).items():
         if field not in fm or fm[field] in (None, ""):
             errors.append(f"missing required field: {field}")

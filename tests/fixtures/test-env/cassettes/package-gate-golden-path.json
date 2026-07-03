@@ -86,7 +86,7 @@
       "args": {
         "path": "knowledge/notes/harness-thesis.md",
         "verdict": "checked",
-        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC1\ntags: []\nlinks: {}\ntitle: Harness thesis\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\n---\n\nHarnessed workflows make durable research systems testable.\n"
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC1\ntags: []\nlinks: {}\ntitle: Harness thesis\n---\n\nHarnessed workflows make durable research systems testable.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-thesis.md"]
@@ -103,7 +103,7 @@
       "args": {
         "path": "knowledge/notes/harness-support.md",
         "verdict": "checked",
-        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC2\ntags: []\ntitle: Harness support\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC2\ntags: []\ntitle: Harness support\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-support.md"]
@@ -120,7 +120,7 @@
       "args": {
         "path": "knowledge/notes/harness-refutation.md",
         "verdict": "checked",
-        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC3\ntags: []\ntitle: Harness refutation\nstatus: accepted\nevidence_set: [catalog/sources/harness2026/source.md]\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC3\ntags: []\ntitle: Harness refutation\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
       },
       "expect": {
         "writes": ["knowledge/notes/harness-refutation.md"]

@@ -245,7 +245,8 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `literal:<value>` | exactly that value; for example, `type: literal:source` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are **allowed**. A schema example (`types/note.yaml`):
+Unknown extra fields are **rejected**. Put local extension data under the
+schema-declared `x:` map. A schema example (`types/note.yaml`):
 
 ```yaml
 type: note
