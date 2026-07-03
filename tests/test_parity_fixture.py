@@ -1,7 +1,8 @@
-"""Alpha.14 user-facing parity fixture."""
+"""Alpha.15 user-facing parity fixture."""
 
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
@@ -45,12 +46,11 @@ def test_palette_actions_have_standalone_cli_parity(
     assert (
         main(
             [
+                "new",
                 "note",
-                "capture",
+                "Palette note",
                 "--workspace",
                 str(workspace),
-                "--title",
-                "Palette note",
                 "--body",
                 "Captured without an adapter.",
                 "--json",
@@ -59,8 +59,8 @@ def test_palette_actions_have_standalone_cli_parity(
         == 0
     )
     note = json.loads(capsys.readouterr().out)
-    assert "check_status" not in read_frontmatter(workspace / note["note_path"])
-    assert state.concept_check_status(workspace, note["note_path"]) == "unchecked"
+    assert "check_status" not in read_frontmatter(workspace / note["path"])
+    assert state.concept_check_status(workspace, note["path"]) == "unchecked"
 
     assert main(["attention", "list", "--workspace", str(workspace), "--json"]) == 0
     attention = json.loads(capsys.readouterr().out)
@@ -96,8 +96,7 @@ def test_palette_actions_have_standalone_cli_parity(
                 "--workspace",
                 str(workspace),
                 "inbox/resolve-card.md",
-                "--outcome",
-                "resolved",
+                "--apply",
                 "--json",
                 "--idempotency-key",
                 "palette-resolve",
@@ -106,7 +105,8 @@ def test_palette_actions_have_standalone_cli_parity(
         == 0
     )
     resolved = json.loads(capsys.readouterr().out)
-    assert resolved["result"]["resolution"]["outcome"] == "resolved"
+    assert resolved["result"]["resolution"]["outcome"] == "apply"
+    assert resolved["result"]["resolution"]["routing_class"] == "ask"
 
     assert (
         main(
@@ -116,29 +116,29 @@ def test_palette_actions_have_standalone_cli_parity(
                 "--workspace",
                 str(workspace),
                 "inbox/dismiss-card.md",
-                "--outcome",
-                "dismissed",
+                "--reject",
                 "--json",
                 "--idempotency-key",
-                "palette-dismiss",
+                "palette-reject",
             ]
         )
         == 0
     )
-    dismissed = json.loads(capsys.readouterr().out)
-    assert dismissed["result"]["resolution"]["outcome"] == "dismissed"
+    rejected = json.loads(capsys.readouterr().out)
+    assert rejected["result"]["resolution"]["outcome"] == "reject"
+    assert rejected["result"]["resolution"]["routing_class"] == "ask"
 
     with state.connect(workspace) as conn:
         rows = conn.execute(
             """
             SELECT request_id, operation_id
             FROM operation_requests
-            WHERE request_id IN ('palette-trace', 'palette-resolve', 'palette-dismiss')
+            WHERE request_id IN ('palette-trace', 'palette-resolve', 'palette-reject')
             ORDER BY request_id
             """
         ).fetchall()
     assert [(row["request_id"], row["operation_id"]) for row in rows] == [
-        ("palette-dismiss", "resolve-attention"),
+        ("palette-reject", "resolve-attention"),
         ("palette-resolve", "resolve-attention"),
         ("palette-trace", "analyze-project-argument"),
     ]
@@ -201,7 +201,11 @@ def _cli_command_surface() -> set[str]:
     commands: set[str] = set()
     for name, subparser in command_action.choices.items():
         child_action = next(
-            (action for action in subparser._actions if getattr(action, "choices", None)),
+            (
+                action
+                for action in subparser._actions
+                if isinstance(action, argparse._SubParsersAction)
+            ),
             None,
         )
         if child_action is None:
@@ -243,6 +247,7 @@ def _write_attention_fixture(workspace: Path) -> None:
             "projection: attention\n"
             "attention_kind: flag\n"
             "attention_status: open\n"
+            "routing_class: ask\n"
             "target: knowledge/notes/palette.md\n"
             "---\n"
             "# Attention\n\nPalette parity fixture.\n",

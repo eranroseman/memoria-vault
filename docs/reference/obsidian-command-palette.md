@@ -6,15 +6,15 @@ grand_parent: Reference
 
 # Obsidian command palette
 
-Alpha.14 has no required Obsidian command-palette surface. The product surface is
+Alpha.15 has no required Obsidian command-palette surface. The product surface is
 the `memoria` CLI, and optional editor adapters must call the CLI/engine instead
 of owning workflow state or write policy.
 
 ## CLI replacements
 
-| Former editor action | Alpha.14 command |
+| Former editor action | Alpha.15 command |
 | --- | --- |
-| Capture a source | `memoria work capture --workspace . --doi <doi>` |
+| Add a source | `memoria work add --workspace . --doi <doi>` |
 | Import bibliography rows | `memoria work import --workspace . --format bibtex --file <file>` |
 | Ask a grounded question | `memoria ask --workspace . --question "<question>"` |
 | Resolve or retry queued work | `memoria request answer`, `memoria request retry`, `memoria request resume` |

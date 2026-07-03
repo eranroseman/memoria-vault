@@ -6,17 +6,17 @@ grand_parent: Reference
 
 # Board export
 
-Alpha.14 does not ship a Hermes board exporter. The standalone product state is
+Alpha.15 does not ship a Hermes board exporter. The standalone product state is
 the SQLite request/journal database plus checked workspace projections generated
-by `memoria workspace rebuild`, `memoria journal list`, and the runtime worker.
+by `memoria workspace rebuild`, `memoria journal tail`, and the runtime worker.
 
 ## Current Replacement
 
-| Need | Alpha.14 surface |
+| Need | Alpha.15 surface |
 | --- | --- |
 | Queue/request state | `memoria status`, `memoria request list`, and `.memoria/memoria.sqlite` |
 | Human attention | `memoria attention list/show/resolve` over `inbox/` projections |
-| Operation history | `memoria journal list/show` and `system/logs/audit.jsonl` |
+| Operation history | `memoria journal tail/show` and `system/logs/audit.jsonl` |
 | Project/export evidence | `memoria project export` and checked generated projections |
 | Runtime diagnostics | `memoria doctor bundle` |
 

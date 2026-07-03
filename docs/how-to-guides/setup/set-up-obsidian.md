@@ -7,7 +7,7 @@ nav_order: 3
 
 # Set up Obsidian
 
-Alpha.14 does not require Obsidian. Use this page only if you want Obsidian as a
+Alpha.15 does not require Obsidian. Use this page only if you want Obsidian as a
 plain Markdown editor for the workspace keep-set.
 
 ## Prerequisites
@@ -18,11 +18,11 @@ plain Markdown editor for the workspace keep-set.
 ## Steps
 
 1. Open the workspace folder in Obsidian.
-2. Do not install or enable Memoria-specific plugins for alpha.14.
+2. Do not install or enable Memoria-specific plugins for alpha.15.
 3. Use the terminal for Memoria actions:
 
 ```bash
-memoria work capture --workspace . --doi <doi>
+memoria work add --workspace . --doi <doi>
 memoria work import --workspace . --format bibtex --file references.bib
 memoria ask --workspace . --question "<question>"
 memoria workspace check --workspace .

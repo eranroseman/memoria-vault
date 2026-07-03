@@ -18,7 +18,7 @@ in Obsidian, VS Code, terminal editors, or any file browser.
 3. Run actions from the terminal, for example:
 
 ```bash
-memoria work capture --workspace . --doi <doi>
+memoria work add --workspace . --doi <doi>
 memoria ask --workspace . --question "<question>"
 memoria workspace check --workspace .
 ```

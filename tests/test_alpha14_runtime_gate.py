@@ -1,4 +1,4 @@
-"""Alpha.14 runtime-local gate replay."""
+"""Alpha.15 runtime-local gate replay."""
 
 from __future__ import annotations
 
@@ -18,10 +18,10 @@ from memoria_vault.runtime.trusted_writer import (
 )
 
 
-def test_alpha14_runtime_gate_replays_user_facing_commands(
+def test_alpha15_runtime_gate_replays_user_facing_commands(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    workspace = tmp_path / "workspace-alpha14"
+    workspace = tmp_path / "workspace-alpha15"
     provider_replay = tmp_path / "providers.json"
     provider_replay.write_text(json.dumps(_provider_payloads()), encoding="utf-8")
     interview = tmp_path / "interview.json"
@@ -51,7 +51,7 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
     _run_json(
         capsys,
         "work",
-        "capture",
+        "add",
         "--workspace",
         str(workspace),
         "--doi",
@@ -69,7 +69,6 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
         "enrich",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--provider-replay",
         str(provider_replay),
@@ -82,7 +81,6 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
         "update",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--topic",
         "framing",
@@ -95,7 +93,6 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
         "interview",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--fixture",
         str(interview),
@@ -108,46 +105,45 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
         "digest",
         "--workspace",
         str(workspace),
-        "--work-id",
         "doi-10.1000_alpha",
         "--idempotency-key",
         "gate-digest",
     )
     digest_path = digest["result"]["digest_path"]
 
-    proposed = _run_json(
+    note = _run_json(
         capsys,
+        "new",
         "note",
-        "propose",
+        "Gate note",
         "--workspace",
         str(workspace),
-        "--work-id",
-        "doi-10.1000_alpha",
+        "--body",
+        "Framing changes which outcomes matter.",
+        "--tag",
+        "framing",
         "--idempotency-key",
-        "gate-note-propose",
+        "gate-note-new",
     )
-    note_path = proposed["result"]["note_paths"][0]
+    note_path = str(note["path"])
     _run_json(
         capsys,
-        "note",
-        "accept",
+        "check",
         "--workspace",
         str(workspace),
         note_path,
-        "--reason",
-        "PI accepted",
         "--idempotency-key",
-        "gate-note-accept",
+        "gate-note-check",
     )
     _run_json(
         capsys,
-        "note",
         "link",
         "--workspace",
         str(workspace),
         note_path,
-        "supports",
         "knowledge/notes/thesis.md",
+        "--rel",
+        "supports",
         "--reason",
         "PI linked",
         "--idempotency-key",
@@ -272,7 +268,7 @@ def test_alpha14_runtime_gate_replays_user_facing_commands(
     journal = _run_json(
         capsys,
         "journal",
-        "list",
+        "tail",
         "--workspace",
         str(workspace),
         "--operation",

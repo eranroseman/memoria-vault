@@ -12,7 +12,7 @@ Use Obsidian as a Markdown reader/editor if you like; use `memoria` for actions.
 | Situation | Open | Run |
 | --- | --- | --- |
 | What needs attention? | `spaces/inbox.md` | `memoria request list --workspace .` |
-| What should I read next? | `spaces/library.md` | `memoria work capture` or `memoria work import` |
+| What should I read next? | `spaces/library.md` | `memoria work add` or `memoria work import` |
 | What does the checked corpus say? | `spaces/knowledge.md` | `memoria ask --workspace . --question "<question>"` |
 | What gaps remain? | `spaces/project.md` | `memoria project gaps project-alpha --workspace .` |
 | Is the workspace healthy? | `spaces/maintenance.md` | `memoria workspace check --workspace .` |

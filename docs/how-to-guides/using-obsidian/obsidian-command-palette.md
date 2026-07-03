@@ -7,13 +7,13 @@ nav_order: 4
 
 # Command palette
 
-Alpha.14 does not ship Obsidian command-palette shortcuts. Use the `memoria` CLI
+Alpha.15 does not ship Obsidian command-palette shortcuts. Use the `memoria` CLI
 for workspace actions.
 
 ## Common replacements
 
 ```bash
-memoria work capture --workspace . --doi <doi>
+memoria work add --workspace . --doi <doi>
 memoria work import --workspace . --format bibtex --file <file>
 memoria request list --workspace .
 memoria ask --workspace . --question "<question>"

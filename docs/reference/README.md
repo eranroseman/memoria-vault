@@ -34,7 +34,7 @@ manual mirrors.
 | --- | --- | --- |
 | [System actions](system-actions.md) | Every action the system performs — operations, scheduled tasks, optional adapters, and PI actions — with performer and purpose | Guarded mirror |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
-| [CLI](cli.md) | Alpha.14 `memoria` command surface | Manual |
+| [CLI](cli.md) | Alpha.15 `memoria` command surface | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
 | [Installed profiles](profile-capabilities.md) | Alpha.14 no-installed-profile contract | Manual |
@@ -62,7 +62,7 @@ manual mirrors.
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs plus historical log boundaries | Manual |
-| [Board export](board-export.md) | Alpha.14 no-board-export boundary and replacement request/journal surfaces | Manual |
+| [Board export](board-export.md) | Alpha.15 no-board-export boundary and replacement request/journal surfaces | Manual |
 | [Fleet metrics](fleet-metrics.md) | Alpha.14 no-fleet-runtime boundary and replacement runtime signals | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 

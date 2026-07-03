@@ -31,7 +31,7 @@ resume it with the `request` command surface.
 **2. Check the audit log.**
 
 ```bash
-memoria journal list --workspace <workspace> --json
+memoria journal tail --workspace <workspace> --json
 ```
 
 For optional adapter writes, also inspect `system/logs/audit.jsonl`. A matching

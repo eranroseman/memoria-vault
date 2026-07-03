@@ -28,7 +28,7 @@ a blank page.
 **3. Record the interview/takeaway.**
 
 ```bash
-memoria work interview --workspace . --work-id <work-id> --response "<takeaway>"
+memoria work interview --workspace . <work-id> --response "<takeaway>"
 ```
 
 Use the prompt to capture what the source argues, what it changes in your
@@ -37,7 +37,7 @@ project, what might falsify it, and where you stand.
 **4. Compile or update the digest.**
 
 ```bash
-memoria work digest --workspace . --work-id <work-id>
+memoria work digest --workspace . <work-id>
 ```
 
 **5. Keep your own note if needed.**

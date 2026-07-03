@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Obsidian workspaces
 
-Alpha.14 ships no saved Obsidian workspace layout. The durable workspace shape is
+Alpha.15 ships no saved Obsidian workspace layout. The durable workspace shape is
 the on-disk Memoria workspace plus CLI commands.
 
 ## Workspace navigation
@@ -14,7 +14,7 @@ the on-disk Memoria workspace plus CLI commands.
 | Area | Markdown entry point | CLI entry point |
 | --- | --- | --- |
 | Inbox | `spaces/inbox.md` | `memoria request list --workspace .` |
-| Library | `spaces/library.md` | `memoria work capture`, `memoria work import`, `memoria work digest` |
+| Library | `spaces/library.md` | `memoria work add`, `memoria work import`, `memoria work digest` |
 | Knowledge | `spaces/knowledge.md` | `memoria ask`, `memoria workspace scan` |
 | Project | `spaces/project.md` | `memoria project gaps <project-path>`, `memoria project export` |
 | Maintenance | `spaces/maintenance.md` | `memoria workspace check`, `memoria doctor` |

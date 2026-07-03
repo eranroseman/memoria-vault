@@ -18,7 +18,7 @@ schemas, and command flags, see [Reference](../reference).
 
 ## Operating mode
 
-Memoria alpha.14 is CLI-first.
+Memoria alpha.15 is CLI-first.
 
 **Day-to-day use - terminal plus editor.**
 Capture, enrichment, ask, digest, project gaps, export, recovery, and checks run
