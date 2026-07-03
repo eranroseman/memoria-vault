@@ -9,6 +9,7 @@ from typing import Any
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.paths import safe_filename
+from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
     frontmatter_doc,
@@ -58,9 +59,12 @@ def read_operations(workspace: Path) -> dict[str, Any]:
     return {"ok": True, "operations": operations}
 
 
-def read_requests(workspace: Path, *, status: str = "") -> dict[str, Any]:
+def read_requests(
+    workspace: Path, *, status: str = "", read_scope: list[str] | None = None
+) -> dict[str, Any]:
     sql = """
-        SELECT request_id, operation_id, status, created_at, completed_at, error
+        SELECT request_id, operation_id, status, created_at, completed_at, error,
+               input_refs_json, output_intents_json, primary_target, args_json
         FROM operation_requests
     """
     params: tuple[str, ...] = ()
@@ -69,13 +73,21 @@ def read_requests(workspace: Path, *, status: str = "") -> dict[str, Any]:
         params = (status,)
     sql += " ORDER BY created_at, request_id"
     with state.connect(workspace) as conn:
-        requests = [_request_summary(row) for row in conn.execute(sql, params)]
+        requests = [
+            _request_summary(row)
+            for row in conn.execute(sql, params)
+            if _request_in_scope(row, read_scope, require_all=False)
+        ]
     return {"ok": True, "requests": requests}
 
 
-def read_request(workspace: Path, request_id: str) -> dict[str, Any]:
+def read_request(
+    workspace: Path, request_id: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
     row = _request_row(Path(workspace), request_id)
     if row is None:
+        raise FileNotFoundError(f"request not found: {request_id}")
+    if not _request_in_scope(row, read_scope, require_all=True):
         raise FileNotFoundError(f"request not found: {request_id}")
     return {"ok": True, "request": _request_detail(row)}
 
@@ -86,8 +98,10 @@ def read_attention(
     status: str = "",
     kind: str = "",
     worklist: bool = False,
+    read_scope: list[str] | None = None,
 ) -> dict[str, Any]:
     cards = _attention_cards(Path(workspace))
+    cards = [card for card in cards if _attention_in_scope(card, read_scope)]
     if worklist:
         cards = [
             card
@@ -103,23 +117,33 @@ def read_attention(
     return {"ok": True, "attention": cards}
 
 
-def read_attention_card(workspace: Path, attention_path: str) -> dict[str, Any]:
+def read_attention_card(
+    workspace: Path, attention_path: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
     rel, path = _workspace_file(Path(workspace), attention_path)
     card = _attention_card(path, Path(workspace))
     if card is None:
         raise FileNotFoundError(f"attention projection not found: {rel}")
+    if not _attention_in_scope(card, read_scope):
+        raise FileNotFoundError(f"attention projection not found: {rel}")
     return {"ok": True, "attention": card}
 
 
-def read_concept(workspace: Path, target: str) -> dict[str, Any]:
+def read_concept(
+    workspace: Path, target: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
     workspace = Path(workspace)
     path = _resolve_concept_path(workspace, target)
     if path is None:
         work = state.catalog_source(workspace, target)
         if work is None:
             raise FileNotFoundError(f"target not found: {target}")
+        _require_scope(
+            work.get("concept_path") or target, read_scope, f"target not found: {target}"
+        )
         return {"ok": True, "target": target, "kind": "work", "work": _tag_work(work)}
     rel = path.relative_to(workspace).as_posix()
+    _require_scope(rel, read_scope, f"target not found: {target}")
     frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
     check_status = state.concept_check_status(workspace, rel)
     return {
@@ -134,11 +158,15 @@ def read_concept(workspace: Path, target: str) -> dict[str, Any]:
     }
 
 
-def read_concepts(workspace: Path, *, concept_type: str = "") -> dict[str, Any]:
+def read_concepts(
+    workspace: Path, *, concept_type: str = "", read_scope: list[str] | None = None
+) -> dict[str, Any]:
     workspace = Path(workspace)
     rows = []
     for path in iter_markdown(workspace):
         rel = path.relative_to(workspace).as_posix()
+        if not _scope_allows(rel, read_scope):
+            continue
         frontmatter = read_frontmatter(path)
         item_type = str(frontmatter.get("type") or "")
         if item_type not in CONCEPT_TYPES:
@@ -158,10 +186,13 @@ def read_concepts(workspace: Path, *, concept_type: str = "") -> dict[str, Any]:
     return {"ok": True, "concepts": sorted(rows, key=lambda row: row["path"])}
 
 
-def read_work(workspace: Path, work_id: str) -> dict[str, Any]:
+def read_work(
+    workspace: Path, work_id: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
     work = state.catalog_source(Path(workspace), work_id)
     if work is None:
         raise FileNotFoundError(f"work not found: {work_id}")
+    _require_any_scope(_work_paths(work), read_scope, f"work not found: {work_id}")
     return {"ok": True, "work": _tag_work(work)}
 
 
@@ -174,6 +205,7 @@ def read_journal(
     decision: str = "",
     date: str = "",
     limit: int = 50,
+    read_scope: list[str] | None = None,
 ) -> dict[str, Any]:
     sql = """
         SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
@@ -214,11 +246,17 @@ def read_journal(
     sql += " ORDER BY event_id DESC LIMIT ?"
     params.append(str(max(limit, 1)))
     with state.connect(workspace) as conn:
-        events = [_journal_row(row) for row in conn.execute(sql, params)]
+        events = [
+            event
+            for row in conn.execute(sql, params)
+            if _journal_in_scope(event := _journal_row(row), read_scope)
+        ]
     return {"ok": True, "events": events}
 
 
-def read_journal_event(workspace: Path, event_id: int) -> dict[str, Any]:
+def read_journal_event(
+    workspace: Path, event_id: int, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
     with state.connect(workspace) as conn:
         row = conn.execute(
             """
@@ -230,7 +268,10 @@ def read_journal_event(workspace: Path, event_id: int) -> dict[str, Any]:
         ).fetchone()
     if row is None:
         raise FileNotFoundError(f"journal event not found: {event_id}")
-    return {"ok": True, "event": _journal_row(row)}
+    event = _journal_row(row)
+    if not _journal_in_scope(event, read_scope):
+        raise FileNotFoundError(f"journal event not found: {event_id}")
+    return {"ok": True, "event": event}
 
 
 def run_operation(
@@ -362,6 +403,35 @@ def _tag_work(work: dict[str, Any]) -> dict[str, Any]:
     return tagged
 
 
+def _scope_allows(path: str, read_scope: list[str] | None) -> bool:
+    if read_scope is None:
+        return True
+    try:
+        return within_scope(normalize_path(path), [normalize_path(scope) for scope in read_scope])
+    except ValueError:
+        return False
+
+
+def _require_scope(path: str, read_scope: list[str] | None, message: str) -> None:
+    if not _scope_allows(path, read_scope):
+        raise FileNotFoundError(message)
+
+
+def _require_any_scope(paths: list[str], read_scope: list[str] | None, message: str) -> None:
+    if read_scope is None:
+        return
+    if not any(_scope_allows(path, read_scope) for path in paths if path):
+        raise FileNotFoundError(message)
+
+
+def _work_paths(work: dict[str, Any]) -> list[str]:
+    return [
+        str(work.get("concept_path") or ""),
+        str(work.get("content_path") or ""),
+        str(work.get("raw_path") or ""),
+    ]
+
+
 def _untrusted_text(text: str) -> dict[str, str]:
     return {"kind": "untrusted_text", "text": text}
 
@@ -431,6 +501,12 @@ def _attention_card(path: Path, workspace: Path) -> dict[str, Any] | None:
     }
 
 
+def _attention_in_scope(card: dict[str, Any], read_scope: list[str] | None) -> bool:
+    return read_scope is None or any(
+        _scope_allows(str(card.get(key) or ""), read_scope) for key in ("path", "target")
+    )
+
+
 def _workspace_file(workspace: Path, value: str) -> tuple[str, Path]:
     raw = Path(value)
     path = raw if raw.is_absolute() else workspace / raw
@@ -465,6 +541,36 @@ def _request_summary(row: Any) -> dict[str, Any]:
     }
 
 
+def _request_in_scope(row: Any, read_scope: list[str] | None, *, require_all: bool) -> bool:
+    if read_scope is None:
+        return True
+    paths = _request_paths(row)
+    if not paths:
+        return False
+    if require_all:
+        return all(_scope_allows(path, read_scope) for path in paths)
+    return any(_scope_allows(path, read_scope) for path in paths)
+
+
+def _request_paths(row: Any) -> list[str]:
+    paths = [str(row["primary_target"] or "")]
+    for key in ("input_refs_json", "output_intents_json"):
+        for item in json.loads(row[key] or "[]"):
+            if isinstance(item, dict):
+                paths.append(str(item.get("id") or item.get("path") or ""))
+            else:
+                paths.append(str(item or ""))
+    args = json.loads(row["args_json"] or "{}")
+    if isinstance(args, dict):
+        for key in ("target_path", "target_id", "path"):
+            paths.append(str(args.get(key) or ""))
+        for key in ("source_id", "work_id"):
+            value = str(args.get(key) or "").strip()
+            if value:
+                paths.extend([value, f"catalog/sources/{value}"])
+    return [path for path in paths if path]
+
+
 def _request_detail(row: Any) -> dict[str, Any]:
     return {
         **_request_summary(row),
@@ -493,6 +599,26 @@ def _journal_row(row: Any) -> dict[str, Any]:
         "prev_hash": row["prev_hash"],
         "row_hash": row["row_hash"],
     }
+
+
+def _journal_in_scope(event: dict[str, Any], read_scope: list[str] | None) -> bool:
+    if read_scope is None:
+        return True
+    paths = _journal_paths(event.get("payload") or {})
+    return bool(paths) and all(_scope_allows(path, read_scope) for path in paths)
+
+
+def _journal_paths(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return []
+    paths = []
+    for key in ("output_id", "target_id", "target_path", "linked_id", "quarantined_id"):
+        paths.append(str(payload.get(key) or ""))
+    for key in ("outputs", "paths", "targets"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            paths.extend(str(item) for item in value)
+    return [path for path in paths if path]
 
 
 def _journal_operation_values(operation: str) -> list[str]:

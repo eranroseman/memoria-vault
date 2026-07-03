@@ -34,6 +34,7 @@ TEST_LEVELS = {
     "test_docs_doctor.py": "static",
     "test_e2e_smoke_helpers.py": "package",
     "test_eval.py": "contract",
+    "test_engine_api.py": "contract",
     "test_eval_score.py": "contract",
     "test_exploration_trace.py": "contract",
     "test_extract.py": "unit",
