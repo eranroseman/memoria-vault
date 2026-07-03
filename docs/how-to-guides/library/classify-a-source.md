@@ -42,9 +42,13 @@ observes and backfills the PI edit.
 
 Every decision, applied or flagged, is logged as one line in `system/logs/classify.jsonl`. That audit line is what makes a value safe to correct by hand. The thresholds ingest uses (`classify.confidence_floor`, `classify.near_tie_margin`) live in `.memoria/schemas/calibration.yaml`.
 
-**3. Accept the Librarian's draft, if there is one.**
+**3. Accept the classify draft, if there is one.**
 
-Look for a `_proposed_classification` block in the frontmatter. This is the Librarian's draft, parked in a holding area apart from the real fields. Read each proposed value. Copy the ones you accept — edited for accuracy — into the main frontmatter, then delete the whole `_proposed_classification:` block. The block is temporary and should not be left behind.
+Look for a `_proposed_classification` block in the frontmatter. This is the
+classify draft, parked in a holding area apart from the real fields. Read each
+proposed value. Copy the ones you accept — edited for accuracy — into the main
+frontmatter, then delete the whole `_proposed_classification:` block. The block
+is temporary and should not be left behind.
 
 The `projects` sub-key inside the draft isn't a guess: it's derived from your optional [project hints](../setup/configure-project-hints.md).
 

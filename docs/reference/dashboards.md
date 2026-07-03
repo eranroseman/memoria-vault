@@ -6,7 +6,10 @@ grand_parent: Reference
 
 # Surfaces, Bases, and dashboards
 
-Dashboard and Bases inventory for the shipped Obsidian surface. Dashboards are consumers: they render vault state and logs, never write. Space switching is owned by the navigation rail (`_nav.md`), not an Obsidian workspace swap.
+Dashboard and view inventory for the standalone workspace. Dashboards are
+consumers: they render workspace state and logs, never write. Optional editor
+adapters may render the same files, but they do not own state, checks, or
+navigation.
 
 ---
 
@@ -32,10 +35,11 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 ## The Bases views
 
-Obsidian Bases (`.base` files) are the database views the dashboards and space notes lean on
-([ADR-116](../adr/116-obsidian-surface-architecture.md)). Bases are views; Concept
-frontmatter is governed by [ADR-119](../adr/119-schema-driven-document-creation.md), and
-SQLite catalog rows are governed by [ADR-122](../adr/122-sqlite-working-state-boundary.md).
+Obsidian Bases (`.base` files), when present, are optional views over the same
+workspace files ([ADR-116](../adr/116-obsidian-surface-architecture.md)). Bases
+are views only; Concept frontmatter is governed by
+[ADR-119](../adr/119-schema-driven-document-creation.md), and SQLite catalog
+rows are governed by [ADR-122](../adr/122-sqlite-working-state-boundary.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |
@@ -58,5 +62,5 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
 - The audit-log schema the audit-log dashboard reads: [Memory substrates](memory-substrates.md)
 - Current Concept types: [Document types](document-types.md)
-- Where the dashboards open by default: [Obsidian workspaces](obsidian-workspaces.md)
+- Optional editor workspace boundary: [Obsidian workspaces](obsidian-workspaces.md)
 - Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)

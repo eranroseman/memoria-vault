@@ -7,62 +7,61 @@ nav_order: 8
 
 # Archive a source
 
-Retire a source note that is no longer active — superseded, irrelevant to current projects, or fully processed with nothing new to extract. Archiving is a **lifecycle change, not a folder move**: the note stays where it is and `lifecycle: archived` takes it out of every active view.
+Retire a Work that is no longer active: superseded, irrelevant to current
+projects, or fully processed with nothing new to extract. Archiving is a
+catalog standing change, not a folder move.
 
 ## Prerequisites
 
-- The source note is at `lifecycle: current` (fully distilled), or you've decided it won't be processed further
+- The Work is checked/current, or you've decided it should not be processed further
 
 ## Steps
 
-**1. Confirm there are no open board cards for this source.**
+**1. Confirm there is no open work for this source.**
 
-Check for open cards referencing this citekey ([Hermes CLI](../../reference/hermes-cli.md#board-management)):
-
-```bash
-hermes kanban list
-```
-
-If an open card references the citekey, archive it with a reason first:
+Check request and attention state for the Work ID or citekey:
 
 ```bash
-hermes kanban archive <card-id> --reason "source archived: superseded"
+memoria request list --workspace <workspace>
+memoria attention list --workspace <workspace>
 ```
 
-**2. Open the source Concept in Obsidian.**
+Cancel obsolete requests or resolve obsolete attention before archiving:
 
-Use the Library space's source views or Obsidian search to open the source
-Concept. The on-disk path is `catalog/sources/<source_id>/source.md`, but
-navigation should start from the space/Bases surface.
-
-**3. Set `lifecycle: archived` in frontmatter.**
-
-```yaml
-lifecycle: archived
+```bash
+memoria request cancel --workspace <workspace> <request-id>
+memoria attention resolve --workspace <workspace> <attention-path> --reject
 ```
 
-Add one line at the top of the body saying why ("superseded by newer work", "out of scope", "fully processed"). This is the only record of why this source left the active pool.
+**2. Archive the Work row.**
 
-**4. Decide whether the Catalog entity archives too.**
+Use the CLI so the worker records the change through the request lifecycle:
 
-The source Concept at `catalog/sources/<source_id>/source.md` is the bibliographic
-record, not your reading of it. Set `lifecycle: archived` only when the record
-itself should leave active Catalog views. For a retracted source, use
-`lifecycle: retracted`.
+```bash
+memoria work update --workspace <workspace> <work-id> --standing archived
+```
 
-**5. Confirm any claims that cite this source still stand.**
+Use `--standing superseded` or `--standing retracted` instead when that is the
+real reason.
 
-Open the backlinks panel before walking away. Claims citing the source remain valid — the source is archived, not deleted, and every `sources:` citekey still resolves. If the archive was prompted by a retraction, revisit those claims deliberately (soften, supersede, or caveat).
+**3. Recheck claims that cite this Work.**
+
+Archive does not delete evidence. If the archive was prompted by a retraction,
+run the retraction sweep and revisit claims deliberately: soften, supersede, or
+caveat.
 
 ## Verify
 
-- The source Concept carries `lifecycle: archived` and no longer appears in active Catalog views
-- No open board cards reference this citekey
-- Checked notes citing this source still resolve their `evidence_set`
+- The `memoria work update --json` result or request record reports `standing: archived`
+- No open request or attention item references this Work
+- Checked notes citing this Work still resolve their evidence
 
 ## When not to archive
 
-Do not archive a source just to clear it from a queue. If a source has sat unread for weeks but you still plan to read it, leave it at `lifecycle: proposed` — the backpressure is intentional. Archive only when you've made a deliberate decision that this source is done.
+Do not archive a Work just to clear it from a queue. If a source has sat unread
+but you still plan to read it, leave it current and let the queue show the
+backpressure. Archive only when you've made a deliberate decision that this Work
+is done.
 
 ## Related
 
