@@ -2,8 +2,8 @@
 title: Analyze gaps
 type: operation
 check_status: checked
-description: Classify checked catalog/knowledge topic mismatches and optional project
-  argument-health gaps.
+description: Classify checked catalog/knowledge topic mismatches, rank discovered
+  Work candidates against steering, and report optional project argument-health gaps.
 operation_id: analyze-gaps
 allowed_tools:
 - read_checked_concepts
@@ -35,6 +35,8 @@ links: {}
 
 Read checked current Concepts and return source/note mismatch gaps. When the
 payload includes `project_path`, also read that checked project's argument graph
-and return argument-health gaps. Repeated unchecked vocabulary phrases in checked
-Work text are emitted as stable `inbox/` tag-candidate attention; tags are never
-written directly.
+and return argument-health gaps. Provider-discovered Work candidates are written
+as `inbox/` attention with deterministic steering relevance metadata and a
+separate exploration channel for non-matching candidates. Repeated unchecked
+vocabulary phrases in checked Work text are emitted as stable `inbox/`
+tag-candidate attention; tags are never written directly.

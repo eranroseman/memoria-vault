@@ -71,6 +71,22 @@ _TAG_CANDIDATE_STOPWORDS = frozenset(
         "with",
     }
 )
+_DISCOVERY_RELEVANCE_STOPWORDS = _TAG_CANDIDATE_STOPWORDS | {
+    "candidate",
+    "current",
+    "paper",
+    "papers",
+    "priority",
+    "question",
+    "questions",
+    "research",
+    "source",
+    "sources",
+    "steering",
+    "system",
+    "work",
+    "works",
+}
 PAPER_PLAN_REQUIRED_FIELDS = (
     "target",
     "audience",
@@ -521,6 +537,7 @@ def analyze_gaps(
         "argument_gap_count": len(argument_gaps),
         "paper_readiness_gap_count": len(paper_gaps),
         "discovery_candidate_paths": candidate_paths,
+        "discovery_candidate_channels": _discovery_candidate_channels(vault, candidate_paths),
         "discovery_commit": commit,
         "tag_candidate_count": len(tag_candidates),
         "tag_candidate_paths": tag_candidate_paths,
@@ -1020,6 +1037,8 @@ def _write_gap_discovery_candidates(
     from memoria_vault.runtime.enrichment import _write_discovery_candidate
 
     captured = _captured_work_ids(vault)
+    steering_tokens = _steering_tokens(vault)
+    relevance_by_path: dict[str, dict[str, Any]] = {}
     new_paths = []
     for source_id in sorted(edges_by_source):
         source = state.catalog_source(vault, source_id)
@@ -1036,10 +1055,14 @@ def _write_gap_discovery_candidates(
                 edge,
                 raised_by="analyze-gaps",
             )
-            if not existed:
+            relevance = _discovery_relevance(steering_tokens, source, edge)
+            relevance_by_path[path] = relevance
+            changed = _annotate_discovery_candidate(vault, path, relevance)
+            if not existed or changed:
                 new_paths.append(path)
     if not new_paths:
         return [], ""
+    new_paths = _sort_discovery_candidate_paths(new_paths, relevance_by_path)
     append_journal_event(
         vault,
         {
@@ -1056,10 +1079,96 @@ def _write_gap_discovery_candidates(
         machine=machine,
     )
     for gap in gaps:
-        related = sorted(set(new_paths) & set(_candidate_paths_for_gap(gap, edges_by_source)))
+        related = _sort_discovery_candidate_paths(
+            set(new_paths) & set(_candidate_paths_for_gap(gap, edges_by_source)),
+            relevance_by_path,
+        )
         if related:
             gap["discovery_candidate_paths"] = related
-    return sorted(new_paths), commit
+    return new_paths, commit
+
+
+def _steering_tokens(vault: Path) -> set[str]:
+    path = vault / "steering.md"
+    if not path.is_file():
+        return set()
+    return _relevance_tokens(path.read_text(encoding="utf-8"))
+
+
+def _discovery_relevance(
+    steering_tokens: set[str],
+    source: dict[str, Any],
+    edge: dict[str, Any],
+) -> dict[str, Any]:
+    title_overlap = sorted(
+        steering_tokens
+        & _relevance_tokens(edge.get("target_title"), edge.get("target_id"), edge.get("target_doi"))
+    )
+    tag_tokens = set()
+    for term in _catalog_source_terms(source):
+        tag_tokens.update(_relevance_tokens(term))
+    tag_overlap = sorted(steering_tokens & tag_tokens)
+    citation_overlap = 2 if str(edge.get("relation_type")) == "references" else 1
+    channel = "ranked" if title_overlap or tag_overlap else "exploration"
+    score = 3 * len(title_overlap) + 2 * len(tag_overlap) + citation_overlap
+    if channel == "exploration":
+        score = 0
+    return {
+        "discovery_relevance_score": score,
+        "discovery_relevance_channel": channel,
+        "discovery_relevance_factors": {
+            "title_overlap": title_overlap,
+            "tag_overlap": tag_overlap,
+            "citation_overlap": citation_overlap,
+        },
+    }
+
+
+def _relevance_tokens(*values: object) -> set[str]:
+    text = " ".join(str(value) for value in values if value)
+    return {
+        token
+        for token in re.findall(r"[a-z0-9]{3,}", text.casefold())
+        if token not in _DISCOVERY_RELEVANCE_STOPWORDS and not token.isdigit()
+    }
+
+
+def _annotate_discovery_candidate(vault: Path, rel: str, relevance: dict[str, Any]) -> bool:
+    path = vault / rel
+    if not path.is_file():
+        return False
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+    changed = False
+    for key, value in relevance.items():
+        if frontmatter.get(key) != value:
+            frontmatter[key] = value
+            changed = True
+    if changed:
+        write_frontmatter_doc(path, frontmatter, body, create_parent=True)
+    return changed
+
+
+def _sort_discovery_candidate_paths(
+    paths: Iterable[str],
+    relevance_by_path: dict[str, dict[str, Any]],
+) -> list[str]:
+    return sorted(
+        paths,
+        key=lambda path: (
+            relevance_by_path.get(path, {}).get("discovery_relevance_channel") != "ranked",
+            -int(relevance_by_path.get(path, {}).get("discovery_relevance_score") or 0),
+            path,
+        ),
+    )
+
+
+def _discovery_candidate_channels(vault: Path, paths: Iterable[str]) -> dict[str, int]:
+    counts = {"ranked": 0, "exploration": 0}
+    for rel in paths:
+        channel = str(read_frontmatter(vault / rel).get("discovery_relevance_channel") or "")
+        if channel in counts:
+            counts[channel] += 1
+    return counts
 
 
 def _tag_candidates(vault: Path) -> list[dict[str, Any]]:

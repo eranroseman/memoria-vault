@@ -673,6 +673,57 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
     assert state.catalog_source(vault, "https://openalex.org/W777") is None
 
 
+def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path) -> None:
+    vault = workspace(tmp_path / "vault")
+    (vault / "steering.md").write_text(
+        "Prioritize neural retrieval evaluation.\n", encoding="utf-8"
+    )
+    state.upsert_catalog_record(
+        vault,
+        source_id="db-alpha",
+        title="DB Alpha",
+        text_status="full-text",
+        check_status="checked",
+        csl_json={"memoria": {"topics": ["catalog-only"]}},
+    )
+    state.replace_work_graph_edges(
+        vault,
+        "db-alpha",
+        [
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W111",
+                "target_title": "Unrelated Work",
+                "source_provider": "openalex",
+            },
+            {
+                "relation_type": "related",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Neural Retrieval Evaluation",
+                "source_provider": "openalex",
+            },
+        ],
+    )
+
+    result = analyze_gaps(vault, dense_threshold=1, machine="gap-machine")
+
+    assert result["discovery_candidate_paths"] == [
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W999.md",
+        "inbox/candidate-work-db-alpha-related-https___openalex.org_W111.md",
+    ]
+    assert result["discovery_candidate_channels"] == {"ranked": 1, "exploration": 1}
+    ranked = read_frontmatter(vault / result["discovery_candidate_paths"][0])
+    exploration = read_frontmatter(vault / result["discovery_candidate_paths"][1])
+    assert ranked["discovery_relevance_channel"] == "ranked"
+    assert ranked["discovery_relevance_score"] > exploration["discovery_relevance_score"]
+    assert ranked["discovery_relevance_factors"]["title_overlap"] == [
+        "evaluation",
+        "neural",
+        "retrieval",
+    ]
+    assert exploration["discovery_relevance_channel"] == "exploration"
+
+
 def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     state.upsert_catalog_record(
