@@ -43,3 +43,17 @@ def test_check_flags_missing_mechanism_and_stale_claim(tmp_path):
     assert any(
         "ADR-41" in error and "dispatch refuses to advance a card" in error for error in errors
     )
+
+
+def test_check_flags_stale_adr130_obsidian_surface_claim(tmp_path):
+    root = _minimal_clean_root(tmp_path)
+    adr130 = root / "docs/adr/130-read-api-surfaces-and-copi.md"
+    adr130.write_text(
+        adr130.read_text(encoding="utf-8")
+        + "\nThe CLI does not count as the direct-access surface.\n",
+        encoding="utf-8",
+    )
+
+    errors = _m.check(root)
+
+    assert any("ADR-130" in error and "CLI does not count" in error for error in errors)
