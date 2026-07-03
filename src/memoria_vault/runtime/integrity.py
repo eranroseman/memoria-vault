@@ -12,6 +12,7 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
@@ -66,6 +67,7 @@ _HANS_ACCEPTANCE = (
     ),
 )
 _SOURCE_RECORD_LINKAGE_ATTENTION = "inbox/work-prompt-record-linkage-source-external-ids.md"
+_ENTITY_RECORD_LINKAGE_ATTENTION = "inbox/work-prompt-record-linkage-entity-external-ids.md"
 
 
 def record_integrity_check(
@@ -341,7 +343,7 @@ def check_source_metadata(
                     machine=machine,
                 )
             )
-    record_linkage_findings = [
+    source_record_linkage_findings = [
         *_duplicate_source_external_id_findings(
             vault,
             shadow=shadow,
@@ -353,23 +355,46 @@ def check_source_metadata(
             machine=machine,
         ),
     ]
+    entity_record_linkage_findings = _duplicate_entity_external_id_findings(
+        vault,
+        shadow=shadow,
+        machine=machine,
+    )
+    record_linkage_findings = [*source_record_linkage_findings, *entity_record_linkage_findings]
     findings.extend(record_linkage_findings)
-    attention_path = ""
+    attention_paths: list[str] = []
     commit_paths: list[str] = []
-    active_record_linkage_findings = [
-        finding for finding in record_linkage_findings if finding.get("route") == "ask"
+    active_source_record_linkage_findings = [
+        finding for finding in source_record_linkage_findings if finding.get("route") == "ask"
     ]
-    if active_record_linkage_findings and commit:
-        attention_path, commit_paths = _write_source_record_linkage_attention(
+    if active_source_record_linkage_findings and commit:
+        attention_path, paths = _write_source_record_linkage_attention(
             vault,
-            active_record_linkage_findings,
+            active_source_record_linkage_findings,
         )
+        attention_paths.append(attention_path)
+        commit_paths.extend(paths)
+    active_entity_record_linkage_findings = [
+        finding for finding in entity_record_linkage_findings if finding.get("route") == "ask"
+    ]
+    if active_entity_record_linkage_findings and commit:
+        attention_path, paths = _write_entity_record_linkage_attention(
+            vault,
+            active_entity_record_linkage_findings,
+        )
+        attention_paths.append(attention_path)
+        commit_paths.extend(paths)
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(
             vault, "source metadata check", commit_paths, machine=machine
         )
-    return {"findings": findings, "commit": commit_hash, "attention_path": attention_path}
+    return {
+        "findings": findings,
+        "commit": commit_hash,
+        "attention_path": attention_paths[0] if attention_paths else "",
+        "attention_paths": attention_paths,
+    }
 
 
 def _duplicate_source_external_id_findings(
@@ -540,6 +565,75 @@ def _csl_first_author_key(csl_json: dict[str, Any]) -> str:
     return ""
 
 
+def _duplicate_entity_external_id_findings(
+    vault: Path,
+    *,
+    shadow: bool,
+    machine: str | None,
+) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    for owner_type, namespace, value, owner_ids in _duplicate_entity_external_id_groups(vault):
+        for owner_id in owner_ids:
+            others = [other for other in owner_ids if other != owner_id]
+            if not others:
+                continue
+            findings.append(
+                record_integrity_check(
+                    vault,
+                    _entity_record_linkage_target(owner_type, owner_id),
+                    check="record-linkage",
+                    status="failed",
+                    reason=(
+                        f"duplicate {owner_type} external id {namespace}={value} also used by "
+                        f"{', '.join(others)}"
+                    ),
+                    shadow=shadow,
+                    machine=machine,
+                )
+            )
+    return findings
+
+
+def _duplicate_entity_external_id_groups(vault: Path) -> list[tuple[str, str, str, list[str]]]:
+    if not state.db_path(vault).is_file():
+        return []
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT owner_type, namespace, value, owner_id
+            FROM external_ids
+            WHERE owner_type = 'person'
+              AND namespace IN ('orcid', 'openalex')
+            ORDER BY owner_type, namespace, value, owner_id
+            """
+        ).fetchall()
+    groups: dict[tuple[str, str, str], set[str]] = {}
+    for row in rows:
+        owner_type = str(row["owner_type"] or "").strip()
+        namespace = str(row["namespace"] or "").strip()
+        value = _entity_external_id_value(namespace, str(row["value"] or ""))
+        owner_id = str(row["owner_id"] or "").strip()
+        if not owner_type or not namespace or not value or not owner_id:
+            continue
+        groups.setdefault((owner_type, namespace, value), set()).add(owner_id)
+    return [
+        (owner_type, namespace, value, sorted(owner_ids))
+        for (owner_type, namespace, value), owner_ids in sorted(groups.items())
+        if len(owner_ids) > 1
+    ]
+
+
+def _entity_external_id_value(namespace: str, value: str) -> str:
+    text = value.strip().rstrip("/")
+    if namespace == "orcid":
+        text = text.removeprefix("https://orcid.org/").removeprefix("http://orcid.org/")
+    return text
+
+
+def _entity_record_linkage_target(owner_type: str, owner_id: str) -> str:
+    return normalize_path(f"catalog/entities/{owner_type}-{safe_filename(owner_id)}.md")
+
+
 def _write_source_record_linkage_attention(
     vault: Path,
     findings: list[dict[str, Any]],
@@ -561,6 +655,32 @@ def _write_source_record_linkage_attention(
     )
     if path is None:
         return _SOURCE_RECORD_LINKAGE_ATTENTION, []
+    rel = path.relative_to(vault).as_posix()
+    return rel, [rel]
+
+
+def _write_entity_record_linkage_attention(
+    vault: Path,
+    findings: list[dict[str, Any]],
+) -> tuple[str, list[str]]:
+    path = write_work_prompt(
+        vault,
+        "Review entity record-linkage candidates",
+        "Review duplicate person identities before merging or treating them as separate people.",
+        (
+            f"The source metadata check found {len(findings)} active entity "
+            "record-linkage candidate(s). The check-fired events list each affected "
+            "person identity and duplicate external ID."
+        ),
+        "check-source-metadata",
+        target="catalog/entities",
+        posture="librarian",
+        loudness="alert",
+        dedupe_slug="record-linkage-entity-external-ids",
+        prompt_kind="record-linkage",
+    )
+    if path is None:
+        return _ENTITY_RECORD_LINKAGE_ATTENTION, []
     rel = path.relative_to(vault).as_posix()
     return rel, [rel]
 
