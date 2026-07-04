@@ -13,10 +13,10 @@ import sys
 import tempfile
 import time
 import uuid
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
+from memoria_vault import __version__
 from memoria_vault.engine import api as engine_api
 from memoria_vault.runtime import state
 from memoria_vault.runtime.worker import (
@@ -2448,10 +2448,7 @@ def _repo_root() -> Path:
 
 
 def _package_version() -> str:
-    try:
-        return version("memoria-vault")
-    except PackageNotFoundError:
-        return "0.0.0"
+    return __version__
 
 
 if __name__ == "__main__":
