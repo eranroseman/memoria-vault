@@ -164,8 +164,9 @@ engine are being validated as a standalone local product. What is not working to
   provider/package run before release.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
-- **Writability and readiness scoring are not implemented** — project readiness
-  scoring remains deferred.
+- **Broad writability scoring is not implemented** — alpha.15 has structural
+  project export readiness, but it does not decide whether developed claims are
+  ready to become prose.
 - **Single-user only** — team and multi-user review are out of scope by design.
 - **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
 - **Some integrations are planned, not shipped** — e.g. expanded reference-manager support.
