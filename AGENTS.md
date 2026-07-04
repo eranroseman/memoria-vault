@@ -50,22 +50,30 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 ## Where things live
 
-`~/memoria-vault` is the local single source of truth for this repository. Save
-nothing outside it without explicit permission.
+`~/memoria-vault` is the local single source of truth for this repository's
+durable source, worktrees, scratch, and test vaults. Do not save those outside it
+without explicit permission.
 
 | Piece | Host | Path |
 |---|---|---|
 | **Project container** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
 | **Main checkout** (permanent files) | WSL2 · ext4 | `~/memoria-vault/main` |
-| **Scratch checkout** (temporary tracked files) | WSL2 · ext4 | `~/memoria-vault/scratch` |
+| **Scratch checkout** (temporary tracked files; linked worktree) | WSL2 · ext4 | `~/memoria-vault/scratch` |
 | **Task worktrees** | WSL2 · ext4 | `~/memoria-vault/worktrees/<session>` |
-| **Standalone Memoria sandbox** (disposable test files) | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
+| **Standalone Memoria sandbox** (disposable runtime/test files) | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
 | **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Permanent files go in `~/memoria-vault/main`; temporary tracked files go in
   `~/memoria-vault/scratch`; task checkouts go in `~/memoria-vault/worktrees/`;
   disposable test workspaces go in `~/memoria-vault/sandbox`.
+- The only nested standalone `.git` expected under this tree is a disposable
+  installed vault such as `~/memoria-vault/sandbox/vault`; it is runtime state,
+  not repository source.
+- Tool caches are not source-of-truth content. Pre-commit, pip, npm, and similar
+  disposable caches may live in normal OS cache locations such as
+  `~/.cache/pre-commit`; keep them untracked, and only place them under
+  `~/memoria-vault/.cache` when a sandbox or local permission rule requires it.
 - Alpha.15's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
@@ -161,6 +169,11 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 `releases/`, `workflow-audit/`, and other scratch-only roots; it does not carry the repository source tree. Authorized
 contributors with repository write access may push scratch-only commits directly
 to that branch; no PR or required CI is expected there.
+
+Locally, `~/memoria-vault/scratch` is the locked linked worktree for the
+`scratch` branch, owned by `~/memoria-vault/main`. Do not replace it with a
+second clone or standalone `.git`; hooks stay disabled there via
+`~/memoria-vault/.cache/git-hooks-disabled`.
 
 For scratch-only work, use a reusable scratch worktree and push directly to the
 shared remote branch. This path intentionally has **no PR** and no required CI.
@@ -277,7 +290,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules.
 - **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
-- **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/memoria-vault/sandbox/vault` — never test against the real `~/Memoria`.
+- **Installer end-to-end:** `bash scripts/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
 
 ---
 

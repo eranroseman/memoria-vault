@@ -42,7 +42,7 @@ def test_verify_dry_run_writes_evidence(tmp_path: Path) -> None:
             f"--find-links {tmp_path}/dist memoria-vault"
         ),
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "bash scripts/e2e-smoke.sh",
+        "python3 scripts/e2e_smoke.py",
     ]
     assert summary["artifacts"] == []
     assert summary["versions"] == {
@@ -111,7 +111,7 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
             f"--find-links {tmp_path}/dist memoria-vault"
         ),
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "bash scripts/e2e-smoke.sh",
+        "python3 scripts/e2e_smoke.py",
         "python3 -m pytest tests/test_alpha15_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
         (
@@ -149,7 +149,7 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
             f"--find-links {tmp_path}/dist memoria-vault"
         ),
         f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "bash scripts/e2e-smoke.sh",
+        "python3 scripts/e2e_smoke.py",
         "python3 -m pytest tests/test_alpha15_runtime_gate.py -q",
         "python3 -m pytest tests/test_alpha11_cycle.py -q",
         (

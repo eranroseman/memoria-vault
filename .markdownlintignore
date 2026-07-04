@@ -1,3 +1,0 @@
-# Scratch dirs (e.g. a release folder's tmp/): tracked in git for relative
-# linking, but not linted (and excluded from the site — see docs/_config.yml).
-**/tmp/

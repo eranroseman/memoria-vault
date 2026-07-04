@@ -51,7 +51,7 @@ GATE_COMMANDS = {
             "-c",
             "import memoria_vault; print(memoria_vault.__version__)",
         ],
-        ["bash", "scripts/e2e-smoke.sh"],
+        ["python3", "scripts/e2e_smoke.py"],
     ],
     "runtime": [
         ["python3", "-m", "pytest", "tests/test_alpha15_runtime_gate.py", "-q"],
@@ -114,23 +114,6 @@ def git_output(*args: str) -> str:
         check=False,
     )
     return result.stdout.strip() if result.returncode == 0 else "unknown"
-
-
-def hermes_version() -> str:
-    if shutil.which("hermes") is None:
-        return "not-found"
-    for command in (["hermes", "--version"], ["hermes", "version"]):
-        result = subprocess.run(
-            command,
-            cwd=ROOT,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            check=False,
-        )
-        if result.returncode == 0 and result.stdout.strip():
-            return result.stdout.strip().splitlines()[0]
-    return "unknown"
 
 
 def package_versions() -> dict[str, str]:
@@ -256,7 +239,6 @@ def main() -> int:
         "host": {
             "platform": platform.platform(),
             "python": platform.python_version(),
-            "hermes": hermes_version(),
         },
         "versions": package_versions(),
         "artifacts": [],

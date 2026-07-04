@@ -10,14 +10,11 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 import tempfile
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from urllib import error, request
 
 import yaml
 
@@ -38,22 +35,6 @@ SKIP_COPY = {".git"}
 
 class HarnessError(RuntimeError):
     pass
-
-
-@dataclass
-class ReplayResult:
-    cassette: str
-    vault: Path
-    steps: list[dict[str, Any]]
-    artifacts: list[str]
-
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "cassette": self.cassette,
-            "vault": str(self.vault),
-            "steps": self.steps,
-            "artifacts": sorted(set(self.artifacts)),
-        }
 
 
 def arg_shape(value: Any) -> Any:
@@ -85,14 +66,6 @@ def load_cassette(path: Path) -> dict[str, Any]:
         if arg_shape(step.get("args", {})) != step.get("arg_shape"):
             raise HarnessError(f"cassette step {step.get('id')} arg_shape does not match args")
     return data
-
-
-def write_recorded_cassette(cassette: dict[str, Any], path: Path) -> None:
-    recorded = json.loads(json.dumps(cassette, sort_keys=True))
-    for step in recorded["steps"]:
-        step["arg_shape"] = arg_shape(step.get("args", {}))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(recorded, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
 def add_operation_paths(root: Path) -> None:
@@ -235,7 +208,7 @@ def assert_final(vault: Path, final: dict[str, Any]) -> None:
             )
 
 
-def replay(root: Path, vault: Path, cassette_path: Path) -> ReplayResult:
+def replay(root: Path, vault: Path, cassette_path: Path) -> dict[str, Any]:
     root = root.resolve()
     vault = vault.resolve()
     add_operation_paths(root)
@@ -248,107 +221,33 @@ def replay(root: Path, vault: Path, cassette_path: Path) -> ReplayResult:
         artifacts.extend(produced)
         steps.append({"id": step["id"], "tool": step["tool"], "artifacts": produced})
     assert_final(vault, cassette.get("final_assertions", {}))
-    return ReplayResult(cassette=cassette["name"], vault=vault, steps=steps, artifacts=artifacts)
-
-
-def run_model_smoke() -> int:
-    """Opt-in G3 smoke for a local OpenAI-compatible tool-call endpoint."""
-    base_url = os.environ.get("MEMORIA_MODEL_BASE_URL", "").rstrip("/")
-    model = os.environ.get("MEMORIA_MODEL_NAME", "local-tool-smoke")
-    # Local runtimes vary: a 12B model on CPU can take ~45s for a single tool
-    # call, so the timeout is generous and overridable for slower hardware.
-    timeout = float(os.environ.get("MEMORIA_MODEL_TIMEOUT", "90"))
-    if not base_url:
-        print("model-smoke: skipped (set MEMORIA_MODEL_BASE_URL to run the live tool-call smoke)")
-        return 0
-    url = f"{base_url}/chat/completions"
-    payload = {
-        "model": model,
-        # tool_choice is "auto" rather than a forced function: several local
-        # OpenAI-compatible runtimes (e.g. Ollama + Gemma) return empty output
-        # when a function is forced, but emit a correct tool_call under "auto".
-        # The instruction keeps the call deterministic without forcing.
-        "messages": [
-            {
-                "role": "user",
-                "content": (
-                    "Write the file inbox/model-smoke.md with body ok using the "
-                    "vault_write tool. You must call the tool."
-                ),
-            }
-        ],
-        "tools": [
-            {
-                "type": "function",
-                "function": {
-                    "name": "vault_write",
-                    "description": "Write a vault-relative markdown file.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "path": {"type": "string"},
-                            "content": {"type": "string"},
-                        },
-                        "required": ["path", "content"],
-                    },
-                },
-            }
-        ],
-        "tool_choice": "auto",
-        "max_tokens": 128,
+    return {
+        "cassette": cassette["name"],
+        "vault": str(vault),
+        "steps": steps,
+        "artifacts": sorted(set(artifacts)),
     }
-    req = request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except (OSError, error.HTTPError, json.JSONDecodeError) as exc:
-        raise HarnessError(f"model-smoke request failed: {exc}") from exc
-    message = (data.get("choices") or [{}])[0].get("message") or {}
-    calls = message.get("tool_calls") or []
-    if not calls:
-        raise HarnessError(f"model-smoke produced no tool_calls: {data}")
-    fn = calls[0].get("function") or {}
-    if fn.get("name") != "vault_write":
-        raise HarnessError(f"model-smoke called unexpected tool: {fn.get('name')!r}")
-    print("model-smoke: PASS")
-    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "command", choices=("replay", "record", "model-smoke"), nargs="?", default="replay"
-    )
+    parser.add_argument("command", choices=("replay",), nargs="?", default="replay")
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--vault", type=Path)
     parser.add_argument("--cassette", type=Path, default=DEFAULT_CASSETTE)
-    parser.add_argument("--out", type=Path, help="record output path")
     parser.add_argument("--json", action="store_true", help="print replay summary as JSON")
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
     cassette_path = args.cassette if args.cassette.is_absolute() else root / args.cassette
-    if args.command == "model-smoke":
-        return run_model_smoke()
-    cassette = load_cassette(cassette_path)
-    if args.command == "record":
-        out = args.out or cassette_path
-        write_recorded_cassette(cassette, out if out.is_absolute() else root / out)
-        print(f"recorded: {out}")
-        return 0
 
     if args.vault is None:
         with tempfile.TemporaryDirectory(prefix="memoria-test-env-") as tmp:
             result = replay(root, Path(tmp), cassette_path)
-            print(json.dumps(result.as_dict(), indent=2) if args.json else "test-env-harness: PASS")
+            print(json.dumps(result, indent=2) if args.json else "test-env-harness: PASS")
             return 0
     result = replay(root, args.vault, cassette_path)
-    print(json.dumps(result.as_dict(), indent=2) if args.json else "test-env-harness: PASS")
+    print(json.dumps(result, indent=2) if args.json else "test-env-harness: PASS")
     return 0
 
 

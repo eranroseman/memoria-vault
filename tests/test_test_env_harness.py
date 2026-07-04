@@ -35,8 +35,7 @@ def test_cassette_matches_tool_name_and_arg_shape():
 def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     harness = _load_harness()
 
-    result = harness.replay(ROOT, tmp_path, CASSETTE)
-    summary = result.as_dict()
+    summary = harness.replay(ROOT, tmp_path, CASSETTE)
 
     assert summary["cassette"] == "package-gate-golden-path"
     assert "knowledge/projects/harness.md" in summary["artifacts"]

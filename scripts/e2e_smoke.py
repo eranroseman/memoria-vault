@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Importable assertions for scripts/e2e-smoke.sh."""
+"""Offline end-to-end smoke gate and importable assertions."""
 
 from __future__ import annotations
 
-import argparse
+import os
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import yaml
@@ -54,10 +57,7 @@ def assert_executable(path: Path, label: str) -> None:
 
 
 def add_repo_paths(root: Path) -> None:
-    for path in (
-        root,
-        root / "vault-template/.memoria",
-    ):
+    for path in (root, root / "vault-template/.memoria"):
         if str(path) not in sys.path:
             sys.path.insert(0, str(path))
 
@@ -162,40 +162,235 @@ def assert_final_verdict(verdict: str) -> None:
     assert re.search(r"PASS|REVIEW", verdict), f"worked vault verdict: {verdict}"
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "command",
-        choices=[
-            "stage-label",
-            "vault-skeleton",
-            "no-obsidian-bundle",
-            "executable",
-            "offline-ingest",
-            "typed-graph",
-            "workflow-artifacts",
-            "final-verdict",
-        ],
-    )
-    parser.add_argument("args", nargs="*")
-    ns = parser.parse_args(argv)
+def _fail(message: str) -> None:
+    print(f"e2e-smoke: FAIL - {message}", file=sys.stderr)
+    raise SystemExit(1)
 
-    if ns.command == "stage-label":
-        print_stage_label(ns.args[0])
-    elif ns.command == "vault-skeleton":
-        assert_vault_skeleton(Path(ns.args[0]), Path(ns.args[1]))
-    elif ns.command == "no-obsidian-bundle":
-        assert_no_obsidian_bundle(Path(ns.args[0]))
-    elif ns.command == "executable":
-        assert_executable(Path(ns.args[0]), ns.args[1])
-    elif ns.command == "offline-ingest":
-        assert_offline_ingest(Path(ns.args[0]), Path(ns.args[1]))
-    elif ns.command == "typed-graph":
-        assert_typed_graph(Path(ns.args[0]), Path(ns.args[1]))
-    elif ns.command == "workflow-artifacts":
-        assert_workflow_replay_artifacts(Path(ns.args[0]))
-    elif ns.command == "final-verdict":
-        assert_final_verdict(ns.args[0])
+
+def _stage(name: str) -> None:
+    print(f"== {STAGE_LABELS[name]} ==")
+
+
+def _env(root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = (
+        f"{root / 'src'}{os.pathsep}{env['PYTHONPATH']}"
+        if env.get("PYTHONPATH")
+        else str(root / "src")
+    )
+    return env
+
+
+def _run(
+    command: list[str],
+    *,
+    env: dict[str, str] | None = None,
+    stdout: int | None = None,
+    stderr: int | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=ROOT,
+        env=env,
+        text=True,
+        stdout=stdout,
+        stderr=stderr,
+        check=False,
+    )
+
+
+def _run_or_fail(command: list[str], message: str, *, env: dict[str, str] | None = None) -> None:
+    result = _run(command, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    if result.returncode != 0:
+        _fail(f"{message}\n{result.stdout}")
+
+
+def _git(
+    vault: Path, *args: str, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    return _run(
+        ["git", "-C", str(vault), *args],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+
+
+def _git_or_fail(vault: Path, *args: str, message: str, env: dict[str, str] | None = None) -> None:
+    result = _git(vault, *args, env=env)
+    if result.returncode != 0:
+        _fail(f"{message}\n{result.stdout}")
+
+
+def _python() -> str:
+    return os.environ.get("PYTHON", sys.executable)
+
+
+def _detector_verdict(vault: Path, env: dict[str, str]) -> str:
+    result = _run(
+        [
+            _python(),
+            "-m",
+            "memoria_vault.runtime.subsystems.integrity.linter.detectors",
+            "--vault",
+            str(vault),
+        ],
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+    if result.returncode != 0:
+        _fail(f"detectors failed\n{result.stdout}")
+    return (result.stdout or "").strip().splitlines()[-1]
+
+
+def _copy_vault_template(root: Path, vault: Path) -> None:
+    shutil.copytree(
+        root / "vault-template",
+        vault,
+        dirs_exist_ok=True,
+        ignore=shutil.ignore_patterns(".git"),
+    )
+
+
+def _vault_assembly(root: Path, vault: Path, env: dict[str, str]) -> None:
+    _stage("vault-assembly-1")
+    if shutil.which("git") is None:
+        _fail("git is required for vault-assembly and commit-gate checks")
+    _copy_vault_template(root, vault)
+    assert_vault_skeleton(root, vault)
+
+    _stage("vault-assembly-2")
+    _git_or_fail(vault, "init", "-q", message="git init failed")
+    _git_or_fail(vault, "config", "user.email", "e2e@example.invalid", message="git config failed")
+    _git_or_fail(vault, "config", "user.name", "Memoria E2E Smoke", message="git config failed")
+    _git_or_fail(vault, "rev-parse", "--is-inside-work-tree", message="not a git repository")
+    hook = vault / ".git/hooks/pre-commit"
+    hook.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(vault / ".githooks/pre-commit", hook)
+    hook.chmod(0o755)
+    assert_executable(hook, "pre-commit hook")
+    assert_no_obsidian_bundle(vault)
+
+    _stage("vault-assembly-3")
+    if "PASS" not in _detector_verdict(vault, env):
+        _fail("detectors not clean on the fresh vault")
+
+
+def _commit_gate(vault: Path, env: dict[str, str]) -> None:
+    _stage("commit-gate")
+    _git_or_fail(
+        vault, "rev-parse", "--is-inside-work-tree", message="commit-gate needs git", env=env
+    )
+    assert_executable(vault / ".git/hooks/pre-commit", "pre-commit hook")
+    _git_or_fail(vault, "add", "-A", message="baseline add failed", env=env)
+    _git_or_fail(
+        vault,
+        "-c",
+        "user.email=e2e@ci",
+        "-c",
+        "user.name=e2e",
+        "commit",
+        "-qm",
+        "init",
+        message="baseline commit blocked",
+        env=env,
+    )
+    bad = vault / "knowledge/notes/bad.md"
+    bad.write_text('---\ntype: note\ntitle: "Bad"\n---\nx\n', encoding="utf-8")
+    _git_or_fail(vault, "add", "knowledge/notes/bad.md", message="bad note add failed", env=env)
+    result = _git(
+        vault,
+        "-c",
+        "user.email=e2e@ci",
+        "-c",
+        "user.name=e2e",
+        "commit",
+        "-qm",
+        "bad",
+        env=env,
+    )
+    if result.returncode == 0:
+        _fail("the gate let a malformed note through")
+    print("   malformed note blocked at commit")
+    _git_or_fail(
+        vault, "reset", "-q", "HEAD", "knowledge/notes/bad.md", message="reset failed", env=env
+    )
+    bad.unlink()
+    good = vault / "knowledge/notes/good.md"
+    good.write_text(
+        "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\ntags: []\nlinks: {}\n"
+        'title: "Good"\n---\nBody.\n',
+        encoding="utf-8",
+    )
+    _git_or_fail(vault, "add", "knowledge/notes/good.md", message="good note add failed", env=env)
+    _git_or_fail(
+        vault,
+        "-c",
+        "user.email=e2e@ci",
+        "-c",
+        "user.name=e2e",
+        "commit",
+        "-qm",
+        "good",
+        message="valid note blocked",
+        env=env,
+    )
+    print("   valid note passes")
+
+
+def _offline_ingest(root: Path, vault: Path) -> None:
+    _stage("offline-ingest-1")
+    assert_offline_ingest(root, vault)
+    _stage("offline-ingest-2")
+    assert_typed_graph(root, vault)
+
+
+def _workflow_replay(root: Path, vault: Path, env: dict[str, str]) -> None:
+    _stage("workflow-replay")
+    _run_or_fail(
+        [
+            _python(),
+            str(root / "scripts/test_env_harness.py"),
+            "replay",
+            "--root",
+            str(root),
+            "--vault",
+            str(vault),
+        ],
+        "test-env harness replay failed",
+        env=env,
+    )
+    assert_workflow_replay_artifacts(vault)
+    print("   cassette replay reached the model-free package-gate path")
+
+
+def _final_integrity(vault: Path, env: dict[str, str]) -> None:
+    _stage("final-integrity")
+    verdict = _detector_verdict(vault, env)
+    print(f"   {verdict}")
+    assert_final_verdict(verdict)
+
+
+def run_smoke(root: Path = ROOT) -> None:
+    root = root.resolve()
+    env = _env(root)
+    vault = Path(
+        tempfile.mkdtemp(prefix="memoria-e2e-", dir=os.environ.get("TMPDIR", tempfile.gettempdir()))
+    )
+    try:
+        _vault_assembly(root, vault, env)
+        _commit_gate(vault, env)
+        _offline_ingest(root, vault)
+        _workflow_replay(root, vault, env)
+        _final_integrity(vault, env)
+    finally:
+        shutil.rmtree(vault, ignore_errors=True)
+    print("e2e-smoke: all gates green")
+
+
+def main() -> int:
+    run_smoke()
     return 0
 
 
