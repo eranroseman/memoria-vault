@@ -18,7 +18,8 @@ scope here. If you want Option 2, it needs its own concrete sequence.
   update path references. No re-clone; no data loss.
 - **Worktree / branch for the doc-update PR:** `~/memoria-vault/worktrees/layout-paths`
   · `fix/layout-paths` off `origin/main` (created *after* the filesystem move).
-  This plan lives on the `scratch` branch under `scratch/workflow-audit/`.
+  This plan lives on the `scratch` branch under `scratch/workflow-audit/`; the
+  de-nest (Phase A, step 0) later moves it to `workflow-audit/`.
 - **Related ADRs:** none required — this is a machine-local dev-environment
   convention documented in AGENTS.md, not a product/architecture decision.
 - **Related issues / milestone:** —
@@ -86,8 +87,7 @@ commands run from `~/memoria-vault/` itself.
 count was ~72 files mentioning `~/mv/` or `~/memoria-vault`): `AGENTS.md`
 (§1 worktree convention `~/mv/<session>` and the "Where things live" table),
 `scripts/refresh-test-vault.sh` (`VAULT="$HOME/Memoria-test"`),
-`.github/workflows/hermes-version-check.yml` (hardcoded `/home/eranr/Memoria-test`),
-plus this agent's memory files.
+`.github/workflows/hermes-version-check.yml` (hardcoded `/home/eranr/Memoria-test`).
 
 **HARD PREREQUISITES (the plan is unsafe without these — a 2026-07-04 pre-flight
 audit found several of these unmet):**
@@ -132,8 +132,11 @@ normal PR that fixes the now-stale *tracked* path references. Phase C is the
 machine-local reconfiguration no PR can do. **The freeze (prereq 1) holds from the
 start of Phase A until Phase B has merged;** Phase C follows.
 
-**Phase A — build the container (local, reversible via backup).** Back up the
-object store. Build the new layout *beside* the current one (`~/memoria-vault-new`)
+**Phase A — build the container (local, reversible via backup).** First **de-nest
+the `scratch` branch** (step 0: move its `scratch/…` content to the branch root,
+commit, push) so the bare clone captures the flat layout and the scratch worktree
+lands clean. Then back up the object store. Build the new layout *beside* the current
+one (`~/memoria-vault-new`)
 so nothing is destroyed until it is verified: create the bare repo (objects
 hardlinked from the local repo — fast, no network), re-point its `origin` at the
 real GitHub URL and set the remote-tracking fetch refspec (the one bare-repo
@@ -146,7 +149,9 @@ to `~/memoria-vault`. Clean the `~/mv` cruft.
 branch off `origin/main`, grep *all* tracked files for the old paths, update the
 stale conventions (AGENTS.md worktree path → `~/memoria-vault/worktrees/<session>`
 and repo-root → `~/memoria-vault/main`; `refresh-test-vault.sh` default →
-`~/memoria-vault/sandbox`; `hermes-version-check.yml`), and open one PR. CI
+`~/memoria-vault/sandbox`; `hermes-version-check.yml`) **plus the de-nest doc-sync**
+(AGENTS.md scratch-flow `scratch/releases/<version>/` → `releases/<version>/`;
+`status_doctor`'s `scratch/releases` glob → `releases`), and open one PR. CI
 is unaffected (it clones fresh); only local conventions change. **The freeze stays
 in force until this PR merges** — until then the disk contradicts AGENTS.md.
 
@@ -164,16 +169,34 @@ touch them:
 - **Shell / IDE.** Aliases, shell rc, and IDE/editor workspace files that assume
   the repo is at `~/memoria-vault` (now a container) or worktrees at `~/mv/` →
   update to `~/memoria-vault/main` and `~/memoria-vault/worktrees/`.
-- **Agent memory — nothing to do.** The repo (AGENTS.md) is the single source of
-  truth for where things live; memory must not restate paths, so there is no path
-  fact in memory to update. (If a memory file *does* hard-code a path, that's a
-  pre-existing SSOT violation to fix separately — point it at AGENTS.md, don't
-  re-mirror the path.)
 
 ## 4. Concrete steps
 
 Run these from a shell whose CWD is **`~`** (never inside a worktree being moved).
 `TS` is a timestamp for the backup. Read the real remote URL rather than guessing.
+
+0. **De-nest the `scratch` branch** (independent scratch-branch commit; must land
+   *before* the bare clone in step 2 so the clone captures the flat layout). The
+   `scratch/` wrapper is a fossil from when scratch was a subfolder of `main`; the
+   orphan branch is entirely scratch, so the prefix is redundant and is the sole
+   cause of the `~/memoria-vault/scratch/scratch/…` double-nest. Move the content to
+   the branch root:
+
+   ```bash
+   cd <the scratch worktree>            # the only worktree on the scratch branch
+   git ls-tree --name-only HEAD         # MUST show only "scratch" at root (no stray root files)
+   git mv scratch/* .                   # releases/, workflow-audit/ -> branch root
+   for f in scratch/.[!.]*; do [ -e "$f" ] && git mv "$f" .; done   # any dotfiles (none today)
+   rmdir scratch
+   PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "scratch: de-nest content to branch root"
+   git push                             # origin/scratch — direct, no PR/CI (scratch rules)
+   ```
+
+   Expected: root now holds `releases/`, `workflow-audit/` directly; this plan moves
+   to `workflow-audit/exec-plan-project-layout.md`. `pr-policy`'s main-side `scratch/`
+   block is untouched (it guards main-branch worktrees, orthogonal to this branch's
+   layout); the now-stale AGENTS.md scratch-flow wording + `status_doctor` glob are
+   fixed in Phase B (step 7).
 
 1. **Pre-flight + backup:**
 
@@ -187,10 +210,12 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    done                                                     # EVERY line: "0 uncommitted"
    git -C ~/memoria-vault branch -vv | grep '\[behind'      # MUST print NOTHING (else a branch is still stale — STOP)
    git -C ~/memoria-vault stash list                        # MUST be empty (prereq 3) — clone drops stashes
-   systemctl --user stop hermes-gateway.service             # prereq 4
-   systemctl --user is-active hermes-gateway.service        # expect: inactive/failed
+   systemctl --user stop hermes-gateway.service 2>/dev/null || true   # prereq 4 (MED #5: "No medium found" if no user bus — tolerate)
+   pgrep -af 'gateway run' | grep -v pgrep && echo "gateway STILL running — kill: pkill -f 'gateway run'" || echo "no gateway process ✓"
    git -C ~/memoria-vault worktree list --porcelain \
-     | awk '/^branch /{sub("refs/heads/","",$2);print $2}' > ~/mv-branches.txt   # live worktree→branch map for step 3
+     | awk '/^branch /{sub("refs/heads/","",$2);print $2}' > ~/mv-branches.txt         # live worktree→branch map (step 3)
+   git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}' \
+     | grep "^$HOME/mv/" > ~/mv-worktree-paths.txt                                     # old worktree dirs under ~/mv (step 6 cleanup)
    ORIGIN=$(git -C ~/memoria-vault remote get-url origin); echo "origin=$ORIGIN"
    cp -r ~/memoria-vault/.git ~/memoria-vault-git-backup    # rollback — name deliberately clear of ~/mv
    ```
@@ -219,22 +244,32 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    Expected: `.bare` exists; `git -C ~/memoria-vault-new branch -a` lists every
    local branch (main, scratch, fix/*) plus `remotes/origin/*`.
 
-3. **Add the worktrees into their new homes:**
+3. **Add the worktrees into their new homes.**
+
+   > **Scratch was de-nested in step 0.** The `scratch`
+   > branch's content lives at its **root** (`releases/`, `workflow-audit/`), not under
+   > a `scratch/` wrapper, so `git worktree add scratch scratch` yields a clean
+   > `~/memoria-vault/scratch/releases/…` — the standard worktree idiom (folder named
+   > for the branch, content at the branch root), no double-nest. `pr-policy` still
+   > blocks `scratch/` paths in *main* PRs; that guard is about main-branch worktrees
+   > and is unaffected by the orphan branch's internal layout.
 
    ```bash
    cd ~/memoria-vault-new
    git worktree add main main
-   git worktree add scratch scratch
-   # HIGH #2: recreate a worktree for every OTHER live branch, derived from the
-   # preflight snapshot — never hardcode branch names (they drift constantly).
+   git worktree add scratch scratch        # ~/memoria-vault/scratch/ = releases/ + workflow-audit/ directly (de-nested)
+   # HIGH #2/#3: a worktree for every OTHER live branch, from the preflight snapshot;
+   # sanitize the FULL branch path — basename alone would collide (fix/foo vs feature/foo).
    for b in $(grep -vxE 'main|scratch' ~/mv-branches.txt); do
-     git worktree add "worktrees/$(basename "$b")" "$b"
+     d="worktrees/$(printf '%s' "$b" | tr / __)"        # fix/foo -> fix__foo (unique, keeps context)
+     [ -e "$d" ] && { echo "target $d already exists — STOP"; break; }
+     git worktree add "$d" "$b"
    done
    git worktree list                                                  # all resolve under ~/memoria-vault-new
    ```
 
-   Expected: `main/`, `scratch/`, and a `worktrees/<name>` for **every** branch in
-   `~/mv-branches.txt`; `worktree list` clean and complete.
+   Expected: `main/`, `scratch/`, and a `worktrees/<sanitized-branch>` for **every**
+   branch in `~/mv-branches.txt`, no collisions; `worktree list` clean and complete.
 
 4. **Move the sandbox in** (Hermes must not be using it — prereq 4):
 
@@ -252,17 +287,20 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    git -C ~/memoria-vault-new/main fetch origin --dry-run   # refspec works, no error
    bash ~/memoria-vault-new/main/scripts/test.sh l0  # green
    ls ~/memoria-vault-new                            # .bare .git main scratch worktrees sandbox
-   # MANIFEST: build old branch+tip list, prove each survives in the new .bare with a worktree
-   git -C ~/memoria-vault worktree list --porcelain \
-     | awk '/^branch /{sub("refs/heads/","",$2);b=$2} /^HEAD /{h=$2} b&&h{print b,h;b="";h=""}' > ~/mv-old-manifest.txt
+   # MANIFEST 1 (HIGH #2): EVERY local branch ref — not just worktree-attached ones —
+   # must survive in the new .bare (as tip or ancestor).
+   git -C ~/memoria-vault for-each-ref --format='%(refname:short) %(objectname)' refs/heads > ~/mv-refs-manifest.txt
    fail=0
    while read b h; do
      newh=$(git -C ~/memoria-vault-new/.bare rev-parse "$b" 2>/dev/null)
      if [ -z "$newh" ]; then echo "MISSING branch $b"; fail=1
      elif [ "$newh" != "$h" ] && ! git -C ~/memoria-vault-new/.bare merge-base --is-ancestor "$h" "$newh" 2>/dev/null; then
-       echo "branch $b: old tip $h NOT contained in new $newh"; fail=1; fi
+       echo "branch $b: old tip $h NOT in new $newh"; fail=1; fi
+   done < ~/mv-refs-manifest.txt
+   # MANIFEST 2 (separate check): every OLD worktree's branch has a worktree in the new container
+   for b in $(git -C ~/memoria-vault worktree list --porcelain | awk '/^branch /{sub("refs/heads/","",$2);print $2}'); do
      git -C ~/memoria-vault-new worktree list | grep -q "\[$b\]" || { echo "no worktree for $b"; fail=1; }
-   done < ~/mv-old-manifest.txt
+   done
    [ "$fail" = 0 ] && echo "MANIFEST OK — safe to swap" || echo "MANIFEST FAILED — DO NOT run step 6"
    ```
 
@@ -274,16 +312,22 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 6. **Swap into place and clean up:**
 
    ```bash
-   rm -rf ~/memoria-vault          # old checkout — its content is safely in .bare + main/
+   rm -rf ~/memoria-vault          # old checkout — content safely in .bare + main/
    mv ~/memoria-vault-new ~/memoria-vault
-   rm -rf ~/mv                     # old scattered worktrees + stray .git/.agents/.codex/main-merge
+   # MED #4: surgical ~/mv cleanup — remove exactly the registered old worktrees +
+   # known cruft, then rmdir ~/mv ONLY if genuinely empty (never a blind rm -rf ~/mv).
+   while read -r d; do rm -rf "$d"; done < ~/mv-worktree-paths.txt   # old worktree dirs (from preflight)
+   rm -rf ~/mv/main-merge ~/mv/.git ~/mv/.agents ~/mv/.codex          # the known cruft
+   if [ -z "$(find ~/mv -mindepth 1 2>/dev/null)" ]; then rmdir ~/mv && echo "~/mv removed";
+   else echo "~/mv NOT empty — inspect before removing:"; ls -la ~/mv; fi
    git -C ~/memoria-vault worktree prune
    git -C ~/memoria-vault worktree list   # everything under ~/memoria-vault/
    ( cd ~/memoria-vault/main && pre-commit install )   # the bare clone dropped the installed hooks
    ```
 
-   Expected: `~/mv` gone; `worktree list` shows all worktrees under
-   `~/memoria-vault/`; pre-commit hook re-installed in `main/`.
+   Expected: every registered old worktree + known cruft removed; `~/mv` **rmdir'd
+   only if empty** (else it stops and lists what's left for you to inspect);
+   `worktree list` shows all worktrees under `~/memoria-vault/`; hook re-installed.
 
 7. **Phase B — the path-reference PR:**
 
@@ -308,7 +352,6 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    # Hermes/Obsidian: N/A in alpha.15 — gateway stays stopped, no runtime re-point.
    git -C ~/memoria-vault/main branch -vv    # confirm upstreams set (Phase A) so pull/push work
    # shell/IDE: fix any alias / workspace file assuming ~/memoria-vault is the repo or ~/mv the worktree parent
-   # agent memory: nothing to update — AGENTS.md is the SSOT for paths; memory holds none
    ```
 
    Expected: branch upstreams resolve; nothing you use references `~/mv` or assumes
@@ -347,10 +390,10 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 - [ ] Prereqs met: quiet window; every worktree clean (`adr-consolidate`
       committed + pushed); **`git stash list` empty** (2 autostashes resolved);
       **Hermes gateway stopped/confirmed clear**; this plan committed to `scratch`.
-- [ ] Phase A: bare container built, verified (step 5), swapped in (step 6);
-      pre-commit re-installed in `main/`.
+- [ ] Phase A: `scratch` de-nested + pushed (step 0); bare container built,
+      verified (step 5), swapped in (step 6); pre-commit re-installed in `main/`.
 - [ ] Sandbox at `~/memoria-vault/sandbox`; `~/mv` removed.
-- [ ] Phase B: path-reference PR merged; memory files updated.
+- [ ] Phase B: path-reference PR merged.
 - [ ] Backup `~/memoria-vault-git-backup` deleted after a clean gate + fetch/push
       cycle.
 - [ ] Close-out: this plan deleted per ExecPlan lifecycle.
