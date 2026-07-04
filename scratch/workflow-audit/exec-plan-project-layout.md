@@ -1,0 +1,292 @@
+# ExecPlan — Consolidate the project into one folder (bare repo + worktrees)
+
+Reorganize the on-disk project so opening **`~/memoria-vault`** shows everything —
+repo, worktrees, scratch, sandbox — each governed by its own rules, using the
+standard git **bare-repository + worktrees** layout.
+
+Target chosen: **Option 1 (bare + worktrees)** — the industry idiom, no special
+checkout, no gitignore hacks. *If Option 2 (keep a normal `main/` checkout) is
+preferred instead, the only change is §4 step 2: skip the bare conversion and
+`git worktree add` — instead `mv` the existing checkout to `main/` and repair;
+everything else is identical.*
+
+## 0. Metadata
+
+- **Task:** Convert `~/memoria-vault` from a single checkout into a container
+  holding `.bare/`, `main/`, `scratch/`, `worktrees/`, and `sandbox/`, then
+  update path references. No re-clone; no data loss.
+- **Worktree / branch for the doc-update PR:** `~/memoria-vault/worktrees/layout-paths`
+  · `fix/layout-paths` off `origin/main` (created *after* the filesystem move).
+  This plan lives on the `scratch` branch under `scratch/workflow-audit/`.
+- **Related ADRs:** none required — this is a machine-local dev-environment
+  convention documented in AGENTS.md, not a product/architecture decision.
+- **Related issues / milestone:** —
+- **Started:** 2026-07-04 · **Last updated:** 2026-07-04
+
+## 1. Purpose / big picture
+
+Today the project is scattered: the repo is at `~/memoria-vault`, task worktrees
+are strewn under `~/mv/`, the `scratch` fast-lane is a worktree of the repo, and
+the disposable sandbox is at `~/Memoria-test`. You cannot open one folder and see
+the project.
+
+When this plan is done, `~/memoria-vault/` is a **container** you open to see the
+whole project at once:
+
+```
+~/memoria-vault/
+  .bare/          the git object store (bare repo)        · standard name
+  .git            file: "gitdir: ./.bare"
+  main/           main branch checkout                    · rule: PR + required CI
+  scratch/        scratch orphan-branch checkout          · rule: commit direct + push, no PR/CI
+  worktrees/      task/feature worktrees                  · rule: branch → PR → main
+  sandbox/        the sandbox (was ~/Memoria-test)        · rule: disposable install, runtime tests
+```
+
+Each part "follows its own rules" because they are branches with their own
+governance (main protected by its ruleset; feature branches PR'd) plus a sandbox
+that is not under the repo's git at all. Because the container is not itself a
+working tree, nothing needs gitignoring.
+
+**Scratch specifically** is a worktree on the **`scratch` orphan branch** — the
+git-idiomatic mechanism for versioned content that shares no history with `main`
+(the same pattern as `gh-pages`/asset branches). This is what its constraints
+require: it must have **history + GitHub backup** (so it is a real branch pushed
+to `origin/scratch`, *not* gitignored — the gitignored `_notes/` approach caused
+problems precisely because it had neither), yet must **skip the PR/CI cycle** (so
+it is not on `main`). Being orphan (scratch-only content, no full-repo mirror) is
+what fixes the drift/misfiling/stale-analysis the earlier full-tree scratch branch
+caused. Its rule: **commit direct + push to `origin/scratch`; no PR, no CI;
+protected from deletion and force-push** (a minimal branch ruleset). Because
+skipping PR/CI requires its own branch, and a checkout of a non-`main` branch is a
+separate worktree, scratch is necessarily a **sibling**, not a subfolder of
+`main/`.
+
+## 2. Context and orientation
+
+Terminology: a **bare repository** has no working tree — just the object store
+(`objects/`, `refs/`, `config`, reflogs). A **linked worktree** is an additional
+checkout of a branch that shares the bare repo's objects; git tracks it under
+`.bare/worktrees/<name>/`, and the worktree's own `.git` is a *file* pointing
+there. The `.git` file at the container root (`gitdir: ./.bare`) lets `git`
+commands run from `~/memoria-vault/` itself.
+
+**Current on-disk state (verify at execution — concurrent sessions move it):**
+- Repo: `~/memoria-vault` — normal checkout on `main`, real `.git` inside, clean.
+- Worktrees (`git worktree list`): `~/memoria-vault` [main];
+  `~/mv/adr-consolidate` [fix/adr-consolidation]; `~/mv/revert-wa`
+  [fix/revert-workflow-audit] (has open PR #1261, pushed); `~/mv/scratch`
+  [scratch] (holds THIS plan); `~/mv/stale-docs` [fix/stale-doc-lines].
+- Sandbox: `~/Memoria-test` — no functioning git (empty-ish, disposable).
+- Stray cruft under `~/mv/`: empty `.git`, dead `main-merge/`, stray
+  `.agents/`, `.codex/`.
+
+**Path references that will go stale** (found earlier; re-grep at execution — the
+count was ~72 files mentioning `~/mv/` or `~/memoria-vault`): `AGENTS.md`
+(§1 worktree convention `~/mv/<session>` and the "Where things live" table),
+`scripts/refresh-test-vault.sh` (`VAULT="$HOME/Memoria-test"`),
+`.github/workflows/hermes-version-check.yml` (hardcoded `/home/eranr/Memoria-test`),
+plus this agent's memory files.
+
+**HARD PREREQUISITES (the plan is unsafe without these):**
+1. **A quiet window** — no active agent session working in any worktree, because
+   the conversion transiently breaks every worktree's git linkage.
+2. **Every worktree clean** — the bare repo is built from *committed* state, so
+   any uncommitted work is lost when old worktrees are removed. At last check
+   `~/mv/adr-consolidate` had **89 uncommitted changes**; its session must commit
+   (and ideally push) before this runs. `git status` in every worktree must be
+   empty.
+3. **This plan committed to `scratch`** — so the bare clone captures it and it
+   survives the move.
+
+## 3. Plan of work
+
+Two phases, in order. Phase A is a local filesystem/git operation (no PR). Phase B
+is a normal PR that fixes the now-stale path references.
+
+**Phase A — build the container (local, reversible via backup).** Back up the
+object store. Build the new layout *beside* the current one (`~/memoria-vault-new`)
+so nothing is destroyed until it is verified: create the bare repo (objects
+hardlinked from the local repo — fast, no network), re-point its `origin` at the
+real GitHub URL and set the remote-tracking fetch refspec (the one bare-repo
+gotcha), drop the `gitdir` pointer, then `git worktree add` `main`, `scratch`, and
+each feature branch into place. Move the sandbox in. Only once the new container
+verifies do we remove the old checkout + old worktrees and swap the new container
+to `~/memoria-vault`. Clean the `~/mv` cruft.
+
+**Phase B — fix path references (PR).** From a worktree under the new layout,
+branch off `origin/main`, grep *all* tracked files for the old paths, update the
+stale conventions (AGENTS.md worktree path → `~/memoria-vault/worktrees/<session>`
+and repo-root → `~/memoria-vault/main`; `refresh-test-vault.sh` default →
+`~/memoria-vault/sandbox`; `hermes-version-check.yml`), and open one PR. CI
+is unaffected (it clones fresh); only local conventions change. Update the agent
+memory files locally (not part of the PR).
+
+## 4. Concrete steps
+
+Run these from a shell whose CWD is **`~`** (never inside a worktree being moved).
+`TS` is a timestamp for the backup. Read the real remote URL rather than guessing.
+
+1. **Pre-flight + backup:**
+
+   ```bash
+   cd ~
+   git -C ~/memoria-vault worktree list                      # snapshot
+   for w in $(git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}'); do
+     echo "$w: $(git -C "$w" status --porcelain | wc -l) uncommitted"
+   done                                                      # EVERY line must read "0 uncommitted"
+   ORIGIN=$(git -C ~/memoria-vault remote get-url origin); echo "origin=$ORIGIN"
+   cp -r ~/memoria-vault/.git ~/mv-git-backup                # rollback point (crown jewels)
+   ```
+
+   Expected: all worktrees `0 uncommitted`; a printed origin URL; a backup dir.
+   **If any worktree is dirty, STOP** — that session must commit first.
+
+2. **Build the bare container beside the current one:**
+
+   ```bash
+   mkdir ~/memoria-vault-new
+   git clone --bare ~/memoria-vault ~/memoria-vault-new/.bare        # hardlinks objects, all branches
+   git -C ~/memoria-vault-new/.bare remote set-url origin "$ORIGIN"  # re-point to GitHub
+   git -C ~/memoria-vault-new/.bare config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+   git -C ~/memoria-vault-new/.bare fetch origin                     # populate remote-tracking refs
+   printf 'gitdir: ./.bare\n' > ~/memoria-vault-new/.git
+   ```
+
+   Expected: `.bare` exists; `git -C ~/memoria-vault-new branch -a` lists every
+   local branch (main, scratch, fix/*) plus `remotes/origin/*`.
+
+3. **Add the worktrees into their new homes:**
+
+   ```bash
+   cd ~/memoria-vault-new
+   git worktree add main main
+   git worktree add scratch scratch
+   git worktree add worktrees/stale-docs   fix/stale-doc-lines
+   git worktree add worktrees/revert-wa    fix/revert-workflow-audit
+   git worktree add worktrees/adr-consolidate fix/adr-consolidation   # only if it was clean in step 1
+   git worktree list                                                  # all resolve under ~/memoria-vault-new
+   ```
+
+   Expected: `main/`, `scratch/`, and `worktrees/*` populated; `worktree list`
+   clean.
+
+4. **Move the sandbox in:**
+
+   ```bash
+   mv ~/Memoria-test ~/memoria-vault-new/sandbox    # rename Memoria-test → sandbox
+   ```
+
+5. **Verify the new container BEFORE destroying the old one:**
+
+   ```bash
+   git -C ~/memoria-vault-new/main status            # clean
+   git -C ~/memoria-vault-new/main fetch origin --dry-run   # refspec works, no error
+   bash ~/memoria-vault-new/main/scripts/test.sh l0  # green
+   ls ~/memoria-vault-new                            # .bare .git main scratch worktrees sandbox
+   ```
+
+   Expected: clean status, fetch works, l0 green, all five entries present.
+   **Do not proceed past here unless all four pass** — the old repo is still intact.
+
+6. **Swap into place and clean up:**
+
+   ```bash
+   rm -rf ~/memoria-vault          # old checkout — its content is safely in .bare + main/
+   mv ~/memoria-vault-new ~/memoria-vault
+   rm -rf ~/mv                     # old scattered worktrees + stray .git/.agents/.codex/main-merge
+   git -C ~/memoria-vault worktree prune
+   git -C ~/memoria-vault worktree list   # everything under ~/memoria-vault/
+   ```
+
+   Expected: `~/mv` gone; `worktree list` shows all worktrees under
+   `~/memoria-vault/`.
+
+7. **Phase B — the path-reference PR:**
+
+   ```bash
+   cd ~/memoria-vault
+   git worktree add worktrees/layout-paths -b fix/layout-paths origin/main
+   cd worktrees/layout-paths
+   git grep -n -e '~/mv/' -e '/home/eranr/mv/' -e 'Memoria-test' -e '~/memoria-vault' -- . ':!scratch/'
+   # edit AGENTS.md, scripts/refresh-test-vault.sh, .github/workflows/hermes-version-check.yml, etc.
+   pre-commit run --all-files && bash scripts/test.sh all
+   git push -u origin fix/layout-paths && gh pr create --base main --fill
+   ```
+
+   Expected: grep enumerates the references; after edits, gate green; PR opens
+   (sensitive paths → `needs_human`). Update memory files locally afterward.
+
+## 5. Validation and acceptance
+
+- **Claim:** Opening `~/memoria-vault` shows `main/`, `scratch/`, `worktrees/`,
+  `sandbox/` (plus `.bare`). **Prove:** `ls ~/memoria-vault`.
+- **Claim:** every worktree resolves against the bare repo. **Prove:**
+  `git -C ~/memoria-vault worktree list` — no "prunable"/broken entries.
+- **Claim:** `git fetch`/`pull` behave normally (the bare gotcha is handled).
+  **Prove:** `git -C ~/memoria-vault/main fetch origin` succeeds and updates
+  `origin/*` refs.
+- **Claim:** no work was lost. **Prove:** `git -C ~/memoria-vault/main log --oneline -3`
+  matches pre-migration `origin/main`; each feature branch is present with its tip.
+- **Claim:** the repo is healthy. **Prove:** `bash ~/memoria-vault/main/scripts/test.sh all` → all PASS.
+- **Claim:** no stale path references remain in tracked files. **Prove:** the
+  Phase B grep returns only intentional/historical mentions after the PR.
+
+## 6. Idempotence and recovery
+
+- **Reversible until step 6.** Everything before the swap builds
+  `~/memoria-vault-new` beside the untouched original; abort by `rm -rf
+  ~/memoria-vault-new` — nothing lost.
+- **Rollback after the swap:** restore from the backup —
+  `rm -rf ~/memoria-vault && <recreate a checkout>` using `~/mv-git-backup` (it is
+  a full copy of the original `.git`). Keep the backup until you have run a full
+  gate and a `git fetch`/`push` cycle from the new layout and are satisfied.
+- **Re-run safety:** steps are guarded (step 5 gates the destructive step 6). A
+  partial run leaves the original intact until step 6.
+
+## 7. Progress
+
+- [ ] Prereqs met: quiet window; every worktree clean (`adr-consolidate`
+      committed); this plan committed to `scratch`.
+- [ ] Phase A: bare container built, verified (step 5), swapped in (step 6).
+- [ ] Sandbox at `~/memoria-vault/sandbox`; `~/mv` removed.
+- [ ] Phase B: path-reference PR merged; memory files updated.
+- [ ] Backup `~/mv-git-backup` deleted after a clean gate + fetch/push cycle.
+- [ ] Close-out: this plan deleted per ExecPlan lifecycle.
+
+## 8. Execution log
+
+- 2026-07-04 — Plan authored for Option 1 (bare + worktrees) after comparing it
+  to Option 2. Chose bare for robustness (object store not hostage to any one
+  checkout) and idiom; the fetch-refspec is set during migration so the known
+  bare-repo gotcha never bites. Built-beside-then-swap chosen over in-place
+  conversion so the operation is reversible right up to the swap.
+
+## 9. Surprises & discoveries
+
+- 2026-07-04 — `git clone --bare` from the local repo captures only *committed*
+  state, which is why "every worktree clean" is a hard prerequisite rather than a
+  nicety — uncommitted work in a worktree would be silently dropped.
+
+## 10. Interfaces & dependencies
+
+- `git worktree` / `git clone --bare` / `git worktree repair` semantics; the
+  bare-repo remote-tracking fetch refspec (`+refs/heads/*:refs/remotes/origin/*`).
+- The real `origin` URL — read via `git remote get-url origin`, never hardcoded.
+- Tracked path references: `AGENTS.md`, `scripts/refresh-test-vault.sh`,
+  `.github/workflows/hermes-version-check.yml` (+ whatever the grep finds).
+- CI is unaffected — GitHub Actions checks out fresh, independent of local layout.
+
+## 11. Artifacts & notes
+
+- Option comparison (bare vs normal) that produced this choice was delivered in
+  session 2026-07-04; the operative conclusion (bare = more robust + idiomatic,
+  one-time fetch-refspec cost) is captured in §1/§8 so this plan stands alone.
+- Backup location: `~/mv-git-backup` (full copy of the pre-migration `.git`).
+
+## 12. Outcomes & retrospective
+
+- **Shipped:** — (fill at close)
+- **Still open:** —
+- **Routed to:** AGENTS.md (new worktree/paths convention) via the Phase B PR.
+- **Lessons:** —
