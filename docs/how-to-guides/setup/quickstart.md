@@ -68,6 +68,6 @@ those commands as the day-1 path for the space you are in.
 ## Related
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
-- Plugin activation details: [Set up Obsidian](set-up-obsidian.md)
+- Optional plain-editor setup: [Set up Obsidian](set-up-obsidian.md)
 - First source task: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Optional Zotero export setup: [Set up Zotero](set-up-zotero.md)
