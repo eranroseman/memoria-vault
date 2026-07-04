@@ -62,7 +62,8 @@ never assembled into a draft - that gap is a judgment call, not a structural
 signal. It is also the hardest gap to notice, because a vault full of
 well-developed claims looks healthy even when nothing is being written. Today
 mapping operations surface coverage, clusters, graph/canvas views, and gap
-attention; writability/readiness scoring is deferred future work.
+attention. Alpha.15 can gate structural project export readiness, but broad
+writability scoring remains deferred future work.
 
 ## Why archiving preserves the cycle's integrity
 
