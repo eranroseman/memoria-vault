@@ -23,7 +23,8 @@ Use the lowest-cost evidence that proves the claim:
 4. Package Gate: `scripts/verify package`.
 5. Runtime Gate: `scripts/verify runtime`.
 6. Release-candidate prefix: `scripts/verify rc`.
-7. Product, manual GUI, or failure/recovery evidence in the release issue.
+7. Live runtime add-on: `scripts/verify live`.
+8. Product, manual GUI, or failure/recovery evidence in the release issue.
 
 Do not test installers against the real `~/Memoria`. Do not claim live-runtime
 verification when only static or synthetic tests ran.
@@ -35,6 +36,7 @@ verification when only static or synthetic tests ran.
 | Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | Any PR broader than a tiny prose edit. |
 | Package | A disposable vault assembles and the model-free workflow replay works. | Shipped vault, installer skeleton, hooks, plugins, or workflow replay changed. |
 | Runtime | Installed CLI dispatch, model endpoint, qmd, scheduled wrappers, recovery, and policy boundaries work live. | Runtime wiring or release-candidate confidence depends on live services. |
+| Live | Runtime services and live-only adapters pass their opt-in checks. | A release or incident check explicitly needs live services. |
 | Product | Research workflows produce reviewable value, telemetry, CLI/output evidence, and quality evidence when claimed. | Release candidates or product-surface changes. |
 | Failure/recovery | Denied writes leave no file, adapter-down paths fail closed, retries recover, dry-run is clean, and installer re-run is idempotent. | Policy, ingest, adapter, installer, scheduler, or replay changed. |
 

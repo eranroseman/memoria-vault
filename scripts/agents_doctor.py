@@ -12,7 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS = ROOT / ".agents"
-GUIDANCE_DIRS = (".agents", ".claude", ".codex", ".kilo")
+GUIDANCE_DIRS = (".agents", ".claude")
 IMPACT_SOURCE = AGENTS / "system/change-impact.yaml"
 IMPACT_DOC = AGENTS / "system/change-impact-map.md"
 RULESET_CONTRACT = ROOT / ".github/ruleset-contract.yaml"
@@ -80,8 +80,6 @@ def _skill_errors() -> list[str]:
     skill_roots = [
         ROOT / ".agents" / "skills",
         ROOT / ".claude" / "skills",
-        ROOT / ".codex" / "skills",
-        ROOT / ".kilo" / "skills",
     ]
     for path in sorted(p for root in skill_roots if root.is_dir() for p in root.glob("*/SKILL.md")):
         text = path.read_text(encoding="utf-8")

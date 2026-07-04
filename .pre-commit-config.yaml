@@ -119,14 +119,14 @@ repos:
         name: status-doctor
         language: system
         entry: python scripts/status_doctor.py
-        files: ^docs/(releasing|testing|contributing)/.*\.md$|^\.agents/playbooks/release\.md$|^scripts/status_doctor\.py$
+        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^scratch/releases/.*\.md$|^scripts/status_doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor
         name: agents-doctor
         language: system
         entry: python scripts/agents_doctor.py
-        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$)
+        files: ^(\.agents/|\.claude/|AGENTS\.md$|scripts/agents_doctor\.py$)
         pass_filenames: false
 
       - id: github-doctor

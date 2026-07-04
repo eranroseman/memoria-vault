@@ -33,7 +33,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | ADR decision state | `docs/adr/` frontmatter and `docs/adr/README.md` | Linked GitHub issues for implementation/readiness |
 | Work readiness and scheduling | Memoria Issue Tracker fields (`Status`, `Readiness`) and milestones | ADR Related sections and release plans |
 | Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |
-| Release readiness | `Release <version>` parent issue + gate/stage sub-issues | Release plan and release playbook |
+| Release readiness | `Release <version>` parent issue + readiness/stage sub-issues | Release plan and release playbook |
 | Release design scratch | `scratch` branch, under `scratch/releases/<version>/` while in progress | Status doctor, release playbook, ExecPlan playbook |
 | Release scope/readiness | GitHub milestone, Memoria Issue Tracker, and "Release <version>" parent issue/sub-issues | Release playbook and release template |
 | Product decisions | `docs/adr/` | Current docs and implementation |

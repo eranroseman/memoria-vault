@@ -49,11 +49,11 @@ before relying on it.
 
 ## 3. Fix
 
-Make the smallest durable change:
+Make the smallest durable change. Use AGENTS.md's documentation routing table
+and the [Documentation review](docs-review.md) playbook for Diátaxis placement
+instead of copying the taxonomy here.
 
-- Align pages with Diátaxis: tutorials teach by doing; how-to guides perform a
-  task; reference pages give exact values; explanation pages describe how the
-  system works; design pages explain why it is designed that way.
+- Align pages with their documented route.
 - Remove hidden compatibility pages, redirects, stale mirrors, duplicate pages,
   route-preservation pages, and common-knowledge pages.
 - Prefer moving, renaming, merging, or deleting over preserving bad historical
