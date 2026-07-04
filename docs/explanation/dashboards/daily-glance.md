@@ -27,13 +27,13 @@ The Inbox page turns the rail count into work:
 
 | Section | Question |
 | --- | --- |
-| Activity | Is anything currently queued, ready, or running? |
+| Activity | Is anything currently pending, running, done, failed, or cancelled? |
 | Action queue | What requires a PI decision or action now? |
 | Fleeting notes | Which raw PI captures still need processing? |
 
-Activity is status only. Done and blocked tasks leave Activity; a blocked task
-creates an actionable attention item only when the PI can do something
-about it.
+Activity is status only. Done, failed, and cancelled requests remain inspectable
+through the request read API; an actionable attention item appears only when the
+PI can do something about it.
 
 ## Board-state support
 

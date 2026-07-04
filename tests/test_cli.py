@@ -2001,6 +2001,35 @@ def test_cli_wires_alpha15_maintenance_and_pi_commands(
     assert shown["event"]["event_id"] == event_id
 
 
+def test_cli_doctor_reports_backup_contract(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
+    capsys.readouterr()
+
+    assert main(["doctor", "--workspace", str(workspace), "--json"]) == 0
+    report = json.loads(capsys.readouterr().out)
+
+    assert report["ok"] is True
+    assert report["backup"]["git_remote"]["configured"] is False
+    assert report["backup"]["sqlite_replication"]["configured"] is False
+    assert report["backup"]["sqlite_replication"]["runtime_dependency"] is False
+    assert report["backup"]["blob_sync"]["configured"] is False
+    assert report["backup"]["blob_sync"]["blob_root_exists"] is True
+
+    git(workspace, "remote", "add", "origin", "https://example.invalid/memoria.git")
+    (workspace / ".memoria/config/litestream.yaml").write_text("dbs: []\n", encoding="utf-8")
+    (workspace / ".memoria/config/blob-sync.yaml").write_text("paths: []\n", encoding="utf-8")
+
+    assert main(["doctor", "bundle", "--workspace", str(workspace), "--json"]) == 0
+    bundle = json.loads(capsys.readouterr().out)
+
+    assert bundle["backup"]["git_remote"] == {"configured": True, "remotes": ["origin"]}
+    assert bundle["backup"]["sqlite_replication"]["configured"] is True
+    assert bundle["backup"]["blob_sync"]["configured"] is True
+
+
 def test_cli_doctor_repair_restores_runtime_seed_files(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -545,6 +545,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
             "ok": all(checks.values()),
             "workspace": str(workspace),
             "checks": checks,
+            "backup": _backup_report(workspace),
             "repaired": repaired,
         },
         args,
@@ -570,6 +571,7 @@ def _cmd_doctor_bundle(args: argparse.Namespace) -> int:
             "workspace": str(workspace),
             "redacted": bool(args.redacted),
             "doctor": _doctor_checks(workspace),
+            "backup": _backup_report(workspace),
             "requests": requests,
             "journal_head": state.journal_head(workspace),
         },
@@ -1845,6 +1847,58 @@ def _doctor_checks(workspace: Path) -> dict[str, Any]:
         "state_db": state.db_path(workspace).is_file(),
         "git": shutil.which("git") is not None,
     }
+
+
+def _backup_report(workspace: Path) -> dict[str, Any]:
+    litestream_configs = [
+        ".memoria/config/litestream.yml",
+        ".memoria/config/litestream.yaml",
+    ]
+    backup_configs = [
+        ".memoria/config/backup.yaml",
+        ".memoria/config/backup.json",
+    ]
+    blob_sync_configs = [
+        ".memoria/config/blob-sync.yaml",
+        ".memoria/config/blob-sync.json",
+    ]
+    remotes = _git_remotes(workspace)
+    return {
+        "git_remote": {
+            "configured": bool(remotes),
+            "remotes": remotes,
+        },
+        "sqlite_replication": {
+            "configured": _any_workspace_file(workspace, [*litestream_configs, *backup_configs]),
+            "config_paths": [*litestream_configs, *backup_configs],
+            "runtime_dependency": False,
+        },
+        "blob_sync": {
+            "configured": _any_workspace_file(workspace, [*blob_sync_configs, *backup_configs]),
+            "blob_root": ".memoria/blobs",
+            "blob_root_exists": (workspace / ".memoria/blobs").is_dir(),
+            "config_paths": [*blob_sync_configs, *backup_configs],
+        },
+    }
+
+
+def _git_remotes(workspace: Path) -> list[str]:
+    if not (workspace / ".git").exists() or shutil.which("git") is None:
+        return []
+    proc = subprocess.run(
+        ["git", "remote"],
+        cwd=workspace,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if proc.returncode:
+        return []
+    return sorted(line.strip() for line in proc.stdout.splitlines() if line.strip())
+
+
+def _any_workspace_file(workspace: Path, relpaths: list[str]) -> bool:
+    return any((workspace / rel).is_file() for rel in relpaths)
 
 
 def _request_row(workspace: Path, request_id: str) -> Any | None:

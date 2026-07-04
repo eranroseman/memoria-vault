@@ -45,9 +45,10 @@ low-value finding without interrupting work.
 ## Notes Replace Claim Maturity
 
 The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.15 uses one
-`note` type with optional `claim_text`, `evidence_set`, and typed links. A note
-is safe to read when it is checked; whether the claim is important is represented
-by evidence, links, and hub/project context.
+`note` type with optional `claim_text`, `source_id`, `evidence_set`, compact
+`citations`, `topics`, and typed links. A note is safe to read when it is
+checked; whether the claim is important is represented by evidence, links, and
+hub/project context.
 
 ---
 

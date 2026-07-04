@@ -13,6 +13,8 @@ runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: red-team-argument.v1
+untrusted_fields:
+- input
 io_schema:
   input: selected_argument
   output: counter_case

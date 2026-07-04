@@ -26,7 +26,12 @@ Memoria is an **opinionated, phase-gated, bounded, personal tool for thinking an
 
 **Opinionated** — it enforces specific workflows and eliminates setup paralysis. The vault structure, the document types, and the review gates are not configurable surfaces to tune; they are the design.
 
-**Phase-gated** — work passes through defined phases with explicit outputs, and nothing becomes a claim or deliverable without human review. A source doesn't become a claim until it's been classified, discussed, and synthesized; a draft doesn't become a deliverable until it's been verified and accepted. Each phase has a clear entry and exit condition.
+**Phase-gated** — work passes through defined phases with explicit outputs. A
+source doesn't become synthesis until it has been captured, enriched, read, and
+compiled; a draft doesn't become a deliverable until it has been verified and
+accepted. Worker `checked` state means required checks and warrants passed, not
+that the PI approved the claim as true. Each phase has a clear entry and exit
+condition.
 
 **Bounded** — agent autonomy is structurally constrained. The agent does not decide what is worth keeping or promote claims to canonical knowledge; the PI does. These limits are structural — enforced by the system's architecture, not by prompt instructions.
 

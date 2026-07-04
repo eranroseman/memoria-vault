@@ -31,14 +31,15 @@ Three kinds of actor work across the structural layers:
 
 | Actor-kind | Who | Trait |
 | --- | --- | --- |
-| **PI** | the human (L1) | judgment; the only actor who promotes to canonical |
+| **PI** | the human (L1) | judgment, curation, and attention disposition |
 | **Agents** | runner-backed operations or optional adapters | posture + LLM judgment; propose, never dispose |
-| **Operations** | ingest · search · sweeps · Linter (L6) | deterministic, no posture; never on the board |
+| **Operations** | ingest · search · sweeps · Linter (L4) | deterministic, no posture; never on the board |
 
 The "is it an agent or an operation?" question is decided by posture and LLM
-judgment, not invocation style. Agents propose and only the PI disposes; why
-that gate is structural rather than a convention is [Why the review gate is
-structural](../../design/why-review-gate-is-structural.md).
+judgment, not invocation style. Agents propose; worker checks can materialize
+checked outputs only through the trusted writer, and the PI separately disposes
+attention/curation decisions. Why that boundary is structural rather than a
+convention is [Why the review gate is structural](../../design/why-review-gate-is-structural.md).
 
 ## The layering binds the agent write-path only
 

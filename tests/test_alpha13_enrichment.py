@@ -11,6 +11,7 @@ import pytest
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import render_references_bib
 from memoria_vault.runtime.enrichment import (
+    _optional_providers,
     _provider_endpoint,
     load_provider_config,
     provider_allowlist_issues,
@@ -188,6 +189,28 @@ def provider_payloads(
     }
 
 
+def semantic_scholar_payload() -> dict:
+    return {
+        "paperId": "S2-ALPHA",
+        "title": "Alpha Source",
+        "tldr": {"text": "Semantic Scholar TLDR for Alpha."},
+        "references": [
+            {
+                "paperId": "S2-DELTA",
+                "title": "Delta Semantic Reference",
+                "externalIds": {"DOI": "10.1000/delta"},
+            }
+        ],
+        "citations": [
+            {
+                "paperId": "S2-GAMMA",
+                "title": "Gamma Semantic Citation",
+                "externalIds": {"DOI": "10.1000/gamma"},
+            }
+        ],
+    }
+
+
 def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
@@ -261,6 +284,19 @@ def test_provider_endpoint_uses_configured_env_query_params(monkeypatch) -> None
     assert unpaywall_endpoint.endswith("?email=pi%40example.test")
 
 
+def test_semantic_scholar_optional_provider_is_default_on_only_when_keyed(
+    monkeypatch,
+) -> None:
+    config = load_provider_config(ROOT / "vault-template")
+
+    monkeypatch.delenv("SEMANTIC_SCHOLAR_API_KEY", raising=False)
+    assert _optional_providers(config, "doi", {}) == []
+    assert _optional_providers(config, "doi", {"semanticscholar": {}}) == ["semanticscholar"]
+
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "semantic-key")
+    assert _optional_providers(config, "doi", {}) == ["semanticscholar"]
+
+
 def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     enqueue_operation(
@@ -303,6 +339,54 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
         "inbox/flag-enrichment-source-alpha-source-enrichment.md",
         state.JOURNAL_HEAD_REL,
     }
+
+
+def test_enrich_source_replays_optional_semantic_scholar_payload(tmp_path: Path) -> None:
+    vault = workspace(tmp_path)
+    enqueue_operation(
+        vault, "capture-source", payload=doi_payload(), idempotency_key="capture-alpha"
+    )
+    run_next_job(vault, machine="test-machine")
+    payloads = {**provider_payloads(), "semanticscholar": semantic_scholar_payload()}
+
+    enqueue_operation(
+        vault,
+        "enrich-source",
+        payload={"source_id": "source-alpha", "provider_payloads": payloads},
+        idempotency_key="enrich-alpha",
+    )
+    done = run_next_job(vault, machine="test-machine")
+
+    assert done is not None
+    assert done["status"] == "done"
+    assert done["optional_provider_failures"] == []
+    with state.connect(vault) as conn:
+        providers = [
+            row["provider"]
+            for row in conn.execute("SELECT provider FROM provider_payloads ORDER BY provider")
+        ]
+        semantic_id = conn.execute(
+            """
+            SELECT value FROM external_ids
+            WHERE namespace = 'semanticscholar' AND owner_id = 'source-alpha'
+            """
+        ).fetchone()
+        semantic_edges = [
+            tuple(row)
+            for row in conn.execute(
+                """
+                SELECT relation_type, target_id, target_title FROM work_graph_edges
+                WHERE source_provider = 'semanticscholar'
+                ORDER BY relation_type, target_id
+                """
+            )
+        ]
+    assert providers == ["crossref", "openalex", "semanticscholar", "unpaywall"]
+    assert semantic_id["value"] == "S2-ALPHA"
+    assert semantic_edges == [
+        ("references", "doi:10.1000/delta", "Delta Semantic Reference"),
+        ("related", "doi:10.1000/gamma", "Gamma Semantic Citation"),
+    ]
 
 
 def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path) -> None:

@@ -19,7 +19,7 @@ linked reference pages and schema files.
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
 | Schema config | `vault-template/.memoria/schemas/**` | workspace source | Memoria | Edit source | linter and schema tests |
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
-| qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |
+| qmd index config and state | checked-only runtime collection | `<workspace>/.memoria/index/qmd/` | generated | Rebuild; do not hand-edit | `memoria doctor --check qmd` |
 | Scheduled-task runner | `vault-template/.memoria/scripts/cron-runner.sh` | workspace source for operator-managed scheduled tasks | Memoria | Edit source | shellcheck |
 | Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.15 baseline | adapter tests |
 
@@ -28,14 +28,14 @@ linked reference pages and schema files.
 | Change | Command |
 | --- | --- |
 | Schema or workspace source config | reinstall or refresh the workspace, then run the linter |
-| qmd index inputs | `bash scripts/qmd-codebase-index.sh --embed` |
+| qmd index inputs | `memoria workspace rebuild --search` or `memoria workspace rebuild --search --embeddings` |
 
 Use a disposable workspace under `~/Memoria-test` for development verification.
 
 ## Never commit
 
 - Model provider keys, local adapter secrets, or API tokens.
-- Generated qmd indexes.
+- Generated qmd indexes under `.memoria/index/qmd/`.
 - Runtime vault state, logs, and local diagnostics.
 
 ## Related references

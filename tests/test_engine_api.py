@@ -30,6 +30,8 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
         workspace, "knowledge/notes/alpha.md", read_scope=["knowledge/notes/"]
     )
 
+    assert listed["api_version"] == api.READ_API_VERSION
+    assert visible["api_version"] == api.READ_API_VERSION
     assert [row["path"] for row in listed["concepts"]] == ["knowledge/notes/alpha.md"]
     assert visible["path"] == "knowledge/notes/alpha.md"
     with pytest.raises(FileNotFoundError, match="target not found"):

@@ -39,9 +39,10 @@ agenda.
 
 ---
 
-## Why claim notes have a required Links section
+## Why claim-bearing notes have a required Links section
 
-The three required sections of a claim note correspond to three epistemic commitments.
+The three required sections of a claim-bearing note correspond to three
+epistemic commitments.
 
 The `## Claim` section states the single durable idea. Atomicity is the constraint here — one claim per note, not one topic. The discipline matters because wikilinks citing a multi-claim note become ambiguous: does the link support claim A or claim B? And when evidence changes, which part of the note gets superseded?
 

@@ -120,6 +120,7 @@ def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> N
 
     assert json.loads(content[0].text)["ok"] is True
     assert structured["ok"] is True
+    assert structured["api_version"] == "engine-read-api.v1"
 
 
 def test_mcp_read_tools_pass_session_scope(

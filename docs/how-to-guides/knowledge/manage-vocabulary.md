@@ -7,7 +7,10 @@ nav_order: 6
 
 # Manage your topic vocabulary
 
-Keep the `research_area`, `methodology`, and `topics` values consistent across your corpus — so Dataview and Bases views stay reliable and classification stays navigable as the vault grows. The controlled lists live in **`system/vocabulary.md`**, which ships with the vault and is checked by the schema/linter surfaces once you've made it yours.
+Keep the `research_area`, `methodology`, and `topics` values consistent across
+your corpus so CLI/read-API queries and optional editor views stay reliable.
+The controlled lists live in **`system/vocabulary.md`**, which ships with the
+vault and is checked by the schema/linter surfaces once you've made it yours.
 
 These vocabularies are deliberately **open** — yours to define. The fixed
 Memoria vocabularies, such as lifecycle, maturity, certainty, and attention
@@ -44,9 +47,9 @@ Open it and structure one section per field:
 
 Keep each list to **~30 terms**. A tighter vocabulary produces more consistent classification and more reliable queries ([Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)).
 
-Note the consumers: ingest/enrichment rolls OpenAlex topics into `research_area`
-on catalog Work rows ([Ingest routing](../../reference/ingest.md)); you carry the
-same terms into notes with `topics`. Your list is what keeps the human side
+Note the consumers: ingest/enrichment rolls OpenAlex topics into catalog Work
+metadata ([Ingest routing](../../reference/ingest.md)); you carry the same terms
+into claim-bearing notes with `topics`. Your list is what keeps the human side
 consistent with the automated side.
 
 ## Step 2 — Add a new term
@@ -66,7 +69,10 @@ git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
 vocabulary-specific points:
 
 - **Also update `system/vocabulary.md`** in the same pass — the controlled list and the notes must move together.
-- **Your selector is a frontmatter value**, so enumerate with Obsidian global search for the old term (or `grep -rl "old-term" notes/ catalog/`) before editing.
+- **Your selector is a frontmatter or catalog metadata value**, so enumerate with
+  `memoria ask`/read-API inspection, Obsidian global search, or `grep -rl
+  "old-term" knowledge/ system/` before editing Concepts. Use `memoria work
+  export` for catalog Work metadata.
 
 ## Step 4 — Annual vocabulary review
 

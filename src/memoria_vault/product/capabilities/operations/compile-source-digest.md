@@ -16,6 +16,10 @@ runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: compile-source-digest.v1
+untrusted_fields:
+- input
+- source_text
+- pi_interview_notes
 io_schema:
   input: checked_work_id
   output: digest_plus_hubs_and_suggestions

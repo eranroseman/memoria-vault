@@ -14,7 +14,7 @@ Obsidian. They are not hidden `.memoria/` internals.
 | `index.md`, `catalog/index.md`, `knowledge/index.md` | Generated OKF-style workspace and bundle indexes. | [Operations](operations.md) |
 | `knowledge/_views/index.md` | Generated knowledge view summary from checked knowledge Concepts. | [Operations](operations.md) |
 | `references.bib` | Generated BibTeX projection from checked SQLite catalog rows with citekeys. | [Ingest routing](ingest.md) |
-| `system/vocabulary.md` | Controlled vocabulary for `research_area`, `methodology`, and claim `topics`. | [Vocabulary](vocabulary.md) |
+| `system/vocabulary.md` | Controlled vocabulary for Work `research_area`/`methodology` metadata and claim-bearing note `topics`. | [Vocabulary](vocabulary.md) |
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
 | `knowledge/views/knowledge.base` | Bases views over `work`, `note`, `hub`, and `project` Concepts. | [Dashboards](dashboards.md) |
 

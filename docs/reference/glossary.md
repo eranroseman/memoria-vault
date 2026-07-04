@@ -40,7 +40,12 @@ every triage, disposition, and promotion decision. Single-user by design.
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
-**Seven-layer architecture** — PI · Interface · Co-PI · Tasks · MCP · Operations · Vault ([ADR-46](../adr/46-seven-layer-architecture.md)): conversation at the top, deterministic code at the bottom, the board and the gate in between.
+**Standalone engine architecture** — PI · CLI · Engine · Operations · Storage ·
+Vault · Optional adapters ([ADR-125](../adr/125-standalone-cli-engine-architecture.md),
+[ADR-130](../adr/130-read-api-surfaces-and-copi.md)): PI intent enters through
+the CLI or observed file edits, the engine owns request/write/recovery state,
+and adapters are presentation layers over the same contracts. The older
+seven-layer architecture is historical context in [ADR-46](../adr/46-seven-layer-architecture.md).
 
 **Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
 `journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
@@ -123,7 +128,7 @@ not Concept frontmatter.
 `.memoria/schemas/types/`; the full roster, categories, and folder homes are in
 [Document types](document-types.md).
 
-**Pattern** — a checked packaged prompt operation
+**Pattern** — a package-owned prompt operation
 ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)) executed through
 `memoria operation run`.
 

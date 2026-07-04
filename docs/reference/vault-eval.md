@@ -72,12 +72,17 @@ memoria eval run --workspace <vault> --dry-run --json  # print, create nothing
   "quarter": "<e.g. 2026-Q2>",
   "retrieved": ["<citekey>", "..."],
   "cited": ["<citekey>", "..."],
-  "claims": ["<claim-note-stem>", "..."],
+  "claims": ["<claim-bearing-note-stem>", "..."],
   "self_score": 1.0
 }
 ```
 
-`retrieved` (ranked results, best first), `cited` (citekeys offered as evidence), and `claims` (claim notes used or produced; `[]` = none) are each optional — a run reports the fields its workflow produces. The scorer reads a local JSON payload via `--from-json <file>` and computes per task only what the result makes computable — **no fake scores**; a task with no result block is reported `unscored`, and a result with no computable field is `reported`.
+`retrieved` (ranked results, best first), `cited` (citekeys offered as evidence),
+and `claims` (claim-bearing notes used or produced; `[]` = none) are each
+optional — a run reports the fields its workflow produces. The scorer reads a
+local JSON payload via `--from-json <file>` and computes per task only what the
+result makes computable — **no fake scores**; a task with no result block is
+reported `unscored`, and a result with no computable field is `reported`.
 
 | Metric | 0–1, higher is better | Computed when |
 | --- | --- | --- |

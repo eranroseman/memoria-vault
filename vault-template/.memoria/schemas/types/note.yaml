@@ -12,12 +12,20 @@ required:
   links: links
 optional:
   aliases: list
+  annotation_ref: map
   archived: bool
+  citations: list
+  claim_text: str
   description: str
+  evidence_set: list
+  extraction_confidence: str
   mode: enum:mode
   question_status: enum:question_status
+  quote: str
+  source_id: str
   temporal_scope: map
   tense: str
+  topics: list
   qualifier: str
   anchors: list
   x: map

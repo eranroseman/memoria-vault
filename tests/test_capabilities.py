@@ -53,6 +53,7 @@ def test_capability_index_renderer_covers_shipped_operations() -> None:
         "https://api.crossref.org/",
         "https://api.openalex.org/",
         "https://api.unpaywall.org/",
+        "https://api.semanticscholar.org/",
     ]
     assert rows["compile-source-digest"]["trust"]["source"] == "product"
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")

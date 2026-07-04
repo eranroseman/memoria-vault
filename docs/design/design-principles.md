@@ -34,11 +34,20 @@ vault where everything is "sort of processed" and nothing is reliably citable.
 
 **4. The agent writes narrowly.**
 
-Agents read broadly but write to controlled areas. Humans review every promotion to canonical zones. This is not a limitation — it is what keeps the vault trustworthy. A vault where agents write freely is a vault where the human doesn't know what they actually believe.
+Agents read broadly but write through controlled request, staging, and trusted
+writer paths. Worker-owned checks can mark material as checked when declared
+warrants pass, but that is not PI approval. The PI owns meaning, curation,
+accept/reject dispositions, and direct edits. A vault where agents write freely
+is a vault where the human doesn't know what they actually believe.
 
 **5. Provenance everywhere.**
 
-Every claim traces back to a citekey. Every agent action traces back to an audit log entry. Untraceable content is not knowledge — it is a liability that will fail when cited. The [Policy gate](../reference/policy-mcp.md), its per-write SHA-256 hash pairing, and the `sources:` field on claim notes all enforce this.
+Every claim-bearing note traces back to checked Work evidence through
+`source_id`, `evidence_set`, compact `citations`, typed `links`, and journal/read
+API state. Every agent action traces back to an audit log entry. Untraceable
+content is not knowledge — it is a liability that will fail when cited. The
+[Policy gate](../reference/policy-mcp.md), trusted writer, per-write SHA-256 hash
+pairing, and SQLite journal/read model all enforce this.
 
 **6. Prefer incremental over full rewrites.**
 

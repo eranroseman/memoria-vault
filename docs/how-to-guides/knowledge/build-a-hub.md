@@ -41,10 +41,12 @@ Use the topic slug directly, for example `receptivity-timing.md` — the folder 
 
 Two to four sentences in the **Shape of the topic** section: what this cluster is about, how the member claims relate, what's settled, what's still contested.
 
-**4. List the members.**
+**4. Curate the membership.**
 
-Add the checked notes and digests to the `members` list. Curate: omit
-tangentially related notes; one strong hub beats a complete-but-noisy one.
+Use the hub's `tag` as the stable membership key. Add that tag to checked notes
+and digests that genuinely belong in the cluster, then write the curated hub
+body to explain why those items belong together. Curate: omit tangentially
+related notes; one strong hub beats a complete-but-noisy one.
 
 **5. Name the gaps.**
 
@@ -54,9 +56,9 @@ capture pass.
 
 ## Splitting a hub
 
-When one branch of a hub grows past ~15–20 member notes, split it: create a new
-hub for the branch, move those members over, and in the parent replace the
-individual links with one link to the child hub.
+When one branch of a hub grows past ~15-20 member notes, split it: create a new
+hub for the branch, give it a narrower `tag`, apply that tag to those notes, and
+in the parent link to the child hub instead of trying to enumerate every item.
 
 ## Owners
 
@@ -65,7 +67,8 @@ not overwrite curated hub judgment.
 
 ## Verify
 
-- The hub validates: `type: hub`, `check_status` set, every `members` entry resolving to a real Concept
+- The hub validates: `type: hub`, a stable ULID `id`, `tag: <topic-tag>`, `tags: []`, and `links: {}`
+- Every intended member has the hub tag and is checked in the DB/read API
 - The member notes link back (open the backlinks panel on the hub)
 - The hub shows up where you'd look for the topic — link it from `steering.md` or a parent hub if not
 

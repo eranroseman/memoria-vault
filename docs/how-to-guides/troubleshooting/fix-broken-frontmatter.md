@@ -43,7 +43,7 @@ Common YAML errors:
 Obsidian masks the raw YAML in Properties view. Open the file in VS Code or Notepad++ to see exactly what's in the frontmatter block:
 
 ```powershell
-code "catalog\papers\<citekey>.md"
+code "knowledge\notes\<note>.md"
 ```
 
 **2. Locate and fix the malformed line.**
@@ -61,14 +61,17 @@ After saving the fix, Obsidian should show no error in the Properties panel. The
 
 ## Verify
 
-In Obsidian, run this Dataview query in a new note to confirm the repaired note is visible:
+In Obsidian, run this Dataview query in a new note to confirm the repaired note
+is visible:
 
 ```dataview
-FROM "catalog/sources"
-WHERE file.name = "<citekey>"
+FROM "knowledge/notes"
+WHERE file.name = "<note>"
 ```
 
-The note should appear. Then confirm with the Linter operation:
+Source metadata lives in SQLite catalog rows, not source frontmatter files. Use
+`memoria work export --workspace . <work-id>` to inspect a catalog Work. Then
+confirm the repaired Concept with the Linter operation:
 
 ```bash
 python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .

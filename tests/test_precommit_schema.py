@@ -21,6 +21,79 @@ def test_clean_note_passes(tmp_path):
     assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
 
 
+def test_generated_note_provenance_fields_pass(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "knowledge/notes/n.md").write_text(
+        "---\n"
+        "type: note\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "tags: []\n"
+        "links: {}\n"
+        "title: T\n"
+        "topics: [personal-informatics]\n"
+        "source_id: catalog/sources/source-alpha\n"
+        "evidence_set:\n"
+        "  - catalog/sources/source-alpha\n"
+        "extraction_confidence: medium\n"
+        "claim_text: Framing changes which outcomes matter.\n"
+        "quote: outcome framing\n"
+        "annotation_ref:\n"
+        "  selector: paragraph-1\n"
+        "citations:\n"
+        "  - source_id: catalog/sources/source-alpha\n"
+        "    citekey: alpha2026\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
+
+
+def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
+    vault = _vault(tmp_path)
+    (vault / "knowledge/works").mkdir(parents=True)
+    (vault / "knowledge/hubs").mkdir(parents=True)
+    (vault / "knowledge/works/source-alpha.md").write_text(
+        "---\n"
+        "type: work\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "title: Digest\n"
+        "tags: []\n"
+        "links: {}\n"
+        "work_id: source-alpha\n"
+        "evidence_set:\n"
+        "  - catalog/sources/source-alpha\n"
+        "citations:\n"
+        "  - source_id: catalog/sources/source-alpha\n"
+        "    citekey: alpha2026\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    (vault / "knowledge/hubs/topic.md").write_text(
+        "---\n"
+        "type: hub\n"
+        "id: 01BRZ3NDEKTSV4RRFFQ69G5FAV\n"
+        "title: Topic\n"
+        "tags: []\n"
+        "links: {}\n"
+        "tag: topic\n"
+        "citations:\n"
+        "  - source_id: catalog/sources/source-alpha\n"
+        "    citekey: alpha2026\n"
+        "---\n"
+        "Body.\n",
+        encoding="utf-8",
+    )
+    assert (
+        precommit_check.check_paths(
+            vault,
+            ["knowledge/works/source-alpha.md", "knowledge/hubs/topic.md"],
+        )
+        == []
+    )
+
+
 def test_schema_violation_blocks(tmp_path):
     vault = _vault(tmp_path)
     (vault / "knowledge/notes/bad.md").write_text(

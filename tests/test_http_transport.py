@@ -93,6 +93,7 @@ def test_http_transport_reads_status(workspace: Path) -> None:
 
     assert http_status == HTTPStatus.OK
     assert status["ok"] is True
+    assert status["api_version"] == "engine-read-api.v1"
     assert status["db"] == ".memoria/memoria.sqlite"
     assert status["workspace"] == str(workspace)
 

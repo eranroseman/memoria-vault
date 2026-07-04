@@ -12,17 +12,17 @@ Library and Knowledge views that surface what to read, discuss, and reconcile �
 
 | View | Question it answers |
 |---|---|
-| Reading pipeline | What's awaiting reading and distillation, and what claims came out of it? |
-| Discuss queue | Which read sources are worth a pass with the Co-PI before the claims firm up? |
-| Open questions | Which claims are still unconnected — the synthesis backlog? |
-| Contradictions | Which claims disagree with each other? |
+| Reading pipeline | What's awaiting reading and distillation, and what claim-bearing notes came out of it? |
+| Discuss queue | Which read sources are worth a pass with the Co-PI before the notes firm up? |
+| Open questions | Which claim-bearing notes are still unconnected — the synthesis backlog? |
+| Contradictions | Which claim-bearing notes disagree with each other? |
 
 ## Reading pipeline
 
 Reading pipeline shows Library work in flight: checked Work rows awaiting
-reading, Works discussed but not yet distilled, and claims grouped by
-maturity. It prevents intake from looking healthy when reading is not becoming
-synthesis.
+reading, Works discussed but not yet distilled, and claim-bearing notes grouped
+by linkage status. It prevents intake from looking healthy when reading is not
+becoming synthesis.
 
 It is not a board view. It reads note state, not cards.
 
@@ -30,23 +30,23 @@ It is not a board view. It reads note state, not cards.
 
 Discuss queue is the narrower read-but-not-distilled slice: checked Works with
 no digest yet. A long queue means intake is outrunning thought; the next move is
-a Co-PI discussion followed by PI-authored claims.
+a Co-PI discussion followed by PI-authored notes.
 
 ## Open questions
 
-Open questions surfaces current claim notes with no inbound links. These are
-claims captured but not yet integrated into hubs or other claims.
+Open questions surfaces current claim-bearing notes with no inbound links. These
+are notes captured but not yet integrated into hubs or other notes.
 
-It does not propose links or track a separate resolved state. A claim drops off
+It does not propose links or track a separate resolved state. A note drops off
 the list when the corpus links to it.
 
 ## Contradictions
 
-Contradictions surfaces current claims with confirmed `links.contradicts`
+Contradictions surfaces current claim-bearing notes with confirmed `links.contradicts`
 relationships. It is a synthesis starting point, not an error list and not a
 truth judgment.
 
-A contradiction is an open tension between current claims; supersession is a
+A contradiction is an open tension between current notes; supersession is a
 resolved temporal replacement.
 
 ## Related

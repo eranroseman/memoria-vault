@@ -9,7 +9,7 @@ grand_parent: Reference
 The shipped prompt operations, the CLI worker runner, and the prompt composition
 contract.
 
-- Prompt operations are checked packaged operation manifests in
+- Prompt operations are package-owned operation manifests in
   `memoria_vault.product.capabilities.operations`.
 - `memoria operation run <pattern-id> --mode test|live` is the core runner: it
   reads checked input refs, selects the manifest-pinned runner branch, records
@@ -21,8 +21,8 @@ contract.
 
 ## The shipped operations
 
-Eight prompt operations ship as checked packaged operation manifests and are
-runnable. Each file stem is its `pattern_id`.
+Eight prompt operations ship as package-owned operation manifests and are
+runnable when manifest validation passes. Each file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -50,7 +50,6 @@ The body is the prompt; `{{input}}` is the one substitution token.
 | --- | --- | --- |
 | `title` | str | Display name in the picker. |
 | `type` | `literal:operation` | Identifies the Concept as an operation. |
-| `check_status` | `unchecked` / `checked` / `quarantined` | Only `checked` operations are runnable. |
 | `description` | str | Human summary required by the operation schema. |
 | `operation_id` | str | Stable operation id; normally matches the file stem. |
 | `posture` | str | The voice the run adopts, echoed back as `posture`. |
@@ -59,11 +58,13 @@ The body is the prompt; `{{input}}` is the one substitution token.
 | `input` | str | Expected input shape; documentation for the caller, not enforced. |
 | `output_target` | path | Where the run's product is meant to land; shipped prompt operations stage under `.memoria/staging/knowledge/`. |
 | `runner` | map | Required `test` and `live` branches; each branch pins `{provider, model, temperature}` and may include other runner params. |
+| `untrusted_fields` | list | Raw user/provider text fields that must be sealed before entering a model prompt. |
 | `version` | str | Logged with every run for provenance. |
 | `adapted_from` | str (optional) | Upstream provenance of the prompt. |
 
-The schema is enforced by the same Linter and pre-commit machinery that guards
-other Concept files.
+Package validation rejects missing required fields, undeclared runner branches,
+malformed `untrusted_fields`, and retired verdict fields such as `check_status`
+or `standing`.
 
 ---
 
@@ -88,14 +89,14 @@ mode/provider/model/params and a prompt hash.
 
 ## Composition
 
-Every run is prefixed with the shared voice preamble at
-`system/patterns/_preamble.md`; the packaged operation manifest remains the
-runner authority ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)).
-`{{input}}` in the operation body is replaced with `input_text`; when
+Every run is prefixed with the shared voice preamble; the packaged operation
+manifest remains the runner authority
+([ADR-125](../adr/125-standalone-cli-engine-architecture.md)). `{{input}}` in
+the operation body is replaced with a reference to sealed untrusted data. When
 `input_ref` or `input_refs` are supplied, the runner first reads each checked
 Concept allowed by the operation policy and joins the referenced text under
 per-file headings. Supplying both refs and raw text is allowed; raw text wins as
-the substitution text while the checked refs remain attached as evidence.
+the sealed substitution text while the checked refs remain attached as evidence.
 
 The product reaches canonical notes only through the normal promotion path. A
 run stages an unchecked report, records the checked inputs in the report
@@ -107,6 +108,6 @@ events, and commits those staged writer changes.
 ## Related
 
 - Why runs are provenance-logged: [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md)
-- CLI command boundary: [Obsidian command palette](obsidian-command-palette.md)
+- CLI command boundary: [CLI](cli.md)
 - Every action the system performs: [System actions](system-actions.md)
 - The picker view over the library: [Dashboards](dashboards.md)

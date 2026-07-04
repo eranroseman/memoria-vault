@@ -96,8 +96,10 @@ def record_copi_interview_turn(
 
 def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
     """Load a packaged product operation manifest and require the WP5 policy contract."""
-    policy = read_capability_manifest("operation", operation_id)["frontmatter"]
-    return validate_operation_policy(operation_id, policy)
+    manifest = read_capability_manifest("operation", operation_id)
+    policy = validate_operation_policy(operation_id, manifest["frontmatter"])
+    _validate_manifest_untrusted_fields(operation_id, policy, manifest["text"])
+    return policy
 
 
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
@@ -113,6 +115,7 @@ def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict
     if missing:
         raise ValueError(f"{operation_id} missing operation policy fields: {', '.join(missing)}")
     _validate_runner_policy(operation_id, policy["runner"])
+    _untrusted_fields(operation_id, policy)
     io_schema = policy["io_schema"]
     if not isinstance(io_schema, dict):
         raise ValueError(f"{operation_id} io_schema must be a map")
@@ -121,6 +124,37 @@ def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"{operation_id} io_schema.{key} must be a non-empty string")
     return policy
+
+
+def _validate_manifest_untrusted_fields(
+    operation_id: str, policy: dict[str, Any], manifest_text: str
+) -> None:
+    _frontmatter, body = split_frontmatter(manifest_text)
+    required = ["input"] if "{{input}}" in body else []
+    if operation_id == "compile-source-digest":
+        required.extend(["source_text", "pi_interview_notes"])
+    _require_untrusted_fields(operation_id, policy, required)
+
+
+def _untrusted_fields(operation_id: str, policy: dict[str, Any]) -> set[str]:
+    fields = policy.get("untrusted_fields", [])
+    if not isinstance(fields, list) or not all(isinstance(field, str) for field in fields):
+        raise ValueError(f"{operation_id} untrusted_fields must be a list of strings")
+    normalized = {field.strip() for field in fields if field.strip()}
+    if len(normalized) != len(fields):
+        raise ValueError(f"{operation_id} untrusted_fields entries must be non-empty strings")
+    return normalized
+
+
+def _require_untrusted_fields(
+    operation_id: str, policy: dict[str, Any], fields: Iterable[str]
+) -> None:
+    declared = _untrusted_fields(operation_id, policy)
+    missing = sorted({field for field in fields if field} - declared)
+    if missing:
+        raise ValueError(
+            f"{operation_id} missing untrusted_fields declarations: {', '.join(missing)}"
+        )
 
 
 def resolve_operation_runner(
@@ -263,7 +297,7 @@ def run_prompt_operation(
         raise ValueError(f"{operation_id} requires input_text or input_ref")
 
     run_id = run_id or f"{operation_id}:{_sha256_text(input_text).removeprefix('sha256:')[:12]}"
-    prompt = _prompt_text(vault, pattern, input_text)
+    prompt = _prompt_text(vault, policy, pattern, input_text)
     started = append_journal_event(
         vault,
         {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
@@ -701,11 +735,24 @@ def _checked_prompt_input(vault: Path, relpath: str) -> tuple[str, dict[str, str
     return safe_read(path), {"id": normalize_path(relpath), "sha256": sha256_file(path)}
 
 
-def _prompt_text(vault: Path, pattern: str, input_text: str) -> str:
+def _prompt_text(vault: Path, policy: dict[str, Any], pattern: str, input_text: str) -> str:
+    _require_untrusted_fields(str(policy.get("operation_id") or "<unknown>"), policy, ["input"])
     preamble_path = vault / "system/patterns/_preamble.md"
     preamble = preamble_path.read_text(encoding="utf-8") if preamble_path.is_file() else ""
-    prompt = pattern.replace("{{input}}", input_text)
-    return f"{preamble}\n\n---\n\n{prompt}".strip()
+    prompt = pattern.replace(
+        "{{input}}",
+        'the sealed data block named "input" below',
+    )
+    return "\n\n".join(
+        part
+        for part in [
+            preamble.strip(),
+            "---",
+            prompt.strip(),
+            _sealed_untrusted_block("input", input_text),
+        ]
+        if part
+    ).strip()
 
 
 def _run_prompt_model(
@@ -824,6 +871,11 @@ def _run_digest_model(
     if runner["model"] == "deterministic-fixture":
         text = _digest_body(source_fm, content, topics, interviews)
     else:
+        _require_untrusted_fields(
+            str(policy.get("operation_id") or "<unknown>"),
+            policy,
+            ["source_text", "pi_interview_notes"],
+        )
         prompt = _digest_prompt(source_fm, content, topics, interviews)
         if runner["runner"] == "pydantic-ai":
             text = _pydantic_ai_chat(policy, runner, prompt)
@@ -847,8 +899,18 @@ def _digest_prompt(
             f"Title: {source_fm['title']}",
             f"Description: {source_fm['description']}",
             "Hub topics:\n" + "\n".join(f"- {topic}" for topic in topics),
-            "PI interview notes:\n" + (interview_text or "- none"),
-            "Source text:\n" + " ".join(content.split()),
+            _sealed_untrusted_block("pi_interview_notes", interview_text or "- none"),
+            _sealed_untrusted_block("source_text", " ".join(content.split())),
+        ]
+    )
+
+
+def _sealed_untrusted_block(name: str, text: str) -> str:
+    return "\n".join(
+        [
+            f'<memoria_untrusted_data name="{name}">',
+            text,
+            "</memoria_untrusted_data>",
         ]
     )
 

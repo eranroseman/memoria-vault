@@ -9,7 +9,8 @@ nav_order: 12
 
 Memoria's review gate is **structural**: machine work can stage and check
 material, but promotion to checked knowledge goes through the engine's request
-envelope, trusted-writer checks, and PI action. It is not an advisory
+envelope and trusted-writer checks, while PI attention and curation are recorded
+as separate dispositions. It is not an advisory
 suggestion, a setting the human can relax, or a prompt instruction. This page
 explains why.
 
@@ -60,8 +61,9 @@ attention; it cannot silently promote synthesis as checked knowledge. Optional
 adapters that try to write around the engine are denied or audited by the policy
 hook. No reasoning happens; no context is consulted; no exception is possible in
 the write path. The agent that "decides" to canonize cannot, because the engine
-will not materialize checked knowledge until the required checks and PI action
-exist as recorded state.
+will not materialize checked knowledge until the required checks and warrants
+exist as recorded state. PI approval remains separate attention/curation state,
+not the meaning of `check_status = checked`.
 
 The practical difference: prompt discipline has a mean time to failure. Structural enforcement doesn't degrade.
 

@@ -1,5 +1,5 @@
 title: Memoria
-description: A research operating system — a Co-PI and four bounded background agents inside your Obsidian vault.
+description: A standalone local research CLI and engine for checked knowledge work.
 remote_theme: just-the-docs/just-the-docs
 
 url: https://eranroseman.github.io

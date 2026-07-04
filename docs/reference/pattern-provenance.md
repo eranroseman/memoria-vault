@@ -46,7 +46,7 @@ used as framing, or rejected. The design argument is
 | [Feng and Liu 2026](bibliography.md#feng2026visionary) | "Vibe researching" language: human as creative director and quality gatekeeper. |
 | Deep Research surveys ([Huang et al. 2025](bibliography.md#huang2025deepresearch); [Xu and Peng 2025](bibliography.md#xu2025deepresearch)) | Contrast case: query-driven, ephemeral reports are not Memoria. |
 | [Gridach et al. 2025](bibliography.md#gridach2025agentic), [Bisht et al. 2026](bibliography.md#bisht2026agentic) | Collaborative rather than autonomous positioning; persistent world-model support. |
-| [Yue et al. 2026](bibliography.md#yue2026mcpnative) | Durable shared artifacts in MCP-native ecosystems; Memoria adds MCP as a permission boundary. |
+| [Yue et al. 2026](bibliography.md#yue2026mcpnative) | Durable shared artifacts in MCP-native ecosystems; Memoria applies the same artifact discipline through the standalone engine/read API, with MCP only as an optional scoped transport. |
 | [Zhang et al. 2026](bibliography.md#zhang2026howfar) | Artifact-aware review supports the evidence-grounded Peer-reviewer and blocking gate. |
 | [Qi et al. 2023](bibliography.md#qi2023hypothesis), [Ren et al. 2025](bibliography.md#ren2025scientific) | Narrow inputs for future domain-science or diversity-tuning work. |
 
@@ -73,5 +73,5 @@ used as framing, or rejected. The design argument is
 | Evidence-grounded verification | [FEVER](bibliography.md#thorne2018fever) | Build supports/contradicts on entailment plus recorded warrant, not embedding cosine. |
 | Temporal coverage | [TEMPO](bibliography.md#abdallah2026tempo) | Treat supersession and evidence date as load-bearing retrieval dimensions. |
 | HCI lineage of the gate | [Horvitz](bibliography.md#horvitz1999mixedinitiative), [Find-Fix-Verify](bibliography.md#bernstein2010soylent), [Amershi](bibliography.md#amershi2019guidelines), [Ackerman](bibliography.md#ackerman2000cscw) | Keeps the PI as adjudicator; separates generation from verification. |
-| Indirect-prompt-injection hardening | [Greshake et al.](bibliography.md#greshake2023injection), [AgentDojo](bibliography.md#debenedetti2024agentdojo) | Confirms least-privilege tool allowlists and MCP-only sandbox. |
+| Indirect-prompt-injection hardening | [Greshake et al.](bibliography.md#greshake2023injection), [AgentDojo](bibliography.md#debenedetti2024agentdojo) | Confirms least-privilege tool allowlists, runtime write policy, read scopes, and sealed untrusted-data prompt blocks. |
 | Fluency is not evidence | [Bender et al. 2021](bibliography.md#bender2021parrots) | Keeps uncertainty flags and source-span provenance on atomic claims. |

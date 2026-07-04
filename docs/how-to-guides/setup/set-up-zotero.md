@@ -69,16 +69,17 @@ not part of the standalone runtime.
 
 ## MarkDB-Connect
 
-Do not configure MarkDB-Connect for alpha.15. It assumes flat citekey-named note
-files, while Memoria source authority lives in SQLite catalog rows plus
-source-content blobs.
+Do not configure MarkDB-Connect as an alpha.15 setup path. It assumes flat
+citekey-named note files, while Memoria source authority lives in SQLite catalog
+rows plus source-content blobs.
 
 ## API keys for enrichment
 
 DOI enrichment calls Crossref, OpenAlex, and Unpaywall. OpenAlex requires
 `OPENALEX_API_KEY`; Crossref and Unpaywall use the contact email from
 `NCBI_EMAIL`. Configure them in the workspace runtime environment. Semantic
-Scholar and PubMed enrichment are deferred beyond the DOI MVP.
+Scholar is optional and default-on only when `SEMANTIC_SCHOLAR_API_KEY` is
+present or a replay fixture supplies the payload. PubMed enrichment is deferred.
 
 For each service's registration URL and the with-/without-key rate limits, see [External integrations → API keys and rate limits](../../reference/integrations.md#api-keys-and-rate-limits).
 

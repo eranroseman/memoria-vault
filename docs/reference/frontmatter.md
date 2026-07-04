@@ -30,7 +30,7 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `list` | a YAML sequence |
 | `map` | a YAML mapping |
 | `links` | a YAML mapping from `supports`, `contradicts`, or `extends` to target lists |
-| `literal:<value>` | exactly that value; for example, `type: literal:source` |
+| `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
 Unknown extra fields are **rejected**. Put local extension data under the

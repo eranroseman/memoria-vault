@@ -19,7 +19,7 @@ Your research steering file — the priorities, open questions, and gaps you wan
 
 ## Synthesis gaps
 
-> Topics where your existing claim notes feel thin and need more evidence.
+> Topics where your existing claim-bearing notes feel thin and need more evidence.
 
 - *(gap 1)*
 - *(gap 2)*

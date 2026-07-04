@@ -103,6 +103,29 @@ def test_operation_policy_rejects_retired_frontmatter_state() -> None:
         validate_operation_policy("compile-source-digest", policy)
 
 
+def test_load_operation_policy_requires_untrusted_prompt_fields(monkeypatch) -> None:
+    policy = compile_policy()
+    policy.pop("untrusted_fields")
+
+    monkeypatch.setattr(
+        "memoria_vault.runtime.operations.read_capability_manifest",
+        lambda _kind, _operation_id: {
+            "frontmatter": policy,
+            "text": "---\n---\nFrom {{input}}, write a report.\n",
+        },
+    )
+
+    with pytest.raises(ValueError, match="missing untrusted_fields declarations"):
+        load_operation_policy(Path(), "compile-source-digest")
+
+
+def test_operation_policy_rejects_malformed_untrusted_fields() -> None:
+    policy = compile_policy(untrusted_fields=["input", ""])
+
+    with pytest.raises(ValueError, match="untrusted_fields entries must be non-empty strings"):
+        validate_operation_policy("compile-source-digest", policy)
+
+
 def test_allowed_network_rejects_host_prefix_bypass() -> None:
     policy = {
         "operation_id": "net-test",
@@ -425,7 +448,10 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     assert seen["model_settings"]["temperature"] == 0
     assert seen["model_settings"]["max_tokens"] == 2048
     assert seen["model_settings"]["timeout"] == 90.0
+    assert '<memoria_untrusted_data name="source_text">' in seen["prompt"]
+    assert '<memoria_untrusted_data name="pi_interview_notes">' in seen["prompt"]
     assert "Alpha content" in seen["prompt"]
+    assert "Source text:\nAlpha content" not in seen["prompt"]
     assert "## Synthesis" in seen["prompt"]
     assert "Model-written Alpha framing outcomes." in (vault / result["digest_path"]).read_text(
         encoding="utf-8"

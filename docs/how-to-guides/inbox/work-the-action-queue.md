@@ -34,9 +34,16 @@ Sit down once and sweep the action queue — high-cardinality decisions belong i
 
 Acting on an item is whatever the projection proposes — write the link, fix the
 note, or queue the discovery task through the CLI/worker. If you still need the
-item as a reminder, leave it open. When no action remains, clear it with
-`memoria attention resolve --workspace <vault> <attention-path>`. The command
-sets `attention_status: resolved` and stamps `resolved_at:`, so the Inbox
+item as a reminder, leave it open. When no action remains, clear it with an
+explicit outcome:
+
+```bash
+memoria attention resolve --workspace <vault> <attention-path> --apply
+```
+
+Use `--reject` when the proposed action should not land, or `--defer --reason
+"..."` when it should stay out of the active queue until a later pass. The
+command records the PI disposition and stamps resolution metadata, so the Inbox
 converges to empty; empty is success.
 
 **4. Reject cleanly.**
