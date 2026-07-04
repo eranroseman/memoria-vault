@@ -596,7 +596,7 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
             require_allowed_network(policy, url)
         except PermissionError:
             continue
-        req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha14"})
+        req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha15"})
         try:
             with request.urlopen(req, timeout=20) as resp:
                 raw = resp.read()

@@ -20,7 +20,7 @@ risk_class: low
 required_checks:
 - eval-task-schema
 tags:
-- alpha14
+- alpha15
 - eval
 id: operations/eval-run
 standing: current
