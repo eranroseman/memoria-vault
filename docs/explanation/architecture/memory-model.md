@@ -86,7 +86,7 @@ field-by-field routing matrix.
 
 **Explanation**
 
-- Request and attention payloads: [The honesty prompt](../kanban-board/honesty-card.md)
+- Request and attention payloads: [The honesty prompt](../control-plane/honesty-card.md)
 - Architecture overview: [Architecture](README.md)
 
 **Reference**

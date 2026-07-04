@@ -96,7 +96,7 @@ payloads may narrow that scope, but never widen it.
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
-**Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
+**Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Control plane reference](control-plane.md).
 
 **Task/request** — a unit of work represented by a SQLite request row. Attention
 projections are PI-facing views over work that needs review.
@@ -164,4 +164,4 @@ closed when adapter policy is missing. See [Policy gate](policy-mcp.md).
 
 - Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
 - The document types referenced throughout: [Document types](document-types.md)
-- Request-control terms: [Kanban board reference](kanban-board.md)
+- Request-control terms: [Control plane reference](control-plane.md)

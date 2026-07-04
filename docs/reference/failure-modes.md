@@ -43,7 +43,6 @@ Sorted by severity, then topic.
 | Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL file or capture the source by DOI/file path. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
 | Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the template/workspace | Delete the profile/lane package and run `python scripts/alpha14_negative_gate.py`. |
-| Bitwarden bootstrap token rejected | LOW | Wrong region or revoked token | Re-run `hermes secrets bitwarden setup` and pick the correct region. |
 
 ---
 

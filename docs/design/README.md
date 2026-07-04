@@ -30,10 +30,9 @@ bounded the way it is.
 | Page | The question it answers |
 | --- | --- |
 | [Why the architecture is layered](why-layered-architecture.md) | Why requests, workers, and workspace knowledge are kept separate |
-| [Why operation postures](why-specialist-profiles.md) | Why Memoria has one read-only conversational posture plus scoped operation postures |
+| [Why operation postures](why-specialist-postures.md) | Why Memoria has one read-only conversational posture plus scoped operation postures |
 | [Why the review gate is structural](why-review-gate-is-structural.md) | Why review is enforced by architecture |
 | [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md) | Why synthesis stays human-owned |
-| [Hermes boundary](why-hermes.md) | Why Hermes is not part of the alpha.15 runtime |
 | [Why deterministic methods](why-deterministic-methods.md) | Why deterministic methods are preferred where correctness matters |
 
 ## Design areas

@@ -61,5 +61,4 @@ The audit trail (`system/logs/audit.jsonl`) records every policy decision with i
 ## Related
 
 - The writer of the audit log: [Policy gate](policy-mcp.md)
-- The no-installed-profile boundary: [Installed profiles](profile-capabilities.md)
 - The request surface: [CLI](cli.md)

@@ -6,9 +6,8 @@ grand_parent: Reference
 
 # Zotero plugins
 
-Optional plugins that install in **Zotero** (not Obsidian), plus a historical
-Zotero↔Obsidian connector comparison. Alpha.15 has no Obsidian adapter plugin
-set. For setup steps see
+Optional plugins that install in **Zotero**, plus a historical Zotero↔Obsidian
+connector comparison. For setup steps see
 [Set up Zotero](../how-to-guides/setup/set-up-zotero.md).
 
 ---
@@ -52,6 +51,4 @@ For guidance on choosing between these connectors see [Set up Zotero](../how-to-
 
 ## Related
 
-- Obsidian no-plugin baseline: [Obsidian plugins](obsidian-plugins.md)
-- Obsidian plugin-settings boundary: [Obsidian plugin settings](obsidian-plugin-settings.md)
 - Zotero setup how-to: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md)

@@ -63,6 +63,5 @@ bootstrap.
 ## Related
 
 - Runtime layout: [On-disk layout](on-disk-layout.md)
-- No installed profiles: [Installed profiles](profile-capabilities.md)
 - CLI commands: [CLI](cli.md)
 - Search and qmd: [Search](search.md)

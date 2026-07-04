@@ -1,12 +1,11 @@
 ---
-title: Kanban board reference
+title: Control plane reference
 parent: Vault data model
 grand_parent: Reference
 ---
 
-# Kanban board reference
+# Control plane reference
 
-Alpha.15 does not use a Hermes-native Kanban board as the core control plane.
 The shipped control plane is the operation request table in
 `.memoria/memoria.sqlite`, surfaced through the `memoria request ...`,
 `memoria workspace ...`, and `memoria attention ...` commands.

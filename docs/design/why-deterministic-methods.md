@@ -49,6 +49,6 @@ Without an explicit classification, there is pressure to route every task to an 
 ## Related
 
 - [Callouts](../explanation/obsidian/callouts.md) — how the hybrid pattern produces callout content
-- Which posture handles which task type: [Why operation postures, not a generalist agent](why-specialist-profiles.md)
+- Which posture handles which task type: [Why operation postures, not a generalist agent](why-specialist-postures.md)
 - The zero-LLM operation this rationale produces: [The Linter](../explanation/operations.md)
 - [Retrieval and analysis methods](../reference/retrieval-and-analysis-methods.md) — the catalog of specific deterministic methods Memoria uses

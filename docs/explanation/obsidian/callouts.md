@@ -15,7 +15,7 @@ Alpha.15 does not ship Obsidian integrations, callout plugins, CSS snippets, or
 runtime adapters; editors that do not understand callouts still show them as
 quoted text.
 
-For the exact shipped-vs-deferred contract, see the reference: [Obsidian callouts](../../reference/obsidian-callouts.md).
+For the exact shipped-vs-deferred contract, see the reference: Obsidian callouts.
 
 ## The three callouts and what they represent
 
@@ -25,7 +25,7 @@ For the exact shipped-vs-deferred contract, see the reference: [Obsidian callout
 | `[!suggestions]` | Collapsed first-action blocks on space notes. | Collapsed |
 | `[!verification]` | Read-barrier guidance on the Knowledge space. | Expanded |
 
-The identifiers and drift check are in the [reference](../../reference/obsidian-callouts.md).
+The identifiers and drift check are in the reference.
 
 ## Ownership and updates
 
@@ -40,4 +40,3 @@ The identifiers and drift check are in the [reference](../../reference/obsidian-
 ## Related
 
 - The hybrid pattern behind callouts: [Why Memoria uses deterministic methods alongside LLMs](../../design/why-deterministic-methods.md)
-- Callout field reference: [Obsidian callouts](../../reference/obsidian-callouts.md)

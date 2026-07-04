@@ -37,5 +37,5 @@ an operation, and findings reach the PI the same way - as attention.
 
 - The deterministic half of verification: [Operations](../operations.md)
 - The proposer it stays independent of: [The Librarian](librarian.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-postures.md)
 - Why review is human-driven: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

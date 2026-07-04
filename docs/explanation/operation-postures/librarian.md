@@ -25,8 +25,7 @@ installed profile packages.
 
 The table below is an orienting illustration of what each operation family does
 and the attention signal it can raise. [Operations](../../reference/operations.md)
-owns the concrete command and manifest surface; [Installed profiles](../../reference/profile-capabilities.md)
-owns the no-installed-profile boundary.
+owns the concrete command and manifest surface.
 
 | Operation family | Work | Attention signal |
 | --- | --- | --- |
@@ -57,5 +56,5 @@ independence, the anti-rubber-stamp principle.
 
 - The mechanical counterpart: [Operations](../operations.md)
 - The independent checker downstream: [The Peer-reviewer](peer-reviewer.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-profiles.md)
-- Why intake is separated from verification: [Why operation postures, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-postures.md)
+- Why intake is separated from verification: [Why operation postures, not a generalist agent](../../design/why-specialist-postures.md)

@@ -53,4 +53,3 @@ The scoring contract is in [Vault eval](../../reference/vault-eval.md).
 
 - Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
 - Policy log schema: [Policy gate](../../reference/policy-mcp.md)
-- Installed profile boundary: [Installed profiles](../../reference/profile-capabilities.md)

@@ -114,7 +114,7 @@ postures stay pure - write zone and stance, not tools.
 
 ## Related
 
-- The operation postures described: [Operation postures](../explanation/profiles/README.md)
+- The operation postures described: [Operation postures](../explanation/operation-postures/README.md)
 - The deterministic actors that are not agents: [Operations](../explanation/operations.md)
 - Why the layers separate concerns: [Why the architecture is layered](why-layered-architecture.md)
 - Why the review gate is human-owned: [Why the review gate is structural](why-review-gate-is-structural.md)

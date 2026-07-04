@@ -3,8 +3,6 @@
 For any AI agent (Claude Code, Hermes, etc.) making changes to `eranroseman/memoria-vault`.
 Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
-**One principle:** choose the correct long-term solution, never the path of least effort. Surface trade-offs and your recommendation rather than defaulting to the cheap path. *(judgment - no mechanism)*
-
 **When presenting options:** give pros/cons and a recommendation for every option — never a bare list. *(judgment - no mechanism)*
 
 ---
@@ -69,7 +67,8 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 - Test only against disposable workspaces such as `~/Memoria-test`; never use a
   personal workspace as a test target. *(judgment - no mechanism)*
 - Provider keys and optional adapter secrets live in local, gitignored config or
-  environment files. Never print or commit them. *(judgment - no mechanism)*
+  environment files (shipped only as `.example` templates). Never print or
+  commit them. *(judgment - no mechanism)*
 
 ---
 
@@ -266,8 +265,6 @@ No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the f
 
 Don't explain what the code does — well-named identifiers already do that. Don't reference the task, PR, or caller ("added for X", "used by Y"). *(judgment - no mechanism)*
 
-Section dividers (`# --- Label ---`) are acceptable in files over ~200 lines when they mark a genuine logical boundary. In short files or before a function that already has a docstring, they are noise — remove them.
-
 Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE001 -- config load with import-inside-try; degrade to default`.
 *(enforced: ruff)*
 
@@ -280,7 +277,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes. *(judgment - no mechanism)*
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules. *(enforced: python-selftest)*
-- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available. *(judgment - no mechanism)*
+- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available. *(judgment - no mechanism)*
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`). *(enforced: PSScriptAnalyzer (scripts/install.ps1))*
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`. *(judgment - no mechanism)*
 
@@ -329,9 +326,6 @@ the manual security review and is a first line against the "never commit
 - **Scheduled wrappers:** shared wrappers live under
   `vault-template/.memoria/scripts/` and call the CLI/runtime package. A local
   scheduler may invoke them, but no scheduler is required for one-shot CLI use.
-- **Secrets:** provider keys live in operator-owned local config or environment
-  files and gitignored workspace files shipped only as `.example`. Never commit a
-  real key. *(judgment - no mechanism)*
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.
@@ -436,10 +430,7 @@ Readiness lives only in the **"Release <version>" parent issue and its readiness
 sub-issues**. Version, changelog, tag, and GitHub Release are owned by
 release-please. Use the portable [release playbook](.agents/playbooks/release.md)
 and [release plan template](.agents/templates/release-plan.md) to draft issue
-prose; do not create a repository release-plan folder. In-work release design
-notes may live on the `scratch` branch under `scratch/releases/<version>/`
-while shaping a release, but they are deleted before that release/checkpoint is
-done.
+prose; do not create a repository release-plan folder.
 *(judgment - no mechanism)*
 
 ---
@@ -454,7 +445,6 @@ done.
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `scratch` branch, under `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -464,8 +454,6 @@ done.
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others. *(judgment - no mechanism)*
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes on the `scratch` branch under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
-  *(judgment - no mechanism)*
 
 ---
 

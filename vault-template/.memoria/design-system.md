@@ -151,7 +151,7 @@ voice:
     - "claim-note (not 'permanent note')"
     - "paper-note (not 'paper note')"
     - "vault (not 'knowledge base')"
-    - "Hermes profile (not 'agent')"
+    - "agent (not 'Hermes profile')"
 ```
 
 ## 8. Brand

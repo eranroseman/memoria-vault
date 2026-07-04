@@ -11,7 +11,7 @@ Back-pressure exists to make overload visible before it becomes
 rubber-stamping. In the standalone engine, request concurrency and review-queue
 limits protect auditability, human review, and synthesis quality. The current
 alpha.15 reference records that Hermes board WIP caps are not a baseline control:
-[Kanban board reference](../../reference/kanban-board.md#wip-limits).
+[Control plane reference](../../reference/control-plane.md#wip-limits).
 
 ## One active request per collision domain
 
@@ -41,5 +41,5 @@ quality, not throughput.
 ## Related
 
 - State-machine explanation: [Request states and the review gate](states.md)
-- Current no-Hermes-board boundary: [Kanban board reference](../../reference/kanban-board.md)
+- Control plane commands: [Control plane reference](../../reference/control-plane.md)
 - Why review remains human-owned: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)

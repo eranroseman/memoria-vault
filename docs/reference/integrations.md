@@ -114,5 +114,4 @@ Tools evaluated and not in the current design:
 ## Related
 
 - Ingest workflow (what runs when a source is ingested): [Ingest routing](ingest.md)
-- No installed-profile boundary: [Installed profiles](profile-capabilities.md)
 - Where API keys are configured: [Memoria configuration](configuration.md)
