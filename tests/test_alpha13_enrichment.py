@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -19,8 +17,7 @@ from memoria_vault.runtime.enrichment import (
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
 
 
 def sha_text(text: str) -> str:
@@ -28,27 +25,11 @@ def sha_text(text: str) -> str:
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "alpha13@example.invalid")
-    git(tmp_path, "config", "user.name", "Alpha13")
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, "alpha13@example.invalid", "Alpha13")
     git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
     git(tmp_path, "commit", "-m", "seed alpha13 workspace")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def allow_example_full_text(monkeypatch) -> None:

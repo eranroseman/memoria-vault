@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import shutil
-import subprocess
 from copy import deepcopy
 from pathlib import Path
 
@@ -20,30 +18,13 @@ from memoria_vault.runtime.operations import (
     validate_operation_policy,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import copy_memoria_dirs, git, init_git, patch_pydantic_ai
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "operations@example.invalid")
-    git(tmp_path, "config", "user.name", "Operations")
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, "operations@example.invalid", "Operations")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def compile_policy(**updates):
@@ -378,39 +359,16 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     )
     seen = {}
 
-    class FakeProvider:
-        def __init__(self, **kwargs):
-            seen["provider_kwargs"] = kwargs
-
-    class FakeModel:
-        def __init__(self, model_name, *, provider):
-            seen["model_name"] = model_name
-            seen["provider"] = provider
-
-    class FakeAgent:
-        def __init__(self, model):
-            seen["model"] = model
-
-        def run_sync(self, prompt, *, model_settings):
-            seen["prompt"] = prompt
-            seen["model_settings"] = model_settings
-            return type(
-                "Result",
-                (),
-                {
-                    "output": (
-                        "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
-                        "## Hub suggestions\n\n- Framing\n"
-                    )
-                },
-            )()
-
-    def fake_loader():
-        return FakeAgent, FakeModel, FakeProvider
-
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
     monkeypatch.setenv("MEMORIA_MODEL_API_KEY", "test-key")
-    monkeypatch.setattr("memoria_vault.runtime.operations._load_pydantic_ai_openai", fake_loader)
+    patch_pydantic_ai(
+        monkeypatch,
+        output=(
+            "## Synthesis\n\nModel-written Alpha framing outcomes.\n\n"
+            "## Hub suggestions\n\n- Framing\n"
+        ),
+        seen=seen,
+    )
 
     result = compile_source_digest(
         vault,
@@ -492,26 +450,8 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
         machine="capture-machine",
     )
 
-    class FakeAgent:
-        def __init__(self, _model):
-            pass
-
-        def run_sync(self, _prompt, *, model_settings):
-            return type("Result", (), {"output": "Loose summary only."})()
-
-    class FakeModel:
-        def __init__(self, _model_name, *, provider):
-            pass
-
-    class FakeProvider:
-        def __init__(self, **_kwargs):
-            pass
-
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
-    )
+    patch_pydantic_ai(monkeypatch, output="Loose summary only.")
 
     with pytest.raises(ValueError, match="digest output must include ## Synthesis"):
         compile_source_digest(
@@ -543,34 +483,13 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
         machine="capture-machine",
     )
 
-    class FakeAgent:
-        def __init__(self, _model):
-            pass
-
-        def run_sync(self, _prompt, *, model_settings):
-            return type(
-                "Result",
-                (),
-                {
-                    "output": (
-                        "## Synthesis\n\nCompletely unrelated banana prose.\n\n"
-                        "## Hub suggestions\n\n- unrelated\n"
-                    )
-                },
-            )()
-
-    class FakeModel:
-        def __init__(self, _model_name, *, provider):
-            pass
-
-    class FakeProvider:
-        def __init__(self, **_kwargs):
-            pass
-
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
+    patch_pydantic_ai(
+        monkeypatch,
+        output=(
+            "## Synthesis\n\nCompletely unrelated banana prose.\n\n"
+            "## Hub suggestions\n\n- unrelated\n"
+        ),
     )
 
     with pytest.raises(ValueError, match="source-grounding smoke check"):

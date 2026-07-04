@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import tomllib
 from pathlib import Path
 
@@ -11,8 +10,8 @@ from memoria_vault.runtime.retrieval_substrate import (
     evaluate_fts5_fixture,
 )
 from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
+from tests.helpers import ROOT, copy_memoria_dirs
 
-ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "tests/fixtures/retrieval-substrate-spike.json"
 
 
@@ -52,7 +51,7 @@ def test_qmd_stays_packaged_until_vector_retrieval_is_declared() -> None:
 
 
 def test_qmd_verdict_matches_rebuild_manifest(tmp_path: Path) -> None:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    copy_memoria_dirs(tmp_path, "schemas")
     note = tmp_path / "knowledge/notes/checked.md"
     note.parent.mkdir(parents=True)
     note.write_text(

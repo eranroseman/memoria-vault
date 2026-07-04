@@ -48,6 +48,16 @@ INTEGRITY_SWEEP_OPERATIONS = (
     "integrity-contradiction-check",
     "integrity-link-target-check",
 )
+INTEGRITY_FINDING_OPERATIONS = {
+    "integrity-evidence-check": "check_evidence_integrity",
+    "integrity-claim-quote-check": "check_claim_quote_support",
+    "integrity-quote-anchor-check": "check_quote_anchor_support",
+    "integrity-prompt-injection-check": "check_prompt_injection_markers",
+    "integrity-provenance-checkpoint": "check_provenance_checkpoint",
+    "integrity-citation-survival-check": "check_citation_survival",
+    "integrity-contradiction-check": "check_contradiction_links",
+    "integrity-link-target-check": "check_link_targets",
+}
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
 CREATE_CONCEPT_HOMES = {
     "note": "knowledge/notes",
@@ -299,7 +309,6 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     payload = job.get("payload") if isinstance(job.get("payload"), dict) else {}
     from memoria_vault.runtime.operations import (
         load_operation_policy,
-        require_allowed_network,
         required_promotion_checks,
         resolve_operation_runner,
     )
@@ -331,118 +340,17 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "check_status": state.concept_check_status(vault, target),
             "materialized": materialized,
         }
-    if operation_id == "integrity-evidence-check":
-        from memoria_vault.runtime.integrity import check_evidence_integrity
-
-        result = check_evidence_integrity(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-claim-quote-check":
-        from memoria_vault.runtime.integrity import check_claim_quote_support
-
-        result = check_claim_quote_support(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-quote-anchor-check":
-        from memoria_vault.runtime.integrity import check_quote_anchor_support
-
-        result = check_quote_anchor_support(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-prompt-injection-check":
-        from memoria_vault.runtime.integrity import check_prompt_injection_markers
-
-        result = check_prompt_injection_markers(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-provenance-checkpoint":
-        from memoria_vault.runtime.integrity import check_provenance_checkpoint
-
-        result = check_provenance_checkpoint(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-citation-survival-check":
-        from memoria_vault.runtime.integrity import check_citation_survival
-
-        result = check_citation_survival(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-contradiction-check":
-        from memoria_vault.runtime.integrity import check_contradiction_links
-
-        result = check_contradiction_links(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
-    if operation_id == "integrity-link-target-check":
-        from memoria_vault.runtime.integrity import check_link_targets
-
-        result = check_link_targets(
-            vault,
-            shadow=bool(payload.get("shadow", True)),
-            machine=machine,
-            commit=True,
-        )
-        return {
-            "commit": result["commit"],
-            "finding_count": len(result["findings"]),
-            "findings": result["findings"],
-        }
+    if operation_id in {
+        "integrity-evidence-check",
+        "integrity-claim-quote-check",
+        "integrity-quote-anchor-check",
+        "integrity-prompt-injection-check",
+        "integrity-provenance-checkpoint",
+        "integrity-citation-survival-check",
+        "integrity-contradiction-check",
+        "integrity-link-target-check",
+    }:
+        return _run_integrity_finding_operation(vault, operation_id, payload, machine)
     if operation_id == "trace-integrity-scan":
         from memoria_vault.runtime.trusted_writer import (
             quarantine_untraced,
@@ -1037,216 +945,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "commit": commit,
         }
     if operation_id == "capture-source":
-        from memoria_vault.runtime.capture import stage_catalog_source
-
-        source_id = str(payload.get("source_id") or "").strip()
-        title = str(payload.get("title") or "").strip()
-        description = str(payload.get("description") or "").strip()
-        content_text = str(payload.get("content_text") or "").strip()
-        if not source_id:
-            raise ValueError("capture-source requires source_id")
-        if not title:
-            raise ValueError("capture-source requires title")
-        if not description:
-            raise ValueError("capture-source requires description")
-        if not content_text:
-            raise ValueError("capture-source requires content_text")
-        identifiers = payload.get("identifiers")
-        csl_json = payload.get("csl_json")
-        if identifiers is not None and not isinstance(identifiers, dict):
-            raise ValueError("capture-source identifiers must be an object")
-        if csl_json is not None and not isinstance(csl_json, dict):
-            raise ValueError("capture-source csl_json must be an object")
-        if "raw_text" in payload and not isinstance(payload["raw_text"], str):
-            raise ValueError("capture-source raw_text must be a string")
-        capture_kwargs = {
-            "raw_bytes": payload["raw_text"].encode() if "raw_text" in payload else None,
-            "raw_filename": str(payload.get("raw_filename") or "source.txt"),
-            "resource": str(payload.get("resource") or ""),
-            "item_type": str(payload.get("item_type") or "article"),
-            "identifiers": identifiers,
-            "csl_json": csl_json,
-            "provider_coverage": str(payload.get("provider_coverage") or "partial"),
-            "text_status": str(payload.get("text_status") or "full-text"),
-            "citekey": str(payload.get("citekey") or ""),
-            "machine": machine,
-            "run_id": str(payload.get("run_id") or "") or None,
-        }
-        result = stage_catalog_source(
-            vault,
-            source_id,
-            title,
-            description,
-            content_text,
-            **capture_kwargs,
-        )
-        return {
-            "commit": result["commit"],
-            "source_id": result["source_id"],
-            "content_path": result["content_path"],
-            "raw_path": result["raw_path"],
-            "text_status": result["text_status"],
-            "check_status": result["check_status"],
-        }
+        return _run_capture_source_operation(vault, payload, machine)
     if operation_id == "enrich-source":
-        from memoria_vault.runtime.enrichment import enrich_source
-
-        source_id = str(payload.get("source_id") or "").strip()
-        if not source_id:
-            raise ValueError("enrich-source requires source_id")
-        provider_payloads = payload.get("provider_payloads")
-        if provider_payloads is not None and not isinstance(provider_payloads, dict):
-            raise ValueError("enrich-source provider_payloads must be an object")
-        return enrich_source(
-            vault,
-            source_id,
-            policy=policy,
-            provider_payloads=provider_payloads,
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
-        )
+        return _run_enrich_source_operation(vault, payload, policy, machine)
     if operation_id == "capture-bibtex-source":
-        from memoria_vault.runtime.capture import bibtex_capture_payload, stage_catalog_source
-
-        bibtex_value = payload.get("bibtex")
-        if bibtex_value is not None and not isinstance(bibtex_value, str):
-            raise ValueError("capture-bibtex-source bibtex must be a string")
-        bibtex = str(bibtex_value or "").strip()
-        if not bibtex:
-            raise ValueError("capture-bibtex-source requires bibtex")
-        content_text = payload.get("content_text")
-        if content_text is not None and not isinstance(content_text, str):
-            raise ValueError("capture-bibtex-source content_text must be a string")
-        source_id = payload.get("source_id")
-        description = payload.get("description")
-        run_id = payload.get("run_id")
-        if source_id is not None and not isinstance(source_id, str):
-            raise ValueError("capture-bibtex-source source_id must be a string")
-        if description is not None and not isinstance(description, str):
-            raise ValueError("capture-bibtex-source description must be a string")
-        if run_id is not None and not isinstance(run_id, str):
-            raise ValueError("capture-bibtex-source run_id must be a string")
-        capture_payload = bibtex_capture_payload(
-            bibtex,
-            content_text=content_text,
-            source_id=source_id or None,
-            description=description or None,
-        )
-        if run_id:
-            capture_payload["run_id"] = run_id
-        result = stage_catalog_source(
-            vault,
-            str(capture_payload["source_id"]),
-            str(capture_payload["title"]),
-            str(capture_payload["description"]),
-            str(capture_payload["content_text"]),
-            raw_bytes=str(capture_payload["raw_text"]).encode(),
-            raw_filename=str(capture_payload["raw_filename"]),
-            resource=str(capture_payload.get("resource") or ""),
-            item_type=str(capture_payload.get("item_type") or "article"),
-            identifiers=capture_payload.get("identifiers"),
-            csl_json=capture_payload.get("csl_json"),
-            provider_coverage=str(capture_payload.get("provider_coverage") or "partial"),
-            text_status=str(capture_payload.get("text_status") or "metadata-only"),
-            citekey=str(capture_payload.get("citekey") or ""),
-            machine=machine,
-            run_id=str(capture_payload.get("run_id") or "") or None,
-            workflow="capture_bibtex_source",
-        )
-        enrichment_job = None
-        if _payload_doi(capture_payload):
-            enrichment_job = enqueue_operation(
-                vault,
-                "enrich-source",
-                payload={"source_id": result["source_id"]},
-                idempotency_key=f"enrich-{result['source_id']}",
-                input_refs=[{"id": result["source_id"], "kind": "catalog_source"}],
-                primary_target=f"catalog/sources/{result['source_id']}",
-                causal_refs=[str(job["job_id"])],
-                actor="operation",
-                provenance={"surface": "worker", "command": "capture-bibtex-source"},
-            )
-        return {
-            "commit": result["commit"],
-            "source_id": result["source_id"],
-            "content_path": result["content_path"],
-            "raw_path": result["raw_path"],
-            "text_status": result["text_status"],
-            "check_status": result["check_status"],
-            "enrichment_job": enrichment_job,
-        }
+        return _run_capture_bibtex_source_operation(vault, payload, job, machine)
     if operation_id == "capture-url-source":
-        from memoria_vault.runtime.capture import stage_url_source
-
-        url = str(payload.get("url") or "").strip()
-        if not url:
-            raise ValueError("capture-url-source requires url")
-        timeout = payload.get("timeout", 10.0)
-        if not isinstance(timeout, int | float):
-            raise ValueError("capture-url-source timeout must be numeric")
-        require_allowed_network(policy, url)
-        result = stage_url_source(
-            vault,
-            url,
-            title=str(payload.get("title") or "") or None,
-            description=str(payload.get("description") or "") or None,
-            timeout=float(timeout),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
-        )
-        return {
-            "commit": result["commit"],
-            "source_id": result["source_id"],
-            "content_path": result["content_path"],
-            "raw_path": result["raw_path"],
-            "text_status": result["text_status"],
-            "check_status": result["check_status"],
-        }
+        return _run_capture_url_source_operation(vault, payload, policy, machine)
     if operation_id == "capture-pdf-source":
-        from memoria_vault.runtime.capture import stage_pdf_source
-
-        source_id = str(payload.get("source_id") or "").strip()
-        title = str(payload.get("title") or "").strip()
-        description = str(payload.get("description") or "").strip()
-        raw_pdf_base64 = str(payload.get("raw_pdf_base64") or "").strip()
-        if not source_id:
-            raise ValueError("capture-pdf-source requires source_id")
-        if not title:
-            raise ValueError("capture-pdf-source requires title")
-        if not description:
-            raise ValueError("capture-pdf-source requires description")
-        if not raw_pdf_base64:
-            raise ValueError("capture-pdf-source requires raw_pdf_base64")
-        identifiers = payload.get("identifiers")
-        csl_json = payload.get("csl_json")
-        if identifiers is not None and not isinstance(identifiers, dict):
-            raise ValueError("capture-pdf-source identifiers must be an object")
-        if csl_json is not None and not isinstance(csl_json, dict):
-            raise ValueError("capture-pdf-source csl_json must be an object")
-        result = stage_pdf_source(
-            vault,
-            source_id,
-            title,
-            description,
-            base64.b64decode(raw_pdf_base64),
-            raw_filename=str(payload.get("raw_filename") or "source.pdf"),
-            resource=str(payload.get("resource") or ""),
-            item_type=str(payload.get("item_type") or "article"),
-            identifiers=identifiers,
-            csl_json=csl_json,
-            provider_coverage=str(payload.get("provider_coverage") or "partial"),
-            citekey=str(payload.get("citekey") or ""),
-            machine=machine,
-            run_id=str(payload.get("run_id") or "") or None,
-        )
-        return {
-            "commit": result["commit"],
-            "source_id": result["source_id"],
-            "content_path": result["content_path"],
-            "raw_path": result["raw_path"],
-            "text_status": result["text_status"],
-            "check_status": result["check_status"],
-        }
+        return _run_capture_pdf_source_operation(vault, payload, machine)
     if operation_id == "regenerate-references-bib":
         from memoria_vault.runtime.capture import write_references_bib
 
@@ -1284,6 +991,220 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "outputs": result["paths"],
         }
     raise ValueError(f"unsupported operation: {operation_id!r}")
+
+
+def _run_integrity_finding_operation(
+    vault: Path, operation_id: str, payload: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime import integrity
+
+    check = getattr(integrity, INTEGRITY_FINDING_OPERATIONS[operation_id])
+    result = check(
+        vault,
+        shadow=bool(payload.get("shadow", True)),
+        machine=machine,
+        commit=True,
+    )
+    return {
+        "commit": result["commit"],
+        "finding_count": len(result["findings"]),
+        "findings": result["findings"],
+    }
+
+
+def _source_result(result: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "commit": result["commit"],
+        "source_id": result["source_id"],
+        "content_path": result["content_path"],
+        "raw_path": result["raw_path"],
+        "text_status": result["text_status"],
+        "check_status": result["check_status"],
+    }
+
+
+def _run_capture_source_operation(
+    vault: Path, payload: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import stage_capture_payload
+
+    source_id = str(payload.get("source_id") or "").strip()
+    title = str(payload.get("title") or "").strip()
+    description = str(payload.get("description") or "").strip()
+    content_text = str(payload.get("content_text") or "").strip()
+    if not source_id:
+        raise ValueError("capture-source requires source_id")
+    if not title:
+        raise ValueError("capture-source requires title")
+    if not description:
+        raise ValueError("capture-source requires description")
+    if not content_text:
+        raise ValueError("capture-source requires content_text")
+    identifiers = payload.get("identifiers")
+    csl_json = payload.get("csl_json")
+    if identifiers is not None and not isinstance(identifiers, dict):
+        raise ValueError("capture-source identifiers must be an object")
+    if csl_json is not None and not isinstance(csl_json, dict):
+        raise ValueError("capture-source csl_json must be an object")
+    if "raw_text" in payload and not isinstance(payload["raw_text"], str):
+        raise ValueError("capture-source raw_text must be a string")
+    result = stage_capture_payload(
+        vault,
+        {
+            **payload,
+            "source_id": source_id,
+            "title": title,
+            "description": description,
+            "content_text": content_text,
+            "identifiers": identifiers,
+            "csl_json": csl_json,
+        },
+        machine=machine,
+        run_id=str(payload.get("run_id") or "") or None,
+    )
+    return _source_result(result)
+
+
+def _run_enrich_source_operation(
+    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime.enrichment import enrich_source
+
+    source_id = str(payload.get("source_id") or "").strip()
+    if not source_id:
+        raise ValueError("enrich-source requires source_id")
+    provider_payloads = payload.get("provider_payloads")
+    if provider_payloads is not None and not isinstance(provider_payloads, dict):
+        raise ValueError("enrich-source provider_payloads must be an object")
+    return enrich_source(
+        vault,
+        source_id,
+        policy=policy,
+        provider_payloads=provider_payloads,
+        machine=machine,
+        run_id=str(payload.get("run_id") or "") or None,
+    )
+
+
+def _run_capture_bibtex_source_operation(
+    vault: Path, payload: dict[str, Any], job: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import bibtex_capture_payload, stage_capture_payload
+
+    bibtex_value = payload.get("bibtex")
+    if bibtex_value is not None and not isinstance(bibtex_value, str):
+        raise ValueError("capture-bibtex-source bibtex must be a string")
+    bibtex = str(bibtex_value or "").strip()
+    if not bibtex:
+        raise ValueError("capture-bibtex-source requires bibtex")
+    content_text = payload.get("content_text")
+    if content_text is not None and not isinstance(content_text, str):
+        raise ValueError("capture-bibtex-source content_text must be a string")
+    source_id = payload.get("source_id")
+    description = payload.get("description")
+    run_id = payload.get("run_id")
+    if source_id is not None and not isinstance(source_id, str):
+        raise ValueError("capture-bibtex-source source_id must be a string")
+    if description is not None and not isinstance(description, str):
+        raise ValueError("capture-bibtex-source description must be a string")
+    if run_id is not None and not isinstance(run_id, str):
+        raise ValueError("capture-bibtex-source run_id must be a string")
+    capture_payload = bibtex_capture_payload(
+        bibtex,
+        content_text=content_text,
+        source_id=source_id or None,
+        description=description or None,
+    )
+    if run_id:
+        capture_payload["run_id"] = run_id
+    result = stage_capture_payload(
+        vault,
+        capture_payload,
+        machine=machine,
+        workflow="capture_bibtex_source",
+    )
+    output = _source_result(result)
+    output["enrichment_job"] = None
+    if _payload_doi(capture_payload):
+        output["enrichment_job"] = enqueue_operation(
+            vault,
+            "enrich-source",
+            payload={"source_id": result["source_id"]},
+            idempotency_key=f"enrich-{result['source_id']}",
+            input_refs=[{"id": result["source_id"], "kind": "catalog_source"}],
+            primary_target=f"catalog/sources/{result['source_id']}",
+            causal_refs=[str(job["job_id"])],
+            actor="operation",
+            provenance={"surface": "worker", "command": "capture-bibtex-source"},
+        )
+    return output
+
+
+def _run_capture_url_source_operation(
+    vault: Path, payload: dict[str, Any], policy: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import stage_url_source
+    from memoria_vault.runtime.operations import require_allowed_network
+
+    url = str(payload.get("url") or "").strip()
+    if not url:
+        raise ValueError("capture-url-source requires url")
+    timeout = payload.get("timeout", 10.0)
+    if not isinstance(timeout, int | float):
+        raise ValueError("capture-url-source timeout must be numeric")
+    require_allowed_network(policy, url)
+    result = stage_url_source(
+        vault,
+        url,
+        title=str(payload.get("title") or "") or None,
+        description=str(payload.get("description") or "") or None,
+        timeout=float(timeout),
+        machine=machine,
+        run_id=str(payload.get("run_id") or "") or None,
+    )
+    return _source_result(result)
+
+
+def _run_capture_pdf_source_operation(
+    vault: Path, payload: dict[str, Any], machine: str | None
+) -> dict[str, Any]:
+    from memoria_vault.runtime.capture import stage_pdf_source
+
+    source_id = str(payload.get("source_id") or "").strip()
+    title = str(payload.get("title") or "").strip()
+    description = str(payload.get("description") or "").strip()
+    raw_pdf_base64 = str(payload.get("raw_pdf_base64") or "").strip()
+    if not source_id:
+        raise ValueError("capture-pdf-source requires source_id")
+    if not title:
+        raise ValueError("capture-pdf-source requires title")
+    if not description:
+        raise ValueError("capture-pdf-source requires description")
+    if not raw_pdf_base64:
+        raise ValueError("capture-pdf-source requires raw_pdf_base64")
+    identifiers = payload.get("identifiers")
+    csl_json = payload.get("csl_json")
+    if identifiers is not None and not isinstance(identifiers, dict):
+        raise ValueError("capture-pdf-source identifiers must be an object")
+    if csl_json is not None and not isinstance(csl_json, dict):
+        raise ValueError("capture-pdf-source csl_json must be an object")
+    result = stage_pdf_source(
+        vault,
+        source_id,
+        title,
+        description,
+        base64.b64decode(raw_pdf_base64),
+        raw_filename=str(payload.get("raw_filename") or "source.pdf"),
+        resource=str(payload.get("resource") or ""),
+        item_type=str(payload.get("item_type") or "article"),
+        identifiers=identifiers,
+        csl_json=csl_json,
+        provider_coverage=str(payload.get("provider_coverage") or "partial"),
+        citekey=str(payload.get("citekey") or ""),
+        machine=machine,
+        run_id=str(payload.get("run_id") or "") or None,
+    )
+    return _source_result(result)
 
 
 def _create_concept_payload(payload: dict[str, Any]) -> tuple[str, str]:

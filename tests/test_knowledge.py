@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -27,30 +26,13 @@ from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "knowledge@example.invalid")
-    git(tmp_path, "config", "user.name", "Knowledge")
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, "knowledge@example.invalid", "Knowledge")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

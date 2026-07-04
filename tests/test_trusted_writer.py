@@ -22,12 +22,11 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept,
 )
 from memoria_vault.runtime.vaultio import is_ulid, read_frontmatter
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    copy_memoria_dirs(tmp_path, "schemas")
     shutil.copyfile(ROOT / "vault-template/.gitignore", tmp_path / ".gitignore")
     return tmp_path
 
@@ -47,19 +46,6 @@ def note_text(*, title: str = "Alpha note") -> str:
 
 def events(vault: Path) -> list[dict]:
     return list(iter_jsonl(vault / "journal/test-machine.jsonl"))
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) -> None:
@@ -182,9 +168,7 @@ def test_promote_checked_rejects_unsupported_promotion_check(tmp_path: Path) -> 
 
 def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    git(vault, "init", "-q")
-    git(vault, "config", "user.email", "writer@example.invalid")
-    git(vault, "config", "user.name", "Trusted Writer")
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
     (vault / "other.md").write_text("unrelated\n", encoding="utf-8")
     git(vault, "add", "other.md")
 
@@ -209,9 +193,7 @@ def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    git(vault, "init", "-q")
-    git(vault, "config", "user.email", "writer@example.invalid")
-    git(vault, "config", "user.name", "Trusted Writer")
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
     content = note_text().replace(
         "Alpha body.",
         "Typed [[supports::knowledge/notes/beta.md]] and bare [[knowledge/notes/gamma.md]].",
@@ -285,9 +267,7 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
 
 def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    git(vault, "init", "-q")
-    git(vault, "config", "user.email", "writer@example.invalid")
-    git(vault, "config", "user.name", "Trusted Writer")
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
     stage_concept(
         vault,
         "knowledge/notes/pi.md",
@@ -319,9 +299,7 @@ def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -
 
 def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    git(vault, "init", "-q")
-    git(vault, "config", "user.email", "writer@example.invalid")
-    git(vault, "config", "user.name", "Trusted Writer")
+    init_git(vault, "writer@example.invalid", "Trusted Writer")
     stage_concept(
         vault,
         "knowledge/notes/pi.md",

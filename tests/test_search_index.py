@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import sys
 from pathlib import Path
 
@@ -19,12 +18,11 @@ from memoria_vault.runtime.search_index import (
     filter_checked_results,
     rebuild_checked_qmd_source,
 )
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import copy_memoria_dirs
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
+    copy_memoria_dirs(tmp_path, "schemas")
     return tmp_path
 
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import uuid
 from pathlib import Path
 
@@ -19,28 +18,12 @@ from memoria_vault.runtime.capabilities import (
 )
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "capabilities@example.invalid")
-    git(tmp_path, "config", "user.name", "Capabilities")
+    init_git(tmp_path, "capabilities@example.invalid", "Capabilities")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def test_capability_index_renderer_covers_shipped_operations() -> None:

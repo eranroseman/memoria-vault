@@ -19,7 +19,7 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
@@ -44,7 +44,7 @@ def connect(vault: Path) -> sqlite3.Connection:
 
 
 def _schema_sql() -> str:
-    return files("memoria_vault.runtime").joinpath("schema_v1.sql").read_text(encoding="utf-8")
+    return files("memoria_vault.runtime").joinpath("schema.sql").read_text(encoding="utf-8")
 
 
 def request_envelope(
@@ -681,6 +681,7 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
         title=str(frontmatter.get("title") or source_id),
         description=str(frontmatter.get("description") or ""),
         resource=str(frontmatter.get("resource") or ""),
+        item_type=str(frontmatter.get("item_type") or csl_json.get("type") or "article"),
         identifiers=identifiers,
         citekey=str(frontmatter.get("citekey") or csl_json.get("id") or ""),
         csl_json=csl_json,
@@ -703,6 +704,7 @@ def upsert_catalog_record(
     concept_path: str = "",
     doi: str | None = None,
     resource: str = "",
+    item_type: str = "article",
     identifiers: dict[str, Any] | None = None,
     citekey: str = "",
     csl_json: dict[str, Any] | None = None,
@@ -728,6 +730,7 @@ def upsert_catalog_record(
                 title,
                 description,
                 resource,
+                item_type,
                 identifiers_json,
                 citekey,
                 csl_json,
@@ -739,13 +742,14 @@ def upsert_catalog_record(
                 content_path,
                 raw_path
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(source_id) DO UPDATE SET
                 concept_path = excluded.concept_path,
                 doi = excluded.doi,
                 title = excluded.title,
                 description = excluded.description,
                 resource = excluded.resource,
+                item_type = excluded.item_type,
                 identifiers_json = excluded.identifiers_json,
                 citekey = excluded.citekey,
                 csl_json = excluded.csl_json,
@@ -766,6 +770,7 @@ def upsert_catalog_record(
                 title or stable_source_id,
                 description,
                 resource,
+                item_type or "article",
                 _json(identifiers),
                 citekey,
                 _json(csl_json),
@@ -1180,6 +1185,7 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "title": row["title"],
         "description": row["description"],
         "resource": row["resource"],
+        "item_type": row["item_type"],
         "identifiers": json.loads(row["identifiers_json"] or "{}"),
         "citekey": row["citekey"],
         "csl_json": json.loads(row["csl_json"] or "{}"),

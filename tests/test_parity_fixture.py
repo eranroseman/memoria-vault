@@ -11,8 +11,8 @@ import pytest
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.vaultio import read_frontmatter
+from tests.helpers import mark_file_status
 
 ADAPTER_ENV_VARS = (
     "OBSIDIAN_API_KEY",
@@ -21,16 +21,6 @@ ADAPTER_ENV_VARS = (
     "ZOTERO_API_KEY",
     "HERMES_HOME",
 )
-
-
-def mark_file_status(workspace: Path, rel: str, concept_type: str, status: str = "checked") -> None:
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(workspace / rel),
-    )
-    state.set_concept_verdict(workspace, rel, status)
 
 
 def test_palette_actions_have_standalone_cli_parity(

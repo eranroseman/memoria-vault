@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import shutil
 import sqlite3
-import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime import state
@@ -17,29 +15,13 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write, run_next_job
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "alpha12@example.invalid")
-    git(tmp_path, "config", "user.name", "Alpha12")
+    copy_memoria_dirs(tmp_path, "schemas")
+    init_git(tmp_path, "alpha12@example.invalid", "Alpha12")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
