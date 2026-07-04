@@ -11,7 +11,7 @@ Librarian worker completes (the two LLM judgments) and stages/promotes:
             extract       -> full text (Unpaywall / PMC / local PDF), gatekept by coherence
             link          -> entity find-or-create plan + cites edges
 
-Output (`--json`): the assembled source Concept **with two holes** —
+Output (`--json`): the assembled source work payload **with two holes** —
 `_proposed_classification` (classify, LLM #1) and the `[!brief]` body (LLM #2) —
 plus the link plan and the extract. The worker fills the two holes and performs
 the gated writes; this script writes nothing.

@@ -37,11 +37,12 @@ A note does not travel when the PI checks it; a catalog Work does not become a
 different kind of thing when it is read. What changes is its read state, and read
 state is a property, not a location.
 
-For file-backed Concepts, read standing lives in `check_status` frontmatter:
-`unchecked -> checked -> quarantined`. For catalog Work rows, the same verdict
-lives in SQLite and read-API responses. The exact Concept field inventory is
-defined in [Frontmatter fields](../reference/frontmatter.md); catalog source
-record fields are defined in [Ingest routing](../reference/ingest.md).
+For every record, read standing lives in SQLite and read-API responses:
+`unchecked -> checked -> quarantined`. File-backed Concept frontmatter carries
+authored meaning only; it never stores `check_status`. Catalog Work rows use the
+same DB-owned verdict. The exact Concept field inventory is defined in
+[Frontmatter fields](../reference/frontmatter.md); catalog source record fields
+are defined in [Ingest routing](../reference/ingest.md).
 
 ---
 

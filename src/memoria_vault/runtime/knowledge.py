@@ -2228,7 +2228,7 @@ def _source_rel(path: str) -> str:
     elif rel.startswith("catalog/sources/") and not rel.endswith(".md"):
         rel = f"{rel.rstrip('/')}/source.md"
     if not rel.startswith("catalog/sources/") or not rel.endswith("/source.md"):
-        raise ValueError(f"source must be a catalog source Concept: {rel}")
+        raise ValueError(f"source must be a catalog source row ref: {rel}")
     return rel
 
 

@@ -3,8 +3,8 @@
 
 Tier 0 (this file, so far): from the local tracked `references.bib` projection
 alone — no network, no PDF, no ML — resolve a citekey to an identity-complete
-source Concept. Produces the assembled source *content*; it does NOT write to the
-vault (the Librarian worker stages/promotes the checked Concept). Tiers 1-2
+source work payload. Produces the assembled source *content*; it does NOT write to the
+vault (the worker stages/promotes the checked Work). Tiers 1-2
 (merge/extract/tag/link, the two LLM judgments) land next.
 
 Usage:
@@ -23,8 +23,8 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
-# BibTeX entry-type -> source.item_type. Non-paper works remain source
-# Concepts; item_type is the discriminator instead of separate catalog homes.
+# BibTeX entry-type -> work.item_type. Non-paper works remain Work rows;
+# item_type is the discriminator instead of separate catalog homes.
 TYPE_ROUTING = {
     "article": "article",
     "inproceedings": "article",

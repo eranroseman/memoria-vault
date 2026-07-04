@@ -36,7 +36,7 @@ def _bare(uri: str) -> str:
 
 
 def index_vault(vault: Path) -> dict:
-    """Map DOI / arXiv-id (lowercased) -> citekey for existing source notes."""
+    """Map DOI / arXiv-id (lowercased) -> citekey for existing source records."""
     idx = {}
     d = vault / "catalog" / "sources"
     if not d.is_dir():
