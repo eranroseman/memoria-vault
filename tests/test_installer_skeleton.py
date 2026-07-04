@@ -135,7 +135,7 @@ def test_alpha11_template_has_no_legacy_alpha10_path_literals():
     assert not offenders
 
 
-def test_alpha14_installer_does_not_ship_installed_profiles():
+def test_alpha15_installer_does_not_ship_installed_profiles():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ALL_PROFILES" not in text
     assert "--profiles-only" not in text

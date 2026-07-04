@@ -21,7 +21,7 @@ TEST_LEVELS = {
     "test_alpha11_cycle.py": "runtime",
     "test_alpha12_state.py": "runtime",
     "test_alpha13_enrichment.py": "runtime",
-    "test_alpha14_runtime_gate.py": "runtime",
+    "test_alpha15_runtime_gate.py": "runtime",
     "test_alpha15_dogfood_checkpoint.py": "runtime",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",

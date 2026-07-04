@@ -34,7 +34,7 @@ def git(workspace: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def _assert_alpha14_request_columns(columns: set[str]) -> None:
+def _assert_alpha15_request_columns(columns: set[str]) -> None:
     assert {
         "input_refs_json",
         "output_intents_json",
@@ -290,7 +290,7 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
             "SELECT operation_id, provenance_json FROM operation_requests WHERE request_id = ?",
             ("capture-alpha",),
         ).fetchone()
-    _assert_alpha14_request_columns(columns)
+    _assert_alpha15_request_columns(columns)
     assert row["operation_id"] == "capture-source"
     assert json.loads(row["provenance_json"]) == {
         "command": "capture-source",
@@ -877,7 +877,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
             "SELECT operation_id, args_json FROM operation_requests WHERE request_id = ?",
             ("project-gaps",),
         ).fetchone()
-    _assert_alpha14_request_columns(columns)
+    _assert_alpha15_request_columns(columns)
     assert row["operation_id"] == "analyze-gaps"
     assert json.loads(row["args_json"]) == {
         "project_path": "project-alpha",
@@ -1657,7 +1657,7 @@ def test_cli_attention_list_show_worklist_and_resolve_projection(
     }
 
 
-def test_cli_wires_alpha14_maintenance_and_pi_commands(
+def test_cli_wires_alpha15_maintenance_and_pi_commands(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -2609,7 +2609,7 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
         "10.1000/book.ref",
         "import",
     )
-    _assert_alpha14_request_columns(columns)
+    _assert_alpha15_request_columns(columns)
 
 
 def test_cli_doctor_qmd_checks_workspace_local_state(
