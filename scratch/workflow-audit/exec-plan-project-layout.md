@@ -27,13 +27,26 @@ scope here. If you want Option 2, it needs its own concrete sequence.
 
 ## 1. Purpose / big picture
 
-Today the project is scattered: the repo is at `~/memoria-vault`, task worktrees
-are strewn under `~/mv/`, the `scratch` fast-lane is a worktree of the repo, and
-the disposable sandbox is at `~/Memoria-test`. You cannot open one folder and see
-the project.
+**Goal — in one sentence:** open a single folder, `~/memoria-vault`, and see the
+*entire* project (repo, task worktrees, scratch, sandbox) in one place, with **each
+part still governed by its own rules**. This plan changes only *where the pieces sit
+on disk* — not the rules, not the history, not the workflow.
 
-When this plan is done, `~/memoria-vault/` is a **container** you open to see the
-whole project at once:
+**Today the pieces are scattered across unrelated locations**, so no single folder
+shows the project:
+
+| Piece                  | Lives now at        | Its rule (unchanged by this plan) |
+| ---------------------- | ------------------- | --------------------------------- |
+| repo (`main`)          | `~/memoria-vault`   | PR + required CI                  |
+| task worktrees         | `~/mv/<session>`    | branch → PR → main                |
+| scratch fast-lane      | `~/mv/scratch`      | commit direct + push, no PR/CI    |
+| sandbox (test vault)   | `~/Memoria-test`    | disposable install, runtime tests |
+
+To find scratch you must know it lives at `~/mv/scratch`; to find a worktree you must
+remember which `~/mv/<name>` it was. Opening `~/memoria-vault` shows only `main`.
+
+When this plan is done, `~/memoria-vault/` is a **container** holding all of them as
+siblings under one roof — same rules, one folder to open:
 
 ```
 ~/memoria-vault/
