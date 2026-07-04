@@ -30,7 +30,7 @@ def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
 
     findings = doctor.check(root)
 
-    assert {finding.path for finding in findings} == {
+    assert {finding.split(":", 1)[0] for finding in findings} == {
         "packages/memoria-obsidian",
         "packages/obsidian-plugin",
         "src/memoria_vault/obsidian_adapter",

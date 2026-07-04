@@ -49,4 +49,4 @@ jobs:
         # Builds a vault from vault-template/ exactly as the installer would, then walks
         # scaffold -> golden -> commit gate -> offline ingest -> attention prompt ->
         # lint. Caught two real bugs the unit suite missed; pure-local, no network.
-        run: bash scripts/e2e-smoke.sh
+        run: python3 scripts/e2e_smoke.py

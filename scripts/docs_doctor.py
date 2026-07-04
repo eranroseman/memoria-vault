@@ -39,6 +39,8 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
 DROPPED_KEYS = (
     "mode",
     "audience",
@@ -76,20 +78,15 @@ def _site_excluded_dirs(base: Path) -> set[str]:
     if not config.is_file():
         _SITE_EXCLUDE_CACHE[root] = set(DEFAULT_SITE_EXCLUDED_DIRS)
         return _SITE_EXCLUDE_CACHE[root]
+    try:
+        data = yaml.safe_load(read(config)) or {}
+    except yaml.YAMLError:
+        data = {}
     excludes: set[str] = set()
-    in_exclude = False
-    for line in read(config).splitlines():
-        if re.match(r"^exclude:\s*$", line):
-            in_exclude = True
+    for item in data.get("exclude") or []:
+        if not isinstance(item, str):
             continue
-        if in_exclude and line and not line.startswith((" ", "\t", "-")):
-            break
-        if not in_exclude:
-            continue
-        item = re.match(r"\s*-\s+(.+?)\s*(?:#.*)?$", line)
-        if not item:
-            continue
-        value = item.group(1).strip().strip("\"'").strip("/")
+        value = item.strip().strip("/")
         if value and "/" not in value and not re.search(r"[*?\[]", value):
             excludes.add(value)
     _SITE_EXCLUDE_CACHE[root] = excludes
@@ -541,10 +538,6 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
 
 
 def _load_schema_types(repo: Path) -> dict[str, dict]:
-    try:
-        import yaml
-    except ImportError:
-        return {}
     schema_dir = repo / "vault-template" / ".memoria" / "schemas" / "types"
     out: dict[str, dict] = {}
     for path in sorted(schema_dir.glob("*.yaml")):
@@ -559,11 +552,6 @@ def _load_schema_types(repo: Path) -> dict[str, dict]:
 def _markdown_code_values(text: str) -> set[str]:
     text = FENCE_RE.sub("", text)
     return set(re.findall(r"`([^`]+)`", text))
-
-
-def _table_count(text: str, label: str) -> int | None:
-    m = re.search(rf"{re.escape(label)}\s*\((\d+)\)", text)
-    return int(m.group(1)) if m else None
 
 
 def check_document_type_reference_mirror(repo: Path, errors: list[str]) -> None:

@@ -18,9 +18,11 @@
 #   --yes             non-interactive: accept all defaults, no prompts (CI)
 #   -h | --help       this help
 #
-# Safety: no silent privilege escalation. Any step needing root prints the exact
-# `sudo` command and runs it only on your confirmation (apt will prompt for your
-# password). --dry-run echoes everything and touches nothing.
+# Safety: no silent privilege escalation or global tool install. Any step
+# needing root prints the exact `sudo` command and runs it only on your
+# confirmation (apt will prompt for your password). Set
+# MEMORIA_INSTALL_GLOBAL_TOOLS=1 to let the installer run `npm install -g` for
+# optional runtime tools. --dry-run echoes everything and touches nothing.
 #
 set -euo pipefail
 
