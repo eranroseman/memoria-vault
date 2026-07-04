@@ -1,12 +1,12 @@
-name: ruleset-audit
+name: docs-link-audit
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 7 * * 1"
+    - cron: "37 7 * * 1"
 
 concurrency:
-  group: ruleset-audit
+  group: docs-link-audit
   cancel-in-progress: true
 
 permissions:
@@ -16,28 +16,24 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
         with:
           python-version: "3.12"
-      - name: Install dependency
-        run: python -m pip install --quiet PyYAML
-      - name: Audit repository and live ruleset
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python scripts/ruleset_doctor.py --live
+      - name: Audit published docs links
+        run: python scripts/check_live_docs_links.py
       - name: Open or update failure issue
         if: failure()
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9
         env:
-          ISSUE_TITLE: "ruleset-audit failure"
+          ISSUE_TITLE: "docs-link-audit failure"
         with:
           script: |
             const title = process.env.ISSUE_TITLE;
             const body = [
-              'The scheduled ruleset audit failed.',
+              'The scheduled published-docs link audit failed.',
               '',
               `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             ].join('\n');

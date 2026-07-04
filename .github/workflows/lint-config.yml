@@ -1,14 +1,12 @@
 name: lint-config
 
 # Lints the config/markup layer that the runtime and CI depend on:
-#   yamllint      — profile config.yaml, lane-overrides, cron, workflows, issue
-#                   templates (a bad indent / duplicate key breaks the agent or CI)
 #   actionlint    — the GitHub workflows specifically (bad action refs, ${{ }}
 #                   expression typos, shell bugs inside run: blocks)
-#   json-validate — authored JSON config; malformed config silently breaks tooling
 #
 # All run unconditionally (no `paths:` filter) so they can back required checks —
 # same rationale as docs-doctor / python-selftest. See AGENTS.md §4.
+# Yamllint now runs inside the required `lint` check via scripts/test.sh l0.
 
 on:
   push:
@@ -29,23 +27,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
-        with:
-          python-version: "3.12"
-      - run: python -m pip install --quiet -r requirements-dev.txt
-      - name: yamllint tracked YAML (uses .yamllint)
-        run: git ls-files '*.yaml' '*.yml' | xargs -r yamllint
-
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.7
         with:
           args: -color
-
-      - name: validate authored JSON
-        run: |
-          rc=0
-          for f in $(git ls-files '*.json'); do
-            python -m json.tool "$f" >/dev/null || { echo "invalid JSON: $f"; rc=1; }
-          done
-          [ "$rc" -eq 0 ] && echo "all authored JSON valid"
-          exit "$rc"

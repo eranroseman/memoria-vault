@@ -67,6 +67,7 @@ frontmatter
 fullmatch
 gameable
 gantt
+gitleaks
 gguf
 glanceable
 goodharting
