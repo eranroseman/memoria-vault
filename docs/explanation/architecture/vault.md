@@ -22,8 +22,8 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 ```text
 <vault-root>/
 ├── steering.md     ← PI-authored program memory
-├── catalog/        ← sources and entities
-├── knowledge/      ← digests, notes, hubs, projects
+├── catalog/        ← source and entity records
+├── knowledge/      ← Works, notes, hubs, projects
 ├── system/         ← visible infrastructure: templates, dashboards, eval, logs
 └── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
 ```
@@ -39,9 +39,9 @@ in [Document types](../../reference/document-types.md).
 
 | Area | Examples | Trust posture |
 | --- | --- | --- |
-| Catalog | source, person, organization, venue | Objective records from capture/import; checked before consumption. |
-| Knowledge | digest, note, hub, project | The working graph. Digests are machine-owned checked records; notes and hub curation are PI judgment. |
-| Capabilities | operation, skill, adapter, workflow | Executable capability records; imports are supply-chain input and are quarantined until vetted. |
+| Catalog | source and entity rows | Objective records from capture/import; checked before consumption. |
+| Knowledge | work, note, hub, project | The working graph. Works can be machine-owned digests; notes and hub curation are PI judgment. |
+| System | templates, dashboards, eval, logs | Visible infrastructure and generated projections; product operations live in the installed package. |
 
 ## Write Boundary
 
@@ -61,11 +61,11 @@ The same trust split applies to connections: `links:` are authored note connecti
 
 ## Generated views; the Linter keeps them sound
 
-Catalog, knowledge, and capability Concepts surface through generated indexes
-and optional editor views. Views are projections; Concept frontmatter is governed by
-[ADR-119](../../adr/119-schema-driven-document-creation.md), and catalog rows that
-feed bibliography/materialization are governed by
-[ADR-122](../../adr/122-sqlite-working-state-boundary.md).
+Catalog records and knowledge Concepts surface through generated indexes and
+optional editor views. Views are projections; Concept frontmatter is governed by
+[ADR-126](../../adr/126-four-type-knowledge-model.md), and catalog rows that feed
+bibliography/materialization are governed by
+[ADR-124](../../adr/124-standalone-catalog-citation-authority.md).
 
 Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. Shipped product-file repair comes from package/template refresh, not an in-vault restore baseline.
 

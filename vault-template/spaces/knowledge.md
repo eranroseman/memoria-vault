@@ -16,9 +16,9 @@ cssclasses: memoria-space
 >   `memoria workspace scan --workspace .`.
 > - Ask a checked-only question with `memoria ask --workspace . --question "<question>"`.
 
-## Digests
+## Works
 
-![[knowledge.base#Digests]]
+![[knowledge.base#Works]]
 
 ## Notes
 
@@ -33,7 +33,7 @@ cssclasses: memoria-space
 ![[knowledge.base#Projects]]
 
 > [!brief] The DB/read API `check_status = checked` verdict is the read barrier.
-> Unchecked notes, digests, and hubs stay out of retrieval until the worker/check
+> Unchecked Works, notes, and hubs stay out of retrieval until the worker/check
 > loop promotes them.
 
 ## Guides

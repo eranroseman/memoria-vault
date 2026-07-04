@@ -50,7 +50,6 @@ def test_refresh_helper_updates_source_owned_surfaces():
         ".git/hooks/pre-commit",
         "PYTHONPATH_VALUE",
         "index.md",
-        "catalog/catalog.base",
         "catalog/index.md",
         "knowledge/index.md",
         "knowledge/_views/index.md",
@@ -61,7 +60,7 @@ def test_refresh_helper_updates_source_owned_surfaces():
 
 def test_refresh_helper_removes_dropped_obsidian_payloads():
     text = _script()
-    assert 'rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts"' in text
+    assert 'rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog/catalog.base"' in text
     assert '"$SRC/.obsidian"/' not in text
     assert "obsidian-local-rest-api" not in text
 

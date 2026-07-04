@@ -19,7 +19,7 @@ navigation.
 | --- | --- | --- | --- |
 | Queue | Inbox | `spaces/inbox.md` | Daily attention queue (`projection: queue`), reached from the rail's *Now*: compact in-process Activity first, then `Needs me`. |
 | Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`projection: maintenance`): drift watch, loose ends, queue state, and new-this-week digest. |
-| Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and Catalog papers. |
+| Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and checked Works. |
 | Space | Knowledge | `spaces/knowledge.md` | Synthesis space: checked note status, open questions, contradictions, hubs, and patterns. |
 | Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
@@ -36,15 +36,13 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 ## The Bases views
 
 Obsidian Bases (`.base` files), when present, are optional views over the same
-workspace files ([ADR-116](../adr/116-obsidian-surface-architecture.md)). Bases
-are views only; Concept frontmatter is governed by
-[ADR-119](../adr/119-schema-driven-document-creation.md), and SQLite catalog
-rows are governed by [ADR-122](../adr/122-sqlite-working-state-boundary.md).
+workspace files. Bases are views only; Concept frontmatter is governed by
+[ADR-126](../adr/126-four-type-knowledge-model.md), and SQLite catalog rows are
+governed by [ADR-124](../adr/124-standalone-catalog-citation-authority.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |
-| `catalog.base` | `catalog/` | Optional editor view over catalog Work projections; SQLite/read-API state remains authoritative. |
-| `knowledge.base` | `knowledge/views/` | Work, note, hub, and project Concepts by home and `check_status`. |
+| `knowledge.base` | `knowledge/views/` | Work, note, hub, and project Concepts by home. Verdicts stay in SQLite/read API. |
 
 ## Verdict band (Maintenance drift watch)
 

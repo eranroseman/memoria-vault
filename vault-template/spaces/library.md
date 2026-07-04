@@ -9,17 +9,17 @@ cssclasses: memoria-space
 # Library
 
 > [!brief] Nothing here yet? Capture or import a work with the CLI. Checked
-> sources appear here after acquisition and promotion.
+> Works appear here after acquisition and promotion.
 
 > [!suggestions] First actions
 > - `memoria work capture --workspace . --doi <doi>`
 > - `memoria work import --workspace . --format bibtex --file <file>`
 
-## Sources
+## Works
 
-![[catalog.base#Sources]]
+![[knowledge.base#Works]]
 
-Reading pipeline items compound into digests, notes, and hubs in the Knowledge space.
+Reading pipeline items compound into Works, notes, and hubs in the Knowledge space.
 
 ## Guides
 

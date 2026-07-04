@@ -1,18 +1,15 @@
 # Board State
 
-The Inbox board — the agent-to-human action queue (ADR-54). Attention items are
+Request and attention state for debugging the local worker. Attention items are
 waiting on you; the queue converges to empty. [Dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/daily-glance/#board-state-support).
 
-![[inbox.base#Needs me]]
+## Requests
 
-## Everything in flight
+Use `memoria request list --workspace . --json` for queued, running, failed, and
+completed operation requests. Runtime request state lives in `.memoria/memoria.sqlite`;
+there is no file-backed board projection.
 
-![[inbox.base#All cards]]
+## Attention
 
-## Live worker cards
-
-```dataview
-TABLE WITHOUT ID file.link AS Card, file.mtime AS Updated
-FROM "system/board"
-SORT file.mtime DESC
-```
+Use `memoria attention list --workspace . --json` for PI-facing attention
+items projected from journal, check, and request state.

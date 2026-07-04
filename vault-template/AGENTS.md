@@ -19,21 +19,21 @@ engine request API. Do not emulate the worker by editing files directly. The
 worker reads request rows from SQLite, writes staged outputs, and records
 check/verdict state before anything becomes trusted.
 
-## Where things live (ADR-119)
+## Where things live (ADR-126)
 
-`catalog/` source and entity Concepts · `knowledge/` digests, notes, hubs, and
+`catalog/` source and entity records · `knowledge/` Works, notes, hubs, and
 projects · `inbox/` transient attention projections · `system/` templates,
 dashboards, eval, metrics, and logs. Product operation manifests live in the
 installed `memoria_vault` package, not in a workspace `capabilities/` tree.
 `archived` is a *state*, not a folder.
 
-## State and signals (ADR-119)
+## State and signals (ADR-126/127)
 
 Concept frontmatter carries meaning fields such as `type`, `id`, `links`, and
 `tags`; runtime verdicts and request state live in SQLite/read API surfaces. A
 tool's `clean` verdict never substitutes for the worker check or PI direction.
 
-## Talking to the PI (ADR-54)
+## Talking to the PI (ADR-128/130)
 
 Everything you need the PI to see is an **attention item** projected from journal,
 queue, check, and Concept state. Proposals carry the **honesty body**: the argument
@@ -41,7 +41,7 @@ for, your strongest argument *against*, what tipped it, and your calibrated
 certainty. Verification findings lead with the finding. Never raise N items for one
 batch decision.
 
-## Connections (ADR-52)
+## Connections (ADR-126)
 
 `relationships` (entities) are **given** facts — the ingest operation builds them; you
 never author them. `links:` (notes) are **authored** — you may *propose* a typed link
