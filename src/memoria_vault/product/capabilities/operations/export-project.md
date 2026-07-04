@@ -20,7 +20,7 @@ io_schema:
 risk_class: low
 required_checks: []
 tags:
-- alpha14
+- alpha15
 - project
 - export
 id: operations/export-project

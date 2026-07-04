@@ -21,7 +21,7 @@ risk_class: medium
 required_checks:
 - memoria-runtime
 tags:
-- alpha14
+- alpha15
 - capture
 id: operations/capture-bibtex-source
 standing: current

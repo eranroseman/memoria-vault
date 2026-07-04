@@ -21,7 +21,7 @@ risk_class: medium
 required_checks:
 - memoria-runtime
 tags:
-- alpha14
+- alpha15
 - catalog
 id: operations/update-work
 standing: current
