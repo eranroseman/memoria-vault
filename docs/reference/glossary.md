@@ -52,7 +52,7 @@ the checked knowledge bundle inside the vault, not the editor vault root.
 
 ## Surfaces and navigation
 
-**Navigator rail** — the left-pane surface for everyday navigation (`_nav.md`, [ADR-116](../adr/116-obsidian-surface-architecture.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
+**Navigator rail** — the Markdown navigation note for everyday navigation (`_nav.md`, [ADR-130](../adr/130-read-api-surfaces-and-copi.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
 
 **Now** — the rail's top band: what is waiting on you right now — **Action
 queue** (your Inbox queue) and **Drift** (open integrity flags).
@@ -60,8 +60,9 @@ queue** (your Inbox queue) and **Drift** (open integrity flags).
 **Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
 
 **Space** — a navigation surface that is also a dashboard-as-note
-(`projection: space`): Library, Knowledge, Project, each embedding Bases views
-over the workspace. "Gate" is reserved for the approval gate, never a space.
+(`projection: space`): Library, Knowledge, Project, each exposing workspace
+state through Markdown views and CLI/read-API commands. "Gate" is reserved for
+the approval gate, never a space.
 
 **Queue** — the **Inbox** (`projection: queue`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then
@@ -132,9 +133,9 @@ not Concept frontmatter.
 [Document types](document-types.md).
 
 **Pattern** — compatibility name for a checked packaged prompt operation
-([ADR-53](../adr/53-pattern-library.md)) executed through
-`memoria operation run`; `memoria_vault.runtime.patterns`
-remains a compatibility prompt composer for tests and optional adapters.
+([ADR-125](../adr/125-standalone-cli-engine-architecture.md)) executed through
+`memoria operation run`; `memoria_vault.runtime.patterns` remains a
+compatibility prompt composer for tests and optional adapters.
 
 **State** — not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in

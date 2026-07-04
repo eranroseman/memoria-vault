@@ -6,157 +6,118 @@ grand_parent: Reference
 
 # Wikilink and link conventions
 
-Wikilink conventions, typed-relation vocabulary, cross-link topology, and hub creation thresholds. Rationale lives in [Note body structure](../explanation/knowledge/note-body-structure.md), [Lifecycle, not topic](../design/lifecycle-over-topic.md), and [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md).
+Alpha.15 has four knowledge Concept types: `work`, `note`, `hub`, and
+`project`. Wikilinks and `links:` express authored PI relationships between
+those Concepts. Catalog source/entity rows live in SQLite and provider payloads;
+they are not `source`, `paper`, `person`, or `venue` Concept files.
 
 ---
 
-## Link types
+## Link forms
 
-| Type | Syntax | Direction | Use |
-| --- | --- | --- | --- |
-| `citekey-link` | `[[mamykina2010sense]]` | `claim` → `paper` | Link a claim to its supporting paper. |
-| `concept-link` | `[[receptivity-decreases-under-high-cognitive-load]]` | `claim` ↔ `claim` | Connect related claims; builds the knowledge graph. |
-| `hub-link` | `[[jitai-design-hub]]` | Note → `hub` | Place a note within a navigational hub. |
-| `entity-link` | `[[mamykina-lena]]` | Any → catalog entity | Connect people, organizations, venues, datasets, repositories. |
-| `agent-cross-link` | Inline in note body | Proposed | Agent-generated candidates; human confirms before treating as canonical. |
-
----
-
-## Linking conventions
-
-- A link records a useful relationship, not exhaustive coverage.
-- A `claim` traces to at least one `paper` citekey.
-- A `paper` eventually connects to at least one relevant `hub`.
-- A concept link carries a relationship that would matter in a later reading or writing session.
-- A note's hub placement is a single strong link, not many weak generic ones.
-- Provenance runs one way: claims point to evidence, not the reverse.
-- An agent-proposed cross-link is not canonical until reviewed.
-- A complete note is one that has received a hub link or relevant concept links — an orphan is incomplete.
-- A `paper` and a `claim` are not peers: the claim stands on its own and the paper is its support.
+| Form | Example | Meaning |
+| --- | --- | --- |
+| Body wikilink | `[[knowledge/notes/receptivity.md]]` | Plain human reference; never becomes an argument edge by itself. |
+| Typed body shorthand | `[[supports::knowledge/notes/target.md]]` | Creates an unchecked edge-candidate attention item; the worker does not edit `links:` automatically. |
+| Frontmatter `links:` | `supports: [knowledge/notes/target.md]` | Authored argument edge accepted into the Concept frontmatter. |
+| Hub tag membership | `tags: [jitai]` with hub `tag: jitai` | Mechanical topic membership; the hub body owns curation and ordering. |
 
 ---
 
-## Required patterns by type
+## Authored links
 
-| Note type | Required link structure |
+Knowledge Concepts carry `links:` as the authored relationship map specified by
+[ADR-126](../adr/126-four-type-knowledge-model.md) and the generated
+[Frontmatter fields](frontmatter.md). The only frontmatter link relations are:
+
+| Link | Direction |
 | --- | --- |
-| `paper` | `relationships:` frontmatter on the Catalog entity (`cited_by`, `authored_by`, `published_in`) — given facts from the bibliographic record. |
-| `claim` | `sources:` frontmatter listing the citekey(s) the claim draws on. `Connections` section for conceptual neighbors via authored `links:`. |
-| `hub` | `links:` frontmatter. Body: overview, curated entries, gaps. |
-
----
-
-## Authored links (`links:` map)
-
-Knowledge Concepts carry **authored** `links:` — the PI's thinking ([ADR-52](../adr/52-links-vs-relationships.md)). The `links:` vs `relationships` field contract (which document types carry each, and the authored-vs-given split) is specified in [Frontmatter fields](frontmatter.md). Agent-proposed candidates are reviewed before they become canonical.
+| `supports` | This Concept supports the linked Concept. |
+| `contradicts` | This Concept contradicts the linked Concept. |
+| `extends` | This Concept builds on the linked Concept. |
 
 ```yaml
 links:
   supports:
-    - "[[another-claim]]"
-  contradicts:
-    - "[[a-conflicting-claim]]"
-  extends:
-    - "[[a-foundational-claim]]"
+    - knowledge/notes/target.md
+  contradicts: []
+  extends: []
 ```
 
-Allowed link types:
+Rules:
 
-| Link | Direction |
-| --- | --- |
-| `supports` | This note supports the linked note. |
-| `contradicts` | This note contradicts the linked note. |
-| `extends` | This note builds on the linked note. |
+- Link for usefulness, not exhaustive coverage.
+- Prefer vault-relative paths over title-only links.
+- A `note` with `mode: claim` needs evidence in its body, anchors, or linked
+  checked Works; `links:` records the argument relation, not the evidence store.
+- A bare wikilink remains a body reference.
+- A proposed machine edge is not canonical until accepted through the attention
+  path.
 
-Catalog entities carry **given** `relationships:` instead, written by the ingest operation (see [Frontmatter fields](frontmatter.md)). Adding a new authored link type requires updating the schema source, this reference, and the Linter's `frontmatter-link` detector.
-
-Plain-editor shorthand: an explicit typed body link such as
-`[[supports::knowledge/notes/target.md]]` emits an unchecked Inbox
-`edge-candidate` prompt at materialization. It never writes `links:` by itself.
-A bare `[[wikilink]]` remains a body reference and never becomes a `supports`,
-`contradicts`, or `extends` edge automatically.
+Catalog/provider relationships such as citations, authors, venues, OpenAlex
+related Works, and entity IDs live in SQLite records and provider payloads. They
+are given facts from ingest/enrichment, not authored `links:` frontmatter.
 
 ---
 
-## Cross-link topology
-
-Expected link graph by document type:
+## Expected topology
 
 ```text
-paper ({citekey})
-  ↔ person               (authored_by)
-  ↔ venue                (published_in)
-  ↔ organization         (author affiliation)
-  ↔ paper (other)        (cited_by)
+work
+  -> catalog Work row via work_id
+  -> note/hub/project when the PI authors a local link
 
-claim
-  → paper                (citekey in sources:)
-  ↔ claim (other)        (authored links — supports / contradicts / extends)
-  → hub                  (links: frontmatter)
-
-person
-  ↔ paper                (authored)
-  ↔ organization         (affiliated with)
-
-organization
-  ↔ person               (members, affiliates)
-  ↔ venue                (hosts or sponsors)
-
-venue
-  ↔ paper                (published)
+note
+  -> work evidence in body text, anchors, and operation records
+  -> note/hub/project through supports / contradicts / extends
 
 hub
-  ← claim                (links: frontmatter on claims)
-  ← paper                (links: frontmatter on sources)
-  ↔ hub (other)          (parent/child hub hierarchy)
+  -> tag-owned membership through checked Concept tags
+  -> curated body links for featured paths and gaps
 
 project
-  ← project artifacts    (knowledge/projects/<project>/* all reference the project note)
+  -> one-way project -> corpus references
+  -> thesis role through the project schema
+  -> project exports under knowledge/projects/<project>/exports/
 ```
 
 ---
 
 ## Hub thresholds
 
-| Threshold | Action |
-| --- | --- |
-| ≥ 15–20 notes (papers + claims combined) on a topic | Create a top-level hub for the topic. |
-| > 20 claims + > 10 papers on a branch | Build a child hub for that branch. |
+The `hub-threshold` linter detector is advisory. When a topic has roughly 15 or
+more checked notes and no covering hub, create a `hub` Concept with one owned
+tag. Below that, the missing hub is usually cheaper than maintaining a premature
+navigation page.
 
-Below these thresholds a topic carries no hub — the friction of the missing hub is lower than the cost of maintaining a premature one.
+---
+
+## Slug conventions
+
+| Concept | Path shape | Example |
+| --- | --- | --- |
+| `work` | `knowledge/works/<slug>.md` | `personal-informatics-sensemaking.md` |
+| `note` | `knowledge/notes/<claim-or-question>.md` | `receptivity-decreases-under-high-burden.md` |
+| `hub` | `knowledge/hubs/<topic>.md` | `jitai.md` |
+| `project` | `knowledge/projects/<project>/project.md` | `knowledge/projects/dissertation/project.md` |
+
+The stable identity is the ULID `id`, not the filename. Renames are still rare:
+they churn links and require a scan/check pass.
 
 ---
 
 ## Vocabulary discipline
 
-The `research_area`, `methodology`, and `topics` fields use the controlled lists in [Vocabulary](vocabulary.md), whose runtime home is `system/vocabulary.md`.
-
-- The active `research_area` list stays near **~30 terms** per corpus; a smaller vocabulary produces more consistent classification.
-- Claim `topics` draw from the same `research_area` list so claims and sources stay queryable together.
-- Richer taxonomy (MeSH, ACM CCS, OpenAlex concepts) lives in `_enrichment` (auto-populated from APIs), not in the hand-curated classification fields.
-- A topic-term rename goes through [Manage your topic vocabulary](../how-to-guides/knowledge/manage-vocabulary.md), not a manual search-replace across notes.
-
----
-
-## Slug conventions for wikilinks
-
-| Note type | Slug format | Example |
-| --- | --- | --- |
-| `paper` | Citekey (Better BibTeX format) | `mamykina2010sense` |
-| `claim` | Lowercase kebab-case, subject-verb-object | `receptivity-decreases-under-high-cognitive-load` |
-| `hub` | `<topic>-hub` | `jitai-design-hub` |
-| `person` | `<lastname>-<firstname>` | `mamykina-lena` |
-| `organization` | Slug of the official name | `columbia-dbmi` |
-| `venue` | Slug of the venue name | `chi-conference` |
-| All others | Descriptive kebab-case | `ema-best-practices` |
-
-Slugs are permanent — renaming a note breaks all wikilinks pointing to the old slug, so renames are rare and the Linter's `graph-analyze` check catches the breakage afterward.
+The `research_area`, `methodology`, and topic tags use the controlled lists in
+[Vocabulary](vocabulary.md), whose runtime home is `system/vocabulary.md`.
+Richer provider taxonomies such as OpenAlex topics are catalog metadata, not
+hand-authored frontmatter vocabulary.
 
 ---
 
 ## Related
 
-- How-to for setting authored links: [Link related claims](../how-to-guides/knowledge/link-related-claims.md)
-- Why the Connections section is load-bearing: [Note body structure](../explanation/knowledge/note-body-structure.md)
+- How-to for setting authored links: [Link checked notes](../how-to-guides/knowledge/link-related-claims.md)
+- Field contract: [Frontmatter fields](frontmatter.md)
+- Current Concept types: [Document types](document-types.md)
 - Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../design/lifecycle-over-topic.md)
-- How links keep the vault compounding: [The knowledge cycle](../explanation/knowledge/knowledge-cycle.md)

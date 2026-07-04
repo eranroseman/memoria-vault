@@ -15,7 +15,7 @@ composition contract.
   reads checked input refs, selects the manifest-pinned runner branch, records
   request/journal provenance, and stages one unchecked report note.
 - `memoria_vault.runtime.patterns` is the compatibility prompt composer for tests
-  and optional adapters ([ADR-53](../adr/53-pattern-library.md)).
+  and optional adapters; packaged operations remain the authority ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)).
 - To inspect the available pattern actions, see [System actions](system-actions.md).
 - For provenance rationale, see [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md).
 
@@ -123,7 +123,8 @@ non-checked operation returns `{"error": "operation-not-checked"}`.
 ## Composition
 
 Every run is prefixed with the shared voice preamble at
-`system/patterns/_preamble.md` ([ADR-53](../adr/53-pattern-library.md)).
+`system/patterns/_preamble.md`; the packaged operation manifest remains the
+runner authority ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)).
 `{{input}}` in the operation body is replaced with `input_text`; when only an
 `input_ref` is supplied, the token becomes `[see <input_ref>]`.
 

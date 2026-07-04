@@ -21,16 +21,23 @@ def test_plugin_scope_doctor_flags_removed_payloads(tmp_path):
     (root / "src/.obsidian").mkdir(parents=True)
     (root / "packages/obsidian-plugin").mkdir(parents=True)
     (root / "packages/memoria-obsidian").mkdir(parents=True)
+    (root / "src/memoria_vault/obsidian_adapter").mkdir(parents=True)
+    (root / "src/memoria_vault/runtime/agent_client.py").parent.mkdir(parents=True)
+    (root / "src/memoria_vault/runtime/agent_client.py").write_text("", encoding="utf-8")
     (root / "tests").mkdir(parents=True)
     (root / "tests/test_memoria_inspector.py").write_text("", encoding="utf-8")
+    (root / "tests/test_obsidian_plugin.py").write_text("", encoding="utf-8")
 
     findings = doctor.check(root)
 
     assert {finding.path for finding in findings} == {
         "packages/memoria-obsidian",
         "packages/obsidian-plugin",
+        "src/memoria_vault/obsidian_adapter",
+        "src/memoria_vault/runtime/agent_client.py",
         "src/.obsidian",
         "tests/test_memoria_inspector.py",
+        "tests/test_obsidian_plugin.py",
         "vault-template/.obsidian",
         "vault-template/system/scripts",
     }

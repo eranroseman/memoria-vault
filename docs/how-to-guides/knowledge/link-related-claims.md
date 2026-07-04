@@ -11,7 +11,7 @@ Add a typed `supports` / `contradicts` / `extends` link between checked
 `note` Concepts. The PI chooses whether a relationship is real; the worker only
 records and traces the accepted edit.
 
-> **`links:` vs `relationships`.** `links:` are authored edges on notes (your thinking); `relationships` are given edges on Catalog entities (facts from the record, written by the ingest operation) ([ADR-52](../../adr/52-links-vs-relationships.md)).
+> **`links:` vs catalog relations.** `links:` are authored edges on knowledge Concepts (your thinking); catalog relations are given facts from ingest/enrichment records ([ADR-126](../../adr/126-four-type-knowledge-model.md)).
 
 ## Prerequisites
 
@@ -66,7 +66,7 @@ the target file rather than retyping.
 
 **5. Let agents propose; confirm yourself.**
 
-The worker and plugin can surface candidate connections, but never copy a
+The worker and optional adapters can surface candidate connections, but never copy a
 proposed link unread. The agent proposes; you dispose.
 
 **6. Confirm it surfaced.**
