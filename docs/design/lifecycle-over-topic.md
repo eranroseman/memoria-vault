@@ -29,7 +29,7 @@ foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
 ## Read state lives with the record
 The vault is organized by **category**
-([ADR-119](../adr/119-schema-driven-document-creation.md)): `knowledge/` holds
+([ADR-126](../adr/126-four-type-knowledge-model.md)): `knowledge/` holds
 Work, note, hub, and project Concepts, SQLite holds catalog working state, and
 packaged product data holds operation manifests. It never mixes lifecycle state
 into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md).
@@ -93,6 +93,6 @@ project. A hub is authored perspective over the graph, not a folder in disguise.
 
 - The type system the folders encode: [Document types and epistemic roles](../explanation/knowledge/document-types.md)
 - How state changes are gated: [Why promotion is gated](../explanation/knowledge/promotion-and-gated-zones.md)
-- The schema/home decision: [ADR-119](../adr/119-schema-driven-document-creation.md)
+- The schema/home decision: [ADR-126](../adr/126-four-type-knowledge-model.md)
 - The folder tree itself: [The vault](../explanation/architecture/vault.md)
 - The facet fields: [Frontmatter fields](../reference/frontmatter.md)

@@ -17,6 +17,14 @@ FORBIDDEN_REL = (
     Path("packages/memoria-obsidian"),
     Path("tests/test_memoria_inspector.py"),
 )
+FORBIDDEN_GLOBS = (
+    "src/**/agent_client*",
+    "src/**/obsidian_adapter*",
+    "src/**/obsidian_plugin*",
+    "tests/**/test_*agent_client*.py",
+    "tests/**/test_*obsidian_adapter*.py",
+    "tests/**/test_*obsidian_plugin*.py",
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +43,15 @@ def check(root: Path = ROOT) -> list[Finding]:
         path = root / rel
         if path.exists():
             findings.append(Finding(rel.as_posix(), "not shipped in alpha.15"))
+    for pattern in FORBIDDEN_GLOBS:
+        for path in sorted(root.glob(pattern)):
+            if path.exists():
+                findings.append(
+                    Finding(
+                        path.relative_to(root).as_posix(),
+                        "Obsidian plugin or adapter implementation is excluded from alpha.15",
+                    )
+                )
     return findings
 
 

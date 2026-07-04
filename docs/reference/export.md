@@ -68,7 +68,7 @@ Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft
 
 Drafts live under the project folder in `knowledge/projects/<project>/`, and
 every export lands beside them under `exports/` — the project is self-contained
-([ADR-119](../adr/119-schema-driven-document-creation.md)). There is no separate
+([ADR-126](../adr/126-four-type-knowledge-model.md)). There is no separate
 top-level deliverables tree.
 
 | Artifact | Folder |
@@ -99,7 +99,7 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 
 ## Export gate
 
-An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([ADR-03](../adr/03-structural-review-gate.md)).
+An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([ADR-128](../adr/128-no-write-time-correctness-oracle.md)).
 
 ---
 

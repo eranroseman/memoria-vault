@@ -42,14 +42,13 @@ attention item or Concept can produce audit and request-state races.
 
 The current design maps work modes to dashboard notes — Inbox, Maintenance, Library,
 Knowledge, and Project — rather than to saved Obsidian workspaces
-([ADR-116](../adr/116-obsidian-surface-architecture.md)). A space is content the vault can
+([ADR-130](../adr/130-read-api-surfaces-and-copi.md)). A space is content the vault can
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 
-The saved **Memoria** workspace remains useful as a reset shell: home in the main pane,
-navigation on the left, Co-PI on the right. Daily mode switching happens through the
-left-pane rail, not layout swaps. The exact layout and space list are reference material:
-[Obsidian workspaces](../reference/obsidian-workspaces.md).
+Alpha.15 ships no saved Obsidian workspace. Daily mode switching happens through
+Markdown space notes and CLI/read-API commands. The exact boundary is reference
+material: [Obsidian workspaces](../reference/obsidian-workspaces.md).
 
 ---
 

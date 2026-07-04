@@ -6,8 +6,8 @@ grand_parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **operation, not an agent** ([ADR-69](../adr/69-operations-layer-naming.md));
-its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creation.md).
+The Linter is an **operation, not an agent** ([ADR-125](../adr/125-standalone-cli-engine-architecture.md));
+its schema contract comes from [ADR-126](../adr/126-four-type-knowledge-model.md).
 
 | Question | Answer |
 | --- | --- |
@@ -25,7 +25,7 @@ its schema contract comes from [ADR-119](../adr/119-schema-driven-document-creat
 | Detector | Severity | Catches |
 | --- | --- | --- |
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum, bad nested `links:` shape). |
-| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map and the `entity` field must resolve ([ADR-52](../adr/52-links-vs-relationships.md)). Citekeys in `sources` are bibliographic, checked by the sweeps instead. |
+| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve ([ADR-126](../adr/126-four-type-knowledge-model.md)). Catalog Work evidence is checked by catalog and citation sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
@@ -54,7 +54,7 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault
 
 ## The pre-commit hook
 
-The pre-commit hook ([ADR-119](../adr/119-schema-driven-document-creation.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The pre-commit hook ([ADR-126](../adr/126-four-type-knowledge-model.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

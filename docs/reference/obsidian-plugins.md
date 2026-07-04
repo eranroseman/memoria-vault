@@ -17,7 +17,7 @@ state, qmd search state, and auxiliary Memoria files only.
 | Are plugins bundled or implemented? | No plugin source, manifest, package, command, UI panel, or plugin test ships in alpha.15. |
 | Does setup install Obsidian plugins? | No. |
 | Does runtime depend on Local REST, Agent Client, Dataview, or QuickAdd? | No. |
-| Where is the boundary checked? | `scripts/plugin_provenance_doctor.py` is a negative guard: it verifies removed implementation payload paths stay absent. |
+| Where is the boundary checked? | `scripts/plugin_provenance_doctor.py` is a negative guard: it verifies removed plugin payload paths and common Obsidian adapter implementation paths stay absent. |
 
 ## Future adapters
 

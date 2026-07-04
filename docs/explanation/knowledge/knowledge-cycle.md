@@ -71,7 +71,7 @@ become gaps in the provenance graph. A deleted source work breaks every claim
 that cited it; a deleted claim leaves later notes without their grounding.
 
 Archiving preserves the chain, and since the archive marker is frontmatter rather
-than a folder move ([ADR-119](../../adr/119-schema-driven-document-creation.md)),
+than a folder move ([ADR-126](../../adr/126-four-type-knowledge-model.md)),
 it costs nothing structurally: the note stays in its type-home, remains readable
 and in Git history, drops out of active views and the agents' working scope, and
 can still be traced from any note that linked to it. No file moves, so no links
