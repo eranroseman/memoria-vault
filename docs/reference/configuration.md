@@ -17,7 +17,6 @@ linked reference pages and schema files.
 | --- | --- | --- | --- | --- | --- |
 | Policy gate plugin | `vault-template/.memoria/plugins/memoria-policy-gate/plugin.yaml` | workspace policy package for optional adapters | Memoria | Edit source | policy tests |
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
-| Project hints | `vault-template/.memoria/project-hints.yaml.example` | `<workspace>/.memoria/project-hints.yaml` | PI | Copy-on-first-use; absent means manual tagging | project-hints guide and linter checks |
 | Schema config | `vault-template/.memoria/schemas/**` | workspace source | Memoria | Edit source | linter and schema tests |
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
 | qmd index config and state | scripts plus runtime collection | `.qmd/` and runtime qmd store | generated | Rebuild; do not hand-edit | qmd scripts |

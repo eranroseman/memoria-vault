@@ -121,10 +121,10 @@ Design Book foundations, then the Explanation pages in this order.
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · [Configure project hints](how-to-guides/setup/configure-project-hints.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
 
 **Daily work — sources**
-[Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Classify a source](how-to-guides/library/classify-a-source.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
+[Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
 
 **Daily work — knowledge and projects**
 [Query the vault](how-to-guides/knowledge/query-the-vault.md) · [Build a hub](how-to-guides/knowledge/build-a-hub.md) · [Analyze a project argument](how-to-guides/project/analyze-a-project-argument.md) · [Export a draft](how-to-guides/project/export-a-draft.md)

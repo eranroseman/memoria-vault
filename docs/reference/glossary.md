@@ -139,8 +139,7 @@ compatibility prompt composer for tests and optional adapters.
 
 **State** — not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in
-SQLite; ingest carries **`ingest_status`**. Prefer the precise field name over a
-bare "state".
+SQLite. Prefer the precise field name over a bare "state".
 
 ---
 

@@ -72,11 +72,9 @@ The split also keeps three vault memories apart: program steering, project worki
 
 A frequent miscategorization is storing a *fact* in a *config* file, or a *rule*
 in a memory substrate. The test is: **memory is read back as recall;
-configuration is read as rules.** "Topics `jitai`, `mhealth` belong to the
-scoping-review project" is a rule (config -> [Configure project
-hints](../../how-to-guides/setup/configure-project-hints.md)); "the PI prefers
-British spelling" is recall only after it becomes checked steering or preference
-state.
+configuration is read as rules.** "Use this local model endpoint" is config;
+"the PI prefers British spelling" is recall only after it becomes checked
+steering or preference state.
 
 For the exact "what lives where" lookup table, use [Memory
 substrates](../../reference/memory-substrates.md). This page owns the rationale, not the
@@ -90,10 +88,6 @@ field-by-field routing matrix.
 
 - Request and attention payloads: [The honesty prompt](../kanban-board/honesty-card.md)
 - Architecture overview: [Architecture](README.md)
-
-**How-to**
-
-- Configuring project hints (the config example above): [Configure project hints](../../how-to-guides/setup/configure-project-hints.md)
 
 **Reference**
 

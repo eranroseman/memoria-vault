@@ -238,7 +238,7 @@ def test_lint_cron_writes_lint_findings_telemetry():
     assert "--jsonl-out" in text
     assert "$vault/system/logs/lint-findings.jsonl" in text
     assert (
-        '-m memoria_vault.typer_cli workspace check --workspace "$vault" '
+        '-m memoria_vault.cli workspace check --workspace "$vault" '
         "--schedule-id lint-integrity --json"
     ) in text
 
@@ -246,10 +246,10 @@ def test_lint_cron_writes_lint_findings_telemetry():
 def test_worker_cron_runs_pi_observer_and_pending_queue():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert (
-        '-m memoria_vault.typer_cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
+        '-m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json'
     ) in text
     assert (
-        '-m memoria_vault.typer_cli workspace run --workspace "$vault" '
+        '-m memoria_vault.cli workspace run --workspace "$vault" '
         "--schedule-id worker-drain --limit 10 --json"
     ) in text
 
@@ -257,7 +257,7 @@ def test_worker_cron_runs_pi_observer_and_pending_queue():
 def test_eval_cron_dispatches_through_cli_with_schedule_id():
     text = (ROOT / "vault-template/.memoria/scripts/cron-runner.sh").read_text(encoding="utf-8")
     assert (
-        '-m memoria_vault.typer_cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
+        '-m memoria_vault.cli eval run --workspace "$vault" --schedule-id eval-dispatch --json'
     ) in text
 
 

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from memoria_vault import typer_cli
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -108,59 +107,7 @@ def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixt
 def test_pyproject_exposes_memoria_console_script() -> None:
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
-    assert data["project"]["scripts"]["memoria"] == "memoria_vault.typer_cli:main"
-
-
-def test_typer_console_entrypoint_delegates_current_commands(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    workspace = tmp_path / "workspace"
-
-    rc = typer_cli.main(["init", "--workspace", str(workspace), "--dry-run", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 0
-    assert output["ok"] is True
-    assert output["dry_run"] is True
-    assert output["workspace"] == str(workspace)
-
-
-def test_typer_console_entrypoint_delegates_nested_options(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    captured: list[list[str]] = []
-    args = [
-        "workspace",
-        "run",
-        "--workspace",
-        str(tmp_path),
-        "--schedule-id",
-        "worker-drain",
-        "--limit",
-        "10",
-        "--json",
-    ]
-
-    def fake_main(argv: list[str]) -> int:
-        captured.append(argv)
-        return 0
-
-    monkeypatch.setattr(typer_cli.legacy_cli, "main", fake_main)
-
-    rc = typer_cli.main(args)
-
-    assert rc == 0
-    assert captured == [args]
-
-
-def test_typer_child_action_ignores_option_choices() -> None:
-    command_action = next(
-        action for action in _build_parser()._actions if getattr(action, "dest", None) == "command"
-    )
-
-    assert typer_cli._child_action(command_action.choices["init"]) is None
-    assert typer_cli._child_action(command_action.choices["status"]) is None
-    assert typer_cli._child_action(command_action.choices["new"]).dest == "new_command"
+    assert data["project"]["scripts"]["memoria"] == "memoria_vault.cli:main"
 
 
 def test_alpha15_cli_command_surface_is_exact() -> None:

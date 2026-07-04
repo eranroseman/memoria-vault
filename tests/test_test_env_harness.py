@@ -24,9 +24,9 @@ def test_cassette_matches_tool_name_and_arg_shape():
     assert cassette["match"] == "tool_name+arg_shape"
     assert cassette["gates"] == ["source", "package"]
     assert [step["id"] for step in cassette["steps"]][:3] == [
-        "ingest-source",
-        "classify-source",
         "seed-project",
+        "seed-thesis",
+        "seed-supporting-note",
     ]
     for step in cassette["steps"]:
         assert harness.arg_shape(step["args"]) == step["arg_shape"]
@@ -39,7 +39,7 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     summary = result.as_dict()
 
     assert summary["cassette"] == "package-gate-golden-path"
-    assert "catalog/sources/harness2026/source.md" in summary["artifacts"]
+    assert "knowledge/projects/harness.md" in summary["artifacts"]
     assert "knowledge/notes/harness-support.md" in summary["artifacts"]
     assert "knowledge/projects/harness/argument.canvas" in summary["artifacts"]
     assert not (tmp_path / "knowledge/notes/blocked-by-harness.md").exists()

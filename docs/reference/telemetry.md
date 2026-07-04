@@ -30,13 +30,11 @@ Rationale: [ADR-20](../adr/20-publication-path.md),
 | File | Writer | Cadence | One row = |
 | --- | --- | --- | --- |
 | `audit.jsonl` | runtime policy gate or optional adapter hook | per gated decision or paired write | one policy decision or before/after write record |
-| `capture-intake.jsonl` | capture/import helpers | per intake | one captured source/input event |
 | `patterns.jsonl` | `memoria_vault.runtime.patterns` | per prompt composition | one prompt-operation composition record |
 | `lint-findings.jsonl` | linter detector run | per manual or scheduled lint run | one detector finding |
 | `sessions/YYYY-MM-DD-HHMM.jsonl` | `session_summary.py` | per summary run | one compact per-session digest file |
 | `attention.jsonl` | attention disposition runtime | per attention resolution | one PI outcome over an attention projection |
 | `triage.jsonl` | attention/import adapters when present | per triage event | one PI triage decision |
-| `linkage.jsonl` | ingest linker | per ingest with ID-missing names | by-name entity collision counters the linker refused to merge |
 | `system/metrics/eval/runs.jsonl` | `eval_score.py` | per eval score run | one scored eval run |
 
 The authoritative operational state is `.memoria/memoria.sqlite`; logs are

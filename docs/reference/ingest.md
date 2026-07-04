@@ -21,10 +21,6 @@ staging path. The PDF adapter `capture_pdf_source()` uses the optional PyMuPDF
 parser when it is installed to extract page text. URL snapshots use
 `capture_url_source()` with stdlib HTML text extraction.
 
-The older paper-ingest operation has been ported into
-`memoria_vault.runtime.subsystems.processing.ingest`. The runtime package is the
-source of truth for catalog writes.
-
 ## Current Pipeline
 
 | Step | Owner | Output |

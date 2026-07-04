@@ -17,7 +17,7 @@ provider, scope, lifespan, backing store, and contents.
 | --- | --- | --- | --- | --- | --- |
 | **Program memory** | Memoria — vault files | Whole research program | Persistent | Vault root (`steering.md`) | Standing steering: discovery priorities, review mode. The PI's main lever over what the system pursues. |
 | **Project memory** | Memoria — vault files | One project, across operations | Project-bound; archives with the project | `knowledge/projects/<project>.md` | Open questions, decisions, framing for one project. |
-| **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, capture-intake anchors, pattern provenance, request projections, and metrics. |
+| **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, pattern provenance, request projections, and metrics. |
 | **Request memory** (payload) | Memoria — SQLite | One operation request | Request-bound | `.memoria/memoria.sqlite` | Input refs, output intents, precondition hashes, status, error, and provenance. |
 | **Working memory** | Runner/session | One operation run | Session-bound | In-context/runtime process | Current goal, recent tool results, and in-flight reasoning. |
 | **Adapter memory** | Optional external adapter | Adapter-defined | Adapter-defined | Outside the core workspace | Not authoritative in alpha.15; adapters must call the CLI/engine and may not replace workspace state. |
@@ -30,7 +30,7 @@ provider, scope, lifespan, backing store, and contents.
 | --- | --- |
 | Program memory is the PI's steering | The PI authors `steering.md`; every operation can read it; it never archives. |
 | Project memory is the per-project channel | Anything that must survive across operations within one project. Archives with the project. |
-| Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own logs (`capture-intake.jsonl`, `patterns.jsonl`). |
+| Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own diagnostic logs such as `patterns.jsonl`. |
 | Request memory is per-request, not global | When work resumes, the request row and journal provide the durable handoff. |
 | Adapter memory is never authoritative | External chat/session history can inform a human but cannot replace checked workspace state. |
 | Working memory is not shared | One operation's in-session reasoning never bleeds into another's. |
@@ -41,7 +41,7 @@ provider, scope, lifespan, backing store, and contents.
 
 | State type | Correct substrate | Wrong substrate (common mistake) |
 | --- | --- | --- |
-| What you want the system to pursue | Program memory (`steering.md`) | `project-hints.yaml` (that's config, not recall) |
+| What you want the system to pursue | Program memory (`steering.md`) | local tool config (that's config, not recall) |
 | One project's open questions / decisions | Project memory (`knowledge/projects/<project>.md`) | Request memory (too narrow; ends with one operation) |
 | Current task goal and context | Request memory (payload) | Working memory (not durable) |
 | Stable facts about the environment | Checked workspace configuration or steering Concepts | Working memory (not persistent) |

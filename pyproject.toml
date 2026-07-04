@@ -11,17 +11,15 @@ requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [{ name = "Eran Roseman" }]
 dependencies = [
-  "click>=8.0",
   "pydantic-ai-slim[openai]>=1.0",
   "PyYAML>=6.0",
-  "typer>=0.12",
 ]
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.27"]
 
 [project.scripts]
-memoria = "memoria_vault.typer_cli:main"
+memoria = "memoria_vault.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

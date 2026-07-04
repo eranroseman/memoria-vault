@@ -14,6 +14,7 @@ from memoria_vault.runtime.capabilities import (
     CAPABILITY_INDEX_PATH,
     check_capability_index,
     import_capability,
+    iter_capability_manifests,
     render_capability_index,
     write_capability_index,
 )
@@ -168,7 +169,7 @@ def test_same_stem_capability_asset_folder_is_allowed(
     assert load_operation_policy(Path(), "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
-def test_adapter_capabilities_are_cataloged_and_mcp_type_is_rejected(tmp_path: Path) -> None:
+def test_only_operation_capabilities_are_supported(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     legacy = tmp_path / "legacy-mcp.md"
     legacy.write_text(
@@ -184,6 +185,8 @@ def test_adapter_capabilities_are_cataloged_and_mcp_type_is_rejected(tmp_path: P
 
     with pytest.raises(ValueError, match="unsupported capability type: mcp"):
         import_capability(vault, legacy)
+    with pytest.raises(ValueError, match="unsupported capability type: adapter"):
+        iter_capability_manifests("adapter")
 
 
 def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: Path) -> None:

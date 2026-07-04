@@ -3,15 +3,12 @@
 The single source of truth for the controlled values used by catalog sources and
 claim-bearing notes. `research_area` and `methodology` describe catalog Work
 rows; `topics` describes claim-bearing `note` Concepts. Keep this note, catalog
-Work metadata, and `.memoria/schemas/types/note.yaml` aligned. The ingest
-classifier reads this note and applies only a term defined here; when nothing
-fits, it leaves the field unset and raises an attention flag for consolidation.
+Work metadata, and `.memoria/schemas/types/note.yaml` aligned.
 
 How each field is populated:
 
-- **`research_area`** — *what the work is about.* Seeded mechanically from OpenAlex
-  topics by the ingest operation (`classify.py`) when the top candidate matches this
-  vocabulary; off-vocabulary winners are flagged for consolidation.
+- **`research_area`** — *what the work is about.* Use controlled terms when correcting
+  catalog Work metadata.
 - **`methodology`** — *how the study was structured, and the techniques it used.* A
   coarse facet is derived from the S2 publication types at ingest; the rest is
   human-extended against the list below.

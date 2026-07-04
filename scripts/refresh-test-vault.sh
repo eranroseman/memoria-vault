@@ -107,7 +107,6 @@ done
 
 for rel in \
   .memoria/design-system.md \
-  .memoria/project-hints.yaml.example \
   .gitignore \
   AGENTS.md \
   home.md \

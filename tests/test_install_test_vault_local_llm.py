@@ -54,7 +54,7 @@ def test_harness_initializes_git_before_install_and_exercises_commit_gate() -> N
 def test_harness_runs_integrity_and_cli_doctor_checks() -> None:
     text = _script()
     for marker in (
-        "memoria_vault.typer_cli doctor bundle",
+        "memoria_vault.cli doctor bundle",
         "detectors",
         "verdict: PASS",
         "Disposable Memoria standalone install verified",
