@@ -17,7 +17,7 @@ design doc is left untouched.
   `origin/main` for the repo edits; this plan lives on the `scratch` branch
   under `scratch/workflow-audit/`.
 - **Related:** workflow-audit Waves A/B already merged (#1256, #1257;
-  originating plan retired); live `scratch` ruleset id **18508179**
+  originating plan retired); live `scratch` ruleset id **18508798**
   (`deletion` + `non_fast_forward`, created by Wave B). Background: AGENTS.md
   scratch-branch flow.
 - **Related issues / milestone:** — (open per wave; milestone 0.1.0-alpha.16).
@@ -60,7 +60,8 @@ that absence.
 | `tests/test_render_profile_configs.py` | missing by design — struck |
 
 **The live scratch ruleset is the sharp hazard for the orphan step.** Wave B
-created ruleset **18508179** with `non_fast_forward`. Orphaning is a
+created ruleset **18508179** with `non_fast_forward`; Wave 2 recreated it as
+**18508798** after the orphan reset. Orphaning is a
 force-push, which that rule **blocks** — so the orphan step must delete the
 ruleset, do the reset, then recreate it. `ruleset-contract.yaml` still declares
 `scratch`, so `ruleset_doctor --live` will flag the gap during the window; keep
@@ -225,8 +226,8 @@ accordingly.
 - [x] 2026-07-04 — Wave C re-grounded against `origin/main` f26596b8: four
       findings confirmed real; stale profile-render item struck.
 - [x] 2026-07-04 — Wave 1: finish Wave C live backstops — #1258 merged.
-- [ ] Wave 2: scratch branch orphaned; ruleset 18508179 recreated;
-      `ruleset_doctor --live` green.
+- [x] 2026-07-04 — Wave 2: scratch branch orphaned at `e93783b7`; ruleset
+      18508798 recreated; `ruleset_doctor --live` green.
 - [ ] Wave 3: "analysis runs from main" rule + `enforced-by-structure:` tag
       class + doctor extension — PR merged.
 - [x] 2026-07-04 — Retired `exec-plan.md`; this file is the sole standalone
@@ -239,7 +240,8 @@ accordingly.
   (Wave C) and fold in the orphan-branch + analysis-from-main rule; **beta.1
   left untouched** (its stale-analysis exposure is acknowledged but not
   remediated here). Re-grounded Wave C against `main` before authoring rather
-  than trusting the scratch-tree findings — all five held, so no phantom risk.
+  than trusting the scratch-tree findings — four live findings held, so no
+  phantom risk.
 - 2026-07-04 — Chose an orphan branch over a paths-only pre-commit hook + CI
   guard (proposed earlier, then dropped): with scratch holding nothing but
   `scratch/`, there is no repo tree to mis-edit or mis-audit, so the structural
@@ -258,6 +260,15 @@ accordingly.
   `render_profile_configs` test item was struck because current `main`
   intentionally retired installed-profile rendering and already pins that
   absence in `tests/test_profiles.py`.
+- 2026-07-04 — Wave 2 completed. Pre-reset scratch tip was `125a4c0e`; the
+  orphan root is `e93783b7` and contains exactly one top-level tracked entry,
+  `scratch`. The ruleset was temporarily deleted for the force-push and
+  recreated as id `18508798` with `deletion` + `non_fast_forward`; live
+  `ruleset_doctor.py --live --repository eranroseman/memoria-vault` returned
+  `ruleset-doctor: ok`. The local scratch checkout has empty untracked
+  `.agents`/`.codex` helper directories from the agent environment, but
+  `git ls-files` and `git ls-tree origin/scratch` prove the branch content is
+  scratch-only.
 
 ## 9. Surprises & discoveries
 
@@ -277,9 +288,9 @@ accordingly.
   `.github/workflows/lint-config.yml` loses its yamllint/json-validate jobs.
 - `scripts/agents_doctor.py` — Wave B's `enforced:`-tag check gains a third tag
   class `enforced-by-structure:` (format-checked, not resolved to a file).
-- `.github/ruleset-contract.yaml` / ruleset **18508179** — deleted and
+- `.github/ruleset-contract.yaml` / ruleset **18508798** — deleted and
   recreated across the orphan reset; contract declaration unchanged.
-- gitleaks — pinned pre-commit rev; CI uses the same version.
+- gitleaks — local pre-commit wrapper plus advisory CI image.
 - Orphan mechanics — `git switch --orphan` + `git checkout origin/scratch --
   scratch/`; `non_fast_forward` on the live ruleset forces the delete/recreate
   ordering.
