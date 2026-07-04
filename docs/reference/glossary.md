@@ -32,7 +32,9 @@ future adapter work. It is not required by alpha.15.
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
 runtime state.
 
-**PI** — the human principal investigator who owns and runs the vault. Makes every approval, triage, and promotion decision. Single-user by design. (Older pages say "the human".)
+**PI** — the human principal investigator who owns and runs the vault. Makes
+every triage, disposition, and promotion decision. Single-user by design.
+(Older pages say "the human".)
 
 **Agent** — a model-backed process doing work. Alpha.15 exposes agents through
 the standalone CLI/engine and optional adapters; it does not ship installed
