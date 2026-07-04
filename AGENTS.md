@@ -50,15 +50,22 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 ## Where things live
 
+`~/memoria-vault` is the local single source of truth for this repository. Save
+nothing outside it without explicit permission.
+
 | Piece | Host | Path |
 |---|---|---|
 | **Project container** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
-| **Main checkout** | WSL2 · ext4 | `~/memoria-vault/main` |
-| **Scratch checkout** | WSL2 · ext4 | `~/memoria-vault/scratch` |
-| **Standalone Memoria sandbox** | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
+| **Main checkout** (permanent files) | WSL2 · ext4 | `~/memoria-vault/main` |
+| **Scratch checkout** (temporary tracked files) | WSL2 · ext4 | `~/memoria-vault/scratch` |
+| **Task worktrees** | WSL2 · ext4 | `~/memoria-vault/worktrees/<session>` |
+| **Standalone Memoria sandbox** (disposable test files) | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
 | **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
+- Permanent files go in `~/memoria-vault/main`; temporary tracked files go in
+  `~/memoria-vault/scratch`; task checkouts go in `~/memoria-vault/worktrees/`;
+  disposable test workspaces go in `~/memoria-vault/sandbox`.
 - Alpha.15's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
@@ -214,6 +221,9 @@ behavior.
 
 ### `pr-policy` tiers
 
+This reader mirror is owned by `.github/scripts/pr_policy.py` and covered by
+`tests/test_pr_policy.py`.
+
 | Decision | Trigger |
 |---|---|
 | `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
@@ -235,14 +245,16 @@ to the maintainer.
 
 ## Python style
 
-**Docstrings** — two rules, no exceptions:
+**Docstrings** — module docstrings are mandatory; function/class docstrings are
+judgment-based:
 
 - Every module gets a docstring. One line is enough; name the file's role and reference an ADR when one governs it.
 - Functions and classes get a docstring only when the name and signature don't tell the full story — a non-obvious invariant, a surprising side-effect, or a constraint the caller must know. If removing the docstring would leave a reader confused, write one; otherwise omit it.
 
 No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the function is too complex — split it first.
 
-`D` (pydocstyle) rules are deliberately off in ruff (`pyproject.toml`). Docstring presence is a judgement call, not a lint gate.
+`D` (pydocstyle) rules are deliberately off in ruff (`pyproject.toml`).
+Function/class docstring presence is a judgment call, not a lint gate.
 
 **Inline comments** — write a comment only when the WHY is non-obvious:
 
