@@ -221,6 +221,9 @@ behavior.
 
 ### `pr-policy` tiers
 
+This reader mirror is owned by `.github/scripts/pr_policy.py` and covered by
+`tests/test_pr_policy.py`.
+
 | Decision | Trigger |
 |---|---|
 | `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
@@ -242,14 +245,16 @@ to the maintainer.
 
 ## Python style
 
-**Docstrings** — two rules, no exceptions:
+**Docstrings** — module docstrings are mandatory; function/class docstrings are
+judgment-based:
 
 - Every module gets a docstring. One line is enough; name the file's role and reference an ADR when one governs it.
 - Functions and classes get a docstring only when the name and signature don't tell the full story — a non-obvious invariant, a surprising side-effect, or a constraint the caller must know. If removing the docstring would leave a reader confused, write one; otherwise omit it.
 
 No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the function is too complex — split it first.
 
-`D` (pydocstyle) rules are deliberately off in ruff (`pyproject.toml`). Docstring presence is a judgement call, not a lint gate.
+`D` (pydocstyle) rules are deliberately off in ruff (`pyproject.toml`).
+Function/class docstring presence is a judgment call, not a lint gate.
 
 **Inline comments** — write a comment only when the WHY is non-obvious:
 
