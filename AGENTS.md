@@ -345,7 +345,7 @@ the manual security review and is a first line against the "never commit
 
 The repo carries an optional **project-local qmd index** (`./.qmd/`, gitignored) for
 hybrid keyword+semantic code search — separate from the runtime/vault qmd, and indexing
-this repo only. Set it up once with `bash scripts/dev-setup.sh` (or `npm install &&
+this repo only. Set it up once with `bash scripts/dev-setup.sh` (or `npm ci &&
 bash scripts/qmd-codebase-index.sh`); needs Node ≥22.
 
 - **Keyword:** `npx qmd search "<terms>"` — BM25, instant, no models.

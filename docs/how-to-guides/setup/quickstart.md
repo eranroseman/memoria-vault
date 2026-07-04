@@ -33,7 +33,7 @@ curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scri
 irm https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.ps1 | iex
 ```
 
-The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search, and wires local hooks.
+The installer scaffolds your runtime vault (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows), installs the `memoria` CLI into `.memoria/.venv`, registers qmd search only when an existing qmd binary is available, and wires local hooks. It does not install qmd.
 
 **2. Verify the CLI runtime.**
 

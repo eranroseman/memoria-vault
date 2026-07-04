@@ -13,14 +13,14 @@ installer, runtime package, workspace template, and docs are welcome.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for qmd
-search, and any provider keys needed for the flow you are testing.
+**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for the
+contributor qmd code index, and any provider keys needed for the flow you are testing.
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
-# One-time contributor tooling: dev requirements, pre-commit hooks, qmd if available.
+# One-time contributor tooling: dev requirements, pre-commit hooks, repo-local qmd index.
 bash scripts/dev-setup.sh
 
 # Installer syntax and dry-run checks.

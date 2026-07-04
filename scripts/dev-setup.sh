@@ -7,7 +7,7 @@
 # This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters). It does
 # NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
 # safe to re-run. Python hook tools are pinned in requirements-dev.txt; Node hook
-# tools are pinned in package-lock.json and installed with npm ci.
+# tools are pinned in package-lock.json and restored with npm ci.
 set -eu
 
 unset CDPATH
@@ -64,7 +64,7 @@ if [ -n "$NODE" ]; then
 fi
 if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
   if command -v npm >/dev/null 2>&1 && npm ci --silent; then
-    note "repo-local Node tools installed (qmd, cspell, markdownlint)"
+    note "repo-local Node tools ready (code search, cspell, markdownlint)"
     bash scripts/qmd-codebase-index.sh \
       || note "qmd index build skipped/failed — re-run: bash scripts/qmd-codebase-index.sh"
     if [ "$WITH_HOOKS" -eq 1 ]; then

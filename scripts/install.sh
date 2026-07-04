@@ -2,7 +2,7 @@
 # Memoria bootstrap installer  (Linux/WSL path; Windows uses install.ps1)
 # One command sets up the standalone Memoria CLI/runtime workspace: clones the
 # vault, installs the package into the vault-local venv, wires local integrity
-# hooks, and registers qmd search. macOS is not supported.
+# hooks, and registers qmd search only when qmd already exists. macOS is not supported.
 #
 # Inspect-first (recommended):
 #   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -18,11 +18,9 @@
 #   --yes             non-interactive: accept all defaults, no prompts (CI)
 #   -h | --help       this help
 #
-# Safety: no silent privilege escalation or global tool install. Any step
-# needing root prints the exact `sudo` command and runs it only on your
-# confirmation (apt will prompt for your password). Set
-# MEMORIA_INSTALL_GLOBAL_TOOLS=1 to let the installer run `npm install -g` for
-# optional runtime tools. --dry-run echoes everything and touches nothing.
+# Safety: no silent privilege escalation. Any step needing root prints the exact
+# `sudo` command and runs it only on your confirmation (apt will prompt for your
+# password). --dry-run echoes everything and touches nothing.
 #
 set -euo pipefail
 
@@ -152,7 +150,7 @@ print_plan() {
   say "  2. fetch the Memoria vault repo"
   say "  3. copy the runtime vault to your chosen folder"
   say "  4. install runtime dependencies + the memoria CLI into .memoria/.venv"
-  say "  5. register qmd search, initialize git, and wire local hooks"
+  say "  5. register qmd search if qmd already exists, initialize git, and wire local hooks"
   say "  6. print CLI next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
   return 0

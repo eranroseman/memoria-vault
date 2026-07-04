@@ -28,10 +28,10 @@ see [CLI](docs/reference/cli.md).
 
 The installer copies `vault-template/` to your chosen runtime folder (default
 `~/Memoria`, deliberately off OneDrive), creates a workspace-local venv,
-installs the `memoria` package, wires Git hooks, and registers qmd search. It
-does not install Hermes, profiles, Obsidian setup, Zotero integration, or a host
-scheduler. See [Installer (bootstrap)](docs/reference/installer.md) for exactly
-what it does.
+installs the `memoria` package, wires Git hooks, and registers qmd search only
+when an existing qmd binary is available. It does not install qmd, Hermes,
+profiles, Obsidian setup, Zotero integration, or a host scheduler. See
+[Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 The CLI and thin transports call one engine API. Product reads return checked
 verdicts; product writes enqueue requests and land unchecked until the required
@@ -70,7 +70,7 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/installer.md)
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
 - **Python 3.12+ with venv support** for the workspace-local runtime package.
-- **Node 22** for required qmd search.
+- **Node 22 plus an existing qmd binary** only for qmd-backed search; the installer does not install qmd.
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 

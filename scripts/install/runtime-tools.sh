@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # Local runtime-tool phases sourced by install.sh after the repository is resolved.
-# shellcheck disable=SC2034  # QMD_BIN is consumed by the qmd install phase in install.sh
+# shellcheck disable=SC2034  # QMD_BIN is consumed by the qmd registration phase in install.sh
 
-# Prefer the npm-global qmd binary: an unrelated conda package also installs qmd.
-allow_global_tool_install() {
-  [ "${MEMORIA_INSTALL_GLOBAL_TOOLS:-0}" = "1" ]
-}
-
+# Prefer an explicit qmd binary, then an already-present npm-global qmd.
 resolve_qmd() {
   local npm_qmd=""
   if [ -n "${MEMORIA_QMD_BIN:-}" ]; then
@@ -22,12 +18,8 @@ ensure_qmd() {
   local q; q="$(resolve_qmd)"
   if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
     ok "qmd present: $q"
-  elif allow_global_tool_install && have npm && node --version 2>/dev/null | grep -qE 'v(2[2-9]|[3-9][0-9])'; then
-    run npm install -g @tobilu/qmd \
-      || warn "qmd install failed — search will not be ready (npm install -g @tobilu/qmd)"
-    q="$(resolve_qmd)"
   else
-    warn "qmd not installed — search will not be ready until you install qmd or rerun with MEMORIA_INSTALL_GLOBAL_TOOLS=1"
+    warn "qmd not found — search registration skipped; set MEMORIA_QMD_BIN to an existing qmd binary to enable it"
   fi
   QMD_BIN="$q"
   if [ -x "$q" ] && "$q" --help 2>/dev/null | grep -q "mcp"; then
