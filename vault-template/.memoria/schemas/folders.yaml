@@ -19,7 +19,7 @@ quarantine_root: .memoria/quarantine
 transient_prefixes:
   - inbox/
 
-# the full installer skeleton (content dirs get .gitkeep; ADR-55)
+# the full installer skeleton (content dirs get .gitkeep; ADR-125)
 skeleton:
   - .memoria/index
   - .memoria/index/qmd

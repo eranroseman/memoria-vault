@@ -20,7 +20,7 @@ number.
 
 ## Status lifecycle
 
-`proposed` → `accepted` → `superseded` (or `rejected`). ADR status records decision
+`proposed` → `accepted` (or `rejected`). ADR status records decision
 state only. Scheduling and readiness live in the GitHub issue tracker: an accepted
 decision can still have an implementation issue with Readiness `Later`, `Blocked`,
 or `Needs shaping`. See `docs/adr/_template.md` for the required fields per
@@ -32,87 +32,25 @@ status.
 
 | # | Decision | Status |
 |---|---|---|
-| [03](03-structural-review-gate.md) | Review gate is structural, enforced by the policy MCP | superseded → ADR-128 |
-| [05](05-zotero-as-bibliographic-backbone.md) | Superseded Zotero bibliography authority | superseded → ADR-124 |
-| [06](06-citekey-naming-convention.md) | Citekey naming convention | superseded → ADR-124 |
-| [07](07-delegate-coding-to-external-agents.md) | Code agent attachment | superseded → ADR-125 |
-| [09](09-contradictions-dashboard.md) | Contradictions / tensions dashboard | superseded → ADR-129 |
-| [10](10-claim-supersession.md) | Claim supersession relation | superseded → ADR-129 |
 | [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
-| [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not a control-plane formatter | accepted |
-| [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | superseded → ADR-126 |
-| [15](15-project-membership-from-topic-hint.md) | Project membership is agent-proposed from a lightweight per-project topic hint, human-confirmed | superseded → ADR-126 |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | proposed |
-| [19](19-moc-threshold-alert.md) | Agent-proposed hubs (threshold alert and Mapper handoff) | superseded → ADR-126 |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
-| [21](21-l3-autonomy-ceiling.md) | L3 autonomy ceiling, structurally enforced (the Coder-lane exception is retired) | superseded → ADR-128 |
-| [22](22-build-on-hermes-runtime.md) | Build on the Hermes Agent runtime rather than a bespoke one | superseded → ADR-125 |
-| [23](23-scoped-memory-substrates.md) | Memory is seven scoped substrates, not one store | superseded → ADR-125 |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
-| [25](25-session-logging-two-logs.md) | Two separate session logs — hash-paired audit vs. per-session digests | superseded → ADR-127 |
-| [26](26-repo-as-install-unit.md) | The repo is the install unit; profiles are hand-authored and idempotently deployed | superseded → ADR-125 |
-| [28](28-write-gate-as-plugin.md) | The vault write gate is a Hermes Python plugin, not a shell hook | superseded → ADR-125 |
-| [29](29-testing-framework.md) | A layered testing framework, not a pile of plans | accepted |
-| [30](30-deterministic-ingest-pipeline.md) | Tiered ingest pipeline (capture → fallback-chained enrichment → gated write) | superseded → ADR-129 |
-| [31](31-native-obsidian-mcp.md) | Vault access via the Local REST API plugin's native MCP (HTTPS), not uvx mcp-obsidian | superseded → ADR-130 |
-| [32](32-external-access-over-mcp.md) | Profile capabilities and external access reach the agent only over MCP; deterministic tools are self-hosted | superseded → ADR-125 |
-| [33](33-cluster-mcp-bertopic.md) | The Mapper's clustering runs over a Memoria-authored BERTopic MCP, not in-agent ML skills | superseded → ADR-125 |
-| [35](35-cross-run-skill-insights.md) | Cross-run skill-insights memory | superseded → ADR-125 |
-| [38](38-pre-file-similarity-gate.md) | Ratchet — a qmd similarity gate before filing a synthesis note | superseded → ADR-129 |
-| [41](41-configurable-review-gate-mode.md) | Configurable review-gate mode (blocking / advisory) for comparison studies | superseded → ADR-128 |
-| [43](43-skill-governance.md) | Skill governance and lifecycle | superseded → ADR-125 |
-| [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
-| [46](46-seven-layer-architecture.md) | Seven-layer architecture — PI · Interface · Co-PI · Tasks · MCP · Engines · Vault | superseded → ADR-125 |
-| [48](48-copi-and-agent-consolidation.md) | One Co-PI fronts everything; specialists consolidate to posture-defined agents | superseded → ADR-125 |
-| [49](49-catalog-in-bases-linter-monitor.md) | Catalog entities live in Obsidian Bases; the Linter is the integrity monitor and commit gate | superseded → ADR-125 |
-| [52](52-links-vs-relationships.md) | Notes carry authored links:, entities carry given relationships — two kinds of connection | superseded → ADR-126 |
-| [53](53-pattern-library.md) | The pattern library — curated prompt-transformations as data in system/patterns/, one runner | superseded → ADR-125 |
-| [54](54-two-decision-kinds-batch-worklists.md) | Two kinds of human decision — approval gates and work prompts; classify automated; batch worklists for high cardinality | superseded → ADR-128 |
-| [55](55-src-scaffold-populate-golden-copy.md) | The repo ships a vault template, the installer scaffolds and populates, and a golden copy makes the vault restorable | superseded → ADR-125 |
-| [56](56-extraction-uncertainty-flag.md) | Low-confidence extraction routes to a flag — the ingest engine never merges identities silently | superseded → ADR-129 |
-| [57](57-engines-write-agents-judge.md) | Engines write, agents judge — no LLM agent as a mechanical writer | superseded → ADR-128 |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
 | [64](64-native-windows-support.md) | Native Windows support | accepted |
-| [66](66-triage-ranking-improvements.md) | Semi-automatic triage, agent-consensus pre-filter, and tournament ranking | superseded → ADR-129 |
-| [69](69-operations-layer-naming.md) | Operations — name the deterministic layer and its four categories | superseded → ADR-125 |
-| [72](72-command-surfacing.md) | Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive | superseded → ADR-130 |
-| [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
-| [74](74-pinned-obsidian-plugin-supply-chain.md) | Manage bundled Obsidian plugins with a pinned provenance manifest | superseded → ADR-125 |
-| [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
-| [77](77-project-gate.md) | Project gate | superseded → ADR-126 |
-| [79](79-argument-graph-and-warrant.md) | Argument graph and warrant | superseded → ADR-126 |
-| [80](80-ephemeral-containerized-test-env.md) | Ephemeral containerized Linux test-env harness | superseded → ADR-125 |
-| [83](83-direct-pi-relate-control.md) | Direct PI relate control | superseded → ADR-126 |
 | [88](88-literate-code-note.md) | Literate code-note | proposed |
-| [90](90-claim-sentence-classification.md) | Claim-sentence classification | proposed |
 | [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
 | [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | accepted |
-| [93](93-keyphrase-extraction-tag-candidates.md) | Keyphrase extraction for tag candidates | accepted |
-| [94](94-record-linkage-entity-deduplication.md) | Record linkage for entity deduplication | accepted |
 | [95](95-nightly-proactive-discovery-loop.md) | Nightly proactive discovery loop | rejected |
 | [96](96-code-lane-keep-revert-experiment-loop.md) | Code-lane keep/revert experiment loop | proposed |
 | [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | rejected |
-| [98](98-relation-vocabulary-expansion.md) | Relation-vocabulary expansion | proposed |
 | [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | accepted |
-| [100](100-exploration-trace-capture.md) | Exploration-trace capture | superseded → ADR-126 |
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
-| [102](102-disposable-projection-engine.md) | Disposable projection engine | superseded → ADR-130 |
 | [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | rejected |
-| [104](104-telemetry-three-planes.md) | Telemetry as three planes — audit, analytics, diagnostic | superseded → ADR-127 |
 | [105](105-diagnostic-plane.md) | Content-light diagnostic plane — out of the vault, ephemeral, opt-in detail | accepted |
 | [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | rejected |
 | [107](107-okf-interchange-bundle-format.md) | OKF as Memoria's import/export bundle format | proposed |
 | [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
-| [109](109-project-management-native-views.md) | Project management uses native views over project notes | superseded → ADR-130 |
-| [110](110-ruff-format-python-layout.md) | Ruff: formatter owns layout (line-length 100), curated lint ruleset | accepted |
-| [112](112-tutorial-destination-first-arc.md) | Onboarding is one destination-first project arc | superseded → ADR-130 |
-| [114](114-left-pane-navigator.md) | Left pane is a navigation rail: Now over Places | superseded → ADR-130 |
-| [115](115-inbox-queue-and-retired-homepage.md) | Inbox is the queue, not a space; retire the homepage front door for a startup shell + welcome seed | superseded → ADR-130 |
-| [116](116-obsidian-surface-architecture.md) | Obsidian surface architecture: three primitives (View, Collection, Rail) + two edges | superseded → ADR-130 |
-| [118](118-dashboard-consolidation.md) | Dashboard consolidation: fold redundant pages into spaces; keep system dashboards read-only; make the Inspector the read-only index | superseded → ADR-130 |
-| [119](119-schema-driven-document-creation.md) | Concept schemas own field, home, read-state, and form contracts | superseded → ADR-126 |
-| [120](120-profile-config-materialization.md) | Profile config capability blocks are materialized from the tool registry | superseded → ADR-125 |
-| [121](121-enqueue-only-obsidian-control-panel.md) | Obsidian control panel mutates only by enqueueing worker jobs | superseded → ADR-130 |
 | [122](122-sqlite-working-state-boundary.md) | SQLite working state and catalog records sit behind the checked Concept boundary | accepted |
 | [123](123-doi-catalog-enrichment-gate.md) | DOI catalog enrichment gates checked source promotion | accepted |
 | [124](124-standalone-catalog-citation-authority.md) | Standalone catalog is the citation authority | accepted |
@@ -131,13 +69,13 @@ editing an ADR; CI fails if it is stale. Do not edit the table by hand.
 
 Rules:
 
-- **Every decision lives here, at any status.** Open proposals (`proposed`), accepted decisions, rejected alternatives, and superseded ones all share this folder and the one number sequence.
-- **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
+- **Every decision lives here, at any status.** Open proposals (`proposed`), accepted decisions, and rejected alternatives all share this folder and the one number sequence.
+- **Numbers are permanent.** A replaced decision's file is deleted (only live decisions sit on `main`); the successor records what it absorbed via `supersedes:`, and the original's `superseded_by`/`supersedes` lineage stays recoverable in git history.
 - **Subsystem ADRs are the default home.** ADRs 125–130 consolidate the alpha.15
   architecture into broad subsystem decisions; amend one of them unless a genuinely
   new subsystem appears.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
-- **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, rejected, or superseded. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
+- **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, or rejected. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
 - **Sequencing is not decided here.** *When* a decision ships lives in the current milestone and the current "Release <version>" parent issue plus sub-issues, which change independently of these decisions. Link to that release surface rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR

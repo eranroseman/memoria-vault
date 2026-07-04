@@ -64,4 +64,4 @@ hub/project context.
 
 **Decisions**
 
-- [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md) — historical work-prompt and batch-worklist decision
+- [ADR-128](../../adr/128-no-write-time-correctness-oracle.md) — historical work-prompt and batch-worklist decision

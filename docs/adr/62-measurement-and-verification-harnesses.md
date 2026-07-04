@@ -82,7 +82,7 @@ standalone emitter is scheduled and documented.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-11 vault-eval as a maintenance capability](11-vault-eval-maintenance.md) (the diagnostic-not-gating discipline and the eval surface these harnesses report through); [ADR-20 publication path](20-publication-path.md) (the six-signal capture these harnesses read, already adopted); [ADR-41 configurable review-gate mode](41-configurable-review-gate-mode.md) (the export/review gate the `prose-check` capability attaches to).
+- **Related decisions / Depends on:** [ADR-11 vault-eval as a maintenance capability](11-vault-eval-maintenance.md) (the diagnostic-not-gating discipline and the eval surface these harnesses report through); [ADR-20 publication path](20-publication-path.md) (the six-signal capture these harnesses read, already adopted); [ADR-128 (no write-time correctness oracle)](128-no-write-time-correctness-oracle.md) (the export/review gate the `prose-check` capability attaches to).
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
 - **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
   — cadence review for the harness family;

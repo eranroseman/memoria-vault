@@ -1,4 +1,4 @@
-"""L1 component tests for status_doctor (ADR-44)."""
+"""L1 component tests for status_doctor."""
 
 import status_doctor as _m
 

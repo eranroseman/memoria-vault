@@ -24,7 +24,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 `screening-protocol` review mode), **project memory** (one sub-project's
 cross-operation working state — open questions, decisions, framing), and
 **audit memory** (the tamper-evident record of every gated write, append-only
-forever per [ADR-25](../../adr/25-session-logging-two-logs.md)).
+forever per [ADR-127](../../adr/127-quarantine-and-verify-integrity.md)).
 
 ## The ones the runtime manages
 
@@ -64,7 +64,7 @@ This is thin-control-over-thick-state applied to memory. Optional adapter memory
 stays thin: working memory, chat notes, and searchable history. Durable state
 lives in checked workspace files plus request/journal rows.
 
-The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([ADR-23](../../adr/23-scoped-memory-substrates.md)).
+The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([ADR-125](../../adr/125-standalone-cli-engine-architecture.md)).
 
 ---
 

@@ -96,7 +96,7 @@ ignore = [
   "PT018",   # composite assert -- splitting `assert a and b` is cosmetic churn.
   # PT011/PT017 assume the pytest.raises idiom, but this suite deliberately uses a
   # pytest-independent try/except/else style so tests run under both pytest and the
-  # ADR-44 CheckHarness (most test files do not import pytest).
+  # standalone CheckHarness (most test files do not import pytest).
   "PT011",   # pytest.raises without match=.
   "PT017",   # assertion on the exception inside an except block.
   # The bandit (S) subrules below are threat-model misfits for a local,

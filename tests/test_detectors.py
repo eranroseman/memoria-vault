@@ -1,4 +1,4 @@
-"""L1 component test for detectors — extracted from its former --self-test (ADR-44)."""
+"""L1 component test for detectors — extracted from its former --self-test."""
 
 import hashlib
 import json as _json

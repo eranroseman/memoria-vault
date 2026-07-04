@@ -85,6 +85,6 @@ the write path.
 ## Related
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)
-- The decisions: [ADR-125](../adr/125-standalone-cli-engine-architecture.md), [ADR-26](../adr/26-repo-as-install-unit.md)
+- The decisions: [ADR-125](../adr/125-standalone-cli-engine-architecture.md), [ADR-125](../adr/125-standalone-cli-engine-architecture.md)
 - Capability reference: [Operations](../reference/operations.md)
 - On-disk layout reference: [On-disk layout](../reference/on-disk-layout.md)

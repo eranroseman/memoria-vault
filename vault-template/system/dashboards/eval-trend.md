@@ -6,7 +6,7 @@ Metrics (each 0–1, higher is better; a task is **unscored** when its card repo
 
 - **recall@k** — the gold citekeys found in the top-k retrieved results.
 - **support-rate** — cited evidence resolving to real catalog records.
-- **FAMA-clean** — no superseded/archived claim was reused (the FAMA failure mode, ADR-10).
+- **FAMA-clean** — no superseded/archived claim was reused (the FAMA failure mode, ADR-129).
 
 ## Trend (newest score per quarter)
 

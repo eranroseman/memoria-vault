@@ -57,7 +57,7 @@ Archive/retraction state is runtime state, not a folder move. Current readers us
 the DB/read API `check_status = checked` verdict; unchecked and quarantined Concepts stay out of the
 checked index and Ask path.
 
-The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-52](../../adr/52-links-vs-relationships.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
+The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-126](../../adr/126-four-type-knowledge-model.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
 ## Generated views; the Linter keeps them sound
 

@@ -54,5 +54,5 @@ whether to revise.
 
 - Promotion boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
 - Prompt shape: [The honesty prompt](honesty-card.md)
-- Batch-worklist decision: [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md)
+- Batch-worklist decision: [ADR-128](../../adr/128-no-write-time-correctness-oracle.md)
 - How project analysis is queued: [Analyze a project argument](../../how-to-guides/project/analyze-a-project-argument.md)

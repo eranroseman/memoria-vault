@@ -45,7 +45,7 @@ Vault · Optional adapters ([ADR-125](../adr/125-standalone-cli-engine-architect
 [ADR-130](../adr/130-read-api-surfaces-and-copi.md)): PI intent enters through
 the CLI or observed file edits, the engine owns request/write/recovery state,
 and adapters are presentation layers over the same contracts. The older
-seven-layer architecture is historical context in [ADR-46](../adr/46-seven-layer-architecture.md).
+seven-layer architecture is historical context in [ADR-125](../adr/125-standalone-cli-engine-architecture.md).
 
 **Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
 `journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
@@ -83,7 +83,7 @@ Maintenance.
 **System dashboard** — one of the read-only, Dataview-backed notes in
 `system/dashboards/`; the spaces and Maintenance carry the action surfaces.
 
-**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)).
+**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-130](../adr/130-read-api-surfaces-and-copi.md)).
 
 ---
 
@@ -142,7 +142,7 @@ SQLite. Prefer the precise field name over a bare "state".
 
 **Audit log** — the append-only JSONL trail of every policy decision at `system/logs/audit.jsonl`. Feeds the audit-log dashboard.
 
-**Extraction-uncertainty flag** — the near-tie rule ([ADR-56](../adr/56-extraction-uncertainty-flag.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
+**Extraction-uncertainty flag** — the near-tie rule ([ADR-129](../adr/129-layered-machine-judgment.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails

@@ -10,7 +10,7 @@ nav_order: 5
 The Engineer is not an installed alpha.15 profile or code runner. It is the
 handoff posture for external coding work: Memoria can prepare and record a
 handoff, but the external coding agent does the coding
-([ADR-07](../../adr/07-delegate-coding-to-external-agents.md)).
+([ADR-125](../../adr/125-standalone-cli-engine-architecture.md)).
 
 ## What it does
 
@@ -22,7 +22,7 @@ handoff, but the external coding agent does the coding
 ## Boundary
 
 - The Engineer posture does **not** grant Memoria terminal, file, or code
-  execution authority ([ADR-46](../../adr/46-seven-layer-architecture.md)).
+  execution authority ([ADR-125](../../adr/125-standalone-cli-engine-architecture.md)).
 - The external coding agent is an opaque peer, not a subprocess Memoria drives.
 - The autonomous code-experiment loop remains deferred.
 
