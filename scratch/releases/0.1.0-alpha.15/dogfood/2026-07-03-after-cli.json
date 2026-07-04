@@ -1,0 +1,84 @@
+{
+  "assertions": {
+    "has_checked_digest": true,
+    "has_checked_note": true,
+    "has_checked_work": true,
+    "has_project": true,
+    "has_references_bib": true,
+    "required_requests_done": true,
+    "seeded_error_passed": true
+  },
+  "budgets": {
+    "cost_observed": false,
+    "limits": {},
+    "model_call_count": 1,
+    "tool_call_count": 33
+  },
+  "friction": {
+    "open_attention_count": 9,
+    "operation_request_count": 33,
+    "per_work_interaction_count": 33.0,
+    "resolved_attention_count": 0,
+    "unchecked_backlog_slope": 0
+  },
+  "passed": true,
+  "requests": {
+    "done": {
+      "answer-query": 1,
+      "capture-source": 1,
+      "compile-source-digest": 1,
+      "create-concept": 1,
+      "enrich-source": 1,
+      "export-project": 1,
+      "mark-checked": 2,
+      "observe-pi-edits": 16,
+      "record-copi-interview": 1,
+      "regenerate-tracked-projections": 1,
+      "run-seeded-error-verdict": 1,
+      "trace-integrity-scan": 1
+    },
+    "failed": {
+      "compile-source-digest": 1,
+      "create-concept": 2,
+      "export-project": 1,
+      "mark-checked": 1
+    }
+  },
+  "schema_version": 1,
+  "seeded_error_verdict": {
+    "mode": "test",
+    "non_sandbox_licensed": false,
+    "passed": true,
+    "verdict_key": "sha256:3df78e1a557c0e44c149a67153b65c994e6b8a3f5b44c98935a88dc7a55fd719"
+  },
+  "state": {
+    "attention_counts": {
+      "open": 9
+    },
+    "catalog_work_count": 1,
+    "checked_work_count": 1,
+    "concept_counts": {
+      "hub": {
+        "checked": 5
+      },
+      "note": {
+        "checked": 1
+      },
+      "project": {
+        "checked": 1
+      },
+      "source": {
+        "checked": 1
+      },
+      "work": {
+        "checked": 1
+      }
+    },
+    "output_counts": {
+      "checked": 9
+    },
+    "unchecked_backlog": 0,
+    "unchecked_output_backlog": 0
+  },
+  "workspace": "/home/eranr/Memoria-test/vault"
+}
