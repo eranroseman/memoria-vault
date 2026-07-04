@@ -45,7 +45,7 @@ each part keeps its existing rule:
 | main repo | `~/memoria-vault` | `~/memoria-vault/main` | PR + required CI |
 | task worktrees | `~/mv/<session>` | `~/memoria-vault/worktrees/<branch>` | branch -> PR -> main |
 | scratch fast lane | `~/mv/scratch` | `~/memoria-vault/scratch` | commit direct + push, no PR/CI |
-| test sandbox | `~/Memoria-test` | `~/memoria-vault/sandbox` | disposable runtime/install target |
+| test sandbox | stale `~/Memoria-test` | empty `~/memoria-vault/sandbox` | disposable runtime/install target |
 
 There is **no root `.git`** at `~/memoria-vault`. That is intentional. Git commands
 run inside the checkout they apply to:
@@ -86,9 +86,9 @@ Important consequences:
   them too.
 - Scratch must be clean, pushed, and removed from the old main worktree registry
   before the old main checkout is moved.
-- The old `~/Memoria-test` is disposable, but it is still moved into `sandbox/`
-  rather than deleted. If a later refresh wants a blank vault, refresh it after the
-  layout is stable.
+- The old `~/Memoria-test` is disposable and must not be moved into `sandbox/`.
+  Delete it and create an empty sandbox directory; the installer initializes any
+  sandbox `.git` during test setup.
 
 ## 3. Hard Prerequisites
 
@@ -106,7 +106,7 @@ Important consequences:
    be clean and `scratch` must be aligned with `origin/scratch`.
 
 5. **Hermes gateway not holding the sandbox.** Alpha.15 does not use Hermes or
-   Obsidian, but do not move a path while a process has it open. Use
+   Obsidian, but do not delete/recreate a path while a process has it open. Use
    `systemctl --user stop hermes-gateway.service 2>/dev/null || true`, then check
    `pgrep -af 'gateway run'`.
 
@@ -133,7 +133,8 @@ causes `scratch/scratch/...` after checkout.
 ```bash
 cd ~/mv/scratch
 git pull --ff-only origin scratch
-git ls-tree --name-only HEAD            # must print only: scratch
+entries=$(git ls-tree --name-only HEAD)
+[ "$entries" = "scratch" ] || { printf 'unexpected scratch root:\n%s\n' "$entries"; exit 1; }
 git mv scratch/* .
 for f in scratch/.[!.]*; do [ -e "$f" ] && git mv "$f" .; done
 rmdir scratch
@@ -281,42 +282,21 @@ git -C ~/memoria-vault-new/scratch rev-parse --absolute-git-dir
 # /home/eranr/memoria-vault-new/scratch/.git
 ```
 
-### 5. Move The Sandbox
+### 5. Create An Empty Sandbox
 
-Move the disposable sandbox into the project container. Because there is no root
-`.git`, the sandbox is not under main/scratch Git discovery.
-
-```bash
-mv ~/Memoria-test ~/memoria-vault-new/sandbox
-```
-
-Expected: `~/memoria-vault-new/sandbox` exists. A later test refresh can rebuild it
-in place.
-
-### 6. Remove Known Accidental Local Cruft
-
-Remove the malformed literal UNC `.codex` folder only if it is still present under
-the moved main checkout and contains no real work. This is not the real `~/.codex`;
-it is the accidental directory whose name begins with `\\wsl.localhost`.
+Delete the stale disposable sandbox and create a blank target directory. Because
+there is no root `.git`, the sandbox is not under main/scratch Git discovery. Do
+not initialize Git here; installer/runtime tests create the sandbox repo when they
+set up a real install.
 
 ```bash
-find ~/memoria-vault-new/main -maxdepth 1 -name '*wsl.localhost*' -print
-
-bad_unc=$(find ~/memoria-vault-new/main -maxdepth 1 -name '*wsl.localhost*' -print -quit)
-if [ -n "$bad_unc" ]; then
-  find "$bad_unc" -maxdepth 4 -type f -print
-  if [ -z "$(find "$bad_unc" -type f -print -quit)" ]; then
-    rm -r "$bad_unc"
-  else
-    echo "UNC-like local folder has files - inspect before removing: $bad_unc"
-    exit 1
-  fi
-fi
+rm -rf ~/Memoria-test
+mkdir ~/memoria-vault-new/sandbox
 ```
 
-Expected: either no malformed UNC folder exists, or it was empty and removed.
+Expected: `~/memoria-vault-new/sandbox` exists and is empty.
 
-### 7. Verify Before Final Swap
+### 6. Verify Before Final Swap
 
 ```bash
 set -euo pipefail
@@ -375,9 +355,9 @@ Expected:
   never `main`;
 - manifest says OK.
 
-### 8. Final Swap And Old Directory Cleanup
+### 7. Final Swap And Old Directory Cleanup
 
-Only run this after step 7 passes.
+Only run this after step 6 passes.
 
 ```bash
 mv ~/memoria-vault-new ~/memoria-vault
@@ -414,7 +394,7 @@ fi
 Do not blindly `rm -rf ~/mv`. The plan only removes exact known cruft after moved
 worktrees are gone.
 
-### 9. Phase B - Path Reference PR
+### 8. Phase B - Path Reference PR
 
 ```bash
 cd ~/memoria-vault/main
@@ -444,7 +424,7 @@ gh pr checks <n> --watch
 
 Freeze remains in effect until this PR merges.
 
-### 10. Phase C - Local Follow-Up
+### 9. Phase C - Local Follow-Up
 
 After Phase B merges:
 
@@ -479,7 +459,7 @@ Update shell aliases, editor workspaces, and habits that still point at
 
 ## 7. Recovery
 
-- Before step 8, rollback is just moving directories back:
+- Before step 7, rollback is just moving directories back:
 
   ```bash
   mv ~/memoria-vault-new/main ~/memoria-vault
@@ -496,7 +476,10 @@ Update shell aliases, editor workspaces, and habits that still point at
   [ -e ~/mv/scratch ] || git -C ~/memoria-vault worktree add ~/mv/scratch scratch
   ```
 
-- After step 8, `~/memoria-vault/main/.git` is the original Git directory moved
+- Step 0's scratch de-nest is intentionally committed and pushed to `origin/scratch`;
+  this filesystem rollback does not undo that branch-content change.
+
+- After step 7, `~/memoria-vault/main/.git` is the original Git directory moved
   whole. `~/memoria-vault-git-backup` is still available as an extra object-store
   backup. Keep it until `test.sh all`, `git fetch`, and one push cycle succeed from
   the new layout.
@@ -509,8 +492,7 @@ Update shell aliases, editor workspaces, and habits that still point at
 - [ ] Main moved whole to `~/memoria-vault/main`.
 - [ ] Scratch created as independent checkout at `~/memoria-vault/scratch`.
 - [ ] Feature worktrees moved under `~/memoria-vault/worktrees/`.
-- [ ] Sandbox moved to `~/memoria-vault/sandbox`.
-- [ ] Malformed UNC `.codex` cruft removed or proven absent.
+- [ ] Empty sandbox created at `~/memoria-vault/sandbox`.
 - [ ] Phase B path-reference PR merged.
 - [ ] Full validation passes.
 - [ ] Backup removed after successful fetch/push cycle.
