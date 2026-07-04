@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 from importlib import resources
 from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.paths import safe_filename
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
+from memoria_vault.runtime.vaultio import parse_frontmatter
 
 CAPABILITY_TYPE = "operation"
 CAPABILITY_HOME = "operations"
@@ -116,54 +114,6 @@ def _capability_resource(capability_id: str) -> dict[str, Any]:
     return {"path": display, "text": text, "frontmatter": frontmatter}
 
 
-def import_capability(
-    vault: Path,
-    source_path: Path | str,
-    *,
-    machine: str | None = None,
-    commit: bool = False,
-) -> dict[str, Any]:
-    """Import a capability only when its trust metadata allows it."""
-    vault = Path(vault)
-    source = Path(source_path)
-    frontmatter = parse_frontmatter(safe_read(source))
-    capability_type = str(frontmatter.get("type") or "")
-    if capability_type != CAPABILITY_TYPE:
-        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
-    trust = frontmatter.get("trust") if isinstance(frontmatter.get("trust"), dict) else {}
-    if trust.get("signed") is True:
-        raise NotImplementedError("signed capability promotion is not implemented")
-
-    quarantine_path = _unique_path(vault / ".memoria/quarantine/capabilities/imports" / source.name)
-    quarantine_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, quarantine_path)
-    event = append_journal_event(
-        vault,
-        {
-            "event": "check-fired",
-            "check": "capability-import-trust",
-            "status": "failed",
-            "reason": "unsigned capability import",
-            "capability_type": capability_type,
-            "target_id": f"capability-import:{source.name}",
-            "target_sha256": sha256_file(source),
-            "quarantined_id": quarantine_path.relative_to(vault).as_posix(),
-        },
-        machine=machine,
-    )
-    commit_id = ""
-    if commit:
-        commit_id = commit_writer_changes(
-            vault, "quarantine unsigned capability import", [], machine=machine
-        )
-    return {
-        "status": "quarantined",
-        "quarantine_path": quarantine_path.relative_to(vault).as_posix(),
-        "event": event,
-        "commit": commit_id,
-    }
-
-
 def _capability_resources() -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
     root = resources.files(CAPABILITY_PACKAGE)
@@ -239,16 +189,3 @@ def _capability_id(path: str, frontmatter: dict[str, Any]) -> str:
 
 def _sha256_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
-
-
-def _unique_path(path: Path) -> Path:
-    if not path.exists():
-        return path
-    base = path.with_suffix("")
-    suffix = path.suffix
-    index = 1
-    while True:
-        candidate = base.with_name(f"{base.name}-{index}{suffix}")
-        if not candidate.exists():
-            return candidate
-        index += 1

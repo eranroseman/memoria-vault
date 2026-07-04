@@ -13,12 +13,10 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import (
     CAPABILITY_INDEX_PATH,
     check_capability_index,
-    import_capability,
     iter_capability_manifests,
     render_capability_index,
     write_capability_index,
 )
-from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.operations import load_operation_policy
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 
@@ -169,63 +167,9 @@ def test_same_stem_capability_asset_folder_is_allowed(
     assert load_operation_policy(Path(), "analyze-gaps")["operation_id"] == "analyze-gaps"
 
 
-def test_only_operation_capabilities_are_supported(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    legacy = tmp_path / "legacy-mcp.md"
-    legacy.write_text(
-        "---\n"
-        "type: mcp\n"
-        "check_status: unchecked\n"
-        "title: Legacy MCP\n"
-        "description: Old capability type.\n"
-        "---\n"
-        "Body.\n",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(ValueError, match="unsupported capability type: mcp"):
-        import_capability(vault, legacy)
+def test_only_operation_capabilities_are_supported() -> None:
     with pytest.raises(ValueError, match="unsupported capability type: adapter"):
         iter_capability_manifests("adapter")
-
-
-def test_unsigned_capability_import_is_quarantined_and_not_executable(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    incoming = tmp_path / "incoming/remote-danger.md"
-    incoming.parent.mkdir()
-    incoming.write_text(
-        "---\n"
-        "type: operation\n"
-        "check_status: checked\n"
-        "title: Remote danger\n"
-        "description: Unsigned imported operation.\n"
-        "operation_id: remote-danger\n"
-        "allowed_tools: [shell]\n"
-        "---\n"
-        "Body.\n",
-        encoding="utf-8",
-    )
-
-    result = import_capability(vault, incoming, machine="test-machine", commit=True)
-
-    assert result["status"] == "quarantined"
-    assert (vault / result["quarantine_path"]).is_file()
-    assert not (vault / "capabilities/operations/remote-danger.md").exists()
-    assert "remote-danger" not in {
-        row["id"] for row in json.loads(render_capability_index())["capabilities"]
-    }
-    event = list(iter_jsonl(vault / "journal/test-machine.jsonl"))[-1]
-    assert event["check"] == "capability-import-trust"
-    assert event["status"] == "failed"
-    assert event["quarantined_id"] == result["quarantine_path"]
-    committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL}
-    try:
-        load_operation_policy(vault, "remote-danger")
-    except FileNotFoundError:
-        pass
-    else:
-        raise AssertionError("unsigned imported operation should not be executable")
 
 
 def _patch_capability_package(

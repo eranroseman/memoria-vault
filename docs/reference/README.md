@@ -48,7 +48,7 @@ every field and count.
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
-| [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
+| [Pattern library](pattern-library.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 | [Clustering](clustering.md) | Alpha.15 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)

@@ -19,23 +19,6 @@ appends a row. Worker-owned CLI mutations also write journal/request evidence in
 `.memoria/memoria.sqlite`; the audit log is the adapter/write-boundary evidence
 stream.
 
-## patterns.jsonl
-
-Prompt-operation composition provenance from `memoria_vault.runtime.patterns`.
-
-```json
-{
-  "timestamp": "2026-06-01T09:00:00Z",
-  "run_id": "abc12345",
-  "pattern": "analyze-claims",
-  "version": "1",
-  "input_ref": "knowledge/notes/n.md",
-  "input_chars": 240,
-  "output_target": ".memoria/staging/knowledge/",
-  "dry_run": false
-}
-```
-
 ## lint-findings.jsonl
 
 One row per detector finding.
