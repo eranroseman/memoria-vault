@@ -1,7 +1,6 @@
 ---
 title: Check source metadata
 type: operation
-check_status: checked
 description: Run bibliographic metadata checks over checked catalog Works.
 operation_id: check-source-metadata
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - integrity
 id: operations/check-source-metadata
-standing: current
 links: {}
 ---
 

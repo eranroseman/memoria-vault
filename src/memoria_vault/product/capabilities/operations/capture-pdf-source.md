@@ -1,7 +1,6 @@
 ---
 title: Capture PDF source
 type: operation
-check_status: checked
 description: Capture a supplied PDF blob as a catalog Work row.
 operation_id: capture-pdf-source
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - capture
 id: operations/capture-pdf-source
-standing: current
 links: {}
 ---
 

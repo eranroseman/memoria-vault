@@ -1,7 +1,6 @@
 ---
 title: Surface tensions
 type: operation
-check_status: checked
 description: List Tier-1/Tier-2 contradiction candidates across checked notes without writing links.
 operation_id: surface-tensions
 allowed_tools:
@@ -26,7 +25,6 @@ version: '1.0'
 adapted_from: open-notebook/transformations
 created: 2026-06-10
 id: operations/surface-tensions
-standing: current
 links: {}
 ---
 

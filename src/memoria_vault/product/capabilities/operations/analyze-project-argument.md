@@ -1,7 +1,6 @@
 ---
 title: Analyze project argument
 type: operation
-check_status: checked
 description: Report argument health for a checked project thesis graph.
 operation_id: analyze-project-argument
 allowed_tools:
@@ -22,7 +21,6 @@ tags:
 - alpha11
 - argument
 id: operations/analyze-project-argument
-standing: current
 links: {}
 ---
 

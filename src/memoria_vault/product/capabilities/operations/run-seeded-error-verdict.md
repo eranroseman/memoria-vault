@@ -1,7 +1,6 @@
 ---
 title: Run seeded-error verdict
 type: operation
-check_status: checked
 description: Run the frozen seeded-error integrity-loop verdict bundle.
 operation_id: run-seeded-error-verdict
 allowed_tools:
@@ -27,7 +26,6 @@ tags:
 - alpha15
 - gate
 id: operations/run-seeded-error-verdict
-standing: current
 links: {}
 ---
 

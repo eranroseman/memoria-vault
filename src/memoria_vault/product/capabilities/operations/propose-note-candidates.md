@@ -1,7 +1,6 @@
 ---
 title: Propose note candidates
 type: operation
-check_status: checked
 description: Propose checked note candidates from a checked source digest.
 operation_id: propose-note-candidates
 allowed_tools:
@@ -29,7 +28,6 @@ output_target: .memoria/staging/knowledge/
 version: '1.0'
 created: 2026-06-29
 id: operations/propose-note-candidates
-standing: current
 links: {}
 ---
 

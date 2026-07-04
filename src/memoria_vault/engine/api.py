@@ -53,7 +53,6 @@ def read_operations(workspace: Path) -> dict[str, Any]:
             {
                 "operation_id": row.get("operation_id") or row["id"],
                 "title": row.get("title") or row["id"],
-                "check_status": row.get("check_status") or "",
                 "risk_class": row.get("risk_class") or "",
                 "runner": row.get("runner") or "",
             }

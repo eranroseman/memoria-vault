@@ -1,7 +1,6 @@
 ---
 title: Regenerate references.bib
 type: operation
-check_status: checked
 description: Regenerate the tracked BibTeX projection from checked SQLite catalog
   rows.
 operation_id: regenerate-references-bib
@@ -26,7 +25,6 @@ tags:
 - alpha12
 - projection
 id: operations/regenerate-references-bib
-standing: current
 links: {}
 ---
 

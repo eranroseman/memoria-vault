@@ -1,7 +1,6 @@
 ---
 title: Capture BibTeX source
 type: operation
-check_status: checked
 description: Stage one BibTeX record as an unchecked catalog Work seed.
 operation_id: capture-bibtex-source
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha15
 - capture
 id: operations/capture-bibtex-source
-standing: current
 links: {}
 ---
 

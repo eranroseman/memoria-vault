@@ -1,7 +1,6 @@
 ---
 title: Red-team an argument
 type: operation
-check_status: checked
 description: Make the strongest grounded counter-case against an argument.
 operation_id: red-team-argument
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/analyze_argument
 created: 2026-06-10
 id: operations/red-team-argument
-standing: current
 links: {}
 ---
 

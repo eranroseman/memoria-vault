@@ -1,7 +1,6 @@
 ---
 title: Curate note candidate
 type: operation
-check_status: checked
 description: Record PI acceptance or rejection of a checked candidate note.
 operation_id: curate-note-candidate
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - notes
 id: operations/curate-note-candidate
-standing: current
 links: {}
 ---
 

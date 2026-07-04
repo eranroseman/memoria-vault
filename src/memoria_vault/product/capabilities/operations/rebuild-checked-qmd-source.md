@@ -1,7 +1,6 @@
 ---
 title: Rebuild checked qmd source
 type: operation
-check_status: checked
 description: Rebuild qmd's disposable input tree from checked retrieval documents.
 operation_id: rebuild-checked-qmd-source
 allowed_tools:
@@ -25,7 +24,6 @@ tags:
 - alpha11
 - index
 id: operations/rebuild-checked-qmd-source
-standing: current
 links: {}
 ---
 

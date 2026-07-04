@@ -1,7 +1,6 @@
 ---
 title: Render project argument canvas
 type: operation
-check_status: checked
 description: Render a checked project argument graph as an Obsidian Canvas projection.
 operation_id: render-project-argument-canvas
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - canvas
 id: operations/render-project-argument-canvas
-standing: current
 links: {}
 ---
 

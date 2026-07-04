@@ -1,7 +1,6 @@
 ---
 title: Run vault eval
 type: operation
-check_status: checked
 description: Plan the current vault-eval task set through the local runtime engine.
 operation_id: eval-run
 allowed_tools:
@@ -23,7 +22,6 @@ tags:
 - alpha15
 - eval
 id: operations/eval-run
-standing: current
 links: {}
 ---
 

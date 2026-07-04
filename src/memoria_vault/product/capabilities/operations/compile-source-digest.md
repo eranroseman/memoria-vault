@@ -1,7 +1,6 @@
 ---
 title: Compile source digest
 type: operation
-check_status: checked
 description: Compile a checked Work into a machine-owned digest, new hubs, and curated
   hub suggestions.
 operation_id: compile-source-digest
@@ -31,7 +30,6 @@ output_target: .memoria/staging/knowledge/
 version: '1.0'
 created: 2026-06-29
 id: operations/compile-source-digest
-standing: current
 links: {}
 ---
 

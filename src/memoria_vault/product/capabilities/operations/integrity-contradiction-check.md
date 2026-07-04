@@ -1,7 +1,6 @@
 ---
 title: Integrity contradiction check
 type: operation
-check_status: checked
 description: Surface explicit contradiction markers as integrity findings.
 operation_id: integrity-contradiction-check
 allowed_tools:
@@ -23,7 +22,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-contradiction-check
-standing: current
 links: {}
 ---
 

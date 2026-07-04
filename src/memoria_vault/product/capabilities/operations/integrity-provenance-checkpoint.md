@@ -1,7 +1,6 @@
 ---
 title: Integrity provenance checkpoint
 type: operation
-check_status: checked
 description: Route synthesis from uncorroborated checked sources to PI attention.
 operation_id: integrity-provenance-checkpoint
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-provenance-checkpoint
-standing: current
 links: {}
 ---
 

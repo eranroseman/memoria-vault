@@ -157,7 +157,6 @@ def _catalog_row(item: dict[str, Any]) -> dict[str, Any]:
         "path": item["path"],
         "title": frontmatter.get("title", ""),
         "description": frontmatter.get("description", ""),
-        "check_status": frontmatter.get("check_status", ""),
         "trust": {
             "source": "product",
             "sha256": _sha256_text(item["text"]),

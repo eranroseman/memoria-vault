@@ -1,7 +1,6 @@
 ---
 title: Trace integrity scan
 type: operation
-check_status: checked
 description: Scan checked Concepts for missing or stale journal derivations.
 operation_id: trace-integrity-scan
 allowed_tools:
@@ -25,7 +24,6 @@ tags:
 - alpha11
 - trace
 id: operations/trace-integrity-scan
-standing: current
 links: {}
 ---
 

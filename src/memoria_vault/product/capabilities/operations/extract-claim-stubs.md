@@ -1,7 +1,6 @@
 ---
 title: Extract claim stubs
 type: operation
-check_status: checked
 description: Draft source-grounded candidate note stubs from checked Work text.
 operation_id: extract-claim-stubs
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/extract_wisdom
 created: 2026-06-10
 id: operations/extract-claim-stubs
-standing: current
 links: {}
 ---
 

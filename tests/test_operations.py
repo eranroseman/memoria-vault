@@ -93,6 +93,16 @@ def test_load_operation_policy_requires_io_schema_shape() -> None:
         validate_operation_policy("compile-source-digest", policy)
 
 
+def test_operation_policy_rejects_retired_frontmatter_state() -> None:
+    policy = compile_policy(check_status="checked", standing="current")
+
+    with pytest.raises(
+        ValueError,
+        match="compile-source-digest operation manifest uses retired fields: check_status, standing",
+    ):
+        validate_operation_policy("compile-source-digest", policy)
+
+
 def test_allowed_network_rejects_host_prefix_bypass() -> None:
     policy = {
         "operation_id": "net-test",

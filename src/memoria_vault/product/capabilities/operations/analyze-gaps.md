@@ -1,7 +1,6 @@
 ---
 title: Analyze gaps
 type: operation
-check_status: checked
 description: Classify checked catalog/knowledge topic mismatches, rank discovered
   Work candidates against steering, and report optional project argument-health gaps.
 operation_id: analyze-gaps
@@ -27,7 +26,6 @@ tags:
 - alpha11
 - gaps
 id: operations/analyze-gaps
-standing: current
 links: {}
 ---
 

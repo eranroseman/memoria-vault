@@ -57,6 +57,7 @@ def test_capability_index_renderer_covers_shipped_operations() -> None:
     assert rows["compile-source-digest"]["trust"]["source"] == "product"
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")
     assert rows["compile-source-digest"]["path"].startswith("product/capabilities/operations/")
+    assert "check_status" not in rows["compile-source-digest"]
 
 
 def test_worker_operations_are_cataloged_and_policy_shaped() -> None:
@@ -140,7 +141,6 @@ def test_same_stem_capability_asset_folder_is_allowed(
             "analyze-gaps.md": (
                 "---\n"
                 "type: operation\n"
-                "check_status: checked\n"
                 "title: Analyze gaps\n"
                 "description: Fixture.\n"
                 "operation_id: analyze-gaps\n"

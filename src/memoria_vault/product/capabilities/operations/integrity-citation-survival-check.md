@@ -1,7 +1,6 @@
 ---
 title: Integrity citation survival check
 type: operation
-check_status: checked
 description: Verify checked keep-set Concepts embed compact citation payloads for
   catalog source references.
 operation_id: integrity-citation-survival-check
@@ -26,7 +25,6 @@ tags:
 - alpha12
 - integrity
 id: operations/integrity-citation-survival-check
-standing: current
 links: {}
 ---
 

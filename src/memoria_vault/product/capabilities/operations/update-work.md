@@ -1,7 +1,6 @@
 ---
 title: Update Work
 type: operation
-check_status: checked
 description: Apply PI-owned Work metadata and lifecycle updates through the worker
   queue.
 operation_id: update-work
@@ -24,7 +23,6 @@ tags:
 - alpha15
 - catalog
 id: operations/update-work
-standing: current
 links: {}
 ---
 

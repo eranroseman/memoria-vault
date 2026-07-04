@@ -1,7 +1,6 @@
 ---
 title: Regenerate tracked projections
 type: operation
-check_status: checked
 description: Regenerate all tracked generated workspace projections.
 operation_id: regenerate-tracked-projections
 allowed_tools:
@@ -27,7 +26,6 @@ tags:
 - alpha11
 - projection
 id: operations/regenerate-tracked-projections
-standing: current
 links: {}
 ---
 

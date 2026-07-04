@@ -95,7 +95,7 @@ def record_copi_interview_turn(
 
 
 def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
-    """Load a packaged checked operation manifest and require the WP5 policy contract."""
+    """Load a packaged product operation manifest and require the WP5 policy contract."""
     policy = read_capability_manifest("operation", operation_id)["frontmatter"]
     return validate_operation_policy(operation_id, policy)
 
@@ -103,9 +103,12 @@ def load_operation_policy(vault: Path, operation_id: str) -> dict[str, Any]:
 def validate_operation_policy(operation_id: str, policy: dict[str, Any]) -> dict[str, Any]:
     """Validate one operation policy frontmatter map."""
     if policy.get("type") != "operation":
-        raise ValueError(f"{operation_id} is not an operation Concept")
-    if policy.get("check_status") != "checked":
-        raise ValueError(f"{operation_id} is not checked")
+        raise ValueError(f"{operation_id} is not an operation manifest")
+    retired = sorted(field for field in ("check_status", "standing") if field in policy)
+    if retired:
+        raise ValueError(
+            f"{operation_id} operation manifest uses retired fields: {', '.join(retired)}"
+        )
     missing = sorted(field for field in REQUIRED_POLICY_FIELDS if field not in policy)
     if missing:
         raise ValueError(f"{operation_id} missing operation policy fields: {', '.join(missing)}")

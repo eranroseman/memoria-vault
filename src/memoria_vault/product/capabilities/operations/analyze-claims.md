@@ -1,7 +1,6 @@
 ---
 title: Analyze claims
 type: operation
-check_status: checked
 description: Extract and rank truth claims from selected input.
 operation_id: analyze-claims
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/analyze_claims
 created: 2026-06-10
 id: operations/analyze-claims
-standing: current
 links: {}
 ---
 
