@@ -11,7 +11,6 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   audit:
@@ -28,38 +27,3 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python scripts/ruleset_doctor.py --live
-      - name: Open or update failure issue
-        if: failure()
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  # v9
-        env:
-          ISSUE_TITLE: "ruleset-audit failure"
-        with:
-          script: |
-            const title = process.env.ISSUE_TITLE;
-            const body = [
-              'The scheduled ruleset audit failed.',
-              '',
-              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-            ].join('\n');
-            const issues = await github.paginate(github.rest.issues.listForRepo, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              per_page: 100,
-            });
-            const existing = issues.find((issue) => !issue.pull_request && issue.title === title);
-            if (existing) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: existing.number,
-                body,
-              });
-            } else {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-              });
-            }

@@ -7,7 +7,7 @@ Release state lives in GitHub; this playbook is the portable agent procedure.
 
 - **Scope** lives in the GitHub milestone plus the Memoria Issue Tracker table
   filtered to that milestone.
-- **Readiness** lives in the **"Release <version>"** parent issue and its readiness/stage
+- **Readiness** lives in the **"Release <version>"** parent issue and its gate/stage
   sub-issues.
 - **Release prose** lives in the release parent issue. Use
   [the release plan template](../templates/release-plan.md) as a drafting aid.
@@ -43,14 +43,14 @@ Do not create a second markdown state table for gate or stage progress.
    filtered to that milestone, using Status and Readiness as the live release state.
 4. Open the **"Release <version>"** parent issue with label `release` and milestone
    `<version>`.
-5. Create one sub-issue per readiness/stage (`G#`, `S#`). Each sub-issue carries its
+5. Create one sub-issue per gate/stage (`G#`, `S#`). Each sub-issue carries its
    own evidence, owner, comments, and close condition.
 6. Put temporary tracked design scratch on the `scratch` branch under
    `scratch/releases/<version>/` only when it must survive handoff.
 
 ## 3. Cut a release or checkpoint
 
-1. Confirm every readiness/stage sub-issue is closed, required CI is green on `main`,
+1. Confirm every gate/stage sub-issue is closed, required CI is green on `main`,
    and no release-milestone issue has `Readiness: Blocked`.
 2. Re-run the relevant Release Gate checks from a fresh clone or record why a
    check is not applicable.

@@ -15,9 +15,15 @@ what is deliberately later. }}
 
 ## Definition of done
 
-This release is done when every readiness/stage sub-issue is closed. Use
-[`verify-change.md`](../playbooks/verify-change.md#3-gate-meanings) as the
-source of truth for gate names and evidence; do not copy that table here.
+This release is done when every gate/stage sub-issue below is closed.
+
+| Gate | Proves | Evidence home |
+|---|---|---|
+| Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | CI and `scripts/verify pr` summary |
+| Package | Disposable vault assembly and model-free workflow replay work. | `scripts/verify package` summary |
+| Runtime | Hermes, MCP, Obsidian bridge, model endpoint, cron, and policy boundaries work live. | `scripts/verify runtime` or explicit skip reason |
+| Product | The product workflow produces reviewable value, telemetry, GUI evidence, and output-quality evidence when claimed. | Product/manual sub-issue |
+| Release | Blockers, docs, versioning, notes, and close-out are ready. | Release parent/sub-issues |
 
 ## Known limitations
 
