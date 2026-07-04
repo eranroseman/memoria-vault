@@ -1,6 +1,0 @@
-{
-  "autoMemoryEnabled": false,
-  "permissions": {
-    "allow": ["Bash(gh issue create:*)"]
-  }
-}
