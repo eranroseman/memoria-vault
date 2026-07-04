@@ -13,7 +13,7 @@ superseded_by: [130]
 
 # ADR-121: Obsidian control panel mutates only by enqueueing worker jobs
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR. The Obsidian Inspector/control-panel implementation paths named below are historical, not alpha.15 implementation scope.
 
 
 > Superseded by [ADR-122](122-sqlite-working-state-boundary.md): SQLite request

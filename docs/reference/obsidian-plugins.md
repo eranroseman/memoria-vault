@@ -14,10 +14,10 @@ state, qmd search state, and auxiliary Memoria files only.
 
 | Question | Alpha.15 answer |
 | --- | --- |
-| Are plugins bundled? | No. |
+| Are plugins bundled or implemented? | No plugin source, manifest, package, command, UI panel, or plugin test ships in alpha.15. |
 | Does setup install Obsidian plugins? | No. |
 | Does runtime depend on Local REST, Agent Client, Dataview, or QuickAdd? | No. |
-| Where is plugin provenance checked? | Nowhere in the baseline; `scripts/plugin_provenance_doctor.py` verifies the deleted payload stays absent. |
+| Where is the boundary checked? | `scripts/plugin_provenance_doctor.py` is a negative guard: it verifies removed implementation payload paths stay absent. |
 
 ## Future adapters
 

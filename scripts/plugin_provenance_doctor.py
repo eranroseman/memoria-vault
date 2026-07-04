@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that the standalone runtime ships no bundled Obsidian plugin payload."""
+"""Validate that alpha.15 ships no Obsidian plugin implementation payload."""
 
 from __future__ import annotations
 
@@ -12,6 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 FORBIDDEN_REL = (
     Path("vault-template/.obsidian"),
     Path("vault-template/system/scripts"),
+    Path("src/.obsidian"),
+    Path("packages/obsidian-plugin"),
+    Path("packages/memoria-obsidian"),
+    Path("tests/test_memoria_inspector.py"),
 )
 
 
@@ -30,7 +34,7 @@ def check(root: Path = ROOT) -> list[Finding]:
     for rel in FORBIDDEN_REL:
         path = root / rel
         if path.exists():
-            findings.append(Finding(rel.as_posix(), "not shipped in standalone runtime"))
+            findings.append(Finding(rel.as_posix(), "not shipped in alpha.15"))
     return findings
 
 
@@ -45,7 +49,7 @@ def main(argv: list[str] | None = None) -> int:
         for finding in findings:
             print(f"  - {finding.format()}", file=sys.stderr)
         return 1
-    print("plugin-provenance-doctor: clean (no bundled Obsidian payload)")
+    print("plugin-provenance-doctor: clean (no Obsidian plugin implementation payload)")
     return 0
 
 
