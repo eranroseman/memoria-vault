@@ -33,7 +33,6 @@ status.
 | # | Decision | Status |
 |---|---|---|
 | [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
-| [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not a control-plane formatter | accepted |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | proposed |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
@@ -44,15 +43,11 @@ status.
 | [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
 | [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [88](88-literate-code-note.md) | Literate code-note | proposed |
-| [90](90-claim-sentence-classification.md) | Claim-sentence classification | proposed |
 | [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
 | [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | accepted |
-| [93](93-keyphrase-extraction-tag-candidates.md) | Keyphrase extraction for tag candidates | accepted |
-| [94](94-record-linkage-entity-deduplication.md) | Record linkage for entity deduplication | accepted |
 | [95](95-nightly-proactive-discovery-loop.md) | Nightly proactive discovery loop | rejected |
 | [96](96-code-lane-keep-revert-experiment-loop.md) | Code-lane keep/revert experiment loop | proposed |
 | [97](97-writer-proposed-candidate-claim-notes.md) | Writer-proposed candidate claim notes | rejected |
-| [98](98-relation-vocabulary-expansion.md) | Relation-vocabulary expansion | proposed |
 | [99](99-massw-aligned-paper-aspects.md) | MASSW-aligned paper aspects | accepted |
 | [101](101-navigation-spaces-gate-reserved-for-approval.md) | Navigation surfaces are "spaces"; "gate" is reserved for the approval gate | accepted |
 | [103](103-projected-canvas-spatial-axis.md) | Projected Canvas spatial axis | rejected |

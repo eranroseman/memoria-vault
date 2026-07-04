@@ -105,6 +105,14 @@ Inherited constants are initial knob positions, not experience.**
   calls flag, never merge. 38/39's capabilities (pre-file similarity check,
   acceptance checklists) are re-scoped as shadow-mode candidates for the
   `new note` flow, to be enabled only against usage data.
+- **Claim-sentence pre-classifier** (absorbs 90; shadow-first, issue #703): a
+  deterministic pass narrows candidate sentences before any LLM proposal; it
+  never decides.
+- **Keyphrase tag candidates** (absorbs 93; shadow-first, issue #706): tag
+  candidates come from a deterministic phrase pass surfaced as cards, not
+  auto-applied tags; KeyBERT/YAKE deferred.
+- **Record-linkage entity dedup** (absorbs 94): deterministic ID/name-collision
+  detection routes to attention, never auto-merges.
 
 **Amendment to ADR-11** (which stays accepted): whole-system vault-eval
 verdicts remain diagnostic and never gate work; `eval select-models` gating a

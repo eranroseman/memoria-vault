@@ -46,7 +46,7 @@ subject).
 - Source references survive the engines→operations rename ([ADR-125](125-standalone-cli-engine-architecture.md)),
   because inline-code paths and tag-pinned URLs don't depend on the live relative tree.
 - Cleaner prose; ADR traceability preserved without clutter.
-- Builds on [ADR-12](12-obsidian-linter-reference-only.md) (docs tooling is advisory);
+- Builds on [ADR-130](130-read-api-surfaces-and-copi.md) (docs tooling is advisory);
   the new structural rule is enforced by docs-doctor, not obsidian-linter.
 
 ## When this matters
@@ -64,7 +64,7 @@ aren't pinned to paths about to move.
 ## Related
 
 - **Related decisions / Depends on:** [ADR-125](125-standalone-cli-engine-architecture.md),
-  [ADR-12](12-obsidian-linter-reference-only.md), [ADR-125](125-standalone-cli-engine-architecture.md)
+  [ADR-130](130-read-api-surfaces-and-copi.md)
 - **Implementing issues:** #464 (docs hygiene sweep), #443 (explanation pages describe
   unbuilt behavior)
 - **Source discussion:** the alpha.3 research notes (`open-issues-research` Issue 3,

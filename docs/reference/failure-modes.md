@@ -25,7 +25,7 @@ Sorted by severity, then topic.
 
 | Symptom | Severity | Cause | Fix |
 | --- | --- | --- | --- |
-| **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it is incompatible with Memoria ([ADR-12](../adr/12-obsidian-linter-reference-only.md)) | Uninstall it. It reorders/rewrites Memoria-owned Concept frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
+| **Obsidian Linter corrupts frontmatter** | CRITICAL | The frontend Obsidian Linter plugin is installed — it is incompatible with Memoria ([ADR-130](../adr/130-read-api-surfaces-and-copi.md)) | Uninstall it. It reorders/rewrites Memoria-owned Concept frontmatter; folder exclusion does not make it safe. `markdownlint` + the Memoria Linter cover its role. |
 | **Memoria-owned frontmatter overwritten** | CRITICAL | A frontend formatter reordered or stripped schema-owned frontmatter on save | Exclude Memoria-owned folders from any frontend formatter; let the Memoria Linter own frontmatter. |
 | DOI source stays unchecked after enrichment | HIGH | Provider config or required provider payloads are missing; required DOI providers block checked promotion when provider calls fail. | Check `<workspace>/.memoria/config/providers.yaml` and the provider replay/payload inputs, then rerun `memoria work enrich`. |
 | Dataview queries returning nothing | HIGH | `methodology` or `topics` field value doesn't match the controlled vocabulary exactly — looks like "nothing to do" | Check values in notes match [Vocabulary](vocabulary.md) exactly — full recipe: [Fix missing query results](../how-to-guides/troubleshooting/fix-missing-query-results.md). |

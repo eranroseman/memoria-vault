@@ -95,6 +95,8 @@ ADR-125 the engine is the product and every surface is a client.
 - **The tutorial arc principle carries** (112): one destination-first
   deliverable-driven arc, rebuilt against the CLI/read-API surfaces at the 15
   docs pass.
+- **obsidian-linter is reference-only** (absorbs 12): a single frontmatter
+  authority; no second formatter mutates audited zones.
 
 ## Consequences
 
