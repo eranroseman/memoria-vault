@@ -24,7 +24,7 @@ Any knowledge production system that uses AI agents must manage three kinds of s
 
 1. **Active work state** — what tasks are in flight, what's their status, who owns them, what happened when they failed.
 2. **Execution context** — which agent is running, what permissions it has, what tools it can use.
-3. **Settled knowledge** — what has been established, synthesized, and approved as canonical.
+3. **Settled knowledge** — what has been established, synthesized, and made available as checked knowledge.
 
 The failure mode of most single-agent or single-document systems is that these three concerns share the same substrate. They collapse together in chat history, in the agent's working memory, or in a flat document store.
 
@@ -35,7 +35,7 @@ The failure mode of most single-agent or single-document systems is that these t
 | Collapse | Failure | Layered fix |
 | --- | --- | --- |
 | Orchestration + execution | Work state lives in chat or agent memory; retries duplicate work and handoffs lose context. | A request row records status, operation, input refs, output intents, handoff payload, and failure history. |
-| Execution + knowledge | Agents write canon directly; confident errors become cited knowledge. | The review gate separates "finished" from "trusted." |
+| Execution + knowledge | Agents write knowledge directly; confident errors become cited knowledge. | The review gate separates "finished" from "checked." |
 | Orchestration + knowledge | Task history pollutes the knowledge graph. | Requests stay in SQLite and the journal; settled knowledge stays in checked workspace Concepts. |
 
 ---

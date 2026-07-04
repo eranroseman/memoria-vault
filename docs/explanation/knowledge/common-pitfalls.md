@@ -7,7 +7,7 @@ nav_order: 6
 
 # Common pitfalls
 
-Failure modes that recur in research vaults built this way. Most of them look like nothing is wrong — which is what makes them worth naming. They are ordered by **severity of outcome**: the ones that silently corrupt trusted content come first; the localized, recoverable ones come last. The closing section names the general principle underneath the worst of them.
+Failure modes that recur in research vaults built this way. Most of them look like nothing is wrong — which is what makes them worth naming. They are ordered by **severity of outcome**: the ones that silently corrupt checked content come first; the localized, recoverable ones come last. The closing section names the general principle underneath the worst of them.
 
 ## Treating agent output as verified content
 

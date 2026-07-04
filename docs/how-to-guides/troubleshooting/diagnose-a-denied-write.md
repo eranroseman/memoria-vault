@@ -62,6 +62,6 @@ authoritative.
 | Outcome | What to do |
 | --- | --- |
 | `deny` | Use the correct CLI operation or narrow adapter policy; do not bypass the gate. |
-| `dry_run` | The target is gated or missing an approved promotion path; inspect the staged output. |
+| `dry_run` | The target is gated or missing a recorded promotion path; inspect the staged output. |
 | failed request | Fix the payload/provider/runner error, then retry or resume the request. |
 | quarantined external edit | Review the scan result, then accept/promote through the checked workflow. |
