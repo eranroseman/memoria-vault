@@ -11,10 +11,10 @@ The shipped control plane is the operation request table in
 `.memoria/memoria.sqlite`, surfaced through the `memoria request ...`,
 `memoria workspace ...`, and `memoria attention ...` commands.
 
-Legacy board exporters and metrics readers may still consume historical board
-logs for compatibility with old data, but new work should be modeled as
-operation requests with input refs, output intents, precondition hashes, status,
-and journal entries.
+Historical board logs may appear in old ADRs, release scratch, or imported
+archives only. Alpha.15 does not ship compatibility readers, exporters, or
+migration paths for them; new work is modeled as operation requests with input
+refs, output intents, precondition hashes, status, and journal entries.
 
 ## Current Commands
 
