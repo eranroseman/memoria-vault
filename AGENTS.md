@@ -36,7 +36,7 @@ novice — can run it top to bottom. Author and run it with the
 [`.agents/templates/exec-plan.md`](.agents/templates/exec-plan.md)).
 
 An ExecPlan is a **working artifact, not a permanent record.** The instance
-lives on the `scratch` branch under `scratch/releases/<version>/` for the
+lives on the `scratch` branch under `releases/<version>/` for the
 current release or checkpoint (tracked for handoff, deleted before that release
 closes — `_notes/` is gitignored, so a plan meant to be resumed never lives
 there); its durable outputs route as usual — decisions to ADRs, readiness/state
@@ -52,15 +52,17 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 | Piece | Host | Path |
 |---|---|---|
-| **Dev repo** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
-| **Standalone Memoria workspace** | WSL2 · ext4 for development and tests | `~/Memoria-test` |
+| **Project container** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
+| **Main checkout** | WSL2 · ext4 | `~/memoria-vault/main` |
+| **Scratch checkout** | WSL2 · ext4 | `~/memoria-vault/scratch` |
+| **Standalone Memoria sandbox** | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
 | **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
 - Alpha.15's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
-- Test only against disposable workspaces such as `~/Memoria-test`; never use a
+- Test only against disposable workspaces under `~/memoria-vault/sandbox`; never use a
   personal workspace as a test target.
 - Provider keys and optional adapter secrets live in local, gitignored config or
   environment files (shipped only as `.example` templates). Never print or
@@ -73,12 +75,12 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 **Start every session in its own worktree — always, even solo, before you touch a single file.** A worktree gives you a private working tree *and* index, so a concurrent session's staged files can never be swept into your commit.
 
 ```bash
-git fetch origin
-git worktree add ~/mv/<session> -b agent/<session> origin/main
-cd ~/mv/<session>          # all edits, commits, PRs from here
+git -C ~/memoria-vault/main fetch origin
+git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/<session> -b agent/<session> origin/main
+cd ~/memoria-vault/worktrees/<session>          # all edits, commits, PRs from here
 ```
 
-Keep all session worktrees under one parent on ext4 — `~/mv/<session>` — never under `/mnt/c`. The canonical main checkout stays at `~/memoria-vault`; `~/mv/` holds only task worktrees, so a single `~/mv/` is easy to list and prune.
+Keep all session worktrees under one parent on ext4 — `~/memoria-vault/worktrees/<session>` — never under `/mnt/c`. The canonical main checkout stays at `~/memoria-vault/main`; `~/memoria-vault/worktrees/` holds task worktrees, so one project container is easy to list and prune.
 
 Prefer a worktree **per branch** even working solo: switching becomes `cd`, and a `reset --hard` in one worktree can't reach another's uncommitted work (§4).
 
@@ -130,9 +132,9 @@ Run the merge from the dedicated main checkout, not the task worktree, then
 remove the task worktree and fast-forward.
 
 ```bash
-cd ~/memoria-vault
+cd ~/memoria-vault/main
 gh pr merge <n> --squash --delete-branch
-git worktree remove ~/mv/<session>  # refuses if the task worktree is dirty
+git worktree remove ~/memoria-vault/worktrees/<session>  # refuses if the task worktree is dirty
 git branch -D <branch>              # after verifying the PR is merged; squash merges are not ancestry-merged
 git status --short                  # must be empty before resync
 git fetch origin
@@ -149,7 +151,7 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 
 `scratch/` is ephemeral working material and lives on the dedicated orphan
 `scratch` branch, not on `main`. The branch's tracked tree contains only
-`scratch/`; it does not carry the repository source tree. Authorized
+`releases/`, `workflow-audit/`, and other scratch-only roots; it does not carry the repository source tree. Authorized
 contributors with repository write access may push scratch-only commits directly
 to that branch; no PR or required CI is expected there.
 
@@ -157,12 +159,10 @@ For scratch-only work, use a reusable scratch worktree and push directly to the
 shared remote branch. This path intentionally has **no PR** and no required CI.
 
 ```bash
-git fetch origin scratch
-git worktree add ~/mv/scratch scratch   # first time only; use `-b scratch origin/scratch` in a fresh clone
-cd ~/mv/scratch
+cd ~/memoria-vault/scratch
 git pull --ff-only origin scratch
-# edit scratch/... only
-git add scratch/<path>
+# edit scratch branch files only, such as releases/<version>/...
+git add releases/<path>
 git commit -m "scratch: <short description>"
 git push origin HEAD:scratch
 ```
@@ -265,7 +265,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 - **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules.
 - **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
-- **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
+- **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/memoria-vault/sandbox/vault` — never test against the real `~/Memoria`.
 
 ---
 
@@ -423,7 +423,7 @@ prose; do not create a repository release-plan folder.
 
 | Item | Goes to |
 |---|---|
-| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc on the `scratch` branch in `scratch/releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc on the `scratch` branch in `releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
 | Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |

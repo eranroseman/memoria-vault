@@ -1,4 +1,4 @@
-"""Fast Memoria-test refresh helper keeps runtime state out of the blast radius."""
+"""Fast sandbox refresh helper keeps runtime state out of the blast radius."""
 
 import re
 from pathlib import Path

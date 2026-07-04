@@ -25,15 +25,15 @@ def test_is_safe_rejects_root_markdown_non_prose_and_code_paths():
     assert not is_safe(".github/workflows/ci.yml")
     assert not is_safe("src/memoria_vault/runtime/policy/hook.py")
     assert not is_safe("scripts/README.md")
-    assert not is_safe("scratch/releases/0.1.0-alpha.12/design.md")
-    assert not is_safe("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert not is_safe("scratch/notes/0.1.0-alpha.12/design.md")
+    assert not is_safe("scratch/notes/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_safe("scratch/fixtures/state.sqlite")
     assert not is_safe(old_agent_tmp)
 
 
 def test_is_main_excluded_flags_scratch_branch_material():
-    assert is_main_excluded("scratch/releases/0.1.0-alpha.12/design.md")
-    assert is_main_excluded("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert is_main_excluded("scratch/notes/0.1.0-alpha.12/design.md")
+    assert is_main_excluded("scratch/notes/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_main_excluded("docs/reference/policy-mcp.md")
 
 
@@ -67,8 +67,8 @@ def test_is_sensitive_leaves_ordinary_docs_and_root_readme_reviewable_not_sensit
     assert not is_sensitive("docs/explanation/deployment.md")
     assert not is_sensitive("docs/reference/policy-mcp.md")
     assert not is_sensitive("docs/design/what-memoria-is.md")
-    assert not is_sensitive("scratch/releases/0.1.0-alpha.12/design.md")
-    assert not is_sensitive("scratch/releases/0.1.0-alpha.12/preimpl_spikes/run.py")
+    assert not is_sensitive("scratch/notes/0.1.0-alpha.12/design.md")
+    assert not is_sensitive("scratch/notes/0.1.0-alpha.12/preimpl_spikes/run.py")
     assert not is_sensitive("README.md")
 
 
@@ -114,10 +114,10 @@ def test_decide_blocks_untrusted_sensitive_changes_but_reviews_safe_changes():
 
 def test_decide_blocks_scratch_prs_to_main_for_any_author():
     trusted, trusted_reason = decide(
-        ["scratch/releases/0.1.0-alpha.12/design.md"], "eranroseman", False
+        ["scratch/notes/0.1.0-alpha.12/design.md"], "eranroseman", False
     )
     untrusted, untrusted_reason = decide(
-        ["scratch/releases/0.1.0-alpha.12/design.md"], "random-user", False
+        ["scratch/notes/0.1.0-alpha.12/design.md"], "random-user", False
     )
 
     assert trusted == "block"

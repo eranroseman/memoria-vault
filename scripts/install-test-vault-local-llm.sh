@@ -2,11 +2,11 @@
 # Disposable standalone-install smoke for the local Memoria test workspace.
 #
 # The target root may contain tool-managed mounts, so the actual workspace
-# defaults to ~/Memoria-test/vault and that child directory is wiped on every run.
+# defaults to ~/memoria-vault/sandbox/vault and that child directory is wiped on every run.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/Memoria-test}"
+TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"
 VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
 MODEL="${MEMORIA_TEST_LLM_MODEL:-memoria-qwen2.5:7b-64k}"
@@ -26,7 +26,7 @@ check only verifies that an OpenAI-compatible endpoint is reachable; alpha.15
 does not install Hermes profiles or drive a Hermes dispatch.
 
 Options:
-  --root DIR          Disposable test root (default: ~/Memoria-test)
+  --root DIR          Disposable test root (default: ~/memoria-vault/sandbox)
   --vault DIR         Actual workspace path; must be below --root (default: DIR/vault)
   --check-local-llm   Check the configured OpenAI-compatible endpoint
   --base-url URL      Endpoint used by --check-local-llm (default: http://127.0.0.1:11434/v1)

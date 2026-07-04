@@ -84,9 +84,6 @@ def test_targets_include_contributor_playbooks_templates_and_release_scratch(tmp
     exec_template.write_text("# ExecPlan template\n")
     handoff_template = root / ".agents" / "templates" / "handoff.md"
     handoff_template.write_text("# Handoff\n")
-    scratch = root / "scratch" / "releases" / "0.1.0-alpha.3" / "notes" / "note.md"
-    scratch.parent.mkdir(parents=True)
-    scratch.write_text("# Scratch\n")
 
     found = targets(root)
 
@@ -97,7 +94,6 @@ def test_targets_include_contributor_playbooks_templates_and_release_scratch(tmp
     assert release_template in found
     assert exec_template in found
     assert handoff_template in found
-    assert scratch in found
 
 
 def test_release_scratch_helper_and_tmp_scope_guard(tmp_path):
@@ -106,14 +102,14 @@ def test_release_scratch_helper_and_tmp_scope_guard(tmp_path):
     other_tmp.parent.mkdir(parents=True)
     other_tmp.write_text("# scratch\n")
 
-    assert _release_scratch(Path("scratch/releases/0.1.0-alpha.3/note.md"))
-    assert not _release_scratch(Path("scratch/note.md"))
+    assert _release_scratch(Path("releases/0.1.0-alpha.3/note.md"))
+    assert not _release_scratch(Path("note.md"))
     assert any("tmp/ is no longer" in e for e in check_file(other_tmp, root))
 
 
 def test_release_scratch_rejects_private_memory_links(tmp_path):
     root = _routing_root(tmp_path)
-    scratch = root / "scratch" / "releases" / "0.1.0-alpha.3" / "note.md"
+    scratch = root / "releases" / "0.1.0-alpha.3" / "note.md"
     scratch.parent.mkdir(parents=True)
     scratch.write_text("[private](../../../../.claude/projects/x/memory/rule.md)\n")
 

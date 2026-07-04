@@ -15,7 +15,7 @@ STALE_PATHS = [
     (re.compile(r"docs/releasing/release-plan-template\.md"), ".agents/templates/release-plan.md"),
     (
         re.compile(r"docs/releasing/\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?/tmp/"),
-        "scratch/releases/<version>/",
+        "`releases/<version>/` on the `scratch` branch",
     ),
     (re.compile(r"docs/releasing/"), ".agents/playbooks/release.md or GitHub release issues"),
     (re.compile(r"docs/testing/"), "CONTRIBUTING.md or .agents/playbooks/verify-change.md"),
@@ -57,7 +57,6 @@ ROUTING_DOCS = (
 def targets(root: Path) -> list[Path]:
     files = [root / rel for rel in ROUTING_DOCS if (root / rel).is_file()]
     files += sorted((root / ".agents" / "templates").glob("*.md"))
-    files += sorted((root / "scratch" / "releases").glob("**/*.md"))
     return sorted(files)
 
 
@@ -101,7 +100,7 @@ def check_file(p: Path, root: Path) -> list[str]:
 
 def _release_scratch(rel: Path) -> bool:
     parts = rel.parts
-    return len(parts) >= 4 and parts[0] == "scratch" and parts[1] == "releases"
+    return len(parts) >= 3 and parts[0] == "releases"
 
 
 def main() -> int:

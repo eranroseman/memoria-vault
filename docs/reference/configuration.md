@@ -30,7 +30,7 @@ linked reference pages and schema files.
 | Schema or workspace source config | reinstall or refresh the workspace, then run the linter |
 | qmd index inputs | `memoria workspace rebuild --search` or `memoria workspace rebuild --search --embeddings` |
 
-Use a disposable workspace under `~/Memoria-test` for development verification.
+Use a disposable workspace under `~/memoria-vault/sandbox` for development verification.
 
 ## Never commit
 
