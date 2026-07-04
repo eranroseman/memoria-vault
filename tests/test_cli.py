@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from memoria_vault import __version__
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -102,6 +103,14 @@ def test_cli_help_imports_without_adapter_environment(capsys: pytest.CaptureFixt
 
     assert exc.value.code == 0
     assert "memoria" in capsys.readouterr().out
+
+
+def test_cli_version_uses_source_package_version(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as exc:
+        main(["--version"])
+
+    assert exc.value.code == 0
+    assert capsys.readouterr().out.strip() == f"memoria {__version__}"
 
 
 def test_pyproject_exposes_memoria_console_script() -> None:
