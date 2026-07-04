@@ -68,7 +68,7 @@ between states/profiles/human↔vault.
 ## How this maps forward (for the design-history doc)
 This is the direct ancestor of the **alpha.1 baseline** (which kept the seven profiles, Hermes
 runtime, Kanban, numbered lifecycle folders, blocking gate, MCP sandbox). The researcher's own
-notes ([../notes/... via researcher-notes.md](../../researcher-notes.md)) describe adopting this
+notes ([../notes/... via researcher-notes.md](../researcher-notes.md)) describe adopting this
 stack (Hermes/Obsidian/Zotero/ZK) "without evaluating fit" — the tension that later forces the
 clean-slate reset (2026-06-26) and the alpha.11 pivot ("direction not authorship / traceability not
 approval"). The seven-layer architecture in the researcher's notes is a later elaboration of this

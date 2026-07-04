@@ -8,7 +8,7 @@ This is a design-history reconstruction: **the full alpha.1 design in detail, th
 
 **Method.** Each version's design state was reconstructed from its release-boundary commit on `main` (there are no git tags; the boundary commits are listed per section), and every version-to-version delta was produced by diffing that boundary against the prior across `docs/`, `vault-template/`, and `src/`, cross-read against that version's own release/design/exec-plan documents. The *why* behind each change was mined from the version's design docs, the `docs/design/why-*.md` essays, ADR Context/Decision sections, full commit-message bodies, and the 401-paper literature review that drove many bets. **ADRs were used as reference, never as authority** — the shipped design docs, the `vault-template`/`src` substrate, and the researcher's own notes are the sources of truth.
 
-**Sources** (all consolidated under [sources/](sources/)): the recovered `docs/releasing/0.1.0-alpha.{1..11}` release docs (`sources/versions/`); the `scratch/releases/0.1.0-alpha.{11..15}` design docs; the retired `docs/design/` essays (`sources/prealpha-docs-design/`); the gitignored `_notes/` reasoning layer (`sources/notes/`); the pre-alpha.1 Drive "Old Skeleton" snapshot (`sources/old-skeleton/`); and the researcher's own round-by-round notes ([researcher-notes.md](researcher-notes.md)).
+**Sources** (all consolidated under [sources/](sources/)): the recovered `docs/releasing/0.1.0-alpha.{1..11}` release docs (`sources/versions/`); the `scratch/releases/0.1.0-alpha.{11..15}` design docs; the retired `docs/design/` essays (`sources/prealpha-docs-design/`); the gitignored `_notes/` reasoning layer (`sources/notes/`); the pre-alpha.1 Drive "Old Skeleton" snapshot (`sources/old-skeleton/`); and the researcher's own round-by-round notes ([researcher-notes.md](sources/researcher-notes.md)).
 
 > **Caveat — the reasoning layer is unbacked.** The `_notes/` directory (which holds the two documents that explain *why* the alpha.11 reset happened — `REVIEW-REFUTATIONS.md` and the clean-slate designs — plus the alpha.11 SSOT design) is **gitignored** and exists nowhere in version control. This document is intended to be the durable capture of that reasoning; where a decision's rationale lives only in an unbacked note, this history quotes it rather than merely pointing at it.
 
@@ -16,7 +16,7 @@ This is a design-history reconstruction: **the full alpha.1 design in detail, th
 
 # Part I — Origins (pre-alpha.1)
 
-*This prologue is context, not a version entry: it is the design Memoria inherited on day one of alpha.1. Sources: the researcher's origin notes ([researcher-notes.md](researcher-notes.md)); the pre-alpha.1 Drive "Old Skeleton" snapshot dated 2026-05-29 ([sources/old-skeleton/](sources/old-skeleton/)); and the alpha.11 design's own genesis account.*
+*This prologue is context, not a version entry: it is the design Memoria inherited on day one of alpha.1. Sources: the researcher's origin notes ([researcher-notes.md](sources/researcher-notes.md)); the pre-alpha.1 Drive "Old Skeleton" snapshot dated 2026-05-29 ([sources/old-skeleton/](sources/old-skeleton/)); and the alpha.11 design's own genesis account.*
 
 ## The goal it started from
 
