@@ -13,7 +13,9 @@ superseded_by: []
 
 # ADR-106: Cost and disposition capture — Hermes session store and the review action
 
-> **Status note (0.1.0-alpha.15):** rejected: Hermes session-store capture is dead with the dropped Hermes runtime.
+> **Status note (0.1.0-alpha.15):** rejected: Hermes session-store capture is
+> dead with the dropped Hermes runtime, and the Obsidian/QuickAdd review-action
+> path below is not alpha.15 implementation scope.
 
 ## Context
 

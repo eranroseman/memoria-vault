@@ -75,24 +75,17 @@ before any automation can rewrite artifacts.
 - Memoria must define migration behavior for renamed plugin IDs and upstream
   manifests before automation can safely prune old plugin directories.
 
-## Current implementation mapping
+## Historical implementation mapping
 
-The lock is implemented in `vault-template/.obsidian/plugin-provenance-lock.json` and
-validated by `scripts/plugin_provenance_doctor.py` in the required lint and local
-L0 gates. `tests/test_plugin_provenance.py` shares the doctor core so test
-fixtures and CI enforce the same contract: enabled-plugin coverage, exactly one
-lock entry per bundled plugin directory, manifest-version parity, declared
-upstream fields, SHA-256 digests for committed artifact files, and rejection of
-undeclared executable artifacts. This is enough for manual audit and review of
-vendored plugin changes, but it is not yet updater automation. Only after that
-doctor is stable should Memoria add an updater that downloads and stages new
-upstream artifacts for review.
+The lock-file model in this ADR was the pre-alpha.15 Obsidian-hosted packaging
+design. It no longer describes shipped alpha.15 behavior: there is no
+`vault-template/.obsidian/` tree, bundled plugin artifact, plugin manifest, or
+plugin updater in the standalone CLI/engine baseline.
 
-Current plugin-boundary status (2026-06-29): Templater is not a required or bundled
-plugin. QuickAdd and Modal Forms own Memoria capture flows instead. Obsidian Git remains
-bundled for manual vault-history checkpoints, but automatic commits and pushes are disabled
-by shipped configuration (`autoSaveInterval: 0`, `autoPushInterval: 0`) so it is not a
-foreign machine writer competing with the worker path.
+The surviving alpha.15 check is negative. `scripts/plugin_provenance_doctor.py`
+fails if removed plugin payload paths or common Obsidian adapter implementation
+paths reappear. It does not validate vendored plugin artifacts because alpha.15
+does not ship any.
 
 ## When this matters
 
@@ -130,8 +123,9 @@ long-term model.
 
 ## Related
 
-- **Files affected:** [`vault-template/.obsidian/plugins/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/.obsidian/plugins),
-  [`scripts/plugin_provenance_doctor.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/plugin_provenance_doctor.py),
+- **Historical files affected:** `vault-template/.obsidian/plugins/`
+  (removed from alpha.15).
+- **Current check:** [`scripts/plugin_provenance_doctor.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/plugin_provenance_doctor.py),
   [Obsidian plugin reference](../reference/obsidian-plugins.md)
 - **Related decisions / Depends on:** [ADR-26](26-repo-as-install-unit.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md)

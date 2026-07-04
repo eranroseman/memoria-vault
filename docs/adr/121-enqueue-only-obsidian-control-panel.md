@@ -67,7 +67,8 @@ queued operations.
 ## Related
 
 - **Depends on:** [ADR-28](28-write-gate-as-plugin.md), [ADR-74](74-pinned-obsidian-plugin-supply-chain.md)
-- **Implementation:** `vault-template/.obsidian/plugins/memoria-inspector/`,
+- **Historical implementation:** `vault-template/.obsidian/plugins/memoria-inspector/`
+  (not alpha.15 scope),
   `src/memoria_vault/runtime/worker.py`,
   `src/memoria_vault/runtime/trusted_writer.py`
 - **Checks:** `tests/test_memoria_inspector.py`, `tests/test_worker_queue.py`,

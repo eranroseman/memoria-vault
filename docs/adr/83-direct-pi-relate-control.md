@@ -13,7 +13,11 @@ superseded_by: [126]
 
 # ADR-83: Direct PI relate control
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-126](126-four-type-knowledge-model.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. QuickAdd,
+> Commander, and Obsidian plugin paths below are historical and not alpha.15
+> implementation scope.
 
 
 > **Verified on-box 2026-06-21 (accepted but not yet implemented).** This control is
@@ -91,7 +95,7 @@ the control is the human confirmation surface.
 
 - **Workflows affected:** Knowledge synthesis, claim linking, Project argument
   graph work, and agent-proposed relation review.
-- **Files affected:** `vault-template/system/scripts/`, `vault-template/.obsidian/plugins/quickadd/data.json`,
+- **Historical files affected:** `vault-template/system/scripts/`, `vault-template/.obsidian/plugins/quickadd/data.json`,
   `vault-template/.obsidian/plugins/cmdr/data.json`, `vault-template/spaces/knowledge.md`, `docs/reference/wikilink-and-link-conventions.md`,
   `docs/reference/frontmatter.md`, and the claim-linking how-to.
 - **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),

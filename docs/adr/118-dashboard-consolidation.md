@@ -13,7 +13,11 @@ superseded_by: [130]
 
 # ADR-118: Dashboard consolidation and the read-only system window
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. Inspector pane and
+> Obsidian plugin implementation references below are historical and not
+> alpha.15 implementation scope.
 
 
 > Status note, 2026-07-01: [ADR-122](122-sqlite-working-state-boundary.md)
