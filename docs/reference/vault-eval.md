@@ -12,9 +12,9 @@ grand_parent: Reference
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They retain
-`type: eval-task` frontmatter for dispatcher compatibility, but `eval-task` is
-not an alpha.15 Concept type and has no schema under
+Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They carry
+`type: eval-task` frontmatter for eval dispatch, but `eval-task` is not an
+alpha.15 Concept type and has no schema under
 `vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
 `## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
 runtime eval operation can run and score it with nothing but the file.
