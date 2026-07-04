@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -603,6 +604,18 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
         "citekey": citekey,
         "fields": _parse_bibtex_fields(fields),
     }
+
+
+def parse_bibtex_entries(text: str) -> Iterator[dict[str, Any]]:
+    index = 0
+    while True:
+        start = text.find("@", index)
+        if start == -1:
+            return
+        open_index = _first_container(text[start:]) + start
+        close_index = _matching_container(text, open_index)
+        yield parse_bibtex_entry(text[start : close_index + 1])
+        index = close_index + 1
 
 
 def render_references_bib(vault: Path) -> str:

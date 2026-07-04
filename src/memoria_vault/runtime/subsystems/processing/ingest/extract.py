@@ -281,7 +281,6 @@ def extract(ids: dict, pdf_path: str | None = None, email: str = "", api_key: st
     }
 
 
-# --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
 

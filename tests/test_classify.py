@@ -15,10 +15,6 @@ from ingest_fixtures import topic as _topic
 
 from memoria_vault.runtime.subsystems.processing.ingest import classify, runner
 
-# --------------------------------------------------------------------------- #
-# fixtures
-# --------------------------------------------------------------------------- #
-
 
 def _audit_lines(vault):
     log = vault / "system" / "logs" / "classify.jsonl"
@@ -41,9 +37,6 @@ def _write_vocabulary(vault):
     )
 
 
-# --------------------------------------------------------------------------- #
-# decide() — the pure decision rule
-# --------------------------------------------------------------------------- #
 def test_candidates_roll_up_to_subfield_best_score():
     m = _merged(
         [
@@ -81,9 +74,6 @@ def test_flag_payload_is_honest_no_verdict():
     assert "left unset" in f["finding"]  # what was ambiguous, no verdict
 
 
-# --------------------------------------------------------------------------- #
-# the pipeline integration — applies / flags / no-ops, always audited
-# --------------------------------------------------------------------------- #
 def test_clear_winner_applies_and_audits(monkeypatch, tmp_path):
     _write_vocabulary(tmp_path)
     m = _merged(

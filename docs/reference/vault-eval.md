@@ -98,11 +98,10 @@ python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <va
 
 ## Cadence
 
-The template includes a `memoria-eval` wrapper that an operator-managed scheduler
-may call. The installer does not register the schedule; see
-[Installer (bootstrap)](installer.md#host-scheduler-wiring). The wrapper
-dispatches the current quarter's local eval task plans. Scoring is explicit and
-uses `eval_score --from-json` once result payloads exist.
+An operator-managed scheduler may call `.memoria/scripts/cron-runner.sh eval`.
+The installer does not register the schedule; see
+[Installer (bootstrap)](installer.md#host-scheduler-wiring). Scoring is explicit
+and uses `eval_score --from-json` once result payloads exist.
 
 ---
 

@@ -121,7 +121,6 @@ def retry(vault: Path, dry_run: bool = False) -> dict:
     return {"pass": "retry", "stuck": len(stuck), "enqueued": enqueued, "dry_run": dry_run}
 
 
-# --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
 

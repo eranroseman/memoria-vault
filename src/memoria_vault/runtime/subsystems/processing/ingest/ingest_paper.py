@@ -21,6 +21,8 @@ import json
 import sys
 from pathlib import Path
 
+from memoria_vault.runtime.capture import parse_bibtex_entries
+
 SCHEMA_VERSION = 1
 
 # BibTeX entry-type -> work.item_type. Non-paper works remain Work rows;
@@ -45,94 +47,6 @@ TYPE_ROUTING = {
 DEFAULT_ITEM_TYPE = "article"
 
 
-# --------------------------------------------------------------------------- #
-# Self-contained BibTeX parsing (Tier 0 must have no external deps)
-# --------------------------------------------------------------------------- #
-def _find_entry(text: str, citekey: str):
-    """Return (entry_type, body_text) for `citekey`, or None. Brace-aware."""
-    needle = "{" + citekey + ","
-    i = 0
-    while True:
-        at = text.find("@", i)
-        if at == -1:
-            return None
-        brace = text.find("{", at)
-        if brace == -1:
-            return None
-        etype = text[at + 1 : brace].strip().lower()
-        # match the citekey immediately after the opening brace
-        head = text[brace : brace + len(needle)]
-        if head.lower() == needle.lower():
-            # read to the matching close brace
-            depth, j = 0, brace
-            while j < len(text):
-                if text[j] == "{":
-                    depth += 1
-                elif text[j] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        break
-                j += 1
-            inner = text[brace + 1 : j]
-            after_key = inner.split(",", 1)[1] if "," in inner else ""
-            return etype, after_key
-        i = brace + 1
-
-
-def _parse_fields(body: str) -> dict:
-    """Parse `name = {value} | "value" | bare,` fields. Brace/quote-aware."""
-    fields, i, n = {}, 0, len(body)
-    while i < n:
-        # field name
-        while i < n and (body[i].isspace() or body[i] == ","):
-            i += 1
-        start = i
-        while i < n and (body[i].isalnum() or body[i] in "_-"):
-            i += 1
-        name = body[start:i].strip().lower()
-        if not name:
-            break
-        while i < n and body[i].isspace():
-            i += 1
-        if i >= n or body[i] != "=":
-            break
-        i += 1
-        while i < n and body[i].isspace():
-            i += 1
-        if i >= n:
-            break
-        if body[i] == "{":
-            depth, j = 0, i
-            while j < n:
-                if body[j] == "{":
-                    depth += 1
-                elif body[j] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        break
-                j += 1
-            val = body[i + 1 : j]
-            i = j + 1
-        elif body[i] == '"':
-            j = i + 1
-            while j < n and body[j] != '"':
-                j += 1
-            val = body[i + 1 : j]
-            i = j + 1
-        else:
-            j = i
-            while j < n and body[j] != ",":
-                j += 1
-            val = body[i:j]
-            i = j
-        fields[name] = _clean(val)
-    return fields
-
-
-def _clean(v: str) -> str:
-    return " ".join(v.replace("{", "").replace("}", "").replace("\n", " ").split()).strip()
-
-
 def _authors(raw: str) -> list[str]:
     """`Last, First and ...` / `First Last and ...` → ['First Last', ...]."""
     out = []
@@ -148,9 +62,6 @@ def _authors(raw: str) -> list[str]:
     return out
 
 
-# --------------------------------------------------------------------------- #
-# Tier 0 — assemble the captured note
-# --------------------------------------------------------------------------- #
 def assemble(citekey: str, etype: str, f: dict) -> dict:
     item_type = TYPE_ROUTING.get(etype, DEFAULT_ITEM_TYPE)
     now = datetime.date.today().isoformat()
@@ -267,13 +178,12 @@ def render(note: dict) -> str:
     return f"---\n{fm}---\n\n{note['body']}"
 
 
-# --------------------------------------------------------------------------- #
 def ingest_text(citekey: str, bib_text: str) -> dict:
-    found = _find_entry(bib_text, citekey)
-    if not found:
-        raise KeyError(citekey)
-    etype, body = found
-    return assemble(citekey, etype, _parse_fields(body))
+    target = citekey.lower()
+    for entry in parse_bibtex_entries(bib_text):
+        if str(entry["citekey"]).lower() == target:
+            return assemble(citekey, entry["entry_type"], entry["fields"])
+    raise KeyError(citekey)
 
 
 def ingest(citekey: str, bib_path: Path) -> dict:

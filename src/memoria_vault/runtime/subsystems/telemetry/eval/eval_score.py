@@ -60,6 +60,7 @@ import re
 import sys
 from pathlib import Path
 
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.telemetry.eval import (
     eval_dispatch,  # sibling: gold-set loader, frontmatter parser, quarter_of
 )
@@ -71,9 +72,6 @@ DEFAULT_K = 3  # the gold rubrics score a "top 3" window
 _FENCED_JSON = re.compile(r"```(?:json)?\s*\n(\{.*?\})\s*```", re.S)
 
 
-# --------------------------------------------------------------------------- #
-# Vault state the metrics check against
-# --------------------------------------------------------------------------- #
 def catalog_citekeys(vault: Path) -> set[str]:
     """Every citekey/source id the catalog resolves."""
     keys: set[str] = set()
@@ -150,9 +148,6 @@ def extract_results(cards: list[dict], quarter: str) -> dict[str, dict]:
     return out
 
 
-# --------------------------------------------------------------------------- #
-# The metrics — each computed only when its inputs exist (no fake scores)
-# --------------------------------------------------------------------------- #
 def _str_list(result: dict, key: str) -> list[str] | None:
     """The result's `key` as a list of strings, or None when absent/malformed."""
     v = result.get(key)
@@ -246,13 +241,10 @@ def append_run(vault: Path, run: dict) -> Path:
     """Append one JSONL line to system/metrics/eval/runs.jsonl (append-only;
     the dashboard trends on the newest line per quarter)."""
     out = vault / METRICS_RELDIR / RUNS_LOG
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(run, ensure_ascii=False) + "\n")
+    append_jsonl(out, [run])
     return out
 
 
-# --------------------------------------------------------------------------- #
 def resolve_quarter(spec: str, today: datetime.date | None = None) -> str:
     """'current' | 'previous' | an explicit 'YYYY-Qn' -> the quarter string."""
     if spec == "current":

@@ -69,7 +69,6 @@ TEST_LEVELS = {
     "test_project_hints.py": "contract",
     "test_project_structural_impact.py": "contract",
     "test_projections.py": "contract",
-    "test_reference_generators.py": "static",
     "test_refresh_test_vault.py": "package",
     "test_resolve_merge.py": "contract",
     "test_retrieval_substrate.py": "contract",

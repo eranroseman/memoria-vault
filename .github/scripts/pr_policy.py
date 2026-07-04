@@ -25,7 +25,11 @@ what future automation is allowed or encouraged to do.
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
 
+import json
 import os
+import urllib.error
+import urllib.parse
+import urllib.request
 
 # Trusted authors: docs-only PRs auto-approve; sensitive-path PRs fall to
 # needs_human (a human reviews/merges) rather than being blocked. dependabot[bot]
@@ -113,23 +117,25 @@ def decide(changed_paths: list[str], pr_author: str, pr_draft: bool) -> tuple[st
     return "needs_human", "Manual merge required: application code or unclassified path."
 
 
-def get_pr_files(session, repo: str, pr_number: str) -> list:
-    import requests  # lazy, like main() — offline unit tests never import it
-
+def get_pr_files(token: str, repo: str, pr_number: str) -> list:
     files, page = [], 1
     while True:
+        query = urllib.parse.urlencode({"per_page": 100, "page": page})
+        request = urllib.request.Request(
+            f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files?{query}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        )
         try:
-            r = session.get(
-                f"https://api.github.com/repos/{repo}/pulls/{pr_number}/files",
-                params={"per_page": 100, "page": page},
-                timeout=30,
-            )
-            r.raise_for_status()
-        except requests.RequestException as exc:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                batch = json.loads(response.read().decode("utf-8"))
+        except (OSError, urllib.error.HTTPError, json.JSONDecodeError) as exc:
             raise SystemExit(
                 f"pr_policy: failed to fetch PR #{pr_number} files (page {page}): {exc}"
             ) from exc
-        batch = r.json()
         if not batch:
             break
         files.extend(batch)
@@ -138,24 +144,13 @@ def get_pr_files(session, repo: str, pr_number: str) -> list:
 
 
 def main() -> int:
-    import requests
-
     token = os.environ["GITHUB_TOKEN"]
     repo = os.environ["REPO"]
     pr_number = os.environ["PR_NUMBER"]
     pr_author = os.environ["PR_AUTHOR"]
     pr_draft = os.environ.get("PR_DRAFT", "false").lower() == "true"
 
-    session = requests.Session()
-    session.headers.update(
-        {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-    )
-
-    files = get_pr_files(session, repo, pr_number)
+    files = get_pr_files(token, repo, pr_number)
     changed_paths = [f["filename"] for f in files]
 
     decision, reason = decide(changed_paths, pr_author, pr_draft)

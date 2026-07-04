@@ -11,10 +11,10 @@ Check the papers in your Catalog against retraction registries and act on the hi
 
 ## When it runs without you
 
-The template ships a wrapper (`retraction-refresh-cron.sh`) that an
-operator-managed monthly schedule can call to refresh the local Retraction Watch
-dataset and sweep. Run it by hand before citing a cluster of older papers in a
-draft, or right after hearing of a retraction in your field.
+An operator-managed monthly schedule can call `.memoria/scripts/cron-runner.sh
+retraction-refresh` to refresh the local Retraction Watch dataset and sweep.
+Run it by hand before citing a cluster of older papers in a draft, or right
+after hearing of a retraction in your field.
 
 ## Steps
 

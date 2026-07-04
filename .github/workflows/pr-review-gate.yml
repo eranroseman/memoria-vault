@@ -30,9 +30,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install deps
-        run: pip install requests
-
       - name: Evaluate PR policy
         id: policy
         env:

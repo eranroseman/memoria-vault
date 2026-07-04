@@ -11,7 +11,7 @@ Run a structural health check on the vault, or review the scheduled report. The 
 
 ## When it runs without you
 
-- **Operator-managed schedule** — wire `.memoria/scripts/lint-cron.sh` through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
+- **Operator-managed schedule** — wire `.memoria/scripts/cron-runner.sh lint` through cron, systemd, launchd, Task Scheduler, or another local scheduler if you want unattended checks. The installer does not register that schedule.
 - **Pre-commit hook** — every staged `.md` is schema-validated; an invalid typed document blocks the commit.
 
 Run it by hand after a large batch ingest, after structural edits, or when a Dataview query returns something unexpected.
@@ -46,7 +46,7 @@ Every detector is report-only — fixes are yours, in Obsidian or the editor. Th
 **4. Confirm scheduled wiring is alive** (if you configured it):
 
 ```bash
-.memoria/scripts/lint-cron.sh
+.memoria/scripts/cron-runner.sh lint
 memoria workspace check --workspace . --schedule-id lint-manual --json
 ```
 

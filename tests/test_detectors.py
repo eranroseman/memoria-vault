@@ -320,10 +320,6 @@ def test_design_system_drift_accepts_shipped_vault_tree():
     assert _m.design_system_drift(src) == []
 
 
-# --------------------------------------------------------------------------- #
-# vault-hash-drift (#392), audit-log-size (#393), hub-threshold (#426),
-# skeleton-drift (#394)
-# --------------------------------------------------------------------------- #
 _EMPTY = "sha256:" + hashlib.sha256(b"").hexdigest()
 
 
