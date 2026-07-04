@@ -28,7 +28,7 @@ The path follows the caller:
 | Scheduled task / CI | Direct command or scheduled script using the same runtime package. |
 | Optional adapter | Runtime policy hook, then CLI/worker request. |
 
-Processing, integrity, cleanup, and telemetry operations are runtime package
+Processing, integrity, telemetry, and maintenance operations are runtime package
 entry points. Optional adapters are transport edges, not implementation owners.
 
 ## Related

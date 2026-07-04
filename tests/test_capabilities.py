@@ -234,7 +234,8 @@ def _patch_capability_package(
     capability_type: str,
     files: dict[str, str],
 ) -> None:
-    home = capability_module.CAPABILITY_HOMES[capability_type]
+    assert capability_type == "operation"
+    home = "operations"
     package_name = f"test_caps_{uuid.uuid4().hex}"
     package_root = tmp_path / "packages"
     package = package_root / package_name / home
@@ -246,8 +247,4 @@ def _patch_capability_package(
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     monkeypatch.syspath_prepend(str(package_root))
-    monkeypatch.setitem(
-        capability_module.CAPABILITY_PACKAGES,
-        capability_type,
-        f"{package_name}.{home}",
-    )
+    monkeypatch.setattr(capability_module, "CAPABILITY_PACKAGE", f"{package_name}.{home}")

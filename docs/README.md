@@ -46,7 +46,7 @@ keeps the work visible, traceable, and review-gated.
 ### The working loop
 
 1. Capture or find a source.
-2. Ingest and classify it into the Library.
+2. Capture and enrich it into the catalog.
 3. Distill checked Works into notes.
 4. Link claims into a project argument.
 5. Draft from current claims.

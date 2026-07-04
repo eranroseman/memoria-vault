@@ -8,10 +8,6 @@
 # Memoria-authored examples use lowercase `.example` (industry standard); the
 # Hermes-generated `.env.EXAMPLE` is uppercase (upstream tooling — not changed).
 
-# Librarian project hints: personal project scopes / topic lists (ADR-15).
-# Ships as project-hints.yaml.example.
-.memoria/project-hints.yaml
-
 # Per-machine secret material (human copies .env.EXAMPLE to .env, fills in keys)
 .env
 

@@ -1922,7 +1922,7 @@ def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[s
 
 
 def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
-    for root in ("catalog/sources", "knowledge/works", "knowledge/notes"):
+    for root in ("knowledge/works", "knowledge/notes"):
         base = vault / root
         if not base.exists():
             continue
@@ -1935,8 +1935,6 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
 
 def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     concept_type = frontmatter.get("type")
-    if relpath.startswith("catalog/sources/") and concept_type == "source":
-        return "sources"
     if relpath.startswith("knowledge/works/") and concept_type == "work":
         return "digests"
     if relpath.startswith("knowledge/notes/") and concept_type == "note":
@@ -2223,11 +2221,10 @@ def _project_canvas_rel(project_rel: str) -> str:
 
 def _source_rel(path: str) -> str:
     rel = normalize_path(path)
-    if "/" not in rel:
-        rel = f"catalog/sources/{rel}/source.md"
-    elif rel.startswith("catalog/sources/") and not rel.endswith(".md"):
-        rel = f"{rel.rstrip('/')}/source.md"
-    if not rel.startswith("catalog/sources/") or not rel.endswith("/source.md"):
+    if not rel.startswith("catalog/sources/"):
+        rel = f"catalog/sources/{rel}"
+    rel = rel.rstrip("/")
+    if rel == "catalog/sources" or rel.count("/") != 2:
         raise ValueError(f"source must be a catalog source row ref: {rel}")
     return rel
 
@@ -2247,8 +2244,10 @@ def _concept_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel:
         rel = f"knowledge/notes/{rel}"
-    if rel.startswith("catalog/sources/") and not rel.endswith(".md"):
-        rel = f"{rel.rstrip('/')}/source.md"
+    if rel.startswith("catalog/sources/"):
+        rel = rel.rstrip("/")
+        if rel.count("/") != 2:
+            raise ValueError(f"source must be a catalog source row ref: {rel}")
     elif not rel.endswith(".md"):
         rel += ".md"
     if not rel.startswith(("catalog/sources/", "knowledge/notes/", "knowledge/hubs/")):

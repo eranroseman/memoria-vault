@@ -2132,45 +2132,6 @@ def test_cli_workspace_recover_fails_running_requests_for_retry(
     assert retried["request"]["status"] == "pending"
 
 
-def test_cli_workspace_check_asserts_no_legacy_work_markdown(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    workspace = tmp_path / "workspace"
-    assert main(["init", "--workspace", str(workspace), "--yes", "--json"]) == 0
-    capsys.readouterr()
-    legacy = workspace / "catalog/sources/old-work/source.md"
-    legacy.parent.mkdir(parents=True)
-    legacy.write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: Old Work\n---\nBody.\n",
-        encoding="utf-8",
-    )
-
-    rc = main(
-        [
-            "workspace",
-            "check",
-            "--workspace",
-            str(workspace),
-            "--schedule-id",
-            "legacy-work-gate",
-            "--assert",
-            "no-legacy-work-markdown",
-            "--json",
-        ]
-    )
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 1
-    assert output["ok"] is False
-    assert output["assertions"] == [
-        {
-            "assertion": "no-legacy-work-markdown",
-            "ok": False,
-            "findings": ["catalog/sources/old-work/source.md"],
-        }
-    ]
-
-
 def test_cli_journal_list_operation_alias_includes_digest_workflow(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -15,11 +15,9 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
-CAPABILITY_TYPES = {"operation"}
-CAPABILITY_HOMES = {"operation": "operations"}
-CAPABILITY_PACKAGES = {
-    kind: f"memoria_vault.product.capabilities.{home}" for kind, home in CAPABILITY_HOMES.items()
-}
+CAPABILITY_TYPE = "operation"
+CAPABILITY_HOME = "operations"
+CAPABILITY_PACKAGE = "memoria_vault.product.capabilities.operations"
 CAPABILITY_INDEX_PATH = ".memoria/index/capability-index.json"
 PRODUCT_CAPABILITY_PREFIX = "product/capabilities"
 
@@ -85,7 +83,9 @@ def check_capability_index(vault: Path, *, output_path: str = CAPABILITY_INDEX_P
 
 def read_capability_manifest(capability_type: str, capability_id: str) -> dict[str, Any]:
     """Return one packaged capability manifest with text, frontmatter, and display path."""
-    item = _capability_resource(capability_type, capability_id)
+    if capability_type != CAPABILITY_TYPE:
+        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
+    item = _capability_resource(capability_id)
     return {
         "path": item["path"],
         "text": item["text"],
@@ -96,26 +96,19 @@ def read_capability_manifest(capability_type: str, capability_id: str) -> dict[s
 
 def iter_capability_manifests(capability_type: str) -> list[dict[str, Any]]:
     """Return packaged manifests for one capability type."""
-    if capability_type not in CAPABILITY_HOMES:
+    if capability_type != CAPABILITY_TYPE:
         raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
-    return [
-        item
-        for item in _capability_resources()
-        if item["frontmatter"].get("type") == capability_type
-    ]
+    return list(_capability_resources())
 
 
-def _capability_resource(capability_type: str, capability_id: str) -> dict[str, Any]:
-    home = CAPABILITY_HOMES.get(capability_type)
-    if home is None:
-        raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
-    root = resources.files(CAPABILITY_PACKAGES[capability_type])
+def _capability_resource(capability_id: str) -> dict[str, Any]:
+    root = resources.files(CAPABILITY_PACKAGE)
     stem = safe_filename(capability_id)
     resource = root / f"{stem}.md"
-    display = f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{stem}.md"
+    display = f"{PRODUCT_CAPABILITY_PREFIX}/{CAPABILITY_HOME}/{stem}.md"
     asset_dir = root / stem
     if not resource.is_file() and asset_dir.is_dir():
-        _raise_directory_only(f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{stem}", display)
+        _raise_directory_only(f"{PRODUCT_CAPABILITY_PREFIX}/{CAPABILITY_HOME}/{stem}", display)
     if not resource.is_file():
         raise FileNotFoundError(display)
     text = resource.read_text(encoding="utf-8")
@@ -135,7 +128,7 @@ def import_capability(
     source = Path(source_path)
     frontmatter = parse_frontmatter(safe_read(source))
     capability_type = str(frontmatter.get("type") or "")
-    if capability_type not in CAPABILITY_TYPES:
+    if capability_type != CAPABILITY_TYPE:
         raise ValueError(f"unsupported capability type: {capability_type or '<missing>'}")
     trust = frontmatter.get("trust") if isinstance(frontmatter.get("trust"), dict) else {}
     if trust.get("signed") is True:
@@ -173,29 +166,29 @@ def import_capability(
 
 def _capability_resources() -> list[dict[str, Any]]:
     items: list[dict[str, Any]] = []
-    for capability_type, home in CAPABILITY_HOMES.items():
-        root = resources.files(CAPABILITY_PACKAGES[capability_type])
-        for child in sorted(root.iterdir(), key=lambda item: item.name):
-            if child.is_dir():
-                sibling = root / f"{child.name}.md"
-                if not sibling.is_file() and child.name != "__pycache__":
-                    _raise_directory_only(
-                        f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}",
-                        f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}.md",
-                    )
-                continue
-            if not child.name.endswith(".md"):
-                continue
-            text = child.read_text(encoding="utf-8")
-            frontmatter = parse_frontmatter(text)
-            if frontmatter.get("type") in CAPABILITY_TYPES:
-                items.append(
-                    {
-                        "path": f"{PRODUCT_CAPABILITY_PREFIX}/{home}/{child.name}",
-                        "text": text,
-                        "frontmatter": frontmatter,
-                    }
+    root = resources.files(CAPABILITY_PACKAGE)
+    for child in sorted(root.iterdir(), key=lambda item: item.name):
+        if child.is_dir():
+            sibling = root / f"{child.name}.md"
+            if not sibling.is_file() and child.name != "__pycache__":
+                _raise_directory_only(
+                    f"{PRODUCT_CAPABILITY_PREFIX}/{CAPABILITY_HOME}/{child.name}",
+                    f"{PRODUCT_CAPABILITY_PREFIX}/{CAPABILITY_HOME}/{child.name}.md",
                 )
+            continue
+        if not child.name.endswith(".md"):
+            continue
+        text = child.read_text(encoding="utf-8")
+        frontmatter = parse_frontmatter(text)
+        if frontmatter.get("type") != CAPABILITY_TYPE:
+            continue
+        items.append(
+            {
+                "path": f"{PRODUCT_CAPABILITY_PREFIX}/{CAPABILITY_HOME}/{child.name}",
+                "text": text,
+                "frontmatter": frontmatter,
+            }
+        )
     return items
 
 
