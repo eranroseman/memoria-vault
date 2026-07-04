@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.jsonl import iter_jsonl
+from memoria_vault.runtime.subsystems.lib import loudness
 from memoria_vault.runtime.time import now_iso
-from memoria_vault.runtime.vaultio import read_frontmatter
 
 from .audit import AUDIT_RELPATH, append_audit, sha256_file
 from .decision import compose_skill_deny, decide, is_review_gated
@@ -82,9 +82,9 @@ class PolicyEngine:
             return {"decision": "deny", "policy_rule": "path.traversal", "message": str(exc)}
 
         if action in MUTATING_ACTIONS and is_review_gated(npath):
-            blockers = _open_blockers(self.workspace)
+            blockers = loudness.open_blockers(self.workspace)
             if blockers:
-                message = _blocker_message(blockers)
+                message = loudness.blocker_message(blockers)
                 append_audit(
                     self.workspace,
                     {
@@ -188,32 +188,3 @@ class PolicyEngine:
             entry["expected_before_hash"] = expected
         append_audit(self.workspace, entry)
         return {"ok": True, "after_hash": after_hash}
-
-
-def _open_blockers(vault: Path) -> list[dict[str, str]]:
-    blockers: list[dict[str, str]] = []
-    for path in sorted((vault / "inbox").glob("*.md")):
-        frontmatter = read_frontmatter(path)
-        if (
-            str(frontmatter.get("loudness") or "").lower() == "block"
-            and str(frontmatter.get("lifecycle") or "").lower() == "proposed"
-        ):
-            blockers.append(
-                {
-                    "path": str(path.relative_to(vault)).replace("\\", "/"),
-                    "title": str(frontmatter.get("title") or path.stem),
-                    "type": str(frontmatter.get("type") or "card"),
-                }
-            )
-    return blockers
-
-
-def _blocker_message(blockers: list[dict[str, str]]) -> str:
-    if not blockers:
-        return ""
-    names = ", ".join(f"{blocker['path']} ({blocker['title']})" for blocker in blockers[:3])
-    more = "" if len(blockers) <= 3 else f"; +{len(blockers) - 3} more"
-    return (
-        "open block-loudness card(s) require PI acknowledgement before "
-        f"dispatch/promotion: {names}{more}"
-    )

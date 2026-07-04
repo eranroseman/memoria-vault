@@ -20,7 +20,8 @@ from memoria_vault.runtime.vaultio import read_frontmatter
 
 PUSH_LOUDNESS = frozenset({"alert", "block"})
 BLOCK_LOUDNESS = "block"
-OPEN_LIFECYCLE = "proposed"
+ATTENTION_PROJECTION = "attention"
+OPEN_ATTENTION_STATUS = "open"
 PUSH_LOG_RELPATH = "system/logs/loudness-push.jsonl"
 TELEGRAM_TOKEN_ENV = ("MEMORIA_TELEGRAM_BOT_TOKEN", "TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ENV = ("MEMORIA_TELEGRAM_CHAT_ID", "TELEGRAM_CHAT_ID")
@@ -29,8 +30,9 @@ TELEGRAM_API_BASE_ENV = "MEMORIA_TELEGRAM_API_BASE"
 
 def is_open_blocker(frontmatter: dict[str, Any]) -> bool:
     return (
-        str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
-        and str(frontmatter.get("lifecycle") or "").lower() == OPEN_LIFECYCLE
+        str(frontmatter.get("projection") or "").lower() == ATTENTION_PROJECTION
+        and str(frontmatter.get("attention_status") or "").lower() == OPEN_ATTENTION_STATUS
+        and str(frontmatter.get("loudness") or "").lower() == BLOCK_LOUDNESS
     )
 
 
@@ -43,7 +45,7 @@ def open_blockers(vault: Path) -> list[dict[str, str]]:
                 {
                     "path": str(path.relative_to(vault)).replace("\\", "/"),
                     "title": str(fm.get("title") or path.stem),
-                    "type": str(fm.get("type") or "card"),
+                    "type": str(fm.get("attention_kind") or fm.get("type") or "card"),
                 }
             )
     return blockers
