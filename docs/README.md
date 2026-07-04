@@ -158,9 +158,10 @@ Deterministic **operations** do the mechanical work, behind the policy gate.
 Memoria is in the **v0.1 alpha source-install** phase: the installer and CLI
 engine are being validated as a standalone local product. What is not working today:
 
-- **No complete alpha.15 end-to-end gate yet** — capture, enrich, digest, ask,
-  export, recovery, and seeded-error evidence are still being closed as release
-  gates.
+- **Release-candidate validation is still pending** — the offline alpha.15
+  runtime gate now replays capture, enrich, digest, ask, export, recovery, and
+  seeded-error evidence (`scripts/verify pr`), but the RC still needs a live
+  provider/package run before release.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
 - **Writability and readiness scoring are not implemented** — project readiness
