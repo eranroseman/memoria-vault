@@ -37,11 +37,11 @@ verification when only static or synthetic tests ran.
 | Package | A disposable vault assembles and the model-free workflow replay works. | Shipped vault, installer skeleton, hooks, plugins, or workflow replay changed. |
 | Runtime | Installed CLI dispatch, model endpoint, qmd, scheduled wrappers, recovery, and policy boundaries work live. | Runtime wiring or release-candidate confidence depends on live services. |
 | Live | Runtime services and live-only adapters pass their opt-in checks. | A release or incident check explicitly needs live services. |
-| Product | Research workflows produce reviewable value, telemetry, CLI/output evidence, and quality evidence when claimed. | Release candidates or product-surface changes. |
-| Failure/recovery | Denied writes leave no file, adapter-down paths fail closed, retries recover, dry-run is clean, and installer re-run is idempotent. | Policy, ingest, adapter, installer, scheduler, or replay changed. |
 
-Manual adapter checks apply only when an optional adapter is in scope. Record
-manual evidence in the relevant release parent issue or sub-issue, not in docs.
+Product, manual GUI, and failure/recovery evidence are release issue evidence,
+not `scripts/verify` gate names. Record them in the relevant release parent
+issue or sub-issue, not in docs. Manual adapter checks apply only when an
+optional adapter is in scope.
 
 ## 4. Execute
 
