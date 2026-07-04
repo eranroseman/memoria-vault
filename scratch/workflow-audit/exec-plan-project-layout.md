@@ -131,6 +131,8 @@ directory. Because the branch itself is scratch, that wrapper is redundant and
 causes `scratch/scratch/...` after checkout.
 
 ```bash
+set -euo pipefail
+cp ~/mv/scratch/scratch/workflow-audit/exec-plan-project-layout.md /tmp/exec-plan-project-layout.md
 cd ~/mv/scratch
 git pull --ff-only origin scratch
 entries=$(git ls-tree --name-only HEAD)
@@ -150,7 +152,8 @@ old_scratch=$(git -C ~/memoria-vault worktree list --porcelain \
 Expected: the scratch branch root now contains `releases/`, `workflow-audit/`, etc.
 This plan's path becomes `workflow-audit/exec-plan-project-layout.md`.
 The old linked scratch worktree no longer appears in
-`git -C ~/memoria-vault worktree list`.
+`git -C ~/memoria-vault worktree list`. Continue from the `/tmp` handoff copy until
+the independent scratch checkout exists.
 
 Phase B must update tracked docs that still describe `scratch/releases/...`. For
 `scripts/status_doctor.py`, remove the dead `root/scratch/releases` scan; do not
@@ -478,6 +481,9 @@ Update shell aliases, editor workspaces, and habits that still point at
 
 - Step 0's scratch de-nest is intentionally committed and pushed to `origin/scratch`;
   this filesystem rollback does not undo that branch-content change.
+
+- Step 5 intentionally deletes the stale `~/Memoria-test`; rollback does not restore
+  it. Installer/runtime tests recreate the sandbox content.
 
 - After step 7, `~/memoria-vault/main/.git` is the original Git directory moved
   whole. `~/memoria-vault-git-backup` is still available as an extra object-store
