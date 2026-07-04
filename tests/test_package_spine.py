@@ -59,6 +59,6 @@ def test_bare_package_import_does_not_need_mcp_sdk():
     subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=env, check=True)
 
 
-def test_vault_side_policy_compatibility_package_is_removed():
+def test_vault_side_policy_package_is_removed():
     assert not (ROOT / "vault-template/.memoria/memoria_runtime").exists()
     assert packaged_policy.normalize_path("./a/b/../c") == "a/c"
