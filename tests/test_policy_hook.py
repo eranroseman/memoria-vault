@@ -1,4 +1,4 @@
-"""L1 component tests for policy_hook (ADR-44)."""
+"""L1 component tests for policy_hook."""
 
 import os
 import time as _time

@@ -24,15 +24,15 @@ class Check:
 
 CHECKS = (
     Check(
-        name="ADR-41 review gate names the write mechanism, not board motion",
-        adr="docs/adr/41-configurable-review-gate-mode.md",
+        name="ADR-128 review gate names the write mechanism, not board motion",
+        adr="docs/adr/128-no-write-time-correctness-oracle.md",
         required_paths=("src/memoria_vault/runtime/policy/decision.py",),
         required_text=("src/memoria_vault/runtime/policy/decision.py", "hard stop is at the write"),
         forbidden_text=("dispatch refuses to advance a card",),
     ),
     Check(
-        name="ADR-10 supersession default query filter is implemented",
-        adr="docs/adr/10-claim-supersession.md",
+        name="ADR-129 supersession default query filter is implemented",
+        adr="docs/adr/129-layered-machine-judgment.md",
         required_paths=(
             "src/memoria_vault/runtime/search_index.py",
             "tests/test_search_index.py",

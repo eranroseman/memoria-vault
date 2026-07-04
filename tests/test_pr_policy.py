@@ -1,4 +1,4 @@
-"""L1 component tests for pr_policy (ADR-44)."""
+"""L1 component tests for pr_policy."""
 
 import pr_policy as _m
 
@@ -57,7 +57,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         "src/memoria_vault/runtime/subsystems/processing/project/structural_impact.py",
         "vault-template/.memoria/schemas/folders.yaml",
         "vault-template/.memoria/design-system.md",
-        "docs/adr/29-testing-framework.md",
+        "docs/adr/125-standalone-cli-engine-architecture.md",
     ]
 
     assert all(is_sensitive(path) for path in sensitive_paths)

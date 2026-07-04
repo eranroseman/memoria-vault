@@ -24,7 +24,7 @@ These are different artifacts written by different components with different lif
 
 | Log | Path | Writer | Lifecycle |
 | --- | --- | --- | --- |
-| **Policy gate audit log** | `system/logs/audit.jsonl` | Policy gate | Append-only **forever** — never rotated ([ADR-25](../../adr/25-session-logging-two-logs.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
+| **Policy gate audit log** | `system/logs/audit.jsonl` | Policy gate | Append-only **forever** — never rotated ([ADR-127](../../adr/127-quarantine-and-verify-integrity.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
 | **Per-request summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`runtime/subsystems/integrity/linter/session_summary.py`, scheduled integrity run) | One file per request; never rotated; accumulate indefinitely |
 
 The audit log is what the audit-log
@@ -53,7 +53,7 @@ Combining them would make the audit log verbose (request detail) and would make
 request summaries harder to query (mixed with per-write events). Each log has a
 different reader: the audit log feeds dashboards and tamper detection; request
 summaries are for the PI reviewing what happened. The decision is
-[ADR-25](../../adr/25-session-logging-two-logs.md).
+[ADR-127](../../adr/127-quarantine-and-verify-integrity.md).
 
 ---
 

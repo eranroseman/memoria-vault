@@ -29,10 +29,10 @@ its schema contract comes from [ADR-126](../adr/126-four-type-knowledge-model.md
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
-| `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-25](../adr/25-session-logging-two-logs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
+| `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-127](../adr/127-quarantine-and-verify-integrity.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — rerun the installer/refresh helper or create it. Checked only in installed vaults (`.git` present); the repo's `vault-template/` ships no empty dirs. |
-| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-19](../adr/19-moc-threshold-alert.md) Tier 1; report-only, never auto-created). |
-| `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-25](../adr/25-session-logging-two-logs.md)) — so growth is surfaced here instead of staying silent. |
+| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-126](../adr/126-four-type-knowledge-model.md) Tier 1; report-only, never auto-created). |
+| `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-127](../adr/127-quarantine-and-verify-integrity.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
@@ -59,7 +59,7 @@ The pre-commit hook ([ADR-126](../adr/126-four-type-knowledge-model.md)): the in
 
 ## Per-request digests
 
-`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-25](../adr/25-session-logging-two-logs.md): a deterministic audit digest, not an LLM summary.
+`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-127](../adr/127-quarantine-and-verify-integrity.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |

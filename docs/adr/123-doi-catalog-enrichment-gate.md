@@ -79,10 +79,10 @@ promotion; direct SQLite edits are not a supported PI surface.
 
 ## Related
 
-- **Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md),
-  [ADR-32](32-external-access-over-mcp.md),
-  [ADR-57](57-engines-write-agents-judge.md),
-  [ADR-119](119-schema-driven-document-creation.md),
+- **Depends on:** [ADR-129](129-layered-machine-judgment.md),
+  [ADR-125](125-standalone-cli-engine-architecture.md),
+  [ADR-128](128-no-write-time-correctness-oracle.md),
+  [ADR-126](126-four-type-knowledge-model.md),
   [ADR-122](122-sqlite-working-state-boundary.md)
 - **Implementation:** `src/memoria_vault/runtime/capture.py`,
   `src/memoria_vault/runtime/enrichment.py`,

@@ -88,6 +88,9 @@ superseded.
 `new note|hub|project` authors, `work add` registers; `vocab` mints and
 manages tag IDs. Deliverable export is terminal and frozen (14's principle
 carried into `project export`).
+- **Authored-link vocabulary expands one value at a time** (absorbs 98): new
+  `links:` relation values are added deliberately, validated-not-inferred,
+  never auto-minted from prose.
 
 ## Consequences
 

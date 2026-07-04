@@ -1,12 +1,12 @@
-# Calibrated thresholds — drift-bound (ADR-56; design guardrails §8).
+# Calibrated thresholds — drift-bound (ADR-129; design guardrails §8).
 # Every value here ships with the discipline: grounded, error-budgeted,
 # recalibrated on model/source-version change, shadow-first.
 entity_resolution:
-  # Below the floor, ingest emits an Inbox near-tie flag instead of merging (ADR-56).
+  # Below the floor, ingest emits an Inbox near-tie flag instead of merging (ADR-129).
   confidence_floor: 0.85
   model_version: null # pin when an embedding/matching model is introduced
 classify:
-  # D21/ADR-54: classification is automated and audited, never a gate. A research
+  # D21/ADR-128: classification is automated and audited, never a gate. A research
   # area applies silently only when the best OpenAlex topic score clears the floor
   # AND beats the runner-up by the near-tie margin; otherwise the field stays unset
   # and ingest raises one Inbox flag. Every decision lands in system/logs/classify.jsonl.
@@ -15,7 +15,7 @@ classify:
   model_version: null # pin if a local topic model ever replaces OpenAlex topics
 hybrid_scores:
   candidate_rank:
-    # #379 / ADR-66: ranking can reorder review attention only after real PI
+    # #379 / ADR-129: ranking can reorder review attention only after real PI
     # decisions calibrate the score. Until then it may log shadow scores but must
     # not hide, auto-accept, or auto-defer candidates.
     production_enabled: false

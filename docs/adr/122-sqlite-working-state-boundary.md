@@ -21,7 +21,7 @@ durable surface, but it could not represent a queued request without a fragile J
 mirror, replay a checked file from a stored payload, or render `references.bib` from
 one checked catalog table.
 
-[ADR-49](49-catalog-in-bases-linter-monitor.md) made markdown records under
+[ADR-122](122-sqlite-working-state-boundary.md) made markdown records under
 `catalog/` the catalog source of truth so Obsidian Bases could render them. That
 model is now too strong: the worker needs indexed catalog rows for materialization,
 idempotency, bibliography rendering, and later provider provenance, while Bases are
@@ -56,7 +56,7 @@ files, projections, `check_status`, SQLite requests, or queue files. There is no
   missing payload failures recorded fail-closed.
 - `references.bib` renders from checked SQLite catalog rows, with checked source
   Concepts as a fallback only when no catalog rows exist.
-- [ADR-49](49-catalog-in-bases-linter-monitor.md)'s catalog-frontmatter source-of-truth
+- [ADR-122](122-sqlite-working-state-boundary.md)'s catalog-frontmatter source-of-truth
   decision is superseded. Bases may still render catalog-shaped views while those
   files exist, but they are projections/fallbacks, not the catalog authority.
 - Git remains the reviewable record for Concepts, projections, and JSONL journals;
@@ -84,11 +84,11 @@ JSONL remains the audit and replay projection.
 
 ## Related
 
-- **Supersedes:** [ADR-49](49-catalog-in-bases-linter-monitor.md),
-  [ADR-121](121-enqueue-only-obsidian-control-panel.md)
-- **Depends on:** [ADR-28](28-write-gate-as-plugin.md),
-  [ADR-55](55-src-scaffold-populate-golden-copy.md),
-  [ADR-119](119-schema-driven-document-creation.md)
+- **Supersedes:** [ADR-122](122-sqlite-working-state-boundary.md),
+  [ADR-130](130-read-api-surfaces-and-copi.md)
+- **Depends on:** [ADR-125](125-standalone-cli-engine-architecture.md),
+  [ADR-125](125-standalone-cli-engine-architecture.md),
+  [ADR-126](126-four-type-knowledge-model.md)
 - **Implementation:** `src/memoria_vault/runtime/state.py`,
   `src/memoria_vault/runtime/worker.py`,
   `src/memoria_vault/runtime/trusted_writer.py`,

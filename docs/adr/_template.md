@@ -3,7 +3,7 @@ topic: decisions
 id: NN
 title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
 nav_exclude: true
-status: proposed  # proposed | accepted | rejected | superseded
+status: proposed  # proposed | accepted | rejected
 date_proposed: YYYY-MM-DD
 date_resolved:
 assumes: []        # ADR-NN refs / mechanisms this rests on — so a change that invalidates it is detectable
@@ -24,8 +24,10 @@ superseded_by: []
 > - `proposed` — under discussion; no action taken yet.
 > - `accepted` — decided; the codebase follows this rule. Implementation can still
 >   be unscheduled; readiness and scheduling live on the linked GitHub issue.
-> - `superseded` — replaced by a later ADR (set `superseded_by`).
 > - `rejected` — decided against; kept with the reasoning so it isn't re-litigated.
+>
+> A replaced decision's ADR is **deleted** — there is no `superseded` status; its
+> `supersedes:`/`superseded_by:` lineage stays recoverable in git history.
 >
 > **All ADR files** carry `nav_exclude: true` so the public sidebar links to the
 > Decision records index instead of listing every decision as a top-level page.

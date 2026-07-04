@@ -57,5 +57,5 @@ research priorities.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-95](95-nightly-proactive-discovery-loop.md).
+- **Related decisions / Depends on:** [ADR-129](129-layered-machine-judgment.md), [ADR-95](95-nightly-proactive-discovery-loop.md).
 - **Tracking issue:** [#705](https://github.com/eranroseman/memoria-vault/issues/705).

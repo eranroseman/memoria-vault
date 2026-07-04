@@ -1,4 +1,4 @@
-"""L1 component tests for gen_adr_index (ADR-44)."""
+"""L1 component tests for gen_adr_index."""
 
 import gen_adr_index as _m
 import pytest
@@ -45,13 +45,13 @@ def test_parse_adr_reads_typed_frontmatter_fields():
     assert validate_adr(_m.Path("docs/adr/28-x.md"), adr) == []
 
 
-def test_status_cell_renders_superseded_target():
-    superseded = parse_adr(
-        _frontmatter(id="27", title="Old", status="superseded", superseded_by="[28]")
-    )
+def test_status_cell_renders_supersession_arrow():
+    # `superseded_by` is retained as a lineage field (traces what an ADR absorbed /
+    # was replaced by); status_cell renders it as an arrow when present.
+    adr = parse_adr(_frontmatter(id="27", title="Old", status="accepted", superseded_by="[28]"))
 
-    assert superseded["superseded_by"] == [28]
-    assert status_cell(superseded) == "superseded → ADR-28"
+    assert adr["superseded_by"] == [28]
+    assert status_cell(adr) == "accepted → ADR-28"
 
 
 def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
@@ -60,9 +60,7 @@ def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
     )
     bad_errs = validate_adr(_m.Path("docs/adr/03-bad.md"), bad)
     accepted_open = parse_adr(_frontmatter(id="4", title="Bad", date_resolved=""))
-    superseded_missing_by = parse_adr(
-        _frontmatter(id="5", title="Bad", status="superseded", date_resolved="2026-06-02")
-    )
+    superseded_retired = parse_adr(_frontmatter(id="5", title="Retired", status="superseded"))
 
     assert any("missing frontmatter key `assumes`" in e for e in bad_errs)
     assert any("missing frontmatter key `nav_exclude`" in e for e in bad_errs)
@@ -71,9 +69,11 @@ def test_validate_adr_reports_missing_keys_and_bad_lifecycle_dates():
         "accepted ADR must set date_resolved" in e
         for e in validate_adr(_m.Path("docs/adr/04-bad.md"), accepted_open)
     )
+    # `superseded` is a retired status: superseded ADRs are deleted (absorbed into
+    # their successor + git history), never kept, so the status is now rejected.
     assert any(
-        "superseded ADR must set superseded_by" in e
-        for e in validate_adr(_m.Path("docs/adr/05-bad.md"), superseded_missing_by)
+        "invalid status `superseded`" in e
+        for e in validate_adr(_m.Path("docs/adr/05-retired.md"), superseded_retired)
     )
 
 
@@ -127,9 +127,7 @@ def test_render_table_sorts_by_id_and_uses_zero_padded_links():
 def test_collect_splice_and_build_round_trip(tmp_path):
     adr_dir = tmp_path
     (adr_dir / "01-alpha.md").write_text(_frontmatter(id="1", title="Alpha"))
-    (adr_dir / "02-beta.md").write_text(
-        _frontmatter(id="2", title="Beta", status="superseded", superseded_by="[1]")
-    )
+    (adr_dir / "02-beta.md").write_text(_frontmatter(id="2", title="Beta"))
     (adr_dir / "_template.md").write_text("---\nid: 0\ntitle: T\nstatus: x\n---\n")
     readme = adr_dir / "README.md"
     readme.write_text(f"# Decisions\n\n{START}\n\nstale\n\n{END}\n\ntail\n")

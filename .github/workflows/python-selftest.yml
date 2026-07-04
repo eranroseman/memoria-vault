@@ -1,7 +1,7 @@
 name: python-selftest
 
 # Runs the L1 pytest suite (tests/) for the vault's Python tooling + repo scripts
-# against the real runtime deps (ADR-44), then runs the offline e2e smoke.
+# against the real runtime deps, then runs the offline e2e smoke.
 #
 # The policy hook lives in the runtime package; dev test tooling installs the
 # package extras needed by component tests.

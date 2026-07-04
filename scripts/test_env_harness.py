@@ -252,7 +252,7 @@ def replay(root: Path, vault: Path, cassette_path: Path) -> ReplayResult:
 
 
 def run_model_smoke() -> int:
-    """Opt-in ADR-80 G3 smoke for a local OpenAI-compatible tool-call endpoint."""
+    """Opt-in G3 smoke for a local OpenAI-compatible tool-call endpoint."""
     base_url = os.environ.get("MEMORIA_MODEL_BASE_URL", "").rstrip("/")
     model = os.environ.get("MEMORIA_MODEL_NAME", "local-tool-smoke")
     # Local runtimes vary: a 12B model on CPU can take ~45s for a single tool
