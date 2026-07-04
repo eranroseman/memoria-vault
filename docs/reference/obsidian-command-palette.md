@@ -6,9 +6,9 @@ grand_parent: Reference
 
 # Obsidian command palette
 
-Alpha.15 has no required Obsidian command-palette surface. The product surface is
-the `memoria` CLI, and optional editor adapters must call the CLI/engine instead
-of owning workflow state or write policy.
+Alpha.15 ships no Obsidian command-palette commands or adapter implementation.
+The product surface is the `memoria` CLI, and optional editor adapters must call
+the CLI/engine instead of owning workflow state or write policy.
 
 ## CLI replacements
 

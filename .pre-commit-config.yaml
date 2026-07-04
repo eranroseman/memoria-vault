@@ -15,13 +15,12 @@ repos:
         always_run: true
         pass_filenames: false
 
-      # Block 8: JSON syntax check (exclude vendored Obsidian plugin files)
+      # Block 8: JSON syntax check
       - id: check-json
         name: check json
         language: system
         entry: check-json
         files: \.json$
-        exclude: src/\.obsidian/plugins/
 
       - id: ruff
         name: ruff
@@ -40,7 +39,6 @@ repos:
         language: system
         entry: yamllint
         files: \.(yaml|yml)$
-        exclude: src/\.obsidian/
 
       - id: shellcheck
         name: shellcheck

@@ -6,9 +6,9 @@ grand_parent: Reference
 
 # Obsidian plugin data files
 
-Alpha.15 ships no Obsidian plugin data files. There is no committed plugin
-`data.json`, plugin build artifact, editor secret file, or first-launch plugin
-setup in the standalone baseline.
+Alpha.15 ships no Obsidian plugin data files or `.obsidian/plugins/` tree. There
+is no committed plugin `data.json`, plugin build artifact, editor secret file,
+or first-launch plugin setup in the standalone baseline.
 
 ## Adapter rule
 

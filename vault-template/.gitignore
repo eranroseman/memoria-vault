@@ -8,15 +8,6 @@
 # Memoria-authored examples use lowercase `.example` (industry standard); the
 # Hermes-generated `.env.EXAMPLE` is uppercase (upstream tooling — not changed).
 
-# Obsidian Local REST API plugin: data.json contains generated secrets
-# (apiKey, TLS certificate, RSA private key). Plugin regenerates on first launch.
-# Only the data.json.example file ships in this repo.
-.obsidian/plugins/obsidian-local-rest-api/data.json
-
-# agent-client: data.json holds per-machine agent command paths ({{HOME}}) and
-# any provider apiKeys. Ships as data.json.example.
-.obsidian/plugins/agent-client/data.json
-
 # Librarian project hints: personal project scopes / topic lists (ADR-15).
 # Ships as project-hints.yaml.example.
 .memoria/project-hints.yaml

@@ -13,7 +13,7 @@ superseded_by: [125]
 
 # ADR-74: Manage bundled Obsidian plugins with a pinned provenance manifest
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR. Alpha.15 ships no Obsidian plugin implementation, bundled plugin artifacts, plugin manifest, or plugin updater.
 
 ## Context
 
