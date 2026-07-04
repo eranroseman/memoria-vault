@@ -54,8 +54,9 @@ Distinguish blocking failures from known advisory warnings.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
-  matching generator check (`gen_reference_refs.py --check`) or route the change
-  to the source/generator.
+  matching generator or drift check. For the ADR index, run
+  `python scripts/gen_adr_index.py --check`; otherwise route the change to the
+  owning source/generator named by the page.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.
