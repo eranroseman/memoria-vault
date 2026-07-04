@@ -119,29 +119,27 @@ audit found several of these unmet):**
    **Do not resume agent work until the Phase B PR has merged.** Given this repo's
    heavy concurrency (worktrees appear/vanish every few minutes), treat this as a
    scheduled maintenance window, not a lull.
-2. **Every worktree clean** — the bare repo is built from *committed* state, so
-   any uncommitted work is lost when old worktrees are removed. `git status` in
-   every worktree must be empty. (Audit: `~/mv/adr-consolidate` still had
-   uncommitted changes **and** 3 unpushed commits — an active session. Wait for it
-   to commit AND push. Unpushed commits are captured by the clone; uncommitted
-   changes are not.)
-3. **No unresolved stashes** — `git clone --bare` does **not** copy stashes, so
-   every `git stash`/rebase-autostash entry vanishes from the new layout (it
-   survives only in the backup, and is fiddly to recover). `git stash list` must
-   be **empty** before migrating. (Audit found TWO `autostash` entries in the
-   shared git dir — a 161-file diff, and one holding `scratch/.notes` + a real
-   214-line alpha.13 design change. This is the single biggest silent-data-loss
-   risk.) Resolve each: `git -C ~/memoria-vault stash show -p stash@{N}` →
-   apply/commit the real ones, drop confirmed-stale ones.
-4. **Hermes gateway stopped** — Obsidian and Hermes are **not used in alpha.15**,
-   so this is a light gate. The gateway is a systemd user service
-   (`hermes-gateway.service`) that respawns on a plain `kill`, so stop it with
-   `systemctl --user stop hermes-gateway.service` — only so no process holds the
-   sandbox during the move. It **stays stopped; do not restart it** (nothing in
-   alpha.15 needs it) and there is no runtime config to re-point. (Already stopped
-   2026-07-04.)
-5. **This plan committed to `scratch`** — so the bare clone captures it and it
-   survives the move. (Done: commit `53ebbb61`.)
+2. **Every worktree clean** — the bare repo is built from *committed* state, so any
+   uncommitted work is lost when old worktrees are removed. **Check live:** `git status`
+   empty in every worktree (enumerate with `git -C ~/memoria-vault worktree list`).
+   Unpushed *commits* are fine (the local clone captures every branch tip); only
+   *uncommitted* changes are at risk.
+3. **No unresolved stashes** — `git clone --bare` does **not** copy stashes, so every
+   `git stash`/rebase-autostash entry vanishes from the new layout (it survives only
+   in the backup, and is fiddly to recover). **Check live:** `git -C ~/memoria-vault
+   stash list` must be **empty**; resolve any via `stash show -p stash@{N}` →
+   apply/commit the real ones, drop stale ones. (A high silent-data-loss vector — a
+   2026-07-04 audit found two autostash entries here, since dropped; see §9. Re-check
+   at execution, don't trust that they're still clear.)
+4. **Hermes gateway not holding the sandbox** — Obsidian and Hermes are **not used in
+   alpha.15**, so this is a light gate. The `hermes-gateway.service` systemd user unit
+   exists (and respawns on a plain `kill`). **Check live:** `systemctl --user is-active
+   hermes-gateway.service` (expect `inactive`/`failed`) and `pgrep -af 'gateway run'`
+   (expect none); if active, `systemctl --user stop hermes-gateway.service`. It stays
+   stopped — nothing in alpha.15 needs it, and there is no runtime config to re-point.
+5. **This plan committed + pushed to `origin/scratch`** — so the bare clone captures
+   the latest version. It is kept committed as it evolves; **check live:** `git status`
+   clean in the scratch worktree before the clone (step 2).
 
 ## 3. Plan of work
 
@@ -423,9 +421,9 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 
 ## 7. Progress
 
-- [ ] Prereqs met: quiet window; every worktree clean (`adr-consolidate`
-      committed + pushed); **`git stash list` empty** (2 autostashes resolved);
-      **Hermes gateway stopped/confirmed clear**; this plan committed to `scratch`.
+- [ ] Prereqs met (all re-checked live, not assumed): quiet window; every worktree
+      `git status` clean; **`git stash list` empty**; **Hermes gateway
+      inactive/`gateway run` absent**; this plan committed + pushed to `origin/scratch`.
 - [ ] Phase A: `scratch` de-nested + pushed (step 0); bare container built,
       verified (step 5); **durable ignored data (`_papers`/`_notes`/…) preserved into
       `main/`** (step-6 preserve-gate); swapped in (step 6); pre-commit re-installed.
