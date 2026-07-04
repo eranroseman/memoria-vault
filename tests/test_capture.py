@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import shutil
-import subprocess
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -20,29 +18,13 @@ from memoria_vault.runtime.capture import (
 )
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import sha256_file
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import copy_memoria_dirs, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "capture@example.invalid")
-    git(tmp_path, "config", "user.name", "Capture")
+    copy_memoria_dirs(tmp_path, "schemas")
+    init_git(tmp_path, "capture@example.invalid", "Capture")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
@@ -74,6 +56,7 @@ def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     assert source is not None
     assert source["check_status"] == "checked"
     assert source["source_id"] == "source-alpha"
+    assert source["item_type"] == "article"
     assert source["raw_path"] == ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
     assert source["content_path"] == ".memoria/blobs/source-content/source-alpha/content.txt"
     assert source["raw_text_sha256"] == sha256_file(raw)

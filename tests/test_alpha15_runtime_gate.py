@@ -16,6 +16,7 @@ from memoria_vault.runtime.trusted_writer import (
     promote_checked,
     stage_concept,
 )
+from tests.helpers import patch_pydantic_ai
 
 
 def test_alpha15_runtime_gate_replays_user_facing_commands(
@@ -315,25 +316,9 @@ def _run_json(
 
 
 def _fake_runner(monkeypatch: pytest.MonkeyPatch) -> None:
-    class FakeProvider:
-        def __init__(self, **kwargs: object) -> None:
-            self.kwargs = kwargs
-
-    class FakeModel:
-        def __init__(self, model_name: str, *, provider: object) -> None:
-            self.model_name = model_name
-            self.provider = provider
-
-    class FakeAgent:
-        def __init__(self, model: object) -> None:
-            self.model = model
-
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://127.0.0.1:11434/v1")
     monkeypatch.setenv("MEMORIA_MODEL", "local-test-model")
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
-    )
+    patch_pydantic_ai(monkeypatch)
 
 
 def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> None:

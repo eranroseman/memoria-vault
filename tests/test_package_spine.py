@@ -40,11 +40,11 @@ def test_alpha15_stack_dependencies_stay_small_and_no_orm():
 
 
 def test_runtime_sqlite_schema_is_packaged_resource():
-    schema = files("memoria_vault.runtime").joinpath("schema_v1.sql").read_text(encoding="utf-8")
+    schema = files("memoria_vault.runtime").joinpath("schema.sql").read_text(encoding="utf-8")
     source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
-    assert "PRAGMA user_version = 3" in schema
+    assert "PRAGMA user_version = 4" in schema
     assert "CREATE TABLE IF NOT EXISTS" not in source
 
 

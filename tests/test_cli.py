@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -13,25 +12,10 @@ import pytest
 from memoria_vault import __version__
 from memoria_vault.cli import _build_parser, main
 from memoria_vault.runtime import state
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import append_journal_event
 from memoria_vault.runtime.vaultio import read_frontmatter
 from memoria_vault.runtime.worker import enqueue_operation, enqueue_trusted_write
-
-ROOT = Path(__file__).resolve().parent.parent
-
-
-def git(workspace: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=workspace,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
+from tests.helpers import ROOT, git, mark_file_status, patch_pydantic_ai
 
 
 def _assert_alpha15_request_columns(columns: set[str]) -> None:
@@ -42,16 +26,6 @@ def _assert_alpha15_request_columns(columns: set[str]) -> None:
         "precondition_hashes_json",
     } <= columns
     assert {"trigger_type", "target_path", "target_hash"}.isdisjoint(columns)
-
-
-def mark_file_status(workspace: Path, rel: str, concept_type: str, status: str = "checked") -> None:
-    state.record_observed_file_edit(
-        workspace,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(workspace / rel),
-    )
-    state.set_concept_verdict(workspace, rel, status)
 
 
 def write_runner_provider_config(
@@ -2630,27 +2604,11 @@ def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
     workspace = tmp_path / "workspace"
     seen = {}
 
-    class FakeProvider:
-        def __init__(self, **kwargs):
-            seen["provider_kwargs"] = kwargs
-
-    class FakeModel:
-        def __init__(self, model_name, *, provider):
-            seen["model_name"] = model_name
-            seen["provider"] = provider
-
-    class FakeAgent:
-        def __init__(self, model):
-            seen["model"] = model
-
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://127.0.0.1:11434/v1")
     monkeypatch.setenv("MEMORIA_MODEL", "local-test-model")
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
-    )
+    patch_pydantic_ai(monkeypatch, seen=seen)
 
     rc = main(
         [
@@ -2685,18 +2643,6 @@ def test_cli_doctor_runner_uses_local_default_base_url(
     workspace = tmp_path / "workspace"
     seen = {}
 
-    class FakeProvider:
-        def __init__(self, **kwargs):
-            seen["provider_kwargs"] = kwargs
-
-    class FakeModel:
-        def __init__(self, model_name, *, provider):
-            seen["model_name"] = model_name
-
-    class FakeAgent:
-        def __init__(self, model):
-            seen["model"] = model
-
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
     for name in (
@@ -2707,10 +2653,7 @@ def test_cli_doctor_runner_uses_local_default_base_url(
         "KILOCODE_API_KEY",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
-    )
+    patch_pydantic_ai(monkeypatch, seen=seen)
 
     rc = main(
         [
@@ -2740,36 +2683,12 @@ def test_cli_doctor_runner_live_dispatches_through_pydantic_ai(
     workspace = tmp_path / "workspace"
     seen = {}
 
-    class FakeProvider:
-        def __init__(self, **kwargs):
-            seen["provider_kwargs"] = kwargs
-
-    class FakeModel:
-        def __init__(self, model_name, *, provider):
-            seen["model_name"] = model_name
-            seen["provider"] = provider
-
-    class FakeResult:
-        output = "runner ok"
-
-    class FakeAgent:
-        def __init__(self, model):
-            seen.setdefault("models", []).append(model)
-
-        def run_sync(self, prompt, *, model_settings):
-            seen["prompt"] = prompt
-            seen["model_settings"] = model_settings
-            return FakeResult()
-
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
     write_runner_provider_config(workspace)
     monkeypatch.setenv("MEMORIA_MODEL_BASE_URL", "http://model.test/v1")
     monkeypatch.setenv("MEMORIA_MODEL", "live-test-model")
-    monkeypatch.setattr(
-        "memoria_vault.runtime.operations._load_pydantic_ai_openai",
-        lambda: (FakeAgent, FakeModel, FakeProvider),
-    )
+    patch_pydantic_ai(monkeypatch, output="runner ok", seen=seen)
 
     rc = main(
         [

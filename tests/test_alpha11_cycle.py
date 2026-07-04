@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import shutil
-import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime import state
@@ -14,30 +12,13 @@ from memoria_vault.runtime.worker import (
     run_next_job,
     run_request,
 )
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import copy_memoria_dirs, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "cycle@example.invalid")
-    git(tmp_path, "config", "user.name", "Alpha Cycle")
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, "cycle@example.invalid", "Alpha Cycle")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def run_operation(

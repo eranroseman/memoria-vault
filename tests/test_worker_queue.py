@@ -5,7 +5,6 @@ import json
 import multiprocessing
 import queue
 import shutil
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -35,32 +34,15 @@ from memoria_vault.runtime.worker import (
 from memoria_vault.runtime.worker import (
     main as worker_main,
 )
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, copy_memoria_dirs, git, init_git, mark_file_status
 
 
 def workspace(tmp_path: Path) -> Path:
-    shutil.copytree(ROOT / "vault-template/.memoria/schemas", tmp_path / ".memoria/schemas")
-    shutil.copytree(ROOT / "vault-template/.memoria/config", tmp_path / ".memoria/config")
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "worker@example.invalid")
-    git(tmp_path, "config", "user.name", "Alpha Worker")
+    copy_memoria_dirs(tmp_path, "schemas", "config")
+    init_git(tmp_path, "worker@example.invalid", "Alpha Worker")
     git(tmp_path, "add", ".memoria/schemas", ".memoria/config")
     git(tmp_path, "commit", "-m", "seed worker workspace")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def note_text(status: str = "checked") -> str:
@@ -115,21 +97,6 @@ def write_note(vault: Path, name: str, status: str, body: str) -> Path:
     )
     state.set_concept_verdict(vault, path.relative_to(vault).as_posix(), status)
     return path
-
-
-def mark_file_status(
-    vault: Path,
-    rel: str,
-    concept_type: str = "note",
-    status: str = "checked",
-) -> None:
-    state.record_observed_file_edit(
-        vault,
-        output_id=rel,
-        concept_type=concept_type,
-        output_sha256=sha256_file(vault / rel),
-    )
-    state.set_concept_verdict(vault, rel, status)
 
 
 def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: Path) -> None:

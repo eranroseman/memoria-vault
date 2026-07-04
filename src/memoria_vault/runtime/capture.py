@@ -113,6 +113,8 @@ def stage_catalog_source(
             provider_coverage,
         )
         resource = resource or str(existing.get("resource") or "")
+        if item_type == "article":
+            item_type = str(existing.get("item_type") or item_type)
         citekey = citekey or str(existing.get("citekey") or "")
     run_id = run_id or f"capture:{source_id}"
 
@@ -138,6 +140,7 @@ def stage_catalog_source(
         concept_path=f"catalog/sources/{source_id}",
         doi=str((identifiers or {}).get("doi") or (csl_json or {}).get("DOI") or "") or None,
         resource=resource,
+        item_type=item_type,
         identifiers=identifiers,
         citekey=citekey,
         csl_json=csl_json,
@@ -309,37 +312,20 @@ def capture_bibtex_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture one source from a local BibTeX entry."""
-    entry = parse_bibtex_entry(bibtex)
-    fields = entry["fields"]
-    citekey = entry["citekey"]
-    title = fields.get("title") or citekey
-    doi = fields.get("doi", "")
-    resource = fields.get("url") or (f"https://doi.org/{doi}" if doi else "")
-    abstract = fields.get("abstract") or ""
-    text = content_text or abstract or title
-    identifiers = {
-        key: value
-        for key in ("doi", "isbn", "issn", "pmid", "pmcid", "arxiv")
-        if (value := fields.get(key))
-    }
-    return capture_source(
+    payload = bibtex_capture_payload(
+        bibtex,
+        content_text=content_text,
+        source_id=source_id,
+        description=description,
+    )
+    citekey = str(payload.get("citekey") or "")
+    return stage_capture_payload(
         vault,
-        source_id or _bibtex_default_source_id(fields, citekey),
-        title,
-        description or fields.get("abstract") or f"BibTeX {entry['entry_type']} source.",
-        text,
-        raw_bytes=bibtex.strip().encode() + b"\n",
-        raw_filename=f"{safe_filename(citekey)}.bib",
-        resource=resource,
-        item_type=_item_type(entry["entry_type"]),
-        identifiers=identifiers or None,
-        csl_json=_csl_json(entry),
-        provider_coverage="partial",
-        text_status=_fallback_text_status(content_text, abstract),
-        citekey=citekey,
+        payload,
         machine=machine,
         run_id=run_id or f"capture-bibtex:{citekey}",
         workflow="capture_bibtex_source",
+        check_status="checked",
     )
 
 
@@ -377,7 +363,6 @@ def bibtex_capture_payload(
         "provider_coverage": "partial",
         "text_status": _fallback_text_status(content_text, abstract),
         "citekey": citekey,
-        "stage_only": True,
     }
 
 
@@ -413,8 +398,39 @@ def csl_capture_payload(
         "provider_coverage": "partial",
         "text_status": _fallback_text_status(content_text, abstract),
         "citekey": str(csl_json.get("id") or ""),
-        "stage_only": True,
     }
+
+
+def stage_capture_payload(
+    vault: Path,
+    payload: dict[str, Any],
+    *,
+    machine: str | None = None,
+    run_id: str | None = None,
+    workflow: str = "capture_source",
+    check_status: str = "unchecked",
+) -> dict[str, Any]:
+    raw_text = payload.get("raw_text")
+    return stage_catalog_source(
+        vault,
+        str(payload["source_id"]),
+        str(payload["title"]),
+        str(payload["description"]),
+        str(payload["content_text"]),
+        raw_bytes=str(raw_text).encode() if raw_text is not None else None,
+        raw_filename=str(payload.get("raw_filename") or "source.txt"),
+        resource=str(payload.get("resource") or ""),
+        item_type=str(payload.get("item_type") or "article"),
+        identifiers=payload.get("identifiers"),
+        csl_json=payload.get("csl_json"),
+        provider_coverage=str(payload.get("provider_coverage") or "partial"),
+        text_status=str(payload.get("text_status") or "full-text"),
+        citekey=str(payload.get("citekey") or ""),
+        machine=machine,
+        run_id=run_id or str(payload.get("run_id") or "") or None,
+        workflow=workflow,
+        check_status=check_status,
+    )
 
 
 def capture_url_source(
@@ -428,33 +444,15 @@ def capture_url_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture one URL snapshot with stdlib HTML text extraction."""
-    resource = url.strip()
-    if not resource:
-        raise ValueError("url is required")
-    raw_bytes = _read_url_bytes(resource, timeout)
-    extracted_title, content_text = _html_text(raw_bytes)
-    final_title = title or extracted_title or resource
-    return capture_source(
+    return _store_url_source(
         vault,
-        _url_source_id(resource),
-        final_title,
-        description or f"URL snapshot captured from {resource}.",
-        content_text,
-        raw_bytes=raw_bytes,
-        raw_filename=f"{safe_filename(_url_source_id(resource))}.html",
-        resource=resource,
-        item_type="webpage",
-        csl_json={
-            "id": _url_source_id(resource),
-            "type": "webpage",
-            "title": final_title,
-            "URL": resource,
-        },
-        provider_coverage="partial",
-        text_status="full-text",
+        url,
+        title=title,
+        description=description,
+        timeout=timeout,
         machine=machine,
-        run_id=run_id or f"capture-url:{resource}",
-        workflow="capture_url_source",
+        run_id=run_id,
+        check_status="checked",
     )
 
 
@@ -469,6 +467,29 @@ def stage_url_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Stage one URL snapshot as an unchecked DB row plus text/blob payloads."""
+    return _store_url_source(
+        vault,
+        url,
+        title=title,
+        description=description,
+        timeout=timeout,
+        machine=machine,
+        run_id=run_id,
+        check_status="unchecked",
+    )
+
+
+def _store_url_source(
+    vault: Path,
+    url: str,
+    *,
+    title: str | None,
+    description: str | None,
+    timeout: float,
+    machine: str | None,
+    run_id: str | None,
+    check_status: str,
+) -> dict[str, Any]:
     resource = url.strip()
     if not resource:
         raise ValueError("url is required")
@@ -497,6 +518,7 @@ def stage_url_source(
         machine=machine,
         run_id=run_id or f"capture-url:{resource}",
         workflow="capture_url_source",
+        check_status=check_status,
     )
 
 
@@ -518,29 +540,22 @@ def capture_pdf_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Capture a PDF raw blob and extracted page text."""
-    stable_source_id = _source_id(source_id)
-    pdf_raw_filename = raw_filename or "source.pdf"
-    pages = _extract_pdf_pages(raw_bytes)
-    _validate_pdf_text_coherence(pages)
-    content_text = _pdf_content_text(pages)
-    return capture_source(
+    return _store_pdf_source(
         vault,
-        stable_source_id,
+        source_id,
         title,
         description,
-        content_text,
-        raw_bytes=raw_bytes,
-        raw_filename=pdf_raw_filename,
+        raw_bytes,
+        raw_filename=raw_filename,
         resource=resource,
         item_type=item_type,
         identifiers=identifiers,
         csl_json=csl_json,
         provider_coverage=provider_coverage,
-        text_status="full-text",
         citekey=citekey,
         machine=machine,
-        run_id=run_id or f"capture-pdf:{_source_id(source_id)}",
-        workflow="capture_pdf_source",
+        run_id=run_id,
+        check_status="checked",
     )
 
 
@@ -562,6 +577,43 @@ def stage_pdf_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     """Stage a PDF raw blob and extracted text as an unchecked DB row."""
+    return _store_pdf_source(
+        vault,
+        source_id,
+        title,
+        description,
+        raw_bytes,
+        raw_filename=raw_filename,
+        resource=resource,
+        item_type=item_type,
+        identifiers=identifiers,
+        csl_json=csl_json,
+        provider_coverage=provider_coverage,
+        citekey=citekey,
+        machine=machine,
+        run_id=run_id,
+        check_status="unchecked",
+    )
+
+
+def _store_pdf_source(
+    vault: Path,
+    source_id: str,
+    title: str,
+    description: str,
+    raw_bytes: bytes,
+    *,
+    raw_filename: str,
+    resource: str,
+    item_type: str,
+    identifiers: dict[str, Any] | None,
+    csl_json: dict[str, Any] | None,
+    provider_coverage: str,
+    citekey: str,
+    machine: str | None,
+    run_id: str | None,
+    check_status: str,
+) -> dict[str, Any]:
     stable_source_id = _source_id(source_id)
     pdf_raw_filename = raw_filename or "source.pdf"
     pages = _extract_pdf_pages(raw_bytes)
@@ -585,6 +637,7 @@ def stage_pdf_source(
         machine=machine,
         run_id=run_id or f"capture-pdf:{stable_source_id}",
         workflow="capture_pdf_source",
+        check_status=check_status,
     )
 
 

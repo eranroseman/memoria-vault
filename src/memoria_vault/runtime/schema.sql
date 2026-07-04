@@ -1,4 +1,4 @@
--- Memoria runtime SQLite schema v1. Applied by runtime.state via PRAGMA user_version.
+-- Memoria runtime SQLite schema. Applied by runtime.state via PRAGMA user_version.
 CREATE TABLE IF NOT EXISTS operation_requests (
     request_id TEXT PRIMARY KEY,
     operation_id TEXT NOT NULL,
@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS catalog_sources (
     title TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
     resource TEXT NOT NULL DEFAULT '',
+    item_type TEXT NOT NULL DEFAULT 'article',
     identifiers_json TEXT NOT NULL DEFAULT '{}',
     citekey TEXT NOT NULL DEFAULT '',
     csl_json TEXT NOT NULL DEFAULT '{}',
@@ -206,4 +207,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 3;
+PRAGMA user_version = 4;

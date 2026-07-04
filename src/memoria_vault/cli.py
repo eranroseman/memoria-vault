@@ -730,7 +730,6 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
             "url": args.url,
             "title": args.title,
             "description": args.description,
-            "stage_only": True,
         }
         return _emit(_enqueue_and_run(args, "capture-url-source", payload), args)
     if args.pdf:
@@ -742,7 +741,6 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
             "description": args.description or f"Captured PDF: {path.name}",
             "raw_pdf_base64": base64.b64encode(path.read_bytes()).decode(),
             "raw_filename": path.name,
-            "stage_only": True,
         }
         return _emit(_enqueue_and_run(args, "capture-pdf-source", payload), args)
     title = args.title or args.doi or args.url or Path(args.file or args.pdf).stem
@@ -776,7 +774,6 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
                 "resource": resource,
                 "identifiers": identifiers,
                 "csl_json": _csl_json(source_id, title, args.doi, resource),
-                "stage_only": bool(args.file),
                 "text_status": text_status,
             },
         ),

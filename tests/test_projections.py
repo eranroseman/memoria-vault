@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 
 from memoria_vault.runtime import state
@@ -15,8 +14,7 @@ from memoria_vault.runtime.projections import (
     write_workspace_indexes,
 )
 from memoria_vault.runtime.worker import enqueue_operation, run_next_job
-
-ROOT = Path(__file__).resolve().parent.parent
+from tests.helpers import ROOT, git, init_git
 
 
 def workspace(tmp_path: Path) -> Path:
@@ -29,23 +27,8 @@ def workspace(tmp_path: Path) -> Path:
         "knowledge/_views/index.md",
     ):
         (tmp_path / rel).unlink(missing_ok=True)
-    git(tmp_path, "init", "-q")
-    git(tmp_path, "config", "user.email", "projections@example.invalid")
-    git(tmp_path, "config", "user.name", "Projections")
+    init_git(tmp_path, "projections@example.invalid", "Projections")
     return tmp_path
-
-
-def git(vault: Path, *args: str) -> str:
-    proc = subprocess.run(
-        ["git", *args],
-        cwd=vault,
-        check=False,
-        text=True,
-        capture_output=True,
-    )
-    if proc.returncode:
-        raise AssertionError(proc.stderr or proc.stdout)
-    return proc.stdout.strip()
 
 
 def add_catalog_work(vault: Path, source_id: str = "db-source") -> str:
