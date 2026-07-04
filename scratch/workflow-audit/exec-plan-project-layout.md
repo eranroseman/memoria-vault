@@ -114,13 +114,13 @@ audit found several of these unmet):**
    214-line alpha.13 design change. This is the single biggest silent-data-loss
    risk.) Resolve each: `git -C ~/memoria-vault stash show -p stash@{N}` →
    apply/commit the real ones, drop confirmed-stale ones.
-4. **Hermes runtime stopped** — the gateway is a **systemd user service**
-   (`hermes-gateway.service`), so a plain `kill` just respawns it. Stop it with
-   `systemctl --user stop hermes-gateway.service` (verify `is-active` → inactive
-   and no `gateway run` process), and keep it down for the whole window since it
-   may be bound to the sandbox path being moved. Restart it only in Phase C,
-   against the *new* sandbox path:
-   `systemctl --user reset-failed hermes-gateway.service && systemctl --user start hermes-gateway.service`.
+4. **Hermes gateway stopped** — Obsidian and Hermes are **not used in alpha.15**,
+   so this is a light gate. The gateway is a systemd user service
+   (`hermes-gateway.service`) that respawns on a plain `kill`, so stop it with
+   `systemctl --user stop hermes-gateway.service` — only so no process holds the
+   sandbox during the move. It **stays stopped; do not restart it** (nothing in
+   alpha.15 needs it) and there is no runtime config to re-point. (Already stopped
+   2026-07-04.)
 5. **This plan committed to `scratch`** — so the bare clone captures it and it
    survives the move. (Done: commit `53ebbb61`.)
 
@@ -152,12 +152,12 @@ in force until this PR merges** — until then the disk contradicts AGENTS.md.
 **Phase C — post-migration reconfiguration (machine-local, no PR can do this).**
 Things that reference the old paths but live *outside* the repo, so Phase B can't
 touch them:
-- **Runtime / sandbox path.** Any Hermes profile under `~/.hermes/` or Obsidian
-  vault registration pointing at `~/Memoria-test` must be re-pointed to
-  `~/memoria-vault/sandbox` (or the sandbox reinstalled there). *Only then* restart
-  the gateway (`systemctl --user reset-failed hermes-gateway.service && systemctl
-  --user start hermes-gateway.service`) and confirm it comes up against the new
-  path.
+- **Runtime / sandbox path — N/A in alpha.15.** Obsidian and Hermes are not used,
+  so there is no machine-local runtime config pointing at the sandbox to re-point
+  and no gateway to restart. The sandbox folder still moves (Phase A) and its
+  *tracked* default updates (Phase B); nothing else depends on it. (If a later
+  stage adopts Hermes/Obsidian, re-point `~/.hermes` profiles + the Obsidian vault
+  to `~/memoria-vault/sandbox` then.)
 - **Branch upstreams.** The bare clone leaves branches with no upstream, so set it
   once (Phase A step, but verify here) — else bare `git pull`/`push` complain.
 - **Shell / IDE.** Aliases, shell rc, and IDE/editor workspace files that assume
@@ -277,17 +277,13 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    is what ends the freeze):
 
    ```bash
-   grep -rl 'Memoria-test' ~/.hermes 2>/dev/null    # machine-local runtime config Phase B can't reach
-   #   → edit those to ~/memoria-vault/sandbox; re-point the Obsidian vault registration too
-   systemctl --user reset-failed hermes-gateway.service
-   systemctl --user start hermes-gateway.service    # runtime back up, against the NEW sandbox path
-   systemctl --user is-active hermes-gateway.service   # expect: active
+   # Hermes/Obsidian: N/A in alpha.15 — gateway stays stopped, no runtime re-point.
+   git -C ~/memoria-vault/main branch -vv    # confirm upstreams set (Phase A) so pull/push work
    # shell/IDE: fix any alias / workspace file assuming ~/memoria-vault is the repo or ~/mv the worktree parent
    # agent memory: update entries recording old worktree/repo/vault paths
    ```
 
-   Expected: no `~/.hermes` file still points at `~/Memoria-test`; gateway `active`
-   against `~/memoria-vault/sandbox`; nothing you use references `~/mv` or assumes
+   Expected: branch upstreams resolve; nothing you use references `~/mv` or assumes
    `~/memoria-vault` is a checkout. **Only now resume agent work.**
 
 ## 5. Validation and acceptance
