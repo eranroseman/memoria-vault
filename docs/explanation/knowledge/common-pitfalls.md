@@ -76,8 +76,7 @@ The failures above share a root, and naming it directly is the best defense. A r
 Tasks like API enrichment, link-candidate proposals, structural lint checks, and citation trace checks are deterministic or can be checked deterministically. Promotion, merge and archive decisions, synthesis quality assessment, and decisions about which papers to read are not — they require epistemic judgment that the agent cannot claim on behalf of the PI. Asking the agent to do the latter produces outputs that look authoritative but aren't, which is why Memoria separates checked materialization from PI attention and curation.
 
 For the explicit mapping of current operation surfaces, see
-[Operations](../../reference/operations.md). For the no-installed-profile
-boundary, see Installed profiles.
+[Operations](../../reference/operations.md).
 
 ---
 

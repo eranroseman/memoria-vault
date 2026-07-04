@@ -1,10 +1,10 @@
 ---
-title: Kanban board reference
+title: Control plane reference
 parent: Vault data model
 grand_parent: Reference
 ---
 
-# Kanban board reference
+# Control plane reference
 
 The shipped control plane is the operation request table in
 `.memoria/memoria.sqlite`, surfaced through the `memoria request ...`,

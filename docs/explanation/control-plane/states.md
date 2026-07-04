@@ -10,8 +10,8 @@ nav_order: 1
 This page explains why the control-plane state machine is shaped the way it is:
 why execution state stays separate from PI attention, and why rejected work
 creates a new request instead of rewriting the old one. For the current command
-lookup and the no-Hermes-board alpha.15 contract, see the
-[Kanban board reference](../../reference/kanban-board.md).
+lookup, see the
+[Control plane reference](../../reference/control-plane.md).
 
 ---
 
@@ -111,4 +111,4 @@ a task tracker.
 
 **Reference**
 
-- Board-states lookup table: [Kanban board reference](../../reference/kanban-board.md)
+- Board-states lookup table: [Control plane reference](../../reference/control-plane.md)

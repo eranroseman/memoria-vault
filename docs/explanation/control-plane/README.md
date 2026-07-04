@@ -3,7 +3,7 @@ title: Request control plane
 parent: Explanation
 nav_order: 5
 has_children: true
-permalink: /explanation/kanban-board/
+permalink: /explanation/control-plane/
 ---
 
 # The request control plane
@@ -25,8 +25,8 @@ The central design move is still to keep three dimensions separate: execution
 status, PI-facing attention state, and any machine recommendation. A worker
 finishing never silently becomes a PI disposition. Why those dimensions stay
 separate is developed in [Request states and the review gate](states.md); the
-current command lookup is in the [Kanban board reference](../../reference/kanban-board.md),
-which now records the no-Hermes-board alpha.15 contract. A request is *work*
+current command lookup is in the [Control plane reference](../../reference/control-plane.md).
+A request is *work*
 (transient, closed when done); a vault note is *knowledge* (durable).
 
 ## Documents in this section
@@ -39,7 +39,7 @@ which now records the no-Hermes-board alpha.15 contract. A request is *work*
 | [WIP limits and back-pressure](wip-limits.md)                 | Why request concurrency and review caps intentionally slow work before review quality degrades. |
 
 For the current control-plane command lookup, see the
-[Kanban board reference](../../reference/kanban-board.md).
+[Control plane reference](../../reference/control-plane.md).
 
 ## Related
 

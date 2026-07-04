@@ -25,7 +25,7 @@ The distribution mechanism is `vault-template/` plus the installed Memoria packa
 | Populate | Copy system files from `vault-template/`. |
 | Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, install the Memoria package, and register qmd search. |
 
-Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md); the no-installed-profile contract is Installed profiles.
+Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately
 *left* the installer — it is an optional import/export adapter, not core

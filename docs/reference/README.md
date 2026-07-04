@@ -25,7 +25,7 @@ every field and count.
 | [Document types](document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
-| [Kanban board reference](kanban-board.md) | No-Hermes-board contract and current request-control commands | Manual |
+| [Control plane reference](control-plane.md) | Request-control commands and state | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |
 
 ## [Agents and control](agents-and-control.md)
@@ -45,7 +45,7 @@ every field and count.
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
-| [Pattern library](pattern-library.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
+| [Prompt operations](prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 | [Clustering](clustering.md) | Alpha.15 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)

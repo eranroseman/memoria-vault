@@ -1,10 +1,10 @@
 ---
-title: Pattern library
+title: Prompt operations
 parent: Agents and control
 grand_parent: Reference
 ---
 
-# Pattern library
+# Prompt operations
 
 The shipped prompt operations, the CLI worker runner, and the prompt composition
 contract.

@@ -25,8 +25,7 @@ installed profile packages.
 
 The table below is an orienting illustration of what each operation family does
 and the attention signal it can raise. [Operations](../../reference/operations.md)
-owns the concrete command and manifest surface; Installed profiles
-owns the no-installed-profile boundary.
+owns the concrete command and manifest surface.
 
 | Operation family | Work | Attention signal |
 | --- | --- | --- |
