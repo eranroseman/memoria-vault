@@ -34,7 +34,7 @@ clean-slate stack. This ADR is the missing decision authority for both.
 Memoria is a **standalone local CLI + engine**, single-user, no daemon.
 
 - **Runtime**: Python 3.12+; `uv` distribution (`uv tool install memoria`;
-  `pip install -e .` contributor fallback); Typer CLI; stdlib `sqlite3` with
+  `pip install -e .` contributor fallback); stdlib `argparse` CLI; stdlib `sqlite3` with
   WAL and FK, **no ORM**; `.sql` DDL gated by `PRAGMA user_version`;
   pydantic-ai as the sole typed LLM runner over OpenAI-compatible endpoints;
   retrieval via qmd for alpha.15 after the baseline-gated spike: SQLite FTS5
