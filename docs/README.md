@@ -103,7 +103,7 @@ Design Book foundations, then the Explanation pages in this order.
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
 8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
-9. [Operation postures](explanation/profiles/README.md) — how old profile language maps to requests and operations
+9. [Operation postures](explanation/operation-postures/README.md) — how old profile language maps to requests and operations
 10. [Operations](explanation/operations.md) — the deterministic and checked operation layer
 11. [The control plane](explanation/control-plane/README.md) — request state, attention, and review boundaries
 12. [Decision points](explanation/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
@@ -149,7 +149,7 @@ Design Book foundations, then the Explanation pages in this order.
 
 Deterministic **operations** do the mechanical work, behind the policy gate.
 
-→ [Operation-posture rationale](explanation/profiles/README.md) · No-installed-profile contract
+→ [Operation-posture rationale](explanation/operation-postures/README.md) · No-installed-profile contract
 
 ---
 

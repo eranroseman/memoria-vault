@@ -18,7 +18,7 @@ attention signal when the PI needs to decide something.
 Old profile and lane names survive only as operation-posture vocabulary. Intake,
 extraction, linking, mapping, and verification are capability-backed operations
 with request rows and manifest ceilings, not shipped Hermes lanes or installed
-profile packages; see [Operation postures](../profiles/README.md) and
+profile packages; see [Operation postures](../operation-postures/README.md) and
 [Operations](../operations.md).
 
 The central design move is still to keep three dimensions separate: execution

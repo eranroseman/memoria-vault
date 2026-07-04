@@ -32,5 +32,5 @@ request.
 
 - The posture that checks its output: [The Peer-reviewer](peer-reviewer.md)
 - Where its drafts live: [The vault](../architecture/vault.md)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-postures.md)
 - Why canonical synthesis belongs to the human: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

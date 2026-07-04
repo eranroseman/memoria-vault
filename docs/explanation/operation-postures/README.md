@@ -3,7 +3,7 @@ title: Operation postures
 parent: Explanation
 nav_order: 3
 has_children: true
-permalink: /explanation/profiles/
+permalink: /explanation/operation-postures/
 ---
 
 # Operation postures

@@ -45,5 +45,5 @@ through documented handoff artifacts, not an agent-control plane.
 
 - Where the handoff lives: [The vault](../architecture/vault.md)
 - How far each posture may delegate: [Operation postures](README.md#delegation-posture)
-- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-profiles.md)
+- Why the posture boundaries are strict: [Why operation postures, not a generalist agent](../../design/why-specialist-postures.md)
 - The autonomy boundary it tests: [Why Memoria doesn't pursue full autonomy](../../design/why-not-autonomous.md)

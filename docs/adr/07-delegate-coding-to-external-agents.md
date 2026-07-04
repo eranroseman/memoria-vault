@@ -23,7 +23,7 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Decision
 
-**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The current lane context lives in [The Engineer](../explanation/profiles/engineer.md).
+**Delegate.** The Coder profile scaffolds `code-note` handoffs with vault context (motivating sources, project links, purpose) and coordinates the review gate. The actual code editing happens in a specialized external agent running as a peer with a shared filesystem. The current lane context lives in [The Engineer](../explanation/operation-postures/engineer.md).
 
 > **Current implementation status.** The Engineer/code lane is deferred in
 > alpha.11. `memoria-engineer/distribution.yaml` reserves optional environment
@@ -44,5 +44,5 @@ Does the Coder profile delegate substantive coding work to an external coding ag
 
 ## Related
 
-- **Workflows affected:** code handoff through the [Engineer](../explanation/profiles/engineer.md)
-- **Files affected:** [The Coder](../explanation/profiles/engineer.md), `99-system/templates/code-note.md` (in the starter vault)
+- **Workflows affected:** code handoff through the [Engineer](../explanation/operation-postures/engineer.md)
+- **Files affected:** [The Coder](../explanation/operation-postures/engineer.md), `99-system/templates/code-note.md` (in the starter vault)

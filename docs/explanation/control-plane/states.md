@@ -100,7 +100,7 @@ a task tracker.
 - Conceptual overview: [Request control plane](README.md)
 - The prompt the PI reads: [The honesty prompt](honesty-card.md)
 - Why WIP limits exist: [WIP limits and back-pressure](wip-limits.md)
-- Why the Co-PI is not a lane: [Operation postures](../profiles/README.md)
+- Why the Co-PI is not a lane: [Operation postures](../operation-postures/README.md)
 - Why operations are not lanes: [Operations](../operations.md)
 - Why review is human-only: [Why the review gate is structural](../../design/why-review-gate-is-structural.md)
 - The decision-kind model the gate implements: [Decision points](decision-points.md)

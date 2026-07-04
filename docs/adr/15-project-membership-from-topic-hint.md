@@ -96,6 +96,6 @@ explicit and auditable.
 ## Related
 
 - **Source:** the predecessor vault's corpus-profiles mechanism (internal salvage analysis).
-- **Profile:** [Librarian](../explanation/profiles/librarian.md) — owns classify / `_proposed_classification`.
+- **Profile:** [Librarian](../explanation/operation-postures/librarian.md) — owns classify / `_proposed_classification`.
 - **Schema:** [Frontmatter fields](../reference/frontmatter.md) (`projects`, `_proposed_classification`).
 - **Respects:** the open-by-design choice for `study_design` / `methods` / `topic` — see [frontmatter.md controlled vocabularies](../reference/frontmatter.md#the-field-kind-grammar); a project hint is not a controlled vocabulary.

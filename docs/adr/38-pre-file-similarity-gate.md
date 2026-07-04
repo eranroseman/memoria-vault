@@ -79,5 +79,5 @@ qmd search "{proposed note title or claim}" --scope knowledge --top 3
 - **Pairs with:** the Concept schema and Linter quality gates in
   [ADR-119](119-schema-driven-document-creation.md)
 - **Retrospective counterpart:** `find-duplicates` (maintenance cadence)
-- **Profiles:** [Linter](../explanation/operations.md), [Mapper](../explanation/profiles/librarian.md)
+- **Profiles:** [Linter](../explanation/operations.md), [Mapper](../explanation/operation-postures/librarian.md)
 - **Document types gated:** checked [note and hub Concepts](../reference/document-types.md)
