@@ -50,15 +50,22 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 
 ## Where things live
 
+`~/memoria-vault` is the local single source of truth for this repository. Save
+nothing outside it without explicit permission.
+
 | Piece | Host | Path |
 |---|---|---|
 | **Project container** (`memoria-vault`) | WSL2 · ext4 | `~/memoria-vault` |
-| **Main checkout** | WSL2 · ext4 | `~/memoria-vault/main` |
-| **Scratch checkout** | WSL2 · ext4 | `~/memoria-vault/scratch` |
-| **Standalone Memoria sandbox** | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
+| **Main checkout** (permanent files) | WSL2 · ext4 | `~/memoria-vault/main` |
+| **Scratch checkout** (temporary tracked files) | WSL2 · ext4 | `~/memoria-vault/scratch` |
+| **Task worktrees** | WSL2 · ext4 | `~/memoria-vault/worktrees/<session>` |
+| **Standalone Memoria sandbox** (disposable test files) | WSL2 · ext4 for development and tests | `~/memoria-vault/sandbox` |
 | **Optional adapters** | Same host as the workspace they read | adapter-owned local config, never the baseline source of truth |
 
 - Work **inside WSL2** on ext4 — never `/mnt/c`, never OneDrive.
+- Permanent files go in `~/memoria-vault/main`; temporary tracked files go in
+  `~/memoria-vault/scratch`; task checkouts go in `~/memoria-vault/worktrees/`;
+  disposable test workspaces go in `~/memoria-vault/sandbox`.
 - Alpha.15's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
