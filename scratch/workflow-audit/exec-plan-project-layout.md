@@ -88,16 +88,30 @@ count was ~72 files mentioning `~/mv/` or `~/memoria-vault`): `AGENTS.md`
 `.github/workflows/hermes-version-check.yml` (hardcoded `/home/eranr/Memoria-test`),
 plus this agent's memory files.
 
-**HARD PREREQUISITES (the plan is unsafe without these):**
+**HARD PREREQUISITES (the plan is unsafe without these — a 2026-07-04 pre-flight
+audit found several of these unmet):**
 1. **A quiet window** — no active agent session working in any worktree, because
    the conversion transiently breaks every worktree's git linkage.
 2. **Every worktree clean** — the bare repo is built from *committed* state, so
-   any uncommitted work is lost when old worktrees are removed. At last check
-   `~/mv/adr-consolidate` had **89 uncommitted changes**; its session must commit
-   (and ideally push) before this runs. `git status` in every worktree must be
-   empty.
-3. **This plan committed to `scratch`** — so the bare clone captures it and it
-   survives the move.
+   any uncommitted work is lost when old worktrees are removed. `git status` in
+   every worktree must be empty. (Audit: `~/mv/adr-consolidate` still had
+   uncommitted changes **and** 3 unpushed commits — an active session. Wait for it
+   to commit AND push. Unpushed commits are captured by the clone; uncommitted
+   changes are not.)
+3. **No unresolved stashes** — `git clone --bare` does **not** copy stashes, so
+   every `git stash`/rebase-autostash entry vanishes from the new layout (it
+   survives only in the backup, and is fiddly to recover). `git stash list` must
+   be **empty** before migrating. (Audit found TWO `autostash` entries in the
+   shared git dir — a 161-file diff, and one holding `scratch/.notes` + a real
+   214-line alpha.13 design change. This is the single biggest silent-data-loss
+   risk.) Resolve each: `git -C ~/memoria-vault stash show -p stash@{N}` →
+   apply/commit the real ones, drop confirmed-stale ones.
+4. **Hermes runtime stopped or confirmed clear** — a live gateway (audit: PID
+   running `hermes_cli.main gateway run`) must not be bound to any moved path,
+   especially the sandbox `~/Memoria-test`. Confirm what it uses; stop it or
+   ensure it is not touching the moved paths before Phase A.
+5. **This plan committed to `scratch`** — so the bare clone captures it and it
+   survives the move. (Done: commit `53ebbb61`.)
 
 ## 3. Plan of work
 
@@ -135,12 +149,17 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    for w in $(git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}'); do
      echo "$w: $(git -C "$w" status --porcelain | wc -l) uncommitted"
    done                                                      # EVERY line must read "0 uncommitted"
+   git -C ~/memoria-vault stash list                         # MUST be empty (prereq 3) — clone drops stashes
+   pgrep -af 'hermes|obsidian' | grep -v pgrep               # none bound to a moved path (prereq 4)
    ORIGIN=$(git -C ~/memoria-vault remote get-url origin); echo "origin=$ORIGIN"
-   cp -r ~/memoria-vault/.git ~/mv-git-backup                # rollback point (crown jewels)
+   cp -r ~/memoria-vault/.git ~/memoria-vault-git-backup     # rollback point — name kept clear of ~/mv
    ```
 
-   Expected: all worktrees `0 uncommitted`; a printed origin URL; a backup dir.
-   **If any worktree is dirty, STOP** — that session must commit first.
+   Expected: all worktrees `0 uncommitted`; `stash list` **empty**; no
+   Hermes/Obsidian process on a moved path; a printed origin URL; a backup at
+   `~/memoria-vault-git-backup` (deliberately NOT under `~/mv`, which gets deleted).
+   **If any worktree is dirty, a stash exists, or Hermes is bound to a moved path,
+   STOP** and resolve it first.
 
 2. **Build the bare container beside the current one:**
 
@@ -171,9 +190,10 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    Expected: `main/`, `scratch/`, and `worktrees/*` populated; `worktree list`
    clean.
 
-4. **Move the sandbox in:**
+4. **Move the sandbox in** (Hermes must not be using it — prereq 4):
 
    ```bash
+   pgrep -af hermes | grep -v pgrep    # empty, or confirmed NOT bound to ~/Memoria-test
    mv ~/Memoria-test ~/memoria-vault-new/sandbox    # rename Memoria-test → sandbox
    ```
 
@@ -197,10 +217,11 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    rm -rf ~/mv                     # old scattered worktrees + stray .git/.agents/.codex/main-merge
    git -C ~/memoria-vault worktree prune
    git -C ~/memoria-vault worktree list   # everything under ~/memoria-vault/
+   ( cd ~/memoria-vault/main && pre-commit install )   # the bare clone dropped the installed hooks
    ```
 
    Expected: `~/mv` gone; `worktree list` shows all worktrees under
-   `~/memoria-vault/`.
+   `~/memoria-vault/`; pre-commit hook re-installed in `main/`.
 
 7. **Phase B — the path-reference PR:**
 
@@ -238,20 +259,24 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
   `~/memoria-vault-new` beside the untouched original; abort by `rm -rf
   ~/memoria-vault-new` — nothing lost.
 - **Rollback after the swap:** restore from the backup —
-  `rm -rf ~/memoria-vault && <recreate a checkout>` using `~/mv-git-backup` (it is
-  a full copy of the original `.git`). Keep the backup until you have run a full
-  gate and a `git fetch`/`push` cycle from the new layout and are satisfied.
+  `rm -rf ~/memoria-vault && <recreate a checkout>` using
+  `~/memoria-vault-git-backup` (a full copy of the original `.git`, including the
+  reflogs and any stashes). Keep the backup until you have run a full gate and a
+  `git fetch`/`push` cycle from the new layout and are satisfied.
 - **Re-run safety:** steps are guarded (step 5 gates the destructive step 6). A
   partial run leaves the original intact until step 6.
 
 ## 7. Progress
 
 - [ ] Prereqs met: quiet window; every worktree clean (`adr-consolidate`
-      committed); this plan committed to `scratch`.
-- [ ] Phase A: bare container built, verified (step 5), swapped in (step 6).
+      committed + pushed); **`git stash list` empty** (2 autostashes resolved);
+      **Hermes gateway stopped/confirmed clear**; this plan committed to `scratch`.
+- [ ] Phase A: bare container built, verified (step 5), swapped in (step 6);
+      pre-commit re-installed in `main/`.
 - [ ] Sandbox at `~/memoria-vault/sandbox`; `~/mv` removed.
 - [ ] Phase B: path-reference PR merged; memory files updated.
-- [ ] Backup `~/mv-git-backup` deleted after a clean gate + fetch/push cycle.
+- [ ] Backup `~/memoria-vault-git-backup` deleted after a clean gate + fetch/push
+      cycle.
 - [ ] Close-out: this plan deleted per ExecPlan lifecycle.
 
 ## 8. Execution log
@@ -267,6 +292,17 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 - 2026-07-04 — `git clone --bare` from the local repo captures only *committed*
   state, which is why "every worktree clean" is a hard prerequisite rather than a
   nicety — uncommitted work in a worktree would be silently dropped.
+- 2026-07-04 (pre-flight audit) — `git clone --bare` **also drops stashes**, and
+  the shared git dir held TWO `autostash` entries (a 161-file diff; one with
+  `scratch/.notes` + a real 214-line alpha.13 design change). These would have
+  vanished silently from the new layout — added as prereq 3. Also found a **live
+  Hermes gateway** (`hermes_cli.main gateway run`) — moving the sandbox under a
+  running runtime would break it (prereq 4). And `adr-consolidate` still had
+  uncommitted + 3 unpushed commits. None were true blockers to the *plan*, but all
+  are blockers to *running it safely* — hence the expanded pre-flight. Backup
+  renamed `~/mv-git-backup` → `~/memoria-vault-git-backup` so the `rm -rf ~/mv`
+  cleanup can't come near it; added a `pre-commit install` in `main/` since the
+  bare clone drops the installed hook.
 
 ## 10. Interfaces & dependencies
 
