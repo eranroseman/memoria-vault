@@ -146,8 +146,10 @@ def _write_note(path: Path, frontmatter: str, body: str) -> None:
 
 def assert_workflow_replay_artifacts(vault: Path) -> None:
     for rel in [
-        "catalog/sources/harness2026/source.md",
+        "knowledge/projects/harness.md",
+        "knowledge/notes/harness-thesis.md",
         "knowledge/notes/harness-support.md",
+        "knowledge/notes/harness-refutation.md",
         "knowledge/projects/harness/argument.canvas",
     ]:
         assert (vault / rel).is_file(), f"workflow replay artifact missing: {rel}"

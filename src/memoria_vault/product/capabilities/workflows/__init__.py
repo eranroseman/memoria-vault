@@ -1,1 +1,0 @@
-"""Packaged workflow capability manifests."""

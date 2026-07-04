@@ -25,7 +25,9 @@ Early in a vault's life, forcing term consistency is counterproductive. The righ
 
 The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
 
-This is also why `research_area` is seeded from **OpenAlex topics** by the ingest operation: topic signals are applied mechanically when they match the controlled vocabulary, and off-vocabulary winners are flagged for consolidation instead of silently landing. `methodology` and claim `topics` are human-extended, and that is where the discipline below applies.
+This is also why source metadata corrections go through explicit Work updates:
+catalog terms should land only when they match the controlled vocabulary. Claim
+`topics` are human-extended, and that is where the discipline below applies.
 
 ## Why drift fails silently
 

@@ -75,6 +75,10 @@ def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     return parse_frontmatter(text), text[body_start:]
 
 
+def strip_frontmatter(text: str) -> str:
+    return split_frontmatter(text)[1]
+
+
 def dump_frontmatter(frontmatter: dict[str, Any]) -> str:
     try:
         import yaml

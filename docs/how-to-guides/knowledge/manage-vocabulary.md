@@ -84,6 +84,5 @@ Once a year (or after a major reading batch), walk each list:
 
 ## Related
 
-- Where the automated side applies terms: [Classify a source](../library/classify-a-source.md)
 - The validation pass: [Run the Linter](../operate/run-the-linter.md)
 - Why three open fields and a small list: [Vocabulary discipline](../../explanation/knowledge/vocabulary-discipline.md)

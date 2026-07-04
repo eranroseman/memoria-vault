@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from memoria_vault.runtime.subsystems.lib.markdown import parse_frontmatter
+from memoria_vault.runtime.vaultio import parse_frontmatter
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 _HEX_COLOR = re.compile(r"#[0-9A-Fa-f]{3,8}\b")

@@ -11,7 +11,6 @@ from typing import Any
 from memoria_vault.runtime.vaultio import iter_markdown as iter_vault_markdown
 from memoria_vault.runtime.vaultio import parse_frontmatter, safe_read
 
-SKIP_DIRS = {".git", ".memoria", ".obsidian", "node_modules"}
 RELATIONS = ("supports", "contradicts")
 
 
@@ -34,13 +33,9 @@ class Edge:
     addressed: bool
 
 
-def iter_markdown(vault: Path):
-    yield from iter_vault_markdown(vault, SKIP_DIRS)
-
-
 def read_notes(vault: Path) -> dict[str, Note]:
     notes: dict[str, Note] = {}
-    for path in iter_markdown(vault):
+    for path in iter_vault_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         text = safe_read(path)
         fm = parse_frontmatter(text)

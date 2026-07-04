@@ -1,63 +1,10 @@
 {
   "schema_version": 1,
   "name": "package-gate-golden-path",
-  "description": "Model-free alpha.11 package-gate cassette: source -> classify -> checked project notes -> argument canvas, plus the deny assertion.",
+  "description": "Model-free package-gate cassette: checked project notes -> argument canvas, plus the deny assertion.",
   "match": "tool_name+arg_shape",
   "gates": ["source", "package"],
   "steps": [
-    {
-      "id": "ingest-source",
-      "tool": "ingest.paper",
-      "arg_shape": {
-        "bibtex": "str",
-        "citekey": "str"
-      },
-      "args": {
-        "citekey": "harness2026",
-        "bibtex": "@article{harness2026,\n  title = {Harnessed Workflows for Durable Research},\n  author = {Ada, River and Lin, Morgan},\n  year = {2026},\n  journal = {Journal of Testable Systems},\n  doi = {10.1000/harness.2026},\n  abstract = {A fixture paper for the Memoria test environment harness.}\n}\n"
-      },
-      "expect": {
-        "writes": ["catalog/sources/harness2026/source.md"]
-      }
-    },
-    {
-      "id": "classify-source",
-      "tool": "classify.apply",
-      "arg_shape": {
-        "citekey": "str",
-        "merged": {
-          "publication_types": ["str"],
-          "topics_scored": [
-            {
-              "name": "str",
-              "score": "float",
-              "subfield": "str"
-            }
-          ]
-        }
-      },
-      "args": {
-        "citekey": "harness2026",
-        "merged": {
-          "topics_scored": [
-            {
-              "name": "Research software engineering",
-              "subfield": "software engineering",
-              "score": 0.91
-            },
-            {
-              "name": "Knowledge management",
-              "subfield": "information systems",
-              "score": 0.61
-            }
-          ],
-          "publication_types": ["review"]
-        }
-      },
-      "expect": {
-        "writes": ["system/logs/classify.jsonl"]
-      }
-    },
     {
       "id": "seed-project",
       "tool": "vault.write_markdown",
@@ -142,7 +89,7 @@
       "args": {
         "card_type": "gap",
         "title": "Harness discussion gap",
-        "action": "Discuss whether the cassette covers the deterministic path.",
+        "action": "Discuss whether the cassette covers the project handoff path.",
         "argument_for": "The cassette exercises real deterministic operations.",
         "argument_against": "It does not judge live model quality.",
         "what_tipped_it": "ADR-80 Phase 1 draws the line at model-free package-gate wiring.",
@@ -181,7 +128,7 @@
       "args": {
         "title": "Review harness argument canvas",
         "action": "Review the cassette-backed source, notes, and argument canvas.",
-        "what_happened": "The model-free package-gate harness replay reached the alpha.11 handoff.",
+        "what_happened": "The model-free package-gate harness replay reached the project handoff.",
         "target": "knowledge/projects/harness/argument.canvas",
         "request_id": "HARNESS-PACKAGE",
         "posture": "writer",
@@ -194,8 +141,6 @@
   ],
   "final_assertions": {
     "exists": [
-      "catalog/sources/harness2026/source.md",
-      "system/logs/classify.jsonl",
       "knowledge/projects/harness.md",
       "knowledge/notes/harness-thesis.md",
       "knowledge/notes/harness-support.md",

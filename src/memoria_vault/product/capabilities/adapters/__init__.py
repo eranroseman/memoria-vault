@@ -1,1 +1,0 @@
-"""Packaged adapter capability manifests."""

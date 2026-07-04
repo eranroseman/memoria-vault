@@ -7,24 +7,8 @@ grand_parent: Reference
 # Sweeps
 
 Deterministic maintenance passes under `memoria_vault.runtime.subsystems`.
-Re-ingest and retraction sweeps surface review work through worker-owned
-projections; they do not directly promote Concept files.
-
-## Re-ingest backstops
-
-`reconcile.py` finds ingest work that started but did not land cleanly.
-Re-ingest must be request-serialized, so each backstop creates an idempotent
-local request such as `reingest:<citekey>`; the SQLite request queue provides
-deduplication, backoff, and the failure circuit-breaker.
-
-| Pass | Detects |
-| --- | --- |
-| `--reconcile` | A capture logged in `capture-intake.jsonl` with no note on disk. |
-| `--retry` | A captured note stuck at `ingest_status: tier0`. |
-
-`--dry-run` reports without creating requests. Alpha.15 does not install a host
-scheduler; an operator-managed scheduled task can invoke the sweep through the
-CLI when the re-ingest path is enabled.
+Retraction sweeps surface review work through worker-owned projections; they do
+not directly promote Concept files.
 
 ## Retraction sweep
 
@@ -41,6 +25,6 @@ CLI when the re-ingest path is enabled.
 
 ## Related
 
-- The ingest stage that creates the source records these sweeps monitor: [Ingest routing](ingest.md)
+- The capture stage that creates the source records these sweeps monitor: [Ingest routing](ingest.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](installer.md)
 - The retired Inbox card contract: [Inbox card fields](inbox-card-fields.md)

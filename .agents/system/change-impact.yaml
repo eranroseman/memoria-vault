@@ -58,17 +58,17 @@ areas:
     checks:
       - python -m pytest tests/test_runtime_helpers.py tests/test_package_spine.py
       - python -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
-  - area: Ingest or linter operation
+  - area: Capture or linter operation
     paths:
-      - src/memoria_vault/runtime/subsystems/processing/ingest/**
+      - src/memoria_vault/runtime/capture.py
       - src/memoria_vault/runtime/subsystems/integrity/linter/**
     inspect:
       - Calibration and schemas
       - Inbox card contract and shared writers
-      - Extract store and source/entity linking
+      - Source catalog state and content/blob writes
       - Scheduled-task wrappers and dashboard fields
     checks:
-      - python -m pytest tests/test_pipeline.py tests/test_inbox_cards.py tests/test_detectors.py
+      - python -m pytest tests/test_capture.py tests/test_inbox_cards.py tests/test_detectors.py
   - area: Installer
     paths:
       - scripts/install.sh

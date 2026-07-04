@@ -42,7 +42,7 @@ Where every file lives.
     ├── patterns/              shared prompt preamble
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
     ├── metrics/               derived metric notes and eval/runs.jsonl
-    └── logs/                  audit.jsonl, capture-intake.jsonl, patterns.jsonl, sessions/
+    └── logs/                  audit.jsonl, patterns.jsonl, sessions/
 ```
 
 The workspace bundle roots are declared in `folders.yaml`, along with the
@@ -71,7 +71,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── state/                   runtime state owned by the CLI/engine
 ├── audit/                   git-trackable audit anchors
 ├── index/ · staging/ · quarantine/   disposable search/input mirrors and holding areas
-├── design-system.md · project-hints.yaml.example
+├── design-system.md
 ```
 
 Alpha.15 deliberately does **not** ship hidden operation-package homes, installed
@@ -95,7 +95,6 @@ Runtime-only (created in the deployed vault, never shipped):
 
 | Path | Created by | Holds |
 | --- | --- | --- |
-| `.memoria/data/extracts/` | runtime ingest helpers | Full-text extracts per citekey, when a workflow needs an intermediate extract store. |
 | `.memoria/data/retraction_watch.csv` | retraction refresh wrapper | The local Retraction Watch index. |
 | `.memoria/.venv/` | installer | The vault-local Python used by the Memoria CLI/runtime package. |
 | `.git/hooks/pre-commit` | installer | The pre-commit hook (once the vault is a git repo). |

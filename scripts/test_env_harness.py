@@ -163,61 +163,15 @@ def assert_expectations(vault: Path, expect: dict[str, Any], artifacts: list[str
         artifacts.append("system/logs/audit.jsonl")
 
 
-def apply_classification(vault: Path, args: dict[str, Any]) -> str:
-    from memoria_vault.runtime.subsystems.processing.ingest import classify
-
-    citekey = args["citekey"]
-    rel = f"catalog/sources/{citekey}/source.md"
-    path = vault / rel
-    fm = read_frontmatter(path)
-    body = path.read_text(encoding="utf-8").split("\n---", 1)[1].lstrip("-\n")
-    floor, margin = classify.thresholds(vault)
-    decision = classify.decide(
-        args["merged"], floor=floor, margin=margin, vocabulary=classify.load_vocabulary(vault)
-    )
-    if decision["status"] == "applied":
-        fm["research_area"] = decision["research_area"]
-        fm["methodology"] = decision["methodology"]
-        proposed = fm.setdefault("_proposed_classification", {})
-        proposed["research_area"] = decision["research_area"]
-        proposed["methodology"] = decision["methodology"]
-    classify.append_audit(vault, citekey, decision, floor, margin)
-    write_frontmatter(path, fm, body)
-    return rel
-
-
 def run_step(root: Path, vault: Path, step: dict[str, Any]) -> list[str]:
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
     from memoria_vault.runtime.subsystems.lib import inbox
-    from memoria_vault.runtime.subsystems.processing.ingest import ingest_paper
     from memoria_vault.runtime.subsystems.processing.project import structural_impact
 
     tool = step["tool"]
     args = step.get("args", {})
     artifacts: list[str] = []
-    if tool == "ingest.paper":
-        note = ingest_paper.ingest_text(args["citekey"], args["bibtex"])
-        rel = f"catalog/sources/{args['citekey']}/source.md"
-        path = vault / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        write_frontmatter(
-            path,
-            {
-                "type": "source",
-                "check_status": "checked",
-                "title": note["frontmatter"].get("title") or args["citekey"],
-                "description": "Captured from the package-gate cassette.",
-                "source_id": args["citekey"],
-                "citekey": args["citekey"],
-                "item_type": "article",
-                "provider_coverage": "partial",
-            },
-            note["body"],
-        )
-        artifacts.append(rel)
-    elif tool == "classify.apply":
-        artifacts.append(apply_classification(vault, args))
-    elif tool == "vault.write_markdown":
+    if tool == "vault.write_markdown":
         path = vault / args["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(args["content"], encoding="utf-8")

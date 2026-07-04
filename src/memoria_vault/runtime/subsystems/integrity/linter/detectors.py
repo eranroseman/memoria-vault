@@ -32,8 +32,7 @@ from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
     vault_hash_drift,
 )
 from memoria_vault.runtime.subsystems.integrity.linter.detectors_design import design_system_drift
-from memoria_vault.runtime.subsystems.lib.markdown import parse_frontmatter
-from memoria_vault.runtime.vaultio import retired_frontmatter_field_errors
+from memoria_vault.runtime.vaultio import parse_frontmatter, retired_frontmatter_field_errors
 
 SKIP_DIRS = {".githooks", ".obsidian", ".git", ".memoria", "node_modules"}
 TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/", "inbox/")
