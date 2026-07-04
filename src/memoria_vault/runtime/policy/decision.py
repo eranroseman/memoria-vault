@@ -84,7 +84,7 @@ def decide(
             return Decision(
                 "dry_run",
                 f"{rule}.auto_fix.{cls}",
-                f"auto_fix class '{cls}' degrades to dry_run -- needs schema-migrate",
+                f"auto_fix class '{cls}' degrades to dry_run -- needs manual schema/content repair",
             )
         if cls in policy.deny_auto_fix_classes:
             return Decision(
