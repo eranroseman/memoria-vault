@@ -34,7 +34,7 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 | Integrity retraction | `memoria_vault.runtime.subsystems.integrity.retraction.retraction` | None | Scheduled task, CI, PI | Runs retraction lookups, surfacing findings as Inbox `alert` attention items. |
 | Eval telemetry | `memoria eval run`; `memoria_vault.runtime.subsystems.telemetry.eval.*` | None | Scheduled task, CI, PI | Dispatches and scores vault-eval runs. |
 | Linter | `memoria_vault.runtime.subsystems.integrity.linter.detectors`; `hub_handoff` | None | Scheduled task, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, session digests, and opt-in hub-threshold handoffs. |
-| Batch worklists | `memoria_vault.runtime.subsystems.lib.worklists` | None | Reports, tests, PI | Emits ADR-54 `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
+| Batch worklists | `memoria_vault.runtime.subsystems.lib.worklists` | None | Reports, tests, PI | Emits [ADR-128](../adr/128-no-write-time-correctness-oracle.md) `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
 
 ## Related
 

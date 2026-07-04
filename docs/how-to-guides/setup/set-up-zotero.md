@@ -32,7 +32,7 @@ Citation Keys tab → Citation key formula:
 [auth.lower][year][shorttitle1_0]
 ```
 
-This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula in [ADR-6](../../adr/124-standalone-catalog-citation-authority.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
+This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula in [ADR-124](../../adr/124-standalone-catalog-citation-authority.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
 
 **3. Leave bibliography generation to Memoria.**
 
@@ -87,4 +87,4 @@ For each service's registration URL and the with-/without-key rate limits, see [
 
 - What capture does with Zotero metadata: [Capture and ingest a source](../library/capture-and-ingest.md)
 - Generated bibliography behavior: [System actions](../../reference/system-actions.md)
-- Citekey naming convention: [ADR-6](../../adr/124-standalone-catalog-citation-authority.md)
+- Citekey naming convention: [ADR-124](../../adr/124-standalone-catalog-citation-authority.md)

@@ -20,7 +20,7 @@ number.
 
 ## Status lifecycle
 
-`proposed` → `accepted` → `superseded` (or `rejected`). ADR status records decision
+`proposed` → `accepted` (or `rejected`). ADR status records decision
 state only. Scheduling and readiness live in the GitHub issue tracker: an accepted
 decision can still have an implementation issue with Readiness `Later`, `Blocked`,
 or `Needs shaping`. See `docs/adr/_template.md` for the required fields per
@@ -69,13 +69,13 @@ editing an ADR; CI fails if it is stale. Do not edit the table by hand.
 
 Rules:
 
-- **Every decision lives here, at any status.** Open proposals (`proposed`), accepted decisions, rejected alternatives, and superseded ones all share this folder and the one number sequence.
-- **Numbers are permanent.** When a decision is superseded, the old file stays and its `superseded_by` field points to the new one.
+- **Every decision lives here, at any status.** Open proposals (`proposed`), accepted decisions, and rejected alternatives all share this folder and the one number sequence.
+- **Numbers are permanent.** A replaced decision's file is deleted (only live decisions sit on `main`); the successor records what it absorbed via `supersedes:`, and the original's `superseded_by`/`supersedes` lineage stays recoverable in git history.
 - **Subsystem ADRs are the default home.** ADRs 125–130 consolidate the alpha.15
   architecture into broad subsystem decisions; amend one of them unless a genuinely
   new subsystem appears.
 - **Retired decisions are removed.** If the question a decision answered no longer applies, delete it — git history is the record.
-- **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, rejected, or superseded. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
+- **Scheduling is issue state, not ADR state.** Use ADR `status` for whether a decision is proposed, accepted, or rejected. Use the linked GitHub issue's Readiness for whether implementation is ready, blocked, needs shaping, or belongs later.
 - **Sequencing is not decided here.** *When* a decision ships lives in the current milestone and the current "Release <version>" parent issue plus sub-issues, which change independently of these decisions. Link to that release surface rather than restating phase order, so a re-plan does not strand stale dates here.
 
 ## When to retire an ADR

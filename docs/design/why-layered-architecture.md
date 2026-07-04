@@ -79,7 +79,7 @@ Each refinement carries the same argument further:
   scheduled jobs are direct edges that the engine observes or executes through
   explicit requests.
 
-The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in ADR-46.
+The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in [ADR-125](../adr/125-standalone-cli-engine-architecture.md).
 
 ---
 
