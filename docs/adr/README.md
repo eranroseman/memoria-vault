@@ -32,10 +32,8 @@ status.
 
 | # | Decision | Status |
 |---|---|---|
-| [06](06-citekey-naming-convention.md) | Citekey naming convention | superseded → ADR-124 |
 | [11](11-vault-eval-maintenance.md) | vault-eval as a maintenance capability | accepted |
 | [12](12-obsidian-linter-reference-only.md) | obsidian-linter is reference-only, not a control-plane formatter | accepted |
-| [14](14-advisor-review-vs-frozen-deliverable.md) | Advisor-review exports are live-citation artifacts, outside the frozen-deliverable contract | superseded → ADR-126 |
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | proposed |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |

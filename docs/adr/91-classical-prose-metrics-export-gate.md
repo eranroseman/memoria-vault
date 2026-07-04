@@ -48,5 +48,5 @@ not final quality judgments.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-14](14-advisor-review-vs-frozen-deliverable.md), [ADR-62](62-measurement-and-verification-harnesses.md).
+- **Related decisions / Depends on:** [ADR-126](126-four-type-knowledge-model.md), [ADR-62](62-measurement-and-verification-harnesses.md).
 - **Tracking issue:** [#704](https://github.com/eranroseman/memoria-vault/issues/704).
