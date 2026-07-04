@@ -224,7 +224,11 @@ behavior.
 | `needs_human` | Manual merge required: trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths. This classification disables auto-merge; it is not a GitHub approval gate by itself. |
 | `block` | Untrusted author on sensitive paths, or any PR that includes `scratch/` paths |
 
-Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
+Sensitive paths: `.github/`, `.agents/`, `.claude/`, `.codex/`, `.kilo/`,
+`scripts/`, `src/memoria_vault/runtime/policy/`,
+`src/memoria_vault/runtime/subsystems/`, `vault-template/.memoria/`,
+`docs/adr/` (the decision record — review-required even though it sits under
+the otherwise-safe docs tree), and `AGENTS.md`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately. On
@@ -363,7 +367,7 @@ Mixed-purpose pages are wrong — split them. *(judgment - no mechanism)*
   - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence. *(judgment - no mechanism)*
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename. *(judgment - no mechanism)*
-- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`. *(judgment - no mechanism)*
+- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth. *(judgment - no mechanism)*
 - **Spelling:** American English only — `-ize`/`-or` endings, not `-ise`/`-our` (write "behavior", "normalize"). `cspell` is the gate. Never suppress a flag with an inline `<!-- cspell:words … -->` / `<!-- cspell:ignore … -->` tag — for each unknown word, either **reword the prose** or, if it's a real term (proper noun, tool name, code token, jargon), **add it to `project-words.txt`** (one lowercase word per line, sorted; a lowercase entry matches every casing). *(judgment - no mechanism)*
 
 ### ADR template (`docs/adr/`)

@@ -40,6 +40,16 @@ def test_agents_required_ci_table_matches_ruleset_contract():
     assert agents_doctor._required_ci_errors() == []
 
 
+def test_agents_md_is_link_checked(tmp_path, monkeypatch):
+    root = tmp_path
+    root.joinpath("AGENTS.md").write_text("[missing](missing.md)\n", encoding="utf-8")
+
+    monkeypatch.setattr(agents_doctor, "ROOT", root)
+    errs = agents_doctor._local_link_errors()
+
+    assert "AGENTS.md: broken link missing.md" in errs
+
+
 def test_optional_agent_client_docs_are_link_checked(tmp_path, monkeypatch):
     root = tmp_path
     (root / ".agents" / "system").mkdir(parents=True)
@@ -51,3 +61,54 @@ def test_optional_agent_client_docs_are_link_checked(tmp_path, monkeypatch):
     monkeypatch.setattr(agents_doctor, "AGENTS", root / ".agents")
     errs = agents_doctor._local_link_errors()
     assert any(".claude/guide.md: broken link missing.md" in e for e in errs)
+
+
+def test_source_of_truth_map_backticked_paths_are_valid():
+    assert agents_doctor._source_map_path_errors() == []
+
+
+def test_source_of_truth_map_missing_backticked_path_fails():
+    errs = agents_doctor._source_map_path_errors("Owner is `scripts/no-such-file.py`.\n")
+
+    assert errs == [".agents/system/source-of-truth-map.md: missing path `scripts/no-such-file.py`"]
+
+
+def test_agents_pr_policy_mirror_matches_policy_constants():
+    assert agents_doctor._pr_policy_errors() == []
+
+
+def test_agents_pr_policy_trusted_author_drift_fails():
+    text = (agents_doctor.ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    bad = text.replace("`dependabot[bot]`", "`not-a-bot[bot]`")
+
+    assert any("trusted authors drift" in err for err in agents_doctor._pr_policy_errors(bad))
+
+
+def test_verify_change_gate_roster_matches_verify_script():
+    assert agents_doctor._verify_change_errors() == []
+
+
+def test_verify_change_gate_roster_drift_fails():
+    text = (agents_doctor.AGENTS / "playbooks/verify-change.md").read_text(encoding="utf-8")
+    bad = text.replace("| Live |", "| Live runtime |")
+
+    assert any("gate rows drift" in err for err in agents_doctor._verify_change_errors(bad))
+
+
+def test_verify_change_mode_roster_drift_fails():
+    text = (agents_doctor.AGENTS / "playbooks/verify-change.md").read_text(encoding="utf-8")
+    bad = text.replace("`scripts/verify live`", "`scripts/verify live-missing`")
+
+    assert any("mode: live" in err for err in agents_doctor._verify_change_errors(bad))
+
+
+def test_agents_enforcement_tags_name_existing_mechanisms():
+    assert agents_doctor._agent_tag_errors() == []
+
+
+def test_agents_enforcement_tag_missing_mechanism_fails():
+    text = "Bad rule. *(enforced: no-such-hook)*\n"
+
+    assert agents_doctor._agent_tag_errors(text) == [
+        "AGENTS.md enforcement tag names missing mechanism: no-such-hook"
+    ]
