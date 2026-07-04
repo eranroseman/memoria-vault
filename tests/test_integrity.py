@@ -178,33 +178,33 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
     assert "catalog/sources/missing" in finding["reason"]
 
 
-def test_evidence_integrity_rejects_legacy_source_markdown_without_catalog_row(
+def test_evidence_integrity_rejects_removed_source_markdown_without_catalog_row(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    legacy = vault / "catalog/sources/legacy/source.md"
-    legacy.parent.mkdir(parents=True, exist_ok=True)
-    legacy.write_text(
+    removed = vault / "catalog/sources/removed/source.md"
+    removed.parent.mkdir(parents=True, exist_ok=True)
+    removed.write_text(
         "---\n"
         "type: source\n"
         "check_status: checked\n"
-        "title: Legacy Source\n"
-        "source_id: legacy\n"
+        "title: Removed Source\n"
+        "source_id: removed\n"
         "---\n"
-        "# Legacy Source\n",
+        "# Removed Source\n",
         encoding="utf-8",
     )
-    target = "knowledge/notes/legacy-evidence.md"
+    target = "knowledge/notes/removed-evidence.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
         "type: note\n"
         "check_status: checked\n"
-        "title: Legacy evidence\n"
+        "title: Removed evidence\n"
         "evidence_set:\n"
-        "  - catalog/sources/legacy/source.md\n"
+        "  - catalog/sources/removed/source.md\n"
         "---\n"
-        "# Legacy evidence\n",
+        "# Removed evidence\n",
         encoding="utf-8",
     )
 
@@ -214,7 +214,7 @@ def test_evidence_integrity_rejects_legacy_source_markdown_without_catalog_row(
     [finding] = result["findings"]
     assert finding["check"] == "evidence-resolves"
     assert finding["target_id"] == target
-    assert "catalog/sources/legacy" in finding["reason"]
+    assert "catalog/sources/removed" in finding["reason"]
 
 
 def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) -> None:
@@ -854,7 +854,7 @@ def test_source_metadata_check_routes_duplicate_entity_name_blocks_to_attention(
     assert committed == {state.JOURNAL_HEAD_REL, result["attention_path"]}
 
 
-def test_db_capture_does_not_create_legacy_entity_identity_findings(
+def test_db_capture_does_not_create_entity_identity_findings(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)

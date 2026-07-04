@@ -59,5 +59,5 @@ are available.
 - [ ] Rebuild search with `memoria workspace rebuild --search`.
 
 Last resort: create a fresh workspace with the bootstrap installer and copy only
-user-authored content across intentionally. There is no profile-only redeploy or
-in-place migration path in alpha.15.
+user-authored content across intentionally. Alpha.15 has no profile-only
+redeploy mode.

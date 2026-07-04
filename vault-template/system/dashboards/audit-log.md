@@ -55,7 +55,7 @@ dv.table(
 
 ## Adapter activity (last 24h)
 
-If optional adapters write through the policy shim, their `actor` field appears
+If optional adapters write through the policy hook, their `actor` field appears
 here.
 
 ```dataviewjs

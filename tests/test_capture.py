@@ -121,7 +121,7 @@ def test_capture_source_populates_work_aspect_read_model(tmp_path: Path) -> None
     assert {row["check_status"] for row in aspects} == {"checked"}
 
 
-def test_capture_source_rejects_legacy_required_check_argument(
+def test_capture_source_rejects_removed_required_check_argument(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -303,7 +303,7 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
     assert events[-1]["workflow"] == "capture_bibtex_source"
 
 
-def test_capture_bibtex_source_does_not_create_legacy_entity_links(tmp_path: Path) -> None:
+def test_capture_bibtex_source_does_not_create_entity_links(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_bibtex_source(
         vault,
@@ -399,7 +399,7 @@ def test_capture_reference_edges_preserve_provider_graph(tmp_path: Path) -> None
     ]
 
 
-def test_capture_source_does_not_materialize_legacy_entity_records(
+def test_capture_source_does_not_materialize_entity_records(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)

@@ -357,7 +357,7 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
     assert tuple(enrich) == ("enrich-source", "pending")
 
 
-def test_cli_work_add_file_stages_text_without_legacy_markdown(
+def test_cli_work_add_file_stages_text_without_source_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -389,7 +389,7 @@ def test_cli_work_add_file_stages_text_without_legacy_markdown(
     )
 
 
-def test_cli_work_add_url_fetches_text_without_legacy_markdown(
+def test_cli_work_add_url_fetches_text_without_source_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workspace = tmp_path / "workspace"
@@ -425,7 +425,7 @@ def test_cli_work_add_url_fetches_text_without_legacy_markdown(
     )
 
 
-def test_cli_work_add_pdf_extracts_text_without_legacy_markdown(
+def test_cli_work_add_pdf_extracts_text_without_source_markdown(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     workspace = tmp_path / "workspace"

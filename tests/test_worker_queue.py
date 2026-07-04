@@ -1484,7 +1484,7 @@ def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> 
         vault,
         "run-seeded-error-verdict",
         payload={"mode": "test"},
-        idempotency_key="seeded-no-legacy-fallback",
+        idempotency_key="seeded-no-removed-fallback",
     )
     done = run_next_job(vault, machine="test-machine")
 

@@ -167,24 +167,24 @@ def test_tracked_projections_render_knowledge_views(tmp_path: Path) -> None:
     assert check_tracked_projections(vault)["ok"]
 
 
-def test_references_bib_ignores_legacy_source_markdown_without_catalog_row(
+def test_references_bib_ignores_removed_source_markdown_without_catalog_row(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    source = vault / "catalog/sources/legacy/source.md"
+    source = vault / "catalog/sources/removed/source.md"
     source.parent.mkdir(parents=True, exist_ok=True)
     source.write_text(
         "---\n"
         "type: source\n"
         "check_status: checked\n"
-        "title: Legacy Source\n"
-        "source_id: legacy\n"
-        "citekey: legacy2026\n"
+        "title: Removed Source\n"
+        "source_id: removed\n"
+        "citekey: removed2026\n"
         "csl_json:\n"
-        "  id: legacy2026\n"
-        "  title: Legacy Source\n"
+        "  id: removed2026\n"
+        "  title: Removed Source\n"
         "---\n"
-        "# Legacy Source\n",
+        "# Removed Source\n",
         encoding="utf-8",
     )
 

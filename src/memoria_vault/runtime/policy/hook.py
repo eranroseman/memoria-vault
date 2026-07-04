@@ -45,8 +45,8 @@ WRITE_KEYWORDS = {
 # adapter call reaching these tools is config drift or prompt-injection bypassing
 # schema-hiding, so fail closed.
 # Bare tool names matched exactly so an unrelated tool merely containing "patch"
-# is never caught. This list covers the known file/terminal/code_execution plus
-# egress/side-effect toolsets exposed by historical adapters.
+# is never caught. This list covers direct file, terminal, code, and
+# egress/side-effect toolsets.
 DENY_DIRECT_TOOLS = frozenset(
     {
         "write_file",
@@ -56,8 +56,7 @@ DENY_DIRECT_TOOLS = frozenset(
         "terminal",
         "process",  # terminal toolset — sibling of `terminal`, runs/inspects processes
         "run_command",  # common alias name; harmless when absent
-        "code_execution",  # legacy/alias name (the real tool is `execute_code`)
-        "execute_code",  # code_execution toolset
+        "execute_code",  # code execution toolset
         "session_search",
         "web_extract",
         "web_search",

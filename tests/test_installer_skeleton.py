@@ -82,8 +82,8 @@ def test_alpha11_fresh_package_contract_is_shipped():
     assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()
 
 
-def test_alpha11_template_has_no_legacy_alpha10_root_files():
-    legacy_roots = (
+def test_alpha11_template_has_no_removed_alpha10_root_files():
+    removed_roots = (
         "vault-template/inbox",
         "vault-template/notes",
         "vault-template/projects",
@@ -98,14 +98,14 @@ def test_alpha11_template_has_no_legacy_alpha10_root_files():
     )
     leftovers = [
         path.relative_to(ROOT).as_posix()
-        for rel in legacy_roots
+        for rel in removed_roots
         for path in (ROOT / rel).rglob("*")
         if path.is_file()
     ]
     assert not leftovers
 
 
-def test_alpha11_template_has_no_legacy_alpha10_path_literals():
+def test_alpha11_template_has_no_removed_alpha10_path_literals():
     roots = [
         ROOT / "vault-template/system",
         ROOT / "vault-template/AGENTS.md",

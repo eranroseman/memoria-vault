@@ -105,7 +105,7 @@ def test_allowed_network_rejects_host_prefix_bypass() -> None:
         require_allowed_network(policy, "https://api.openalex.org.evil/works/W1")
 
 
-def test_runner_provider_config_rejects_legacy_root_providers(tmp_path: Path) -> None:
+def test_runner_provider_config_rejects_removed_root_providers(tmp_path: Path) -> None:
     config = tmp_path / ".memoria/config/providers.yaml"
     config.parent.mkdir(parents=True)
     config.write_text(
@@ -211,36 +211,36 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     }
 
 
-def test_compile_source_digest_rejects_legacy_source_markdown_without_catalog_row(
+def test_compile_source_digest_rejects_removed_source_markdown_without_catalog_row(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    legacy = vault / "catalog/sources/legacy/source.md"
-    legacy.parent.mkdir(parents=True, exist_ok=True)
-    legacy.write_text(
+    removed = vault / "catalog/sources/removed/source.md"
+    removed.parent.mkdir(parents=True, exist_ok=True)
+    removed.write_text(
         "---\n"
         "type: source\n"
         "check_status: checked\n"
-        "title: Legacy Source\n"
+        "title: Removed Source\n"
         "description: Should not be treated as a Work row.\n"
-        "source_id: legacy\n"
-        "content_path: .memoria/blobs/source-content/legacy/content.txt\n"
+        "source_id: removed\n"
+        "content_path: .memoria/blobs/source-content/removed/content.txt\n"
         "text_status: full-text\n"
         "---\n"
-        "# Legacy Source\n",
+        "# Removed Source\n",
         encoding="utf-8",
     )
-    content = vault / ".memoria/blobs/source-content/legacy/content.txt"
+    content = vault / ".memoria/blobs/source-content/removed/content.txt"
     content.parent.mkdir(parents=True, exist_ok=True)
-    content.write_text("Legacy source text.\n", encoding="utf-8")
+    content.write_text("Removed source text.\n", encoding="utf-8")
 
-    with pytest.raises(FileNotFoundError, match="catalog/sources/legacy"):
+    with pytest.raises(FileNotFoundError, match="catalog/sources/removed"):
         compile_source_digest(
             vault,
-            "legacy",
+            "removed",
             ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
             machine="op-machine",
-            run_id="compile-legacy",
+            run_id="compile-removed",
         )
 
 
