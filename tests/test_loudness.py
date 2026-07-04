@@ -39,18 +39,40 @@ def test_notice_card_stays_pull_only_without_push_log(tmp_path):
     assert not (tmp_path / loudness.PUSH_LOG_RELPATH).exists()
 
 
-def test_open_blockers_only_reads_proposed_block_cards(tmp_path):
+def test_open_blockers_only_reads_open_block_attention_projections(tmp_path):
     (tmp_path / "inbox").mkdir()
     (tmp_path / "inbox/open.md").write_text(
-        "---\ntitle: Open block\ntype: alert\nlifecycle: proposed\nloudness: block\n---\n",
+        "---\n"
+        "title: Open block\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: open\n"
+        "loudness: block\n"
+        "---\n",
         encoding="utf-8",
     )
     (tmp_path / "inbox/resolved.md").write_text(
-        "---\ntitle: Resolved block\ntype: alert\nlifecycle: current\nloudness: block\n---\n",
+        "---\n"
+        "title: Resolved block\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: resolved\n"
+        "loudness: block\n"
+        "---\n",
         encoding="utf-8",
     )
     (tmp_path / "inbox/notice.md").write_text(
-        "---\ntitle: Notice\ntype: flag\nlifecycle: proposed\nloudness: notice\n---\n",
+        "---\n"
+        "title: Notice\n"
+        "projection: attention\n"
+        "attention_kind: flag\n"
+        "attention_status: open\n"
+        "loudness: notice\n"
+        "---\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "inbox/old-shape.md").write_text(
+        "---\ntitle: Old shape\ntype: alert\nlifecycle: proposed\nloudness: block\n---\n",
         encoding="utf-8",
     )
 

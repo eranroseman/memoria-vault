@@ -405,7 +405,13 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     (tmp_path / "inbox").mkdir()
     blocker = tmp_path / "inbox/block.md"
     blocker.write_text(
-        "---\ntitle: Stop\ntype: alert\nlifecycle: proposed\nloudness: block\n---\n",
+        "---\n"
+        "title: Stop\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: open\n"
+        "loudness: block\n"
+        "---\n",
         encoding="utf-8",
     )
 
@@ -416,7 +422,14 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     assert blocked["blockers"][0]["path"] == "inbox/block.md"
 
     blocker.write_text(
-        "---\ntitle: Stop\ntype: alert\nlifecycle: current\nloudness: block\nresolved: 2026-06-15\n---\n",
+        "---\n"
+        "title: Stop\n"
+        "projection: attention\n"
+        "attention_kind: alert\n"
+        "attention_status: resolved\n"
+        "loudness: block\n"
+        "resolved_at: 2026-06-15\n"
+        "---\n",
         encoding="utf-8",
     )
     unblocked = engine.check("operation", "write", "knowledge/hubs/h.md", "REQ-OPEN")
