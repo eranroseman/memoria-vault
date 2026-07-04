@@ -1,7 +1,6 @@
 ---
 title: Regenerate indexes
 type: operation
-check_status: checked
 description: Regenerate tracked workspace and bundle index projections.
 operation_id: regenerate-indexes
 allowed_tools:
@@ -27,7 +26,6 @@ tags:
 - alpha11
 - projection
 id: operations/regenerate-indexes
-standing: current
 links: {}
 ---
 

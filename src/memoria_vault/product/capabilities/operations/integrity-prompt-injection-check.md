@@ -1,7 +1,6 @@
 ---
 title: Integrity prompt injection check
 type: operation
-check_status: checked
 description: Detect fixture prompt-injection markers in checked Work text.
 operation_id: integrity-prompt-injection-check
 allowed_tools:
@@ -23,7 +22,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-prompt-injection-check
-standing: current
 links: {}
 ---
 

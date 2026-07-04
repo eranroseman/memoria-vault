@@ -1,7 +1,6 @@
 ---
 title: Cascade rollback
 type: operation
-check_status: checked
 description: Rollback traced machine descendants and flag PI-directed descendants.
 operation_id: cascade-rollback
 allowed_tools:
@@ -26,7 +25,6 @@ tags:
 - alpha11
 - rollback
 id: operations/cascade-rollback
-standing: current
 links: {}
 ---
 

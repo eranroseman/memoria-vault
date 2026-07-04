@@ -1,7 +1,6 @@
 ---
 title: Integrity link target check
 type: operation
-check_status: checked
 description: Check that typed note links target checked current Concepts.
 operation_id: integrity-link-target-check
 allowed_tools:
@@ -23,7 +22,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-link-target-check
-standing: current
 links: {}
 ---
 

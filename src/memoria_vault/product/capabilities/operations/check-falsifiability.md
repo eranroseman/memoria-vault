@@ -1,7 +1,6 @@
 ---
 title: Check falsifiability
 type: operation
-check_status: checked
 description: Check whether input claims are empirically falsifiable.
 operation_id: check-falsifiability
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/check_falsifiability
 created: 2026-06-10
 id: operations/check-falsifiability
-standing: current
 links: {}
 ---
 

@@ -1,7 +1,6 @@
 ---
 title: Capture URL source
 type: operation
-check_status: checked
 description: Fetch a URL snapshot and stage it as a catalog Work row.
 operation_id: capture-url-source
 allowed_tools:
@@ -26,7 +25,6 @@ tags:
 - alpha11
 - capture
 id: operations/capture-url-source
-standing: current
 links: {}
 ---
 

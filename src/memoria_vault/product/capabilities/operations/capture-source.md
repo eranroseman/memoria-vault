@@ -1,7 +1,6 @@
 ---
 title: Capture source
 type: operation
-check_status: checked
 description: Capture supplied source metadata and text; DOI/ISBN records stage for
   enrichment.
 operation_id: capture-source
@@ -25,7 +24,6 @@ tags:
 - alpha11
 - capture
 id: operations/capture-source
-standing: current
 links: {}
 ---
 

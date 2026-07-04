@@ -1,7 +1,6 @@
 ---
 title: Integrity claim quote check
 type: operation
-check_status: checked
 description: Check whether a claim's quoted evidence appears in its source.
 operation_id: integrity-claim-quote-check
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-claim-quote-check
-standing: current
 links: {}
 ---
 

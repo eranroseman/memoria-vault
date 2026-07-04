@@ -1,7 +1,6 @@
 ---
 title: Regenerate capability index
 type: operation
-check_status: checked
 description: Regenerate the local packaged-capability index cache.
 operation_id: regenerate-capability-index
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - projection
 id: operations/regenerate-capability-index
-standing: current
 links: {}
 ---
 

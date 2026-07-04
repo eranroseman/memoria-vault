@@ -1,7 +1,6 @@
 ---
 title: Integrity quote anchor check
 type: operation
-check_status: checked
 description: Check anchored note quotes against their source content.
 operation_id: integrity-quote-anchor-check
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-quote-anchor-check
-standing: current
 links: {}
 ---
 

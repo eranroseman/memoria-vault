@@ -1,7 +1,6 @@
 ---
 title: Mark checked
 type: operation
-check_status: checked
 description: Promote an observed PI edit back to checked after worker checks pass.
 operation_id: mark-checked
 allowed_tools:
@@ -26,7 +25,6 @@ tags:
 - alpha11
 - trace
 id: operations/mark-checked
-standing: current
 links: {}
 ---
 

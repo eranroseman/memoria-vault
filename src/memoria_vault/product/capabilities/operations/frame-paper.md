@@ -1,7 +1,6 @@
 ---
 title: Frame paper
 type: operation
-check_status: checked
 description: Record PI-supplied paper framing fields on a project.
 operation_id: frame-paper
 allowed_tools:
@@ -22,7 +21,6 @@ tags:
 - alpha15
 - project
 id: operations/frame-paper
-standing: current
 links: {}
 ---
 

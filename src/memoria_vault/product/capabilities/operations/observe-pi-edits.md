@@ -1,7 +1,6 @@
 ---
 title: Observe PI edits
 type: operation
-check_status: checked
 description: Backfill journal events for PI edits detected in git status.
 operation_id: observe-pi-edits
 allowed_tools:
@@ -26,7 +25,6 @@ tags:
 - alpha11
 - trace
 id: operations/observe-pi-edits
-standing: current
 links: {}
 ---
 

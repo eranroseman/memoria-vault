@@ -1,7 +1,6 @@
 ---
 title: Export project
 type: operation
-check_status: checked
 description: Export a checked project composition to Markdown or a Pandoc-backed format.
 operation_id: export-project
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - project
 - export
 id: operations/export-project
-standing: current
 links: {}
 ---
 

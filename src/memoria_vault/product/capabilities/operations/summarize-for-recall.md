@@ -1,7 +1,6 @@
 ---
 title: Summarize for recall
 type: operation
-check_status: checked
 description: Summarize selected input for later recall and connection-making.
 operation_id: summarize-for-recall
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/summarize
 created: 2026-06-10
 id: operations/summarize-for-recall
-standing: current
 links: {}
 ---
 

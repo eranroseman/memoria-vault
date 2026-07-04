@@ -1,7 +1,6 @@
 ---
 title: Acknowledge attention
 type: operation
-check_status: checked
 description: Record that the PI acknowledged a generated attention item.
 operation_id: acknowledge-attention
 allowed_tools:
@@ -23,7 +22,6 @@ tags:
 - alpha11
 - attention
 id: operations/acknowledge-attention
-standing: current
 links: {}
 ---
 

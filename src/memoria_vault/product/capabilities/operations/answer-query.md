@@ -1,7 +1,6 @@
 ---
 title: Answer query
 type: operation
-check_status: checked
 description: Answer an Ask query over checked retrieval documents with BM25 sources.
 operation_id: answer-query
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - ask
 id: operations/answer-query
-standing: current
 links: {}
 ---
 

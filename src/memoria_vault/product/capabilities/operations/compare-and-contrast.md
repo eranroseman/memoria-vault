@@ -1,7 +1,6 @@
 ---
 title: Compare and contrast
 type: operation
-check_status: checked
 description: Compare multiple notes or sources and surface grounded disagreements.
 operation_id: compare-and-contrast
 allowed_tools:
@@ -30,7 +29,6 @@ version: '1.0'
 adapted_from: fabric/compare_and_contrast
 created: 2026-06-10
 id: operations/compare-and-contrast
-standing: current
 links: {}
 ---
 

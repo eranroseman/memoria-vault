@@ -1,7 +1,6 @@
 ---
 title: Enrich source
 type: operation
-check_status: checked
 description: Resolve and merge DOI provider metadata for one staged catalog source.
 operation_id: enrich-source
 allowed_tools:
@@ -32,7 +31,6 @@ tags:
 - enrichment
 - library
 id: operations/enrich-source
-standing: current
 links: {}
 ---
 

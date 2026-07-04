@@ -1,7 +1,6 @@
 ---
 title: Integrity evidence check
 type: operation
-check_status: checked
 description: Check that note evidence references resolve through checked catalog Works.
 operation_id: integrity-evidence-check
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - integrity
 id: operations/integrity-evidence-check
-standing: current
 links: {}
 ---
 

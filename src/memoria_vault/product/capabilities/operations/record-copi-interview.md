@@ -1,7 +1,6 @@
 ---
 title: Record Co-PI interview
 type: operation
-check_status: checked
 description: Record one PI interview takeaway for a checked source.
 operation_id: record-copi-interview
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - copi
 id: operations/record-copi-interview
-standing: current
 links: {}
 ---
 

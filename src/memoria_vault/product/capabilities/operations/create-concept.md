@@ -1,7 +1,6 @@
 ---
 title: Create Concept
 type: operation
-check_status: checked
 description: Materialize a PI or agent-authored Concept as unchecked knowledge.
 operation_id: create-concept
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha15
 - engine-api
 id: operations/create-concept
-standing: current
 links: {}
 ---
 

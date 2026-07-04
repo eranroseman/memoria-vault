@@ -72,7 +72,7 @@ convention. Templates and deterministic emitters put fields in this order:
 
 1. Human identity: `title` or `name`.
 2. Schema identity: `type`, then `id` where the bundle requires it.
-3. Human summary and pointer fields: `description`, `resource`, `source_id`.
+3. Human summary and pointer fields: `description`.
 4. Type-specific state and references.
 5. Relations and classification: `links`, `tags`, and type-specific maps.
 
@@ -82,11 +82,13 @@ convention. Templates and deterministic emitters put fields in this order:
 responses. It is not written to Concept frontmatter. Writers reject retired
 frontmatter verdict fields so a forged file field cannot grant a checked verdict.
 
-## Links and resources
+## Links and catalog resources
 
-Concepts use `resource` for the backing source pointer when one exists. `links`
-is the required relation field for knowledge Concepts. It is a map from
-`supports`, `contradicts`, or `extends` to lists of local Concept targets.
+Work Concepts use `work_id` to point at the SQLite catalog Work row. Backing
+resource URLs and external identifiers live in `.memoria/memoria.sqlite`, not in
+Concept frontmatter. `links` is the required relation field for knowledge
+Concepts. It is a map from `supports`, `contradicts`, or `extends` to lists of
+local Concept targets.
 
 ## Other universal fields
 
@@ -97,7 +99,6 @@ is the required relation field for knowledge Concepts. It is a map from
 | `title` | `str` | Human-readable Concept title. |
 | `links` | `links` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
-| `resource` | `str` | Optional backing-resource pointer. |
 | `tags` | `list` | Optional local classification where the type supports it. |
 
 ## Enforcement

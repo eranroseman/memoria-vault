@@ -298,17 +298,17 @@ def test_worker_cli_enqueues_operation_payload(tmp_path: Path, capsys) -> None:
     assert output["payload"] == {"query": "alpha", "k": 1}
 
 
-def test_worker_requires_checked_operation_policy_before_dispatch(
+def test_worker_requires_valid_operation_policy_before_dispatch(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     vault = workspace(tmp_path)
 
-    def reject_unchecked(_vault: Path, _operation_id: str) -> dict:
-        raise ValueError("answer-query is not checked")
+    def reject_invalid_policy(_vault: Path, _operation_id: str) -> dict:
+        raise ValueError("answer-query missing operation policy fields: runner")
 
     monkeypatch.setattr(
         "memoria_vault.runtime.operations.load_operation_policy",
-        reject_unchecked,
+        reject_invalid_policy,
     )
 
     enqueue_operation(
@@ -321,7 +321,7 @@ def test_worker_requires_checked_operation_policy_before_dispatch(
 
     assert done is not None
     assert done["status"] == "failed"
-    assert "answer-query is not checked" in done["error"]
+    assert "answer-query missing operation policy fields: runner" in done["error"]
 
 
 def test_worker_runs_integrity_operation_jobs(tmp_path: Path) -> None:

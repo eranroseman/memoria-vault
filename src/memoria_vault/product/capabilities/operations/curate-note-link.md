@@ -1,7 +1,6 @@
 ---
 title: Curate note link
 type: operation
-check_status: checked
 description: Record a PI-authored typed link between checked notes.
 operation_id: curate-note-link
 allowed_tools:
@@ -24,7 +23,6 @@ tags:
 - alpha11
 - notes
 id: operations/curate-note-link
-standing: current
 links: {}
 ---
 
