@@ -94,8 +94,8 @@ carried into `project export`).
 - Adding a type later adds zero commands and one schema.
 - Files never churn on checking; the content hash is the file.
 - The template, validators, read-API projections, and scan/rebuild are
-  rewritten to this model (exec-plan PR-B2), with the alpha.14 surface
-  retirement enforced by a negative gate.
+  rewritten to this model, with the alpha.14 surface retirement enforced by a
+  negative gate.
 
 ## Alternatives considered
 
@@ -109,5 +109,5 @@ carried into `project export`).
 
 ## Related
 
-- Design §3/§4/§5/§10; ADR-125; ADR-127 (who may set verdicts); ADR-129
+- ADR-125 (standalone runtime), ADR-127 (who may set verdicts), ADR-129
   (edge extraction and the supersession comparator).

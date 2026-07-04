@@ -98,7 +98,7 @@ runtime and the vault-file world.
 
 - Correctness for observers is fail-closed, not transactional: a half-done
   operation is unobservable as complete.
-- Every guarantee has a crash/recovery gate (exec-plan PR-C/PR-D/PR-E).
+- Every guarantee has a crash/recovery gate.
 - Multi-machine sync of the SQLite authority is out of contract (markdown
   merges; SQLite does not); one workspace, one writer at a time.
 - A three-store **backup contract** exists and `doctor` reports on it: git
@@ -119,5 +119,5 @@ runtime and the vault-file world.
 
 ## Related
 
-- Design §2/§3/§6/§9/§11; ADR-105 (diagnostic plane, unchanged); ADR-128
-  (the epistemics this machinery licenses).
+- ADR-105 (diagnostic plane, unchanged); ADR-128 (the epistemics this
+  machinery licenses).
