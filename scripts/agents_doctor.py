@@ -319,6 +319,11 @@ def _agent_tag_errors(text: str | None = None) -> list[str]:
         for mechanism in (item.strip() for item in raw.split(",")):
             if mechanism not in mechanisms:
                 errors.append(f"AGENTS.md enforcement tag names missing mechanism: {mechanism}")
+    for raw in re.findall(r"\*\(enforced-by-structure: (.*?)\)\*", text):
+        if "<" in raw:
+            continue
+        if not raw.strip():
+            errors.append("AGENTS.md structural enforcement tag must name a concrete invariant")
     return errors
 
 

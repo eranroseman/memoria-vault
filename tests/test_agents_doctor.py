@@ -112,3 +112,23 @@ def test_agents_enforcement_tag_missing_mechanism_fails():
     assert agents_doctor._agent_tag_errors(text) == [
         "AGENTS.md enforcement tag names missing mechanism: no-such-hook"
     ]
+
+
+def test_agents_structural_enforcement_tag_names_invariant():
+    text = "Rule. *(enforced-by-structure: orphan scratch branch - no repo tree present)*\n"
+
+    assert agents_doctor._agent_tag_errors(text) == []
+
+
+def test_agents_structural_enforcement_tag_placeholder_is_ignored():
+    text = "Example: `*(enforced-by-structure: <invariant>)*`\n"
+
+    assert agents_doctor._agent_tag_errors(text) == []
+
+
+def test_agents_structural_enforcement_tag_empty_fails():
+    text = "Rule. *(enforced-by-structure: )*\n"
+
+    assert agents_doctor._agent_tag_errors(text) == [
+        "AGENTS.md structural enforcement tag must name a concrete invariant"
+    ]
