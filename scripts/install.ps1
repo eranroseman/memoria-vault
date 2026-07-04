@@ -11,7 +11,7 @@
       2. Creates the vault-local runtime venv.
       3. Installs the Memoria package.
       4. Ensures the folder skeleton and wires Git hooks.
-      5. Registers the workspace-local qmd search collection.
+      5. Registers the workspace-local qmd search collection when qmd already exists.
       6. Prints CLI next steps.
 
 .PARAMETER Vault
@@ -24,9 +24,6 @@
 .PARAMETER Yes
     Non-interactive: accept defaults and run guided installs.
 
-.NOTES
-    Set MEMORIA_INSTALL_GLOBAL_TOOLS=1 to let the installer run npm install -g
-    for optional runtime tools.
 #>
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '')]
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseSingularNouns', '')]
@@ -48,7 +45,6 @@ function Write-Header { param([string]$Message) Write-Host "`n== $Message ==" -F
 function Write-Ok { param([string]$Message) Write-Host "[OK] $Message" -ForegroundColor Green }
 function Write-Warn { param([string]$Message) Write-Host "[!] $Message" -ForegroundColor Yellow }
 function Stop-Install { param([string]$Message) Write-Host "[X] $Message" -ForegroundColor Red; exit 1 }
-function Test-GlobalToolInstallAllowed { return $env:MEMORIA_INSTALL_GLOBAL_TOOLS -eq '1' }
 
 function Invoke-Logged {
     param(
@@ -247,17 +243,8 @@ function Install-Qmd {
     if ($qmd) {
         Write-Ok "qmd present: $qmd"
     } else {
-        $npm = Get-CommandPath @('npm.cmd', 'npm.exe', 'npm')
-        $node = Get-CommandPath @('node.exe', 'node')
-        $nodeVersion = if ($node -and -not $DryRun) { (& $node --version 2>$null | Select-Object -First 1) } else { '' }
-        if ((Test-GlobalToolInstallAllowed) -and $npm -and ($DryRun -or $nodeVersion -match '^v(2[2-9]|[3-9][0-9])')) {
-            Invoke-Logged -FilePath $npm -ArgumentList @('install', '-g', '@tobilu/qmd')
-            $qmd = Resolve-Qmd
-        }
-        if (-not $qmd) {
-            Write-Warn 'qmd not installed -- search will not be ready until you install qmd or rerun with MEMORIA_INSTALL_GLOBAL_TOOLS=1'
-            return
-        }
+        Write-Warn 'qmd not found -- search registration skipped; set MEMORIA_QMD_BIN to an existing qmd binary to enable it'
+        return
     }
     $script:QmdBin = $qmd
 

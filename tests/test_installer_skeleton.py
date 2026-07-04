@@ -288,13 +288,15 @@ def test_installer_qmd_resolution_avoids_ambiguous_path_binary():
     text = RUNTIME_TOOLS.read_text(encoding="utf-8")
     assert "MEMORIA_QMD_BIN" in text
     assert "command -v qmd" not in text
-    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" in text
-    assert "qmd not installed" in text
+    assert "npm install -g" not in text
+    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" not in text
+    assert "qmd not found" in text
     ps = INSTALL_PS.read_text(encoding="utf-8")
     assert "MEMORIA_QMD_BIN" in ps
     assert "Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')" not in ps
-    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" in ps
-    assert "qmd not installed" in ps
+    assert "npm install -g" not in ps
+    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" not in ps
+    assert "qmd not found" in ps
 
 
 def test_zotero_left_the_installer():

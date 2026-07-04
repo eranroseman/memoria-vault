@@ -49,10 +49,7 @@ def resolve_qmd_executable() -> dict[str, str]:
         return {
             "path": "",
             "source": "path",
-            "error": (
-                f"qmd found at {resolved}; set {QMD_BIN_ENV} to an absolute qmd path "
-                "or install @tobilu/qmd globally with npm"
-            ),
+            "error": f"qmd found at {resolved}; set {QMD_BIN_ENV} to an absolute qmd path",
         }
     return {"path": "", "source": "", "error": "qmd not found"}
 

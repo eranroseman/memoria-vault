@@ -5,9 +5,10 @@
 #   bash scripts/qmd-codebase-index.sh --embed    # also build vector embeddings (GPU if available)
 #
 # This indexes THIS repo into a PROJECT-LOCAL index at ./.qmd/ (gitignored) — it is a
-# DEV tool, separate from the runtime/vault qmd (which the installer wires for ~/Memoria).
-# Idempotent; safe to re-run. Uses the repo-pinned qmd from node_modules (run `npm install`
-# first, or `bash scripts/dev-setup.sh`). Needs Node >=22.
+# DEV tool, separate from the runtime/vault qmd (which the installer can register
+# when an existing binary is available).
+# Idempotent; safe to re-run. Uses the repo-pinned qmd from node_modules (run
+# `npm ci` first, or `bash scripts/dev-setup.sh`). Needs Node >=22.
 #
 # GPU: qmd auto-detects CUDA/Metal/Vulkan. Leave QMD_LLAMA_GPU unset for auto-selection.
 # On Linux/WSL with an NVIDIA card you need the CUDA 13 runtime (libcudart.so.13 +
@@ -33,7 +34,7 @@ if [ -x "$ROOT/node_modules/.bin/qmd" ]; then
 elif command -v npx >/dev/null 2>&1; then
   QMD="npx --no-install qmd"
 else
-  note "qmd not found — run 'npm install' (or scripts/dev-setup.sh) first. Skipping."
+  note "qmd not found — run 'npm ci' (or scripts/dev-setup.sh) first. Skipping."
   exit 0
 fi
 
