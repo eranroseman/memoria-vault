@@ -55,13 +55,14 @@ siblings under one roof — same rules, one folder to open:
   main/           main branch checkout                    · rule: PR + required CI
   scratch/        scratch orphan-branch checkout          · rule: commit direct + push, no PR/CI
   worktrees/      task/feature worktrees                  · rule: branch → PR → main
-  sandbox/        the sandbox (was ~/Memoria-test)        · rule: disposable install, runtime tests
+  sandbox/        fresh install with its OWN .git         · rule: disposable; simulates a real install
 ```
 
 Each part "follows its own rules" because they are branches with their own
 governance (main protected by its ruleset; feature branches PR'd) plus a sandbox
-that is not under the repo's git at all. Because the container is not itself a
-working tree, nothing needs gitignoring.
+that is its **own standalone git repo** — not a worktree, not under `.bare` at all —
+so it behaves exactly like a real end-user install. Because the container is not
+itself a working tree, nothing needs gitignoring.
 
 **Scratch specifically** is a worktree on the **`scratch` orphan branch** — the
 git-idiomatic mechanism for versioned content that shares no history with `main`
@@ -157,9 +158,11 @@ so nothing is destroyed until it is verified: create the bare repo (objects
 hardlinked from the local repo — fast, no network), re-point its `origin` at the
 real GitHub URL and set the remote-tracking fetch refspec (the one bare-repo
 gotcha), drop the `gitdir` pointer, then `git worktree add` `main`, `scratch`, and
-each feature branch into place. Move the sandbox in. Only once the new container
-verifies do we remove the old checkout + old worktrees and swap the new container
-to `~/memoria-vault`. Clean the `~/mv` cruft.
+each feature branch into place. Create a **fresh, empty sandbox with its own
+`git init`** (a standalone repo simulating a real install — the old disposable
+`~/Memoria-test` is deleted, not moved). Only once the new container verifies do we
+remove the old checkout + old worktrees + old `~/Memoria-test`, and swap the new
+container to `~/memoria-vault`. Clean the `~/mv` cruft.
 
 **Phase B — fix path references (PR).** From a worktree under the new layout,
 branch off `origin/main`, grep *all* tracked files for the old paths, update the
@@ -177,7 +180,7 @@ Things that reference the old paths but live *outside* the repo, so Phase B can'
 touch them:
 - **Runtime / sandbox path — N/A in alpha.15.** Obsidian and Hermes are not used,
   so there is no machine-local runtime config pointing at the sandbox to re-point
-  and no gateway to restart. The sandbox folder still moves (Phase A) and its
+  and no gateway to restart. The fresh sandbox is created in Phase A and its
   *tracked* default updates (Phase B); nothing else depends on it. (If a later
   stage adopts Hermes/Obsidian, re-point `~/.hermes` profiles + the Obsidian vault
   to `~/memoria-vault/sandbox` then.)
@@ -292,12 +295,19 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    Expected: `main/`, `scratch/`, and a `worktrees/<sanitized-branch>` for **every**
    branch in `~/mv-branches.txt`, no collisions; `worktree list` clean and complete.
 
-4. **Move the sandbox in** (Hermes must not be using it — prereq 4):
+4. **Create a fresh, empty sandbox** — a **separate install with its own `.git`**,
+   simulating a real end-user vault: an independent repo, **not** a worktree of this
+   one and sharing no history with `main`/`.bare`. The old `~/Memoria-test` is
+   disposable and is **not carried over** — it is deleted in step 6.
 
    ```bash
-   pgrep -af hermes | grep -v pgrep    # empty, or confirmed NOT bound to ~/Memoria-test
-   mv ~/Memoria-test ~/memoria-vault-new/sandbox    # rename Memoria-test → sandbox
+   mkdir ~/memoria-vault-new/sandbox
+   git -C ~/memoria-vault-new/sandbox init -q   # its OWN standalone repo — simulates a real install
    ```
+
+   It starts empty; a real test run populates it via the installer /
+   `refresh-test-vault.sh` (whose default target Phase B repoints to
+   `~/memoria-vault/sandbox`).
 
 5. **Verify the new container BEFORE destroying the old one** — health **and a
    branch-tip manifest** (HIGH #3: never delete old state until every old branch
@@ -353,15 +363,19 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    rm -rf ~/mv/main-merge ~/mv/.git ~/mv/.agents ~/mv/.codex          # the known cruft
    if [ -z "$(find ~/mv -mindepth 1 2>/dev/null)" ]; then rmdir ~/mv && echo "~/mv removed";
    else echo "~/mv NOT empty — inspect before removing:"; ls -la ~/mv; fi
+   # delete the OLD disposable sandbox — replaced by the fresh ~/memoria-vault/sandbox
+   if pgrep -af hermes | grep -qv pgrep; then echo "hermes still bound — stop before deleting ~/Memoria-test";
+   else rm -rf ~/Memoria-test && echo "old ~/Memoria-test deleted"; fi
    git -C ~/memoria-vault worktree prune
    git -C ~/memoria-vault worktree list   # everything under ~/memoria-vault/
    ( cd ~/memoria-vault/main && pre-commit install )   # the bare clone dropped the installed hooks
    ```
 
    Expected: durable ignored data (`_papers`, `_notes`, …) moved into `main/` **before**
-   the rm; every registered old worktree + known cruft removed; `~/mv` **rmdir'd
-   only if empty** (else it stops and lists what's left for you to inspect);
-   `worktree list` shows all worktrees under `~/memoria-vault/`; hook re-installed.
+   the rm; every registered old worktree + known cruft removed; **old `~/Memoria-test`
+   deleted** (fresh sandbox already in place from step 4); `~/mv` **rmdir'd only if
+   empty** (else it stops and lists what's left for you to inspect); `worktree list`
+   shows all worktrees under `~/memoria-vault/`; hook re-installed.
 
 7. **Phase B — the path-reference PR:**
 
@@ -395,6 +409,10 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 
 - **Claim:** Opening `~/memoria-vault` shows `main/`, `scratch/`, `worktrees/`,
   `sandbox/` (plus `.bare`). **Prove:** `ls ~/memoria-vault`.
+- **Claim:** the sandbox is a fresh, standalone install with its **own** `.git`
+  (not a worktree of `.bare`). **Prove:** `git -C ~/memoria-vault/sandbox rev-parse
+  --absolute-git-dir` → `~/memoria-vault/sandbox/.git` (NOT the container `.bare`);
+  and it is not listed by `git -C ~/memoria-vault worktree list`.
 - **Claim:** every worktree resolves against the bare repo. **Prove:**
   `git -C ~/memoria-vault worktree list` — no "prunable"/broken entries.
 - **Claim:** `git fetch`/`pull` behave normally (the bare gotcha is handled).
@@ -427,7 +445,8 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 - [ ] Phase A: `scratch` de-nested + pushed (step 0); bare container built,
       verified (step 5); **durable ignored data (`_papers`/`_notes`/…) preserved into
       `main/`** (step-6 preserve-gate); swapped in (step 6); pre-commit re-installed.
-- [ ] Sandbox at `~/memoria-vault/sandbox`; `~/mv` removed.
+- [ ] Fresh sandbox at `~/memoria-vault/sandbox` (own `.git`, empty); old
+      `~/Memoria-test` deleted; `~/mv` removed.
 - [ ] Phase B: path-reference PR merged.
 - [ ] Backup `~/memoria-vault-git-backup` deleted after a clean gate + fetch/push
       cycle.
