@@ -5,7 +5,7 @@
   guidance comments. See ../playbooks/exec-plan.md for when and how to use it.
 
   ── Where this instance lives ───────────────────────────────────────────────
-  scratch branch, scratch/releases/<version>/ — under the current
+  scratch branch, releases/<version>/ — under the current
   release/checkpoint; tracked for linking and handoff, deleted before that
   release closes.
   (_notes/ is gitignored, so a plan meant to be resumed or handed off never
@@ -31,7 +31,7 @@
 <!-- The minimum a stateless reader needs to orient. -->
 
 - **Task:** {{ one line }}
-- **Worktree / branch:** `~/mv/<name>` · `feat/<name>` for implementation;
+- **Worktree / branch:** `~/memoria-vault/worktrees/<name>` · `feat/<name>` for implementation;
   `scratch/<name>` pushed to `origin/scratch` for this plan file
 - **Related ADRs:** {{ ADR-NN — link to `docs/adr/<NN>-*.md`, or — }}
 - **Related issues / milestone:** {{ #NN, 0.1.0 or — }}
@@ -68,8 +68,8 @@
 
    ```bash
    git fetch origin
-   git worktree add ~/mv/{{ name }} -b feat/{{ name }} origin/main
-   cd ~/mv/{{ name }}
+   git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/{{ name }} -b feat/{{ name }} origin/main
+   cd ~/memoria-vault/worktrees/{{ name }}
    ```
 
 2. {{ next exact command }}

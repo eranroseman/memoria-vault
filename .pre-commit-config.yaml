@@ -126,7 +126,7 @@ repos:
         name: status-doctor
         language: system
         entry: python scripts/status_doctor.py
-        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^scratch/releases/.*\.md$|^scripts/status_doctor\.py$
+        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^releases/.*\.md$|^scripts/status_doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor

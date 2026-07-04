@@ -18,7 +18,7 @@ def test_local_llm_full_install_harness_exists_and_is_executable() -> None:
 
 def test_harness_uses_child_vault_and_refuses_unsafe_wipes() -> None:
     text = _script()
-    assert 'TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/Memoria-test}"' in text
+    assert 'TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"' in text
     assert 'VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"' in text
     assert "--vault must be below --root; refusing to wipe $VAULT" in text
     assert "--vault must be a child of --root" in text

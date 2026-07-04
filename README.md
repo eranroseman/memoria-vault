@@ -111,11 +111,11 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 ## Development
 
 For fast system-file iteration on the disposable sandbox, run
-`bash scripts/refresh-test-vault.sh` to update `~/Memoria-test` from
+`bash scripts/refresh-test-vault.sh` to update `~/memoria-vault/sandbox/vault` from
 `vault-template/` while preserving runtime state. For release-candidate installer
 proof, rebuild the disposable vault from scratch with
 `bash scripts/install-test-vault-local-llm.sh`; it installs into
-`~/Memoria-test/vault` and runs package, detector, and CLI doctor checks. Full
+`~/memoria-vault/sandbox/vault` and runs package, detector, and CLI doctor checks. Full
 flags: [Installer (bootstrap)](docs/reference/installer.md).
 
 ## Citation

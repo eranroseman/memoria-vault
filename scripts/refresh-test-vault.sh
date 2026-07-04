@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fast local refresh for the disposable ~/Memoria-test sandbox.
+# Fast local refresh for the disposable ~/memoria-vault/sandbox/vault workspace.
 # cspell:words pathlib
 #
 # This updates source-owned vault files from vault-template/ without doing a fresh install.
@@ -8,7 +8,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VAULT="$HOME/Memoria-test"
+VAULT="$HOME/memoria-vault/sandbox/vault"
 DRY_RUN=0
 
 say() { printf '%s\n' "$*"; }
@@ -22,7 +22,7 @@ Usage: scripts/refresh-test-vault.sh [--vault DIR] [--dry-run]
 Fast-refresh an existing disposable Memoria test vault from vault-template/.
 
 Options:
-  --vault DIR                 Target vault (default: ~/Memoria-test)
+  --vault DIR                 Target vault (default: ~/memoria-vault/sandbox/vault)
   --dry-run                   Print the actions without writing
   -h, --help                  Show this help
 
