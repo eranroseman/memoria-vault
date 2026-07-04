@@ -10,6 +10,7 @@ from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
+from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.vaultio import (
     apply_universal_concept_frontmatter,
     frontmatter_doc,
@@ -145,8 +146,10 @@ def read_concept(
         return {"ok": True, "target": target, "kind": "work", "work": _tag_work(work)}
     rel = path.relative_to(workspace).as_posix()
     _require_scope(rel, read_scope, f"target not found: {target}")
-    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
     check_status = state.concept_check_status(workspace, rel)
+    if check_status == "checked" and not is_consumable_checked_file(workspace, rel):
+        raise PermissionError(f"checked Concept is not consumable until scan runs: {rel}")
+    frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
     return {
         "ok": True,
         "path": rel,
