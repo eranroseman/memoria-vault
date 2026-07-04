@@ -314,7 +314,7 @@ def evaluate_pre(payload: dict, actor: str, workspace: Path) -> dict:
         return {
             "decision": "block",  # direct tool escape -> fail closed
             "reason": f"policy gate: '{tool_name}' is direct or unaudited external access -- "
-            f"adapter agents must use approved workspace tools; no actor is "
+            f"adapter agents must use allowed workspace request tools; no actor is "
             f"permitted this toolset.",
         }
     tool_policy_block = _tool_policy_block(tool_name, actor, workspace)
@@ -364,8 +364,8 @@ def evaluate_pre(payload: dict, actor: str, workspace: Path) -> dict:
     if decision == "dry_run":
         return {
             "decision": "block",
-            "reason": f"review-gated ({rule}): write to '{path}' must be human-approved "
-            f"-- surface as an attention item; do not write directly.",
+            "reason": f"review-gated ({rule}): write to '{path}' requires PI disposition "
+            f"through an attention item; do not write directly.",
         }
     return {
         "decision": "block",  # deny / anything unexpected

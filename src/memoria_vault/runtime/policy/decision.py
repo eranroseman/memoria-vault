@@ -129,7 +129,7 @@ def decide(
             return Decision(
                 "dry_run",
                 "review_gated.dry_run",
-                "review-gated zone -- delete must be human-approved",
+                "review-gated zone -- delete requires PI disposition through attention",
             )
         return Decision("allow_with_log", f"{rule}.delete", log_required=True)
 
@@ -152,7 +152,7 @@ def decide(
         return Decision(
             "dry_run",
             "review_gated.dry_run",
-            "review-gated zone write requires approval -- surface as an attention item",
+            "review-gated zone write requires PI disposition -- surface as an attention item",
         )
     return Decision("allow_with_log", f"{rule}.{action}.{_zone(npath)}", log_required=True)
 

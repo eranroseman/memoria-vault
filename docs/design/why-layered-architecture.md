@@ -107,7 +107,7 @@ work cannot bypass the checked request/write lifecycle."
 **Explanation**
 
 - The seven layers described: [Architecture](../explanation/architecture/README.md)
-- How the agent layer is structured: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
+- How the agent layer is structured: [Why operation postures, not a generalist agent](why-specialist-profiles.md)
 - Why the vault's review gate is structural: [Why the review gate is structural](why-review-gate-is-structural.md)
 
 **Reference**
