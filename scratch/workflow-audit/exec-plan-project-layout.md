@@ -90,8 +90,16 @@ plus this agent's memory files.
 
 **HARD PREREQUISITES (the plan is unsafe without these — a 2026-07-04 pre-flight
 audit found several of these unmet):**
-1. **A quiet window** — no active agent session working in any worktree, because
-   the conversion transiently breaks every worktree's git linkage.
+1. **A quiet window that holds through BOTH Phase A and the Phase B merge** — no
+   active agent session for the *whole* migration, not just Phase A. Two reasons:
+   (a) the conversion transiently breaks every worktree's git linkage; (b) between
+   Phase A finishing and the Phase B PR merging, the on-disk layout **contradicts
+   AGENTS.md** (which still says worktrees live at `~/mv/<session>` and the repo is
+   `~/memoria-vault`), so any session that starts in that gap will `cd` into a bare
+   container and try to add a worktree under a `~/mv` that no longer exists.
+   **Do not resume agent work until the Phase B PR has merged.** Given this repo's
+   heavy concurrency (worktrees appear/vanish every few minutes), treat this as a
+   scheduled maintenance window, not a lull.
 2. **Every worktree clean** — the bare repo is built from *committed* state, so
    any uncommitted work is lost when old worktrees are removed. `git status` in
    every worktree must be empty. (Audit: `~/mv/adr-consolidate` still had
@@ -106,17 +114,22 @@ audit found several of these unmet):**
    214-line alpha.13 design change. This is the single biggest silent-data-loss
    risk.) Resolve each: `git -C ~/memoria-vault stash show -p stash@{N}` →
    apply/commit the real ones, drop confirmed-stale ones.
-4. **Hermes runtime stopped or confirmed clear** — a live gateway (audit: PID
-   running `hermes_cli.main gateway run`) must not be bound to any moved path,
-   especially the sandbox `~/Memoria-test`. Confirm what it uses; stop it or
-   ensure it is not touching the moved paths before Phase A.
+4. **Hermes runtime stopped** — the gateway is a **systemd user service**
+   (`hermes-gateway.service`), so a plain `kill` just respawns it. Stop it with
+   `systemctl --user stop hermes-gateway.service` (verify `is-active` → inactive
+   and no `gateway run` process), and keep it down for the whole window since it
+   may be bound to the sandbox path being moved. Restart it only in Phase C,
+   against the *new* sandbox path:
+   `systemctl --user reset-failed hermes-gateway.service && systemctl --user start hermes-gateway.service`.
 5. **This plan committed to `scratch`** — so the bare clone captures it and it
    survives the move. (Done: commit `53ebbb61`.)
 
 ## 3. Plan of work
 
-Two phases, in order. Phase A is a local filesystem/git operation (no PR). Phase B
-is a normal PR that fixes the now-stale path references.
+Three phases. Phase A is a local filesystem/git operation (no PR). Phase B is a
+normal PR that fixes the now-stale *tracked* path references. Phase C is the
+machine-local reconfiguration no PR can do. **The freeze (prereq 1) holds from the
+start of Phase A until Phase B has merged;** Phase C follows.
 
 **Phase A — build the container (local, reversible via backup).** Back up the
 object store. Build the new layout *beside* the current one (`~/memoria-vault-new`)
@@ -133,8 +146,25 @@ branch off `origin/main`, grep *all* tracked files for the old paths, update the
 stale conventions (AGENTS.md worktree path → `~/memoria-vault/worktrees/<session>`
 and repo-root → `~/memoria-vault/main`; `refresh-test-vault.sh` default →
 `~/memoria-vault/sandbox`; `hermes-version-check.yml`), and open one PR. CI
-is unaffected (it clones fresh); only local conventions change. Update the agent
-memory files locally (not part of the PR).
+is unaffected (it clones fresh); only local conventions change. **The freeze stays
+in force until this PR merges** — until then the disk contradicts AGENTS.md.
+
+**Phase C — post-migration reconfiguration (machine-local, no PR can do this).**
+Things that reference the old paths but live *outside* the repo, so Phase B can't
+touch them:
+- **Runtime / sandbox path.** Any Hermes profile under `~/.hermes/` or Obsidian
+  vault registration pointing at `~/Memoria-test` must be re-pointed to
+  `~/memoria-vault/sandbox` (or the sandbox reinstalled there). *Only then* restart
+  the gateway (`systemctl --user reset-failed hermes-gateway.service && systemctl
+  --user start hermes-gateway.service`) and confirm it comes up against the new
+  path.
+- **Branch upstreams.** The bare clone leaves branches with no upstream, so set it
+  once (Phase A step, but verify here) — else bare `git pull`/`push` complain.
+- **Shell / IDE.** Aliases, shell rc, and IDE/editor workspace files that assume
+  the repo is at `~/memoria-vault` (now a container) or worktrees at `~/mv/` →
+  update to `~/memoria-vault/main` and `~/memoria-vault/worktrees/`.
+- **Agent memory files.** Update the entries recording old worktree/repo/vault
+  paths (also done in Phase B's local step, listed here for completeness).
 
 ## 4. Concrete steps
 
@@ -150,7 +180,8 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
      echo "$w: $(git -C "$w" status --porcelain | wc -l) uncommitted"
    done                                                      # EVERY line must read "0 uncommitted"
    git -C ~/memoria-vault stash list                         # MUST be empty (prereq 3) — clone drops stashes
-   pgrep -af 'hermes|obsidian' | grep -v pgrep               # none bound to a moved path (prereq 4)
+   systemctl --user stop hermes-gateway.service              # prereq 4: supervised service; a plain kill respawns
+   systemctl --user is-active hermes-gateway.service         # expect: inactive/failed (NOT "active")
    ORIGIN=$(git -C ~/memoria-vault remote get-url origin); echo "origin=$ORIGIN"
    cp -r ~/memoria-vault/.git ~/memoria-vault-git-backup     # rollback point — name kept clear of ~/mv
    ```
@@ -169,6 +200,9 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    git -C ~/memoria-vault-new/.bare remote set-url origin "$ORIGIN"  # re-point to GitHub
    git -C ~/memoria-vault-new/.bare config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
    git -C ~/memoria-vault-new/.bare fetch origin                     # populate remote-tracking refs
+   for b in $(git -C ~/memoria-vault-new/.bare for-each-ref --format='%(refname:short)' refs/heads); do
+     git -C ~/memoria-vault-new/.bare branch --set-upstream-to="origin/$b" "$b" 2>/dev/null   # else pull/push complain (risk #3)
+   done
    printf 'gitdir: ./.bare\n' > ~/memoria-vault-new/.git
    ```
 
@@ -236,7 +270,25 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    ```
 
    Expected: grep enumerates the references; after edits, gate green; PR opens
-   (sensitive paths → `needs_human`). Update memory files locally afterward.
+   (sensitive paths → `needs_human`). **Keep the freeze until this PR merges** —
+   the disk contradicts AGENTS.md until then.
+
+8. **Phase C — post-migration reconfiguration** (after the Phase B PR merges; this
+   is what ends the freeze):
+
+   ```bash
+   grep -rl 'Memoria-test' ~/.hermes 2>/dev/null    # machine-local runtime config Phase B can't reach
+   #   → edit those to ~/memoria-vault/sandbox; re-point the Obsidian vault registration too
+   systemctl --user reset-failed hermes-gateway.service
+   systemctl --user start hermes-gateway.service    # runtime back up, against the NEW sandbox path
+   systemctl --user is-active hermes-gateway.service   # expect: active
+   # shell/IDE: fix any alias / workspace file assuming ~/memoria-vault is the repo or ~/mv the worktree parent
+   # agent memory: update entries recording old worktree/repo/vault paths
+   ```
+
+   Expected: no `~/.hermes` file still points at `~/Memoria-test`; gateway `active`
+   against `~/memoria-vault/sandbox`; nothing you use references `~/mv` or assumes
+   `~/memoria-vault` is a checkout. **Only now resume agent work.**
 
 ## 5. Validation and acceptance
 
