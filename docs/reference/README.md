@@ -61,7 +61,7 @@ every field and count.
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
-| [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs plus historical log boundaries | Manual |
+| [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs | Manual |
 | [Board export](board-export.md) | Alpha.15 no-board-export boundary and replacement request/journal surfaces | Manual |
 | [Fleet metrics](fleet-metrics.md) | Alpha.15 no-fleet-runtime boundary and replacement runtime signals | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |

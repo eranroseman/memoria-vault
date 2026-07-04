@@ -16,7 +16,7 @@ the workspace template under `vault-template/`, the installer copies it to the
 target workspace, recreates schema-owned empty folders from `folders.yaml`,
 installs the CLI package into the workspace venv, wires local Git hooks, and
 registers qmd search. Product-file repair is a package/template reinstall or
-fresh workspace refresh, not an in-vault migration path.
+fresh workspace refresh.
 
 ## Flags
 

@@ -138,7 +138,7 @@ def test_evaluate_pre_allows_reads_and_gates_adapter_writes(tmp_path):
         {
             "tool_name": "obsidian_patch_content",
             "tool_input": {"filepath": "inbox/a.md"},
-            "session_id": "legacy-session",
+            "session_id": "session-only",
         },
         "adapter",
         vault,
@@ -277,7 +277,7 @@ def test_evaluate_post_requires_explicit_request_id_for_completion_audit(tmp_pat
     payload = {
         "tool_name": "obsidian_put_content",
         "tool_input": {"filepath": "inbox/round.md"},
-        "session_id": "legacy-session",
+        "session_id": "session-only",
         "extra": {"tool_call_id": "call-without-request"},
     }
     stash = _pending_file(vault, _stash_key(payload))

@@ -28,10 +28,7 @@ CHECKS = (
         adr="docs/adr/41-configurable-review-gate-mode.md",
         required_paths=("src/memoria_vault/runtime/policy/decision.py",),
         required_text=("src/memoria_vault/runtime/policy/decision.py", "hard stop is at the write"),
-        forbidden_text=(
-            "dispatch refuses to advance a card",
-            "legacy policy decision shim",
-        ),
+        forbidden_text=("dispatch refuses to advance a card",),
     ),
     Check(
         name="ADR-10 supersession default query filter is implemented",

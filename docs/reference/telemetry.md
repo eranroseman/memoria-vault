@@ -21,8 +21,7 @@ Rationale: [ADR-20](../adr/20-publication-path.md),
   operation.
 - **Time.** Every row carries `timestamp` in ISO-8601 UTC with a trailing `Z`.
 - **Identity.** Request-scoped rows carry `request_id`; eval rows use
-  `eval_role` for diagnostic role grouping. Adapter imports normalize legacy
-  identifiers before writing current logs.
+  `eval_role` for diagnostic role grouping.
 - **Encoding.** UTF-8, `ensure_ascii=false`.
 
 ## Log Inventory
@@ -38,11 +37,3 @@ Rationale: [ADR-20](../adr/20-publication-path.md),
 
 The authoritative operational state is `.memoria/memoria.sqlite`; logs are
 evidence streams and diagnostics, not a second state store.
-
-## Historical Logs
-
-Old workspaces or archived release artifacts may contain board, cost, blind
-review, lane-metric, or cron-heartbeat logs from the pre-alpha.14 Hermes/fleet
-runtime. Alpha.15 does not ship the exporters that produced those logs. Current
-dashboards and gates should read the runtime request/journal database and the log
-inventory above.
