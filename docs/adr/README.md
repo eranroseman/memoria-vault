@@ -36,12 +36,8 @@ status.
 | [16](16-systematic-review-adopt-on-demand.md) | Adopt-on-demand — systematic-review tooling | proposed |
 | [20](20-publication-path.md) | Publication path — vault-eval benchmark first, capture-now | accepted |
 | [24](24-single-researcher-scope.md) | Single-researcher scope — multi-user semantics are out of scope | accepted |
-| [29](29-testing-framework.md) | A layered testing framework, not a pile of plans | accepted |
-| [44](44-tests-in-pytest-tree.md) | L1 component tests live in a repo-side pytest tree, not inline in shipped modules | accepted |
 | [62](62-measurement-and-verification-harnesses.md) | Measurement and verification harnesses | accepted |
 | [64](64-native-windows-support.md) | Native Windows support | accepted |
-| [73](73-docs-reference-conventions.md) | Documentation references — source links, ADR links, and per-operation Diátaxis split | accepted |
-| [75](75-github-project-fields-and-release-sub-issues.md) | Use GitHub Project fields and release sub-issues for live work state | accepted |
 | [88](88-literate-code-note.md) | Literate code-note | proposed |
 | [91](91-classical-prose-metrics-export-gate.md) | Classical prose metrics for the export gate | proposed |
 | [92](92-discovery-relevance-scoring.md) | Discovery relevance scoring | accepted |
@@ -55,7 +51,6 @@ status.
 | [106](106-cost-and-disposition-capture.md) | Cost and disposition capture — Hermes session store and the review action | rejected |
 | [107](107-okf-interchange-bundle-format.md) | OKF as Memoria's import/export bundle format | proposed |
 | [108](108-liteparse-local-document-parsing.md) | LiteParse as the local document-parsing engine | proposed |
-| [110](110-ruff-format-python-layout.md) | Ruff: formatter owns layout (line-length 100), curated lint ruleset | accepted |
 | [122](122-sqlite-working-state-boundary.md) | SQLite working state and catalog records sit behind the checked Concept boundary | accepted |
 | [123](123-doi-catalog-enrichment-gate.md) | DOI catalog enrichment gates checked source promotion | accepted |
 | [124](124-standalone-catalog-citation-authority.md) | Standalone catalog is the citation authority | accepted |

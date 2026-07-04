@@ -1,4 +1,4 @@
-"""L1 component tests for gen_adr_index (ADR-44)."""
+"""L1 component tests for gen_adr_index."""
 
 import gen_adr_index as _m
 import pytest

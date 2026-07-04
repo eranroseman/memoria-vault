@@ -279,7 +279,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes. *(judgment - no mechanism)*
-- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44). *(enforced: python-selftest)*
+- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules. *(enforced: python-selftest)*
 - **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available. *(judgment - no mechanism)*
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`). *(enforced: PSScriptAnalyzer (scripts/install.ps1))*
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`. *(judgment - no mechanism)*
@@ -373,6 +373,8 @@ Mixed-purpose pages are wrong — split them. *(judgment - no mechanism)*
 
 - **Links:** `docs/` files → relative links; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
   - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
+  - Never relative-link into `src/` from a published page — those paths 404 on the site. Cite a source file as an **inline-code path** (`` `vault-template/.memoria/…` ``), or an absolute tag-pinned `blob/<tag>/…` URL only when a click genuinely adds value. *(enforced: docs-doctor)*
+  - **ADR references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as **title-text links** — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text. *(enforced: docs-doctor)*
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence. *(judgment - no mechanism)*
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename. *(judgment - no mechanism)*
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth. *(judgment - no mechanism)*

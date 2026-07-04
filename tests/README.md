@@ -1,9 +1,8 @@
 # tests/
 
-Pytest suite for the test levels defined by
-[ADR-29](../docs/adr/29-testing-framework.md) and hosted repo-side per
-[ADR-44](../docs/adr/44-tests-in-pytest-tree.md). Tests live here as standalone
-files so the shipped vault carries no test code.
+Pytest suite for the repo's test levels (see AGENTS.md → *Test before opening a
+PR*). Tests live here as standalone files, not inline in shipped modules, so the
+deployed vault carries no test code.
 
 - `test_*.py` — one per module under test; imports the module and asserts its contract
   on synthetic fixtures (no vault runtime, no network).

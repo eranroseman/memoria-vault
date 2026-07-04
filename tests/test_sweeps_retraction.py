@@ -1,4 +1,4 @@
-"""L1 component tests for retraction (ADR-44)."""
+"""L1 component tests for retraction."""
 
 from memoria_vault.runtime.subsystems.integrity.retraction import retraction as _m
 
