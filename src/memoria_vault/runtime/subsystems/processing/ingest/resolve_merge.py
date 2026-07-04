@@ -113,9 +113,6 @@ def _get_text(url: str, retries: int = 3) -> str | None:
     )
 
 
-# --------------------------------------------------------------------------- #
-# Identifiers from the .bib note
-# --------------------------------------------------------------------------- #
 def bib_ids(citekey: str, bib_text: str) -> dict:
     fm = ingest_paper.ingest_text(citekey, bib_text)["frontmatter"]
     doi = (fm.get("doi") or "").strip()
@@ -154,9 +151,6 @@ def _norm_refs_s2(refs) -> list[dict]:
     return out
 
 
-# --------------------------------------------------------------------------- #
-# Source fetchers -> normalized partial records
-# --------------------------------------------------------------------------- #
 def fetch_s2(ids: dict, key: str) -> dict:
     sid = _s2_id(ids)
     if not sid:
@@ -326,9 +320,6 @@ def resolve(citekey: str, bib_text: str) -> dict:
     return {"citekey": citekey, "ids": ids, "parts": parts, "merged": merge(parts)}
 
 
-# --------------------------------------------------------------------------- #
-# --diagnose — the build-time merge spike, emitted by the merge code itself
-# --------------------------------------------------------------------------- #
 def diagnose(bib_path: Path, n: int, seed: int = 13) -> int:
     import re
 

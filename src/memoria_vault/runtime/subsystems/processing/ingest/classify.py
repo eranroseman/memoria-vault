@@ -34,11 +34,12 @@ manual project tagging (silent no-op). Same audit trail.
 from __future__ import annotations
 
 import datetime
-import json
 import re
 import sys
 import uuid
 from pathlib import Path
+
+from memoria_vault.runtime.jsonl import append_jsonl
 
 AUDIT_RELPATH = "system/logs/classify.jsonl"
 HINTS_RELPATH = ".memoria/project-hints.yaml"
@@ -227,16 +228,10 @@ def append_audit(vault: Path, citekey: str, decision: dict, floor: float, margin
             record["miss_kind"] = "off_vocabulary"
         else:
             record["miss_kind"] = "near_tie"
-    log = Path(vault) / AUDIT_RELPATH
-    log.parent.mkdir(parents=True, exist_ok=True)
-    with log.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    append_jsonl(Path(vault) / AUDIT_RELPATH, [record])
     return record
 
 
-# --------------------------------------------------------------------------- #
-# project membership proposal (ADR-15)
-# --------------------------------------------------------------------------- #
 # A lightweight, optional `.memoria/project-hints.yaml` (one `primary_topics`
 # list per project) lets the classify step PROPOSE a `projects` value by simple
 # topic overlap. The proposal lands in `_proposed_classification` for the human
@@ -365,10 +360,7 @@ def append_project_audit(vault: Path, citekey: str, decision: dict) -> dict:
         "reason": decision["reason"],
         "source": "project-hints.yaml x openalex.topics",
     }
-    log = Path(vault) / AUDIT_RELPATH
-    log.parent.mkdir(parents=True, exist_ok=True)
-    with log.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    append_jsonl(Path(vault) / AUDIT_RELPATH, [record])
     return record
 
 

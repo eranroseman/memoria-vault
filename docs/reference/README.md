@@ -12,17 +12,17 @@ and runtime contracts. For design rationale and decision history, see
 [Developers](../developers.md); for operational explanations, see
 [Explanation](../explanation).
 
-The reference pages are grouped by domain in the site navigation. Generated and
-guarded pages name their source so field lists, rosters, and counts do not become
-manual mirrors.
+The reference pages are grouped by domain in the site navigation. Pages that
+summarize schema-owned contracts name the owning source rather than mirroring
+every field and count.
 
 ## [Vault data model](vault-data-model.md)
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter fields: type, allowed values, owner, namespace | Generated |
-| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.15 has no durable Inbox-card Concept schemas | Generated |
-| [Document types](document-types.md) | Schema-owned document types: folder, template, lifecycle, promotion map | Generated |
+| [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter field grammar and ownership | Source-owned |
+| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.15 has no durable Inbox-card Concept schemas | Manual |
+| [Document types](document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Kanban board reference](kanban-board.md) | No-Hermes-board contract and current request-control commands | Manual |
@@ -46,7 +46,7 @@ manual mirrors.
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
 | [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, project-hint scoring, API calls, and graph algorithms | Manual |
-| [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Generated |
+| [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
 | [Clustering](clustering.md) | Alpha.15 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |

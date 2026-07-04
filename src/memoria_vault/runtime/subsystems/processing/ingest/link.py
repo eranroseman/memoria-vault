@@ -25,6 +25,7 @@ import json
 import sys
 from pathlib import Path
 
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.lib.markdown import read_frontmatter
 
 LINKAGE_RELPATH = "system/logs/linkage.jsonl"
@@ -155,14 +156,10 @@ def append_by_name_audit(vault: Path, citekey: str, plan: dict) -> dict | None:
         "recorded_by_name": by_name,
         "source": "link.py",
     }
-    log = Path(vault) / LINKAGE_RELPATH
-    log.parent.mkdir(parents=True, exist_ok=True)
-    with log.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    append_jsonl(Path(vault) / LINKAGE_RELPATH, [record])
     return record
 
 
-# --------------------------------------------------------------------------- #
 def main() -> int:
     import argparse
 

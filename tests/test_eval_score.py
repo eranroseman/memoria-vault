@@ -13,9 +13,6 @@ import pytest
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch, eval_score
 
 
-# --------------------------------------------------------------------------- #
-# Fixtures
-# --------------------------------------------------------------------------- #
 def _vault(tmp_path: Path) -> Path:
     """A minimal vault: two gold tasks, a small catalog, one superseded note."""
     ev = tmp_path / "system/eval"
@@ -76,9 +73,6 @@ def _result_card(task: str, quarter: str, **fields) -> dict:
     }
 
 
-# --------------------------------------------------------------------------- #
-# Vault state
-# --------------------------------------------------------------------------- #
 def test_catalog_resolves_by_stem_and_by_frontmatter_citekey(tmp_path):
     v = _vault(tmp_path)
     keys = eval_score.catalog_citekeys(v)
@@ -109,9 +103,6 @@ def test_superseded_classification_matches_the_linter_detector(tmp_path):
     assert flagged == eval_score.superseded_claims(v)
 
 
-# --------------------------------------------------------------------------- #
-# Metric math
-# --------------------------------------------------------------------------- #
 def test_recall_at_k_hit_miss_and_window(tmp_path):
     v = _vault(tmp_path)
     catalog = eval_score.catalog_citekeys(v)
@@ -172,9 +163,6 @@ def test_no_inputs_means_no_metrics_not_fake_ones(tmp_path):
     assert m == {}
 
 
-# --------------------------------------------------------------------------- #
-# Reading results off the board
-# --------------------------------------------------------------------------- #
 def test_extract_results_filters_by_quarter_and_marker():
     cards = [
         _result_card("find-x", "2026-Q2", retrieved=["a"]),
@@ -233,9 +221,6 @@ def test_extract_results_newest_block_wins_and_reads_all_summary_fields():
     assert out["verify-y"]["cited"] == ["devlin2019bert"]
 
 
-# --------------------------------------------------------------------------- #
-# The run record + the metrics log
-# --------------------------------------------------------------------------- #
 def test_score_run_per_task_statuses_and_aggregate(tmp_path):
     v = _vault(tmp_path)
     cards = [
@@ -336,9 +321,6 @@ def test_cli_scores_and_appends_from_json(tmp_path, monkeypatch, capsys):
     assert line["aggregate"]["tasks_scored"] == 1
 
 
-# --------------------------------------------------------------------------- #
-# Quarter resolution + the dispatch side of the contract
-# --------------------------------------------------------------------------- #
 def test_resolve_quarter():
     today = datetime.date(2026, 6, 12)
     assert eval_score.resolve_quarter("current", today) == "2026-Q2"

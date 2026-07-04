@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# =============================================================================
 # Memoria bootstrap installer  (Linux/WSL path; Windows uses install.ps1)
-# =============================================================================
 # One command sets up the standalone Memoria CLI/runtime workspace: clones the
 # vault, installs the package into the vault-local venv, wires local integrity
 # hooks, and registers qmd search. macOS is not supported.
@@ -24,16 +22,15 @@
 # `sudo` command and runs it only on your confirmation (apt will prompt for your
 # password). --dry-run echoes everything and touches nothing.
 #
-# =============================================================================
 set -euo pipefail
 
-# --- constants ---------------------------------------------------------------
+# Installer constants.
 REPO_URL="https://github.com/eranroseman/memoria-vault.git"
 REPO_BRANCH="main"
 DEFAULT_TARGET="$HOME/Memoria"
 MEMORIA_ENV="${MEMORIA_ENV:-prod}"
 
-# --- flags -------------------------------------------------------------------
+# Command-line flags.
 DRY_RUN=0
 ASSUME_YES=0
 VAULT_OVERRIDE=""
@@ -46,7 +43,7 @@ VENV_PYTHON=""    # interpreter the Memoria runtime package lands in
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
 INSTALL_MODULES_LOADED=0
 
-# --- helpers -----------------------------------------------------------------
+# Shell helpers.
 say()  { printf '%s\n' "$*"; }
 hdr()  { printf '\n\033[1;36m== %s ==\033[0m\n' "$*"; }
 ok()   { printf '\033[0;32m[OK]\033[0m %s\n' "$*"; }
@@ -133,9 +130,6 @@ load_install_modules() {
   INSTALL_MODULES_LOADED=1
 }
 
-# =============================================================================
-# Arg parsing
-# =============================================================================
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -149,9 +143,6 @@ parse_args() {
   done
 }
 
-# =============================================================================
-# Plan + consent
-# =============================================================================
 print_plan() {
   hdr "Memoria installer"
   say "This will set up the standalone CLI/runtime workspace:"
@@ -165,9 +156,7 @@ print_plan() {
   return 0
 }
 
-# =============================================================================
 # Step 1 — prerequisites
-# =============================================================================
 ensure_prereqs() {
   hdr "Prerequisites"
   local missing=""
@@ -208,9 +197,7 @@ ensure_prereqs() {
   have pandoc || warn "Pandoc not found — DOCX/PDF exports are unavailable until installed."
 }
 
-# =============================================================================
 # Step 2 — locate or clone the repo  (sets REPO_DIR)
-# =============================================================================
 resolve_repo() {
   hdr "Memoria vault source"
   # Running from inside a clone? (script dir or cwd has vault-template/.memoria)
@@ -233,9 +220,7 @@ resolve_repo() {
   ok "Cloned to $REPO_DIR"
 }
 
-# =============================================================================
 # Step 4 — copy the runtime vault to its target  (sets VAULT_PATH)
-# =============================================================================
 copy_vault() {
   hdr "Runtime vault"
   local target="$VAULT_OVERRIDE"
@@ -286,9 +271,7 @@ copy_vault() {
   say "      git remote add origin <your-repo-url>   # optional — backup / multi-machine sync"
 }
 
-# =============================================================================
 # Step 5 — runtime dependencies
-# =============================================================================
 # The package goes into a vault-local venv ($VAULT_PATH/.memoria/.venv). This sidesteps
 # modern Ubuntu/Debian's PEP-668 "externally-managed-environment" pip block, keeps
 # Memoria's deps off the system site-packages, and gives a stable interpreter path.
@@ -352,9 +335,7 @@ print_cli_next_steps() {
   return 0
 }
 
-# =============================================================================
 # main  (wrapped so a truncated `curl | bash` download can't execute a partial run)
-# =============================================================================
 main() {
   parse_args "$@"
 

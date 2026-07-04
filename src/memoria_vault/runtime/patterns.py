@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import datetime
-import json
 import re
 import sys
 import uuid
@@ -13,6 +12,7 @@ from typing import Any
 import yaml
 
 from memoria_vault.runtime.capabilities import iter_capability_manifests, read_capability_manifest
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
 PREAMBLE_RELPATH = "system/patterns/_preamble.md"
@@ -110,10 +110,7 @@ def run_pattern(
     }
     provenance_logged = True
     try:
-        log = vault / PROVENANCE_RELPATH
-        log.parent.mkdir(parents=True, exist_ok=True)
-        with log.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record) + "\n")
+        append_jsonl(vault / PROVENANCE_RELPATH, [record])
     except Exception as exc:  # noqa: BLE001 -- prompt still returns but provenance loss is loud.
         provenance_logged = False
         print(

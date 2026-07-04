@@ -29,9 +29,6 @@ def _frontmatter(path: Path) -> dict:
     return yaml.safe_load(m.group(1))
 
 
-# --------------------------------------------------------------------------- #
-# The shipped gold set                                                         #
-# --------------------------------------------------------------------------- #
 def test_shipped_gold_tasks_have_valid_dispatch_shape():
     files = _gold_files()
     assert len(files) >= 8, "the gold set ships ≥ 2 tasks per workflow"
@@ -74,9 +71,6 @@ def test_gold_task_roles_match_the_routed_roles():
     assert roles <= set(eval_dispatch.EVAL_ROLE_ASSIGNEE)
 
 
-# --------------------------------------------------------------------------- #
-# Dispatch                                                                     #
-# --------------------------------------------------------------------------- #
 def _fixture_vault(tmp_path: Path) -> Path:
     d = tmp_path / "system/eval"
     d.mkdir(parents=True)

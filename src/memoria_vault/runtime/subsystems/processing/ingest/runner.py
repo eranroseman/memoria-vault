@@ -27,6 +27,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+from memoria_vault.runtime.capture import parse_bibtex_entries
 from memoria_vault.runtime.subsystems.processing.ingest import (
     classify,
     extract,
@@ -55,11 +56,11 @@ def _confidence_floor(vault: Path | None) -> float:
 
 def _bib_field(citekey: str, bib_text: str, name: str) -> str:
     """Raw value of a single named field from a bib entry ('' if absent)."""
-    entry = ingest_paper._find_entry(bib_text, citekey)
-    if not entry:
-        return ""
-    m = re.search(rf"\b{re.escape(name)}\s*=\s*\{{([^}}]*)\}}", entry[1], re.IGNORECASE)
-    return m.group(1).strip() if m else ""
+    target = citekey.lower()
+    for entry in parse_bibtex_entries(bib_text):
+        if str(entry["citekey"]).lower() == target:
+            return str(entry["fields"].get(name.lower(), "")).strip()
+    return ""
 
 
 def _bib_local_pdf(citekey: str, bib_text: str) -> tuple[str, str]:

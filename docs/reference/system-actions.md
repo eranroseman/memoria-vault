@@ -149,11 +149,10 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 ## Scheduled tasks (`.memoria/scripts/`)
 
 The deterministic scheduled jobs are optional operator wiring around the CLI and
-runtime package. The shipped wrappers call `.memoria/scripts/cron-runner.sh`,
-which dispatches `sweeps`, `worker`, `lint`, `eval`, and
-`retraction-refresh`. No scheduler is required for a one-shot CLI workflow; a
-systemd timer, cron entry, launchd job, or another local scheduler can call the
-same wrappers when always-on maintenance is desired.
+runtime package. `.memoria/scripts/cron-runner.sh` dispatches `sweeps`, `worker`,
+`lint`, `eval`, and `retraction-refresh`. No scheduler is required for a one-shot
+CLI workflow; a systemd timer, cron entry, launchd job, or another local
+scheduler can call the runner when always-on maintenance is desired.
 
 ## Skills and prompts
 

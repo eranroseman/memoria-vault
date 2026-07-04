@@ -31,11 +31,12 @@ import argparse
 import csv
 import json
 import os
-import re
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+from memoria_vault.runtime.vaultio import read_frontmatter
 
 CROSSREF_URL = "https://api.crossref.org/works/{doi}"
 OPEN_RETRACTIONS_URL = "https://openretractions.com/api/doi/{doi}/data.json"
@@ -46,9 +47,6 @@ _RW_INDEX: dict[str, dict] | None = None  # module-level cache, keyed by normali
 _warned_no_csv = False  # one stderr warning per process
 
 
-# --------------------------------------------------------------------------- #
-# Helpers                                                                      #
-# --------------------------------------------------------------------------- #
 def normalize_doi(doi: str) -> str:
     return (
         (doi or "")
@@ -91,9 +89,6 @@ def _get_json(url: str) -> tuple[int, dict | None, str | None]:
         return 0, None, str(e)
 
 
-# --------------------------------------------------------------------------- #
-# Source 1 — Retraction Watch CSV (authoritative, local)                      #
-# --------------------------------------------------------------------------- #
 def _nature_retracted(nature: str) -> bool:
     n = (nature or "").lower()
     return "retraction" in n and "reinstatement" not in n  # EoC / Correction are not retractions
@@ -164,9 +159,6 @@ def refresh_rw(path: Path | None = None, url: str = RW_CSV_URL) -> int:
     return n
 
 
-# --------------------------------------------------------------------------- #
-# Source 2/3 parsers (deterministic; unit-tested offline)                     #
-# --------------------------------------------------------------------------- #
 def _date_parts_to_iso(dp: dict) -> str | None:
     parts = (dp or {}).get("date-parts") or [[]]
     p = parts[0] if parts else []
@@ -211,9 +203,6 @@ def open_retractions_verdict(status: int, data: dict | None) -> dict:
     return {"retracted": None, "date": None, "retraction_doi": None}
 
 
-# --------------------------------------------------------------------------- #
-# Combine                                                                     #
-# --------------------------------------------------------------------------- #
 def combine(doi: str, sources: dict[str, dict | None], errors: dict[str, str | None]) -> dict:
     """Combine source verdicts (most-authoritative first) into one result.
     A source contributes a vote only when its `retracted` is True/False (not None)."""
@@ -316,29 +305,19 @@ def sweep(vault: Path, offline: bool = True) -> dict:
     `alert` for each retracted work (the writing half of the sweep operation)."""
     from memoria_vault.runtime.subsystems.lib import inbox as inbox_writer
 
-    fm_re = re.compile(r"^---\n(.*?)\n---", re.S)
-    doi_re = re.compile(r"^doi:\s*[\"']?([^\"'\n]+)", re.M)
-    ck_re = re.compile(r"^citekey:\s*[\"']?([^\"'\n]+)", re.M)
     checked = hits = 0
     d = vault / "catalog" / "sources"
     if d.is_dir():
         for note in sorted(d.glob("*/source.md")):
-            m = fm_re.match(note.read_text(encoding="utf-8"))
-            if not m:
-                continue
-            frontmatter = m.group(1)
-            doi_m = doi_re.search(frontmatter)
-            doi = doi_m.group(1).strip() if doi_m else ""
-            if not doi:
-                id_m = re.search(r"^\s+doi:\s*[\"']?([^\"'\n]+)", frontmatter, re.M)
-                doi = id_m.group(1).strip() if id_m else ""
+            fm = read_frontmatter(note)
+            doi = str(fm.get("doi") or (fm.get("identifiers") or {}).get("doi") or "").strip()
             if not doi:
                 continue
             checked += 1
             result = check_doi(doi, offline=offline)
             if result.get("retracted"):
                 hits += 1
-                ck = (ck_re.search(m.group(1)) or [None, ""])[1]
+                ck = str(fm.get("citekey") or "")
                 inbox_writer.write_finding(
                     vault,
                     "alert",

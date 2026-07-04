@@ -261,7 +261,7 @@ def _audit_tool_policy_block(
         return
 
 
-# --- pending-write stash (correlates the pre/post pair by tool_call_id) ------ #
+# Pending-write stash correlates the pre/post pair by tool_call_id.
 def _stash_key(payload: dict) -> str:
     extra = payload.get("extra") or {}
     tcid = extra.get("tool_call_id")
@@ -468,6 +468,5 @@ def main() -> None:
     print(json.dumps(handler(payload, args.actor, Path(args.workspace))))
 
 
-# --------------------------------------------------------------------------- #
 if __name__ == "__main__":
     main()

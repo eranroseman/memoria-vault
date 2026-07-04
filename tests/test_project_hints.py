@@ -17,9 +17,6 @@ from ingest_fixtures import topic as _topic
 
 from memoria_vault.runtime.subsystems.processing.ingest import classify
 
-# --------------------------------------------------------------------------- #
-# fixtures (the test_classify.py shapes)
-# --------------------------------------------------------------------------- #
 HINTS_YAML = """\
 projects:
   - id: phd-dissertation
@@ -51,9 +48,6 @@ MHEALTH_TOPICS = [
 ]
 
 
-# --------------------------------------------------------------------------- #
-# load_project_hints() — absent silent, malformed loud-but-safe
-# --------------------------------------------------------------------------- #
 def test_absent_hints_file_loads_empty_and_silent(tmp_path, capsys):
     assert classify.load_project_hints(tmp_path) == []
     assert classify.load_project_hints(None) == []
@@ -90,9 +84,6 @@ def test_entries_missing_id_or_topics_are_dropped(tmp_path, monkeypatch):
     assert classify.load_project_hints(tmp_path) == []
 
 
-# --------------------------------------------------------------------------- #
-# propose_projects() — the pure overlap rule
-# --------------------------------------------------------------------------- #
 def test_overlap_scores_and_ranks_projects():
     hints = [
         {"id": "phd-dissertation", "primary_topics": ["jitai", "health-coaching", "mhealth"]},
@@ -133,9 +124,6 @@ def test_no_topic_signals_is_no_data():
     assert pp["status"] == "no_data" and pp["projects"] == []
 
 
-# --------------------------------------------------------------------------- #
-# the pipeline integration — proposal only, audited, never crashes
-# --------------------------------------------------------------------------- #
 def test_proposal_lands_in_proposed_classification_not_projects(monkeypatch, tmp_path):
     _write_hints(tmp_path)
     b = _run_pipeline(monkeypatch, tmp_path, _merged(MHEALTH_TOPICS))

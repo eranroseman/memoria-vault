@@ -25,6 +25,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
     audit_log_size,
     audit_unpaired_writes,
@@ -119,12 +120,9 @@ DATAVIEW_KEYWORDS = {
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
 NOTE_FOLDERS = ("catalog", "knowledge")
-
-# --------------------------------------------------------------------------- #
 # Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
-# --------------------------------------------------------------------------- #
 TYPE_SCHEMAS: dict | None = None
 _FOLDERS: dict | None = None
 _VOCABULARY_BY_VAULT: dict[Path, dict[str, set[str]]] = {}
@@ -142,7 +140,7 @@ try:
         if str(path).strip("/")
     }
     KNOWN_TOP_DIRS.add("spaces")
-except Exception:  # noqa: BLE001
+except Exception:  # noqa: BLE001 -- dependency-free fallback when schemas cannot load
     _schema = None
 
 SEVERITY_RANK = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
@@ -157,9 +155,6 @@ class Finding:
     timestamp: str = ""  # ISO-8601 UTC; stamped per lint pass in run_all()
 
 
-# --------------------------------------------------------------------------- #
-# Helpers
-# --------------------------------------------------------------------------- #
 def iter_files(vault: Path):
     """Yield every file under vault, skipping SKIP_DIRS.
 
@@ -223,9 +218,6 @@ def template_field_names(text: str) -> set[str]:
     return keys
 
 
-# --------------------------------------------------------------------------- #
-# Detectors -- each takes the vault root and returns a list[Finding].
-# --------------------------------------------------------------------------- #
 def orphan_working_files(vault: Path) -> list[Finding]:
     out = []
     for p in iter_files(vault):
@@ -720,15 +712,10 @@ def verdict(findings: list[Finding]) -> str:
 def append_findings_jsonl(path: Path, findings: list[Finding]) -> None:
     """Append one row per finding and create the file for clean no-data runs."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as fh:
-        for finding in findings:
-            fh.write(json.dumps(finding.__dict__, sort_keys=True) + "\n")
+    path.touch(exist_ok=True)
+    append_jsonl(path, [finding.__dict__ for finding in findings])
 
 
-# --------------------------------------------------------------------------- #
-# Self-test -- builds a throwaway vault, asserts each detector fires correctly.
-# --------------------------------------------------------------------------- #
-# --------------------------------------------------------------------------- #
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

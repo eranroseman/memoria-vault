@@ -66,7 +66,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── config/                  provider and runtime policy (`providers.yaml`)
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters
-├── scripts/                 wrappers for operator-managed scheduled tasks
+├── scripts/                 cron-runner for operator-managed scheduled tasks
 ├── memoria.sqlite           SQLite working-state DB
 ├── state/                   runtime state owned by the CLI/engine
 ├── audit/                   git-trackable audit anchors
