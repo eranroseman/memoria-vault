@@ -26,8 +26,9 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
   - An ADR may describe a boundary, but it must name the enforcing mechanism and
     a check that proves it. *(judgment - no mechanism)*
 - **Rule provenance.** New imperative rules must carry either
-  `*(enforced: <mechanism>)*` or `*(judgment - no mechanism)*`; facts and
-  orientation do not need a tag. *(judgment - no mechanism)*
+  `*(enforced: <mechanism>)*`, `*(enforced-by-structure: <invariant>)*`, or
+  `*(judgment - no mechanism)*`; facts and orientation do not need a tag.
+  *(judgment - no mechanism)*
 
 ---
 
@@ -154,10 +155,11 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 
 ## Scratch branch flow
 
-`scratch/` is ephemeral working material and lives on the dedicated `scratch`
-branch, not on `main`. Authorized contributors with repository write access may
-push scratch-only commits directly to that branch; no PR or required CI is
-expected there.
+`scratch/` is ephemeral working material and lives on the dedicated orphan
+`scratch` branch, not on `main`. The branch's tracked tree contains only
+`scratch/`; it does not carry the repository source tree. Authorized
+contributors with repository write access may push scratch-only commits directly
+to that branch; no PR or required CI is expected there.
 
 For scratch-only work, use a reusable scratch worktree and push directly to the
 shared remote branch. This path intentionally has **no PR** and no required CI.
@@ -173,6 +175,12 @@ git add scratch/<path>
 git commit -m "scratch: <short description>"
 git push origin HEAD:scratch
 ```
+
+Run repo audits and implementation analysis from a worktree of the code branch
+under review (`main` by default), never from the scratch worktree. The scratch
+worktree has no tracked `.agents/`, `.github/`, `docs/`, `scripts/`, `src/`,
+`tests/`, or `vault-template/` tree to analyze. *(enforced-by-structure: orphan
+scratch branch - no tracked repo tree present to analyze)*
 
 Never merge the `scratch` branch into `main`. Promote durable content by copying
 it into `docs/`, `docs/adr/`, issues, or release notes on a normal `main` PR.
