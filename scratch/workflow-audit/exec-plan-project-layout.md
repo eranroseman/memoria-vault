@@ -5,10 +5,11 @@ repo, worktrees, scratch, sandbox — each governed by its own rules, using the
 standard git **bare-repository + worktrees** layout.
 
 Target chosen: **Option 1 (bare + worktrees)** — the industry idiom, no special
-checkout, no gitignore hacks. *If Option 2 (keep a normal `main/` checkout) is
-preferred instead, the only change is §4 step 2: skip the bare conversion and
-`git worktree add` — instead `mv` the existing checkout to `main/` and repair;
-everything else is identical.*
+checkout, no gitignore hacks. **This plan executes Option 1 only.** Option 2 (a
+normal `main/` checkout holding the `.git`) is a *materially different* procedure
+— no `.bare`, different `git -C` targets, different upstream/worktree repair,
+cleanup, and validation — **not** a one-line variant of this one; it is out of
+scope here. If you want Option 2, it needs its own concrete sequence.
 
 ## 0. Metadata
 
@@ -163,8 +164,11 @@ touch them:
 - **Shell / IDE.** Aliases, shell rc, and IDE/editor workspace files that assume
   the repo is at `~/memoria-vault` (now a container) or worktrees at `~/mv/` →
   update to `~/memoria-vault/main` and `~/memoria-vault/worktrees/`.
-- **Agent memory files.** Update the entries recording old worktree/repo/vault
-  paths (also done in Phase B's local step, listed here for completeness).
+- **Agent memory — nothing to do.** The repo (AGENTS.md) is the single source of
+  truth for where things live; memory must not restate paths, so there is no path
+  fact in memory to update. (If a memory file *does* hard-code a path, that's a
+  pre-existing SSOT violation to fix separately — point it at AGENTS.md, don't
+  re-mirror the path.)
 
 ## 4. Concrete steps
 
@@ -175,22 +179,28 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 
    ```bash
    cd ~
-   git -C ~/memoria-vault worktree list                      # snapshot
+   git -C ~/memoria-vault fetch --prune origin              # current origin tips (HIGH #1: avoid stale clone)
+   git -C ~/memoria-vault branch -vv                        # inspect [ahead]/[behind] per branch
    for w in $(git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}'); do
+     git -C "$w" pull --ff-only 2>/dev/null || true         # fast-forward any behind branch BEFORE cloning
      echo "$w: $(git -C "$w" status --porcelain | wc -l) uncommitted"
-   done                                                      # EVERY line must read "0 uncommitted"
-   git -C ~/memoria-vault stash list                         # MUST be empty (prereq 3) — clone drops stashes
-   systemctl --user stop hermes-gateway.service              # prereq 4: supervised service; a plain kill respawns
-   systemctl --user is-active hermes-gateway.service         # expect: inactive/failed (NOT "active")
+   done                                                     # EVERY line: "0 uncommitted"
+   git -C ~/memoria-vault branch -vv | grep '\[behind'      # MUST print NOTHING (else a branch is still stale — STOP)
+   git -C ~/memoria-vault stash list                        # MUST be empty (prereq 3) — clone drops stashes
+   systemctl --user stop hermes-gateway.service             # prereq 4
+   systemctl --user is-active hermes-gateway.service        # expect: inactive/failed
+   git -C ~/memoria-vault worktree list --porcelain \
+     | awk '/^branch /{sub("refs/heads/","",$2);print $2}' > ~/mv-branches.txt   # live worktree→branch map for step 3
    ORIGIN=$(git -C ~/memoria-vault remote get-url origin); echo "origin=$ORIGIN"
-   cp -r ~/memoria-vault/.git ~/memoria-vault-git-backup     # rollback point — name kept clear of ~/mv
+   cp -r ~/memoria-vault/.git ~/memoria-vault-git-backup    # rollback — name deliberately clear of ~/mv
    ```
 
-   Expected: all worktrees `0 uncommitted`; `stash list` **empty**; no
-   Hermes/Obsidian process on a moved path; a printed origin URL; a backup at
-   `~/memoria-vault-git-backup` (deliberately NOT under `~/mv`, which gets deleted).
-   **If any worktree is dirty, a stash exists, or Hermes is bound to a moved path,
-   STOP** and resolve it first.
+   Expected: fetch clean; **no branch prints `[behind …]`** (fast-forward it or
+   STOP — a behind branch would clone stale and later falsely "match" origin);
+   all worktrees `0 uncommitted`; `stash list` **empty**; Hermes inactive;
+   `~/mv-branches.txt` lists every live worktree branch; a backup at
+   `~/memoria-vault-git-backup` (NOT under `~/mv`, which gets deleted). **If any
+   branch is behind, a stash exists, or a worktree is dirty, STOP.**
 
 2. **Build the bare container beside the current one:**
 
@@ -215,14 +225,16 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    cd ~/memoria-vault-new
    git worktree add main main
    git worktree add scratch scratch
-   git worktree add worktrees/stale-docs   fix/stale-doc-lines
-   git worktree add worktrees/revert-wa    fix/revert-workflow-audit
-   git worktree add worktrees/adr-consolidate fix/adr-consolidation   # only if it was clean in step 1
+   # HIGH #2: recreate a worktree for every OTHER live branch, derived from the
+   # preflight snapshot — never hardcode branch names (they drift constantly).
+   for b in $(grep -vxE 'main|scratch' ~/mv-branches.txt); do
+     git worktree add "worktrees/$(basename "$b")" "$b"
+   done
    git worktree list                                                  # all resolve under ~/memoria-vault-new
    ```
 
-   Expected: `main/`, `scratch/`, and `worktrees/*` populated; `worktree list`
-   clean.
+   Expected: `main/`, `scratch/`, and a `worktrees/<name>` for **every** branch in
+   `~/mv-branches.txt`; `worktree list` clean and complete.
 
 4. **Move the sandbox in** (Hermes must not be using it — prereq 4):
 
@@ -231,17 +243,33 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    mv ~/Memoria-test ~/memoria-vault-new/sandbox    # rename Memoria-test → sandbox
    ```
 
-5. **Verify the new container BEFORE destroying the old one:**
+5. **Verify the new container BEFORE destroying the old one** — health **and a
+   branch-tip manifest** (HIGH #3: never delete old state until every old branch
+   tip + worktree is proven present in the new container):
 
    ```bash
    git -C ~/memoria-vault-new/main status            # clean
    git -C ~/memoria-vault-new/main fetch origin --dry-run   # refspec works, no error
    bash ~/memoria-vault-new/main/scripts/test.sh l0  # green
    ls ~/memoria-vault-new                            # .bare .git main scratch worktrees sandbox
+   # MANIFEST: build old branch+tip list, prove each survives in the new .bare with a worktree
+   git -C ~/memoria-vault worktree list --porcelain \
+     | awk '/^branch /{sub("refs/heads/","",$2);b=$2} /^HEAD /{h=$2} b&&h{print b,h;b="";h=""}' > ~/mv-old-manifest.txt
+   fail=0
+   while read b h; do
+     newh=$(git -C ~/memoria-vault-new/.bare rev-parse "$b" 2>/dev/null)
+     if [ -z "$newh" ]; then echo "MISSING branch $b"; fail=1
+     elif [ "$newh" != "$h" ] && ! git -C ~/memoria-vault-new/.bare merge-base --is-ancestor "$h" "$newh" 2>/dev/null; then
+       echo "branch $b: old tip $h NOT contained in new $newh"; fail=1; fi
+     git -C ~/memoria-vault-new worktree list | grep -q "\[$b\]" || { echo "no worktree for $b"; fail=1; }
+   done < ~/mv-old-manifest.txt
+   [ "$fail" = 0 ] && echo "MANIFEST OK — safe to swap" || echo "MANIFEST FAILED — DO NOT run step 6"
    ```
 
-   Expected: clean status, fetch works, l0 green, all five entries present.
-   **Do not proceed past here unless all four pass** — the old repo is still intact.
+   Expected: clean status, fetch works, l0 green, all five entries present, and
+   **`MANIFEST OK`** — every old branch HEAD is present (as tip or ancestor) in the
+   new `.bare` with a matching worktree. **Do not run step 6 unless every check
+   passes and MANIFEST is OK** — the old repo is still fully intact until then.
 
 6. **Swap into place and clean up:**
 
@@ -280,7 +308,7 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    # Hermes/Obsidian: N/A in alpha.15 — gateway stays stopped, no runtime re-point.
    git -C ~/memoria-vault/main branch -vv    # confirm upstreams set (Phase A) so pull/push work
    # shell/IDE: fix any alias / workspace file assuming ~/memoria-vault is the repo or ~/mv the worktree parent
-   # agent memory: update entries recording old worktree/repo/vault paths
+   # agent memory: nothing to update — AGENTS.md is the SSOT for paths; memory holds none
    ```
 
    Expected: branch upstreams resolve; nothing you use references `~/mv` or assumes
@@ -366,7 +394,9 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 - Option comparison (bare vs normal) that produced this choice was delivered in
   session 2026-07-04; the operative conclusion (bare = more robust + idiomatic,
   one-time fetch-refspec cost) is captured in §1/§8 so this plan stands alone.
-- Backup location: `~/mv-git-backup` (full copy of the pre-migration `.git`).
+- Backup location: `~/memoria-vault-git-backup` (full copy of the pre-migration
+  `.git`; the single backup-path name used throughout — deliberately not under
+  `~/mv`, which the swap deletes).
 
 ## 12. Outcomes & retrospective
 
