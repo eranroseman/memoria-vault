@@ -42,7 +42,7 @@ Where every file lives.
     ├── patterns/              shared prompt preamble
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
     ├── metrics/               derived metric notes and eval/runs.jsonl
-    └── logs/                  audit.jsonl, patterns.jsonl, sessions/
+    └── logs/                  audit.jsonl, sessions/
 ```
 
 The workspace bundle roots are declared in `folders.yaml`, along with the

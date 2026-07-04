@@ -134,8 +134,7 @@ not Concept frontmatter.
 
 **Pattern** — compatibility name for a checked packaged prompt operation
 ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)) executed through
-`memoria operation run`; `memoria_vault.runtime.patterns` remains a
-compatibility prompt composer for tests and optional adapters.
+`memoria operation run`.
 
 **State** — not a field name on its own; use the specific field. A Concept's
 read verdict is **`check_status`** in runtime state; request state lives in

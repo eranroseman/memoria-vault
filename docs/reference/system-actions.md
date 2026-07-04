@@ -46,7 +46,6 @@ reference pages; docs checks keep the mirror linked.
 | Regenerate tracked projections | runtime projection helper (`write_tracked_projections`) / worker operation `regenerate-tracked-projections` | Rebuilds `index.md`, bundle indexes, `knowledge/_views/index.md`, and `references.bib` in one worker-owned projection run. |
 | Regenerate workspace indexes | runtime projection helper (`write_workspace_indexes`) / worker operation `regenerate-indexes` | Rebuilds the root and bundle `index.md` projections from checked Concept files. |
 | Regenerate capability index | runtime capability helper (`write_capability_index`) / worker operation `regenerate-capability-index` | Rebuilds ignored `.memoria/index/capability-index.json` from packaged capability manifests and records product SHA-256 trust hashes. |
-| Import capability | runtime capability helper (`import_capability`) | Quarantines unsigned imported capability files under `.memoria/quarantine/`, records a failed `capability-import-trust` check, and does not make them executable or catalog-visible. Signed promotion is not implemented. |
 
 ### Search input and query (`memoria_vault.runtime.search_index`)
 
@@ -116,7 +115,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
-| List / run prompt operations | runtime prompt helper (`memoria_vault.runtime.patterns`) and `memoria operation run` | Lists checked packaged prompt operations, composes prompt runs, refuses gated-zone output targets, and logs provenance. |
+| Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs checked packaged prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block attention items to delegation and policy gates. |
 
 ## CLI requests
