@@ -6,15 +6,15 @@ grand_parent: Reference
 
 # Obsidian callouts
 
-Alpha.15 does not ship Obsidian or Callout Manager. The template still uses plain
-Markdown callout syntax for readable orientation blocks; unsupported editors show
-them as quoted text.
+Alpha.15 does not ship Obsidian integrations, callout plugins, CSS snippets, or
+runtime adapters. The template still uses plain Markdown callout syntax for
+readable orientation blocks; unsupported editors show them as quoted text.
 
 ## Registered styles
 
 | Callout | Current use |
 | --- | --- |
-| `[!brief]` | Orientation blocks on Home and space notes. |
+| `[!brief]` | Orientation blocks on space notes. |
 | `[!suggestions]` | Collapsed first-action blocks on space notes. |
 | `[!verification]` | Read-barrier guidance on the Knowledge space. |
 
