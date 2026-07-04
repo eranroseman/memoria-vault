@@ -113,7 +113,6 @@ and uses `eval_score --from-json` once result payloads exist.
 ## Related
 
 - The decision: [ADR-11](../adr/11-vault-eval-maintenance.md)
-- The operation/posture boundary: [Installed profiles](profile-capabilities.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](installer.md)

@@ -39,7 +39,7 @@ The system surfaces when a topic cluster has crossed the hub-creation threshold 
 There is an asymmetry in how human-owned synthesis types get agent help. A
 `reference-note` historically got an agent-drafted starting point through the
 Writer's `promote` command; alpha.15 replaces that editor surface with CLI
-commands documented in [Obsidian command palette](../reference/obsidian-command-palette.md).
+commands documented in Obsidian command palette.
 A `hub` formerly got none — it is human-authored start to finish
 ([Build a Map of Content](../how-to-guides/knowledge/build-a-hub.md)), and the
 Mapper-era design sent the request as a `map` lane card rather than as a profile

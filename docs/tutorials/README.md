@@ -18,7 +18,6 @@ For alpha.15, use the current setup and task guides against a fresh vault:
 | Install the system | [Quickstart](../how-to-guides/setup/quickstart.md) |
 | Use Obsidian as an editor | [Using Obsidian](../how-to-guides/using-obsidian/README.md) |
 | Understand current types | [Document types](../reference/document-types.md) |
-| Understand the retired sample-vault status | [Sample vault](../reference/sample-vault.md) |
 
 ## Deferred tutorial arc
 

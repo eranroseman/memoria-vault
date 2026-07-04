@@ -36,7 +36,6 @@ which now records the no-Hermes-board alpha.15 contract. A request is *work*
 | [Request states and the review gate](states.md)                 | What a request carries; why execution, review, and PI-facing attention state are separate; and why rejected work gets a new request. |
 | [The honesty prompt](honesty-card.md)                            | The attention prompt the PI actually reads: argument for, argument against, what tipped it, certainty, and no automatic verdict on proposals.               |
 | [Decision points](decision-points.md)                         | Review gates, work prompts, batch worklists, and automated steps. |
-| [How old board surfaces map to alpha.15](obsidian-projection.md)  | The optional editor/board projection boundary and why the CLI/engine remains authoritative. |
 | [WIP limits and back-pressure](wip-limits.md)                 | Why request concurrency and review caps intentionally slow work before review quality degrades. |
 
 For the current control-plane command lookup, see the

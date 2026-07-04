@@ -95,6 +95,5 @@ already covers browsing.
 - **Depends on:** [ADR-116](116-obsidian-surface-architecture.md) (ambient health,
   surface primitives, and dashboards as persistent notes),
   [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md) (the four spaces).
-- **Reference:** [Obsidian workspaces](../reference/obsidian-workspaces.md),
   [Home — the vault front door](../explanation/obsidian/home.md).
 - **Source discussion:** the alpha.8 left-pane clean-slate review.

@@ -67,7 +67,7 @@ standalone `memoria` CLI and engine are the product surface. Optional future
 adapters may call the same CLI/engine, but they are not the source of truth for
 capabilities and they do not belong in the runtime vault bootstrap.
 
-The absence is test-pinned by [Installed profiles](../reference/profile-capabilities.md) and
+The absence is test-pinned by Installed profiles and
 `scripts/alpha14_negative_gate.py`.
 
 ---

@@ -126,7 +126,7 @@ long-term model.
 - **Historical files affected:** `vault-template/.obsidian/plugins/`
   (removed from alpha.15).
 - **Current check:** [`scripts/plugin_provenance_doctor.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/plugin_provenance_doctor.py),
-  [Obsidian plugin reference](../reference/obsidian-plugins.md)
+  Obsidian plugin reference
 - **Related decisions / Depends on:** [ADR-26](26-repo-as-install-unit.md),
   [ADR-55](55-src-scaffold-populate-golden-copy.md)
 - **Tracking issue:** [#686](https://github.com/eranroseman/memoria-vault/issues/686)

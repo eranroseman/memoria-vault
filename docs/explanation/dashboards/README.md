@@ -19,8 +19,10 @@ The **Inbox** is the *action queue* — discrete things that need you now. **Das
 
 The daily glance starts in the rail's **Now**: the Inbox is the daily action queue,
 and Maintenance is the weekly structural-debt collection behind the health band.
-**Board state is the Inbox board itself** — a Base over `inbox/`, not a separate query
-page. The Project space's gate is its own steering surface, not part of the dashboard
+**Board state is the standalone worker-debug dashboard**
+(`system/dashboards/board-state.md`) — request and attention state for the local
+worker, surfaced via the `memoria` request/attention commands — that the Inbox
+links to, not the Inbox action queue itself. The Project space's gate is its own steering surface, not part of the dashboard
 collection. The synthesis-vs-structural split is by *actor*:
 open-questions and contradictions are the **PI's** unfinished thinking; loose-ends and
 drift-watch are the **Linter operation's** structural debt — kept separate, not collapsed.

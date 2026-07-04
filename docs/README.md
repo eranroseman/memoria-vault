@@ -121,7 +121,7 @@ Design Book foundations, then the Explanation pages in this order.
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · Reset workspace
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
@@ -149,7 +149,7 @@ Design Book foundations, then the Explanation pages in this order.
 
 Deterministic **operations** do the mechanical work, behind the policy gate.
 
-→ [Operation-posture rationale](explanation/profiles/README.md) · [No-installed-profile contract](reference/profile-capabilities.md)
+→ [Operation-posture rationale](explanation/profiles/README.md) · No-installed-profile contract
 
 ---
 

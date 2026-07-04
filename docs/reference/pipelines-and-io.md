@@ -11,5 +11,5 @@ Ingest, search, export, telemetry, request-state projection, diagnostics, and
 other data movement surfaces.
 
 Start with [Ingest routing](ingest.md) for source intake and
-[Board export](board-export.md) for the no-Hermes-board boundary and current
+Board export for the no-Hermes-board boundary and current
 request/journal replacement surfaces.

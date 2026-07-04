@@ -37,11 +37,8 @@ every field and count.
 | [CLI](cli.md) | Alpha.15 `memoria` command surface | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
-| [Installed profiles](profile-capabilities.md) | Alpha.15 no-installed-profile contract | Manual |
 | [Linter: detectors and auto-fix](linter.md) | Linter structural detectors, auto-fix classes, and severity scale | Manual |
 | [Vault eval](vault-eval.md) | The vault-eval gold set, quarterly dispatch, idempotency keys, and diagnostic eval fixtures | Manual |
-| [Obsidian command palette](obsidian-command-palette.md) | Alpha.15 no-command-palette boundary and CLI equivalents | Guarded mirror |
-| [Hermes CLI](hermes-cli.md) | Alpha.15 no-Hermes-command boundary | Manual |
 | [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
@@ -62,8 +59,6 @@ every field and count.
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs | Manual |
-| [Board export](board-export.md) | Alpha.15 no-board-export boundary and replacement request/journal surfaces | Manual |
-| [Fleet metrics](fleet-metrics.md) | Alpha.15 no-fleet-runtime boundary and replacement runtime signals | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 
 ## [System and infrastructure](system-and-infrastructure.md)
@@ -76,7 +71,6 @@ every field and count.
 | [System artifacts](system-artifacts.md) | Visible `system/` files, eval fixtures, and shipped Bases views | Manual |
 | [Installer (bootstrap)](installer.md) | Bootstrap installer: platform matrix, install flow, component checklist, secrets and skills tables | Manual |
 | [Failure modes](failure-modes.md) | Failure modes by severity: symptom, cause, fix | Manual |
-| [Sample vault](sample-vault.md) | Retired alpha.10 tutorial corpus; not shipped in alpha.15 | Manual |
 | [Pattern provenance table](pattern-provenance.md) | Borrow/adapt/reference/ignore judgments for surveyed AI-research-system patterns | Manual |
 | [Bibliography](bibliography.md) | Works cited across the docs in ACM author-date style | Manual |
 
@@ -84,9 +78,4 @@ every field and count.
 
 | File | What it covers | Source |
 | --- | --- | --- |
-| [Obsidian plugins](obsidian-plugins.md) | Alpha.15 no-plugin baseline and optional adapter boundary | Guarded mirror |
-| [Obsidian plugin settings](obsidian-plugin-settings.md) | No required plugin settings and optional adapter boundary | Manual |
-| [Obsidian plugin data files](obsidian-plugin-data-files.md) | No shipped plugin data files and optional adapter boundary | Manual |
 | [Zotero plugins](zotero-plugins.md) | Zotero add-ons and the Zotero↔Obsidian connector comparison | Manual |
-| [Obsidian callouts](obsidian-callouts.md) | Callout type identifiers, trigger conditions, and field schema | Manual |
-| [Obsidian workspaces](obsidian-workspaces.md) | The Memoria reset layout and navigation-rail space-switching model | Manual |

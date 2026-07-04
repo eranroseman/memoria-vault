@@ -186,7 +186,7 @@ Subscription publisher APIs are deliberately out of scope (open-access full text
 
 ## Related
 
-- **Workflows affected:** [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md), [Obsidian command palette](../reference/obsidian-command-palette.md).
+- **Workflows affected:** [Capture and ingest a source](../how-to-guides/library/capture-and-ingest.md), Obsidian command palette.
 - **Files affected:** ingest runtime operation (source of truth for API field lists, chain order, and merge rules — kept out of the ADR so it can change without re-deciding), [Ingest routing](../reference/ingest.md) (type routing, fallback chains, extraction tiers, S2-not-GROBID), [Frontmatter fields](../reference/frontmatter.md) / [Document types](../reference/document-types.md) (`captured` + `ingest_status`), optional adapter importers, the seed-tag vocabulary format (tags carry definitions).
 - **Correction (delivery mechanism):** the worker **cannot run the pipeline as a script** — the Librarian's capability allowlist ([ADR-120](120-profile-config-materialization.md)) disables `code_execution`/`terminal`/`file`. The deterministic spine is therefore delivered as an **MCP tool** (`ingest_pipeline` on the `memoria-ingest` server, `mcp/ingest_mcp.py`, wrapping `runner.run()`), reached the same way vault access and the policy gate are. The tool reads + computes only; the agent still fills the two holes and writes through the gated obsidian MCP. (The CLI entry points remain for cron/sweeps and offline use.)
 - **Related decisions / Depends on:** [ADR-120](120-profile-config-materialization.md), [ADR-28](28-write-gate-as-plugin.md) (the write gate), [ADR-16](16-systematic-review-adopt-on-demand.md).

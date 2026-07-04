@@ -77,7 +77,7 @@ Tasks like API enrichment, link-candidate proposals, structural lint checks, and
 
 For the explicit mapping of current operation surfaces, see
 [Operations](../../reference/operations.md). For the no-installed-profile
-boundary, see [Installed profiles](../../reference/profile-capabilities.md).
+boundary, see Installed profiles.
 
 ---
 

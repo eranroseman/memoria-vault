@@ -60,5 +60,4 @@ The scoring contract is owned by [Vault eval](vault-eval.md).
 - The detectors behind Maintenance drift watch: [Linter: detectors and auto-fix](linter.md)
 - The audit-log schema the audit-log dashboard reads: [Memory substrates](memory-substrates.md)
 - Current Concept types: [Document types](document-types.md)
-- Optional editor workspace boundary: [Obsidian workspaces](obsidian-workspaces.md)
 - Dashboard design rationale: [Dashboards](../explanation/dashboards/README.md)

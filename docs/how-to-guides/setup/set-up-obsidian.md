@@ -7,7 +7,7 @@ nav_order: 3
 
 # Set up Obsidian
 
-Alpha.15 does not require Obsidian. Use this page only if you want Obsidian as a
+Obsidian is optional. Use this page if you want Obsidian as a
 plain Markdown editor for the workspace keep-set.
 
 ## Prerequisites
@@ -47,5 +47,4 @@ write-policy boundary, scheduler, model runner, or operation API.
 ## Related
 
 - CLI command reference: [Memoria CLI](../../reference/cli.md)
-- Obsidian plugin boundary: [Obsidian plugins](../../reference/obsidian-plugins.md)
 - On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)

@@ -33,7 +33,6 @@ bounded the way it is.
 | [Why operation postures](why-specialist-profiles.md) | Why Memoria has one read-only conversational posture plus scoped operation postures |
 | [Why the review gate is structural](why-review-gate-is-structural.md) | Why review is enforced by architecture |
 | [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md) | Why synthesis stays human-owned |
-| [Hermes boundary](why-hermes.md) | Why Hermes is not part of the alpha.15 runtime |
 | [Why deterministic methods](why-deterministic-methods.md) | Why deterministic methods are preferred where correctness matters |
 
 ## Design areas

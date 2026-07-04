@@ -16,7 +16,6 @@ Start from the symptom you're seeing. Each guide takes one failure mode from sym
 | A request or old "card" won't advance                             | [Fix a stuck card](fix-stuck-card.md)                            |
 | YAML parse error; a note is missing from Dataview queries         | [Fix broken frontmatter](fix-broken-frontmatter.md)              |
 | An agent's write didn't land — denied, or never reached the gate  | [Diagnose a denied or blocked write](diagnose-a-denied-write.md) |
-| Removed profile package reappeared                                | [Fix profile drift](fix-profile-drift.md)                        |
 | Enrichment is empty after ingest; classification never applied    | Check provider config, then rerun source metadata checks |
 | A filtered query returns nothing though the notes are valid       | [Fix missing query results](fix-missing-query-results.md)        |
 

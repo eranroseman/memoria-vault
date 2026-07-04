@@ -62,5 +62,5 @@ removes the risky mechanical duplication.
 - **Supporting rationale:** [Distribution model](../design/distribution-model.md) (the three-part repo, idempotent install, hand-authored profiles).
 - **Related decisions:** [ADR-48 profile consolidation](48-copi-and-agent-consolidation.md) (the profiles being deployed); [ADR-22 build on Hermes](22-build-on-hermes-runtime.md) (profiles deploy to `~/.hermes/profiles/`).
 - **Installer design:** [Bootstrap installer](../design/bootstrap-installer.md) (rationale) + [Installer (bootstrap)](../reference/installer.md) (inventories).
-- **How-to:** [Redeploy profiles](../how-to-guides/operate/redeploy-profiles.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
+- **How-to:** Redeploy profiles, [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).
 - **Source discussion:** retroactively records the distribution model in `distribution-model.md`; note this ADR follows the *current* repo-as-install-unit model, which has moved past the earlier vault-as-carrier framing.

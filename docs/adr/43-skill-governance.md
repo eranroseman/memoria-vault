@@ -99,5 +99,5 @@ store).
 - **System of record:** lane-override files (`policy.allow.skills`) + per-profile `skills/` folders.
 - **Alpha.14 boundary:** the historical `system/dashboards/skill-state.md`
   surface was removed with installed profiles; the current contract is
-  [Installed profiles](../reference/profile-capabilities.md).
+  Installed profiles.
 - **Scope premise:** [ADR-24](24-single-researcher-scope.md) — single researcher; one judgment owner.

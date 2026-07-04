@@ -48,7 +48,7 @@ state made navigation heavier than the job required.
 
 Alpha.15 ships no saved Obsidian workspace. Daily mode switching happens through
 Markdown space notes and CLI/read-API commands. The exact boundary is reference
-material: [Obsidian workspaces](../reference/obsidian-workspaces.md).
+material: Obsidian workspaces.
 
 ---
 
@@ -57,4 +57,3 @@ material: [Obsidian workspaces](../reference/obsidian-workspaces.md).
 - The current ambient glance and dashboard inventory: [Dashboards](../explanation/dashboards/README.md)
 - The callout types and their fixed three-color palette: [Callouts](../explanation/obsidian/callouts.md)
 - The welcome note, which participates in the same restraint: [Home welcome note](../explanation/obsidian/home.md)
-- Gate/reset layout reference: [Obsidian workspaces](../reference/obsidian-workspaces.md)

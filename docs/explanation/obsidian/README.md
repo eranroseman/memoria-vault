@@ -21,7 +21,6 @@ One principle runs through every page below: **the architecture is invisible dur
 | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | [Home welcome note](home.md)          | `home.md` as the plain Markdown welcome note. |
 | [Callouts](callouts.md)                         | The inline callout types (`[!brief]`, `[!suggestions]`, `[!verification]`) and what each means.              |
-| [The Agent Client pane](agent-client-pane.md) | Why the pane is not part of alpha.15 and what a future adapter must not own. |
 
 ## The discipline behind them
 
@@ -38,6 +37,4 @@ section: [explanation/dashboards/](../dashboards/README.md).
 ## Related
 
 - How to use Obsidian as an optional editor: [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian)
-- Plugin inventory: [Obsidian plugins](../../reference/obsidian-plugins.md)
-- Plugin-settings boundary: [Obsidian plugin settings](../../reference/obsidian-plugin-settings.md)
 - Workspace, callout, and dashboard reference pages: [Reference](../../reference)

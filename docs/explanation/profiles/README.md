@@ -8,8 +8,9 @@ permalink: /explanation/profiles/
 
 # Operation postures
 
-Alpha.15 does not ship installed Hermes profiles. The old profile language maps
-to current concepts this way:
+Operation postures are the current replacement for the old installed-profile
+language — drafting and review stances the CLI and its operations adopt. The
+old profile language maps to them this way:
 
 | Old profile concept | Alpha.15 replacement |
 | --- | --- |
@@ -35,4 +36,3 @@ manifest's authority.
 
 - Current command surface: [CLI](../../reference/cli.md)
 - Operation manifests: [Operations](../../reference/operations.md)
-- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)
