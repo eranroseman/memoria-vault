@@ -11,7 +11,7 @@ Where every file lives.
 - The repo ships the vault source under **`vault-template/`**.
 - The installer scaffolds a runtime vault, then populates it from `vault-template/`.
 - Product operation manifests ship inside the installed Python package, not the runtime vault.
-- The legal root categories come from [ADR-119](../adr/119-schema-driven-document-creation.md) and `vault-template/.memoria/schemas/folders.yaml`.
+- The legal root categories come from [ADR-126](../adr/126-four-type-knowledge-model.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
@@ -26,14 +26,13 @@ Where every file lives.
 ├── steering.md              program memory; the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
-├── catalog/                 source and entity Concepts
+├── catalog/                 source and entity record projections
 │   ├── index.md              generated catalog index
-│   ├── catalog.base           Sources Bases view
 │   ├── sources/
 │   └── entities/
-├── knowledge/               digest, note, hub, and project Concepts
+├── knowledge/               Work, note, hub, and project Concepts
 │   ├── index.md              generated knowledge index
-│   ├── digests/  notes/  hubs/  projects/
+│   ├── works/  notes/  hubs/  projects/
 │   └── views/knowledge.base
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
@@ -60,7 +59,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 
 ```text
 .memoria/
-├── schemas/                 THE single schema source (ADR-119)
+├── schemas/                 THE single schema source (ADR-126)
 │   ├── types/<type>.yaml      per-type Concept schemas
 │   ├── folders.yaml           type→folder homes, staging roots, quarantine, skeleton
 │   └── calibration.yaml       drift-bound thresholds (entity-resolution, classify, hybrid scores)
@@ -110,11 +109,12 @@ state beside or inside a working copy, but that state is not part of the
 standalone template, installer skeleton, request lifecycle, or source-of-truth
 layout.
 
-### The Bases views
+### The Bases view
 
-The `.base` files sit alongside their data: `catalog/catalog.base` and
-`knowledge/views/knowledge.base` ([ADR-116](../adr/116-obsidian-surface-architecture.md)).
-What each view shows is in [Dashboards](dashboards.md#the-bases-views).
+The shipped `.base` file sits alongside the checked knowledge Concepts:
+`knowledge/views/knowledge.base`. It is an optional editor view over the same
+files; the CLI/read API remains authoritative. What it shows is in
+[Dashboards](dashboards.md#the-bases-views).
 
 ---
 

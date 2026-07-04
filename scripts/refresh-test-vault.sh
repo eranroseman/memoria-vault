@@ -115,7 +115,6 @@ for rel in \
   index.md \
   steering.md \
   troubleshooting.md \
-  catalog/catalog.base \
   catalog/index.md \
   knowledge/index.md \
   knowledge/_views/index.md \
@@ -126,7 +125,7 @@ do
 done
 
 hdr "Remove dropped standalone baseline payloads"
-run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts"
+run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog/catalog.base"
 
 hdr "Wire git hook"
 if [ -d "$VAULT/.git" ] && [ -f "$VAULT/.githooks/pre-commit" ]; then
