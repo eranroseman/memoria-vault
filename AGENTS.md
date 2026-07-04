@@ -265,8 +265,6 @@ No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the f
 
 Don't explain what the code does — well-named identifiers already do that. Don't reference the task, PR, or caller ("added for X", "used by Y"). *(judgment - no mechanism)*
 
-Section dividers (`# --- Label ---`) are acceptable in files over ~200 lines when they mark a genuine logical boundary. In short files or before a function that already has a docstring, they are noise — remove them.
-
 Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE001 -- config load with import-inside-try; degrade to default`.
 *(enforced: ruff)*
 
@@ -425,10 +423,7 @@ Readiness lives only in the **"Release <version>" parent issue and its readiness
 sub-issues**. Version, changelog, tag, and GitHub Release are owned by
 release-please. Use the portable [release playbook](.agents/playbooks/release.md)
 and [release plan template](.agents/templates/release-plan.md) to draft issue
-prose; do not create a repository release-plan folder. In-work release design
-notes may live on the `scratch` branch under `scratch/releases/<version>/`
-while shaping a release, but they are deleted before that release/checkpoint is
-done.
+prose; do not create a repository release-plan folder.
 *(judgment - no mechanism)*
 
 ---
@@ -443,7 +438,6 @@ done.
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `scratch` branch, under `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
