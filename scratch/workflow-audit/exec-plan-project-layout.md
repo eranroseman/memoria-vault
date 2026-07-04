@@ -83,24 +83,29 @@ Terminology: a **bare repository** has no working tree — just the object store
 (`objects/`, `refs/`, `config`, reflogs). A **linked worktree** is an additional
 checkout of a branch that shares the bare repo's objects; git tracks it under
 `.bare/worktrees/<name>/`, and the worktree's own `.git` is a *file* pointing
-there. The `.git` file at the container root (`gitdir: ./.bare`) lets `git`
-commands run from `~/memoria-vault/` itself.
+there. The `.git` file at the container root (`gitdir: ./.bare`) lets
+**repo-management** commands (`git worktree`, `git branch`, `git fetch`) run from
+`~/memoria-vault/` itself — but it points at a *bare* repo, so **working-tree**
+commands (`git status`, `git add`) there fail; run those inside `main/`, `scratch/`,
+or a worktree.
 
-**Current on-disk state (verify at execution — concurrent sessions move it):**
-- Repo: `~/memoria-vault` — normal checkout on `main`, real `.git` inside, clean.
-- Worktrees (`git worktree list`): `~/memoria-vault` [main];
-  `~/mv/adr-consolidate` [fix/adr-consolidation]; `~/mv/revert-wa`
-  [fix/revert-workflow-audit] (has open PR #1261, pushed); `~/mv/scratch`
-  [scratch] (holds THIS plan); `~/mv/stale-docs` [fix/stale-doc-lines].
-- Sandbox: `~/Memoria-test` — no functioning git (empty-ish, disposable).
-- Stray cruft under `~/mv/`: empty `.git`, dead `main-merge/`, stray
-  `.agents/`, `.codex/`.
+**Current on-disk state — enumerate LIVE at execution (concurrent sessions move it;
+do NOT trust any snapshot baked into this doc):**
+- Worktrees: `git -C ~/memoria-vault worktree list`
+- Sandbox: `ls ~/Memoria-test` (disposable test vault, no functioning git)
+- Stray cruft under `~/mv/`: `find ~/mv -maxdepth 1` (expect leftovers such as an
+  empty `.git`, `main-merge/`, `.agents/`, `.codex/`)
+- **Ignored/untracked local data** (feeds the step-6 preserve-gate — see below):
+  `git -C ~/memoria-vault status --porcelain --ignored`
+- (2026-07-04 audit snapshot — for context only, now stale: worktrees were
+  `~/memoria-vault` [main], `~/mv/{adr-consolidate,revert-wa,scratch,stale-docs}`;
+  as of last check only `~/memoria-vault` [main] and `~/mv/scratch` [scratch] remain.)
 
-**Path references that will go stale** (found earlier; re-grep at execution — the
-count was ~72 files mentioning `~/mv/` or `~/memoria-vault`): `AGENTS.md`
-(§1 worktree convention `~/mv/<session>` and the "Where things live" table),
-`scripts/refresh-test-vault.sh` (`VAULT="$HOME/Memoria-test"`),
-`.github/workflows/hermes-version-check.yml` (hardcoded `/home/eranr/Memoria-test`).
+**Path references that will go stale:** the authoritative list is **whatever the
+Phase B `git grep` (step 7) surfaces** — do not hardcode targets that may have moved
+or been deleted. Illustrative examples: `AGENTS.md` (§1 worktree convention
+`~/mv/<session>` and the "Where things live" table) and `scripts/refresh-test-vault.sh`
+(`VAULT="$HOME/Memoria-test"`).
 
 **HARD PREREQUISITES (the plan is unsafe without these — a 2026-07-04 pre-flight
 audit found several of these unmet):**
@@ -162,9 +167,10 @@ to `~/memoria-vault`. Clean the `~/mv` cruft.
 branch off `origin/main`, grep *all* tracked files for the old paths, update the
 stale conventions (AGENTS.md worktree path → `~/memoria-vault/worktrees/<session>`
 and repo-root → `~/memoria-vault/main`; `refresh-test-vault.sh` default →
-`~/memoria-vault/sandbox`; `hermes-version-check.yml`) **plus the de-nest doc-sync**
-(AGENTS.md scratch-flow `scratch/releases/<version>/` → `releases/<version>/`;
-`status_doctor`'s `scratch/releases` glob → `releases`), and open one PR. CI
+`~/memoria-vault/sandbox`; **whatever else the grep surfaces**) **plus the de-nest
+doc-sync** (AGENTS.md scratch-flow `scratch/releases/<version>/` → `releases/<version>/`;
+and **remove** `status_doctor`'s dead `scratch/releases` scan — do NOT rename it to
+`releases`, see step 0's note), and open one PR. CI
 is unaffected (it clones fresh); only local conventions change. **The freeze stays
 in force until this PR merges** — until then the disk contradicts AGENTS.md.
 
@@ -208,8 +214,12 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    Expected: root now holds `releases/`, `workflow-audit/` directly; this plan moves
    to `workflow-audit/exec-plan-project-layout.md`. `pr-policy`'s main-side `scratch/`
    block is untouched (it guards main-branch worktrees, orthogonal to this branch's
-   layout); the now-stale AGENTS.md scratch-flow wording + `status_doctor` glob are
-   fixed in Phase B (step 7).
+   layout). Doc follow-ups in Phase B (step 7): update the AGENTS.md scratch-flow
+   wording; and **remove** `status_doctor`'s `scratch/releases` scan — it globs its
+   own worktree root (`ROOT = __file__/../..`, then `root/scratch/releases`), so
+   post-container it cannot reach the sibling `~/memoria-vault/scratch/` at all, and
+   renaming it to `releases` would wrongly point at `main/releases`. (It is already a
+   dead no-op on `main` today, since `main` carries no `scratch/`.)
 
 1. **Pre-flight + backup:**
 
@@ -325,7 +335,19 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 6. **Swap into place and clean up:**
 
    ```bash
-   rm -rf ~/memoria-vault          # old checkout — content safely in .bare + main/
+   # HIGH — PRESERVE-GATE (run BEFORE the rm): the bare clone copied only git objects.
+   # Ignored/untracked local data in the old checkout is NOT in .bare, and the rm below
+   # destroys it permanently. On last check this included _papers (~2.1G) and _notes.
+   git -C ~/memoria-vault status --porcelain --ignored \
+     | awk '$1=="!!"||$1=="??"{print $2}' | sed 's#/.*#/#' | sort -u   # inventory — classify EACH:
+   #   preserve (durable, not in git):  _papers/, _notes/, any local data  -> move it
+   #   rebuild  (regenerable):          node_modules/, .venv/, .qmd/, *_cache/, .coverage
+   #   delete   (confirmed junk):       let the rm handle it
+   for p in _papers _notes ; do        # <-- EDIT this list to match the inventory above
+     [ -e ~/memoria-vault/"$p" ] && mv ~/memoria-vault/"$p" ~/memoria-vault-new/main/"$p"
+   done
+   # Only once every durable path is moved and the remainder is confirmed regenerable/junk:
+   rm -rf ~/memoria-vault          # old checkout — tracked content safely in .bare + main/
    mv ~/memoria-vault-new ~/memoria-vault
    # MED #4: surgical ~/mv cleanup — remove exactly the registered old worktrees +
    # known cruft, then rmdir ~/mv ONLY if genuinely empty (never a blind rm -rf ~/mv).
@@ -338,7 +360,8 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    ( cd ~/memoria-vault/main && pre-commit install )   # the bare clone dropped the installed hooks
    ```
 
-   Expected: every registered old worktree + known cruft removed; `~/mv` **rmdir'd
+   Expected: durable ignored data (`_papers`, `_notes`, …) moved into `main/` **before**
+   the rm; every registered old worktree + known cruft removed; `~/mv` **rmdir'd
    only if empty** (else it stops and lists what's left for you to inspect);
    `worktree list` shows all worktrees under `~/memoria-vault/`; hook re-installed.
 
@@ -349,7 +372,7 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
    git worktree add worktrees/layout-paths -b fix/layout-paths origin/main
    cd worktrees/layout-paths
    git grep -n -e '~/mv/' -e '/home/eranr/mv/' -e 'Memoria-test' -e '~/memoria-vault' -- . ':!scratch/'
-   # edit AGENTS.md, scripts/refresh-test-vault.sh, .github/workflows/hermes-version-check.yml, etc.
+   # edit whatever the grep surfaced (AGENTS.md, scripts/refresh-test-vault.sh, …)
    pre-commit run --all-files && bash scripts/test.sh all
    git push -u origin fix/layout-paths && gh pr create --base main --fill
    ```
@@ -404,7 +427,8 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
       committed + pushed); **`git stash list` empty** (2 autostashes resolved);
       **Hermes gateway stopped/confirmed clear**; this plan committed to `scratch`.
 - [ ] Phase A: `scratch` de-nested + pushed (step 0); bare container built,
-      verified (step 5), swapped in (step 6); pre-commit re-installed in `main/`.
+      verified (step 5); **durable ignored data (`_papers`/`_notes`/…) preserved into
+      `main/`** (step-6 preserve-gate); swapped in (step 6); pre-commit re-installed.
 - [ ] Sandbox at `~/memoria-vault/sandbox`; `~/mv` removed.
 - [ ] Phase B: path-reference PR merged.
 - [ ] Backup `~/memoria-vault-git-backup` deleted after a clean gate + fetch/push
@@ -441,8 +465,8 @@ Run these from a shell whose CWD is **`~`** (never inside a worktree being moved
 - `git worktree` / `git clone --bare` / `git worktree repair` semantics; the
   bare-repo remote-tracking fetch refspec (`+refs/heads/*:refs/remotes/origin/*`).
 - The real `origin` URL — read via `git remote get-url origin`, never hardcoded.
-- Tracked path references: `AGENTS.md`, `scripts/refresh-test-vault.sh`,
-  `.github/workflows/hermes-version-check.yml` (+ whatever the grep finds).
+- Tracked path references: whatever the Phase B `git grep` surfaces (e.g. `AGENTS.md`,
+  `scripts/refresh-test-vault.sh`) — not a hardcoded list; targets move and get deleted.
 - CI is unaffected — GitHub Actions checks out fresh, independent of local layout.
 
 ## 11. Artifacts & notes
