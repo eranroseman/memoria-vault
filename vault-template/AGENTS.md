@@ -17,7 +17,7 @@ Do not write Concepts, journal rows, projections, or `check_status` by hand.
 If a task should mutate the workspace, queue it through the `memoria` CLI or the
 engine request API. Do not emulate the worker by editing files directly. The
 worker reads request rows from SQLite, writes staged outputs, and records
-check/verdict state before anything becomes trusted.
+check/verdict state before anything becomes readable as checked knowledge.
 
 ## Where things live (ADR-126)
 

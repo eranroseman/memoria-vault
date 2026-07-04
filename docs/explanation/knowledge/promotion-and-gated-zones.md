@@ -58,9 +58,9 @@ by evidence, links, and hub/project context.
 - The types involved: [Document types and epistemic roles](document-types.md)
 - Why state replaced folders: [Lifecycle, not topic — and state, not folders](../../design/lifecycle-over-topic.md)
 - The attention prompt in detail: [The honesty prompt](../kanban-board/honesty-card.md)
-- Approval gates vs work prompts: [Decision points](../kanban-board/decision-points.md)
+- Review gates vs work prompts: [Decision points](../kanban-board/decision-points.md)
 - The operations behind the boundary: [Operations](../operations.md)
 
 **Decisions**
 
-- [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md) — approval gates vs work prompts; classify automated; batch worklists
+- [ADR-54](../../adr/54-two-decision-kinds-batch-worklists.md) — historical work-prompt and batch-worklist decision

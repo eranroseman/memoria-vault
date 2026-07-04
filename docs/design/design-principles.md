@@ -66,7 +66,7 @@ only when it calls the same request lifecycle, checks, and write boundary.
 
 ## Related
 
-- Why these principles led to a human-gated system: [Why the review gate is structural](why-review-gate-is-structural.md)
+- Why these principles led to a review-gated system: [Why the review gate is structural](why-review-gate-is-structural.md)
 - Why specialist profiles rather than one generalist: [Why specialist profiles, not a generalist agent](why-specialist-profiles.md)
 - Why not autonomous: [Why Memoria doesn't pursue full autonomy](why-not-autonomous.md)
 - What the principles describe: [What Memoria is](what-memoria-is.md)

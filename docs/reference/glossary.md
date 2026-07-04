@@ -62,7 +62,7 @@ queue** (your Inbox queue) and **Drift** (open integrity flags).
 **Space** — a navigation surface that is also a dashboard-as-note
 (`projection: space`): Library, Knowledge, Project, each exposing workspace
 state through Markdown views and CLI/read-API commands. "Gate" is reserved for
-the approval gate, never a space.
+the review gate, never a space.
 
 **Queue** — the **Inbox** (`projection: queue`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then

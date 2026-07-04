@@ -9,11 +9,11 @@ nav_order: 3
 
 Not every Inbox item asks for the same kind of human action. Memoria keeps three
 decision shapes separate so the daily queue does not become a pile of fake
-approvals.
+decisions.
 
-## Approval gates
+## Review gates
 
-Approval gates review machine-produced output: candidate triage, link
+Review gates surface machine-produced output: candidate triage, link
 confirmation, certification before shipping, re-adjudication after a retraction,
 near-tie dedup calls, and archive proposals. Each gate gives the PI decision
 material, not a verdict. The prompt format is the

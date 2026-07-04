@@ -49,7 +49,8 @@ agent-assisted to **bounded, phase-gated knowledge production**:
   removed.
 
 This makes the architecture easier to debug: each phase has a traceable
-responsibility, and nothing reaches canonical without human approval.
+responsibility, and nothing reaches checked knowledge without a recorded PI
+disposition where one is required.
 
 ## Related
 

@@ -27,7 +27,9 @@ dv.table(
 
 ## Writes to review-gated zones
 
-Should be near zero. Each row is an approved promotion (`allow_with_log` + `request_id`) or an attempted bypass (`deny` / `dry_run`). A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
+Should be near zero. Each row is a request-envelope promotion
+(`allow_with_log` + `request_id`) or an attempted bypass (`deny` / `dry_run`).
+A raw `allow` here is a smell — these zones degrade to `dry_run` by default.
 
 ```dataviewjs
 if (!dv.container.dataset.poll) {

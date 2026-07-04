@@ -9,8 +9,8 @@ topic: overview
 
 A research operating system for a single researcher (the PI): a standalone local
 CLI and engine that capture, enrich, map, verify, and ask over a checked
-workspace under a human-approval gate that audits every proposed change before
-it lands.
+workspace under a structural review gate that records proposed changes and PI
+dispositions before they become checked knowledge.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
@@ -61,7 +61,7 @@ Nothing important depends only on chat history.
 Operations propose; the PI disposes. CLI commands, observed file changes, and
 scheduled jobs can create request rows, attention prompts, and staged outputs
 within their manifest scope. Promotion into review-gated knowledge stays
-human-owned and policy-gated.
+PI-directed and policy-gated.
 
 ---
 
