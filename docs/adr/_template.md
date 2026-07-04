@@ -3,7 +3,7 @@ topic: decisions
 id: NN
 title: <short imperative phrase, e.g. "Shared candidate frontmatter format">
 nav_exclude: true
-status: proposed  # proposed | accepted | rejected | superseded
+status: proposed  # proposed | accepted | rejected
 date_proposed: YYYY-MM-DD
 date_resolved:
 assumes: []        # ADR-NN refs / mechanisms this rests on — so a change that invalidates it is detectable

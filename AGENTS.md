@@ -382,9 +382,14 @@ Mixed-purpose pages are wrong — split them. *(judgment - no mechanism)*
 
 ### ADR template (`docs/adr/`)
 
-ADRs are the **single home for every decision, at any lifecycle status** — there is no
-separate proposals/RFC folder. An open proposal is an ADR with `status: proposed`;
-accepted future direction is `status: accepted` even when implementation is later.
+ADRs are the **single home for every live decision** — there is no separate
+proposals/RFC folder. An open proposal is an ADR with `status: proposed`; accepted
+future direction is `status: accepted` even when implementation is later; a
+considered-and-declined option is `status: rejected`. There is no `superseded`
+status: a replaced decision's ADR is **deleted** so only live decisions sit on
+`main`. Its successor records what it absorbed via `supersedes:` and prose; the
+original — with its `superseded_by`/`supersedes` lineage — stays recoverable in git
+history for later investigation.
 Scheduling and readiness live in GitHub issues, not ADR status. Every proposed ADR
 gets a linked GitHub issue in the Memoria Issue Tracker, normally `Status: Backlog`
 and `Readiness: Needs shaping`; when a decision is accepted and implemented, its
@@ -398,7 +403,7 @@ open with the correct Readiness. Full template + nav fields in
 topic: decisions
 id: <NN>
 title: <Short title>
-status: proposed | accepted | rejected | superseded
+status: proposed | accepted | rejected
 date_proposed: YYYY-MM-DD
 date_resolved: YYYY-MM-DD
 assumes: []          # ADR/mechanism deps — so a change that invalidates this is detectable
