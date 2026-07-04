@@ -159,15 +159,32 @@ from the project container root.
 ### 1. Preflight And Backup
 
 ```bash
+set -euo pipefail
 cd ~
-git -C ~/memoria-vault fetch --prune origin
 
-for w in $(git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}'); do
-  git -C "$w" pull --ff-only 2>/dev/null || true
-  echo "$w: $(git -C "$w" status --porcelain | wc -l) uncommitted"
+for p in "$HOME/memoria-vault-new" "$HOME/memoria-vault-main-moving" "$HOME/memoria-vault-git-backup"; do
+  if [ -e "$p" ]; then
+    echo "pre-existing migration path - inspect/remove first: $p"
+    exit 1
+  fi
 done
 
-if git -C ~/memoria-vault branch -vv | grep '\[behind'; then
+git -C ~/memoria-vault fetch --prune origin
+
+dirty=0
+while IFS= read -r w; do
+  status=$(git -C "$w" status --porcelain)
+  if [ -n "$status" ]; then
+    echo "$w dirty - STOP"
+    printf '%s\n' "$status"
+    dirty=1
+  else
+    echo "$w clean"
+  fi
+done < <(git -C ~/memoria-vault worktree list --porcelain | awk '/^worktree /{print $2}')
+[ "$dirty" = 0 ] || exit 1
+
+if git -C ~/memoria-vault branch -vv | grep -E '\[[^]]*behind'; then
   echo "behind branch - STOP"
   exit 1
 fi
@@ -193,16 +210,18 @@ git -C ~/memoria-vault for-each-ref --format='%(refname:short) %(objectname)' re
   > ~/mv-refs-manifest.txt
 
 ORIGIN=$(git -C ~/memoria-vault remote get-url origin)
+printf '%s\n' "$ORIGIN" > ~/mv-origin-url.txt
 cp -a ~/memoria-vault/.git ~/memoria-vault-git-backup
 ```
 
 Stop unless:
 
-- every worktree prints `0 uncommitted`;
+- every worktree prints `clean`;
 - no branch is behind;
 - `git stash list` is empty;
 - no gateway process is running;
 - `~/mv-worktrees.tsv` lists every current worktree;
+- `~/mv-origin-url.txt` contains the remote URL;
 - `~/memoria-vault-git-backup` exists.
 
 ### 2. Build The New Container By Moving Existing State
@@ -248,6 +267,7 @@ branch path structure.
 Create an independent checkout of `scratch` with its own `.git`.
 
 ```bash
+ORIGIN=$(cat ~/mv-origin-url.txt)
 git clone --branch scratch --single-branch ~/memoria-vault-new/main ~/memoria-vault-new/scratch
 git -C ~/memoria-vault-new/scratch remote set-url origin "$ORIGIN"
 git -C ~/memoria-vault-new/scratch fetch --prune origin
@@ -299,13 +319,25 @@ Expected: either no malformed UNC folder exists, or it was empty and removed.
 ### 7. Verify Before Final Swap
 
 ```bash
+set -euo pipefail
+fail=0
+
 git -C ~/memoria-vault-new/main status --short --branch
 git -C ~/memoria-vault-new/scratch status --short --branch
 git -C ~/memoria-vault-new/main worktree list
 
+if [ -n "$(git -C ~/memoria-vault-new/main status --porcelain)" ]; then
+  echo "main dirty - STOP"
+  fail=1
+fi
+
+if [ -n "$(git -C ~/memoria-vault-new/scratch status --porcelain)" ]; then
+  echo "scratch dirty - STOP"
+  fail=1
+fi
+
 bash ~/memoria-vault-new/main/scripts/test.sh l0
 
-fail=0
 while read -r branch old_tip; do
   new_tip=$(git -C ~/memoria-vault-new/main rev-parse "$branch" 2>/dev/null) || {
     echo "missing branch: $branch"; fail=1; continue
@@ -317,10 +349,21 @@ while read -r branch old_tip; do
   fi
 done < ~/mv-refs-manifest.txt
 
-git -C ~/memoria-vault-new/sandbox rev-parse --show-toplevel >/tmp/sandbox-git-root 2>/dev/null || true
-cat /tmp/sandbox-git-root
+sandbox_root=$(git -C ~/memoria-vault-new/sandbox rev-parse --show-toplevel 2>/dev/null || true)
+case "$sandbox_root" in
+  ""|"$HOME/memoria-vault-new/sandbox") ;;
+  *)
+    echo "sandbox belongs to wrong Git root: $sandbox_root"
+    fail=1
+    ;;
+esac
 
-[ "$fail" = 0 ] && echo "MANIFEST OK - safe to swap" || echo "MANIFEST FAILED - STOP"
+if [ "$fail" = 0 ]; then
+  echo "MANIFEST OK - safe to swap"
+else
+  echo "MANIFEST FAILED - STOP"
+  exit 1
+fi
 ```
 
 Expected:
@@ -347,7 +390,17 @@ while IFS="$(printf '\t')" read -r branch path; do
   esac
 done < ~/mv-worktrees.tsv
 
-rm -rf ~/mv/main-merge ~/mv/.git ~/mv/.agents ~/mv/.codex
+for p in ~/mv/main-merge ~/mv/.git ~/mv/.agents ~/mv/.codex; do
+  [ -e "$p" ] || continue
+  if [ -n "$(find "$p" -type f -print -quit)" ]; then
+    echo "cleanup target has files - inspect before removing: $p"
+    find "$p" -maxdepth 3 -print
+    exit 1
+  fi
+  find "$p" -depth -type d -empty -delete
+  [ ! -e "$p" ] || { echo "cleanup target not empty - inspect: $p"; exit 1; }
+done
+
 if [ -d ~/mv ] && [ -z "$(find ~/mv -mindepth 1 2>/dev/null)" ]; then
   rmdir ~/mv
 elif [ -d ~/mv ]; then
@@ -430,7 +483,17 @@ Update shell aliases, editor workspaces, and habits that still point at
 
   ```bash
   mv ~/memoria-vault-new/main ~/memoria-vault
-  # Move any feature worktrees back using ~/mv-worktrees.tsv if needed.
+  while IFS="$(printf '\t')" read -r branch old_path; do
+    case "$branch" in
+      main|scratch) continue ;;
+    esac
+    new_path="$HOME/memoria-vault-new/worktrees/$branch"
+    [ -e "$new_path" ] && mv "$new_path" "$old_path"
+  done < ~/mv-worktrees.tsv
+
+  repair_paths=$(awk -F '\t' '$1!="main" && $1!="scratch"{print $2}' ~/mv-worktrees.tsv)
+  [ -z "$repair_paths" ] || git -C ~/memoria-vault worktree repair $repair_paths
+  [ -e ~/mv/scratch ] || git -C ~/memoria-vault worktree add ~/mv/scratch scratch
   ```
 
 - After step 8, `~/memoria-vault/main/.git` is the original Git directory moved
