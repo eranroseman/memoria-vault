@@ -13,9 +13,24 @@ superseded_by: []
 
 # ADR-62: Measurement and verification harnesses
 
+> **Status note (0.1.0-alpha.15):** the harness family remains accepted, but
+> Hermes board export, QuickAdd disposition capture, and cost/disposition JSONL
+> emitters are not current alpha.15 implementation scope. Alpha.15 ships the
+> standalone telemetry inventory in [Telemetry & logs](../reference/telemetry.md).
+
 ## Context
 
-A set of analysis capabilities would make the Peer-reviewer measurable, the claim layer richer, and the system's health visible over time. The **minimal capture** they all read — the six-signal operational log (state-transition timestamps + decision time, cost per card, deny reasons, suggestion disposition, FAMA exposure) — is the single highest-leverage action from the publication-path report, with schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see [ADR-20 publication path](20-publication-path.md)). Capture cannot be back-filled, so the schema and available emitters ship first. ADR-106 closed the former card-overlay gap by joining cost to Hermes session rows and writing disposition at the human review action. This ADR records the harness family: the fleet observability aggregator has shipped, while the remaining harnesses stay deferred until their per-item conditions raise priority.
+A set of analysis capabilities would make the Peer-reviewer measurable, the
+claim layer richer, and the system's health visible over time. The **minimal
+capture** they all read — state-transition timestamps, decision time, cost,
+policy deny reasons, suggestion disposition, and FAMA exposure — remains the
+single highest-leverage action from the publication-path report, with current
+schemas pinned in [Telemetry & logs](../reference/telemetry.md) (see
+[ADR-20 publication path](20-publication-path.md)). Capture cannot be
+back-filled, so the schema and available standalone emitters ship first.
+[ADR-106](106-cost-and-disposition-capture.md) rejected the old
+Hermes/Obsidian implementation path. This ADR records the harness family; each
+harness runs only when its alpha.15-compatible emitter exists.
 
 ## Decision
 
@@ -35,7 +50,10 @@ Memoria treats the following analysis harnesses as the approved direction:
 
 ## Consequences
 
-- Each remaining deferred harness reads the six-signal capture model. Cost and disposition now have first-class emitters through the [ADR-106](106-cost-and-disposition-capture.md) path; `cost-misses.jsonl` rows are data-quality misses, not zero-cost activity.
+- Each remaining deferred harness reads the six-signal capture model. Cost and
+  disposition require standalone emitters before they can be treated as current
+  data; historical `cost-misses.jsonl` rows remain data-quality misses, not
+  zero-cost activity.
 - Several harnesses gate one another (the CiteME fixture gates the claim taxonomy; fleet observability surfaces the retry rate that gates reflection-on-retry), so order matters and the conditions encode it.
 - Partial adoption can be worse than none — a claim taxonomy with most claims untyped makes type-aware checks unreliable; a too-small or too-easy CiteME fixture gives false confidence — so each waits for its condition.
 - Verdicts stay diagnostic, not gating, consistent with [ADR-11](11-vault-eval-maintenance.md): an eval or prose-check dip informs the human and never auto-halts scheduled work.
@@ -54,15 +72,13 @@ Per-item conditions that raise priority at the cadence review:
 
 ## Current implementation mapping
 
-The telemetry schema and downstream aggregation contract are current system behavior.
-`audit.jsonl`, `board-state.jsonl`, `board-transitions.jsonl`,
-`lint-findings.jsonl`, `disposition.jsonl`, and `cost.jsonl` emit through their
-documented writers. ADR-106 deliberately keeps cost and disposition off the card
-metadata overlay: cost/tokens join a completed card to the Hermes session store via
-`hermes kanban show <id> --json` and
-`runs[].metadata.worker_session_id`, while disposition is written by the
-`Memoria: resolve inbox card` QuickAdd action. Consumers must treat
-`cost-misses.jsonl` rows as join-quality misses, never as valid zero-cost runs.
+The current alpha.15 telemetry schema and downstream aggregation contract are
+the standalone inventory in [Telemetry & logs](../reference/telemetry.md) and
+[Telemetry log schemas](../reference/telemetry-logs.md). `audit.jsonl`,
+`lint-findings.jsonl`, session summaries, attention/triage logs, and eval runs
+are current. Board-state, board-transition, cost, cost-miss, blind-review,
+lane-metric, and cron-heartbeat logs are historical import data unless a future
+standalone emitter is scheduled and documented.
 
 ## Related
 
@@ -70,5 +86,5 @@ metadata overlay: cost/tokens join a completed card to the Hermes session store 
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
 - **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
   — cadence review for the harness family;
-  [#737](https://github.com/eranroseman/memoria-vault/issues/737) — implemented
-  session-store/review-action path for `disposition.jsonl` and `cost.jsonl`.
+  [#737](https://github.com/eranroseman/memoria-vault/issues/737) — rejected
+  Hermes/Obsidian session-store and review-action capture path.

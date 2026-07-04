@@ -13,7 +13,11 @@ superseded_by: [129]
 
 # ADR-30: Tiered ingest pipeline
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-129](129-layered-machine-judgment.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-129](129-layered-machine-judgment.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. Obsidian MCP,
+> cron/sweep, and adapter delivery references below are historical and not
+> alpha.15 implementation scope.
 
 
 > *Terminology note (0.1.0-alpha.12): `captured` is now the `ingest_status: tier0`

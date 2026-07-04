@@ -13,7 +13,11 @@ superseded_by: [125]
 
 # ADR-80: Ephemeral containerized Linux test-env harness
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-125](125-standalone-cli-engine-architecture.md). Kept for decision
+> history; current architecture is carried by the consolidation ADR. Headless
+> Obsidian, plugin, command-palette, and Hermes harness references below are
+> historical or future adapter-test ideas, not alpha.15 implementation scope.
 
 ## Context
 

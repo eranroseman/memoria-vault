@@ -13,7 +13,11 @@ superseded_by: [130]
 
 # ADR-115: Inbox is the queue, not a space; retire the homepage front door
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. Homepage,
+> QuickAdd-startup, saved-workspace, and `.obsidian/plugins/` details below are
+> historical and not alpha.15 implementation scope.
 
 ## Context
 

@@ -13,7 +13,11 @@ superseded_by: [126]
 
 # ADR-19: Agent-proposed hubs (threshold alert and Mapper handoff)
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-126](126-four-type-knowledge-model.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. Obsidian command
+> palette, Mapper lane, and profile-command references below are historical and
+> not alpha.15 implementation scope.
 
 
 > **Tier 1 ships (status note, 2026-06-12).** The report-only check is implemented as the Linter's `hub-threshold` detector ([#426](https://github.com/eranroseman/memoria-vault/issues/426)). The chosen rule, where this ADR left the reading open: a "topic" is a term in a claim's `topics` list or a paper's `research_area` list (the paper-side topic facet the classify stage fills — papers carry no `topics` field); the threshold is **15 notes** (papers + claims combined, the lower edge of the ≥15–20 band in [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md#hub-thresholds)); matching is case-insensitive; a topic already covered by a `hub` (or legacy `moc`) note — its `topic` or `title` matches the term — is suppressed. The finding is a LOW advisory ("consider creating a hub"), never auto-creation. **Tier 2 ships (status note, 2026-06-16).** The deterministic `hub_handoff.py` operation reads current `hub-threshold` findings and delegates a `map` lane card to the Librarian. The handoff is ceiling-validated by `tasks_mcp.py`, allows only `notes/fleeting/maps/` and `inbox/`, and explicitly forbids writes under `notes/hubs/`; the PI still creates or promotes the final hub.
@@ -32,7 +36,14 @@ The system surfaces when a topic cluster has crossed the hub-creation threshold 
 
 ## Why
 
-There is an asymmetry in how human-owned synthesis types get agent help. A `reference-note` gets an agent-drafted starting point: the Writer's `promote` command proposes a claim→reference promotion the human finalizes ([Obsidian command palette](../reference/obsidian-command-palette.md)). A `hub` formerly got none — it is human-authored start to finish ([Build a Map of Content](../how-to-guides/knowledge/build-a-hub.md)), and the Mapper now receives the request as a `map` lane card rather than as a profile command.
+There is an asymmetry in how human-owned synthesis types get agent help. A
+`reference-note` historically got an agent-drafted starting point through the
+Writer's `promote` command; alpha.15 replaces that editor surface with CLI
+commands documented in [Obsidian command palette](../reference/obsidian-command-palette.md).
+A `hub` formerly got none — it is human-authored start to finish
+([Build a Map of Content](../how-to-guides/knowledge/build-a-hub.md)), and the
+Mapper-era design sent the request as a `map` lane card rather than as a profile
+command.
 
 Yet the Mapper already computes the exact signal a hub proposal needs: `cluster-map` finds dense topic clusters, and [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md#hub-thresholds) defines the ≥15–20-note threshold that says "time for a hub." The capability is present; it is simply not wired to a proposal. Today the human must manually track note counts per topic to know when a hub is due — a bookkeeping task the system is otherwise built to absorb.
 

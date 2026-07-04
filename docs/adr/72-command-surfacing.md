@@ -13,7 +13,11 @@ superseded_by: [130]
 
 # ADR-72: Command surfacing — every action reachable directly; Commander for placement, the Co-PI additive
 
-> **Status note (0.1.0-alpha.15):** superseded by [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history; current architecture is carried by the consolidation ADR.
+> **Status note (0.1.0-alpha.15):** superseded by
+> [ADR-130](130-read-api-surfaces-and-copi.md). Kept for decision history;
+> current architecture is carried by the consolidation ADR. Commander,
+> QuickAdd, command-palette, and Obsidian UI implementation details below are
+> historical and not alpha.15 implementation scope.
 
 ## Context
 
