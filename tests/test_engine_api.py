@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,31 @@ def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
         api.read_concept(
             workspace, "knowledge/notes/beta.md", read_scope=["knowledge/notes/alpha.md"]
         )
+
+
+def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> None:
+    path = workspace / "knowledge/notes/alpha.md"
+    _write_note(workspace, path.relative_to(workspace).as_posix(), "Alpha")
+    path.write_text(
+        "---\ntype: note\ntitle: Alpha\ntags: []\nlinks: {}\n---\nTampered.\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(PermissionError, match="not consumable until scan runs"):
+        api.read_concept(workspace, "knowledge/notes/alpha.md")
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            """
+            SELECT operation_id, status, schedule_id, args_json
+            FROM operation_requests
+            WHERE operation_id = 'observe-pi-edits'
+            """
+        ).fetchone()
+    assert row is not None
+    assert row["status"] == "pending"
+    assert row["schedule_id"] == "read-guard"
+    assert row["operation_id"] == "observe-pi-edits"
+    assert json.loads(row["args_json"])["target_path"] == "knowledge/notes/alpha.md"
 
 
 def test_engine_read_scope_filters_attention_by_card_or_target(workspace: Path) -> None:
