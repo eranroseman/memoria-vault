@@ -10,25 +10,30 @@ nav_order: 3
 
 Not every agent output belongs on a dashboard. Some context is only useful while looking at a specific note — the comparative read on a paper matters when you open it to read the source, not in a daily roll-up. Dashboards surface *decisions across notes*; callouts surface *context inside one note*.
 
-Memoria defines three callout types via the Callout Manager plugin and renders them consistently across the vault. They follow the hybrid pattern: deterministic selection first, LLM composition second.
+Memoria uses three plain Markdown callout identifiers in shipped template notes.
+Alpha.15 does not ship Obsidian integrations, callout plugins, CSS snippets, or
+runtime adapters; editors that do not understand callouts still show them as
+quoted text.
 
 For the exact shipped-vs-deferred contract, see the reference: [Obsidian callouts](../../reference/obsidian-callouts.md).
 
 ## The three callouts and what they represent
 
-| Callout | Producer | Purpose | Default |
-| --- | --- | --- | --- |
-| `[!brief]` | Ingest / Librarian | Comparative read before you read the source: overlaps, possible contradictions, new constructs. | Expanded |
-| `[!suggestions]` | Link-claim action / Librarian | Bounded candidate links with approve/reject affordances. | Collapsed |
-| `[!verification]` | Verify-draft action / Peer-reviewer | Claim-trace scaffold over a draft, with gaps surfaced separately. | Expanded |
+| Callout | Current use | Default |
+| --- | --- | --- |
+| `[!brief]` | Orientation blocks on space notes. | Expanded |
+| `[!suggestions]` | Collapsed first-action blocks on space notes. | Collapsed |
+| `[!verification]` | Read-barrier guidance on the Knowledge space. | Expanded |
 
-The placement, cap values, collapse states, and drift-signal cutoffs are in the [reference](../../reference/obsidian-callouts.md).
+The identifiers and drift check are in the [reference](../../reference/obsidian-callouts.md).
 
 ## Ownership and updates
 
-- The producing agent writes the callout; the human owns it after that.
-- Producers append a dated update rather than overwriting human edits.
-- Writes pass through the policy gate, so callouts cannot bypass the review gate.
+- Template callouts are normal Markdown note content.
+- Direct edits are observed by the same scan/check loop as other authored
+  Markdown.
+- Future generated callout content would need to enter through the request and
+  trusted-writer path; alpha.15 does not ship that generator.
 
 ---
 

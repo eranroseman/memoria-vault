@@ -45,7 +45,13 @@ The voice section — person, formality, terminology — might seem misplaced in
 
 ## Drift discipline
 
-The vault file is the live implementation; this page explains the philosophy. When the brand evolves, the vault file changes first — the docs follow. The Linter's `design-system-drift` detector now reports consumer drift: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc callout variants, and terminology/capitalization drift. Lifecycle link coloring ships in `memoria-link-colors.css`; when Supercharged Links exposes `data-link-lifecycle`, links gain a state accent without replacing the folder/type color.
+The vault file is the live implementation; this page explains the philosophy.
+When the brand evolves, the vault file changes first — the docs follow. The
+Linter's `design-system-drift` detector reports consumer drift: off-palette
+colors, font sizes outside the scale, emoji in note titles, ad-hoc callout
+variants, and terminology/capitalization drift. Alpha.15 does not ship CSS
+snippets or editor-plugin link styling; optional editor adapters may render the
+same design tokens later, but they are not part of the baseline.
 
 This asymmetry is intentional: the vault file is the spec; consumers are subordinate to it. When they diverge, the answer is always "update the consumer to match the spec," never "update the spec to match a stray consumer."
 
