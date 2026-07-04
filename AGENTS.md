@@ -3,8 +3,6 @@
 For any AI agent (Claude Code, Hermes, etc.) making changes to `eranroseman/memoria-vault`.
 Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
-**One principle:** choose the correct long-term solution, never the path of least effort. Surface trade-offs and your recommendation rather than defaulting to the cheap path. *(judgment - no mechanism)*
-
 **When presenting options:** give pros/cons and a recommendation for every option — never a bare list. *(judgment - no mechanism)*
 
 ---
@@ -69,7 +67,8 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 - Test only against disposable workspaces such as `~/Memoria-test`; never use a
   personal workspace as a test target. *(judgment - no mechanism)*
 - Provider keys and optional adapter secrets live in local, gitignored config or
-  environment files. Never print or commit them. *(judgment - no mechanism)*
+  environment files (shipped only as `.example` templates). Never print or
+  commit them. *(judgment - no mechanism)*
 
 ---
 
@@ -329,9 +328,6 @@ the manual security review and is a first line against the "never commit
 - **Scheduled wrappers:** shared wrappers live under
   `vault-template/.memoria/scripts/` and call the CLI/runtime package. A local
   scheduler may invoke them, but no scheduler is required for one-shot CLI use.
-- **Secrets:** provider keys live in operator-owned local config or environment
-  files and gitignored workspace files shipped only as `.example`. Never commit a
-  real key. *(judgment - no mechanism)*
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.
@@ -457,8 +453,6 @@ done.
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others. *(judgment - no mechanism)*
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes on the `scratch` branch under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
-  *(judgment - no mechanism)*
 
 ---
 
