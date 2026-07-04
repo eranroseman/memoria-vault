@@ -152,7 +152,7 @@ def emit_report(
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description="Emit ADR-54 batch worklists")
+    parser = argparse.ArgumentParser(description="Emit ADR-128 batch worklists")
     sub = parser.add_subparsers(dest="cmd")
     emit = sub.add_parser("emit")
     emit.add_argument("--vault", required=True)

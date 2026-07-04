@@ -3,8 +3,6 @@
 For any AI agent (Claude Code, Hermes, etc.) making changes to `eranroseman/memoria-vault`.
 Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
 
-**One principle:** choose the correct long-term solution, never the path of least effort. Surface trade-offs and your recommendation rather than defaulting to the cheap path.
-
 **When presenting options:** give pros/cons and a recommendation for every option — never a bare list.
 
 ---
@@ -24,11 +22,7 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
     (`registry.dispatch` still runs any registered tool by name); the policy
     plugin's hard-deny is the boundary.
   - An ADR may describe a boundary, but it must name the enforcing mechanism and
-    a check that proves it. Done right: ADR-55 (test-pinned `system/**` deny +
-    golden-restore SHA manifest), ADR-74 (provenance doctor in the required
-    lint), ADR-80 (a live negative deny-assertion that proves the gate fires),
-    ADR-105 (redaction golden-corpus self-test). Done wrong (corrected in
-    place): ADR-28/23/60/04/46/41.
+    a check that proves it.
 
 ---
 
@@ -69,13 +63,14 @@ only in the plan. Skip the ceremony for small, single-sitting changes — use th
 - Test only against disposable workspaces such as `~/Memoria-test`; never use a
   personal workspace as a test target.
 - Provider keys and optional adapter secrets live in local, gitignored config or
-  environment files. Never print or commit them.
+  environment files (shipped only as `.example` templates). Never print or
+  commit them.
 
 ---
 
 ## 1. Session isolation — git worktree
 
-**Start every session in its own worktree — always, even solo, before you touch a single file.** A worktree gives you a private working tree *and* index, so a concurrent session's staged files can never be swept into your commit:
+**Start every session in its own worktree — always, even solo, before you touch a single file.** A worktree gives you a private working tree *and* index, so a concurrent session's staged files can never be swept into your commit.
 
 ```bash
 git fetch origin
@@ -95,11 +90,11 @@ fix — happens on `main`, on the default/shared checkout, or on another session
 branch. Use a descriptive branch name such as `fix/installer-timeout` in place
 of `agent/<session>`; do not create a second branch after entering the worktree.
 
-**Why a worktree, not just a branch:** the index is **shared** across a checkout. In a checkout another agent may be using, `git add <your-file>` stages *alongside* their already-staged files, and `git commit` captures the **whole** index — sweeping their work into your commit (this happened 2026-06-09: a one-file config commit swallowed 73 files of another agent's in-flight restructure). Your own worktree has its own index, so this cannot occur. If you ever must share a checkout, run `git diff --cached --name-only` and confirm it lists **only your files** before every commit.
+**Why a worktree, not just a branch:** the index is **shared** across a checkout. In a checkout another agent may be using, `git add <your-file>` stages alongside their already-staged files, and `git commit` captures the **whole** index. Your own worktree has its own index, so this cannot occur. If you ever must share a checkout, run `git diff --cached --name-only` and confirm it lists **only your files** before every commit.
 
 ## 3. Stage by explicit path — never `git add -A`
 
-The tree may hold parallel work-in-progress. Stage only what you changed:
+The tree may hold parallel work-in-progress. Stage only what you changed.
 
 ```bash
 git add scripts/install.sh          # yes
@@ -123,7 +118,7 @@ there's normally no reason to switch or reset inside a task worktree.
 
 ## PR flow
 
-`main` rejects direct pushes (ruleset GH013). Always open a PR:
+`main` rejects direct pushes (ruleset GH013). Always open a PR.
 
 ```bash
 git push -u origin <branch>
@@ -132,7 +127,7 @@ gh pr checks <n> --watch
 ```
 
 Run the merge from the dedicated main checkout, not the task worktree, then
-remove the task worktree and fast-forward:
+remove the task worktree and fast-forward.
 
 ```bash
 cd ~/memoria-vault
@@ -144,10 +139,6 @@ git fetch origin
 git merge --ff-only origin/main
 ```
 
-**Known quirk:** if `gh pr merge` still prints `fatal: Not possible to fast-forward`,
-the merge may have **succeeded server-side**. Verify with
-`gh pr view <n> --json state -q .state`, then resync. Don't re-attempt the merge.
-
 If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranroseman/memoria-vault/pulls/<n>/update-branch`), then wait for checks to re-run.
 
 **Emergency bypass (policy-code deadlock only):** when a PR changes `.github/scripts/` or `.github/workflows/` AND the `pr_policy.py` code itself, temporarily disable "Require a pull request" and "Require status checks" in Settings → Rules → Rulesets → "main", push directly to main, then re-enable both. For policy-code fixes only.
@@ -156,13 +147,14 @@ If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranr
 
 ## Scratch branch flow
 
-`scratch/` is ephemeral working material and lives on the dedicated `scratch`
-branch, not on `main`. Authorized contributors with repository write access may
-push scratch-only commits directly to that branch; no PR or required CI is
-expected there.
+`scratch/` is ephemeral working material and lives on the dedicated orphan
+`scratch` branch, not on `main`. The branch's tracked tree contains only
+`scratch/`; it does not carry the repository source tree. Authorized
+contributors with repository write access may push scratch-only commits directly
+to that branch; no PR or required CI is expected there.
 
 For scratch-only work, use a reusable scratch worktree and push directly to the
-shared remote branch. This path intentionally has **no PR** and no required CI:
+shared remote branch. This path intentionally has **no PR** and no required CI.
 
 ```bash
 git fetch origin scratch
@@ -175,6 +167,11 @@ git commit -m "scratch: <short description>"
 git push origin HEAD:scratch
 ```
 
+Run repo audits and implementation analysis from a worktree of the code branch
+under review (`main` by default), never from the scratch worktree. The scratch
+worktree has no tracked `.agents/`, `.github/`, `docs/`, `scripts/`, `src/`,
+`tests/`, or `vault-template/` tree to analyze.
+
 Never merge the `scratch` branch into `main`. Promote durable content by copying
 it into `docs/`, `docs/adr/`, issues, or release notes on a normal `main` PR.
 The `pr-policy` check blocks `scratch/` paths in PRs targeting `main`.
@@ -183,7 +180,7 @@ The `pr-policy` check blocks `scratch/` paths in PRs targeting `main`.
 
 ## Required CI checks
 
-All must pass before merge:
+All must pass before merge.
 
 The check-name roster is owned by
 [`.github/ruleset-contract.yaml`](.github/ruleset-contract.yaml). This table is
@@ -223,7 +220,11 @@ behavior.
 | `needs_human` | Manual merge required: trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths. This classification disables auto-merge; it is not a GitHub approval gate by itself. |
 | `block` | Untrusted author on sensitive paths, or any PR that includes `scratch/` paths |
 
-Sensitive paths: `vault-template/.memoria/`, `scripts/`, `docs/adr/` (the decision record — review-required even though it sits under the otherwise-safe `docs/`), `.github/`, `AGENTS.md`, and agent guidance directories `.agents/`, `.claude/`, `.codex/`, `.kilo/`.
+Sensitive paths: `.github/`, `.agents/`, `.claude/`, `.codex/`, `.kilo/`,
+`scripts/`, `src/memoria_vault/runtime/policy/`,
+`src/memoria_vault/runtime/subsystems/`, `vault-template/.memoria/`,
+`docs/adr/` (the decision record — review-required even though it sits under
+the otherwise-safe docs tree), and `AGENTS.md`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately. On
@@ -252,8 +253,6 @@ No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the f
 
 Don't explain what the code does — well-named identifiers already do that. Don't reference the task, PR, or caller ("added for X", "used by Y").
 
-Section dividers (`# --- Label ---`) are acceptable in files over ~200 lines when they mark a genuine logical boundary. In short files or before a function that already has a docstring, they are noise — remove them.
-
 Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE001 -- config load with import-inside-try; degrade to default`.
 
 **Line length** — 100 characters (`ruff format`, `pyproject.toml`). The formatter owns layout; don't fight it.
@@ -263,8 +262,8 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
-- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules (ADR-44).
-- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in live Hermes runtime smoke when prerequisites are available.
+- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules.
+- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/install.sh --yes --no-apps --vault ~/Memoria-test` — never test against the real `~/Memoria`.
 
@@ -313,9 +312,6 @@ the manual security review and is a first line against the "never commit
 - **Scheduled wrappers:** shared wrappers live under
   `vault-template/.memoria/scripts/` and call the CLI/runtime package. A local
   scheduler may invoke them, but no scheduler is required for one-shot CLI use.
-- **Secrets:** provider keys live in operator-owned local config or environment
-  files and gitignored workspace files shipped only as `.example`. Never commit a
-  real key.
 - **Build state & gaps:** check open [issues](https://github.com/eranroseman/memoria-vault/issues)
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.
@@ -357,16 +353,23 @@ Mixed-purpose pages are wrong — split them.
 
 - **Links:** `docs/` files → relative links; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
   - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
+  - Never relative-link into `src/` from a published page — those paths 404 on the site. Cite a source file as an **inline-code path** (`` `vault-template/.memoria/…` ``), or an absolute tag-pinned `blob/<tag>/…` URL only when a click genuinely adds value.
+  - **ADR references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as **title-text links** — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
-- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); link in-text mentions to `[bibliography.md#anchor](../reference/bibliography.md#anchor)`.
+- **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
 - **Spelling:** American English only — `-ize`/`-or` endings, not `-ise`/`-our` (write "behavior", "normalize"). `cspell` is the gate. Never suppress a flag with an inline `<!-- cspell:words … -->` / `<!-- cspell:ignore … -->` tag — for each unknown word, either **reword the prose** or, if it's a real term (proper noun, tool name, code token, jargon), **add it to `project-words.txt`** (one lowercase word per line, sorted; a lowercase entry matches every casing).
 
 ### ADR template (`docs/adr/`)
 
-ADRs are the **single home for every decision, at any lifecycle status** — there is no
-separate proposals/RFC folder. An open proposal is an ADR with `status: proposed`;
-accepted future direction is `status: accepted` even when implementation is later.
+ADRs are the **single home for every live decision** — there is no separate
+proposals/RFC folder. An open proposal is an ADR with `status: proposed`; accepted
+future direction is `status: accepted` even when implementation is later; a
+considered-and-declined option is `status: rejected`. There is no `superseded`
+status: a replaced decision's ADR is **deleted** so only live decisions sit on
+`main`. Its successor records what it absorbed via `supersedes:` and prose; the
+original — with its `superseded_by`/`supersedes` lineage — stays recoverable in git
+history for later investigation.
 Scheduling and readiness live in GitHub issues, not ADR status. Every proposed ADR
 gets a linked GitHub issue in the Memoria Issue Tracker, normally `Status: Backlog`
 and `Readiness: Needs shaping`; when a decision is accepted and implemented, its
@@ -379,7 +382,7 @@ open with the correct Readiness. Full template + nav fields in
 topic: decisions
 id: <NN>
 title: <Short title>
-status: proposed | accepted | rejected | superseded
+status: proposed | accepted | rejected
 date_proposed: YYYY-MM-DD
 date_resolved: YYYY-MM-DD
 assumes: []          # ADR/mechanism deps — so a change that invalidates this is detectable
@@ -412,10 +415,7 @@ Readiness lives only in the **"Release <version>" parent issue and its readiness
 sub-issues**. Version, changelog, tag, and GitHub Release are owned by
 release-please. Use the portable [release playbook](.agents/playbooks/release.md)
 and [release plan template](.agents/templates/release-plan.md) to draft issue
-prose; do not create a repository release-plan folder. In-work release design
-notes may live on the `scratch` branch under `scratch/releases/<version>/`
-while shaping a release, but they are deleted before that release/checkpoint is
-done.
+prose; do not create a repository release-plan folder.
 
 ---
 
@@ -429,7 +429,6 @@ done.
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
 | Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
-| In-work release design notes | `scratch` branch, under `scratch/releases/<version>/` while shaping a release; delete before release/checkpoint completion |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -439,7 +438,6 @@ done.
   ADRs link closed `Done` issues or an explicit open implementation issue; superseded
   ADR bundles link their replacement ADRs and close any replaced umbrella issues.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
-- Reports: a **durable** analysis behind a decision goes **into the ADR** (`docs/adr/`, `status: proposed` until decided); **in-work release design scratch** goes on the `scratch` branch under `scratch/releases/<version>/` until the release/checkpoint closes; **transient personal notes** go in `_notes/` (gitignored) — never the repo root.
 
 ---
 

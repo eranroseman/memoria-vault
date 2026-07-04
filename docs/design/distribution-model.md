@@ -67,7 +67,7 @@ standalone `memoria` CLI and engine are the product surface. Optional future
 adapters may call the same CLI/engine, but they are not the source of truth for
 capabilities and they do not belong in the runtime vault bootstrap.
 
-The absence is test-pinned by [Installed profiles](../reference/profile-capabilities.md) and
+The absence is test-pinned by Installed profiles and
 `scripts/alpha14_negative_gate.py`.
 
 ---
@@ -85,6 +85,6 @@ the write path.
 ## Related
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)
-- The decisions: [ADR-125](../adr/125-standalone-cli-engine-architecture.md), [ADR-26](../adr/26-repo-as-install-unit.md)
+- The decisions: [ADR-125](../adr/125-standalone-cli-engine-architecture.md), [ADR-125](../adr/125-standalone-cli-engine-architecture.md)
 - Capability reference: [Operations](../reference/operations.md)
 - On-disk layout reference: [On-disk layout](../reference/on-disk-layout.md)

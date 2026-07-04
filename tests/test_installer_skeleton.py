@@ -1,4 +1,4 @@
-"""The installer skeleton cannot drift from the schema home (ADR-55 risk control)."""
+"""The installer skeleton cannot drift from the schema home (ADR-125 risk control)."""
 
 import re
 import subprocess

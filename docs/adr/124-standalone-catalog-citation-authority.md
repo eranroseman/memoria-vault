@@ -45,6 +45,11 @@ cannot satisfy the digest gate.
 - Zotero users should still pin Better BibTeX keys before exporting, because a
   changing citekey breaks human-facing aliases even though it no longer renames
   the Work.
+- The standard citekey shape is **`authoryearword`** — the Better BibTeX
+  formula `[auth.lower][year][shorttitle1_0]` produces `mamykina2010sense`
+  from a Mamykina 2010 paper: surname lowercase, four-digit year, first
+  significant title word via `shorttitle(1,0)` (one whole word — do **not**
+  substitute `condense:N`). (Absorbs ADR-06.)
 
 ## Alternatives considered
 
@@ -60,6 +65,6 @@ and cannot be the local source of truth.
 
 ## Related
 
-- Superseded decisions: [ADR-05 superseded Zotero bibliography authority](05-zotero-as-bibliographic-backbone.md) and [ADR-06 citekey naming convention](06-citekey-naming-convention.md)
+- Superseded decisions: ADR-05 (Zotero bibliography authority) and ADR-06 (citekey naming convention) — both absorbed here; originals in git history
 - Capture routing: [Ingest routing](../reference/ingest.md)
-- Installer decision: [ADR-55 source scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md)
+- Installer decision: [ADR-125 (standalone CLI + engine)](125-standalone-cli-engine-architecture.md)

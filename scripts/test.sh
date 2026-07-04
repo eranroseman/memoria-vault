@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Memoria local test runner — the bottom of the test pyramid (ADR-29).
+# Memoria local test runner — the bottom of the test pyramid.
 #
 #   static   formatting, lint, schema, docs refs, ADR index, workflow safety.
 #   unit     deterministic Python behavior.
@@ -25,7 +25,7 @@ pytest_level() {
   label="$1"
   expr="$2"
   echo "── $label (pytest: $expr) ──"
-  # ADR-44: L1 tests live in tests/, run by pytest, instead of inline --self-test.
+  # L1 tests live in tests/, run by pytest, instead of inline --self-test.
   if python3 -c "import pytest" >/dev/null 2>&1; then
     run env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ -q -m "$expr"
   else

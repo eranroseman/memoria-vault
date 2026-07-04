@@ -28,4 +28,4 @@ make Obsidian a required product surface.
 
 - On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)
 - CLI reference: [Memoria CLI](../../reference/cli.md)
-- Current welcome-note decision: [ADR-115](../../adr/115-inbox-queue-and-retired-homepage.md)
+- Current welcome-note decision: [ADR-130](../../adr/130-read-api-surfaces-and-copi.md)

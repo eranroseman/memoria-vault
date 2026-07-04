@@ -61,5 +61,4 @@ This asymmetry is intentional: the vault file is the spec; consumers are subordi
 
 - The visual discipline this system enables: [Visual discipline](visual-discipline.md)
 - The callout types and their fixed three-color palette: [Callouts](../explanation/obsidian/callouts.md)
-- Obsidian plugin inventory: [Obsidian plugins](../reference/obsidian-plugins.md)
 - Vault implementation file: `.memoria/design-system.md`

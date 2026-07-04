@@ -52,4 +52,3 @@ state, SQLite state, or provider config between workspaces.
 
 - Full install walkthrough: [Set up the vault](set-up-the-vault.md)
 - Runtime layout: [On-disk layout](../../reference/on-disk-layout.md)
-- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)

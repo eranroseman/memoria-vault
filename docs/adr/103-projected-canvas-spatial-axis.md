@@ -83,9 +83,9 @@ therefore the shipped posture. It may become too narrow for dense argument revie
   spatial sense-making, and direct relation authoring.
 - **Files affected:** future projection engine/registry, `projects/` pages,
   Canvas projection tests, and relation-authoring docs.
-- **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md),
-  [ADR-79](79-argument-graph-and-warrant.md),
-  [ADR-83](83-direct-pi-relate-control.md),
-  [ADR-102](102-disposable-projection-engine.md),
-  [ADR-116](116-obsidian-surface-architecture.md).
+- **Related decisions / Depends on:** [ADR-126](126-four-type-knowledge-model.md),
+  [ADR-126](126-four-type-knowledge-model.md),
+  [ADR-126](126-four-type-knowledge-model.md),
+  [ADR-130](130-read-api-surfaces-and-copi.md),
+  [ADR-130](130-read-api-surfaces-and-copi.md).
 - **Tracking issue:** [#721](https://github.com/eranroseman/memoria-vault/issues/721).

@@ -95,6 +95,10 @@ ADR-125 the engine is the product and every surface is a client.
 - **The tutorial arc principle carries** (112): one destination-first
   deliverable-driven arc, rebuilt against the CLI/read-API surfaces at the 15
   docs pass.
+- **obsidian-linter is incompatible — do not install** (absorbs 12): frontmatter
+  has one authority and no second formatter may mutate audited zones; whole-folder
+  exclusion can't protect drafts that agents and humans both edit, so no config
+  makes the plugin safe to run alongside Memoria.
 
 ## Consequences
 

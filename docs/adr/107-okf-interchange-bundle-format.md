@@ -23,13 +23,13 @@ total: OKF's *Concept* is a typed markdown document (a tangible asset or an
 abstract idea), its *Concept ID* is the file path minus `.md`, relationships are
 markdown links, and it reserves `index.md` (progressive disclosure) and `log.md`
 (history). That an external, vendor-backed spec landed on the same shape is
-validation of [ADR-119](119-schema-driven-document-creation.md) /
-[ADR-26](26-repo-as-install-unit.md), but it also names a contract Memoria lacks.
+validation of [ADR-126](126-four-type-knowledge-model.md) /
+[ADR-125](125-standalone-cli-engine-architecture.md), but it also names a contract Memoria lacks.
 
 Memoria's **outbound** layer is its least-defined. The Path-4 open-artifact
 release is deferred ([ADR-20](20-publication-path.md)); navigation spaces
 ([ADR-101](101-navigation-spaces-gate-reserved-for-approval.md)) and the
-disposable projection engine ([ADR-102](102-disposable-projection-engine.md))
+disposable projection engine ([ADR-130](130-read-api-surfaces-and-copi.md))
 produce views with no *named, runtime-independent* serialization. OKF supplies
 exactly that missing unit: the **Knowledge Bundle**, "the primary unit of
 distribution," consumable without Memoria's gates, MCPs, or Hermes runtime.
@@ -39,7 +39,7 @@ permissive consumption — "Consumers MUST NOT reject a bundle because of missin
 optional fields, unknown `type` values, or broken cross-links" — and holds that "the
 specific kind of relationship is conveyed by the surrounding prose, not by the link
 itself." Memoria deliberately rejected prose-typed relationships in favor of typed
-edges ([ADR-52](52-links-vs-relationships.md)) because graph queries need the type *on*
+edges ([ADR-126](126-four-type-knowledge-model.md)) because graph queries need the type *on*
 the edge, and it enforces strict schemas, controlled vocabularies, and category-error
 rejection in the Linter. OKF is therefore a fit for the **boundary**, not the core.
 
@@ -54,23 +54,23 @@ concept; the projection's folder tree → the bundle tree; the bundle's root
 `index.md` declares `okf_version`. The export is **lossy by contract**, and the
 loss is documented, not hidden:
 
-- typed `links:` / `relationships:` ([ADR-52](52-links-vs-relationships.md))
+- typed `links:` / `relationships:` ([ADR-126](126-four-type-knowledge-model.md))
   collapse to untyped markdown links, with the relation type emitted as prose per
   OKF convention — graph-queryable typing does not survive the round trip;
 - `check_status` and type-specific workflow state
-  ([ADR-119](119-schema-driven-document-creation.md)) survive only as custom
+  ([ADR-126](126-four-type-knowledge-model.md)) survive only as custom
   frontmatter that conformant consumers may ignore;
 - the bundle carries no gate, no Linter, and no MCP surface — it is inert data.
 
 The serialization runs through the projection engine's reconciliation and failure
-model ([ADR-102](102-disposable-projection-engine.md)) rather than as a bespoke
+model ([ADR-130](130-read-api-surfaces-and-copi.md)) rather than as a bespoke
 emitter; bundles are disposable consumer-only artifacts, not a second source of
 truth.
 
 **Import.** An external OKF bundle may be ingested as a new source type through the
-deterministic pipeline ([ADR-30](30-deterministic-ingest-pipeline.md)). OKF
+deterministic pipeline ([ADR-129](129-layered-machine-judgment.md)). OKF
 concepts enter as candidate material subject to the normal write/link gates
-([ADR-28](28-write-gate-as-plugin.md)) — Memoria's tolerance of OKF's permissiveness
+([ADR-125](125-standalone-cli-engine-architecture.md)) — Memoria's tolerance of OKF's permissiveness
 stops at ingest; nothing from a foreign bundle reaches a canonical surface ungated.
 
 **Conventions borrowed outright.** Independently of the bundle contract, Memoria
@@ -111,8 +111,8 @@ that already matches the substrate.
 
 **Adopt OKF's permissiveness internally** (untyped prose relationships, tolerate
 unknown types, never reject). Rejected outright: it is the inverse of the typed-edge
-and structural-gate thesis ([ADR-52](52-links-vs-relationships.md),
-[ADR-28](28-write-gate-as-plugin.md)) — Memoria is deliberately *ahead* of OKF here.
+and structural-gate thesis ([ADR-126](126-four-type-knowledge-model.md),
+[ADR-125](125-standalone-cli-engine-architecture.md)) — Memoria is deliberately *ahead* of OKF here.
 
 **Export only, no import.** Viable as a first slice, but the inbound direction is
 near-free given the format symmetry and positions Memoria to consume the broader OKF
@@ -123,16 +123,16 @@ corpus; deferring it is a sequencing choice, not a different decision.
 - **Workflows affected:** publication / open-artifact release, navigation-space
   export, OKF-bundle ingest.
 - **Files affected:** future OKF (de)serializer under `vault-template/.memoria/operations/`,
-  the projection registry ([ADR-102](102-disposable-projection-engine.md)), the
-  ingest pipeline source-type registry ([ADR-30](30-deterministic-ingest-pipeline.md)),
+  the projection registry ([ADR-130](130-read-api-surfaces-and-copi.md)), the
+  ingest pipeline source-type registry ([ADR-129](129-layered-machine-judgment.md)),
   schema/Linter conformance for emitted bundles.
 - **Related decisions / Depends on:**
-  [ADR-26](26-repo-as-install-unit.md),
-  [ADR-30](30-deterministic-ingest-pipeline.md),
-  [ADR-52](52-links-vs-relationships.md),
+  [ADR-125](125-standalone-cli-engine-architecture.md),
+  [ADR-129](129-layered-machine-judgment.md),
+  [ADR-126](126-four-type-knowledge-model.md),
   [ADR-101](101-navigation-spaces-gate-reserved-for-approval.md),
-  [ADR-102](102-disposable-projection-engine.md),
-  [ADR-119](119-schema-driven-document-creation.md);
+  [ADR-130](130-read-api-surfaces-and-copi.md),
+  [ADR-126](126-four-type-knowledge-model.md);
   serves the deferred Path-4 release of [ADR-20](20-publication-path.md).
 - **Reference:** Open Knowledge Format (OKF) v0.1 draft —
   `GoogleCloudPlatform/knowledge-catalog`, `okf/SPEC.md`.

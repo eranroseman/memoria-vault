@@ -84,8 +84,8 @@ portable BibTeX/CSL exports are file inputs.
 
 ## Related
 
-- Operation postures that use these methods: [Librarian](../explanation/profiles/librarian.md),
-  [Peer-reviewer](../explanation/profiles/peer-reviewer.md), and
+- Operation postures that use these methods: [Librarian](../explanation/operation-postures/librarian.md),
+  [Peer-reviewer](../explanation/operation-postures/peer-reviewer.md), and
   [Operations - the deterministic layer](../explanation/operations.md)
   (Linter, retrieval, sweeps)
 - Why deterministic methods: [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md)

@@ -75,7 +75,8 @@ Memoria is a **standalone local CLI + engine**, single-user, no daemon.
   checks, and read barrier fail closed on any internal error; a logged denial
   is policy, silence is wiring.
 - **Windows-native production and the layered test gates survive unchanged**
-  (ADR-64, ADR-29, ADR-44 are not superseded).
+  (ADR-64 is not superseded; the layered test gates are now the AGENTS.md test
+  conventions).
 
 ## Consequences
 

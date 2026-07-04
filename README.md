@@ -22,8 +22,7 @@ request envelope, checks, quarantine, and read barrier before they are trusted.
 ---
 
 For the system model, start at [Home](docs/README.md). For the command surface,
-see [CLI](docs/reference/cli.md); for the no-installed-profile boundary, see
-[Installed profiles](docs/reference/profile-capabilities.md).
+see [CLI](docs/reference/cli.md).
 
 ## How it works
 

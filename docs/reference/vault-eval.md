@@ -25,7 +25,7 @@ runtime eval operation can run and score it with nothing but the file.
 | `title` | str | The request title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-48](../adr/48-copi-and-agent-consolidation.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
+| `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
@@ -47,7 +47,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 
 ## Dispatch
 
-`memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([ADR-30](../adr/30-deterministic-ingest-pipeline.md) discipline).
+`memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([ADR-129](../adr/129-layered-machine-judgment.md) discipline).
 
 - One local eval task plan per `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
@@ -113,7 +113,6 @@ and uses `eval_score --from-json` once result payloads exist.
 ## Related
 
 - The decision: [ADR-11](../adr/11-vault-eval-maintenance.md)
-- The operation/posture boundary: [Installed profiles](profile-capabilities.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](installer.md)

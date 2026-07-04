@@ -64,5 +64,4 @@ sync completes; check Git/sync status before blaming retrieval.
 
 - Safe mode: [Safe mode](../troubleshooting/safe-mode.md)
 - Rebuild search index: [Rebuild the search index](../operate/rebuild-the-search-index.md)
-- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)
 - Failure catalog: [Failure modes](../../reference/failure-modes.md)

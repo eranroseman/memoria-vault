@@ -45,7 +45,7 @@ Vault · Optional adapters ([ADR-125](../adr/125-standalone-cli-engine-architect
 [ADR-130](../adr/130-read-api-surfaces-and-copi.md)): PI intent enters through
 the CLI or observed file edits, the engine owns request/write/recovery state,
 and adapters are presentation layers over the same contracts. The older
-seven-layer architecture is historical context in [ADR-46](../adr/46-seven-layer-architecture.md).
+seven-layer architecture is historical context in [ADR-125](../adr/125-standalone-cli-engine-architecture.md).
 
 **Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
 `journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
@@ -83,7 +83,7 @@ Maintenance.
 **System dashboard** — one of the read-only, Dataview-backed notes in
 `system/dashboards/`; the spaces and Maintenance carry the action surfaces.
 
-**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-115](../adr/115-inbox-queue-and-retired-homepage.md)).
+**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-130](../adr/130-read-api-surfaces-and-copi.md)).
 
 ---
 
@@ -96,7 +96,7 @@ payloads may narrow that scope, but never widen it.
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
-**Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Kanban board reference](kanban-board.md).
+**Handoff payload** — the self-contained block that provisions the next worker; its fields are specified in the [Control plane reference](control-plane.md).
 
 **Task/request** — a unit of work represented by a SQLite request row. Attention
 projections are PI-facing views over work that needs review.
@@ -142,7 +142,7 @@ SQLite. Prefer the precise field name over a bare "state".
 
 **Audit log** — the append-only JSONL trail of every policy decision at `system/logs/audit.jsonl`. Feeds the audit-log dashboard.
 
-**Extraction-uncertainty flag** — the near-tie rule ([ADR-56](../adr/56-extraction-uncertainty-flag.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
+**Extraction-uncertainty flag** — the near-tie rule ([ADR-129](../adr/129-layered-machine-judgment.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails
@@ -164,4 +164,4 @@ closed when adapter policy is missing. See [Policy gate](policy-mcp.md).
 
 - Frontmatter fields these terms name: [Frontmatter fields](frontmatter.md)
 - The document types referenced throughout: [Document types](document-types.md)
-- Request-control terms: [Kanban board reference](kanban-board.md)
+- Request-control terms: [Control plane reference](control-plane.md)

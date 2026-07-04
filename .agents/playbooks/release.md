@@ -25,9 +25,8 @@ Do not create a second markdown state table for gate or stage progress.
 > `RELEASE_PLEASE_TOKEN` secret, **not** the default `GITHUB_TOKEN` (whose PRs do not
 > trigger the required checks, so a release PR can never go green). Scopes, rationale, and
 > the rotate-before-expiry rule live in the workflow comments
-> ([`.github/workflows/release-please.yml`](../../.github/workflows/release-please.yml)) and
-> [ADR-75](../../docs/adr/75-github-project-fields-and-release-sub-issues.md) — releases break *silently* if the
-> PAT lapses.
+> ([`.github/workflows/release-please.yml`](../../.github/workflows/release-please.yml)) —
+> releases break *silently* if the PAT lapses.
 
 ## 2. Start a release
 

@@ -65,5 +65,5 @@ trusted worker plus staging, read barrier, quarantine, journal, and git history.
 ## Where to go next
 
 - **Why the architecture is layered**, and the research behind it → [Why the architecture is layered](../../design/why-layered-architecture.md)
-- **The operation postures** -> [Operation postures](../profiles/README.md)
+- **The operation postures** -> [Operation postures](../operation-postures/README.md)
 - **The deterministic operations** -> [Operations](../operations.md)

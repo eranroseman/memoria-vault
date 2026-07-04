@@ -25,7 +25,7 @@ The distribution mechanism is `vault-template/` plus the installed Memoria packa
 | Populate | Copy system files from `vault-template/`. |
 | Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, install the Memoria package, and register qmd search. |
 
-Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md); the no-installed-profile contract is [Installed profiles](../reference/profile-capabilities.md).
+Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md).
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately
 *left* the installer — it is an optional import/export adapter, not core
@@ -82,6 +82,6 @@ Each trades breadth for less installer code:
 ## Related
 
 - **Reference:** [Installer (bootstrap)](../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
-- **Decisions:** [ADR-125](../adr/125-standalone-cli-engine-architecture.md) (standalone CLI + engine), [ADR-26](../adr/26-repo-as-install-unit.md) (historical repo install unit).
-- **Design:** [Distribution model](distribution-model.md), [Hermes boundary](why-hermes.md).
+- **Decisions:** [ADR-125](../adr/125-standalone-cli-engine-architecture.md) (standalone CLI + engine; absorbs the former repo-as-install-unit decision).
+- **Design:** [Distribution model](distribution-model.md), Hermes boundary.
 - **How-to:** [Quickstart](../how-to-guides/setup/quickstart.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).

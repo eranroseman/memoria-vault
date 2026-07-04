@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""schema — loader + validator for the canonical type schemas (ADR-49/ADR-50).
+"""schema — loader + validator for the canonical type schemas (ADR-122/ADR-50).
 
 `.memoria/schemas/` is the single source for the vault's document-type vocabulary
 (ADR-47): per-type frontmatter schemas (`types/<type>.yaml`), the type→folder

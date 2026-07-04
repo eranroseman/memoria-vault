@@ -42,7 +42,7 @@ Memoria treats the following analysis harnesses as the approved direction:
   and board history to materialize the historical fleet-health dashboard — per-lane
   and per-skill cost, success rate, retry rate, and latency on
   daily/weekly/monthly cadence. Alpha.14 removed this shipped fleet surface; the
-  current boundary is [Fleet metrics](../reference/fleet-metrics.md). This slice
+  current boundary is Fleet metrics. This slice
   was built as `metrics_aggregate.py` and the `memoria-metrics` cron wrapper.
 - **Propagation debts re-eval queue.** When a high-traffic note changes (claim promoted to `evergreen`, reference updated, paper retracted), enumerate the dependents needing re-evaluation and record them as a readable queue in the Linter's report. The human works the queue; the agent never rewrites dependents.
 - **LLM-judge `prose-check` export gate.** At export time only, a `prose-check` command scores the manuscript on a small fixed rubric (argument coherence, voice consistency, citation grounding) and attaches a report to the export card. It never auto-edits, never blocks export, and never runs against synthesis — the human reads it and decides whether to revise.
@@ -82,7 +82,7 @@ standalone emitter is scheduled and documented.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-11 vault-eval as a maintenance capability](11-vault-eval-maintenance.md) (the diagnostic-not-gating discipline and the eval surface these harnesses report through); [ADR-20 publication path](20-publication-path.md) (the six-signal capture these harnesses read, already adopted); [ADR-41 configurable review-gate mode](41-configurable-review-gate-mode.md) (the export/review gate the `prose-check` capability attaches to).
+- **Related decisions / Depends on:** [ADR-11 vault-eval as a maintenance capability](11-vault-eval-maintenance.md) (the diagnostic-not-gating discipline and the eval surface these harnesses report through); [ADR-20 publication path](20-publication-path.md) (the six-signal capture these harnesses read, already adopted); [ADR-128 (no write-time correctness oracle)](128-no-write-time-correctness-oracle.md) (the export/review gate the `prose-check` capability attaches to).
 - **Source discussion:** [Telemetry & logs](../reference/telemetry.md).
 - **Tracking issues:** [#412](https://github.com/eranroseman/memoria-vault/issues/412)
   — cadence review for the harness family;

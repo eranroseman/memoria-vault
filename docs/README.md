@@ -103,10 +103,10 @@ Design Book foundations, then the Explanation pages in this order.
 6. [The vault](explanation/architecture/vault.md) — how knowledge is laid out on disk
 7. [Document types and epistemic roles](explanation/knowledge/document-types.md) — the data model
 8. [The memory model](explanation/architecture/memory-model.md) — what persists, and why the workspace is durable memory
-9. [Operation postures](explanation/profiles/README.md) — how old profile language maps to requests and operations
+9. [Operation postures](explanation/operation-postures/README.md) — how old profile language maps to requests and operations
 10. [Operations](explanation/operations.md) — the deterministic and checked operation layer
-11. [The control plane](explanation/kanban-board/README.md) — request state, attention, and review boundaries
-12. [Decision points](explanation/kanban-board/decision-points.md) — how approvals, prompts, worklists, and triggers differ
+11. [The control plane](explanation/control-plane/README.md) — request state, attention, and review boundaries
+12. [Decision points](explanation/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
 14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
 15. [Design Book](design/README.md) — why each major decision went the way it did
@@ -121,7 +121,7 @@ Design Book foundations, then the Explanation pages in this order.
 ## Common tasks
 
 **First session**
-[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · [Reset workspace](how-to-guides/using-obsidian/reset-workspace.md)
+[Quickstart](how-to-guides/setup/quickstart.md) · [Set up the vault](how-to-guides/setup/set-up-the-vault.md) · Reset workspace
 
 **Daily work — sources**
 [Capture and ingest](how-to-guides/library/capture-and-ingest.md) · [Discuss a paper](how-to-guides/library/discuss-a-paper.md)
@@ -149,7 +149,7 @@ Design Book foundations, then the Explanation pages in this order.
 
 Deterministic **operations** do the mechanical work, behind the policy gate.
 
-→ [Operation-posture rationale](explanation/profiles/README.md) · [No-installed-profile contract](reference/profile-capabilities.md)
+→ [Operation-posture rationale](explanation/operation-postures/README.md) · No-installed-profile contract
 
 ---
 

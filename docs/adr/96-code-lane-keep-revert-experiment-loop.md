@@ -55,5 +55,5 @@ safe scalar metric and reversible success semantics.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md).
+- **Related decisions / Depends on:** [ADR-128](128-no-write-time-correctness-oracle.md).
 - **Tracking issue:** [#709](https://github.com/eranroseman/memoria-vault/issues/709).

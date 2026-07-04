@@ -70,4 +70,3 @@ rollback/history assumptions cannot run.
 ## Related
 
 - Optional UI adapter: [Set up Obsidian](set-up-obsidian.md)
-- No installed profiles: [Installed profiles](../../reference/profile-capabilities.md)

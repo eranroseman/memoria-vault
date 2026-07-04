@@ -21,6 +21,20 @@ from memoria_vault.runtime.worker import enqueue_operation, run_next_job
 from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
 
 
+@pytest.fixture(autouse=True)
+def _no_ambient_provider_keys(monkeypatch):
+    """Keep enrichment tests hermetic against the developer's environment.
+
+    Semantic Scholar is an optional provider that is ``default_on_when_keyed:
+    SEMANTIC_SCHOLAR_API_KEY`` (``providers.yaml``). If that key is exported in a
+    contributor's shell, ``enrich-source`` fetches it live, so the single-``urlopen``
+    mocks below (which ``assert timeout == 20`` for the full-text fetch) trip on the
+    provider call. CI has no key and passes; clear it so local runs match. Tests that
+    exercise keying set it explicitly afterwards.
+    """
+    monkeypatch.delenv("SEMANTIC_SCHOLAR_API_KEY", raising=False)
+
+
 def sha_text(text: str) -> str:
     return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
 

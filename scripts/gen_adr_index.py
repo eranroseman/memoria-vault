@@ -30,7 +30,7 @@ END = "<!-- ADR-INDEX:END -->"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 ADR_FILE_RE = re.compile(r"^\d+-.+\.md$")
-ADR_STATUSES = {"proposed", "accepted", "rejected", "superseded"}
+ADR_STATUSES = {"proposed", "accepted", "rejected"}
 REQUIRED_KEYS = (
     "topic",
     "id",
@@ -43,7 +43,7 @@ REQUIRED_KEYS = (
     "supersedes",
     "superseded_by",
 )
-RESOLVED_STATUSES = {"accepted", "rejected", "superseded"}
+RESOLVED_STATUSES = {"accepted", "rejected"}
 UNRESOLVED_STATUSES = {"proposed"}
 
 
@@ -117,8 +117,6 @@ def validate_adr(path: Path, adr: dict[str, object]) -> list[str]:
         errs.append(f"{rel}: {status} ADR must set date_resolved")
     if status in UNRESOLVED_STATUSES and date_resolved:
         errs.append(f"{rel}: {status} ADR must leave date_resolved blank")
-    if status == "superseded" and not adr.get("superseded_by"):
-        errs.append(f"{rel}: superseded ADR must set superseded_by")
     return errs
 
 

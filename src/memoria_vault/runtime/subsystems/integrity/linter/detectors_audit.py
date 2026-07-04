@@ -80,7 +80,7 @@ def audit_unpaired_writes(vault: Path, max_age_h: float = 1.0) -> list[Finding]:
 def vault_hash_drift(vault: Path) -> list[Finding]:
     """A file's on-disk state no longer matches its last audited write.
 
-    Walks `system/logs/audit.jsonl` (append-only forever, ADR-25 -- so one walk
+    Walks `system/logs/audit.jsonl` (append-only forever, ADR-127 -- so one walk
     covers the full history; there are no rotated files to stitch) and keeps the
     *latest* `write_complete` record per path (last write wins). Each recorded
     `after_hash` is then compared to the current on-disk SHA-256, using the same
@@ -143,7 +143,7 @@ def vault_hash_drift(vault: Path) -> list[Finding]:
 
 
 def audit_log_size(vault: Path, max_mb: float = 50.0) -> list[Finding]:
-    """Advisory size check on the append-only-forever audit log (ADR-25).
+    """Advisory size check on the append-only-forever audit log (ADR-127).
 
     audit.jsonl is never rotated -- rotation would complicate the per-write
     pairing reads (audit_unpaired_writes), the hash-drift walk (vault_hash_drift),
@@ -162,7 +162,7 @@ def audit_log_size(vault: Path, max_mb: float = 50.0) -> list[Finding]:
             "LOW",
             "system/logs/audit.jsonl",
             f"audit log is {size_mb:.0f} MB (advisory threshold {max_mb:.0f} MB) "
-            f"-- append-only forever by design (ADR-25), so growth is "
+            f"-- append-only forever by design (ADR-127), so growth is "
             f"surfaced here, never rotated away",
         )
     ]

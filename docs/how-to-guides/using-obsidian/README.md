@@ -16,6 +16,3 @@ required UI, scheduler, model runner, operation API, or write-policy boundary.
 | --- | --- |
 | [Vault launch screen](use-the-vault-launch-screen.md) | Open the Markdown welcome note and space links |
 | [Navigate Memoria surfaces](navigate-memoria-surfaces.md) | Which Markdown space or CLI command to use for each situation |
-| [Reset workspace](reset-workspace.md) | What changed now that no saved editor workspace ships |
-| [Agent Client pane](use-the-agent-client-pane.md) | Why the pane is not part of alpha.15 |
-| [Command palette](obsidian-command-palette.md) | Why palette shortcuts are not part of alpha.15 |

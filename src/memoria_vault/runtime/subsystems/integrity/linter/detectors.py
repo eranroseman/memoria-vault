@@ -120,7 +120,7 @@ DATAVIEW_KEYWORDS = {
 # Only queries over these folders read *note frontmatter*; queries over the board
 # (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
 NOTE_FOLDERS = ("catalog", "knowledge")
-# Canonical schemas (ADR-49): when .memoria/schemas/ + PyYAML are available the
+# Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
 TYPE_SCHEMAS: dict | None = None
@@ -267,7 +267,7 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
     REPORT-ONLY by design: the human decides keep / promote / discard in the
     weekly review. Never auto-archive -- the most useful drafts are often the
     ones not yet gotten to, so silent archival would hide them exactly when
-    they're most likely to be needed. (Formerly proposed as ADR-3, answer-draft
+    they're most likely to be needed. (Formerly proposed as ADR-128, answer-draft
     retention; realized here as a report-only check rather than a decision.)"""
     out, cutoff = [], time.time() - days * 86400
     folder = vault / "inbox" / "_answers"
@@ -341,7 +341,7 @@ _WIKI_VAL = re.compile(r"\[\[([^\]|#]+)")
 
 
 def frontmatter_link_check(vault: Path) -> list[Finding]:
-    """Authored connections must resolve (ADR-52): every wikilink inside the
+    """Authored connections must resolve (ADR-126): every wikilink inside the
     `links:` map and the `entity` field points at a real note. Citekeys in
     `sources` are bibliographic, not note links -- checked by the sweeps, not here."""
     notes = list(iter_notes(vault))
@@ -569,7 +569,7 @@ def misplaced_note(vault: Path) -> list[Finding]:
 
 
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
-    """A topic crossed the hub-creation threshold with no hub (ADR-19 Tier 1).
+    """A topic crossed the hub-creation threshold with no hub (ADR-126 Tier 1).
 
     Report-only: counts catalog Works and notes per topic/tag term and flags
     any term with >= `threshold` records that no existing hub already covers.

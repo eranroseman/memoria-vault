@@ -23,7 +23,7 @@ At the time of this decision, two analytics signals the publication path depends
 
 ## Decision
 
-Memoria captures both signals at points it controls, per machine ([ADR-104](104-telemetry-three-planes.md)):
+Memoria captures both signals at points it controls, per machine ([ADR-127](127-quarantine-and-verify-integrity.md)):
 
 - **Cost / tokens — from the Hermes session store.** A Memoria-side exporter (host tooling, not an agent toolset, so unaffected by the MCP-only sandbox) reads, per completed card, the run metadata exposed by `hermes kanban show <id> --json` (`runs[].metadata.worker_session_id`), joins it to the per-profile session store (`~/.hermes/profiles/<lane>/state.db`, `sessions` table), and emits a cost event carrying Hermes's already-priced figures: `input_tokens`, `output_tokens`, cache and reasoning tokens, `estimated_cost_usd`, and the provenance fields (`cost_source`, `billing_provider`, `pricing_version`). Memoria does **not** maintain its own pricing table — it records Hermes's estimate and its provenance. The session store is per-machine and unsynced, so this exporter runs on each machine that dispatches and writes that machine's partitioned cost events.
 - **Disposition — at the review action.** The accept / edit / reject outcome is a human decision taken in Obsidian, not an inference event. It is captured where the PI resolves a review (the board/QuickAdd review action), the same Memoria-controlled surface that already emits `attention` and `triage` — never inferred from a card-metadata overlay.
@@ -64,7 +64,7 @@ This matters as soon as the publication benchmark ([ADR-20](20-publication-path.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-20 (publication path)](20-publication-path.md) (the capture-now mandate these signals serve); [ADR-22 (build on the Hermes runtime)](22-build-on-hermes-runtime.md) (the runtime whose store is read); [ADR-104 (telemetry three planes)](104-telemetry-three-planes.md) (the analytics plane and per-machine partitioning).
+- **Related decisions / Depends on:** [ADR-20 (publication path)](20-publication-path.md) (the capture-now mandate these signals serve); [ADR-125 (standalone CLI + engine)](125-standalone-cli-engine-architecture.md) (the runtime whose store is read); [ADR-127 (quarantine-and-verify integrity)](127-quarantine-and-verify-integrity.md) (the analytics plane and per-machine partitioning).
 - **Files affected:** [`vault-template/.memoria/mcp/board_export.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/.memoria/mcp/board_export.py) (the exporter CLI/orchestrator) and [`vault-template/.memoria/mcp/board_export_cost.py`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/.memoria/mcp/board_export_cost.py) (the session-store join and cost doctor).
 - **Tracking issue:** [#737](https://github.com/eranroseman/memoria-vault/issues/737) — implementation readiness and Hermes cost doctor.
-- **Reference:** [Telemetry & logs](../reference/telemetry.md) (cost/disposition schemas and the corrected mechanism note); [Hermes CLI](../reference/hermes-cli.md).
+- **Reference:** [Telemetry & logs](../reference/telemetry.md) (cost/disposition schemas and the corrected mechanism note); Hermes CLI.
