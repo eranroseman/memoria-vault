@@ -40,8 +40,8 @@ Memoria commits to a **two-part publication strategy**:
   keeps only the standalone telemetry inventory and runtime state that actually
   ship.
 - **The de-risking is deliberate.** If within-vault citation-attribution numbers come out *worse* than public CiteME, the Verifier-as-gate thesis weakens — and we learn that before staking a system paper on it.
-- **n=1 operator data is accepted as a known weakness** of the later system-paper path, to be mitigated by detailed logging and a within-subject comparison arm (blocking vs. advisory review, see [ADR-41](41-configurable-review-gate-mode.md)) rather than by more operators.
-- **The novelty surface is fixed to a triad** — policy-MCP-enforced zone permissions, structurally blocking review state, and structural human-set claim supersession ([ADR-10](10-claim-supersession.md)) as the answer to the FAMA failure mode — plus the measurable knowledge-work consequences that only data can supply. We explicitly will **not** anchor a paper on the seven-profile design, the LLM-Wiki/Zettelkasten/Memex synthesis, or Obsidian-as-substrate; each is prior art or operational, not contributory.
+- **n=1 operator data is accepted as a known weakness** of the later system-paper path, to be mitigated by detailed logging and a within-subject comparison arm (blocking vs. advisory review, see [ADR-128](128-no-write-time-correctness-oracle.md)) rather than by more operators.
+- **The novelty surface is fixed to a triad** — policy-MCP-enforced zone permissions, structurally blocking review state, and structural human-set claim supersession ([ADR-129](129-layered-machine-judgment.md)) as the answer to the FAMA failure mode — plus the measurable knowledge-work consequences that only data can supply. We explicitly will **not** anchor a paper on the seven-profile design, the LLM-Wiki/Zettelkasten/Memex synthesis, or Obsidian-as-substrate; each is prior art or operational, not contributory.
 - A higher-novelty framing (Path 1′, vault-eval as the contribution rather than vault-CiteME as an instance) remains available and costs more fixture work; the choice between the two framings is left to paper-drafting time and does not change this decision.
 
 ## Alternatives considered
@@ -57,9 +57,9 @@ Memoria commits to a **two-part publication strategy**:
 ## Related
 
 - **Files affected:** [Telemetry & logs](../reference/telemetry.md) (the six-signal schemas and board-export prerequisite).
-- **Related decisions / Depends on:** [ADR-11 vault-eval](11-vault-eval-maintenance.md) (the eval program this paper instantiates); [ADR-10 claim supersession](10-claim-supersession.md) (the FAMA-exposure signal and a novelty-triad pillar); [ADR-03 structural review gate](03-structural-review-gate.md) (the blocking-review thesis the later system/position paper would test).
+- **Related decisions / Depends on:** [ADR-11 vault-eval](11-vault-eval-maintenance.md) (the eval program this paper instantiates); [ADR-129 (layered machine judgment)](129-layered-machine-judgment.md) (the FAMA-exposure signal and a novelty-triad pillar); [ADR-128 (no write-time correctness oracle)](128-no-write-time-correctness-oracle.md) (the blocking-review thesis the later system/position paper would test).
 - **Proposals:** [Measurement and verification harnesses](62-measurement-and-verification-harnesses.md)
-  (analysis harnesses, deferred); [ADR-41](41-configurable-review-gate-mode.md)
+  (analysis harnesses, deferred); [ADR-128](128-no-write-time-correctness-oracle.md)
   (the comparison arm); [ADR-106](106-cost-and-disposition-capture.md)
   (rejected Hermes/Obsidian cost-disposition path).
 - **Supporting rationale:** [Why Memoria doesn't pursue full autonomy](../design/why-not-autonomous.md), [Pattern provenance: borrow, adapt, ignore](../design/why-pattern-provenance.md), [Why the review gate is structural](../design/why-review-gate-is-structural.md), [Intellectual foundations](../design/intellectual-foundations.md).

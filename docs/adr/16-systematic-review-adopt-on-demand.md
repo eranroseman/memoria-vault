@@ -42,7 +42,7 @@ The reasoning is identical across all four:
 The candidate-note baseline is adjacent but **not** part of this deferred cluster — it was
 adopted into baseline 0.1.0 independent of any formal review, because the shared
 candidate schema pays off for everyday `find` on its own. The later
-[ADR-54](54-two-decision-kinds-batch-worklists.md) human-decision contract supersedes
+[ADR-128](128-no-write-time-correctness-oracle.md) human-decision contract supersedes
 the old candidate-note routing shape. This cluster's pre-ingest screening pipeline
 consumes the current attention-projection shape once *it* activates.
 

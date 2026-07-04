@@ -15,7 +15,7 @@ superseded_by: []
 
 ## Context
 
-The tiered ingest pipeline ([ADR-30](30-deterministic-ingest-pipeline.md)) prefers
+The tiered ingest pipeline ([ADR-129](129-layered-machine-judgment.md)) prefers
 pre-extracted full text (PMC, S2ORC, CORE, arXiv) and falls back to parsing a local
 Zotero PDF, with OCR as the last resort. The local-parse tier uses `pymupdf4llm`,
 which wraps PyMuPDF. Two properties of that choice are worth revisiting:
@@ -32,7 +32,7 @@ is a **Rust**, **Apache-2.0** document parser that runs entirely local — no cl
 no LLM, no API key — and emits Markdown with spatial layout, bounding boxes, and
 built-in Tesseract OCR. It parses PDF plus DOCX/XLSX/PPTX and PNG/JPG, and ships a
 Python binding. Its design statement is nearly a restatement of
-[ADR-30](30-deterministic-ingest-pipeline.md) / [ADR-32](32-external-access-over-mcp.md):
+[ADR-129](129-layered-machine-judgment.md) / [ADR-125](125-standalone-cli-engine-architecture.md):
 offline, deterministic, no model in the loop. This is the opposite of GROBID/Marker,
 which ADR-30 rejected as too heavy.
 
@@ -87,9 +87,9 @@ the AGPL obligation and the MuPDF parse surface in place.
 
 **LlamaParse or other cloud parsers.** Rejected: cloud, API-key, and (for LlamaParse)
 LLM-in-the-loop dependencies are incompatible with the offline-first stance of
-[ADR-30](30-deterministic-ingest-pipeline.md) and [ADR-32](32-external-access-over-mcp.md).
+[ADR-129](129-layered-machine-judgment.md) and [ADR-125](125-standalone-cli-engine-architecture.md).
 
 ## Related
 
-- **Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md),
-  [ADR-32](32-external-access-over-mcp.md).
+- **Depends on:** [ADR-129](129-layered-machine-judgment.md),
+  [ADR-125](125-standalone-cli-engine-architecture.md).

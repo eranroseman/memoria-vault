@@ -26,5 +26,5 @@ loop backfill checked Concepts.
 ## Historical context
 
 The retired tutorial rationale lives in
-[ADR-112](../adr/112-tutorial-destination-first-arc.md). It is historical
+[ADR-130](../adr/130-read-api-surfaces-and-copi.md). It is historical
 context only, not current product behavior.

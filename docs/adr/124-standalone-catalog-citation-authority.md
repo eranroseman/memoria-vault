@@ -60,6 +60,6 @@ and cannot be the local source of truth.
 
 ## Related
 
-- Superseded decisions: [ADR-05 superseded Zotero bibliography authority](05-zotero-as-bibliographic-backbone.md) and [ADR-06 citekey naming convention](06-citekey-naming-convention.md)
+- Superseded decisions: ADR-05 (Zotero bibliography authority, superseded — git history) and [ADR-06 citekey naming convention](06-citekey-naming-convention.md)
 - Capture routing: [Ingest routing](../reference/ingest.md)
-- Installer decision: [ADR-55 source scaffold, populate, golden copy](55-src-scaffold-populate-golden-copy.md)
+- Installer decision: [ADR-125 (standalone CLI + engine)](125-standalone-cli-engine-architecture.md)

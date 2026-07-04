@@ -48,5 +48,5 @@ once the claim graph becomes dense.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-52](52-links-vs-relationships.md), [ADR-79](79-argument-graph-and-warrant.md).
+- **Related decisions / Depends on:** [ADR-126](126-four-type-knowledge-model.md), [ADR-126](126-four-type-knowledge-model.md).
 - **Tracking issue:** [#711](https://github.com/eranroseman/memoria-vault/issues/711).

@@ -49,5 +49,5 @@ inbox flooding.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-48](48-copi-and-agent-consolidation.md).
+- **Related decisions / Depends on:** [ADR-128](128-no-write-time-correctness-oracle.md), [ADR-125](125-standalone-cli-engine-architecture.md).
 - **Tracking issue:** [#708](https://github.com/eranroseman/memoria-vault/issues/708).

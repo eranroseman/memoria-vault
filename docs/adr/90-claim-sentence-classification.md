@@ -46,5 +46,5 @@ review and context; the classifier only narrows the candidate set.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-54](54-two-decision-kinds-batch-worklists.md).
+- **Related decisions / Depends on:** [ADR-129](129-layered-machine-judgment.md), [ADR-128](128-no-write-time-correctness-oracle.md).
 - **Tracking issue:** [#703](https://github.com/eranroseman/memoria-vault/issues/703).

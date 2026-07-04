@@ -93,7 +93,7 @@ procedure lives in the release playbook.
 
 ## Why
 
-- The substrate of testing is *which behavior is asserted where* — the same reason the memory model is scoped substrates ([ADR-23](23-scoped-memory-substrates.md)). Without explicit gates, coverage erodes and nobody notices.
+- The substrate of testing is *which behavior is asserted where* — the same reason the memory model is scoped substrates ([ADR-125](125-standalone-cli-engine-architecture.md)). Without explicit gates, coverage erodes and nobody notices.
 - The pyramid pushes coverage to the cheapest layer that can assert it: a `--self-test` on every commit beats a manual GUI step per release.
 - Separating wiring (L0–L4) from quality (L5) keeps fast deterministic checks honest and quarantines the slow, judgement-heavy eval where it belongs.
 
@@ -128,7 +128,7 @@ L2 ("wiring / contract") splits at the **model boundary**, and the two halves be
 
 **Driver (resolved).** Hermes ships a scripted one-shot: `hermes -z "<prompt>"` (final text only, clean stdout/stderr) and `hermes chat -q` (same, but tool calls in the transcript — what L2b wants, to observe the write + the gate call). ACP is interactive/editor-only — **not** the automation path.
 
-**Backend (resolved).** L2b does **not** need Obsidian. In production the 5 non-code lanes write only through the `obsidian` MCP → Local REST API (`file` is absent from their positive `platform_toolsets`), but the gate is **transport-agnostic**: `policy_hook.classify` keys on the base tool-name + path at the `pre_tool_call` plugin layer ([ADR-28](28-write-gate-as-plugin.md)), gating `obsidian_*` and `file` `write_file`/`patch` identically — the REST transport itself is L3's contract (matrix #15), not L2's. So:
+**Backend (resolved).** L2b does **not** need Obsidian. In production the 5 non-code lanes write only through the `obsidian` MCP → Local REST API (`file` is absent from their positive `platform_toolsets`), but the gate is **transport-agnostic**: `policy_hook.classify` keys on the base tool-name + path at the `pre_tool_call` plugin layer ([ADR-125](125-standalone-cli-engine-architecture.md)), gating `obsidian_*` and `file` `write_file`/`patch` identically — the REST transport itself is L3's contract (matrix #15), not L2's. So:
 - **Option B (chosen for unattended).** A filesystem-backed `obsidian` MCP shim with the same tool names (`obsidian_append_content`/`patch_content`/`put_content`). Skills call the same tools, the gate fires unchanged, and allowed writes land on disk — no GUI, runs anywhere. The ADR-28 task_id objection to a wrapper MCP doesn't apply: the gate plugin still supplies task_id; the shim only executes the write.
 - **Option A (production-faithful variant).** Headless Obsidian (`xvfb-run`) on a self-hosted runner — exercises the real REST path, but heavy/flaky and overlaps L3 #15, so it doesn't gate L2b.
 - *(Rejected: re-enabling the `file` toolset — Memoria skills emit `obsidian_*`, so they'd break without an obsidian server.)*

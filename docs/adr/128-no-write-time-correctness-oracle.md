@@ -74,6 +74,10 @@ the second and ADR-127 removed the first:
   reproducibility). But "agents judge, PI approves" is replaced by "checks
   route, propagation protects, calibrated humans decide where they measurably
   help." No machine verdict is a gate by itself (ADR-129).
+- **From ADR-41, the review gate names the write mechanism, not board motion.**
+  The one structural stop that remains is at the write itself:
+  `src/memoria_vault/runtime/policy/decision.py` enforces that the
+  hard stop is at the write, never at kanban card advancement.
 
 ## Consequences
 

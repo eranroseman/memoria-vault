@@ -44,7 +44,9 @@ Inherited constants are initial knob positions, not experience.**
   baseline (cosine/BM25) on its fixture or it is disabled. NLI silence is
   never presented as "no contradiction."
 - **Supersession semantics** (10's mechanism, narrowed): the human sets
-  `superseded-by`; machine-proposed supersession is a candidate. Superseded/
+  `superseded-by`; machine-proposed supersession is a candidate. The default
+  retrieval query in `memoria_vault.runtime.search_index` sets
+  `include_stale=True` so superseded items stay retrievable. Superseded/
   retracted items are never presented as current but stay first-class
   retrievable and tagged — hard exclusion is rejected because cross-period
   queries need the historical baseline. Partial supersession rides the link's

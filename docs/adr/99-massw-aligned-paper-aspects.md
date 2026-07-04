@@ -59,5 +59,5 @@ is DB-owned in alpha.15, and derived fields should not churn authored files.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md).
+- **Related decisions / Depends on:** [ADR-129](129-layered-machine-judgment.md).
 - **Tracking issue:** [#712](https://github.com/eranroseman/memoria-vault/issues/712).

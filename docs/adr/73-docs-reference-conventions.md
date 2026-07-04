@@ -43,7 +43,7 @@ subject).
 
 ## Consequences
 
-- Source references survive the engines→operations rename ([ADR-69](69-operations-layer-naming.md)),
+- Source references survive the engines→operations rename ([ADR-125](125-standalone-cli-engine-architecture.md)),
   because inline-code paths and tag-pinned URLs don't depend on the live relative tree.
 - Cleaner prose; ADR traceability preserved without clutter.
 - Builds on [ADR-12](12-obsidian-linter-reference-only.md) (docs tooling is advisory);
@@ -63,8 +63,8 @@ aren't pinned to paths about to move.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-46](46-seven-layer-architecture.md),
-  [ADR-12](12-obsidian-linter-reference-only.md), [ADR-69](69-operations-layer-naming.md)
+- **Related decisions / Depends on:** [ADR-125](125-standalone-cli-engine-architecture.md),
+  [ADR-12](12-obsidian-linter-reference-only.md), [ADR-125](125-standalone-cli-engine-architecture.md)
 - **Implementing issues:** #464 (docs hygiene sweep), #443 (explanation pages describe
   unbuilt behavior)
 - **Source discussion:** the alpha.3 research notes (`open-issues-research` Issue 3,

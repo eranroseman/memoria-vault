@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn ADR-19 hub-threshold findings into map-proposal requests.
+"""Turn ADR-126 hub-threshold findings into map-proposal requests.
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those
 findings and creates a review-gated proposal handoff: an operation may draft a
@@ -50,7 +50,7 @@ def _expected_outputs(topic: str) -> str:
 def _context(finding: detectors.Finding, topic: str, count: int, threshold: int) -> str:
     return "\n".join(
         [
-            "ADR-19 Tier 2 handoff from the Linter hub-threshold detector.",
+            "ADR-126 Tier 2 handoff from the Linter hub-threshold detector.",
             f"Finding: {finding.message}",
             f"Topic: {topic}",
             f"Count: {count}; threshold: {threshold}",

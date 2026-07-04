@@ -47,5 +47,5 @@ method rationale outside the vault's schema and review discipline.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-119](119-schema-driven-document-creation.md), [ADR-57](57-engines-write-agents-judge.md).
+- **Related decisions / Depends on:** [ADR-126](126-four-type-knowledge-model.md), [ADR-128](128-no-write-time-correctness-oracle.md).
 - **Tracking issue:** [#701](https://github.com/eranroseman/memoria-vault/issues/701).

@@ -53,5 +53,5 @@ vocabulary discipline.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md).
+- **Related decisions / Depends on:** [ADR-129](129-layered-machine-judgment.md).
 - **Tracking issue:** [#706](https://github.com/eranroseman/memoria-vault/issues/706).

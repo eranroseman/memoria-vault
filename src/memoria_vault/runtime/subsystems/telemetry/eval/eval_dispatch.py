@@ -26,7 +26,7 @@ from pathlib import Path
 
 from memoria_vault.runtime.vaultio import parse_frontmatter, strip_frontmatter
 
-# eval role -> the local role label that owns it (ADR-48 §4.1).
+# eval role -> the local role label that owns it (ADR-125 §4.1).
 # Kept local so vault-eval can run without importing adapter or profile code.
 EVAL_ROLE_ASSIGNEE = {
     "catalog": "memoria-librarian",

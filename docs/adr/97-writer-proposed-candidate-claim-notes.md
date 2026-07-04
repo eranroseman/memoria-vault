@@ -50,5 +50,5 @@ manual even when provenance is clear.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-21](21-l3-autonomy-ceiling.md), [ADR-54](54-two-decision-kinds-batch-worklists.md).
+- **Related decisions / Depends on:** [ADR-128](128-no-write-time-correctness-oracle.md), [ADR-128](128-no-write-time-correctness-oracle.md).
 - **Tracking issue:** [#710](https://github.com/eranroseman/memoria-vault/issues/710).

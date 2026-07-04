@@ -52,5 +52,5 @@ identity merge needs deterministic evidence and review.
 
 ## Related
 
-- **Related decisions / Depends on:** [ADR-30](30-deterministic-ingest-pipeline.md), [ADR-122](122-sqlite-working-state-boundary.md).
+- **Related decisions / Depends on:** [ADR-129](129-layered-machine-judgment.md), [ADR-122](122-sqlite-working-state-boundary.md).
 - **Tracking issue:** [#707](https://github.com/eranroseman/memoria-vault/issues/707).
