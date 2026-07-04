@@ -126,5 +126,5 @@ verdicts remain diagnostic and never gate work; `eval select-models` gating a
 
 ## Related
 
-- Design §4/§7/§8/§9/§10/§14; ADR-127 (propagation), ADR-128 (disposition
-  telemetry the calibration reads).
+- ADR-127 (propagation), ADR-128 (disposition telemetry the calibration
+  reads).

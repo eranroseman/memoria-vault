@@ -118,6 +118,6 @@ ADR-125 the engine is the product and every surface is a client.
 
 ## Related
 
-- Design §1/§2/§5, Appendices H–J; ADR-128 (attention surface obligations);
-  exec-plan second wave (transports after the dogfood checkpoint; plugin
-  implementation requires a future adapter ADR).
+- ADR-125 (standalone runtime), ADR-128 (attention surface obligations).
+- Future adapter implementation, including any Obsidian plugin, requires its
+  own adapter ADR before scheduling.

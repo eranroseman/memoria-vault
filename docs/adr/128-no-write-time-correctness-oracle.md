@@ -98,5 +98,4 @@ the second and ADR-127 removed the first:
 
 ## Related
 
-- Design §S5 (principle, supersession record, terminology rule); ADR-127
-  (the machinery), ADR-129 (machine judgment stays proposer-only).
+- ADR-127 (the machinery), ADR-129 (machine judgment stays proposer-only).

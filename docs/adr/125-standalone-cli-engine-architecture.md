@@ -93,13 +93,11 @@ Memoria is a **standalone local CLI + engine**, single-user, no daemon.
   acknowledged and accepted as a cost, bounded by ADR-127's explicit contracts.
 - **Rust/Go/TypeScript engine** — rejected: NLI/embeddings/PDF-anchoring/
   scholarly-metadata are Python-native; every other choice embeds Python
-  anyway (design §S1).
+  anyway.
 - **ORM + migration framework** — rejected: the integrity schema is the
   product; single-user scale needs `.sql` + `user_version` only.
 
 ## Related
 
-- Design: `scratch/releases/0.1.0-alpha.15/0.1.0-alpha.15-design.md` §0–§S2,
-  §S6 (until scratch cleanup; then release notes).
 - ADR-126 (knowledge model), ADR-127 (integrity), ADR-128 (epistemics),
   ADR-129 (machine judgment), ADR-130 (surfaces).
