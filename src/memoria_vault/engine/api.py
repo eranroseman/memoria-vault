@@ -28,6 +28,7 @@ CONCEPT_HOMES = {
     "project": "knowledge/projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
+READ_API_VERSION = "engine-read-api.v1"
 
 
 def read_status(workspace: Path) -> dict[str, Any]:
@@ -36,11 +37,11 @@ def read_status(workspace: Path) -> dict[str, Any]:
         rows = conn.execute(
             "SELECT status, COUNT(*) AS count FROM operation_requests GROUP BY status"
         ).fetchall()
-    return {
-        "workspace": str(workspace),
-        "db": state.db_path(workspace).relative_to(workspace).as_posix(),
-        "requests": {row["status"]: row["count"] for row in rows},
-    }
+    return _read_payload(
+        workspace=str(workspace),
+        db=state.db_path(workspace).relative_to(workspace).as_posix(),
+        requests={row["status"]: row["count"] for row in rows},
+    )
 
 
 def read_operations(workspace: Path) -> dict[str, Any]:
@@ -57,7 +58,7 @@ def read_operations(workspace: Path) -> dict[str, Any]:
                 "runner": row.get("runner") or "",
             }
         )
-    return {"ok": True, "operations": operations}
+    return _read_payload(operations=operations)
 
 
 def read_requests(
@@ -79,7 +80,7 @@ def read_requests(
             for row in conn.execute(sql, params)
             if _request_in_scope(row, read_scope, require_all=False)
         ]
-    return {"ok": True, "requests": requests}
+    return _read_payload(requests=requests)
 
 
 def read_request(
@@ -90,7 +91,7 @@ def read_request(
         raise FileNotFoundError(f"request not found: {request_id}")
     if not _request_in_scope(row, read_scope, require_all=True):
         raise FileNotFoundError(f"request not found: {request_id}")
-    return {"ok": True, "request": _request_detail(row)}
+    return _read_payload(request=_request_detail(row))
 
 
 def read_attention(
@@ -115,7 +116,7 @@ def read_attention(
             for card in cards
             if (not status or card["status"] == status) and (not kind or card["kind"] == kind)
         ]
-    return {"ok": True, "attention": cards, "view": _attention_table_view(cards, worklist=worklist)}
+    return _read_payload(attention=cards, view=_attention_table_view(cards, worklist=worklist))
 
 
 def read_attention_card(
@@ -127,7 +128,7 @@ def read_attention_card(
         raise FileNotFoundError(f"attention projection not found: {rel}")
     if not _attention_in_scope(card, read_scope):
         raise FileNotFoundError(f"attention projection not found: {rel}")
-    return {"ok": True, "attention": card, "view": _attention_card_view(card)}
+    return _read_payload(attention=card, view=_attention_card_view(card))
 
 
 def read_concept(
@@ -142,23 +143,22 @@ def read_concept(
         _require_scope(
             work.get("concept_path") or target, read_scope, f"target not found: {target}"
         )
-        return {"ok": True, "target": target, "kind": "work", "work": _tag_work(work)}
+        return _read_payload(target=target, kind="work", work=_tag_work(work))
     rel = path.relative_to(workspace).as_posix()
     _require_scope(rel, read_scope, f"target not found: {target}")
     check_status = state.concept_check_status(workspace, rel)
     if check_status == "checked" and not is_consumable_checked_file(workspace, rel):
         raise PermissionError(f"checked Concept is not consumable until scan runs: {rel}")
     frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
-    return {
-        "ok": True,
-        "path": rel,
-        "type": frontmatter.get("type"),
-        "check_status": check_status,
-        "verdict": check_status,
-        "frontmatter": frontmatter,
-        "body": body,
-        "body_data": _untrusted_text(body),
-    }
+    return _read_payload(
+        path=rel,
+        type=frontmatter.get("type"),
+        check_status=check_status,
+        verdict=check_status,
+        frontmatter=frontmatter,
+        body=body,
+        body_data=_untrusted_text(body),
+    )
 
 
 def read_concepts(
@@ -186,7 +186,7 @@ def read_concepts(
                 "verdict": check_status,
             }
         )
-    return {"ok": True, "concepts": sorted(rows, key=lambda row: row["path"])}
+    return _read_payload(concepts=sorted(rows, key=lambda row: row["path"]))
 
 
 def read_work(
@@ -196,7 +196,7 @@ def read_work(
     if work is None:
         raise FileNotFoundError(f"work not found: {work_id}")
     _require_any_scope(_work_paths(work), read_scope, f"work not found: {work_id}")
-    return {"ok": True, "work": _tag_work(work)}
+    return _read_payload(work=_tag_work(work))
 
 
 def read_journal(
@@ -254,7 +254,7 @@ def read_journal(
             for row in conn.execute(sql, params)
             if _journal_in_scope(event := _journal_row(row), read_scope)
         ]
-    return {"ok": True, "events": events}
+    return _read_payload(events=events)
 
 
 def read_journal_event(
@@ -274,7 +274,11 @@ def read_journal_event(
     event = _journal_row(row)
     if not _journal_in_scope(event, read_scope):
         raise FileNotFoundError(f"journal event not found: {event_id}")
-    return {"ok": True, "event": event}
+    return _read_payload(event=event)
+
+
+def _read_payload(**payload: Any) -> dict[str, Any]:
+    return {"ok": True, "api_version": READ_API_VERSION, **payload}
 
 
 def run_operation(

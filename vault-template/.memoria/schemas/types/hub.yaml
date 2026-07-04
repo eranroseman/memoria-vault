@@ -11,5 +11,6 @@ required:
 optional:
   aliases: list
   archived: bool
+  citations: list
   description: str
   x: map

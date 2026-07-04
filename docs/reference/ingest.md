@@ -8,7 +8,7 @@ grand_parent: Reference
 
 Worker capture starts the catalog record, but scholarly identifiers do not
 become checked source rows before provider verification. Worker
-`capture-source` stages DOI/ISBN inputs as unchecked SQLite catalog rows plus
+`capture-source` stages DOI inputs as unchecked SQLite catalog rows plus
 durable content/raw blobs under `.memoria/blobs/source-content/`; worker
 `enrich-source` resolves required DOI providers, records provenance, and checks
 the row only when provider and retraction checks pass.
@@ -26,7 +26,7 @@ parser when it is installed to extract page text. URL snapshots use
 | Step | Owner | Output |
 | --- | --- | --- |
 | Capture event | worker `capture-source` / `capture_source()` | First journal `run` event with `workflow: capture_source`, before durable content is written. |
-| DOI/ISBN staging | `stage_catalog_source()` via worker `capture-source` | Writes an unchecked SQLite catalog row and durable blobs under `.memoria/blobs/source-content/<source_id>/`; no `source.md` or `references.bib` is written before enrichment. |
+| DOI staging | `stage_catalog_source()` via worker `capture-source` | Writes an unchecked SQLite catalog row and durable blobs under `.memoria/blobs/source-content/<source_id>/`; no `source.md` or `references.bib` is written before enrichment. |
 | DOI enrichment | `enrich_source()` via worker `enrich-source` | Requires Crossref, OpenAlex, Unpaywall, and full text for DOI records, caches raw provider JSON under `.memoria/blobs/provider-payloads/`, fetches provider-discovered open-access text only when the operation manifest allows that URL, merges canonical CSL-JSON, external IDs, field provenance, first-order Work graph edges, and `work_aspects` read-model rows, blocks with attention when full text is absent, then checks the catalog row, emits unchecked discovery candidate attention items, and materializes `references.bib`. |
 | Raw copy | `capture_source()` / `stage_catalog_source()` | Writes `.memoria/blobs/source-content/<source_id>/raw/<filename>` plus `raw_text_sha256`. Raw blobs are gitignored and synced out of band. |
 | Extracted content | `capture_source()` / `stage_catalog_source()` | Writes `.memoria/blobs/source-content/<source_id>/content.txt` plus `normalized_text_sha256`. Structured CSL aspects and explicit full-text sections populate the `work_aspects` read model. |
@@ -41,14 +41,16 @@ parser when it is installed to extract page text. URL snapshots use
 | Catalog source row | catalog state | Source metadata lives in `.memoria/memoria.sqlite` with a mirror concept id of `catalog/sources/<source_id>` and DB/read-API `check_status`. There is no alpha.15 `source` frontmatter schema. |
 | SQLite catalog row | `memoria_vault.runtime.state` | Writes staged or checked source metadata, enrichment runs, provider payload paths, external IDs, field provenance, and first-order Work graph edges in `.memoria/memoria.sqlite`, the catalog working-state source of truth. |
 | Bibliography projection | `write_references_bib()` / worker projection refresh | Regenerates `references.bib` from checked SQLite catalog rows. Enrichment materializes it in the same worker commit after required providers pass; `check_references_bib()` checks this file, and `check_tracked_projections()` covers it with the rest of the tracked projection set. |
-| Commit | trusted writer / projection writer | Capture writes SQLite state and gitignored blobs. DOI/ISBN capture writes unchecked state only; enrichment and explicit projection refreshes commit required tracked projections such as `references.bib`. Raw and provider blobs stay out of git. |
+| Commit | trusted writer / projection writer | Capture writes SQLite state and gitignored blobs. DOI capture writes unchecked state only; enrichment and explicit projection refreshes commit required tracked projections such as `references.bib`. Raw and provider blobs stay out of git. |
 
-The current extraction input is already-normalized markdown text, one DOI/ISBN
+The current extraction input is already-normalized markdown text, one DOI
 payload staged for enrichment, one local BibTeX entry plus caller-supplied
 content, one CSL-JSON item file, one URL snapshot, or PDF bytes when the
-optional PyMuPDF parser is installed. Live URL smoke beyond mocked fetch tests,
-ISBN URL-depth enrichment, ambiguous entity disambiguation, ambiguous identity
-flags, parser selection, and richer coherence gates remain follow-on work.
+optional PyMuPDF parser is installed. ISBN metadata can arrive through portable
+BibTeX/CSL imports, but alpha.15 has no standalone `work add --isbn` enrichment
+route. Live URL smoke beyond mocked fetch tests, ISBN URL-depth enrichment,
+ambiguous entity disambiguation, ambiguous identity flags, parser selection, and
+richer coherence gates remain follow-on work.
 
 ## Catalog Source Record
 
@@ -80,7 +82,7 @@ input rebuild.
 
 - ISBN URL-depth enrichment.
 - Live URL smoke beyond mocked single-page fetch tests.
-- Semantic Scholar, PubMed, arXiv, and UI.
+- PubMed, arXiv, broad source-discovery search, and UI.
 - Parser selection and richer coherence gates for PDFs and other source formats.
 - Ambiguous entity disambiguation beyond exact deterministic CSL author and venue paths.
 

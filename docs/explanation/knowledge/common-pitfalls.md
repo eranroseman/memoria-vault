@@ -48,10 +48,10 @@ The failure is that summary and synthesis look identical in the moment of writin
 
 The Librarian operation posture proposes a classification that often surfaces
 project connections that were not obvious at intake - connections that should
-appear in the claim's `sources:` frontmatter and `links:`. Writing the claim
-before reviewing that proposal means missing those connections, because the
-classification pass is also when the system discovers what the source has to do
-with your existing work.
+appear in the note's `source_id`, `evidence_set`, `citations`, `topics`, and
+typed `links`. Writing the note before reviewing that proposal means missing
+those connections, because the classification pass is also when the system
+discovers what the Work has to do with your existing graph.
 
 The deeper reason: classification (automated, audited, correctable) is how the system integrates a source into the existing graph. Bypassing it produces a claim that cites a paper but isn't connected to the web of context that would have been visible from the review.
 

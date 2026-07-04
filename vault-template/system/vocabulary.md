@@ -57,9 +57,9 @@ Many values per source. *What the work is about.* Claim-note `topics` draw from 
 
 ## methodology
 
-Many values per note. *How the study was structured, and the techniques it used.* The
-schema carries study architecture and specific technique in this one field; both groups
-below are valid `methodology` values.
+Many values per catalog Work. *How the study was structured, and the techniques
+it used.* The metadata carries study architecture and specific technique in this
+one field; both groups below are valid `methodology` values.
 
 ### Research architecture — how the study was structured
 
@@ -105,7 +105,7 @@ below are valid `methodology` values.
 
 ## topics
 
-Claim-bearing notes only. Many values per note. *What the claim is about.* Draw from the
-`research_area` vocabulary above so a claim and the sources it rests on share the same
-controlled terms (and surface together in queries); propose a new provisional term only
-when no `research_area` value fits.
+Claim-bearing notes only. Many values per claim-bearing note. *What the claim
+is about.* Draw from the `research_area` vocabulary above so a claim and the
+Works it rests on share the same controlled terms and surface together in
+queries; propose a new provisional term only when no `research_area` value fits.

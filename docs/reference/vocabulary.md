@@ -6,7 +6,9 @@ grand_parent: Reference
 
 # Vocabulary
 
-`system/vocabulary.md` is the visible, PI-editable home for the controlled values used by `research_area`, `methodology`, and claim `topics`.
+`system/vocabulary.md` is the visible, PI-editable home for the controlled
+values used by catalog Work `research_area`/`methodology` metadata and
+claim-bearing note `topics`.
 
 The shipped file lives at [`vault-template/system/vocabulary.md`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/system/vocabulary.md). In a runtime vault, edit `system/vocabulary.md` directly and keep note frontmatter values in lockstep with it.
 
@@ -14,9 +16,9 @@ The shipped file lives at [`vault-template/system/vocabulary.md`](https://github
 
 | Field | Applies to | Source list |
 | --- | --- | --- |
-| `research_area` | `paper`, `source` | `system/vocabulary.md` → `## research_area` |
-| `methodology` | `paper`, `source` | `system/vocabulary.md` → `## methodology` |
-| `topics` | `claim` | Draw from `## research_area` so claims and sources stay queryable together |
+| `research_area` | SQLite catalog Work metadata | `system/vocabulary.md` -> `## research_area` |
+| `methodology` | SQLite catalog Work metadata | `system/vocabulary.md` -> `## methodology` |
+| `topics` | claim-bearing `note` Concepts | Draw from `## research_area` so notes and Works stay queryable together |
 
 ## Allowed values
 
@@ -24,7 +26,8 @@ The tables below mirror the shipped [`vault-template/system/vocabulary.md`](http
 
 ### `research_area`
 
-*What the work is about.* Claim `topics` draw from this same list. Kept to ~30 terms; consolidate drift at roughly fifty papers.
+*What the work is about.* Claim-bearing note `topics` draw from this same list.
+Kept to ~30 terms; consolidate drift at roughly fifty Works.
 
 | Term | Definition |
 | --- | --- |
@@ -108,7 +111,10 @@ The tables below mirror the shipped [`vault-template/system/vocabulary.md`](http
 
 ### `topics`
 
-Claim notes only. Drawn from the `research_area` terms above so a claim and the sources it rests on share the same controlled values (and surface together in queries). Propose a new provisional term only when no `research_area` value fits.
+Claim-bearing notes only. Drawn from the `research_area` terms above so a note
+and the Works it rests on share the same controlled values and surface together
+in queries. Propose a new provisional term only when no `research_area` value
+fits.
 
 ## Related
 

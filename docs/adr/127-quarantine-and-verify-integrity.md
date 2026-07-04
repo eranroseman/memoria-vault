@@ -53,12 +53,14 @@ runtime and the vault-file world.
   opportunistically in batches. Retraction-driven demotions
   propagate one level deeper before going stale. The blast radius is journaled.
 - **Cross-store recoverability at the operation boundary** (SQLite + files + blobs +
-  git): 2PC with exactly two journal states — `prepared` (covering the whole
-  pre-finalize window) and `materialized` (set by a finalize transaction after
-  `git commit` yields the SHA); write-ahead ordering (payload fsynced before
-  the DB commit that references it; DB commit durable before materialize); one
-  workspace-scoped write lock held for the whole operation; crash at any
-  boundary recovers to complete-or-non-consumable via `workspace recover`.
+  git): 2PC-style materialization with output states `pending`,
+  `materialized`, and `failed`. `pending` covers the prepared/pre-finalize
+  window; `materialized` is set only after `git commit` yields the SHA; `failed`
+  records unrecoverable cases such as a missing durable payload or missing git
+  commit. Write-ahead ordering (payload fsynced before the DB commit that
+  references it; DB commit durable before materialize); one workspace-scoped
+  write lock held for the whole operation; crash at any boundary recovers to
+  complete-or-non-consumable via `workspace recover`.
 - **Integrity incidents resolve by forward repair.** An incident (triggers:
   failed change-verification, user-declared error, periodic scan) carries its
   blast radius and suggested resolutions; the ground truth for repair is the
@@ -101,11 +103,11 @@ runtime and the vault-file world.
 - Every guarantee has a crash/recovery gate.
 - Multi-machine sync of the SQLite authority is out of contract (markdown
   merges; SQLite does not); one workspace, one writer at a time.
-- A three-store **backup contract** exists and `doctor` reports on it: git
-  remote (corpus), SQLite streaming replication — Litestream or equivalent,
-  documented, never a runtime dependency — and blob file-sync. Fail-closed
-  recovery loses every verdict; replication is cheaper than re-checking a
-  corpus. Replication is backup, not sync.
+- A three-store **backup contract** exists and `doctor`/`doctor bundle` report
+  on it without treating backup tools as runtime dependencies: git remote
+  (corpus), SQLite streaming replication — Litestream or equivalent — and blob
+  file-sync. Fail-closed recovery loses every verdict; replication is cheaper
+  than re-checking a corpus. Replication is backup, not sync.
 
 ## Alternatives considered
 

@@ -11,5 +11,7 @@ required:
 optional:
   aliases: list
   archived: bool
+  citations: list
   description: str
+  evidence_set: list
   x: map

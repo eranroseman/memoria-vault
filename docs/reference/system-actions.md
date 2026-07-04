@@ -22,7 +22,7 @@ reference pages; docs checks keep the mirror linked.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Capture source | worker operation `capture-source` + runtime helpers (`capture_source`, `stage_catalog_source`) | Records a capture run. All routes write a SQLite catalog row plus durable content/raw blobs under `.memoria/blobs/source-content/`; DOI/ISBN and portable imports stay unchecked until `enrich-source`, while already-supplied full text can become a checked catalog row after worker checks ([Ingest routing](ingest.md)). |
+| Capture source | worker operation `capture-source` + runtime helpers (`capture_source`, `stage_catalog_source`) | Records a capture run. All routes write a SQLite catalog row plus durable content/raw blobs under `.memoria/blobs/source-content/`; DOI capture and portable imports stay unchecked until enrichment/checking, while already-supplied full text can become a checked catalog row after worker checks. Portable BibTeX/CSL imports can carry ISBN metadata but do not create a standalone ISBN enrichment route ([Ingest routing](ingest.md)). |
 | Enrich staged source | worker operation `enrich-source` + runtime helper (`enrich_source`) | Fetches required DOI payloads from Crossref, OpenAlex, and Unpaywall, stores raw provider payloads under `.memoria/blobs/provider-payloads/`, records external IDs and field provenance in SQLite, blocks provider failures or retracted/contested records with `check-fired` plus an `inbox/` attention projection, then checks passing catalog rows and materializes `references.bib`. |
 | Capture BibTeX source | worker operation `capture-bibtex-source` + runtime helper (`bibtex_capture_payload`) | Parses one local BibTeX entry into a DOI/URL-derived `source_id` when available, citekey alias, CSL-JSON-shaped metadata, identifiers, durable raw `.bib` blob, an unchecked SQLite catalog row, and a queued DOI enrichment request when a DOI is present. It does not create source/entity markdown or update `references.bib`. |
 | Capture CSL source | `memoria work import --format csl` + runtime helper (`csl_capture_payload`) | Parses one local CSL-JSON item into a stable `source_id`, CSL-JSON-shaped metadata, identifiers, durable raw `.csl.json` blob, an unchecked SQLite catalog row, and a queued DOI enrichment request when a DOI is present. It uses the generic `capture-source` worker operation and does not create source/entity markdown or update `references.bib`. |
@@ -39,7 +39,7 @@ reference pages; docs checks keep the mirror linked.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Load operation policy | runtime operation helper (`load_operation_policy`) | Loads a checked packaged operation manifest and requires the WP5 policy contract: tools, paths, network, `runner.test` plus `runner.live` provider/model branches, prompt version, `io_schema.input`/`io_schema.output`, risk class, and checks. |
+| Load operation policy | runtime operation helper (`load_operation_policy`) | Loads a package-owned operation manifest and requires the WP5 policy contract: tools, paths, network, `runner.test` plus `runner.live` provider/model branches, prompt version, `io_schema.input`/`io_schema.output`, risk class, checks, and sealed `untrusted_fields` where raw text enters model prompts. |
 | Select model pins | `memoria eval select-models` | Runs the seeded-error bar for manifest-declared `runner.test`/`runner.live` pins in a disposable fixture, emits a selection record, and refuses to select a runner whose bar fails. |
 | Record Co-PI interview | worker operation `record-copi-interview` + runtime helper (`record_copi_interview_turn`) | Records a PI interview takeaway for a checked Work as a committed `copi-interview` journal event; digest compile can consume it as traced context. |
 | Compile source digest | worker operation `compile-source-digest` + runtime helper (`compile_source_digest`) | Reads one checked Work, resolves `--mode test\|live` to a manifest-pinned runner branch, uses deterministic fixture output or an allowed OpenAI-compatible pydantic-ai runner for digest markdown that passes the required section contract and a lexical source-grounding smoke check, records resolved mode/provider/model/params plus prompt hash in `model_call`, embeds compact citation survival payloads, promotes a machine-owned checked digest Work plus brand-new hubs, and stages curated hub suggestions without overwriting curated hubs. |
@@ -64,7 +64,7 @@ reference pages; docs checks keep the mirror linked.
 | Analyze gaps | worker operation `analyze-gaps` + runtime helper (`analyze_gaps`) | Counts checked Work, checked digest Work, and accepted-note topic signals and reports `new-topic`, `undigested`, and `under-warranted` gaps with proposed seed actions; when a project path is supplied, it also seeds project scope/facet terms, counts checked linked thesis terms, and includes checked project argument-health gaps. Provider-discovered Work candidates surface as unchecked attention with deterministic steering relevance metadata plus a separate exploration channel; repeated off-vocabulary phrases in checked Work text surface as unchecked tag-candidate attention. The operation never captures candidate Works or writes tags directly. |
 | Analyze project argument | worker operation `analyze-project-argument` + runtime helper (`analyze_project_argument`) | Follows checked, non-candidate note links around a checked project's `thesis` note and returns relation counts, stage, saturation, gap/advisory taxonomy, nodes, and edges. |
 | Render project argument Canvas | worker operation `render-project-argument-canvas` + runtime helper (`write_project_argument_canvas`) | Renders the checked-note argument graph for one project as a generated `knowledge/projects/<project>/argument.canvas` projection and commits it with a journal row. |
-| Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for checked prompt-operation manifests such as `analyze-claims`, records request/journal provenance, and stages one unchecked report note under `.memoria/staging/knowledge/`. |
+| Run prompt operation | worker operation `<pattern-id>` + runtime helper (`run_prompt_operation`) | Reads checked input refs for package-owned prompt-operation manifests such as `analyze-claims`, records request/journal provenance, and stages one unchecked report note under `.memoria/staging/knowledge/`. |
 
 ### Integrity loop (`memoria_vault.runtime.integrity`)
 
@@ -115,7 +115,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
 | Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
-| Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs checked packaged prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
+| Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block attention items to delegation and policy gates. |
 
 ## CLI requests
@@ -156,7 +156,7 @@ scheduler can call the runner when always-on maintenance is desired.
 ## Skills and prompts
 
 Alpha.15 does not ship installed profile skill bundles or per-lane task routing.
-Reusable prompt behavior lives as checked packaged operation manifests and runs
+Reusable prompt behavior lives as package-owned operation manifests and runs
 through `memoria operation run`.
 
 ## PI actions
@@ -167,4 +167,4 @@ through `memoria operation run`.
 | --- | --- |
 | Worker promotion | Machine writes promote from `.memoria/staging/` only after worker checks set DB/read API `check_status = checked`; operation-owned promotions enforce their `required_checks` (`memoria-runtime`) before the state transition and record durable materialization payloads in SQLite. PI edits are direct, then the worker observes git-status changes and backfills `{Concept + journal}`. |
 | Inbox triage | Resolve or act on attention projections; dispositions are logged for trust and attention metrics. |
-| Workspace recover `--apply` | The PI decides to replay pending materialization or repair workspace files from the package/template source. |
+| Workspace recover | `memoria workspace recover` marks interrupted running requests failed for explicit retry and replays pending materialization payloads; `--fixture crash-before-materialization` is a test-only recovery harness. |

@@ -2,7 +2,7 @@ version: 1
 branches:
   doi:
     required: [crossref, openalex, unpaywall]
-    optional: []
+    optional: [semanticscholar]
 runner_providers:
   local:
     url: http://127.0.0.1:11434/v1
@@ -36,3 +36,13 @@ providers:
     rate_limit_per_second: 10
     query_params:
       email: NCBI_EMAIL
+  semanticscholar:
+    enabled: true
+    base_url: https://api.semanticscholar.org/
+    endpoint_template: >-
+      https://api.semanticscholar.org/graph/v1/paper/DOI:{doi}?fields=paperId,title,tldr,references.paperId,references.title,references.externalIds,citations.paperId,citations.title,citations.externalIds
+    timeout_seconds: 10
+    rate_limit_per_second: 10
+    default_on_when_keyed: SEMANTIC_SCHOLAR_API_KEY
+    header_env:
+      x-api-key: SEMANTIC_SCHOLAR_API_KEY

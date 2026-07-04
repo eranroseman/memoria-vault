@@ -16,6 +16,7 @@ allowed_network:
 - https://api.crossref.org/
 - https://api.openalex.org/
 - https://api.unpaywall.org/
+- https://api.semanticscholar.org/
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}

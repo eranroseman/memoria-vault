@@ -6,7 +6,8 @@ installer, runtime package, workspace template, and docs are welcome.
 ## Before you start
 
 - Check [open issues](https://github.com/eranroseman/memoria-vault/issues) to avoid duplicate work.
-- Open an issue first for significant changes: new agents, installer overhauls, profile capabilities, schema changes, or architecture decisions.
+- Open an issue first for significant changes: new operation surfaces, installer
+  overhauls, schema changes, provider integrations, or architecture decisions.
 - Small docs, typo, script, and test fixes can go straight to a PR.
 - AI agents must follow [AGENTS.md](AGENTS.md); it is authoritative for worktrees, branch safety, PR flow, docs routing, and required checks.
 
@@ -66,7 +67,7 @@ broader than a narrow doc edit.
 |---|---|---|
 | Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | `scripts/verify pr` |
 | Package | A disposable vault assembles and the offline workflow replay works. | `scripts/verify package` |
-| Runtime | Hermes, MCP, Obsidian, model endpoint, cron, and policy boundaries work live. | `scripts/verify runtime` |
+| Runtime | Live model endpoint, optional transports, scheduled-task wrappers, and policy boundaries work in a disposable workspace. | `scripts/verify runtime` |
 | Release candidate | Source, Package, and Runtime run as a candidate prefix. Product/manual evidence still belongs in release issues. | `scripts/verify rc` |
 
 Product, manual GUI, failure/recovery, and release cut evidence lives in the
@@ -113,7 +114,7 @@ Use short, lowercase imperative subject lines following
 ```text
 fix: installer fails when KILOCODE_API_KEY is unset
 docs: add WSL2 troubleshooting section
-profiles: extend librarian skill for zotero groups
+feat: add semantic scholar enrichment replay
 ```
 
 | Type | Use for | Version intent |
@@ -128,8 +129,8 @@ profiles: extend librarian skill for zotero groups
 
 Breaking changes use `!` in the header or a `BREAKING CHANGE:` footer, and must
 state what changed, who is affected, what action is required, and the replacement
-path. In Memoria, breaking changes include profile config field renames, vault
-folder restructuring, removed profile capabilities or skills, and required
+path. In Memoria, breaking changes include CLI command or JSON-contract changes,
+vault folder restructuring, provider/config field renames, and required
 ADR-frontmatter changes.
 
 ## Releases and changelog

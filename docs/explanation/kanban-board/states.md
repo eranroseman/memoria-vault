@@ -22,18 +22,20 @@ output intents, precondition hashes, optional machine recommendations, journal
 events, and retry/blocking history. Those fields make work persistent,
 queryable, recoverable, and safe to resume without sharing profile memory.
 
-The key invariant: **a request never closes on a worker's say-so**. The worker can
-finish execution; the human still decides whether any attention item has been
-handled.
+The key invariant: **request execution and PI attention are separate states**.
+The worker can finish a request as `done`; the human still decides whether any
+attention item raised by that work has been handled.
 
 ## The execution chain is the hidden mechanic
 
-The runtime moves each request through machine-facing states such as queued,
-running, done, blocked, canceled, or recovered. This chain is load-bearing for
-the worker and recovery code, but the **PI does not treat it as approval**. It is
-plumbing, and its design serves execution:
+The runtime moves each request through machine-facing states: `pending`,
+`running`, `done`, `failed`, or `cancelled`. Recovery marks interrupted
+`running` requests as `failed` so they can be retried explicitly, and pending
+materialization payloads replay through `workspace recover`. This chain is
+load-bearing for the worker and recovery code, but the **PI does not treat it as
+approval**. It is plumbing, and its design serves execution:
 
-**Queued work exists so dispatch never starts before scope is explicit.** A
+**Pending work exists so dispatch never starts before scope is explicit.** A
 request carries input refs, output intents, and checks before execution. A file
 change observed by `workspace scan` is first recorded and checked; it is not
 machine-consumable merely because it appeared on disk.
@@ -44,10 +46,10 @@ judgment become attention, with a reason, for the PI to clear or amend.
 
 ## The PI sees only action state
 
-The human-facing state is an attention projection over request/journal state, not
-a durable Concept lifecycle. Concept read state is the DB/read API `check_status`
-verdict; Concept frontmatter stays meaning-only. For an action prompt the path the
-PI walks is just awaiting action -> acted -> archived.
+The human-facing state is an attention projection over request/journal state,
+not a durable Concept lifecycle. Concept read state is the DB/read API
+`check_status` verdict; Concept frontmatter stays meaning-only. For an action
+prompt the PI records an explicit outcome: apply, reject, or defer.
 
 An action prompt awaiting you appears in the Inbox projection. You act on it, then it
 leaves the active queue when no action remains. There is no separate `review-request`
@@ -80,7 +82,7 @@ a system where the audit trail lies.
 
 ## Requests and notes are different things
 
-A request is **work**: transient, queued in the engine, and closed when the
+A request is **work**: transient, pending in the engine, and closed when the
 attempt is over. A note is **knowledge**: durable, linkable, and preserved in the
 workspace. A request can reference or produce a note, but it never *is* a note.
 Mixing request fields (`status`, `request_id`, output intents) with note fields

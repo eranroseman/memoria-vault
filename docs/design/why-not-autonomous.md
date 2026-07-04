@@ -62,7 +62,8 @@ So a bounded code experiment loop could be admissible in principle.
 
 The synthesis gate remains structurally untouched. The request envelope,
 trusted-writer checks, read barrier, and optional adapter policy hook still block
-unchecked machine output from becoming checked synthesis. Whether to admit a
+unchecked machine output from bypassing required checks or pretending to carry
+PI approval. Whether to admit a
 bounded code-experiment loop will be revisited only when the
 external-coding-agent path is defined beyond the current project handoff — and
 reopening it requires a superseding decision, not an incremental relaxation.
@@ -73,8 +74,10 @@ reopening it requires a superseding decision, not an incremental relaxation.
 
 The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
-- Operations propose, classify, draft, and verify — but do not canonize.
-- Scheduled and overnight operations create requests and attention only. Promotion is always synchronous with human attention.
+- Operations propose, classify, draft, and verify — but do not own PI judgment.
+- Scheduled and overnight operations create requests and attention. Checked
+  materialization can occur only through declared worker checks; PI disposition
+  remains separate attention state.
 - The discovery loop can run autonomously (finding and ingesting candidates) because the human reviews candidates before they enter the canonical vault.
 - The cost discipline ("$1–3/day API budget for the nightly loop") matters because there's no scalar payoff to optimize against. Budget discipline replaces metric discipline.
 
@@ -86,9 +89,10 @@ The design produces a bounded, phase-gated, human-in-the-loop operating cadence:
 
 Memoria is L3. Operations execute multi-step work unattended within request and
 manifest ceilings. The human sets the strategy (`steering.md`,
-`screening-protocol.md`) and the review gate blocks every promotion. L4 requires
-autonomous keep/revert on synthesis; L5 requires self-directed agenda-setting.
-Both fail the preconditions test for knowledge work.
+`screening-protocol.md`) and the review gate blocks unchecked or unwarranted
+promotion from entering checked readers. L4 requires autonomous keep/revert on
+synthesis; L5 requires self-directed agenda-setting. Both fail the
+preconditions test for knowledge work.
 
 ---
 

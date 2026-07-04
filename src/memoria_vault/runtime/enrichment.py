@@ -74,14 +74,15 @@ def enrich_source(
     issues = provider_allowlist_issues(config, policy)
     if issues:
         raise PermissionError("; ".join(issues))
-    required = _required_providers(config, "doi")
     run_id = run_id or f"enrich-source:{source['source_id']}:{_hash_text(doi)}"
     fixture_payloads = provider_payloads if isinstance(provider_payloads, dict) else {}
+    required = _required_providers(config, "doi")
+    optional = _optional_providers(config, "doi", fixture_payloads)
     state.start_enrichment_run(
         vault,
         run_id=run_id,
         source_id=source["source_id"],
-        required_provider_policy={"branch": "doi", "required": required},
+        required_provider_policy={"branch": "doi", "required": required, "optional": optional},
     )
     append_journal_event(
         vault,
@@ -92,13 +93,17 @@ def enrich_source(
     payloads: dict[str, dict[str, Any]] = {}
     payload_hashes: dict[str, str] = {}
     missing: list[str] = []
-    for provider in required:
+    optional_missing: list[str] = []
+    for provider in [*required, *optional]:
         try:
             payload, latency_ms = _provider_payload(
                 vault, config, policy, provider, doi, fixture_payloads
             )
         except RuntimeError as exc:
-            missing.append(f"{provider}: {exc}")
+            if provider in required:
+                missing.append(f"{provider}: {exc}")
+            else:
+                optional_missing.append(f"{provider}: {exc}")
             continue
         payloads[provider] = payload
         raw_hash, raw_path = _write_provider_blob(vault, provider, payload)
@@ -321,6 +326,7 @@ def enrich_source(
         "content_path": content_path,
         "discovery_candidate_paths": candidate_paths,
         "text_status": text_status,
+        "optional_provider_failures": optional_missing,
         "commit": commit,
     }
 
@@ -372,6 +378,32 @@ def _required_providers(config: dict[str, Any], branch: str) -> list[str]:
     if not isinstance(providers, list) or not all(isinstance(item, str) for item in providers):
         raise ValueError(f"{PROVIDER_CONFIG} branches.{branch}.required must be a string list")
     return providers
+
+
+def _optional_providers(
+    config: dict[str, Any], branch: str, fixture_payloads: dict[str, Any] | None = None
+) -> list[str]:
+    branches = config.get("branches") if isinstance(config.get("branches"), dict) else {}
+    spec = branches.get(branch) if isinstance(branches.get(branch), dict) else {}
+    providers = spec.get("optional", [])
+    if not isinstance(providers, list) or not all(isinstance(item, str) for item in providers):
+        raise ValueError(f"{PROVIDER_CONFIG} branches.{branch}.optional must be a string list")
+    fixtures = fixture_payloads if isinstance(fixture_payloads, dict) else {}
+    return [
+        provider
+        for provider in providers
+        if provider in fixtures or _provider_default_on(config, provider)
+    ]
+
+
+def _provider_default_on(config: dict[str, Any], provider: str) -> bool:
+    spec = _provider_spec(config, provider)
+    gate = spec.get("default_on_when_keyed")
+    if isinstance(gate, str):
+        return bool(os.environ.get(gate))
+    if isinstance(gate, list):
+        return any(isinstance(name, str) and os.environ.get(name) for name in gate)
+    return False
 
 
 def _write_attention_flag(
@@ -489,9 +521,17 @@ def _provider_payload(
     from memoria_vault.runtime.operations import require_allowed_network
 
     require_allowed_network(policy, endpoint)
-    timeout = float(_provider_spec(config, provider).get("timeout_seconds") or 10)
+    spec = _provider_spec(config, provider)
+    timeout = float(spec.get("timeout_seconds") or 10)
     started = time.monotonic()
-    req = request.Request(endpoint, headers={"User-Agent": "memoria-vault/0.1 alpha13"})
+    headers = {"User-Agent": "memoria-vault/0.1 alpha15"}
+    header_env = spec.get("header_env")
+    if isinstance(header_env, dict):
+        for header, env_name in header_env.items():
+            value = os.environ.get(str(env_name or ""), "")
+            if value:
+                headers[str(header)] = value
+    req = request.Request(endpoint, headers=headers)
     try:
         with request.urlopen(req, timeout=timeout) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
@@ -765,6 +805,13 @@ def _merge_doi_source(
     identifiers["doi"] = doi
     if openalex_id := str(openalex.get("id") or "").strip():
         identifiers["openalex"] = openalex_id
+    semantic_scholar = payloads.get("semanticscholar", {})
+    semantic_scholar_id = str(semantic_scholar.get("paperId") or "").strip()
+    if semantic_scholar_id:
+        identifiers["semanticscholar"] = semantic_scholar_id
+    tldr = semantic_scholar.get("tldr")
+    if isinstance(tldr, dict) and str(tldr.get("text") or "").strip():
+        csl_json["note"] = str(tldr["text"]).strip()
     provenance = [
         _provenance(
             "title",
@@ -807,6 +854,19 @@ def _merge_doi_source(
         *(
             [_external_id("source", source["source_id"], "openalex", openalex_id, "openalex")]
             if openalex_id
+            else []
+        ),
+        *(
+            [
+                _external_id(
+                    "source",
+                    source["source_id"],
+                    "semanticscholar",
+                    semantic_scholar_id,
+                    "semanticscholar",
+                )
+            ]
+            if semantic_scholar_id
             else []
         ),
         *_openalex_external_ids(openalex),
@@ -956,6 +1016,32 @@ def _first_order_work_graph(
                     {"id": target_id, "source_work": source_id},
                 )
 
+    semantic_scholar = payloads.get("semanticscholar", {})
+    for relation_type, field in (("references", "references"), ("related", "citations")):
+        values = semantic_scholar.get(field)
+        if not isinstance(values, list):
+            continue
+        for row in values:
+            if not isinstance(row, dict):
+                continue
+            target_doi = _semantic_scholar_doi(row)
+            paper_id = str(row.get("paperId") or "").strip()
+            target_id = (
+                f"doi:{target_doi.casefold()}" if target_doi else f"semanticscholar:{paper_id}"
+            )
+            if target_id == "semanticscholar:":
+                continue
+            title = str(row.get("title") or target_id).strip()
+            _add_graph_row(
+                rows,
+                relation_type,
+                target_id,
+                title,
+                target_doi,
+                "semanticscholar",
+                row,
+            )
+
     topic_candidates = []
     if isinstance(openalex.get("primary_topic"), dict):
         topic_candidates.append(openalex["primary_topic"])
@@ -1039,7 +1125,20 @@ def _normalize_provider(provider: str, payload: dict[str, Any]) -> dict[str, Any
         return {"title": payload.get("title"), "id": payload.get("id")}
     if provider == "unpaywall":
         return {"doi": payload.get("doi"), "best_oa_location": payload.get("best_oa_location")}
+    if provider == "semanticscholar":
+        return {
+            "paperId": payload.get("paperId"),
+            "title": payload.get("title"),
+            "tldr": payload.get("tldr"),
+        }
     return payload
+
+
+def _semantic_scholar_doi(row: dict[str, Any]) -> str:
+    external_ids = row.get("externalIds")
+    if isinstance(external_ids, dict):
+        return str(external_ids.get("DOI") or external_ids.get("doi") or "").strip()
+    return ""
 
 
 def _blocked_status(canonical: dict[str, Any]) -> str:

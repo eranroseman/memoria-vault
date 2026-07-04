@@ -23,7 +23,7 @@ every field and count.
 | [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter field grammar and ownership | Source-owned |
 | [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.15 has no durable Inbox-card Concept schemas | Manual |
 | [Document types](document-types.md) | Schema-owned document types and owning files | Source-owned |
-| [Vocabulary](vocabulary.md) | Vocabulary-source values for `research_area`, `methodology`, and claim `topics` | Guarded mirror |
+| [Vocabulary](vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
 | [Kanban board reference](kanban-board.md) | No-Hermes-board contract and current request-control commands | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |

@@ -61,7 +61,13 @@ claim note that has no incoming links has not entered the knowledge graph.
 
 The ~400-paper review (`_papers/`) grounds the design in what the field has tried: AI-research systems, HCI/CSCW, extraction and claim verification, evaluation, and temporal retrieval.
 
-Its main result is convergence. Separate research lines re-derive the structural review gate, durable vault-as-memory, MCP-only sandbox, deterministic ingest, and stage-gated handoffs. It also scopes what Memoria rejects: advisory-only LLM review, scalar keep/revert loops, and tree search over synthesis.
+Its main result is convergence. Separate research lines re-derive the structural
+review gate, durable vault-as-memory, explicit tool/write boundaries,
+deterministic ingest, and stage-gated handoffs. Alpha.15 implements that through
+the standalone CLI/engine, read API, request envelope, runtime policy, and
+trusted writer; MCP is optional transport context, not the core sandbox. The
+review also scopes what Memoria rejects: advisory-only LLM review, scalar
+keep/revert loops, and tree search over synthesis.
 
 The pattern-by-pattern judgment is in [Pattern provenance table](../reference/pattern-provenance.md). The confident-wrong argument behind the human gate is in [Why the review gate is structural](why-review-gate-is-structural.md).
 

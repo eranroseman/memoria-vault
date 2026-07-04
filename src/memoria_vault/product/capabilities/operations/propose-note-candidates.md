@@ -14,6 +14,8 @@ runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: propose-note-candidates.v1
+untrusted_fields:
+- input
 io_schema:
   input: checked_digest
   output: note_candidates

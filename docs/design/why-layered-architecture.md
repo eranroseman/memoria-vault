@@ -72,7 +72,12 @@ Each refinement carries the same argument further:
   live.
 - Deterministic work lives in **operations** — reproducible mechanism that needs
   no installed profile or background lane.
-- The **Interface** and the **PI** were named as layers because the strict layering claim had to be scoped honestly: it binds the *agent write-path* (Co-PI → Tasks → MCP → Operations/Vault); the PI and scheduled/CI paths are direct edges.
+- The **Interface** and the **PI** were named as layers because the strict
+  layering claim had to be scoped honestly: in alpha.15 it binds the machine
+  write path from CLI/API request envelope through engine, runtime policy,
+  operations, storage, and vault materialization. PI edits and operator-managed
+  scheduled jobs are direct edges that the engine observes or executes through
+  explicit requests.
 
 The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in ADR-46.
 

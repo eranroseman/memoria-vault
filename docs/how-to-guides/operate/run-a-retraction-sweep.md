@@ -48,18 +48,18 @@ that cite it through `evidence_set`.
 
 No claim is rewritten automatically. The judgment is always yours.
 
-**5. Update the paper entity.**
+**5. Update the Work standing.**
 
-Set the entity's lifecycle to match the record:
+Set the catalog Work standing through the CLI:
 
-```yaml
-lifecycle: retracted
+```bash
+memoria work update --workspace . <work-id> --standing retracted
 ```
 
 Then resolve the alert attention item:
 
 ```bash
-memoria attention resolve --workspace . <attention-path>
+memoria attention resolve --workspace . <attention-path> --apply
 ```
 
 **6. Check for new tensions.**
@@ -69,7 +69,7 @@ A retraction sometimes resolves — or creates — a contradiction. Glance at Kn
 ## Verify
 
 - Every alert attention item from the sweep is resolved
-- Affected paper entities carry `lifecycle: retracted`
+- Affected catalog Works report `standing: retracted` through `memoria work export`
 - Each citing claim was softened, superseded, or caveated — and a re-run raises no new alerts
 
 ## Related

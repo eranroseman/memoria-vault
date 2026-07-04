@@ -6,8 +6,8 @@ grand_parent: How-to guides
 
 # Capture and ingest a source
 
-Capture always enters through a SQLite worker request. DOI/ISBN, BibTeX, CSL
-JSON, URL, PDF, and local text imports create catalog Work rows under
+Capture always enters through a SQLite worker request. DOI, BibTeX, CSL JSON,
+URL, PDF, and local text imports create catalog Work rows under
 `.memoria/memoria.sqlite` plus durable blobs under `.memoria/blobs/source-content/`.
 
 **1. Capture a URL from the CLI.**
@@ -22,9 +22,11 @@ normalizes, stores blobs, writes the catalog row, and journals the capture.
 **2. Import portable bibliographic files.**
 
 Use `memoria work import --format bibtex|csl --file <path>` for portable
-metadata. Imports write unchecked Work rows and queue DOI enrichment when a DOI
-is present. They do not fetch from a reference-manager API, create source/entity
-Markdown, or update `references.bib` at import time.
+metadata, including records that carry ISBN metadata. Imports write unchecked
+Work rows and queue DOI enrichment when a DOI is present. They do not fetch from
+a reference-manager API, create source/entity Markdown, or update
+`references.bib` at import time. There is no standalone `memoria work add
+--isbn` route in alpha.15.
 
 **3. Confirm the catalog row and blobs.**
 

@@ -13,7 +13,10 @@ For the exact field definitions and allowed values, see [Frontmatter fields](../
 
 ## Why separate facets, not one tag field
 
-Memoria classifies sources with two distinct facets — `research_area` and `methodology` — plus `topics` on claim notes, rather than one general-purpose tag field. The separation is not bureaucratic; the facets answer categorically different questions.
+Memoria classifies catalog Works with two distinct facets — `research_area` and
+`methodology` — plus `topics` on claim-bearing notes, rather than one
+general-purpose tag field. The separation is not bureaucratic; the facets answer
+categorically different questions.
 
 `methodology` captures research architecture: _how_ a study was structured (RCT, observational, qualitative, systematic review, simulation, …). `research_area` captures conceptual content: _what_ the work is about. A query asking "show me all RCTs" is a `methodology` question. A query asking "everything on sensemaking" is a `research_area` question. Routing both to the same field makes both queries unreliable — one field can't simultaneously be the answer to orthogonal questions.
 
@@ -21,9 +24,16 @@ The Linter's `schema-check` pass validates that facet values match the defined v
 
 ## Why vocabulary stabilization is deferred
 
-Early in a vault's life, forcing term consistency is counterproductive. The right terms emerge from reading — you don't know yet whether "opportune-moment" and "receptivity-detection" are the same concept until you've read enough papers to recognize the pattern. Premature consolidation locks in the wrong vocabulary.
+Early in a vault's life, forcing term consistency is counterproductive. The
+right terms emerge from reading — you don't know yet whether "opportune-moment"
+and "receptivity-detection" are the same concept until you've read enough Works
+to recognize the pattern. Premature consolidation locks in the wrong vocabulary.
 
-The deliberate design is to accept provisional terms early and consolidate once enough corpus has accumulated to make the vocabulary decisions durable. At roughly fifty papers, reviewing and merging inconsistent terms is tractable. Before that, the cost of false consolidation — deciding two concepts are the same when they're not — is higher than the cost of deferring.
+The deliberate design is to accept provisional terms early and consolidate once
+enough corpus has accumulated to make the vocabulary decisions durable. At
+roughly fifty Works, reviewing and merging inconsistent terms is tractable.
+Before that, the cost of false consolidation — deciding two concepts are the
+same when they're not — is higher than the cost of deferring.
 
 This is also why source metadata corrections go through explicit Work updates:
 catalog terms should land only when they match the controlled vocabulary. Claim

@@ -17,7 +17,8 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria status` | Show workspace state. |
 | `memoria doctor --check qmd` | Check required qmd search prerequisites. |
 | `memoria doctor --check runner [--provider local\|gateway]` | Check the configured pydantic-ai runner provider; add `--live` for an opt-in model dispatch. |
-| `memoria doctor bundle` | Emit a diagnostic bundle. |
+| `memoria doctor` | Report local runtime checks plus the three-store backup contract: Git remote, SQLite replication config, and blob-sync config. Backup tools are reported, not runtime dependencies. |
+| `memoria doctor bundle` | Emit a diagnostic bundle, including the same backup-contract report. |
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
 | `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |

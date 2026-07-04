@@ -30,27 +30,24 @@ catalog source metadata and entities.
 | API | What it provides | Key fields populated |
 |---|---|---|
 | **OpenAlex** | Citation graph, concept tags, institutional affiliations, open-access links | `cited_by_count`, `concepts`, `oa_url`, `institutions` |
-| **Semantic Scholar** | Semantic citation context, paper recommendations | `tldr`, `citation_contexts`, `recommendations` |
+| **Semantic Scholar** | Optional keyed citation context and TLDR payloads; default-on only when `SEMANTIC_SCHOLAR_API_KEY` is present or a replay fixture supplies the payload | `tldr`, reference/citation graph candidates |
 | **Crossref** | DOI resolution, reference and relation metadata, publication venue, full-text links | `doi`, `journal`, `volume`, `issue`, `pages`, `relation`, `link` |
-| **PubMed** | Biomedical coverage, MeSH terms, abstract | `mesh_terms`, `pmid`, `abstract` |
 | **Unpaywall** | Open-access PDF discovery | `pdf_uri` (OA version) |
-| **Scite** | Supporting / contrasting / mentioning citation signals | `scite_supporting`, `scite_contrasting`, `scite_mentioning` |
-| **DataCite** | Dataset DOIs and metadata | `doi`, `data_url` for dataset items |
 
 ### API keys and rate limits
 
 Enrichment, search, and live runner calls are rate-limited or fail outright
 without the relevant API key/contact email. Register keys per service and add
 them to the local environment used to run `memoria`. DOI enrichment reads
-`OPENALEX_API_KEY` and `NCBI_EMAIL` through the `providers:` section of
-`.memoria/config/providers.yaml`; model runner connections use the same file's
-`runner_providers:` section (`local` and `gateway`).
+`OPENALEX_API_KEY`, `NCBI_EMAIL`, and optional `SEMANTIC_SCHOLAR_API_KEY`
+through the `providers:` section of `.memoria/config/providers.yaml`; model
+runner connections use the same file's `runner_providers:` section (`local` and
+`gateway`).
 
 | Service | Where to register | Rate without key | Rate with free key |
 | --- | --- | --- | --- |
 | OpenAlex | openalex.org/settings/api | Fails (required since Feb 2026) | 10 req/sec |
 | Semantic Scholar | semanticscholar.org/product/api | 1 req/sec | 10 req/sec |
-| PubMed | ncbi.nlm.nih.gov/account/ | 3 req/sec | 10 req/sec |
 | GitHub | github.com/settings/tokens (`public_repo` scope) | 60 req/hr | 5,000 req/hr |
 
 ---
@@ -75,14 +72,15 @@ organization, and venue graph records.
 | **`memoria` CLI** | Required workspace control surface. All mutating work enters through request envelopes and the engine lifecycle. |
 | **qmd** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the degraded fallback when qmd is not ready. |
 | **Optional editor adapters** | Future presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
-| **MarkDB-Connect** (Zotero add-on) | Optional. Tags Zotero items that have a workspace note and adds a right-click jump-to-note. Convenience layer over portable citekey matching, not a dependency. Setup: [Set up Zotero](../how-to-guides/setup/set-up-zotero.md). |
+| **MarkDB-Connect** (Zotero add-on) | Not an alpha.15 setup path. It assumes flat citekey-named note files, while Memoria's source authority is SQLite catalog state plus source-content blobs. |
 | **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` in the local runtime environment if the push adapter is installed. |
 
 ---
 
-## Search and retrieval (used at ingest)
+## Planned search and retrieval
 
-These are called during `find` to surface candidate sources.
+These are not current alpha.15 provider calls. They are candidate future inputs
+for broader source discovery.
 
 | API | Coverage |
 |---|---|
@@ -109,6 +107,7 @@ Tools evaluated and not in the current design:
 | Tool | Why not |
 |---|---|
 | **ZotLit** | Obsidian-native Zotero integration — not the shipped connector. Its evaluation, status, and how it compares to the bundled `obsidian-citation-plugin` are in [Zotero plugins](zotero-plugins.md). |
+| **PubMed, Scite, DataCite** | Deferred provider integrations. Alpha.15 uses Crossref, OpenAlex, Unpaywall, and optional keyed Semantic Scholar for DOI enrichment. |
 
 ---
 

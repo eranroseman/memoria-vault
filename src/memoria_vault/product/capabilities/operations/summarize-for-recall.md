@@ -13,6 +13,8 @@ runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
   live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: summarize-for-recall.v1
+untrusted_fields:
+- input
 io_schema:
   input: selection_or_note
   output: recall_summary
