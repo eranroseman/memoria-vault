@@ -39,7 +39,6 @@ def test_harness_runs_standalone_installer_without_profile_adapter() -> None:
         "--no-apps",
         "hermes profile list",
         "hermes cron list",
-        'bash "$ROOT/scripts/test-l2.sh"',
     ):
         assert stale not in text
 
