@@ -25,6 +25,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl
 from memoria_vault.runtime.subsystems.integrity.linter.detectors_audit import (
     audit_log_size,
@@ -281,30 +282,6 @@ def stale_answer_drafts(vault: Path, days: int = 90) -> list[Finding]:
                     "LOW",
                     relpath(vault, p),
                     f"answer draft {age_d:.0f}d old (>{days}d); keep, promote, or discard",
-                )
-            )
-    return out
-
-
-def extract_path_broken(vault: Path) -> list[Finding]:
-    out = []
-    sources = vault / "catalog" / "sources"
-    if not sources.is_dir():
-        return out
-    for p in sources.rglob("source.md"):
-        fm = parse_frontmatter(read(p))
-        ep = fm.get("content_path", "")
-        if not ep or not isinstance(ep, str):
-            continue
-        norm = ep.strip().lstrip("/").replace("\\", "/")
-        norm = norm[2:] if norm.startswith("./") else norm
-        if not (vault / norm).exists():
-            out.append(
-                Finding(
-                    "extract-path-broken",
-                    "HIGH",
-                    relpath(vault, p),
-                    f"content_path '{ep}' does not resolve",
                 )
             )
     return out
@@ -594,7 +571,7 @@ def misplaced_note(vault: Path) -> list[Finding]:
 def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
     """A topic crossed the hub-creation threshold with no hub (ADR-19 Tier 1).
 
-    Report-only: counts sources and notes per topic/tag term and flags
+    Report-only: counts catalog Works and notes per topic/tag term and flags
     any term with >= `threshold` records that no existing hub already covers.
     Never auto-creates -- the finding suggests the PI consider a hub."""
     counts: dict[str, int] = {}
@@ -610,7 +587,7 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
                 if isinstance(v, str) and v.strip():
                     hubbed.add(v.strip().lower())
             continue
-        if not rp.startswith(("catalog/sources/", "knowledge/notes/")):
+        if not rp.startswith("knowledge/notes/"):
             continue
         terms: list[str] = []
         for field in ("topics", "tags", "research_area"):
@@ -623,6 +600,11 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
             key = t.lower()
             counts[key] = counts.get(key, 0) + 1
             label.setdefault(key, t)
+    for source in state.catalog_sources(vault):
+        for term in _catalog_source_terms(source):
+            key = term.lower()
+            counts[key] = counts.get(key, 0) + 1
+            label.setdefault(key, term)
     out = []
     for key in sorted(counts):
         if counts[key] >= threshold and key not in hubbed:
@@ -636,6 +618,19 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
                 )
             )
     return out
+
+
+def _catalog_source_terms(source: dict[str, object]) -> list[str]:
+    csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
+    memoria = csl.get("memoria") if isinstance(csl.get("memoria"), dict) else {}
+    out = []
+    for field in ("tags", "topics", "research_area"):
+        value = memoria.get(field)
+        if isinstance(value, list):
+            out.extend(term for term in value if isinstance(term, str) and term.strip())
+        elif isinstance(value, str) and value.strip():
+            out.append(value)
+    return sorted(set(out))
 
 
 def skeleton_drift(vault: Path) -> list[Finding]:
@@ -672,7 +667,6 @@ DETECTORS = [
     orphan_working_files,
     stale_fleeting,
     stale_answer_drafts,
-    extract_path_broken,
     frontmatter_schema_check,
     frontmatter_link_check,
     broken_wikilinks,

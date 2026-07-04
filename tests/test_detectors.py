@@ -5,6 +5,7 @@ import json as _json
 from datetime import UTC
 from pathlib import Path as _Path
 
+from memoria_vault.runtime import state
 from memoria_vault.runtime.subsystems.integrity.linter import detectors as _m
 
 Path = _m.Path
@@ -26,7 +27,6 @@ def test_detectors():
             for d in (
                 "notes/fleeting",
                 "inbox/_answers",
-                "catalog/sources/s1",
                 "knowledge/notes",
                 "knowledge/hubs",
                 "knowledge/projects/proj",
@@ -60,11 +60,6 @@ def test_detectors():
             ad.write_text("draft answer", encoding="utf-8")
             old_ad = time.time() - 100 * 86400
             os.utime(ad, (old_ad, old_ad))
-            (v / "catalog/sources/s1/source.md").write_text(
-                "---\ntype: source\ncheck_status: checked\ntitle: S1\n"
-                "description: Source one\nsource_id: s1\ncontent_path: missing/content.md\n---\n",
-                encoding="utf-8",
-            )
             (v / "knowledge/notes/oldnote.md").write_text(
                 "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAW\n"
                 "tags: []\nlinks: {}\ntitle: Old\nstatus: superseded\n---\nOld note.\n",
@@ -180,10 +175,6 @@ def test_detectors():
             check(
                 "stale-answer-drafts fires on 100d draft",
                 any("old-answer.md" in x.path for x in by("stale-answer-drafts")),
-            )
-            check(
-                "extract-path-broken fires",
-                any("source.md" in x.path for x in by("extract-path-broken")),
             )
             check(
                 "schema-check flags malformed note",
@@ -454,11 +445,12 @@ def test_hub_threshold(tmp_path):
     v = tmp_path
     for i in range(2):
         _topic_note(v, f"sleep-{i}", "[Sleep]")
-    (v / "catalog/sources/p1").mkdir(parents=True, exist_ok=True)
-    (v / "catalog/sources/p1/source.md").write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: P1\n"
-        "description: Source\nsource_id: p1\nresearch_area: [sleep]\n---\n",
-        encoding="utf-8",
+    state.upsert_catalog_record(
+        v,
+        source_id="p1",
+        title="P1",
+        check_status="checked",
+        csl_json={"memoria": {"research_area": ["sleep"]}},
     )
     # below threshold -> no finding
     assert _m.hub_threshold(v, threshold=4) == []

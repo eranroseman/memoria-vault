@@ -45,7 +45,7 @@ every field and count.
 | [Policy gate](policy-mcp.md) | Runtime policy hook, optional adapter contract, audit pairing, and fail-closed behavior | Manual |
 | [Policy audit log](policy-audit-log.md) | Audit-log fields, JSON example, decision enum, and per-write hash pairing | Manual |
 | [Policy auto-fix](policy-auto-fix.md) | Auto-fix classes and dispositions enforced by the policy gate | Manual |
-| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, project-hint scoring, API calls, and graph algorithms | Manual |
+| [Retrieval and analysis methods](retrieval-and-analysis-methods.md) | Deterministic methods: BM25 retrieval, API calls, and graph algorithms | Manual |
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Pattern library](pattern-library.md) | Shipped patterns, pattern-note schema, runner contract, gated-target dry-run, and provenance | Manual |
@@ -56,7 +56,7 @@ every field and count.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest | Manual |
-| [Sweeps](sweeps.md) | Re-ingest and retraction maintenance passes | Manual |
+| [Sweeps](sweeps.md) | Retraction maintenance passes | Manual |
 | [Search](search.md) | qmd retrieval surface: checked-only BM25 baseline, consumers, index, and limits | Manual |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |

@@ -15,9 +15,6 @@ run_py() {
 }
 
 case "$job" in
-  sweeps)
-    run_py -m memoria_vault.runtime.subsystems.cleanup.reconcile --vault "$vault"
-    ;;
   worker)
     run_py -m memoria_vault.cli workspace scan --workspace "$vault" --schedule-id worker-scan --json
     run_py -m memoria_vault.cli workspace run --workspace "$vault" --schedule-id worker-drain --limit 10 --json

@@ -88,11 +88,11 @@ reference pages; docs checks keep the mirror linked.
 
 ### Linter (`memoria_vault.runtime.subsystems.integrity.linter`)
 
-The seventeen registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](linter.md#the-detectors); every detector is report-only.
+The registered detectors (slugs, severities, and what each catches) live in [Linter: detectors and auto-fix](linter.md#the-detectors); every detector is report-only.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all seventeen structural detectors over the vault; findings surface on the drift dashboards. |
+| Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
 | Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-25](../adr/25-session-logging-two-logs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `knowledge/hubs/` stays PI-curated. |
@@ -101,10 +101,10 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Eval dispatch | sweeps operation (`eval_dispatch.py`, scheduled task or `memoria eval run`) | Fans the gold set out as one idempotent local eval task per current task ([Vault eval](vault-eval.md)). |
-| Eval score | sweeps operation (`eval_score.py`, scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
-| Retraction check | sweeps operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
-| Retraction sweep | sweeps operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
+| Eval dispatch | telemetry operation (`eval_dispatch.py`, scheduled task or `memoria eval run`) | Fans the gold set out as one idempotent local eval task per current task ([Vault eval](vault-eval.md)). |
+| Eval score | telemetry operation (`eval_score.py`, scheduled task) | Computes recall@k / support-rate / FAMA-clean from local result blocks; appends to `system/metrics/eval/runs.jsonl`. |
+| Retraction check | retraction operation (`retraction.py`) | Checks a DOI against the Retraction Watch dataset, Crossref, and Open Retractions (read-only). |
+| Retraction sweep | retraction operation (`retraction.py`) | Scans the catalog's DOIs for retractions and hands findings to the agent to flag. |
 | Emit worklist | shared operation helper (`worklists.py`) | Converts a scan/search report into file-backed worklist projections and one aggregate `work-prompt` attention projection. |
 
 ## Runtime policy and helper modules
@@ -149,8 +149,8 @@ The seventeen registered detectors (slugs, severities, and what each catches) li
 ## Scheduled tasks (`.memoria/scripts/`)
 
 The deterministic scheduled jobs are optional operator wiring around the CLI and
-runtime package. `.memoria/scripts/cron-runner.sh` dispatches `sweeps`, `worker`,
-`lint`, `eval`, and `retraction-refresh`. No scheduler is required for a one-shot
+runtime package. `.memoria/scripts/cron-runner.sh` dispatches `worker`, `lint`,
+`eval`, and `retraction-refresh`. No scheduler is required for a one-shot
 CLI workflow; a systemd timer, cron entry, launchd job, or another local
 scheduler can call the runner when always-on maintenance is desired.
 
@@ -158,9 +158,7 @@ scheduler can call the runner when always-on maintenance is desired.
 
 Alpha.15 does not ship installed profile skill bundles or per-lane task routing.
 Reusable prompt behavior lives as checked packaged operation manifests and runs
-through `memoria operation run`. Optional
-adapters may expose their own skills later, but those adapters are not current
-product authority.
+through `memoria operation run`.
 
 ## PI actions
 

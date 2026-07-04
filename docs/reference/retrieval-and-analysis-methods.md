@@ -57,19 +57,6 @@ read barrier.
 
 ---
 
-### Project-hint overlap scoring
-
-**Status:** not shipped in alpha.15.
-
-The older project-hints idea proposed project membership from a small
-user-authored topic list. The current template does not ship a
-`.memoria/project-hints.yaml` file and ingest does not read one.
-
-Use `memoria work update` and project-scoped notes for explicit project
-membership until a future design reintroduces this as an implemented operation.
-
----
-
 ### Graph algorithms (BFS, PageRank, shortest path)
 
 **For:** orphan detection, hub identification, dependency walks, link density measurement.

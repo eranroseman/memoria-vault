@@ -374,9 +374,13 @@ def _vault_root(path: Path) -> Path:
 
 
 def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
-    _md(
-        tmp_path / "catalog/sources/source-alpha/source.md",
-        "type: source\ncheck_status: checked\ntitle: Alpha\ndescription: Alpha\ntags: [sleep]\n",
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="source-alpha",
+        title="Alpha",
+        check_status="checked",
+        text_status="full-text",
+        csl_json={"memoria": {"tags": ["sleep"]}},
     )
     _md(
         tmp_path / "knowledge/works/source-alpha.md",
@@ -388,28 +392,41 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
             tmp_path / f"knowledge/notes/warrant-{idx}.md",
             f"type: note\ncheck_status: checked\ntitle: Warrant {idx}\ntags: [warrant]\n",
         )
-    _md(
-        tmp_path / "catalog/sources/balanced/source.md",
-        "type: source\ncheck_status: checked\ntitle: Balanced\ndescription: Balanced\n"
-        "tags: [balanced]\n",
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="balanced",
+        title="Balanced",
+        check_status="checked",
+        text_status="full-text",
+        csl_json={"memoria": {"tags": ["balanced"]}},
     )
     _md(
         tmp_path / "knowledge/notes/balanced.md",
         "type: note\ncheck_status: checked\ntitle: Balanced note\ntags: [balanced]\n",
     )
-    _md(
-        tmp_path / "catalog/sources/thin/source.md",
-        "type: source\ncheck_status: checked\ntitle: Thin\ndescription: Thin\ntags: [thin]\n",
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="thin",
+        title="Thin",
+        check_status="checked",
+        text_status="full-text",
+        csl_json={"memoria": {"tags": ["thin"]}},
     )
-    _md(
-        tmp_path / "catalog/sources/unchecked/source.md",
-        "type: source\ncheck_status: unchecked\ntitle: Unchecked\ndescription: Unchecked\n"
-        "tags: [unchecked-only]\n",
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="unchecked",
+        title="Unchecked",
+        check_status="unchecked",
+        text_status="full-text",
+        csl_json={"memoria": {"tags": ["unchecked-only"]}},
     )
-    _md(
-        tmp_path / "catalog/sources/retracted/source.md",
-        "type: source\ncheck_status: checked\ntitle: Retracted\ndescription: Retracted\n"
-        "lifecycle: retracted\ntags: [stale-only]\n",
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="retracted",
+        title="Retracted",
+        check_status="checked",
+        text_status="full-text",
+        csl_json={"memoria": {"tags": ["stale-only"], "standing": "retracted"}},
     )
     for idx in range(2):
         path = tmp_path / f"knowledge/notes/candidate-{idx}.md"
