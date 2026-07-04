@@ -16,7 +16,9 @@ superseded_by: [126]
 > **Status note (0.1.0-alpha.15):** superseded by [ADR-126](126-four-type-knowledge-model.md). Kept for decision history; current architecture is carried by the consolidation ADR.
 
 
-> **Implementation status: built** ([#425](https://github.com/eranroseman/memoria-vault/issues/425)). The classify stage (`classify.py`, wired in `runner.py`) loads the optional `.memoria/project-hints.yaml` and scores each project's `primary_topics` against the paper's OpenAlex topic signals (topic names + subfields, kebab-case normalized; a hint matches a signal when equal or when all the hint's tokens appear in it). The ADR left the proposal rule open, so the implementation picked a conservative one: **every project with >= 1 overlapping hint topic is proposed, ranked by overlap count** — safe because it is a proposal the human confirms at triage, never an auto-apply. The proposal lands in `_proposed_classification.projects`; each decision (proposed or no-match) appends one `stage: project_hints` line to `system/logs/classify.jsonl` with the candidates and overlap counts (ADR-54 honesty — counts, not confidence). An absent hints file is a silent no-op (fully manual); a malformed one warns once on stderr and degrades to manual.
+> **Alpha.15 update:** the project-hints implementation described below was
+> removed with the alpha.15 standalone cut. Current project membership and
+> proposal behavior is owned by [ADR-126](126-four-type-knowledge-model.md).
 
 ## Context
 
