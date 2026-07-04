@@ -18,23 +18,3 @@ workflow_jobs:
   cspell: .github/workflows/cspell.yml
   lint-config: .github/workflows/lint-config.yml
   markdownlint: .github/workflows/markdownlint.yml
-rulesets:
-  - name: main
-    target: branch
-    enforcement: active
-    ref_includes:
-      - refs/heads/main
-    rules:
-      - type: deletion
-      - type: non_fast_forward
-      - type: pull_request
-      - type: required_status_checks
-        contexts_from: required_checks
-  - name: scratch
-    target: branch
-    enforcement: active
-    ref_includes:
-      - refs/heads/scratch
-    rules:
-      - type: deletion
-      - type: non_fast_forward

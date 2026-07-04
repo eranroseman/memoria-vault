@@ -133,7 +133,7 @@ repos:
         name: agents-doctor
         language: system
         entry: python scripts/agents_doctor.py
-        files: ^(\.agents/|\.claude/|AGENTS\.md$|scripts/agents_doctor\.py$)
+        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$)
         pass_filenames: false
 
       - id: github-doctor

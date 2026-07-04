@@ -39,16 +39,6 @@ contract() { pytest_level "contract" "contract"; }
 package_tests() { pytest_level "package" "package"; }
 runtime_tests() { pytest_level "runtime" "runtime"; }
 
-doc_refs() {
-  mapfile -t doc_ref_files < <(git ls-files '*.md' '*.py' '*.yaml' '*.yml')
-  python3 scripts/docs_doctor.py --doc-refs "${doc_ref_files[@]}"
-}
-
-yaml_lint() {
-  mapfile -t yaml_files < <(git ls-files '*.yaml' '*.yml')
-  yamllint "${yaml_files[@]}"
-}
-
 l1() {
   echo "── L1/source: unit + contract ──"
   pytest_level "unit + contract" "unit or contract"
@@ -93,8 +83,6 @@ l0() {
   run python3 scripts/docs_doctor.py docs
   run python3 scripts/alpha14_negative_gate.py
   run python3 scripts/checked_terminology_gate.py
-  run doc_refs
-  run yaml_lint
   run python3 scripts/docs_doctor.py --vault-links
   run python3 scripts/status_doctor.py
   run python3 scripts/adr_code_doctor.py

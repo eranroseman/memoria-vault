@@ -69,6 +69,7 @@ TEST_LEVELS = {
     "test_ruleset_doctor.py": "static",
     "test_runtime_helpers.py": "unit",
     "test_runtime_policy.py": "contract",
+    "test_sample_vault.py": "package",
     "test_schemas.py": "contract",
     "test_search_index.py": "contract",
     "test_seeded_errors.py": "runtime",

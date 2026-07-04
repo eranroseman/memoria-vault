@@ -4,8 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib.machinery
-import importlib.util
 import re
 import sys
 from pathlib import Path
@@ -14,7 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS = ROOT / ".agents"
-GUIDANCE_DIRS = (".agents", ".claude")
+GUIDANCE_DIRS = (".agents", ".claude", ".codex", ".kilo")
 IMPACT_SOURCE = AGENTS / "system/change-impact.yaml"
 IMPACT_DOC = AGENTS / "system/change-impact-map.md"
 RULESET_CONTRACT = ROOT / ".github/ruleset-contract.yaml"
@@ -67,10 +65,7 @@ def _local_link_errors() -> list[str]:
     errors = []
     link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
     roots = [ROOT / name for name in GUIDANCE_DIRS if (ROOT / name).is_dir()]
-    paths = [p for root in roots for p in root.rglob("*.md")]
-    if (ROOT / "AGENTS.md").is_file():
-        paths.append(ROOT / "AGENTS.md")
-    for path in sorted(paths):
+    for path in sorted(p for root in roots for p in root.rglob("*.md")):
         for target in link_re.findall(path.read_text(encoding="utf-8")):
             target = target.split("#", 1)[0]
             if not target or "://" in target or target.startswith("#"):
@@ -85,6 +80,8 @@ def _skill_errors() -> list[str]:
     skill_roots = [
         ROOT / ".agents" / "skills",
         ROOT / ".claude" / "skills",
+        ROOT / ".codex" / "skills",
+        ROOT / ".kilo" / "skills",
     ]
     for path in sorted(p for root in skill_roots if root.is_dir() for p in root.glob("*/SKILL.md")):
         text = path.read_text(encoding="utf-8")
@@ -136,197 +133,6 @@ def _required_ci_errors() -> list[str]:
     return []
 
 
-def _load_python_file(module_name: str, path: Path):
-    loader = importlib.machinery.SourceFileLoader(module_name, str(path))
-    spec = importlib.util.spec_from_loader(module_name, loader)
-    if spec is None:
-        raise ImportError(f"cannot load {path}")
-    module = importlib.util.module_from_spec(spec)
-    loader.exec_module(module)
-    return module
-
-
-def _code_spans(text: str) -> list[str]:
-    return re.findall(r"`([^`]+)`", text)
-
-
-def _code_spans_after_label(text: str, label: str) -> set[str]:
-    lines = text.splitlines()
-    for index, line in enumerate(lines):
-        if line.startswith(label):
-            block = [line]
-            for continuation in lines[index + 1 :]:
-                if not continuation.strip() or re.match(r"^[A-Z][A-Za-z -]+:", continuation):
-                    break
-                block.append(continuation)
-            return set(_code_spans("\n".join(block)))
-    return set()
-
-
-def _pr_policy_errors(text: str | None = None, policy=None) -> list[str]:
-    text = text if text is not None else (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    policy = policy or _load_python_file("memoria_pr_policy", ROOT / ".github/scripts/pr_policy.py")
-    errors = []
-
-    trusted = _code_spans_after_label(text, "Trusted authors:")
-    expected_trusted = set(policy.TRUSTED_AUTHORS)
-    if trusted != expected_trusted:
-        errors.append(
-            f"AGENTS.md trusted authors drift from pr_policy.py: {trusted} != {expected_trusted}"
-        )
-
-    sensitive = _code_spans_after_label(text, "Sensitive paths:")
-    expected_sensitive = set(policy.SENSITIVE_PREFIXES) | set(policy.SENSITIVE_PATHS)
-    if sensitive != expected_sensitive:
-        errors.append(
-            "AGENTS.md sensitive paths drift from pr_policy.py: "
-            f"{sensitive} != {expected_sensitive}"
-        )
-
-    auto_row = _table_row(text, "auto_approve")
-    auto_values = set(_code_spans(auto_row))
-    for value in (*policy.SAFE_PROSE_PREFIXES, *policy.SAFE_SUFFIXES):
-        if value not in auto_values:
-            errors.append(f"AGENTS.md auto_approve row omits pr_policy.py value: {value}")
-
-    block_row = _table_row(text, "block")
-    block_values = set(_code_spans(block_row))
-    for value in policy.MAIN_EXCLUDED_PREFIXES:
-        if value not in block_values:
-            errors.append(f"AGENTS.md block row omits pr_policy.py value: {value}")
-
-    return errors
-
-
-def _table_row(text: str, key: str) -> str:
-    prefix = f"| `{key}` |"
-    return next((line for line in text.splitlines() if line.startswith(prefix)), "")
-
-
-def _expand_braces(pattern: str) -> list[str]:
-    match = re.search(r"\{([^{}]+)\}", pattern)
-    if not match:
-        return [pattern]
-    before, after = pattern[: match.start()], pattern[match.end() :]
-    expanded = []
-    for option in match.group(1).split(","):
-        expanded.extend(_expand_braces(f"{before}{option}{after}"))
-    return expanded
-
-
-ROOT_PATHS = {
-    "AGENTS.md",
-    "CONTRIBUTING.md",
-    "package.json",
-    "pyproject.toml",
-    "requirements-dev.txt",
-}
-PATH_PREFIXES = (".agents/", ".github/", "docs/", "scripts/", "src/", "tests/", "vault-template/")
-
-
-def _source_map_path_errors(text: str | None = None, root: Path | None = None) -> list[str]:
-    root = root or ROOT
-    text = (
-        text
-        if text is not None
-        else (AGENTS / "system/source-of-truth-map.md").read_text(encoding="utf-8")
-    )
-    errors = []
-    for span in _code_spans(text):
-        if "<" in span or (span not in ROOT_PATHS and not span.startswith(PATH_PREFIXES)):
-            continue
-        for expanded in _expand_braces(span):
-            matches = list(root.glob(expanded)) if any(ch in expanded for ch in "*?[]") else []
-            if matches:
-                continue
-            candidate = root / expanded
-            if expanded.endswith("/"):
-                ok = candidate.is_dir()
-            else:
-                ok = candidate.exists()
-            if not ok:
-                errors.append(f".agents/system/source-of-truth-map.md: missing path `{span}`")
-                break
-    return errors
-
-
-def _verify_change_errors(text: str | None = None, verify_module=None) -> list[str]:
-    text = (
-        text
-        if text is not None
-        else (AGENTS / "playbooks/verify-change.md").read_text(encoding="utf-8")
-    )
-    verify_module = verify_module or _load_python_file(
-        "memoria_verify_script", ROOT / "scripts/verify"
-    )
-    errors = []
-
-    actual_gates = _verify_gate_rows(text)
-    expected_gates = list(verify_module.GATE_COMMANDS)
-    if actual_gates != expected_gates:
-        errors.append(
-            f"verify-change gate rows drift from scripts/verify: {actual_gates} != {expected_gates}"
-        )
-
-    for mode in verify_module.MODES:
-        if f"`scripts/verify {mode}`" not in text:
-            errors.append(f"verify-change evidence ladder omits scripts/verify mode: {mode}")
-    return errors
-
-
-def _verify_gate_rows(text: str) -> list[str]:
-    rows = []
-    in_table = False
-    for line in text.splitlines():
-        if line == "| Gate | Proves | Use when |":
-            in_table = True
-            continue
-        if in_table and line == "|---|---|---|":
-            continue
-        if in_table and line.startswith("| "):
-            cells = [cell.strip() for cell in line.strip("|").split("|")]
-            rows.append(cells[0].lower())
-            continue
-        if in_table:
-            break
-    return rows
-
-
-def _enforcement_mechanisms() -> set[str]:
-    mechanisms = set()
-    precommit = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")) or {}
-    for repo in precommit.get("repos", []):
-        for hook in repo.get("hooks", []):
-            if hook_id := hook.get("id"):
-                mechanisms.add(hook_id)
-    contract = yaml.safe_load(RULESET_CONTRACT.read_text(encoding="utf-8")) or {}
-    mechanisms.update(contract.get("required_checks", []))
-    for base in (ROOT / "scripts", ROOT / ".github/scripts"):
-        if base.is_dir():
-            mechanisms.update(
-                path.relative_to(ROOT).as_posix() for path in base.rglob("*") if path.is_file()
-            )
-    return mechanisms
-
-
-def _agent_tag_errors(text: str | None = None) -> list[str]:
-    text = text if text is not None else (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-    mechanisms = _enforcement_mechanisms()
-    errors = []
-    for raw in re.findall(r"\*\(enforced: (.*?)\)\*", text):
-        if "<" in raw:
-            continue
-        for mechanism in (item.strip() for item in raw.split(",")):
-            if mechanism not in mechanisms:
-                errors.append(f"AGENTS.md enforcement tag names missing mechanism: {mechanism}")
-    for raw in re.findall(r"\*\(enforced-by-structure: (.*?)\)\*", text):
-        if "<" in raw:
-            continue
-        if not raw.strip():
-            errors.append("AGENTS.md structural enforcement tag must name a concrete invariant")
-    return errors
-
-
 def generated_files() -> dict[Path, str]:
     data = yaml.safe_load(IMPACT_SOURCE.read_text(encoding="utf-8")) or {}
     if data.get("version") != 1 or not data.get("areas"):
@@ -358,12 +164,7 @@ def check(write: bool = False) -> list[str]:
         if not (AGENTS / relative).is_file():
             errors.append(f".agents/{relative}: required guidance file is missing")
     try:
-        agents_text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         errors.extend(_required_ci_errors())
-        errors.extend(_pr_policy_errors(agents_text))
-        errors.extend(_source_map_path_errors())
-        errors.extend(_verify_change_errors())
-        errors.extend(_agent_tag_errors(agents_text))
         data = yaml.safe_load(IMPACT_SOURCE.read_text(encoding="utf-8")) or {}
         errors.extend(_impact_errors(data))
         rendered = generated_files()

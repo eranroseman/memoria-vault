@@ -29,9 +29,14 @@ Read:
    - `schemas/types/<type>.yaml` for fields and enums
    - `schemas/folders.yaml` for homes, prefixes, and skeleton
    - `schemas/calibration.yaml` for thresholds
-3. Inspect and update every affected consumer named by the source-of-truth map
-   and the relevant change-impact map rows. Do not copy those dependency lists
-   into this skill.
+3. Inspect and update affected consumers:
+   - Matching `vault-template/system/templates/<type>.md`
+   - `.base` views and dashboard queries
+   - Shared card writer or engine emitters
+   - Linter/pre-commit behavior
+   - Installer skeleton and golden-copy behavior
+   - Policy/pattern fallback constants when gated prefixes change
+   - Frontmatter, document-type, layout, and workflow documentation
 4. Preserve invariants:
    - Every type has exactly one home and a matching type literal.
    - Lifecycle values are an ordered subset of the universal chain.
