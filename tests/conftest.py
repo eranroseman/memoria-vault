@@ -16,7 +16,6 @@ GIT_ENV_VARS = (
 TEST_LEVEL_NAMES = frozenset({"static", "unit", "contract", "package", "runtime", "live"})
 
 TEST_LEVELS = {
-    "test_adr_code_doctor.py": "static",
     "test_agents_doctor.py": "static",
     "test_alpha11_cycle.py": "runtime",
     "test_alpha12_state.py": "runtime",
@@ -36,7 +35,6 @@ TEST_LEVELS = {
     "test_engine_api.py": "contract",
     "test_eval_score.py": "contract",
     "test_exploration_trace.py": "contract",
-    "test_gen_adr_index.py": "static",
     "test_github_doctor.py": "static",
     "test_hub_handoff.py": "contract",
     "test_http_transport.py": "contract",

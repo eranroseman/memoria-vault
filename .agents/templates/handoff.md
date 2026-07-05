@@ -37,7 +37,7 @@ Explicitly out of scope:
 
 ## Evidence and references
 
-- <!-- Issue, ADR, source file, failing test, or reproduction command. -->
+- <!-- Issue, decision record, source file, failing test, or reproduction command. -->
 
 ## Open questions
 

@@ -54,9 +54,9 @@ Distinguish blocking failures from known advisory warnings.
 - Verify commands, paths, profile names, counts, and release references against
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
-  matching generator or drift check. For the ADR index, run
-  `python scripts/checks/gen_adr_index.py --check`; otherwise route the change to the
-  owning source/generator named by the page.
+  matching generator or drift check. Decision-history changes should update
+  `design-history/arcs.md` and the active release decision ledger when they
+  change the current or pending design line.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.

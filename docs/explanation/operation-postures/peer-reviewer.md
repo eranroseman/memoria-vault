@@ -18,7 +18,7 @@ The Peer-reviewer owns judgment checks. Deterministic verification work -
 retraction lookups, duplicate and broken-citation sweeps - lives in
 verification-sweep operations that can be run manually or by an operator-managed
 schedule, with no installed profile and no lane ([Operations](../operations.md)).
-[ADR-125](../../adr/125-standalone-cli-engine-architecture.md) records the consolidation decision.
+[ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) records the consolidation decision.
 
 ---
 

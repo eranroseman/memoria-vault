@@ -15,6 +15,6 @@ workflow lives in the repo root.
 | Section | Use it for |
 | --- | --- |
 | [Design Book](design/README.md) | Maintained arguments for the major design choices. |
-| [Decision records]({{ site.baseurl }}/adr/) | Dated ADR records for decisions at every lifecycle state. |
+| [Design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) | Dated release design record and current/pending design line. |
 | [Contributing](https://github.com/eranroseman/memoria-vault/blob/main/CONTRIBUTING.md) | Human-facing contribution workflow and issue-tracking model. |
 | [Reference: agents and control](reference/README.md#agents-and-control) | Agent rules, policy guards, and runtime contract sources. |

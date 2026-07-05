@@ -12,5 +12,5 @@ scripts/install.ps1 @eranroseman
 # Agent profiles and vault machinery — core product logic
 vault-template/.memoria/ @eranroseman
 
-# Signed-off architecture decisions
-docs/adr/ @eranroseman
+# Signed-off design history
+design-history/ @eranroseman

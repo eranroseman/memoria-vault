@@ -20,6 +20,7 @@ BOT_LABELS = {"dependencies", "python", "github_actions", "release"}
 EXPECTED_DEPENDABOT_UPDATES = {
     ("github-actions", "/"),
     ("pip", "/"),
+    ("pre-commit", "/"),
 }
 STALE_PROFILE_TERMS = {
     "memoria-mapper",

@@ -27,7 +27,7 @@ they are not `source`, `paper`, `person`, or `venue` Concept files.
 ## Authored links
 
 Knowledge Concepts carry `links:` as the authored relationship map specified by
-[ADR-126](../adr/126-four-type-knowledge-model.md) and the generated
+[ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and the generated
 [Frontmatter fields](frontmatter.md). The only frontmatter link relations are:
 
 | Link | Direction |

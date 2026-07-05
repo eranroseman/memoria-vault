@@ -33,8 +33,15 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Cache pre-commit environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pre-commit-
       - name: yamllint tracked YAML (uses .yamllint)
-        run: git ls-files '*.yaml' '*.yml' | xargs -r yamllint
+        run: pre-commit run yamllint --all-files
 
       - name: actionlint
         uses: docker://rhysd/actionlint:1.7.7

@@ -37,8 +37,8 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 Obsidian Bases (`.base` files), when present, are optional views over the same
 workspace files. Bases are views only; Concept frontmatter is governed by
-[ADR-126](../adr/126-four-type-knowledge-model.md), and SQLite catalog rows are
-governed by [ADR-124](../adr/124-standalone-catalog-citation-authority.md).
+[ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and SQLite catalog rows are
+governed by [ADR-124](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |

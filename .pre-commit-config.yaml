@@ -5,54 +5,50 @@
 # Bypass everything (rarely):  git commit --no-verify
 
 repos:
-  - repo: local
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
     hooks:
       # Block 0: no direct commits to main (main is PR-protected; block, don't warn)
       - id: no-commit-to-branch
-        name: no-commit-to-branch
-        language: system
-        entry: no-commit-to-branch --branch main
+        args: [--branch, main]
         always_run: true
         pass_filenames: false
 
       # Block 8: JSON syntax check
       - id: check-json
-        name: check json
-        language: system
-        entry: check-json
         files: \.json$
 
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
       - id: gitleaks
-        name: gitleaks
-        language: system
-        entry: gitleaks protect --staged --redact --verbose
         always_run: true
         pass_filenames: false
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
       - id: ruff
-        name: ruff
-        language: system
-        entry: ruff check --force-exclude
         files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
 
       - id: ruff-format
-        name: ruff format
-        language: system
-        entry: ruff format --force-exclude
         files: ^src/memoria_vault/.*\.py$|^scripts/.*\.py$|^vault-template/\.memoria/.*\.py$|^\.github/scripts/.*\.py$|^tests/.*\.py$
 
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
       - id: yamllint
-        name: yamllint
-        language: system
-        entry: yamllint
         files: \.(yaml|yml)$
 
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
       - id: shellcheck
-        name: shellcheck
-        language: system
-        entry: shellcheck --severity=warning
+        args: [--severity=warning]
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
 
+  - repo: local
+    hooks:
       # Block 1: docs-doctor
       - id: docs-doctor
         name: docs-doctor
@@ -83,6 +79,7 @@ repos:
         language: system
         entry: python scripts/checks/docs_doctor.py --doc-refs
         files: \.(md|py|ya?ml)$
+        exclude: ^design-history/
         pass_filenames: true
 
       # Block 6: dashboard schema-drift
@@ -112,14 +109,6 @@ repos:
         entry: bash -lc 'PATH=node_modules/.bin:$PATH cspell lint --no-progress --no-must-find-files "$@"' --
         files: \.md$
         pass_filenames: true
-
-      # Block 10: ADR index current
-      - id: adr-index
-        name: adr-index
-        language: system
-        entry: python scripts/checks/gen_adr_index.py --check
-        files: ^docs/adr/.*\.md$|^scripts/checks/gen_adr_index\.py$
-        pass_filenames: false
 
       # Block 11: status-doctor
       - id: status-doctor

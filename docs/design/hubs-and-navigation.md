@@ -31,7 +31,7 @@ there degrades to a proposal ([Document types and epistemic roles](../explanatio
 
 So the engine stops at the threshold of judgment. A gap-analysis operation may
 propose that a topic needs a hub, but only as a **bare member list plus
-threshold evidence** in staging ([ADR-126 (four-type knowledge model, hub-owns-tag)](../adr/126-four-type-knowledge-model.md)).
+threshold evidence** in staging ([ADR-126 (four-type knowledge model, hub-owns-tag)](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 The human writes the framing, curates membership, and names gaps.
 
 ---

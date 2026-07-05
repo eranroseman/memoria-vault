@@ -12,8 +12,8 @@ Release state lives in GitHub; this playbook is the portable agent procedure.
 - **Release prose** lives in the release parent issue. Use
   [the release plan template](../templates/release-plan.md) as a drafting aid.
 - **Build gaps** live as GitHub issues.
-- **Scope cuts** live as GitHub issues with Readiness `Later`; ADRs record the
-  decision or rationale only when there is one.
+- **Scope cuts** live as GitHub issues with Readiness `Later`; release decision
+  entries record the decision or rationale only when there is one.
 - **Version and notes** are owned by release-please.
 - **In-work release design notes** live on the `scratch` branch under
   `releases/<version>/` on the `scratch` branch while the release is being shaped and are deleted
@@ -53,15 +53,14 @@ Do not create a second markdown state table for gate or stage progress.
    and no release-milestone issue has `Readiness: Blocked`.
 2. Re-run the relevant Release Gate checks from a fresh clone or record why a
    check is not applicable.
-3. Retire-sweep ADRs in a small separate PR: delete ADRs whose question this
-   release dissolved or superseded, keep the decision memory in git history, and
-   regenerate the ADR index.
+3. Fold accepted/rejected release decisions into `design-history/` and update
+   `design-history/arcs.md` with current and pending lines.
 4. Merge the release-please PR for formal releases. It owns version bump,
    changelog, tag, and GitHub Release notes.
 5. Close the milestone and release parent issue, rolling unfinished issues forward.
 6. Delete `releases/<version>/` design notes from the `scratch` branch
    before calling the release/checkpoint done, after routing durable content to
-   ADRs, docs, or issues.
+   `design-history/`, docs, or issues.
 
 ## 4. Verify
 

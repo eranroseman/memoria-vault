@@ -11,9 +11,9 @@ Memoria telemetry is split into three planes because the same event stream canno
 serve audit, product-health, and debugging needs without leaking data or losing
 forensic value. This page explains the operating model. Exact schemas live in
 [Telemetry log schemas](../../reference/telemetry-logs.md); the decisions are
-[ADR-127](../../adr/127-quarantine-and-verify-integrity.md),
-[ADR-105](../../adr/105-diagnostic-plane.md), and
-[ADR-106](../../adr/106-cost-and-disposition-capture.md).
+[ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
+[ADR-105](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
+[ADR-106](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Plane | What it answers | Where it lives |
 | --- | --- | --- |

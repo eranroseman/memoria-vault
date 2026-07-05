@@ -6,7 +6,7 @@ grand_parent: Reference
 
 # Retrieval and analysis methods
 
-Deterministic methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in ADRs and explanation pages, not in the active reference contract.
+Deterministic methods Memoria uses, organized by purpose. This page is the current lookup surface; deferred method ideas live in the active release decision ledger, design history, and explanation pages, not in the active reference contract.
 
 For the rationale — why deterministic over LLM, cost, and audit implications — see [Why Memoria uses deterministic methods alongside LLMs](../design/why-deterministic-methods.md).
 

@@ -8,7 +8,7 @@ nav_order: 11
 # Why operation postures, not a generalist agent
 
 Memoria uses **one read-only conversational posture plus capability-backed
-operation postures** instead of one generalist ([ADR-125](../adr/125-standalone-cli-engine-architecture.md)).
+operation postures** instead of one generalist ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 The dividing line is **posture and write-permission, not capability or tool**:
 faithful vs skeptical, read-only vs checked-write vs proposal-only. This page
 makes the argument - why specialists at all, and why posture is the axis that

@@ -1,11 +1,12 @@
 # Dependabot version-update PRs for the dependency surfaces that exist: GitHub
-# Actions pinned in .github/workflows/ and contributor/CI Python tooling at the
-# repo root.
+# Actions pinned in .github/workflows/, contributor/CI Python tooling at the
+# repo root, and pinned pre-commit hook environments.
 # Monthly + a small PR cap keeps the noise low; commit messages use the `chore`
 # prefix to match Conventional Commits.
 #
 # github-actions PRs auto-merge when green (.github/workflows/dependabot-auto-merge.yml);
-# pip PRs land as needs_human so a person eyeballs API-affecting bumps first.
+# pip and pre-commit PRs land as needs_human so a person eyeballs API-affecting
+# bumps first.
 # (Security-fix PRs from Dependabot alerts are separate and not gated here.)
 version: 2
 updates:
@@ -29,4 +30,15 @@ updates:
       prefix: chore
     groups:
       dev-python:
+        patterns: ["*"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+    groups:
+      hook-tools:
         patterns: ["*"]

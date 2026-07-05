@@ -18,7 +18,8 @@
   2. Living — update Progress / Execution log / Surprises at every stop.
   3. Novice-executable — define every term the first time it appears.
   4. Demonstrably working — validation is observable behavior with transcripts.
-  5. Decisions go to ADRs — link them; the Execution log holds only tactics.
+  5. Decisions go to the release decision ledger — link them; the Execution log
+     holds only tactics.
 
   ── Formatting ──────────────────────────────────────────────────────────────
   Prose first; the ONLY checklist is Progress (§7). If you paste this whole plan
@@ -33,7 +34,7 @@
 - **Task:** {{ one line }}
 - **Worktree / branch:** `~/memoria-vault/worktrees/<name>` · `feat/<name>` for implementation;
   `scratch/<name>` pushed to `origin/scratch` for this plan file
-- **Related ADRs:** {{ ADR-NN — link to `docs/adr/<NN>-*.md`, or — }}
+- **Related decisions:** {{ release decision entry / design-history link, or — }}
 - **Related issues / milestone:** {{ #NN, 0.1.0 or — }}
 - **Started:** {{ YYYY-MM-DD }} · **Last updated:** {{ YYYY-MM-DD }}
 
@@ -104,10 +105,10 @@
 ## 8. Execution log
 
 <!-- Tactical and sequencing decisions made WHILE running, with rationale.
-     Architectural / product decisions are NOT recorded here — write them as an
-     ADR in docs/adr/ and link it. -->
+     Architectural / product decisions are NOT recorded here — write them in
+     releases/<version>/decisions.md and link them. -->
 
-- {{ YYYY-MM-DD }} — {{ tactical choice and why }} (architectural decision → {{ link the ADR at `docs/adr/<NN>-*.md` }})
+- {{ YYYY-MM-DD }} — {{ tactical choice and why }} (architectural decision → {{ link the release decision entry }})
 
 ## 9. Surprises & discoveries
 
@@ -136,5 +137,5 @@
 
 - **Shipped:** {{ what now works }}
 - **Still open:** {{ remaining gaps → GitHub issues }}
-- **Routed to:** {{ ADR(s), issue(s), milestone — where decisions/state landed }}
+- **Routed to:** {{ decision ledger/design-history, issue(s), milestone — where decisions/state landed }}
 - **Lessons:** {{ what to do differently next time }}

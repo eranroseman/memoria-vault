@@ -27,9 +27,9 @@ do the change.
 ## Where the plan lives (Memoria routing)
 
 An ExecPlan is a **working artifact**, not a new committed deliverable. Memoria
-retired standalone proposal and design-doc folders — decisions are ADRs and
-state lives in issues — so an ExecPlan must never become a fourth permanent
-record.
+retired standalone proposal and design-doc folders. Decisions live in the active
+release decision ledger and then `design-history/`; state lives in issues. An
+ExecPlan must never become another permanent record.
 
 Put the instance on the **`scratch` branch**, under
 **`releases/<version>/`** on the `scratch` branch for the current release or checkpoint: tracked
@@ -44,9 +44,9 @@ produces. Durable outputs route as usual:
 
 | Output | Goes to |
 |---|---|
-| An architectural or product decision | an ADR in `docs/adr/` — the plan links it |
+| An architectural or product decision | the active release decision ledger — the plan links it |
 | Release readiness / gate / stage state | the "Release <version>" parent issue and its sub-issues |
-| A scope cut | a GitHub issue with Readiness `Later`; add or update an ADR only when the cut records a decision or durable rationale |
+| A scope cut | a GitHub issue with Readiness `Later`; add a release decision entry only when the cut records a decision or durable rationale |
 | A bug, gap, or follow-up | a GitHub issue in the Memoria Issue Tracker |
 
 ## Five mandates (non-negotiable)
@@ -62,9 +62,10 @@ produces. Durable outputs route as usual:
 4. **Demonstrably working.** Validation is not optional. Acceptance is phrased
    as observable behavior, with the exact commands, inputs, and expected output
    transcripts — not "the code compiles."
-5. **Decisions go to ADRs.** The plan's Execution log records only tactical,
-   sequencing choices made while running. Any architectural or product decision
-   is written as an ADR in `docs/adr/` and linked — never recorded only here.
+5. **Decisions go to release ledgers.** The plan's Execution log records only
+   tactical, sequencing choices made while running. Any architectural or product
+   decision is written in the active release decision ledger and linked — never
+   recorded only here.
 
 ## Authoring
 
@@ -107,9 +108,9 @@ Validation follows the [verify-change](verify-change.md) playbook:
 ## Closing
 
 Fill Outcomes & retrospective: what shipped, what is still open, lessons, and —
-critically — where each durable output landed (ADR, issue, milestone). Then
-route those outputs, delete or archive the working instance per its home, and
-open the PR (`AGENTS.md` → "PR flow").
+critically — where each durable output landed (decision ledger/design history,
+issue, milestone). Then route those outputs, delete or archive the working
+instance per its home, and open the PR (`AGENTS.md` → "PR flow").
 
 ## Authority
 

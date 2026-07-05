@@ -41,11 +41,11 @@ the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
 **Standalone engine architecture** — PI · CLI · Engine · Operations · Storage ·
-Vault · Optional adapters ([ADR-125](../adr/125-standalone-cli-engine-architecture.md),
-[ADR-130](../adr/130-read-api-surfaces-and-copi.md)): PI intent enters through
+Vault · Optional adapters ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
+[ADR-130](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): PI intent enters through
 the CLI or observed file edits, the engine owns request/write/recovery state,
 and adapters are presentation layers over the same contracts. The older
-seven-layer architecture is historical context in [ADR-125](../adr/125-standalone-cli-engine-architecture.md).
+seven-layer architecture is historical context in [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 **Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
 `journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
@@ -55,7 +55,7 @@ the checked knowledge bundle inside the vault, not the editor vault root.
 
 ## Surfaces and navigation
 
-**Navigator rail** — the Markdown navigation note for everyday navigation (`_nav.md`, [ADR-130](../adr/130-read-api-surfaces-and-copi.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
+**Navigator rail** — the Markdown navigation note for everyday navigation (`_nav.md`, [ADR-130](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): **Now** over **Places**. Replaces the older per-dashboard nav rows.
 
 **Now** — the rail's top band: what is waiting on you right now — **Action
 queue** (your Inbox queue) and **Drift** (open integrity flags).
@@ -83,7 +83,7 @@ Maintenance.
 **System dashboard** — one of the read-only, Dataview-backed notes in
 `system/dashboards/`; the spaces and Maintenance carry the action surfaces.
 
-**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-130](../adr/130-read-api-surfaces-and-copi.md)).
+**Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [ADR-130](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 
@@ -129,7 +129,7 @@ not Concept frontmatter.
 [Document types](document-types.md).
 
 **Pattern** — a package-owned prompt operation
-([ADR-125](../adr/125-standalone-cli-engine-architecture.md)) executed through
+([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) executed through
 `memoria operation run`.
 
 **State** — not a field name on its own; use the specific field. A Concept's
@@ -142,7 +142,7 @@ SQLite. Prefer the precise field name over a bare "state".
 
 **Audit log** — the append-only JSONL trail of every policy decision at `system/logs/audit.jsonl`. Feeds the audit-log dashboard.
 
-**Extraction-uncertainty flag** — the near-tie rule ([ADR-129](../adr/129-layered-machine-judgment.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
+**Extraction-uncertainty flag** — the near-tie rule ([ADR-129](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails

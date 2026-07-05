@@ -25,12 +25,20 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
-      - name: Run shellcheck
-        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38  # 2.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6
         with:
-          scandir: "."
-          additional_files: "scripts/install.sh scripts/install/manifest.sh"
-          severity: warning
+          python-version: "3.12"
+      - name: Install pre-commit
+        run: python -m pip install --quiet -r requirements-dev.txt
+      - name: Cache pre-commit environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pre-commit-
+      - name: Run shellcheck
+        run: pre-commit run shellcheck --all-files
 
   psscriptanalyzer:
     name: PSScriptAnalyzer (scripts/install.ps1)
