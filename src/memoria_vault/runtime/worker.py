@@ -646,15 +646,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "edge_count": result["edge_count"],
             "relation_count": result["relation_count"],
         }
-    if operation_id == "rebuild-checked-qmd-source":
-        from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
+    if operation_id == "rebuild-checked-search-index":
+        from memoria_vault.runtime.search_index import rebuild_checked_search_index
 
-        manifest = rebuild_checked_qmd_source(vault)
+        manifest = rebuild_checked_search_index(vault)
         return {
+            "engine": manifest["backend"],
             "input_root": manifest["input_root"],
             "document_count": len(manifest["documents"]),
             "documents": manifest["documents"],
-            "qmd_commands": manifest["qmd_commands"],
         }
     if operation_id == "answer-query":
         from memoria_vault.runtime.search_index import answer_query

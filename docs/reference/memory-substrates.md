@@ -46,7 +46,7 @@ provider, scope, lifespan, backing store, and contents.
 | Current task goal and context | Request memory (payload) | Working memory (not durable) |
 | Stable facts about the environment | Checked workspace configuration or steering Concepts | Working memory (not persistent) |
 | The PI's preferences and style | Program memory (`steering.md`) or checked preference notes | Adapter chat/session history |
-| Cross-session retrieval | qmd + SQLite over checked workspace state | Adapter memory (not authoritative) |
+| Cross-session retrieval | search + SQLite over checked workspace state | Adapter memory (not authoritative) |
 | Audit trail of all decisions | Audit memory (`system/logs/audit.jsonl`) | Working memory (wrong granularity) |
 | Durable synthesized knowledge | Checked Concepts under `knowledge/` | Any of the above |
 

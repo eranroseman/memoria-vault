@@ -20,7 +20,7 @@ L1  PI          the human, using the CLI and editor
 L2  CLI         request envelope, stable commands, JSON and exit codes
 L3  Engine      queue, worker, checks, read barrier, recovery
 L4  Operations  ingest, enrichment, search, sweeps, linter, runner-backed operations
-L5  Storage     SQLite graph/ops state, blobs, qmd state
+L5  Storage     SQLite graph/ops state, blobs, search state
 L6  Vault       Markdown keep-set and generated projections
 L7  Adapters    optional editor/API surfaces that call the same engine
 ```

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 import math
-import os
 import re
 import shutil
-import subprocess
 from collections import Counter
 from collections.abc import Iterable
 from pathlib import Path
@@ -20,75 +18,14 @@ from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
 from memoria_vault.runtime.vaultio import iter_markdown, parse_frontmatter, safe_read
 
-QMD_INPUT_ROOT = ".memoria/index/qmd/checked"
-QMD_MANIFEST = ".memoria/index/qmd/manifest.json"
-QMD_BIN_ENV = "MEMORIA_QMD_BIN"
+SEARCH_INPUT_ROOT = ".memoria/index/search/checked"
+SEARCH_MANIFEST = ".memoria/index/search/manifest.json"
 
 
-def resolve_qmd_executable() -> dict[str, str]:
-    explicit = os.environ.get(QMD_BIN_ENV, "").strip()
-    if explicit:
-        path = Path(explicit).expanduser()
-        if not path.is_absolute():
-            return {"path": "", "source": QMD_BIN_ENV, "error": f"{QMD_BIN_ENV} must be absolute"}
-        if not _is_executable(path):
-            return {
-                "path": "",
-                "source": QMD_BIN_ENV,
-                "error": f"{QMD_BIN_ENV} is not executable: {path}",
-            }
-        return {"path": str(path.resolve()), "source": QMD_BIN_ENV, "error": ""}
-
-    npm_qmd = _npm_global_qmd()
-    if npm_qmd and _is_executable(npm_qmd):
-        return {"path": str(npm_qmd.resolve()), "source": "npm-global", "error": ""}
-
-    path_qmd = shutil.which("qmd")
-    if path_qmd:
-        resolved = Path(path_qmd).resolve()
-        return {
-            "path": "",
-            "source": "path",
-            "error": f"qmd found at {resolved}; set {QMD_BIN_ENV} to an absolute qmd path",
-        }
-    return {"path": "", "source": "", "error": "qmd not found"}
-
-
-def _npm_global_qmd() -> Path | None:
-    npm = shutil.which("npm")
-    if not npm:
-        return None
-    try:
-        proc = subprocess.run(
-            [npm, "prefix", "-g"],
-            check=False,
-            text=True,
-            capture_output=True,
-            timeout=10,
-        )
-    except (OSError, subprocess.TimeoutExpired):
-        return None
-    prefix = proc.stdout.strip().splitlines()
-    if proc.returncode != 0 or not prefix:
-        return None
-    root = Path(prefix[0]).expanduser()
-    candidates = (
-        root / "qmd.cmd",
-        root / "qmd.exe",
-        root / "bin" / "qmd",
-        root / "qmd",
-    )
-    return next((path for path in candidates if _is_executable(path)), None)
-
-
-def _is_executable(path: Path) -> bool:
-    return path.is_file() and os.access(path, os.X_OK)
-
-
-def rebuild_checked_qmd_source(
-    vault: Path, output_root: str = QMD_INPUT_ROOT, *, embeddings: bool = False
+def rebuild_checked_search_index(
+    vault: Path, output_root: str = SEARCH_INPUT_ROOT
 ) -> dict[str, Any]:
-    """Rebuild qmd's disposable input tree from checked retrieval documents."""
+    """Rebuild the disposable checked retrieval tree and BM25 manifest."""
     vault = Path(vault)
     out = vault / normalize_path(output_root)
     if out.exists():
@@ -113,19 +50,12 @@ def rebuild_checked_qmd_source(
             }
         )
     manifest = {
-        "backend": "qmd",
-        "mode": "hybrid" if embeddings else "bm25",
-        "embeddings": embeddings,
+        "backend": "bm25",
+        "mode": "bm25",
         "input_root": normalize_path(output_root),
         "documents": docs,
-        "qmd_commands": [
-            f"qmd collection add {normalize_path(output_root)} --name memoria-checked --mask '**/*.md'",
-            "qmd update",
-        ],
     }
-    if embeddings:
-        manifest["qmd_commands"].append("qmd embed --chunk-strategy auto")
-    manifest_path = vault / QMD_MANIFEST
+    manifest_path = vault / SEARCH_MANIFEST
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     return manifest
@@ -170,20 +100,20 @@ def checked_concepts(vault: Path, *, include_stale: bool = False) -> list[Path]:
 
 
 def filter_checked_results(vault: Path, rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Filter qmd-style JSON result rows to checked retrieval documents."""
+    """Filter search result rows to checked retrieval documents."""
     vault = Path(vault)
     out = []
     for row in rows:
-        rel = qmd_result_path(row.get("file") or row.get("path") or "", vault)
+        rel = search_result_path(row.get("file") or row.get("path") or "", vault)
         if rel and is_checked_concept(vault, rel):
             out.append(row)
     return out
 
 
-def qmd_result_path(ref: object, vault: Path) -> str:
-    """Resolve qmd URI/path output to a vault-relative path."""
+def search_result_path(ref: object, vault: Path) -> str:
+    """Resolve a result URI/path to a vault-relative path."""
     text = str(ref or "")
-    if text.startswith("qmd://"):
+    if text.startswith("search://"):
         parts = text.split("/", 3)
         return normalize_path(parts[3]) if len(parts) > 3 else ""
     text = text.split(":", 1)[0].removeprefix("./")
@@ -198,8 +128,8 @@ def qmd_result_path(ref: object, vault: Path) -> str:
 
 def is_checked_concept(vault: Path, relpath: str) -> bool:
     rel = normalize_path(relpath)
-    if rel.startswith(f"{QMD_INPUT_ROOT}/"):
-        rel = rel.removeprefix(f"{QMD_INPUT_ROOT}/")
+    if rel.startswith(f"{SEARCH_INPUT_ROOT}/"):
+        rel = rel.removeprefix(f"{SEARCH_INPUT_ROOT}/")
     if _is_checked_generated_work_document(vault, rel):
         return True
     path = Path(vault) / rel
@@ -209,12 +139,7 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
         and _is_searchable_frontmatter(_frontmatter_with_flags(vault, rel, safe_read(path)))
     ):
         return True
-    qmd_path = Path(vault) / QMD_INPUT_ROOT / rel
-    return (
-        qmd_path.is_file()
-        and is_consumable_checked_file(vault, rel)
-        and _is_searchable_frontmatter(_frontmatter_with_flags(vault, rel, safe_read(qmd_path)))
-    )
+    return False
 
 
 def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
@@ -240,16 +165,6 @@ def answer_query(
     ]
     project_context = _project_context(project_id, docs)
     retrieval_query = _project_query(query, project_context)
-    qmd_hits = _qmd_query_hits(vault, retrieval_query, k=k, include_stale=include_stale)
-    if qmd_hits is not None:
-        frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
-        return _answer_from_hits(
-            query,
-            qmd_hits,
-            frontmatter_by_path,
-            engine="qmd",
-            project_context=project_context,
-        )
     tokenized = [(path, _tokens(text)) for path, text, _frontmatter in docs]
     frontmatter_by_path = {path: frontmatter for path, _text, frontmatter in docs}
     hits = _bm25(tokenized, retrieval_query)[:k]
@@ -383,70 +298,6 @@ def _string_list(value: object) -> list[str]:
     if isinstance(value, list):
         return [item.strip() for item in value if isinstance(item, str) and item.strip()]
     return []
-
-
-def _qmd_query_hits(
-    vault: Path, query: str, *, k: int, include_stale: bool
-) -> list[tuple[str, float]] | None:
-    qmd = resolve_qmd_executable()["path"]
-    if not qmd or include_stale or not (vault / QMD_MANIFEST).is_file():
-        return None
-    text = " ".join(query.split())
-    if not text:
-        return []
-    try:
-        proc = subprocess.run(
-            [
-                qmd,
-                "query",
-                f"lex: {text}\nvec: {text}",
-                "--no-rerank",
-                "--format",
-                "json",
-                "-n",
-                str(max(k * 3, k)),
-                "-c",
-                "memoria-checked",
-            ],
-            cwd=vault,
-            env=_qmd_env(vault),
-            check=False,
-            text=True,
-            capture_output=True,
-            timeout=30,
-        )
-    except subprocess.TimeoutExpired:
-        return None
-    if proc.returncode:
-        return None
-    try:
-        rows = json.loads(proc.stdout or "[]")
-    except json.JSONDecodeError:
-        return None
-    if not isinstance(rows, list):
-        return None
-    hits: list[tuple[str, float]] = []
-    seen: set[str] = set()
-    for row in filter_checked_results(vault, (row for row in rows if isinstance(row, dict))):
-        rel = qmd_result_path(row.get("file") or row.get("path") or "", vault)
-        if rel.startswith(f"{QMD_INPUT_ROOT}/"):
-            rel = rel.removeprefix(f"{QMD_INPUT_ROOT}/")
-        if not rel or rel in seen:
-            continue
-        seen.add(rel)
-        score = row.get("score")
-        hits.append((rel, float(score) if isinstance(score, int | float) else 0.0))
-        if len(hits) >= k:
-            break
-    return hits
-
-
-def _qmd_env(vault: Path) -> dict[str, str]:
-    env = dict(os.environ)
-    root = vault / ".memoria/index/qmd"
-    env["QMD_CONFIG_DIR"] = str(root / "config")
-    env["INDEX_PATH"] = str(root / "index.sqlite")
-    return env
 
 
 def evaluate_bm25(

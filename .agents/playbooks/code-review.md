@@ -42,7 +42,7 @@ Run the narrowest relevant tests first. Use the repository gate when the change
 has broad or shared impact:
 
 ```bash
-scripts/test.sh all
+python scripts/verify pr
 ```
 
 Also run language- or component-specific checks required by `AGENTS.md`. Record

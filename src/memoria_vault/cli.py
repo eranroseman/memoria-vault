@@ -68,7 +68,7 @@ def _build_parser() -> argparse.ArgumentParser:
     doctor = sub.add_parser("doctor")
     doctor_sub = doctor.add_subparsers(dest="doctor_command")
     _common(doctor, workspace_required=False)
-    doctor.add_argument("--check", choices=("qmd", "runner"), default=None)
+    doctor.add_argument("--check", choices=("search", "runner"), default=None)
     doctor.add_argument("--provider", default=None)
     doctor.add_argument("--live", action="store_true")
     doctor.add_argument("--repair", action="store_true")
@@ -376,7 +376,6 @@ def _workspace_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]
         _common(cmd)
         if name == "rebuild":
             cmd.add_argument("--search", action="store_true")
-            cmd.add_argument("--embeddings", action="store_true")
             cmd.set_defaults(handler=_cmd_workspace_rebuild)
         elif name == "scan":
             cmd.add_argument("--fixture")
@@ -504,20 +503,17 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         "state_db": state.db_path(workspace).is_file(),
         "git": shutil.which("git") is not None,
     }
-    if args.check == "qmd":
-        status = _qmd_status(workspace)
+    if args.check == "search":
+        status = _search_status(workspace)
         checks.update(status["checks"])
         return _emit(
             {
                 "ok": all(checks.values()),
                 "workspace": str(workspace),
                 "checks": checks,
-                "qmd_path": status["qmd_path"],
-                "qmd_source": status["qmd_source"],
-                "qmd_error": status["qmd_error"],
-                "node_version": status["node_version"],
-                "qmd_doctor_output": status["qmd_doctor_output"],
-                "qmd_collection_output": status["qmd_collection_output"],
+                "search_engine": status["engine"],
+                "search_manifest": status["manifest"],
+                "search_document_count": status["document_count"],
                 "repaired": repaired,
             },
             args,
@@ -1391,8 +1387,6 @@ def _cmd_workspace_check(args: argparse.Namespace) -> int:
 
 
 def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
-    if args.embeddings and not args.search:
-        return _fail("workspace rebuild --embeddings requires --search", json_output=args.json)
     workspace = _workspace(args)
     from memoria_vault.runtime.capture import write_references_bib
     from memoria_vault.runtime.trusted_writer import rebuild_concept_mirror_from_files
@@ -1401,11 +1395,10 @@ def _cmd_workspace_rebuild(args: argparse.Namespace) -> int:
     references = write_references_bib(workspace)
     payload: dict[str, Any] = {"ok": True, "concept_mirror": mirror, "references": references}
     if args.search:
-        from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
+        from memoria_vault.runtime.search_index import rebuild_checked_search_index
 
-        manifest = rebuild_checked_qmd_source(workspace, embeddings=args.embeddings)
-        payload["qmd"] = _run_qmd_rebuild(workspace, embeddings=args.embeddings)
-        payload["qmd"]["manifest"] = manifest
+        manifest = rebuild_checked_search_index(workspace)
+        payload["search"] = {"engine": "bm25", "manifest": manifest}
     return _emit(payload, args)
 
 
@@ -1638,8 +1631,7 @@ def _workspace_plan(workspace: Path) -> list[str]:
         "system/eval",
         ".memoria/blobs",
         ".memoria/config",
-        ".memoria/index/qmd/checked",
-        ".memoria/index/qmd/config",
+        ".memoria/index/search/checked",
     ]
 
 
@@ -1648,12 +1640,10 @@ def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, 
 
     seed_trees = [target for _, target in SEED_TREES]
     seed_files = [target for _, target in SEED_FILES]
-    qmd = {
-        "collection": "memoria-checked",
-        "checked_root": ".memoria/index/qmd/checked",
-        "config_dir": ".memoria/index/qmd/config",
-        "index_path": ".memoria/index/qmd/index.sqlite",
-        "mask": "**/*.md",
+    search = {
+        "engine": "bm25",
+        "checked_root": ".memoria/index/search/checked",
+        "manifest": ".memoria/index/search/manifest.json",
     }
     return {
         "ok": True,
@@ -1680,7 +1670,7 @@ def _init_dry_run_report(workspace: Path, planned_dirs: list[str]) -> dict[str, 
             "steering": "steering.md",
             "vocabulary": "system/vocabulary.md",
         },
-        "qmd": qmd,
+        "search": search,
         "provider_config": {
             "path": ".memoria/config/providers.yaml",
             "seeded": ".memoria/config" in seed_trees,
@@ -2204,35 +2194,27 @@ def _read_csl_item(text: str) -> dict[str, Any]:
     raise ValueError("CSL import expects a JSON object or one-item array")
 
 
-def _qmd_status(workspace: Path, *, include_collection: bool = True) -> dict[str, Any]:
-    from memoria_vault.runtime.search_index import resolve_qmd_executable
+def _search_status(workspace: Path) -> dict[str, Any]:
+    from memoria_vault.runtime.search_index import SEARCH_INPUT_ROOT, SEARCH_MANIFEST
 
-    qmd_info = resolve_qmd_executable()
-    qmd = qmd_info["path"]
-    node = shutil.which("node")
-    node_version = _node_version(node) if node else ""
-    doctor = _qmd_doctor_status(workspace, qmd) if qmd else {}
-    collection = _qmd_collection_status(workspace, qmd) if qmd and include_collection else {}
+    manifest_path = workspace / SEARCH_MANIFEST
+    document_count = 0
+    if manifest_path.is_file():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            manifest = {}
+        documents = manifest.get("documents")
+        document_count = len(documents) if isinstance(documents, list) else 0
     checks = {
-        "node": node is not None,
-        "node_22": _node_major(node_version) >= 22,
-        "qmd": bool(qmd),
-        "qmd_absolute": bool(qmd and Path(qmd).is_absolute()),
-        "qmd_checked_root": (workspace / ".memoria/index/qmd/checked").is_dir(),
-        "qmd_config_dir": (workspace / ".memoria/index/qmd/config").is_dir(),
-        "qmd_index_home": (workspace / ".memoria/index/qmd").is_dir(),
-        "qmd_doctor": bool(doctor.get("qmd_doctor", False)),
-        "qmd_embedding_models": bool(doctor.get("qmd_embedding_models", False)),
+        "search_checked_root": (workspace / SEARCH_INPUT_ROOT).is_dir(),
+        "search_manifest": manifest_path.is_file(),
     }
-    checks.update(collection.get("checks", {}))
     return {
         "checks": checks,
-        "qmd_path": qmd,
-        "qmd_source": qmd_info["source"],
-        "qmd_error": qmd_info["error"],
-        "node_version": node_version,
-        "qmd_doctor_output": doctor.get("qmd_doctor_output", ""),
-        "qmd_collection_output": collection.get("qmd_collection_output", ""),
+        "engine": "bm25",
+        "manifest": SEARCH_MANIFEST,
+        "document_count": document_count,
     }
 
 
@@ -2302,147 +2284,6 @@ def _runner_status(workspace: Path, provider: str | None, *, live: bool = False)
         "model": model_name,
         "error": error,
     }
-
-
-def _run_qmd_rebuild(workspace: Path, *, embeddings: bool) -> dict[str, Any]:
-    status = _qmd_status(workspace, include_collection=False)
-    checks = dict(status["checks"])
-    if not embeddings:
-        checks.pop("qmd_embedding_models", None)
-    if not all(checks.values()):
-        failed = [key for key, ok in checks.items() if not ok]
-        if embeddings and "qmd_embedding_models" in failed:
-            raise RuntimeError("qmd embedding models are missing; run `qmd pull` before embeddings")
-        raise RuntimeError(f"qmd is not ready: {', '.join(failed)}")
-    qmd = status["qmd_path"]
-    env = _qmd_env(workspace)
-    checked = workspace / ".memoria/index/qmd/checked"
-    commands = [
-        [qmd, "collection", "remove", "memoria-checked"],
-        [qmd, "collection", "add", str(checked), "--name", "memoria-checked", "--mask", "**/*.md"],
-        [qmd, "update"],
-    ]
-    if embeddings:
-        commands.append([qmd, "embed", "--chunk-strategy", "auto"])
-    for command in commands:
-        try:
-            _run(command, cwd=workspace, env=env)
-        except RuntimeError as exc:
-            if command[1:3] == ["collection", "remove"] and "Collection not found" in str(exc):
-                continue
-            raise
-    return {
-        "qmd_path": qmd,
-        "config_home": env["QMD_CONFIG_DIR"],
-        "cache_home": env.get("XDG_CACHE_HOME", ""),
-        "index_path": env["INDEX_PATH"],
-        "commands": [" ".join(command) for command in commands],
-    }
-
-
-def _qmd_env(workspace: Path) -> dict[str, str]:
-    env = dict(os.environ)
-    root = workspace / ".memoria/index/qmd"
-    config = root / "config"
-    index = root / "index.sqlite"
-    config.mkdir(parents=True, exist_ok=True)
-    env["QMD_CONFIG_DIR"] = str(config)
-    env["INDEX_PATH"] = str(index)
-    return env
-
-
-def _qmd_doctor_status(
-    workspace: Path, qmd: str, *, env: dict[str, str] | None = None
-) -> dict[str, Any]:
-    try:
-        proc = subprocess.run(
-            [qmd, "doctor"],
-            cwd=workspace,
-            env=env or _qmd_env(workspace),
-            check=False,
-            text=True,
-            capture_output=True,
-            timeout=15,
-        )
-    except subprocess.TimeoutExpired:
-        return {
-            "qmd_doctor": False,
-            "qmd_embedding_models": False,
-            "qmd_doctor_output": "qmd doctor timed out",
-        }
-    output = "\n".join(value for value in (proc.stdout, proc.stderr) if value).strip()
-    return {
-        "qmd_doctor": proc.returncode == 0,
-        "qmd_embedding_models": proc.returncode == 0 and "model cache: missing" not in output,
-        "qmd_doctor_output": output[-4000:],
-    }
-
-
-def _qmd_collection_status(workspace: Path, qmd: str) -> dict[str, Any]:
-    expected_root = (workspace / ".memoria/index/qmd/checked").resolve()
-    try:
-        proc = subprocess.run(
-            [qmd, "collection", "show", "memoria-checked"],
-            cwd=workspace,
-            env=_qmd_env(workspace),
-            check=False,
-            text=True,
-            capture_output=True,
-            timeout=15,
-        )
-    except subprocess.TimeoutExpired:
-        output = "qmd collection show memoria-checked timed out"
-        return {
-            "checks": {
-                "qmd_collection": False,
-                "qmd_collection_root": False,
-                "qmd_collection_mask": False,
-            },
-            "qmd_collection_output": output,
-        }
-    output = "\n".join(value for value in (proc.stdout, proc.stderr) if value).strip()
-    root, mask = _parse_qmd_collection_show(output)
-    root_ok = bool(root) and Path(root).expanduser().resolve() == expected_root
-    mask_ok = mask == "**/*.md"
-    return {
-        "checks": {
-            "qmd_collection": proc.returncode == 0,
-            "qmd_collection_root": proc.returncode == 0 and root_ok,
-            "qmd_collection_mask": proc.returncode == 0 and mask_ok,
-        },
-        "qmd_collection_output": output[-4000:],
-    }
-
-
-def _parse_qmd_collection_show(output: str) -> tuple[str, str]:
-    root = ""
-    mask = ""
-    for line in output.splitlines():
-        key, sep, value = line.strip().partition(":")
-        if not sep:
-            continue
-        if key == "Path":
-            root = value.strip()
-        elif key in {"Pattern", "Mask"}:
-            mask = value.strip()
-    return root, mask
-
-
-def _node_version(node: str) -> str:
-    proc = subprocess.run([node, "--version"], check=False, text=True, capture_output=True)
-    return proc.stdout.strip()
-
-
-def _node_major(version_text: str) -> int:
-    text = version_text.strip().removeprefix("v")
-    major = text.split(".", 1)[0]
-    return int(major) if major.isdigit() else 0
-
-
-def _run(command: list[str], *, cwd: Path, env: dict[str, str]) -> None:
-    proc = subprocess.run(command, cwd=cwd, env=env, check=False, text=True, capture_output=True)
-    if proc.returncode:
-        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip())
 
 
 def _emit(payload: dict[str, Any], args: argparse.Namespace) -> int:

@@ -38,9 +38,9 @@ cd memoria-vault
 bash scripts/install.sh            # or .\scripts/install.ps1 on Windows
 ```
 
-**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, registers qmd search only when an existing qmd binary is available, wires local hooks, and prints the vault-local CLI commands.
+**2. What it does.** With your confirmation at each external step, the installer scaffolds and populates your runtime vault from `vault-template/` (default `~/Memoria` on Linux/WSL, `%USERPROFILE%\Memoria` on Windows; keep it off OneDrive), installs runtime dependencies and the Memoria package into `.memoria/.venv`, wires local hooks, and prints the vault-local CLI commands.
 
-The installer is standalone-only. It does not install qmd, Hermes, profiles, lane
+The installer is standalone-only. It does not install external search tooling, Hermes, profiles, lane
 overrides, profile skills, Hermes crons, Obsidian setup, or Zotero integration.
 
 **3. Make your first git checkpoint** (recommended).

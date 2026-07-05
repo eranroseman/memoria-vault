@@ -1,6 +1,6 @@
 """L1 component tests for docs_doctor."""
 
-import docs_doctor as _m
+from scripts.checks import docs_doctor as _m
 
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
 check_bare_adr_codes = _m.check_bare_adr_codes
@@ -8,14 +8,12 @@ check_frontmatter = _m.check_frontmatter
 check_hidden_compatibility_page = _m.check_hidden_compatibility_page
 check_link_text = _m.check_link_text
 check_links = _m.check_links
-check_model_spine_link = _m.check_model_spine_link
 check_readmes = _m.check_readmes
 check_reference_readme_index = _m.check_reference_readme_index
 check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
 check_site_nav_hierarchy = _m.check_site_nav_hierarchy
 check_template_frontmatter = _m.check_template_frontmatter
-check_thin_folders = _m.check_thin_folders
 check_vocabulary_reference_mirror = _m.check_vocabulary_reference_mirror
 check_wikilink_aliases = _m.check_wikilink_aliases
 check_wikilinks = _m.check_wikilinks
@@ -248,21 +246,6 @@ def test_check_template_frontmatter_validates_yaml_fences(tmp_path):
     assert good_errs == []
 
 
-def test_check_thin_folders_warns_for_site_folders_but_skips_site_excluded(tmp_path):
-    (tmp_path / "README.md").write_text("# Root\n")
-    (tmp_path / "thin").mkdir()
-    (tmp_path / "thin" / "only.md").write_text("# Only\n")
-    (tmp_path / "releasing").mkdir()
-    (tmp_path / "releasing" / "README.md").write_text("# Releasing\n")
-    (tmp_path / "releasing" / "plan.md").write_text("# Plan\n")
-
-    warns: list[str] = []
-    check_thin_folders(tmp_path, warns)
-
-    assert any("thin/" in w for w in warns)
-    assert not any("releasing/" in w for w in warns)
-
-
 def test_check_site_local_links_blocks_published_pages_that_leave_the_site(tmp_path):
     repo = tmp_path
     root = repo / "docs"
@@ -339,26 +322,6 @@ def test_check_site_excluded_targets_blocks_published_links_to_excluded_docs(tmp
 
     assert len(errs) == 1
     assert "excluded page" in errs[0]
-
-
-def test_check_model_spine_link_warns_when_model_is_repeated_without_spine_link(tmp_path):
-    root = tmp_path / "docs"
-    root.mkdir()
-    page = root / "overview.md"
-    page.write_text("Memoria is a research operating system with a Co-PI.\n", encoding="utf-8")
-    linked = root / "linked.md"
-    linked.write_text(
-        "Memoria is a research operating system. See [Home](README.md#the-model).\n",
-        encoding="utf-8",
-    )
-
-    warnings: list[str] = []
-    linked_warnings: list[str] = []
-    check_model_spine_link(page, root, warnings)
-    check_model_spine_link(linked, root, linked_warnings)
-
-    assert len(warnings) == 1
-    assert linked_warnings == []
 
 
 def test_check_hidden_compatibility_page_rejects_hidden_permalink_stub(tmp_path):

@@ -44,7 +44,7 @@ version: 1
 actors:
   adapter:
     allow:
-      tools: [obsidian.get_file_contents, qmd.search]
+      tools: [obsidian.get_file_contents, search.query]
       write: ["inbox/**"]
     deny:
       tools: [web_search, execute_code]

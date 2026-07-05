@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 SCAN_ROOTS = ("docs", "src/memoria_vault", "scripts", "vault-template")
 SKIP_PARTS = {
     ".git",
@@ -17,7 +17,7 @@ SKIP_PARTS = {
     "node_modules",
     "docs/adr",
     "scratch",
-    "scripts/checked_terminology_gate.py",
+    "scripts/checks/checked_terminology_gate.py",
 }
 SUFFIXES = {".md", ".py", ".sh", ".ps1", ".yaml", ".yml"}
 BAD_WORD = r"(?:approved|approval|verified|trusted(?![- ]writer))"

@@ -14,8 +14,7 @@ live Zotero integration.
 The install model is **scaffold -> populate -> install package**: the repo ships
 the workspace template under `vault-template/`, the installer copies it to the
 target workspace, recreates schema-owned empty folders from `folders.yaml`,
-installs the CLI package into the workspace venv, wires local Git hooks, and
-registers qmd search only when an existing qmd binary is available. Product-file
+installs the CLI package into the workspace venv, and wires local Git hooks. Product-file
 repair is a package/template reinstall or fresh workspace refresh.
 
 ## Flags
@@ -36,7 +35,6 @@ repair is a package/template reinstall or fresh workspace refresh.
 | Skeleton | Recreates schema-owned empty folders from `folders.yaml`. |
 | Runtime dependencies | Creates `<workspace>/.memoria/.venv`, upgrades pip, then installs the Memoria Python package from the repo. |
 | Git hooks | Initializes Git when needed and wires `.githooks/pre-commit`. The installer never commits, sets identity, or adds a remote. File-change work is observed with `memoria workspace scan`. |
-| qmd | Registers `.memoria/index/qmd/checked` as the checked-only qmd collection using workspace-local qmd config/index state. |
 | Next steps | Prints vault-local Python commands for `memoria doctor bundle`, `memoria workspace rebuild --search`, and `memoria ask`. |
 
 ## Scheduled Work
@@ -56,7 +54,6 @@ bootstrap.
 | Item | Where |
 | --- | --- |
 | Runtime provider keys | Shell environment or workspace runtime configuration consumed by the standalone CLI. |
-| Optional qmd binary | Existing qmd path, preferably via `MEMORIA_QMD_BIN`; the installer does not install qmd. |
 | git binary + Git workspace | The host must have `git` on `PATH`; checkpoints, hooks, rollback, and history need the runtime workspace to be a repo. |
 | Bibliography imports | Portable BibTeX/CSL files passed to `memoria work import`; no live reference-manager authority is installed. |
 
@@ -64,4 +61,4 @@ bootstrap.
 
 - Runtime layout: [On-disk layout](on-disk-layout.md)
 - CLI commands: [CLI](cli.md)
-- Search and qmd: [Search](search.md)
+- Search: [Search](search.md)

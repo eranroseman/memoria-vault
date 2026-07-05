@@ -37,7 +37,7 @@ Memoria is a **standalone local CLI + engine**, single-user, no daemon.
   `pip install -e .` contributor fallback); stdlib `argparse` CLI; stdlib `sqlite3` with
   WAL and FK, **no ORM**; `.sql` DDL gated by `PRAGMA user_version`;
   pydantic-ai as the sole typed LLM runner over OpenAI-compatible endpoints;
-  retrieval via qmd for alpha.15 after the baseline-gated spike: SQLite FTS5
+  retrieval via search for alpha.15 after the baseline-gated spike: SQLite FTS5
   covers lexical cases, but the packaged product does not yet carry sqlite-vec
   plus a local embedding pipeline, so the semantic/hybrid replacement bar did
   not clear; the committed fixture/verdict lives in

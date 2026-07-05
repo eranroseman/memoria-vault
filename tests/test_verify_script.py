@@ -32,18 +32,15 @@ def test_verify_dry_run_writes_evidence(tmp_path: Path) -> None:
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
     assert summary["mode"] == "package"
     assert summary["result"] == "dry-run"
-    assert summary["gates"] == ["source", "package"]
-    assert [step["display"] for step in summary["steps"]] == [
-        "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
-        f"python3 -m venv --clear {tmp_path}/venv",
-        (
-            f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
-            f"--find-links {tmp_path}/dist memoria-vault"
-        ),
-        f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "python3 scripts/e2e_smoke.py",
-    ]
+    assert summary["gates"] == ["l0", "l1", "package"]
+    displays = [step["display"] for step in summary["steps"]]
+    assert "python3 scripts/checks/docs_doctor.py docs" in displays
+    assert (
+        "env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ -q -m 'unit or contract'"
+        in displays
+    )
+    assert f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist ." in displays
+    assert "python3 scripts/sandbox/e2e_smoke.py" in displays
     assert summary["artifacts"] == []
     assert summary["versions"] == {
         "package_init": "0.1.0a10",
@@ -71,16 +68,10 @@ def test_verify_live_dry_run_includes_standalone_runtime_gates(tmp_path: Path) -
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
     assert summary["mode"] == "live"
     assert summary["result"] == "dry-run"
-    assert summary["gates"] == ["runtime", "live"]
-    assert [step["display"] for step in summary["steps"]] == [
-        "python3 -m pytest tests/test_alpha15_runtime_gate.py -q",
-        "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        (
-            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
-            "tests/test_worker_queue.py -q"
-        ),
-        "bash scripts/test.sh live",
-    ]
+    assert summary["gates"] == ["l0", "l1", "package", "runtime", "live"]
+    displays = [step["display"] for step in summary["steps"]]
+    assert "python3 -m pytest tests/test_alpha15_runtime_gate.py -q" in displays
+    assert "env PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 python3 -m pytest tests/ -q -m live" in displays
 
 
 def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
@@ -101,24 +92,11 @@ def test_verify_runtime_dry_run_keeps_gate_order(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
-    assert summary["gates"] == ["source", "package", "runtime"]
-    assert [step["display"] for step in summary["steps"]] == [
-        "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
-        f"python3 -m venv --clear {tmp_path}/venv",
-        (
-            f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
-            f"--find-links {tmp_path}/dist memoria-vault"
-        ),
-        f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "python3 scripts/e2e_smoke.py",
-        "python3 -m pytest tests/test_alpha15_runtime_gate.py -q",
-        "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        (
-            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
-            "tests/test_worker_queue.py -q"
-        ),
-    ]
+    assert summary["gates"] == ["l0", "l1", "package", "runtime"]
+    displays = [step["display"] for step in summary["steps"]]
+    assert displays.index("python3 scripts/sandbox/e2e_smoke.py") < displays.index(
+        "python3 -m pytest tests/test_alpha15_runtime_gate.py -q"
+    )
 
 
 def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
@@ -139,24 +117,7 @@ def test_verify_rc_dry_run_keeps_manual_release_gates(tmp_path: Path) -> None:
 
     assert result.returncode == 0
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
-    assert summary["gates"] == ["source", "package", "runtime"]
-    assert [step["display"] for step in summary["steps"]] == [
-        "bash scripts/test.sh source",
-        f"python3 -m pip wheel --no-build-isolation --wheel-dir {tmp_path}/dist .",
-        f"python3 -m venv --clear {tmp_path}/venv",
-        (
-            f"{tmp_path}/venv/bin/python -m pip install --force-reinstall --no-index "
-            f"--find-links {tmp_path}/dist memoria-vault"
-        ),
-        f"{tmp_path}/venv/bin/python -c 'import memoria_vault; print(memoria_vault.__version__)'",
-        "python3 scripts/e2e_smoke.py",
-        "python3 -m pytest tests/test_alpha15_runtime_gate.py -q",
-        "python3 -m pytest tests/test_alpha11_cycle.py -q",
-        (
-            "python3 -m pytest tests/test_cli.py tests/test_seeded_errors.py "
-            "tests/test_worker_queue.py -q"
-        ),
-    ]
+    assert summary["gates"] == ["l0", "l1", "package", "runtime"]
     assert summary["manual_follow_up"] == [
         "Complete product/manual release evidence in the release parent issue.",
         "Follow .agents/playbooks/release.md for release cut checks.",

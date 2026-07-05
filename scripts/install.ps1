@@ -11,8 +11,7 @@
       2. Creates the vault-local runtime venv.
       3. Installs the Memoria package.
       4. Ensures the folder skeleton and wires Git hooks.
-      5. Registers the workspace-local qmd search collection when qmd already exists.
-      6. Prints CLI next steps.
+      5. Prints CLI next steps.
 
 .PARAMETER Vault
     Windows folder for the runtime vault. Default: $env:USERPROFILE\Memoria
@@ -219,58 +218,6 @@ function Install-RuntimeScaffold {
     Write-Ok 'Folder skeleton ensured from folders.yaml'
 }
 
-function Resolve-Qmd {
-    if ($env:MEMORIA_QMD_BIN) {
-        if ([System.IO.Path]::IsPathRooted($env:MEMORIA_QMD_BIN) -and (Test-Path -Path $env:MEMORIA_QMD_BIN -PathType Leaf)) {
-            return (Resolve-Path $env:MEMORIA_QMD_BIN).Path
-        }
-        return $null
-    }
-    $npm = Get-CommandPath @('npm.cmd', 'npm.exe', 'npm')
-    if (-not $npm -or $DryRun) { return $null }
-    $prefix = (& $npm prefix -g 2>$null | Select-Object -First 1)
-    if (-not $prefix) { return $null }
-    return Get-CommandPath @(
-        (Join-Path $prefix 'qmd.cmd'),
-        (Join-Path $prefix 'qmd.exe'),
-        (Join-Path $prefix 'bin/qmd')
-    )
-}
-
-function Install-Qmd {
-    Write-Header 'qmd search engine'
-    $qmd = Resolve-Qmd
-    if ($qmd) {
-        Write-Ok "qmd present: $qmd"
-    } else {
-        Write-Warn 'qmd not found -- search registration skipped; set MEMORIA_QMD_BIN to an existing qmd binary to enable it'
-        return
-    }
-    $script:QmdBin = $qmd
-
-    $checked = Join-Path $Vault '.memoria/index/qmd/checked'
-    $config = Join-Path $Vault '.memoria/index/qmd/config'
-    $index = Join-Path $Vault '.memoria/index/qmd/index.sqlite'
-    Write-Line "  + QMD_CONFIG_DIR=$config INDEX_PATH=$index $qmd collection add $checked --name memoria-checked --mask **/*.md"
-    if ($DryRun) { return }
-    New-Item -ItemType Directory -Path $checked -Force | Out-Null
-    New-Item -ItemType Directory -Path $config -Force | Out-Null
-    $oldConfig = $env:QMD_CONFIG_DIR
-    $oldIndex = $env:INDEX_PATH
-    try {
-        $env:QMD_CONFIG_DIR = $config
-        $env:INDEX_PATH = $index
-        & $qmd collection add $checked --name memoria-checked --mask '**/*.md'
-        if ($LASTEXITCODE -ne 0) {
-            Write-Warn "qmd collection add failed -- run: memoria workspace rebuild --workspace `"$Vault`" --search"
-        }
-    } finally {
-        if ($null -eq $oldConfig) { Remove-Item Env:QMD_CONFIG_DIR -ErrorAction SilentlyContinue } else { $env:QMD_CONFIG_DIR = $oldConfig }
-        if ($null -eq $oldIndex) { Remove-Item Env:INDEX_PATH -ErrorAction SilentlyContinue } else { $env:INDEX_PATH = $oldIndex }
-    }
-    Write-Line '  (registered checked-only qmd input; the worker rebuilds it from checked Concepts)'
-}
-
 function Write-CliNextSteps {
     Write-Header 'Next steps'
     $py = if ($script:VenvPython) { $script:VenvPython } else { Join-Path $Vault '.memoria/.venv/Scripts/python.exe' }
@@ -294,7 +241,6 @@ function Invoke-Main {
     Install-RuntimeScaffold
     Initialize-VaultGit
     Install-VaultHooks
-    Install-Qmd
     Write-CliNextSteps
     Write-Header 'Done'
 }

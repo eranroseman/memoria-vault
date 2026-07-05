@@ -44,7 +44,7 @@ Treat MCP as a policy boundary, not an operating-system sandbox.
   expression handling, dependency pinning, and concurrency behavior.
 - For `vault-template/.memoria/`, verify tool capability and path scope separately.
 - For installer changes, use dry-run and a disposable vault, never `~/Memoria`.
-- Run the narrow tests and `scripts/test.sh all` when practical.
+- Run the narrow tests and `python scripts/verify pr` when practical.
 
 ## 4. Report
 

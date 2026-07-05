@@ -54,7 +54,7 @@ every field and count.
 | --- | --- | --- |
 | [Ingest routing](ingest.md) | Type detection dispatch, per-type enrichment, frontmatter written at ingest | Manual |
 | [Sweeps](sweeps.md) | Retraction maintenance passes | Manual |
-| [Search](search.md) | qmd retrieval surface: checked-only BM25 baseline, consumers, index, and limits | Manual |
+| [Search](search.md) | search retrieval surface: checked-only BM25 baseline, consumers, index, and limits | Manual |
 | [Export routes and formats](export.md) | Citation states, export routes, editor comparison, deliverable targets | Manual |
 | [Memory substrates](memory-substrates.md) | Memory substrate table, audit log schema, retention | Manual |
 | [Telemetry & logs](telemetry.md) | Operational log inventory, JSONL conventions, cadence, and join keys | Manual |

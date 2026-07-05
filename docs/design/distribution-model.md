@@ -68,14 +68,14 @@ adapters may call the same CLI/engine, but they are not the source of truth for
 capabilities and they do not belong in the runtime vault bootstrap.
 
 The absence is test-pinned by Installed profiles and
-`scripts/alpha14_negative_gate.py`.
+`scripts/checks/alpha14_negative_gate.py`.
 
 ---
 
 ## Running more than one vault
 
 Nothing in the distribution model is single-vault by design. The rule is simple:
-give each workspace its own directory, `.memoria/memoria.sqlite`, qmd index
+give each workspace its own directory, `.memoria/memoria.sqlite`, search index
 state, Git history, and provider config. If an optional app adapter is added
 later, it must attach to one workspace at a time and preserve the CLI/engine as
 the write path.

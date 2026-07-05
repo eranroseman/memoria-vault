@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
-import sys
 from pathlib import Path
 
 import pytest
@@ -36,7 +34,6 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
         ),
         encoding="utf-8",
     )
-    _fake_qmd_toolchain(tmp_path, monkeypatch)
     _fake_runner(monkeypatch)
     _fake_seeded_verdict(monkeypatch, workspace)
 
@@ -190,8 +187,6 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
     assert scan["needs_check_count"] == 0
     assert (workspace / ".memoria/quarantine/knowledge/_views/index.md").is_file()
 
-    qmd = _run_json(capsys, "doctor", "--workspace", str(workspace), "--check", "qmd")
-    assert qmd["checks"]["qmd_collection_root"] is True
     _run_json(
         capsys,
         "workspace",
@@ -218,9 +213,12 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
         "--workspace",
         str(workspace),
         "--search",
-        "--embeddings",
     )
-    assert len(rebuild["qmd"]["manifest"]["documents"]) >= 1
+    assert rebuild["search"]["engine"] == "bm25"
+    assert len(rebuild["search"]["manifest"]["documents"]) >= 1
+    search = _run_json(capsys, "doctor", "--workspace", str(workspace), "--check", "search")
+    assert search["checks"]["search_checked_root"] is True
+    assert search["checks"]["search_manifest"] is True
 
     status = _run_json(capsys, "status", "--workspace", str(workspace), ok_key=False)
     assert status["requests"]["done"] >= 1
@@ -343,37 +341,6 @@ def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> No
         "memoria_vault.runtime.seeded_errors.run_seeded_error_verdict",
         fake_verdict,
     )
-
-
-def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    npm_root = tmp_path / "npm-global"
-    npm_bin = npm_root / "bin"
-    npm_bin.mkdir(parents=True)
-    node = bin_dir / "node"
-    node.write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
-    npm = bin_dir / "npm"
-    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
-    qmd = npm_bin / "qmd"
-    qmd.write_text(
-        f"#!{sys.executable}\n"
-        "import os, pathlib, sys\n"
-        "if sys.argv[1:] == ['collection', 'show', 'memoria-checked']:\n"
-        "    root = pathlib.Path(os.environ['QMD_CONFIG_DIR']).parent / 'checked'\n"
-        "    print('Collection: memoria-checked')\n"
-        "    print(f'  Path:     {root}')\n"
-        "    print('  Pattern:  **/*.md')\n"
-        "elif sys.argv[1:] == ['doctor']:\n"
-        "    print('model cache: ready')\n"
-        "elif sys.argv[1:2] == ['query']:\n"
-        '    print(\'[{"file": "qmd://memoria-checked/knowledge/works/doi-10.1000_alpha.md", "score": 9}]\')\n',
-        encoding="utf-8",
-    )
-    node.chmod(0o755)
-    npm.chmod(0o755)
-    qmd.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
 
 
 def _write_project_fixture(workspace: Path) -> None:

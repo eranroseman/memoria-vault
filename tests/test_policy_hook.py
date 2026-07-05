@@ -26,7 +26,7 @@ actors:
         - obsidian.delete_file
         - obsidian.put_content
         - obsidian.vault_write
-        - qmd.search
+        - search.query
         - skills
         - kanban
       write:
@@ -43,7 +43,7 @@ actors:
     allow:
       tools:
         - obsidian.get_file_contents
-        - qmd.search
+        - search.query
 """
 
 
@@ -166,7 +166,7 @@ def test_evaluate_pre_blocks_tools_outside_actor_policy(tmp_path):
         vault,
     )
     allowed = evaluate_pre(
-        {"tool_name": "mcp_qmd_search", "tool_input": {}, "extra": {"request_id": "REQ-3"}},
+        {"tool_name": "mcp_search_query", "tool_input": {}, "extra": {"request_id": "REQ-3"}},
         "adapter",
         vault,
     )

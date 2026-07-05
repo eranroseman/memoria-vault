@@ -1,6 +1,6 @@
 {
-  "bar": "A replacement must match or beat qmd on every slice before qmd leaves the alpha.15 baseline.",
-  "expected_qmd_recall_by_slice": {
+  "bar": "A future vector or hybrid substrate must match the checked-only BM25 contract and improve semantic recall before it replaces the packaged baseline.",
+  "target_recall_by_slice": {
     "hybrid": 1.0,
     "keyword": 1.0,
     "semantic": 1.0
@@ -47,8 +47,8 @@
     }
   ],
   "verdict": {
-    "selected": "qmd",
+    "selected": "bm25",
     "cleared_replacement_bar": false,
-    "reason": "FTS5 covers lexical cases, but without a packaged sqlite-vec plus local embedding pipeline it misses synonym/semantic cases. Keep qmd as the alpha.15 baseline retrieval substrate."
+    "reason": "The packaged product uses deterministic checked-only BM25 search. Semantic and hybrid retrieval remain future work until a local vector pipeline ships as product code."
   }
 }

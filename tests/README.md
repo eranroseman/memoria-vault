@@ -19,8 +19,8 @@ deployed vault carries no test code.
 | `runtime` | worker loops, recovery, idempotence, state transitions, long checks | nightly, release candidate |
 | `live` | real external services/providers | manual or scheduled only |
 
-Run the PR source gate with `scripts/test.sh source` or `scripts/verify pr`.
-Target a level with `python -m pytest tests/ -q -m unit` or `scripts/test.sh unit`.
+Run the PR source gate with `python scripts/verify pr`.
+Target a level with `python -m pytest tests/ -q -m unit` or `python scripts/verify l1`.
 Use `python -m pytest tests/ -q -m "not slow"` for the fast local loop.
 Higher-gate procedure lives in
 [verify-change](../.agents/playbooks/verify-change.md).

@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, register qmd search only when an existing qmd binary is available, and wire local integrity hooks. Alpha.15 does not install qmd, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, and wire local integrity hooks. Alpha.15 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -23,7 +23,7 @@ The distribution mechanism is `vault-template/` plus the installed Memoria packa
 | --- | --- |
 | Scaffold | Create the folder tree from `.memoria/schemas/folders.yaml`. |
 | Populate | Copy system files from `vault-template/`. |
-| Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, install the Memoria package, and register qmd search only when qmd already exists. |
+| Wire runtime | Initialize Git, add the pre-commit hook, create the vault-local venv, and install the Memoria package. |
 
 Ordered steps and the component checklist are owned by [Installer (bootstrap)](../reference/installer.md).
 
@@ -65,7 +65,7 @@ Each trades breadth for less installer code:
 | --- | --- |
 | Guide app installs instead of fully automating them | Version parsing and silent installs. |
 | Presence checks instead of version gates | Duplicating upstream installer logic. |
-| Use Python venv and an existing qmd binary directly | Depending on Hermes to supply the core runtime. |
+| Use a Python venv directly | Depending on Hermes to supply the core runtime. |
 | Assume `local-only` deployment | Syncthing/VPS/sync branching. |
 | Default vaults off OneDrive | Obsidian index and file-lock conflicts. |
 | Leave git identity to the user | Synthetic authorship and installer-owned repos. |

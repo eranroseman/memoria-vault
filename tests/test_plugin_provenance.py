@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-import plugin_provenance_doctor as doctor
+from scripts.checks import plugin_provenance_doctor as doctor
 
 ROOT = Path(__file__).resolve().parent.parent
 

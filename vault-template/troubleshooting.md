@@ -17,7 +17,7 @@ Run from a terminal:
 | --- | --- | --- |
 | CLI package | `.memoria/.venv/bin/memoria --help` | prints `memoria` help |
 | Bundle | `.memoria/.venv/bin/memoria doctor bundle --workspace .` | reports `ok: true` or actionable failed checks |
-| Search | `.memoria/.venv/bin/memoria workspace rebuild --workspace . --search` | rebuild completes or reports the missing qmd dependency |
+| Search | `.memoria/.venv/bin/memoria workspace rebuild --workspace . --search` | rebuild completes and writes the search manifest |
 | Integrity | `.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .` | final verdict is `PASS` or gives concrete findings |
 | Git | `git status --short` | only expected local edits appear |
 
@@ -31,7 +31,7 @@ adapter separately.
 | --- | --- | --- |
 | Command fails before running | venv missing or package not installed | `.memoria/.venv/bin/memoria --help` |
 | New captures do not become checked | enrichment/full-text/provider data missing | `memoria request list` and `.memoria/config/providers.yaml` |
-| Search returns stale results | qmd checked-only index needs rebuild | `memoria workspace rebuild --search` |
+| Search returns stale results | search checked-only index needs rebuild | `memoria workspace rebuild --search` |
 | Linter findings stale | scheduled task not running | run the same `memoria` command manually |
 | Attention views look stale | projections or search need rebuild | `memoria workspace rebuild --search` |
 | Wikilinks broken across many notes | File/folder renamed without updating refs | `git diff` to find the rename |

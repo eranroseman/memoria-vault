@@ -7,7 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_REL = (
     Path("vault-template/.obsidian"),
     Path("vault-template/system/scripts"),

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-import sys
 import tomllib
 from pathlib import Path
 
@@ -173,7 +171,7 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
     assert output["workspace_exists"] is False
     assert output["db"] == {"path": ".memoria/memoria.sqlite", "exists": False}
     assert "capabilities" not in output["skeleton"]["directories"]
-    assert ".memoria/index/qmd/checked" in output["skeleton"]["missing"]
+    assert ".memoria/index/search/checked" in output["skeleton"]["missing"]
     assert output["package"]["seed_files"] == [".gitignore", "steering.md", "system/vocabulary.md"]
     assert "capabilities" not in output["package"]["seed_trees"]
     assert {
@@ -187,12 +185,10 @@ def test_cli_init_dry_run_reports_runtime_setup_without_mutation(
         "steering": "steering.md",
         "vocabulary": "system/vocabulary.md",
     }
-    assert output["qmd"] == {
-        "collection": "memoria-checked",
-        "checked_root": ".memoria/index/qmd/checked",
-        "config_dir": ".memoria/index/qmd/config",
-        "index_path": ".memoria/index/qmd/index.sqlite",
-        "mask": "**/*.md",
+    assert output["search"] == {
+        "engine": "bm25",
+        "checked_root": ".memoria/index/search/checked",
+        "manifest": ".memoria/index/search/manifest.json",
     }
     assert output["provider_config"] == {
         "path": ".memoria/config/providers.yaml",
@@ -255,7 +251,7 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
     assert rc == 0
     assert output["ok"] is True
     assert output["result"]["source_id"] == "doi-10.1000_alpha"
-    assert not (workspace / ".memoria/index/qmd/cache").exists()
+    assert not (workspace / ".memoria/index/search/manifest.json").exists()
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
     assert (workspace / output["result"]["content_path"]).is_file()
     with state.connect(workspace) as conn:
@@ -2576,26 +2572,23 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
     _assert_alpha15_request_columns(columns)
 
 
-def test_cli_doctor_qmd_checks_workspace_local_state(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+def test_cli_doctor_search_checks_workspace_local_state(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
-    _fake_qmd_toolchain(tmp_path, monkeypatch)
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
 
-    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "search", "--json"])
     output = json.loads(capsys.readouterr().out)
 
-    assert rc == 0
-    assert output["ok"] is True
-    assert output["checks"]["node_22"] is True
-    assert output["checks"]["qmd_absolute"] is True
-    assert output["checks"]["qmd_collection"] is True
-    assert output["checks"]["qmd_collection_root"] is True
-    assert output["checks"]["qmd_collection_mask"] is True
-    assert output["qmd_source"] == "npm-global"
-    assert output["qmd_path"].startswith(str(tmp_path))
+    assert rc == 1
+    assert output["ok"] is False
+    assert output["search_engine"] == "bm25"
+    assert output["search_manifest"] == ".memoria/index/search/manifest.json"
+    assert output["search_document_count"] == 0
+    assert output["checks"]["search_checked_root"] is True
+    assert output["checks"]["search_manifest"] is False
 
 
 def test_cli_doctor_runner_constructs_local_pydantic_ai_agent(
@@ -2730,20 +2723,19 @@ def test_cli_doctor_live_requires_runner_check(
     assert output["error"] == "doctor --live is only valid with --check runner"
 
 
-def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+def test_cli_workspace_rebuild_writes_checked_search_index(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     workspace = tmp_path / "workspace"
-    qmd_log = _fake_qmd_toolchain(tmp_path, monkeypatch)
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    note = workspace / "knowledge/notes/qmd.md"
+    note = workspace / "knowledge/notes/search.md"
     note.parent.mkdir(parents=True, exist_ok=True)
     note.write_text(
-        "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
+        "---\ntype: note\ncheck_status: checked\ntitle: search\n---\nalpha search\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/notes/qmd.md", "note")
+    mark_file_status(workspace, "knowledge/notes/search.md", "note")
 
     rc = main(
         [
@@ -2752,7 +2744,6 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
             "--workspace",
             str(workspace),
             "--search",
-            "--embeddings",
             "--json",
         ]
     )
@@ -2760,155 +2751,17 @@ def test_cli_workspace_rebuild_runs_qmd_with_workspace_local_state(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["qmd"]["manifest"]["mode"] == "hybrid"
-    assert output["qmd"]["manifest"]["embeddings"] is True
-    assert output["qmd"]["manifest"]["qmd_commands"][-1] == "qmd embed --chunk-strategy auto"
-    assert output["qmd"]["manifest"]["documents"][0]["path"] == "knowledge/notes/qmd.md"
-    assert output["qmd"]["index_path"] == f"{workspace}/.memoria/index/qmd/index.sqlite"
-    assert output["qmd"]["cache_home"] == ""
-    assert (workspace / ".memoria/index/qmd/checked/knowledge/notes/qmd.md").is_file()
-    lines = qmd_log.read_text(encoding="utf-8").splitlines()
-    qmd_env = f"{workspace}/.memoria/index/qmd/config|{workspace}/.memoria/index/qmd/index.sqlite|"
-    assert lines == [
-        f"doctor|{qmd_env}",
-        f"collection remove memoria-checked|{qmd_env}",
-        "collection add "
-        f"{workspace}/.memoria/index/qmd/checked --name memoria-checked --mask **/*.md"
-        f"|{qmd_env}",
-        f"update|{qmd_env}",
-        f"embed --chunk-strategy auto|{qmd_env}",
-    ]
+    assert output["search"]["engine"] == "bm25"
+    assert output["search"]["manifest"]["mode"] == "bm25"
+    assert output["search"]["manifest"]["documents"][0]["path"] == "knowledge/notes/search.md"
+    assert (workspace / ".memoria/index/search/checked/knowledge/notes/search.md").is_file()
 
-
-def test_cli_doctor_qmd_requires_embedding_models_for_required_qmd(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    workspace = tmp_path / "workspace"
-    _fake_qmd_toolchain(tmp_path, monkeypatch)
-    monkeypatch.setenv("QMD_DOCTOR_OUTPUT", "model cache: missing 3/3")
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-
-    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 1
-    assert output["ok"] is False
-    assert output["checks"]["qmd_doctor"] is True
-    assert output["checks"]["qmd_embedding_models"] is False
-    assert "model cache: missing" in output["qmd_doctor_output"]
-
-
-def test_cli_doctor_qmd_rejects_wrong_collection_registration(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    workspace = tmp_path / "workspace"
-    _fake_qmd_toolchain(tmp_path, monkeypatch)
-    monkeypatch.setenv("QMD_COLLECTION_PATH", str(tmp_path / "wrong"))
-    monkeypatch.setenv("QMD_COLLECTION_MASK", "*.txt")
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-
-    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 1
-    assert output["ok"] is False
-    assert output["checks"]["qmd_collection"] is True
-    assert output["checks"]["qmd_collection_root"] is False
-    assert output["checks"]["qmd_collection_mask"] is False
-    assert "Pattern:  *.txt" in output["qmd_collection_output"]
-
-
-def test_cli_doctor_qmd_rejects_ambiguous_path_binary(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    workspace = tmp_path / "workspace"
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    (bin_dir / "node").write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
-    (bin_dir / "qmd").write_text(f"#!{sys.executable}\nprint('wrong qmd')\n", encoding="utf-8")
-    (bin_dir / "node").chmod(0o755)
-    (bin_dir / "qmd").chmod(0o755)
-    monkeypatch.setenv("PATH", str(bin_dir))
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-
-    rc = main(["doctor", "--workspace", str(workspace), "--check", "qmd", "--json"])
-    output = json.loads(capsys.readouterr().out)
-
-    assert rc == 1
-    assert output["ok"] is False
-    assert output["checks"]["qmd"] is False
-    assert output["qmd_source"] == "path"
-    assert "MEMORIA_QMD_BIN" in output["qmd_error"]
-
-
-def test_cli_workspace_rebuild_ignores_missing_qmd_collection(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
-) -> None:
-    workspace = tmp_path / "workspace"
-    _fake_qmd_toolchain(tmp_path, monkeypatch)
-    monkeypatch.setenv("QMD_REMOVE_MISSING", "1")
-    main(["init", "--workspace", str(workspace), "--yes", "--json"])
-    capsys.readouterr()
-    note = workspace / "knowledge/notes/qmd.md"
-    note.parent.mkdir(parents=True, exist_ok=True)
-    note.write_text(
-        "---\ntype: note\ncheck_status: checked\ntitle: qmd\n---\nalpha search\n",
-        encoding="utf-8",
-    )
-    state.set_concept_verdict(workspace, "knowledge/notes/qmd.md", "checked")
-
-    rc = main(["workspace", "rebuild", "--workspace", str(workspace), "--search", "--json"])
-    output = json.loads(capsys.readouterr().out)
+    rc = main(["doctor", "--workspace", str(workspace), "--check", "search", "--json"])
+    doctor = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert output["ok"] is True
-
-
-def _fake_qmd_toolchain(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    npm_root = tmp_path / "npm-global"
-    npm_bin = npm_root / "bin"
-    npm_bin.mkdir(parents=True)
-    qmd_log = tmp_path / "qmd.log"
-    node = bin_dir / "node"
-    node.write_text(f"#!{sys.executable}\nprint('v22.11.0')\n", encoding="utf-8")
-    npm = bin_dir / "npm"
-    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
-    qmd = npm_bin / "qmd"
-    qmd.write_text(
-        f"#!{sys.executable}\n"
-        "import os, pathlib, sys\n"
-        "pathlib.Path(os.environ['QMD_LOG']).open('a', encoding='utf-8').write(\n"
-        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('QMD_CONFIG_DIR', '')\n"
-        "    + '|' + os.environ.get('INDEX_PATH', '')\n"
-        "    + '|' + os.environ.get('XDG_CACHE_HOME', '') + '\\n'\n"
-        ")\n"
-        "if sys.argv[1:3] == ['collection', 'remove'] and os.environ.get('QMD_REMOVE_MISSING'):\n"
-        "    print('Collection not found: memoria-checked', file=sys.stderr)\n"
-        "    sys.exit(1)\n"
-        "if sys.argv[1:] == ['collection', 'show', 'memoria-checked']:\n"
-        "    root = pathlib.Path(os.environ['QMD_CONFIG_DIR']).parent / 'checked'\n"
-        "    path = os.environ.get('QMD_COLLECTION_PATH', str(root))\n"
-        "    mask = os.environ.get('QMD_COLLECTION_MASK', '**/*.md')\n"
-        "    print('Collection: memoria-checked')\n"
-        "    print(f'  Path:     {path}')\n"
-        "    print(f'  Pattern:  {mask}')\n"
-        "    sys.exit(0)\n"
-        "if sys.argv[1:] == ['doctor']:\n"
-        "    print(os.environ.get('QMD_DOCTOR_OUTPUT', 'model cache: ready'))\n",
-        encoding="utf-8",
-    )
-    node.chmod(0o755)
-    npm.chmod(0o755)
-    qmd.chmod(0o755)
-    monkeypatch.setenv("QMD_LOG", str(qmd_log))
-    monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
-    return qmd_log
+    assert doctor["ok"] is True
+    assert doctor["search_document_count"] == 1
 
 
 def _write_project_argument_fixture(workspace: Path) -> None:

@@ -78,10 +78,10 @@ Make the smallest durable change:
 Run the focused docs checks:
 
 ```bash
-python scripts/docs_doctor.py docs
-python scripts/agents_doctor.py
-python scripts/gen_adr_index.py --check
-python scripts/docs_doctor.py --vault-links
+python scripts/checks/docs_doctor.py docs
+python scripts/checks/agents_doctor.py
+python scripts/checks/gen_adr_index.py --check
+python scripts/checks/docs_doctor.py --vault-links
 ```
 
 Then run the standard source gate:

@@ -1,6 +1,6 @@
 name: lint
 
-# Runs the L0 source gate from scripts/test.sh: ruff, docs/reference checks,
+# Runs the L0 source gate from scripts/verify: ruff, docs/reference checks,
 # repo doctors, syntax checks, and schema/design drift. No `paths:` filter —
 # reports on every PR (AGENTS.md §4).
 
@@ -28,4 +28,4 @@ jobs:
       - name: Install lint dependencies
         run: python -m pip install --quiet -r requirements-dev.txt
       - name: Run L0 source gate
-        run: bash scripts/test.sh l0
+        run: python scripts/verify l0

@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 FORBIDDEN_PATHS = (
     "vault-template/.memoria/operations",
     "vault-template/.memoria/mcp",
@@ -64,14 +64,13 @@ SEARCH_ROOTS = (
 )
 SKIP_PARTS = {
     ".git",
-    ".qmd",
     ".venv",
     "__pycache__",
 }
 SKIP_SUFFIXES = {".pyc", ".sqlite", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf"}
 ALLOW_TEXT_FILES = {
-    "scripts/alpha14_negative_gate.py",
-    "scripts/plugin_provenance_doctor.py",
+    "scripts/checks/alpha14_negative_gate.py",
+    "scripts/checks/plugin_provenance_doctor.py",
     "tests/test_plugin_provenance.py",
 }
 

@@ -12,7 +12,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Vault document types and fields | `vault-template/.memoria/schemas/types/*.yaml` | Templates, linter, pre-commit, Bases tests |
 | Type homes, staging/quarantine roots, skeleton | `vault-template/.memoria/schemas/folders.yaml` | Installer, linter, templates, dashboards, worker promotion tests |
 | Calibrated thresholds | `vault-template/.memoria/schemas/calibration.yaml` | Ingest, classification, clustering, evaluation |
-| Installed profile absence | `tests/test_profiles.py` + `scripts/alpha14_negative_gate.py` | Installer tests, profile reference page |
+| Installed profile absence | `tests/test_profiles.py` + `scripts/checks/alpha14_negative_gate.py` | Installer tests, profile reference page |
 | Runtime path and glob semantics | `src/memoria_vault/runtime/policy/` | Runtime policy tests and optional adapter policy hooks |
 | Runtime helper primitives | `src/memoria_vault/runtime/{vaultio,jsonl,time,paths}.py` | Runtime subsystems, operations, test harnesses |
 | Runtime write decisions and audit | `src/memoria_vault/runtime/policy/{model,decision,workspace,audit,engine}.py` | `src/memoria_vault/runtime/policy/hook.py`, optional policy gate plugin, audit log |
@@ -20,14 +20,14 @@ find the owning file, then fix the stale consumer rather than the source.
 | Shared schema validation | `src/memoria_vault/runtime/subsystems/lib/schema.py` | Linter, pre-commit, installer and schema tests |
 | Inbox card rendering and loudness routing | `src/memoria_vault/runtime/subsystems/lib/inbox.py` + `src/memoria_vault/runtime/subsystems/lib/loudness.py` | Operations that raise attention items; Home/Telegram push; request and policy block checks |
 | Runtime vault image | `vault-template/` | `scripts/install.sh`, golden-copy staging |
-| Dropped Obsidian baseline payload | `scripts/alpha14_negative_gate.py` + `scripts/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
+| Dropped Obsidian baseline payload | `scripts/checks/alpha14_negative_gate.py` + `scripts/checks/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
-| Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/ruleset_doctor.py`, and `AGENTS.md` |
-| Offline e2e smoke stages | `scripts/e2e_smoke.py` | `scripts/e2e-smoke.sh`, ADR-125/testing docs, release stage evidence |
-| Standalone disposable install harness | `scripts/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |
+| Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/checks/ruleset_doctor.py`, and `AGENTS.md` |
+| Offline e2e smoke stages | `scripts/sandbox/e2e_smoke.py` | `scripts/sandbox/e2e_smoke.py`, ADR-125/testing docs, release stage evidence |
+| Standalone disposable install harness | `scripts/sandbox/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |
 | Contributor Python tooling | `requirements-dev.txt` | Dev setup, lint workflows, python-selftest, Dependabot |
 | Contributor code search (qmd) | `package.json` + `scripts/qmd-codebase-index.sh` / `scripts/qmd-install-hooks.sh` | AGENTS.md "Searching the codebase (qmd)", dev setup |
-| GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/github_doctor.py`, issue tracking docs |
+| GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/checks/github_doctor.py`, issue tracking docs |
 | Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
 | PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
 | ADR decision state | `docs/adr/` frontmatter and `docs/adr/README.md` | Linked GitHub issues for implementation/readiness |

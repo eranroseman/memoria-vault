@@ -55,7 +55,7 @@ open Maintenance for **Drift watch**, **Loose ends**, and **Board**.
 **Optional UI adapter not responding** — keep working through the `memoria` CLI
 and repair the adapter separately.
 
-**qmd search index stale** — rebuild it with [Rebuild the search index](../operate/rebuild-the-search-index.md).
+**search index stale** — rebuild it with [Rebuild the search index](../operate/rebuild-the-search-index.md).
 
 **Sync incomplete** — notes created on another device are not queryable until
 sync completes; check Git/sync status before blaming retrieval.

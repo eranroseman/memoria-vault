@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-HARNESS = ROOT / "scripts" / "test_env_harness.py"
+HARNESS = ROOT / "scripts" / "sandbox" / "test_env_harness.py"
 CASSETTE = ROOT / "tests" / "fixtures" / "test-env" / "cassettes" / "package-gate-golden-path.json"
 
 

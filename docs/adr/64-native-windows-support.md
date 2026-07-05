@@ -38,7 +38,7 @@ Hermes is an optional adapter.
 **Native Windows is supported without WSL2.** Keep two platform installers, but
 make the standalone CLI/runtime the default on both:
 
-- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. It lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, wires Git hooks, and registers qmd search only when qmd already exists. It does not carry a `-WithHermes` mode in alpha.15.
+- **Windows provisioning** — `scripts/install.ps1` is a native Windows installer. It lays down the vault from `vault-template/`, creates the vault-local runtime venv, installs the Memoria package, and wires Git hooks. It does not carry a `-WithHermes` mode in alpha.15.
 - **Linux/WSL provisioning** — `scripts/install.sh` installs the same standalone CLI/runtime workspace. It does not carry a `--with-hermes` adapter mode in alpha.15.
 - **Scheduling and always-on** — the standalone runtime exposes deterministic CLI/worker commands and can be invoked manually, by file-change hooks, or by any external scheduler. Hermes cron support is not an alpha.15 installer surface.
 - **Bridge removal** — the production path has no `/mnt/c` translation, no WSL2 gate, and no `windowsWslMode` requirement for ACP. The WSL bridge remains only in WSL-specific test docs.

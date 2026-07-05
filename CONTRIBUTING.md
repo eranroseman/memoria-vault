@@ -13,22 +13,22 @@ installer, runtime package, workspace template, and docs are welcome.
 
 ## Development setup
 
-**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for the
-contributor qmd code index, and any provider keys needed for the flow you are testing.
+**Requirements:** Git, WSL2 or Linux, Python 3 with venv support, Node 22 for
+contributor prose tools, and any provider keys needed for the flow you are testing.
 
 ```bash
 git clone https://github.com/eranroseman/memoria-vault.git
 cd memoria-vault
 
-# One-time contributor tooling: dev requirements, pre-commit hooks, repo-local qmd index.
-bash scripts/dev-setup.sh
+# One-time contributor tooling: dev requirements, pre-commit hooks, prose tools.
+bash scripts/dev/setup.sh
 
 # Installer syntax and dry-run checks.
 bash -n scripts/install.sh
 bash scripts/install.sh --dry-run
 ```
 
-`dev-setup.sh` sets up the contributor toolchain only; it does not install or run
+`scripts/dev/setup.sh` sets up the contributor toolchain only; it does not install or run
 Memoria. Runtime package dependencies come from `pyproject.toml` and install into
 the workspace-local `.memoria/.venv`.
 Recommended VS Code extensions are listed in [.vscode/extensions.json](.vscode/extensions.json).

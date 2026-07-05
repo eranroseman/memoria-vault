@@ -6,7 +6,7 @@
 # vault-template/.memoria/schemas/folders.yaml; tests/test_installer_skeleton.py enforces it.
 SKELETON_DIRS=(
   .memoria/index
-  .memoria/index/qmd
+  .memoria/index/search
   .memoria/audit
   .memoria/config
   .memoria/quarantine

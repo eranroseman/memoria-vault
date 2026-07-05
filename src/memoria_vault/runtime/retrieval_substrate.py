@@ -7,15 +7,15 @@ import sqlite3
 from collections import defaultdict
 from typing import Any
 
-SELECTED_RETRIEVAL_SUBSTRATE = "qmd"
+SELECTED_RETRIEVAL_SUBSTRATE = "bm25"
 RETRIEVAL_SUBSTRATE_VERDICT = {
     "selected": SELECTED_RETRIEVAL_SUBSTRATE,
     "cleared_replacement_bar": False,
     "date": "2026-07-02",
     "reason": (
-        "SQLite FTS5 is available for lexical retrieval, but the packaged product "
-        "does not yet include sqlite-vec plus a local embedding pipeline, so the "
-        "semantic and hybrid slices do not clear the alpha.15 replacement bar."
+        "The packaged product uses deterministic checked-only BM25 search. "
+        "Semantic and hybrid retrieval remain future work until a local vector "
+        "pipeline ships as product code."
     ),
 }
 

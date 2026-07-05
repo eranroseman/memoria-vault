@@ -12,7 +12,7 @@ Modes:
   --check       exit 1 if the committed table is stale (CI / pre-commit gate)
   --self-test   run the internal tests
 
-Usage: python scripts/gen_adr_index.py [--check | --self-test]
+Usage: python scripts/checks/gen_adr_index.py [--check | --self-test]
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 ADR_DIR = ROOT / "docs" / "adr"
 README = ADR_DIR / "README.md"
 
@@ -188,7 +188,9 @@ def main() -> int:
     updated = build(ADR_DIR, README)
     if "--check" in sys.argv:
         if current != updated:
-            print("gen-adr-index: ADR index is stale — run `python scripts/gen_adr_index.py`")
+            print(
+                "gen-adr-index: ADR index is stale — run `python scripts/checks/gen_adr_index.py`"
+            )
             return 1
         print("gen-adr-index: ADR index is current ✓")
         return 0

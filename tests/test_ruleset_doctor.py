@@ -1,7 +1,8 @@
 """Tests for the required-check contract."""
 
-import ruleset_doctor
 import yaml
+
+from scripts.checks import ruleset_doctor
 
 
 def test_required_workflows_match_the_local_contract():

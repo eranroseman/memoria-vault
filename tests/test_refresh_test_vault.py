@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "refresh-test-vault.sh"
+SCRIPT = ROOT / "scripts" / "sandbox" / "refresh-test-vault.sh"
 
 
 def _script() -> str:

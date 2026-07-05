@@ -419,7 +419,7 @@ def analyze_gaps(
     project_path: str = "",
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Classify source/note topic mismatches over checked Concepts and qmd hits."""
+    """Classify source/note topic mismatches over checked Concepts and search hits."""
     vault = Path(vault)
     project_path = project_path.strip()
     project_argument: dict[str, Any] | None = None
@@ -458,7 +458,7 @@ def analyze_gaps(
             labels.setdefault(label.lower(), label)
             counts[label.lower()]
 
-    _add_qmd_gap_hits(vault, counts, seen, labels, retrieval)
+    _add_search_gap_hits(vault, counts, seen, labels, retrieval)
 
     gaps = []
     for key in sorted(counts):
@@ -873,22 +873,20 @@ def _argument_impact(finding: dict[str, Any]) -> int:
     return 2 if str(finding.get("severity") or "").lower() == "high" else 1
 
 
-def _add_qmd_gap_hits(
+def _add_search_gap_hits(
     vault: Path,
     counts: dict[str, dict[str, int]],
     seen: dict[str, dict[str, set[str]]],
     labels: dict[str, str],
     retrieval: dict[str, dict[str, Any]],
 ) -> None:
-    from memoria_vault.runtime.search_index import QMD_MANIFEST, answer_query
+    from memoria_vault.runtime.search_index import SEARCH_MANIFEST, answer_query
 
-    if not (vault / QMD_MANIFEST).is_file():
+    if not (vault / SEARCH_MANIFEST).is_file():
         return
 
     for key, label in sorted(labels.items()):
         answer = answer_query(vault, label, k=5)
-        if answer["engine"] != "qmd":
-            continue
         retrieval[key] = {
             "engine": answer["engine"],
             "sources": answer["sources"],
