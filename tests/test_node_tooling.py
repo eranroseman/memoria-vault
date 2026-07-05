@@ -26,7 +26,7 @@ def _local_hook(hook_id: str) -> dict:
 def test_required_node_checks_use_pinned_local_tools():
     package = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
 
-    assert package["devDependencies"]["cspell"] == "8.19.4"
+    assert package["devDependencies"]["cspell"] == "10.0.1"
     assert package["devDependencies"]["markdownlint-cli"] == "0.49.0"
     assert package["scripts"]["spellcheck"] == (
         'cspell lint --no-progress --no-must-find-files --gitignore "**/*.md"'
