@@ -47,7 +47,7 @@ def test_workflow_defers_to_cspell_json():
 
 def test_package_script_defers_to_cspell_json():
     package = json.loads(PACKAGE_JSON.read_text(encoding="utf-8"))
-    assert package["devDependencies"]["cspell"] == "8.19.4"
+    assert package["devDependencies"]["cspell"] == "10.0.1"
     assert package["scripts"]["spellcheck"] == (
         'cspell lint --no-progress --no-must-find-files --gitignore "**/*.md"'
     )
