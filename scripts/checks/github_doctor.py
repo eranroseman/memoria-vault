@@ -8,7 +8,7 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 GITHUB = ROOT / ".github"
 ISSUE_TEMPLATES = GITHUB / "ISSUE_TEMPLATE"
 DEPENDABOT = GITHUB / "dependabot.yml"

@@ -5,57 +5,37 @@ grand_parent: How-to guides
 nav_order: 5
 ---
 
-
 # Rebuild the search index
 
-Rebuild the checked-only qmd input tree and refresh qmd's local index. Alpha.15
-uses qmd as the required local retrieval engine, with deterministic BM25 fallback
-for degraded local runs ([External integrations](../../reference/integrations.md)).
+Rebuild the checked-only BM25 input tree and manifest used by `memoria ask`,
+`memoria project ask`, and gap analysis.
 
 ## When to rebuild
 
-- `memoria ask` misses checked Concepts you know exist ([Query the vault](../knowledge/query-the-vault.md))
-- A checked Work, digest Work, note, or hub was promoted and does not appear in search
-- `qmd search "known term"` returns empty or omits checked Concepts you know exist
-
-## When a rebuild is the fix
-
-Before rebuilding, rule out cheaper causes:
-
-| Symptom | Likely cause | What to do |
-| --- | --- | --- |
-| One new Concept is not found | Its DB/read API verdict is not `check_status = checked`, or the checked input tree is stale | Confirm the Concept is checked; then rebuild |
-| Search misses many checked Concepts or returns empty | Stale or missing checked input tree / qmd index | Run this guide |
-| Raw `qmd search` finds it but `memoria ask` does not cite it | Not an index problem | Use [Query the vault](../knowledge/query-the-vault.md) troubleshooting |
+- `memoria ask` misses checked Concepts you know exist.
+- A checked Work, digest Work, note, or hub was promoted and does not appear in search.
+- You refreshed generated Work text or graph neighborhoods.
 
 ## Steps
 
-**1. Check qmd readiness.**
-
-```bash
-memoria doctor --workspace <workspace> --check qmd
-```
-
-Fix any failed readiness row before rebuilding. `--embeddings` also requires
-qmd's model cache; run `qmd pull` if the doctor reports missing models.
-
-**2. Rebuild the checked input tree and qmd index.**
+**1. Rebuild the checked input tree.**
 
 ```bash
 memoria workspace rebuild --workspace <workspace> --search
 ```
 
 This copies only checked, current catalog Work rows and Knowledge Concepts plus
-checked Work text and graph neighborhoods into `.memoria/index/qmd/checked/`, writes
-`.memoria/index/qmd/manifest.json`, registers the qmd collection, and runs
-`qmd update`. The index lives inside the workspace and is gitignored — never
-commit it.
+checked Work text and graph neighborhoods into `.memoria/index/search/checked/`
+and writes `.memoria/index/search/manifest.json`. The index tree is generated
+workspace state and should not be committed.
 
-Add embeddings only after qmd models are present:
+**2. Check the local search state.**
 
 ```bash
-memoria workspace rebuild --workspace <workspace> --search --embeddings
+memoria doctor --workspace <workspace> --check search
 ```
+
+The search check should report the checked root and manifest as present.
 
 **3. Verify the rebuild.**
 
@@ -63,20 +43,10 @@ memoria workspace rebuild --workspace <workspace> --search --embeddings
 memoria ask --workspace <workspace> --question "<term>"
 ```
 
-Confirm the expected checked retrieval documents now appear. Use raw
-`qmd search "<term>"` only when you need to distinguish qmd index state from
-Memoria's checked-read filtering.
-
-## Verify
-
-```bash
-memoria ask --workspace <workspace> --question "term in checked Work or Concept"
-```
-
-Returns the retrieval document, and Ask cites recently checked Works again.
+Confirm the expected checked retrieval documents now appear.
 
 ## Related
 
-- Stale-index failure mode: [Failure modes](../../reference/failure-modes.md) — "qmd search index stale"
-- The search consumer you'll notice first: [Query the vault](../knowledge/query-the-vault.md)
-- Where qmd sits in the toolchain: [External integrations](../../reference/integrations.md)
+- Stale-index failure mode: [Failure modes](../../reference/failure-modes.md)
+- Querying the vault: [Query the vault](../knowledge/query-the-vault.md)
+- Search reference: [Search](../../reference/search.md)

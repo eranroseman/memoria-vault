@@ -12,7 +12,7 @@ from memoria_vault.runtime.policy.audit import EMPTY_SHA256
 from memoria_vault.runtime.worker import enqueue_operation
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts/alpha15_dogfood_checkpoint.py"
+SCRIPT = ROOT / "scripts/sandbox/alpha15_dogfood_checkpoint.py"
 
 
 def _load_script():

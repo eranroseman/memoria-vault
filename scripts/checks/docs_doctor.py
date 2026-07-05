@@ -27,7 +27,7 @@ Checks:
                         leaving bare `(ADR-NN)` codes.
 
 Exit 0 if clean, 1 if any error.
-Usage: python scripts/docs_doctor.py [docs_root]   (default: docs)
+Usage: python scripts/checks/docs_doctor.py [docs_root]   (default: docs)
 
 One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 """
@@ -122,18 +122,8 @@ INLINE_CODE_RE = re.compile(r"`[^`]*`")
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 YAML_FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.DOTALL)
 BARE_ADR_CODE_RE = re.compile(r"(?<!\[)\(ADR-\d+\)")
-COUNT_RE = re.compile(r"\b(\d+)\b")
 RELEASE_VERSION_DIR_RE = re.compile(r"^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$")
-MODEL_SPINE = "README.md"
-MODEL_SPINE_LINK_RE = re.compile(
-    r"\]\((?:\.\./)*README\.md(?:#[^)]+)?\)|"
-    r"https://eranroseman\.github\.io/memoria-vault/?(?:#[^)]+)?"
-)
-MODEL_RESTATEMENT_RE = re.compile(
-    r"\b(research operating system|single-researcher operating system|five terms|"
-    r"board, workers, vault|agents propose; the PI disposes|one conversational agent)\b",
-    re.IGNORECASE,
-)
+COUNT_RE = re.compile(r"\b(\d+)\b")
 
 
 def read(path: Path) -> str:
@@ -164,24 +154,6 @@ def _release_version_dir(path: Path, root: Path) -> bool:
     if root.name == "releasing" and len(parts) == 1:
         return bool(RELEASE_VERSION_DIR_RE.fullmatch(parts[0]))
     return False
-
-
-def check_thin_folders(root: Path, warnings: list[str]) -> None:
-    # Advisory: flag folders thin enough to consider flattening into their parent.
-    # Does not affect exit code — the human decides whether to act.
-    for d in sorted(
-        p
-        for p in root.rglob("*")
-        if p.is_dir() and not _scratch(p, root) and not _site_excluded(p, root)
-    ):
-        md_files = [p for p in d.iterdir() if p.suffix == ".md" and p.name != "README.md"]
-        has_readme = (d / "README.md").exists()
-        if len(md_files) == 1 and not has_readme:
-            warnings.append(
-                f"{d}/: single-file folder (no README) — consider flattening into parent"
-            )
-        elif len(md_files) == 1 and has_readme:
-            warnings.append(f"{d}/: README + one file — consider flattening into parent")
 
 
 def check_frontmatter(md: Path, errors: list[str]) -> None:
@@ -412,16 +384,6 @@ def check_site_excluded_targets(md: Path, root: Path, errors: list[str]) -> None
                 f"{md}: link '{path_part}' targets a docs/_config.yml excluded page — "
                 "use an absolute github.com blob URL or publish the target"
             )
-
-
-def check_model_spine_link(md: Path, root: Path, warnings: list[str]) -> None:
-    if not _published(md, root) or md == root / MODEL_SPINE or "adr" in md.relative_to(root).parts:
-        return
-    text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
-    if MODEL_SPINE_LINK_RE.search(text):
-        return
-    if MODEL_RESTATEMENT_RE.search(text):
-        warnings.append(f"{md}: restates the system model without linking docs/README.md")
 
 
 def check_hidden_compatibility_page(md: Path, root: Path, errors: list[str]) -> None:
@@ -769,17 +731,14 @@ def main() -> int:
         return 1
 
     errors: list[str] = []
-    warnings: list[str] = []
     doc_md_names = {p.name.lower() for p in root.rglob("*.md") if not _scratch(p, root)}
     check_readmes(root, errors)
-    check_thin_folders(root, warnings)
     check_site_nav_hierarchy(root, errors)
     for md in sorted(p for p in root.rglob("*.md") if not _scratch(p, root)):
         check_frontmatter(md, errors)
         check_links(md, errors)
         check_site_local_links(md, root, errors)
         check_site_excluded_targets(md, root, errors)
-        check_model_spine_link(md, root, warnings)
         check_hidden_compatibility_page(md, root, errors)
         check_bare_adr_codes(md, root, errors)
         check_wikilinks(md, errors, doc_md_names)
@@ -816,11 +775,6 @@ def main() -> int:
             print(f"  ✗ {e}")
     else:
         print("docs-doctor: clean ✓")
-
-    if warnings:
-        print(f"\ndocs-doctor: {len(warnings)} advisory warning(s)")
-        for w in warnings:
-            print(f"  ⚠ {w}")
 
     return 1 if errors else 0
 

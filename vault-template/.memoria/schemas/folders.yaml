@@ -22,7 +22,7 @@ transient_prefixes:
 # the full installer skeleton (content dirs get .gitkeep; ADR-125)
 skeleton:
   - .memoria/index
-  - .memoria/index/qmd
+  - .memoria/index/search
   - .memoria/audit
   - .memoria/config
   - .memoria/quarantine

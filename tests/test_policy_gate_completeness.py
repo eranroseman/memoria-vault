@@ -20,7 +20,7 @@ actors:
       tools: [memory]
   adapter:
     allow:
-      tools: [skills, kanban, qmd.search]
+      tools: [skills, kanban, search.query]
     deny:
       tools: [memory]
 """

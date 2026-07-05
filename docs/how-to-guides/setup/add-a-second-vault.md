@@ -9,7 +9,7 @@ nav_order: 7
 
 Create a second standalone Memoria workspace by running the bootstrap installer
 with a different target path. Each workspace owns its own `.memoria/memoria.sqlite`,
-qmd index, provider config, Git history, and optional app settings.
+search index, provider config, Git history, and optional app settings.
 
 ## Steps
 
@@ -38,7 +38,7 @@ git commit -m "Initial Memoria workspace"
 
 **4. Keep adapters isolated.**
 
-If you use optional UI adapters, configure them per workspace. Do not share qmd
+If you use optional UI adapters, configure them per workspace. Do not share search
 state, SQLite state, or provider config between workspaces.
 
 ## Verify

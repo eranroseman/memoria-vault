@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
@@ -351,7 +351,7 @@ def _workflow_replay(root: Path, vault: Path, env: dict[str, str]) -> None:
     _run_or_fail(
         [
             _python(),
-            str(root / "scripts/test_env_harness.py"),
+            str(root / "scripts/sandbox/test_env_harness.py"),
             "replay",
             "--root",
             str(root),

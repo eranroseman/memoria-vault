@@ -10,7 +10,6 @@ ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "scripts" / "install.sh"
 INSTALL_PS = ROOT / "scripts" / "install.ps1"
 MANIFEST = ROOT / "scripts" / "install" / "manifest.sh"
-RUNTIME_TOOLS = ROOT / "scripts" / "install" / "runtime-tools.sh"
 
 
 def _skeleton_dirs() -> set[str]:
@@ -41,7 +40,7 @@ def test_skeleton_covers_every_type_home():
 
 def test_alpha11_fresh_package_contract_is_shipped():
     required_dirs = {
-        ".memoria/index/qmd",
+        ".memoria/index/search",
         ".memoria/config",
         ".memoria/quarantine",
         ".memoria/staging/knowledge",
@@ -73,7 +72,7 @@ def test_alpha11_fresh_package_contract_is_shipped():
     ):
         assert (ROOT / "vault-template" / rel).is_file(), rel
     for rel in (
-        ".memoria/index/qmd",
+        ".memoria/index/search",
         ".memoria/quarantine",
         ".memoria/staging/knowledge",
         "journal",
@@ -151,7 +150,6 @@ def test_cron_wrappers_exist_for_wired_jobs():
 
 def test_standalone_installer_does_not_wire_hermes_cron_jobs():
     text = INSTALL.read_text(encoding="utf-8")
-    runtime_tools = RUNTIME_TOOLS.read_text(encoding="utf-8")
 
     for source, dest, schedule, job in (
         ("board-export-cron.sh", "memoria-board-export.sh", "* * * * *", "memoria-board-export"),
@@ -162,7 +160,7 @@ def test_standalone_installer_does_not_wire_hermes_cron_jobs():
         assert schedule not in text
         assert job not in text
     for deleted in ("install_hermes_cron", "hermes cron", "cron create", "HERMES_HOME/scripts"):
-        assert deleted not in runtime_tools
+        assert deleted not in text
 
 
 def test_linux_installer_defaults_to_standalone_cli_runtime():
@@ -176,10 +174,9 @@ def test_linux_installer_defaults_to_standalone_cli_runtime():
     for required in (
         "ensure_prereqs",
         "resolve_repo",
-        "load_install_modules",
+        'source "$REPO_DIR/scripts/install/manifest.sh"',
         "copy_vault",
         "install_runtime_deps",
-        "ensure_qmd",
         "print_cli_next_steps",
     ):
         assert required in text
@@ -217,7 +214,6 @@ def test_windows_installer_defaults_to_standalone_cli_runtime():
         "Install-RuntimeScaffold",
         "Initialize-VaultGit",
         "Install-VaultHooks",
-        "Install-Qmd",
         "Write-CliNextSteps",
     ):
         assert required in text
@@ -273,30 +269,16 @@ def test_cron_runner_uses_memoria_python_without_template_brace(tmp_path):
     assert result.returncode == 0, result.stderr
 
 
-def test_installer_registers_qmd_with_workspace_local_state():
-    text = RUNTIME_TOOLS.read_text(encoding="utf-8")
-    assert 'QMD_CONFIG_DIR="$VAULT_PATH/.memoria/index/qmd/config"' in text
-    assert 'INDEX_PATH="$VAULT_PATH/.memoria/index/qmd/index.sqlite"' in text
-    assert "--name memoria-checked" in text
+def test_installer_does_not_install_or_register_search_binaries():
+    sh = INSTALL.read_text(encoding="utf-8")
     ps = INSTALL_PS.read_text(encoding="utf-8")
-    assert "$env:QMD_CONFIG_DIR = $config" in ps
-    assert "$env:INDEX_PATH = $index" in ps
-    assert "--name memoria-checked --mask '**/*.md'" in ps
 
-
-def test_installer_qmd_resolution_avoids_ambiguous_path_binary():
-    text = RUNTIME_TOOLS.read_text(encoding="utf-8")
-    assert "MEMORIA_QMD_BIN" in text
-    assert "command -v qmd" not in text
-    assert "npm install -g" not in text
-    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" not in text
-    assert "qmd not found" in text
-    ps = INSTALL_PS.read_text(encoding="utf-8")
-    assert "MEMORIA_QMD_BIN" in ps
-    assert "Get-CommandPath @('qmd.cmd', 'qmd.exe', 'qmd')" not in ps
-    assert "npm install -g" not in ps
-    assert "MEMORIA_INSTALL_GLOBAL_TOOLS" not in ps
-    assert "qmd not found" in ps
+    for source in (sh, ps):
+        assert "MEMORIA_SEARCH_BIN" not in source
+        assert "collection add" not in source
+        assert "embed --chunk-strategy" not in source
+        assert ".memoria/index/search/checked" not in source
+        assert "--name memoria-checked" not in source
 
 
 def test_zotero_left_the_installer():
@@ -311,7 +293,6 @@ def test_installer_has_no_profile_template_replacement_layer():
     for text in (sh, ps):
         assert "{{VAULT_PATH}}" not in text
         assert "{{PYTHON}}" not in text
-        assert "{{QMD}}" not in text
         assert "sed_repl()" not in text
         assert "Set-TemplateValues" not in text
 

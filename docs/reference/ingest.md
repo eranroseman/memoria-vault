@@ -72,7 +72,7 @@ catalog row before `references.bib` is rendered.
 
 ## Read Barrier
 
-The captured source enters qmd/retrieval only after the DB/read API reports
+The captured source enters search/retrieval only after the DB/read API reports
 `check_status = checked`.
 Unchecked staged catalog rows, provider payloads, source-content blobs,
 quarantined files, and raw blobs are not indexed by the checked-only search

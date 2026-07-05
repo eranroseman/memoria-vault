@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
-import sys
 from pathlib import Path
-
-import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -16,7 +12,7 @@ from memoria_vault.runtime.search_index import (
     checked_concepts,
     evaluate_bm25,
     filter_checked_results,
-    rebuild_checked_qmd_source,
+    rebuild_checked_search_index,
 )
 from tests.helpers import copy_memoria_dirs
 
@@ -71,7 +67,7 @@ def mark_note_candidate(vault: Path, path: Path) -> None:
     )
 
 
-def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path) -> None:
+def test_rebuild_checked_search_index_copies_only_checked_concepts(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     note(vault, "checked", "checked", "alpha beta")
     note(vault, "unchecked", "unchecked", "poison alpha")
@@ -96,22 +92,21 @@ def test_rebuild_checked_qmd_source_copies_only_checked_concepts(tmp_path: Path)
         encoding="utf-8",
     )
 
-    manifest = rebuild_checked_qmd_source(vault)
+    manifest = rebuild_checked_search_index(vault)
 
+    assert manifest["backend"] == "bm25"
     assert manifest["mode"] == "bm25"
-    assert manifest["embeddings"] is False
     assert [row["path"] for row in manifest["documents"]] == [
         "knowledge/notes/checked.md",
         "knowledge/notes/superseded.md",
     ]
-    assert (vault / ".memoria/index/qmd/checked/knowledge/notes/checked.md").is_file()
-    assert (vault / ".memoria/index/qmd/checked/knowledge/notes/superseded.md").is_file()
-    assert not (vault / ".memoria/index/qmd/checked/capabilities").exists()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/candidate.md").exists()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/unchecked.md").exists()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/quarantined.md").exists()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/forged.md").exists()
-    assert manifest["qmd_commands"][-1] == "qmd update"
+    assert (vault / ".memoria/index/search/checked/knowledge/notes/checked.md").is_file()
+    assert (vault / ".memoria/index/search/checked/knowledge/notes/superseded.md").is_file()
+    assert not (vault / ".memoria/index/search/checked/capabilities").exists()
+    assert not (vault / ".memoria/index/search/checked/knowledge/notes/candidate.md").exists()
+    assert not (vault / ".memoria/index/search/checked/knowledge/notes/unchecked.md").exists()
+    assert not (vault / ".memoria/index/search/checked/knowledge/notes/quarantined.md").exists()
+    assert not (vault / ".memoria/index/search/checked/knowledge/notes/forged.md").exists()
 
 
 def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path: Path) -> None:
@@ -141,20 +136,7 @@ def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path
     assert json.loads(row["args_json"])["target_path"] == rel
 
 
-def test_rebuild_checked_qmd_source_records_embedding_mode(tmp_path: Path) -> None:
-    vault = workspace(tmp_path)
-    note(vault, "checked", "checked", "alpha beta")
-
-    manifest = rebuild_checked_qmd_source(vault, embeddings=True)
-
-    assert manifest["mode"] == "hybrid"
-    assert manifest["embeddings"] is True
-    assert manifest["qmd_commands"][-1] == "qmd embed --chunk-strategy auto"
-    stored = vault / ".memoria/index/qmd/manifest.json"
-    assert '"mode": "hybrid"' in stored.read_text(encoding="utf-8")
-
-
-def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
+def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
@@ -229,15 +211,15 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
         ],
     )
 
-    manifest = rebuild_checked_qmd_source(vault)
+    manifest = rebuild_checked_search_index(vault)
 
     assert [row["path"] for row in manifest["documents"]] == [
         "graph-neighborhoods/source-alpha.md",
         "knowledge/notes/checked.md",
         "works/source-alpha.md",
     ]
-    work = vault / ".memoria/index/qmd/checked/works/source-alpha.md"
-    graph = vault / ".memoria/index/qmd/checked/graph-neighborhoods/source-alpha.md"
+    work = vault / ".memoria/index/search/checked/works/source-alpha.md"
+    graph = vault / ".memoria/index/search/checked/graph-neighborhoods/source-alpha.md"
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
     assert "coordination-aspect interviews" in work.read_text(encoding="utf-8")
     assert '"doi": "10.1000/alpha"' in work.read_text(encoding="utf-8")
@@ -275,14 +257,14 @@ def test_rebuild_checked_qmd_source_includes_checked_work_text_and_graph(
     )
 
 
-def test_filter_checked_results_applies_read_barrier_to_qmd_rows(tmp_path: Path) -> None:
+def test_filter_checked_results_applies_read_barrier_to_search_rows(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     checked = note(vault, "checked", "checked", "alpha beta")
     note(vault, "unchecked", "unchecked", "poison alpha")
     rows = [
-        {"file": "qmd://vault/knowledge/notes/unchecked.md", "title": "Unchecked"},
+        {"file": "search://vault/knowledge/notes/unchecked.md", "title": "Unchecked"},
         {"file": checked.as_posix(), "title": "Checked absolute"},
-        {"file": "qmd://vault/missing.md", "title": "Missing"},
+        {"file": "search://vault/missing.md", "title": "Missing"},
     ]
 
     assert filter_checked_results(vault, rows) == [rows[1]]
@@ -400,30 +382,10 @@ def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     ]
 
 
-def test_answer_query_uses_qmd_after_rebuild(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+def test_project_answer_expands_bm25_query_with_project_and_thesis_terms(
+    tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path / "vault")
-    qmd_log = _fake_qmd_query(tmp_path, monkeypatch)
-    note(vault, "checked", "checked", "alpha beta")
-    note(vault, "unchecked", "unchecked", "poison alpha")
-    rebuild_checked_qmd_source(vault)
-
-    answer = answer_query(vault, "alpha")
-
-    assert answer["engine"] == "qmd"
-    assert [source["path"] for source in answer["sources"]] == ["knowledge/notes/checked.md"]
-    qmd_env = f"{vault}/.memoria/index/qmd/config|{vault}/.memoria/index/qmd/index.sqlite"
-    assert qmd_log.read_text(encoding="utf-8").strip() == (
-        f"query lex: alpha\nvec: alpha --no-rerank --format json -n 15 -c memoria-checked|{qmd_env}"
-    )
-
-
-def test_project_answer_expands_qmd_query_with_project_and_thesis_terms(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    vault = workspace(tmp_path / "vault")
-    qmd_log = _fake_qmd_query(tmp_path, monkeypatch)
     project = vault / "knowledge/projects/project-alpha.md"
     project.parent.mkdir(parents=True, exist_ok=True)
     project.write_text(
@@ -447,47 +409,13 @@ def test_project_answer_expands_qmd_query_with_project_and_thesis_terms(
         "Thesis body.",
         "topics: [patient-generated-data]\n",
     )
-    rebuild_checked_qmd_source(vault)
+    rebuild_checked_search_index(vault)
 
     answer = answer_query(vault, "status", project_id="project-alpha")
 
-    assert answer["engine"] == "qmd"
+    assert answer["engine"] == "bm25"
     assert answer["project_context"]["retrieval_terms"] == [
         "patient-generated-data",
         "qualitative",
         "sensemaking",
     ]
-    assert "status Framing project project-alpha thesis" in qmd_log.read_text(encoding="utf-8")
-    assert "patient-generated-data qualitative sensemaking" in qmd_log.read_text(encoding="utf-8")
-
-
-def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    npm_root = tmp_path / "npm-global"
-    npm_bin = npm_root / "bin"
-    npm_bin.mkdir(parents=True)
-    qmd_log = tmp_path / "qmd.log"
-    npm = bin_dir / "npm"
-    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
-    qmd = npm_bin / "qmd"
-    qmd.write_text(
-        f"#!{sys.executable}\n"
-        "import json, os, pathlib, sys\n"
-        "pathlib.Path(os.environ['QMD_LOG']).write_text(\n"
-        "    ' '.join(sys.argv[1:]) + '|' + os.environ.get('QMD_CONFIG_DIR', '')\n"
-        "    + '|' + os.environ.get('INDEX_PATH', '')\n"
-        "    + '\\n',\n"
-        "    encoding='utf-8',\n"
-        ")\n"
-        "print(json.dumps([\n"
-        "    {'file': 'qmd://memoria-checked/knowledge/notes/unchecked.md', 'score': 9},\n"
-        "    {'file': 'qmd://memoria-checked/knowledge/notes/checked.md', 'score': 8},\n"
-        "]))\n",
-        encoding="utf-8",
-    )
-    npm.chmod(0o755)
-    qmd.chmod(0o755)
-    monkeypatch.setenv("QMD_LOG", str(qmd_log))
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
-    return qmd_log

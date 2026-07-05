@@ -25,7 +25,7 @@ schema validation, and ingest type-detection dispatch.
 
 ---
 
-### Checked qmd BM25 retrieval
+### Checked search BM25 retrieval
 
 **For:** finding checked retrieval documents by exact terms, citekeys, rare tokens, and short query text.
 
@@ -34,26 +34,22 @@ pulls, and integrity sub-check candidate pulls. No QuickAdd pre-file similarity
 telemetry, standalone `similarity-check`, or `find-duplicates` command ships
 today.
 
-**Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_qmd_source()`
+**Implementation:** `memoria_vault.runtime.search_index.rebuild_checked_search_index()`
 writes checked Concepts plus generated checked Work text and graph neighborhoods into
-`.memoria/index/qmd/checked/`; Memoria filters qmd results back through the
-DB/read API `check_status = checked` verdict. `answer_query()` first uses qmd when the checked
-manifest and qmd binary are ready, then falls back to deterministic Python BM25.
+`.memoria/index/search/checked/`; Memoria filters results back through the
+DB/read API `check_status = checked` verdict. `answer_query()` uses deterministic Python BM25.
 For project-scoped Ask, it expands the query with checked project scope/facet
-terms and checked linked thesis terms before querying qmd. `run_bm25_eval()`
+terms and checked linked thesis terms before ranking. `run_bm25_eval()`
 provides the eval harness. Rerank and broader global query expansion are later
-Ask/retrieval eval work; they count only after they beat the qmd or BM25
-baseline.
+Ask/retrieval eval work; they count only after they beat the BM25 baseline.
 
 Project gap analysis also reads SQLite catalog Work terms, checked project
 scope/facet terms, checked linked thesis terms, and first-order reference/related
 graph edges. When a checked Work creates a source-only gap, the gap keeps that
 source id and can emit unchecked candidate Work attention items from its graph
-edges without requiring qmd to rediscover the source.
+edges without requiring search to rediscover the source.
 
-**Cost:** local index rebuild plus qmd query time. Determinism: total for the Python BM25
-baseline; qmd CLI ranking is treated as an implementation detail behind the checked-only
-read barrier.
+**Cost:** local index rebuild plus BM25 ranking time. Determinism: total.
 
 ---
 

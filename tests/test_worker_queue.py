@@ -1303,15 +1303,15 @@ def test_worker_runs_project_argument_analysis_operation_jobs(tmp_path: Path) ->
     assert {edge["label"] for edge in canvas["edges"]} == {"supports", "contradicts"}
 
 
-def test_worker_runs_checked_qmd_source_rebuild_operation_jobs(tmp_path: Path) -> None:
+def test_worker_runs_checked_search_index_rebuild_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     write_note(vault, "checked", "checked", "alpha beta")
     write_note(vault, "unchecked", "unchecked", "poison alpha")
 
     queued = enqueue_operation(
         vault,
-        "rebuild-checked-qmd-source",
-        idempotency_key="rebuild-qmd",
+        "rebuild-checked-search-index",
+        idempotency_key="rebuild-search",
     )
     done = run_next_job(vault, machine="test-machine")
 
@@ -1320,8 +1320,8 @@ def test_worker_runs_checked_qmd_source_rebuild_operation_jobs(tmp_path: Path) -
     assert done["status"] == "done"
     assert done["document_count"] == 1
     assert [row["path"] for row in done["documents"]] == ["knowledge/notes/checked.md"]
-    assert (vault / ".memoria/index/qmd/checked/knowledge/notes/checked.md").is_file()
-    assert not (vault / ".memoria/index/qmd/checked/knowledge/notes/unchecked.md").exists()
+    assert (vault / ".memoria/index/search/checked/knowledge/notes/checked.md").is_file()
+    assert not (vault / ".memoria/index/search/checked/knowledge/notes/unchecked.md").exists()
 
 
 def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:

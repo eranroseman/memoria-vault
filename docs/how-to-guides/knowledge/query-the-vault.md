@@ -22,7 +22,7 @@ Ask a grounded question over checked workspace knowledge with `memoria ask`.
 ## Prerequisites
 
 - Checked sources, digests, or notes in the workspace.
-- Current qmd index. Rebuild it if results look stale: [Rebuild the search index](../operate/rebuild-the-search-index.md).
+- Current search index. Rebuild it if results look stale: [Rebuild the search index](../operate/rebuild-the-search-index.md).
 
 ## Steps
 

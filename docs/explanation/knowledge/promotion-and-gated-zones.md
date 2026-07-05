@@ -18,7 +18,7 @@ mean; the worker owns the mechanical write boundary.
 
 Canonical readers consume checked knowledge Concepts and checked SQLite catalog
 rows. Unchecked or quarantined Concepts can exist on disk, but they do not enter
-the checked qmd index or Ask path.
+the checked search index or Ask path.
 
 Promotion is not a file move. A Concept is born in its type home and stays
 there; the boundary is the **state transition** and its trace. Machine writes

@@ -51,8 +51,8 @@ reference pages; docs checks keep the mirror linked.
 
 | Action | Performer | What it does |
 | --- | --- | --- |
-| Rebuild checked qmd source | worker operation `rebuild-checked-qmd-source` + runtime helper (`rebuild_checked_qmd_source`) | Rebuilds `.memoria/index/qmd/checked/` from checked retrieval documents: current Concepts plus generated checked Work text and graph neighborhoods. |
-| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the qmd-backed or deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, contradictions, and project context when supplied. |
+| Rebuild checked search source | worker operation `rebuild-checked-search-index` + runtime helper (`rebuild_checked_search_index`) | Rebuilds `.memoria/index/search/checked/` from checked retrieval documents: current Concepts plus generated checked Work text and graph neighborhoods. |
+| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the search-backed or deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, contradictions, and project context when supplied. |
 
 ### Knowledge construction (`memoria_vault.runtime.knowledge`)
 
@@ -113,7 +113,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Policy decision | [Policy gate](policy-mcp.md) (`memoria_vault.runtime.policy`) | Decides allow / allow_with_log / deny / dry_run for optional adapter writes and runtime checks; fail-closed. |
 | Pre-tool gate | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Optional adapters call it before a tool runs; denied, dry-run, direct-file, terminal, browser, and unaudited egress tools are blocked. |
 | Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
-| Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for qmd-backed ask and gap analysis. |
+| Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for search-backed ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block attention items to delegation and policy gates. |
@@ -128,7 +128,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Ask query | `memoria ask --question ...` / `memoria project ask <project-id> --question ...` | Runs `answer-query` and returns the Ask/Query response contract over checked retrieval documents; project Ask includes checked project context when available. |
 | Author and curate Concepts | `memoria new note`, `memoria check`, `memoria link` | Authors PI or CLI-agent Concepts through the engine request envelope, promotes checked Concepts through the request boundary, and records typed-link curation through worker-owned requests and journal rows. |
 | Analyze project | `memoria project gaps <project-path>`, `trace`, `frame-paper`, `export` | Runs checked graph, project-scope, linked-thesis, project-argument, and paper-readiness gap analysis; records PI-supplied paper framing; runs argument tracing; and performs deterministic Markdown/Pandoc project export from the CLI control plane. New Project Concepts are authored through `memoria new project`, queued as `create-concept`, and remain unchecked until review/check promotion. |
-| Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, workspace indexes, and checked-only qmd inputs from worker-readable state. |
+| Refresh projections and search | `memoria workspace rebuild` | Regenerates tracked projections, bibliography, workspace indexes, and checked-only search inputs from worker-readable state. |
 | Trace rollback | `memoria workspace rollback` | Runs `cascade-rollback` against a target id; the worker owns quarantine, commit, and journal rows. |
 | Observe PI edits | `memoria workspace scan` / `memoria serve --watch` | Runs `observe-pi-edits`, scanning bundle-root git status and committing direct PI Concept edits with backfilled `derived` events. `serve --watch` is only a stdlib polling trigger; the scan worker remains the correctness boundary. |
 | Resolve attention | `memoria attention resolve (--apply\|--reject\|--defer)` | Runs the attention-disposition request, records routing class plus PI resolution outcome, and closes or defers the attention projection in the committed journal row. |
@@ -141,7 +141,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Vault read / gated write | optional editor or BYO-agent adapter | Reads may inspect workspace files; writes must call the runtime policy hook and then enter the same checked request/journal boundary as CLI work. |
-| Vault search | `memoria ask` / qmd debug commands | Uses the checked-only qmd tree and runtime read barrier; no required external operation API ships. |
+| Vault search | `memoria ask` / search debug commands | Uses the checked-only search tree and runtime read barrier; no required external operation API ships. |
 | Literature discovery | provider-backed runtime operations | Uses configured provider allowlists and replay fixtures for tests; no live Zotero or required external agent server is authoritative. |
 | Portable bibliography import | `memoria work import --format bibtex` or `--format csl` | Reads local BibTeX or CSL JSON files as input data only; no live reference-manager DB/API is a baseline dependency. |
 

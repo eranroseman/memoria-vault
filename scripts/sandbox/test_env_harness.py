@@ -18,7 +18,7 @@ from typing import Any
 
 import yaml
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
@@ -232,7 +232,7 @@ def replay(root: Path, vault: Path, cassette_path: Path) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("replay",), nargs="?", default="replay")
-    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--vault", type=Path)
     parser.add_argument("--cassette", type=Path, default=DEFAULT_CASSETTE)
     parser.add_argument("--json", action="store_true", help="print replay summary as JSON")

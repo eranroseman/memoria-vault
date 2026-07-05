@@ -43,10 +43,10 @@ jobs:
           python -m pip install --quiet -r requirements-dev.txt
           python -m pip install --quiet -e .
       - name: Run L1 component tests
-        run: bash scripts/test.sh l1
+        run: python scripts/verify l1
 
       - name: E2E smoke (offline vault build + the Library loop)
         # Builds a vault from vault-template/ exactly as the installer would, then walks
         # scaffold -> golden -> commit gate -> offline ingest -> attention prompt ->
         # lint. Caught two real bugs the unit suite missed; pure-local, no network.
-        run: python3 scripts/e2e_smoke.py
+        run: python3 scripts/sandbox/e2e_smoke.py

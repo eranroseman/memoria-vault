@@ -21,8 +21,108 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+L0_COMMANDS = [
+    [
+        "ruff",
+        "check",
+        "src/memoria_vault",
+        "scripts",
+        "vault-template/.memoria",
+        ".github/scripts",
+        "tests",
+    ],
+    [
+        "ruff",
+        "format",
+        "--check",
+        "src/memoria_vault",
+        "scripts",
+        "vault-template/.memoria",
+        ".github/scripts",
+        "tests",
+    ],
+    ["python3", "scripts/checks/docs_doctor.py", "docs"],
+    ["python3", "scripts/checks/alpha14_negative_gate.py"],
+    ["python3", "scripts/checks/checked_terminology_gate.py"],
+    ["python3", "scripts/checks/docs_doctor.py", "--vault-links"],
+    ["python3", "scripts/checks/status_doctor.py"],
+    ["python3", "scripts/checks/adr_code_doctor.py"],
+    ["python3", "scripts/checks/agents_doctor.py"],
+    ["python3", "scripts/checks/github_doctor.py"],
+    ["python3", "scripts/checks/ruleset_doctor.py"],
+    ["python3", "scripts/checks/plugin_provenance_doctor.py"],
+    ["python3", "scripts/checks/gen_adr_index.py", "--check"],
+    [
+        "env",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+        "python3",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        "-m",
+        "static",
+    ],
+    [
+        "python3",
+        "-m",
+        "compileall",
+        "-q",
+        "src/memoria_vault",
+        "scripts/checks",
+        "scripts/sandbox",
+        "scripts/verify",
+    ],
+    [
+        "bash",
+        "-n",
+        "scripts/install.sh",
+        "scripts/install/manifest.sh",
+        "scripts/sandbox/refresh-test-vault.sh",
+        "scripts/sandbox/install-test-vault-local-llm.sh",
+    ],
+    [
+        "env",
+        "PYTHONPATH=src",
+        "python3",
+        "-m",
+        "memoria_vault.runtime.subsystems.integrity.linter.detectors",
+        "--vault",
+        "vault-template",
+        "--gate",
+        "dashboard-field-drift,design-system-drift",
+    ],
+]
+
+L1_COMMANDS = [
+    [
+        "env",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+        "python3",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        "-m",
+        "unit or contract",
+    ],
+]
+
 GATE_COMMANDS = {
-    "source": [["bash", "scripts/test.sh", "source"]],
+    "check": [
+        [
+            "env",
+            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+            "python3",
+            "-m",
+            "pytest",
+            "tests/",
+            "--co",
+            "-q",
+        ],
+    ],
+    "l0": L0_COMMANDS,
+    "l1": L1_COMMANDS,
     "package": [
         [
             "python3",
@@ -51,7 +151,7 @@ GATE_COMMANDS = {
             "-c",
             "import memoria_vault; print(memoria_vault.__version__)",
         ],
-        ["python3", "scripts/e2e_smoke.py"],
+        ["python3", "scripts/sandbox/e2e_smoke.py"],
     ],
     "runtime": [
         ["python3", "-m", "pytest", "tests/test_alpha15_runtime_gate.py", "-q"],
@@ -66,15 +166,30 @@ GATE_COMMANDS = {
             "-q",
         ],
     ],
-    "live": [["bash", "scripts/test.sh", "live"]],
+    "live": [
+        [
+            "env",
+            "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+            "python3",
+            "-m",
+            "pytest",
+            "tests/",
+            "-q",
+            "-m",
+            "live",
+        ]
+    ],
 }
 
 MODES = {
-    "pr": ["source"],
-    "package": ["source", "package"],
-    "runtime": ["source", "package", "runtime"],
-    "rc": ["source", "package", "runtime"],
-    "live": ["runtime", "live"],
+    "check": ["check"],
+    "l0": ["l0"],
+    "l1": ["l1"],
+    "pr": ["l0", "l1"],
+    "package": ["l0", "l1", "package"],
+    "runtime": ["l0", "l1", "package", "runtime"],
+    "rc": ["l0", "l1", "package", "runtime"],
+    "live": ["l0", "l1", "package", "runtime", "live"],
 }
 
 MANUAL_FOLLOW_UP = {
@@ -204,14 +319,17 @@ def run_step(
     )
     log_path.write_text(result.stdout, encoding="utf-8")
     print(result.stdout, end="")
-    status = (
-        "passed" if result.returncode == 0 else "skipped" if result.returncode == 77 else "failed"
-    )
+    if gate == "live" and result.returncode == 5:
+        returncode = 0
+        status = "skipped"
+    else:
+        returncode = result.returncode
+        status = "passed" if returncode == 0 else "skipped" if returncode == 77 else "failed"
     return {
         "gate": gate,
         "command": command,
         "display": display,
-        "returncode": result.returncode,
+        "returncode": returncode,
         "result": status,
         "duration_seconds": round(time.monotonic() - started, 3),
         "log": str(log_path),

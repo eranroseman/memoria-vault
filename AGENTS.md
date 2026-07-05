@@ -204,12 +204,12 @@ All must pass before merge.
 
 The check-name roster is owned by
 [`.github/ruleset-contract.yaml`](.github/ruleset-contract.yaml). This table is
-a reader mirror guarded by `python scripts/agents_doctor.py`.
+a reader mirror guarded by `python scripts/checks/agents_doctor.py`.
 
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | Runs `scripts/test.sh l0`: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
+| `lint` | Runs `python scripts/verify l0`: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -287,10 +287,10 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
-- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `scripts/test.sh l1`). The L1 tests live in `tests/`, not inline in the modules.
-- **Standard PR verification:** `scripts/verify pr` runs the source checks (`scripts/test.sh all`) and writes a JSON evidence bundle. Use `scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `scripts/verify runtime` / `scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
+- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `python scripts/verify l1`). The L1 tests live in `tests/`, not inline in the modules.
+- **Standard PR verification:** `python scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `python scripts/verify runtime` / `python scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
-- **Installer end-to-end:** `bash scripts/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
+- **Installer end-to-end:** `bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
 
 ---
 
@@ -341,24 +341,10 @@ the manual security review and is a first line against the "never commit
   and [milestones](https://github.com/eranroseman/memoria-vault/milestones) for
   current blockers, checkpoint scope, and known limitations.
 
-### Searching the codebase (qmd)
+### Searching the codebase
 
-The repo carries an optional **project-local qmd index** (`./.qmd/`, gitignored) for
-hybrid keyword+semantic code search — separate from the runtime/vault qmd, and indexing
-this repo only. Set it up once with `bash scripts/dev-setup.sh` (or `npm ci &&
-bash scripts/qmd-codebase-index.sh`); needs Node ≥22.
-
-- **Keyword:** `npx qmd search "<terms>"` — BM25, instant, no models.
-- **Semantic:** `npx qmd query "<intent>"` — needs vectors first: `bash scripts/qmd-codebase-index.sh --embed`.
-- **Open a hit:** `npx qmd get <file>`.
-- **Rebuild after large changes:** `bash scripts/qmd-codebase-index.sh --embed`.
-- **Auto-refresh (optional):** `bash scripts/qmd-install-hooks.sh` (or `dev-setup.sh --with-hooks`)
-  wires git hooks that refresh the index after commits/merges/branch switches — non-blocking,
-  and a no-op until the index exists. Remove with `bash scripts/qmd-install-hooks.sh --uninstall`.
-
-GPU is auto-detected (leave `QMD_LLAMA_GPU` unset). On WSL/Linux with an NVIDIA card,
-semantic search needs the CUDA 13 runtime (`libcudart.so.13` + `libcublas.so.13`);
-without it qmd falls back to CPU (slower, still works).
+Use `rg` / `rg --files` from the active worktree. The repo does not carry or
+install a project-local search index.
 
 ---
 

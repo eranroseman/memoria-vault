@@ -1,6 +1,6 @@
 """L1 component tests for status_doctor."""
 
-import status_doctor as _m
+from scripts.checks import status_doctor as _m
 
 Path = _m.Path
 _release_scratch = _m._release_scratch

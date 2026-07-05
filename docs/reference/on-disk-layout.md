@@ -122,7 +122,7 @@ files; the CLI/read API remains authoritative. What it shows is in
 | Path | Holds |
 | --- | --- |
 | `<repo>/scripts/` | `install.sh` / `install.ps1`, `docs_doctor.py`, test drivers — install tooling never deploys into the vault. |
-| qmd user cache | Model files and global qmd cache managed by qmd; Memoria keeps workspace config/index state inside `.memoria/index/qmd/`. |
+| search index | Generated checked-only BM25 input tree and manifest under `.memoria/index/search/`. |
 | OS diagnostic state directory | Redacted support bundles and raw diagnostic captures; see [Diagnostics](diagnostics.md). |
 
 ---

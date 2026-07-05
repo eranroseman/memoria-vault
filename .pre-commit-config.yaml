@@ -1,5 +1,5 @@
 # Memoria pre-commit configuration.
-# Install once per clone:  pre-commit install --install-hooks   (or run scripts/dev-setup.sh)
+# Install once per clone:  pre-commit install --install-hooks   (or run scripts/dev/setup.sh)
 # Run manually over all files:  pre-commit run --all-files
 # Skip a single hook once:  SKIP=<hook-id> git commit
 # Bypass everything (rarely):  git commit --no-verify
@@ -25,9 +25,9 @@ repos:
       - id: gitleaks
         name: gitleaks
         language: system
-        entry: python scripts/gitleaks_precommit.py
-        files: .
-        types: [text]
+        entry: gitleaks protect --staged --redact --verbose
+        always_run: true
+        pass_filenames: false
 
       - id: ruff
         name: ruff
@@ -57,15 +57,15 @@ repos:
       - id: docs-doctor
         name: docs-doctor
         language: system
-        entry: python scripts/docs_doctor.py docs
-        files: ^docs/|^scripts/docs_doctor\.py
+        entry: python scripts/checks/docs_doctor.py docs
+        files: ^docs/|^scripts/checks/docs_doctor\.py
         pass_filenames: false
 
       # Block 2 partial: bash syntax check for install.sh
       - id: bash-syntax
         name: bash-syntax
         language: system
-        entry: bash -n scripts/install.sh scripts/install/manifest.sh scripts/install/runtime-tools.sh
+        entry: bash -n scripts/install.sh scripts/install/manifest.sh
         files: ^scripts/install\.sh$|^scripts/install/.*\.sh$
         pass_filenames: false
 
@@ -73,7 +73,7 @@ repos:
       - id: pytest
         name: pytest-collect
         language: system
-        entry: bash scripts/test.sh check
+        entry: python scripts/verify check
         files: \.py$
         pass_filenames: false
 
@@ -81,7 +81,7 @@ repos:
       - id: check-doc-refs
         name: check-doc-refs
         language: system
-        entry: python scripts/docs_doctor.py --doc-refs
+        entry: python scripts/checks/docs_doctor.py --doc-refs
         files: \.(md|py|ya?ml)$
         pass_filenames: true
 
@@ -117,35 +117,35 @@ repos:
       - id: adr-index
         name: adr-index
         language: system
-        entry: python scripts/gen_adr_index.py --check
-        files: ^docs/adr/.*\.md$|^scripts/gen_adr_index\.py$
+        entry: python scripts/checks/gen_adr_index.py --check
+        files: ^docs/adr/.*\.md$|^scripts/checks/gen_adr_index\.py$
         pass_filenames: false
 
       # Block 11: status-doctor
       - id: status-doctor
         name: status-doctor
         language: system
-        entry: python scripts/status_doctor.py
-        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^releases/.*\.md$|^scripts/status_doctor\.py$
+        entry: python scripts/checks/status_doctor.py
+        files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^releases/.*\.md$|^scripts/checks/status_doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor
         name: agents-doctor
         language: system
-        entry: python scripts/agents_doctor.py
-        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/agents_doctor\.py$)
+        entry: python scripts/checks/agents_doctor.py
+        files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/checks/agents_doctor\.py$)
         pass_filenames: false
 
       - id: github-doctor
         name: github-doctor
         language: system
-        entry: python scripts/github_doctor.py
-        files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/github_doctor\.py$
+        entry: python scripts/checks/github_doctor.py
+        files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/checks/github_doctor\.py$
         pass_filenames: false
 
       - id: plugin-provenance-doctor
         name: plugin-provenance-doctor
         language: system
-        entry: python scripts/plugin_provenance_doctor.py
-        files: ^vault-template/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
+        entry: python scripts/checks/plugin_provenance_doctor.py
+        files: ^vault-template/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/checks/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
         pass_filenames: false

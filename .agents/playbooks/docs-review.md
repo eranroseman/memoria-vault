@@ -33,8 +33,8 @@ match their filename and index link text.
 Run:
 
 ```bash
-python scripts/docs_doctor.py docs
-python scripts/docs_doctor.py --vault-links
+python scripts/checks/docs_doctor.py docs
+python scripts/checks/docs_doctor.py --vault-links
 ```
 
 Distinguish blocking failures from known advisory warnings.
@@ -55,7 +55,7 @@ Distinguish blocking failures from known advisory warnings.
   current source files rather than copying older prose.
 - If a reference page repeats generated or source-owned contracts, run the
   matching generator or drift check. For the ADR index, run
-  `python scripts/gen_adr_index.py --check`; otherwise route the change to the
+  `python scripts/checks/gen_adr_index.py --check`; otherwise route the change to the
   owning source/generator named by the page.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not

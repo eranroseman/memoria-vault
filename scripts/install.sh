@@ -2,7 +2,7 @@
 # Memoria bootstrap installer  (Linux/WSL path; Windows uses install.ps1)
 # One command sets up the standalone Memoria CLI/runtime workspace: clones the
 # vault, installs the package into the vault-local venv, wires local integrity
-# hooks, and registers qmd search only when qmd already exists. macOS is not supported.
+# hooks. macOS is not supported.
 #
 # Inspect-first (recommended):
 #   curl -fsSL https://raw.githubusercontent.com/eranroseman/memoria-vault/main/scripts/install.sh -o install.sh
@@ -41,7 +41,6 @@ VAULT_PATH=""
 PYTHON=""
 VENV_PYTHON=""    # interpreter the Memoria runtime package lands in
 STAGING_REPO=""   # set only when WE clone to temp; removed on exit (the runtime vault is the copy)
-INSTALL_MODULES_LOADED=0
 
 # Shell helpers.
 say()  { printf '%s\n' "$*"; }
@@ -114,22 +113,6 @@ python_version_ok() {
   "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1
 }
 
-load_install_modules() {
-  [ "$INSTALL_MODULES_LOADED" -eq 1 ] && return 0
-  local script_dir candidate
-  script_dir="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || true)"
-  candidate="$script_dir/install"
-  if [ ! -d "$candidate" ] && [ -n "$REPO_DIR" ]; then
-    candidate="$REPO_DIR/scripts/install"
-  fi
-  [ -f "$candidate/manifest.sh" ] || die "Installer modules not found under $candidate"
-  # shellcheck source=scripts/install/manifest.sh
-  source "$candidate/manifest.sh"
-  # shellcheck source=scripts/install/runtime-tools.sh
-  source "$candidate/runtime-tools.sh"
-  INSTALL_MODULES_LOADED=1
-}
-
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -150,7 +133,7 @@ print_plan() {
   say "  2. fetch the Memoria vault repo"
   say "  3. copy the runtime vault to your chosen folder"
   say "  4. install runtime dependencies + the memoria CLI into .memoria/.venv"
-  say "  5. register qmd search if qmd already exists, initialize git, and wire local hooks"
+  say "  5. initialize git and wire local hooks"
   say "  6. print CLI next steps"
   [ "$DRY_RUN" -eq 1 ] && { say ""; warn "DRY RUN — nothing will be changed."; }
   return 0
@@ -261,7 +244,14 @@ copy_vault() {
     ok "Git repo initialized for checkpoints and hooks"
   fi
 
-  wire_commit_gate
+  if [ -d "$VAULT_PATH/.git" ] || [ "$DRY_RUN" -eq 1 ]; then
+    run mkdir -p "$VAULT_PATH/.git/hooks"
+    run cp "$VAULT_PATH/.githooks/pre-commit" "$VAULT_PATH/.git/hooks/pre-commit"
+    run chmod +x "$VAULT_PATH/.git/hooks/pre-commit"
+    ok "pre-commit schema gate wired (.git/hooks/pre-commit)"
+  else
+    say "  (vault is not a git repo yet — initialize git, then copy .githooks/pre-commit into .git/hooks/pre-commit)"
+  fi
 
   # The runtime vault is the user's own repo — the installer initializes Git so
   # hooks can be wired, but it never commits or sets identity/remotes.
@@ -343,10 +333,11 @@ main() {
   confirm "Proceed with the standalone Memoria install?" || die "Aborted — nothing changed."
   ensure_prereqs
   resolve_repo
-  load_install_modules
+  [ -f "$REPO_DIR/scripts/install/manifest.sh" ] || die "Installer manifest not found under $REPO_DIR/scripts/install"
+  # shellcheck source=scripts/install/manifest.sh
+  source "$REPO_DIR/scripts/install/manifest.sh"
   copy_vault
   install_runtime_deps
-  ensure_qmd
   print_cli_next_steps
   hdr "Done"
 }

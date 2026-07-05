@@ -28,9 +28,9 @@ see [CLI](docs/reference/cli.md).
 
 The installer copies `vault-template/` to your chosen runtime folder (default
 `~/Memoria`, deliberately off OneDrive), creates a workspace-local venv,
-installs the `memoria` package, wires Git hooks, and registers qmd search only
-when an existing qmd binary is available. It does not install qmd, Hermes,
-profiles, Obsidian setup, Zotero integration, or a host scheduler. See
+installs the `memoria` package, and wires Git hooks. It does not install Hermes,
+profiles, Obsidian setup, Zotero integration, a host scheduler, or external
+search tooling. See
 [Installer (bootstrap)](docs/reference/installer.md) for exactly what it does.
 
 The CLI and thin transports call one engine API. Product reads return checked
@@ -70,7 +70,7 @@ For the full flag list, see [Installer (bootstrap)](docs/reference/installer.md)
 
 - **Git** on your `PATH`. **Supported platforms:** native Windows 10/11, Ubuntu/Debian, and WSL2. macOS is not supported.
 - **Python 3.12+ with venv support** for the workspace-local runtime package.
-- **Node 22 plus an existing qmd binary** only for qmd-backed search; the installer does not install qmd.
+- **Node 22** only for contributor prose tools (`cspell`, `markdownlint`).
 - Provider keys only for the flows you use; replay fixtures and local files cover
   offline development.
 
@@ -111,10 +111,10 @@ Self-route by intent — the docs follow the [Diátaxis](https://diataxis.fr) fo
 ## Development
 
 For fast system-file iteration on the disposable sandbox, run
-`bash scripts/refresh-test-vault.sh` to update `~/memoria-vault/sandbox/vault` from
+`bash scripts/sandbox/refresh-test-vault.sh` to update `~/memoria-vault/sandbox/vault` from
 `vault-template/` while preserving runtime state. For release-candidate installer
 proof, rebuild the disposable vault from scratch with
-`bash scripts/install-test-vault-local-llm.sh`; it installs into
+`bash scripts/sandbox/install-test-vault-local-llm.sh`; it installs into
 `~/memoria-vault/sandbox/vault` and runs package, detector, and CLI doctor checks. Full
 flags: [Installer (bootstrap)](docs/reference/installer.md).
 

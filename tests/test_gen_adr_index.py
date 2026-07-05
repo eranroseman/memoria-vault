@@ -1,7 +1,8 @@
 """L1 component tests for gen_adr_index."""
 
-import gen_adr_index as _m
 import pytest
+
+from scripts.checks import gen_adr_index as _m
 
 END = _m.END
 START = _m.START

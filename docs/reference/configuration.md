@@ -19,7 +19,7 @@ linked reference pages and schema files.
 | Runtime Python package | `pyproject.toml` + `src/memoria_vault/**` | `<workspace>/.memoria/.venv` | Memoria | Edit source; reinstall runtime | installer tests |
 | Schema config | `vault-template/.memoria/schemas/**` | workspace source | Memoria | Edit source | linter and schema tests |
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
-| qmd index config and state | checked-only runtime collection | `<workspace>/.memoria/index/qmd/` | generated | Rebuild; do not hand-edit | `memoria doctor --check qmd` |
+| Search index state | checked-only BM25 input tree and manifest | `<workspace>/.memoria/index/search/` | generated | Rebuild; do not hand-edit | `memoria doctor --check search` |
 | Scheduled-task runner | `vault-template/.memoria/scripts/cron-runner.sh` | workspace source for operator-managed scheduled tasks | Memoria | Edit source | shellcheck |
 | Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.15 baseline | adapter tests |
 
@@ -28,14 +28,14 @@ linked reference pages and schema files.
 | Change | Command |
 | --- | --- |
 | Schema or workspace source config | reinstall or refresh the workspace, then run the linter |
-| qmd index inputs | `memoria workspace rebuild --search` or `memoria workspace rebuild --search --embeddings` |
+| Search index inputs | `memoria workspace rebuild --search` |
 
 Use a disposable workspace under `~/memoria-vault/sandbox` for development verification.
 
 ## Never commit
 
 - Model provider keys, local adapter secrets, or API tokens.
-- Generated qmd indexes under `.memoria/index/qmd/`.
+- Generated search indexes under `.memoria/index/search/`.
 - Runtime vault state, logs, and local diagnostics.
 
 ## Related references
@@ -45,4 +45,4 @@ Use a disposable workspace under `~/memoria-vault/sandbox` for development verif
 - External integrations: [External integrations](integrations.md)
 - Frontmatter fields: [Frontmatter fields](frontmatter.md)
 - Calibration thresholds: [Calibration](calibration.md)
-- Search and qmd: [Search](search.md)
+- Search: [Search](search.md)

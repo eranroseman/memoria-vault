@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
 import shutil
-import sys
 from pathlib import Path
 
 import pytest
@@ -23,7 +21,7 @@ from memoria_vault.runtime.knowledge import (
 )
 from memoria_vault.runtime.operations import compile_source_digest
 from memoria_vault.runtime.policy.audit import sha256_file
-from memoria_vault.runtime.search_index import rebuild_checked_qmd_source
+from memoria_vault.runtime.search_index import rebuild_checked_search_index
 from memoria_vault.runtime.trusted_writer import mark_checked, observe_pi_edit_from_head
 from memoria_vault.runtime.vaultio import read_frontmatter
 from tests.helpers import ROOT, copy_memoria_dirs, git, init_git
@@ -33,28 +31,6 @@ def workspace(tmp_path: Path) -> Path:
     copy_memoria_dirs(tmp_path, "schemas", "config")
     init_git(tmp_path, "knowledge@example.invalid", "Knowledge")
     return tmp_path
-
-
-def _fake_qmd_query(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    npm_root = tmp_path / "npm-global"
-    npm_bin = npm_root / "bin"
-    npm_bin.mkdir(parents=True)
-    npm = bin_dir / "npm"
-    npm.write_text(f"#!{sys.executable}\nprint({str(npm_root)!r})\n", encoding="utf-8")
-    qmd = npm_bin / "qmd"
-    qmd.write_text(
-        f"#!{sys.executable}\n"
-        "import json\n"
-        "print(json.dumps([\n"
-        "    {'file': 'qmd://memoria-checked/works/source-alpha.md', 'score': 8}\n"
-        "]))\n",
-        encoding="utf-8",
-    )
-    npm.chmod(0o755)
-    qmd.chmod(0o755)
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
 
 
 def _assert_gap_contract(gap: dict[str, object], kind: str) -> None:
@@ -519,16 +495,14 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     assert gaps["Graph-only Keyword"]["note_count"] == 0
 
 
-def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     capture_source(
         vault,
         "source-alpha",
         "Alpha Source",
         "A fixture source.",
-        "rare alpha full text for qmd-backed gap analysis",
+        "rare alpha full text for checked search gap analysis",
         machine="capture-machine",
     )
     state.replace_work_graph_edges(
@@ -544,8 +518,7 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
             }
         ],
     )
-    rebuild_checked_qmd_source(vault)
-    _fake_qmd_query(tmp_path, monkeypatch)
+    rebuild_checked_search_index(vault)
 
     result = analyze_gaps(
         vault,
@@ -557,7 +530,7 @@ def test_analyze_gaps_uses_qmd_graph_for_discovery_candidates(
     gap = {row["topic"]: row for row in result["gaps"]}["rare alpha"]
     assert gap["gap_type"] == "undigested"
     _assert_gap_contract(gap, "undigested")
-    assert gap["retrieval_engine"] == "qmd"
+    assert gap["retrieval_engine"] == "bm25"
     assert gap["retrieval_sources"][0]["path"] == "works/source-alpha.md"
     citation_gap = {row["topic"]: row for row in result["gaps"]}[
         "Citation neighborhood: Alpha Source"
@@ -625,7 +598,7 @@ def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) ->
     assert committed == {result["tag_candidate_paths"][0], state.JOURNAL_HEAD_REL}
 
 
-def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_qmd(
+def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search_index(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path / "vault")

@@ -59,7 +59,7 @@ Code, or Codex unless that client explicitly supports `.agents/skills/`.
 - Keep procedures portable across Codex, Claude Code, Hermes, and other agents.
 - Do not put secrets, runtime state, task tracking, or tool-specific settings here.
 - Do not duplicate architecture or product documentation from `docs/`.
-- Prefer repository commands such as `scripts/test.sh` over hand-written command lists.
+- Prefer repository commands such as `python scripts/verify` over hand-written command lists.
 - Keep examples generic; never include real API keys, profile `.env` values, or runtime-vault content.
 - Skills must reference the system maps instead of copying their dependency tables.
-- Regenerate derived maps with `python scripts/agents_doctor.py --write`.
+- Regenerate derived maps with `python scripts/checks/agents_doctor.py --write`.

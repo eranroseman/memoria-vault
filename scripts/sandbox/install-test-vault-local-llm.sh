@@ -5,7 +5,7 @@
 # defaults to ~/memoria-vault/sandbox/vault and that child directory is wiped on every run.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TEST_ROOT="${MEMORIA_TEST_ROOT:-$HOME/memoria-vault/sandbox}"
 VAULT="${MEMORIA_TEST_VAULT:-$TEST_ROOT/vault}"
 BASE_URL="${MEMORIA_TEST_LLM_BASE_URL:-http://127.0.0.1:11434/v1}"
@@ -18,7 +18,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage: scripts/install-test-vault-local-llm.sh [options]
+Usage: scripts/sandbox/install-test-vault-local-llm.sh [options]
 
 Rebuild the disposable Memoria test workspace and run the standalone installer,
 package, detector, and CLI doctor checks. The optional local-LLM

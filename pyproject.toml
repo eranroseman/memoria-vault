@@ -114,7 +114,7 @@ ignore = [
 # E402: test helpers do sys.path manipulation before imports.
 "tests/**" = ["S", "E402"]
 # The e2e smoke harness uses assert as its assertion mechanism, like the tests.
-"scripts/e2e_smoke.py" = ["S101"]
+"scripts/sandbox/e2e_smoke.py" = ["S101"]
 # vault-template/.memoria scripts run with a custom sys.path set before imports.
 "vault-template/.memoria/**" = ["E402"]
 "scripts/**" = ["E402"]

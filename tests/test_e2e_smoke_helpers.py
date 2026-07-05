@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from scripts import e2e_smoke
+from scripts.sandbox import e2e_smoke
 
 
 def test_stage_labels_preserve_e2e_smoke_order() -> None:

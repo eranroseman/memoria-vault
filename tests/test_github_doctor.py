@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import github_doctor
+from scripts.checks import github_doctor
 
 
 def test_github_doctor_accepts_current_github_files():

@@ -37,7 +37,6 @@ TEST_LEVELS = {
     "test_eval_score.py": "contract",
     "test_exploration_trace.py": "contract",
     "test_gen_adr_index.py": "static",
-    "test_gitleaks_precommit.py": "static",
     "test_github_doctor.py": "static",
     "test_hub_handoff.py": "contract",
     "test_http_transport.py": "contract",

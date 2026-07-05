@@ -242,7 +242,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     assert answer["sources"]
     assert answer["unknowns"] == []
 
-    manifest = run_operation(vault, "rebuild-checked-qmd-source", key="rebuild-qmd")
+    manifest = run_operation(vault, "rebuild-checked-search-index", key="rebuild-search")
     indexed_paths = {row["path"] for row in manifest["documents"]}
     assert f"works/{source_id}.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
@@ -267,7 +267,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         source_path = (
             (vault / path)
             if (vault / path).is_file()
-            else (vault / ".memoria/index/qmd/checked" / path)
+            else (vault / ".memoria/index/search/checked" / path)
         )
         assert "check_status" not in read_frontmatter(source_path)
         if (vault / path).is_file():

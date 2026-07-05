@@ -64,7 +64,7 @@ status.
 <!-- ADR-INDEX:END -->
 
 This table is generated from each ADR's frontmatter by
-[`scripts/gen_adr_index.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/gen_adr_index.py) — run it after adding or
+[`scripts/checks/gen_adr_index.py`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/checks/gen_adr_index.py) — run it after adding or
 editing an ADR; CI fails if it is stale. Do not edit the table by hand.
 
 Rules:
@@ -99,5 +99,5 @@ still-relevant rejection.
 **Mechanics.** Delete the file, **leave the number gap** (numbers are permanent — never
 renumber), remove or repoint inbound `supersedes` / `superseded_by` / `assumes` references
 and any doc links (the `lint` job's link checks catch a dangling reference), then
-regenerate the index (`scripts/gen_adr_index.py`). The retire sweep runs **per release
+regenerate the index (`scripts/checks/gen_adr_index.py`). The retire sweep runs **per release
 cut** — see `.agents/playbooks/release.md`.

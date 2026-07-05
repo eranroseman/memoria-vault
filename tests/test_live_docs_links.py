@@ -1,6 +1,6 @@
 """Tests for the published docs live-link checker."""
 
-from scripts.check_live_docs_links import LiveDocsChecker
+from scripts.checks.check_live_docs_links import LiveDocsChecker
 
 
 def test_live_docs_checker_accepts_internal_fragments_and_local_github_links(tmp_path):

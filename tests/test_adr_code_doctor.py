@@ -1,6 +1,6 @@
 """L1 component tests for adr_code_doctor."""
 
-import adr_code_doctor as _m
+from scripts.checks import adr_code_doctor as _m
 
 
 def _write(root, rel, text="ok"):

@@ -53,7 +53,7 @@ the relevant checks pass.
 memoria workspace rebuild --workspace <workspace> --json
 ```
 
-Generated files such as indexes, bibliography, and qmd input mirrors are rebuilt
+Generated files such as indexes, bibliography, and search input mirrors are rebuilt
 from SQLite and checked Concepts. A direct edit to a generated target is not
 authoritative.
 

@@ -7,7 +7,7 @@
 # copy so drift checks match the new source.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VAULT="$HOME/memoria-vault/sandbox/vault"
 DRY_RUN=0
 
@@ -17,7 +17,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Usage: scripts/refresh-test-vault.sh [--vault DIR] [--dry-run]
+Usage: scripts/sandbox/refresh-test-vault.sh [--vault DIR] [--dry-run]
 
 Fast-refresh an existing disposable Memoria test vault from vault-template/.
 

@@ -35,8 +35,8 @@ journal/
 # .gitkeep files are tracked so fresh installs create the directories.
 .memoria/index/**
 !.memoria/index/
-!.memoria/index/qmd/
-!.memoria/index/qmd/.gitkeep
+!.memoria/index/search/
+!.memoria/index/search/.gitkeep
 .memoria/staging/**
 !.memoria/staging/
 !.memoria/staging/*/

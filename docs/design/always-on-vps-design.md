@@ -41,7 +41,7 @@ background operation requests against the synced runtime workspace.
 | --- | --- |
 | Review UI and optional reference-manager UI | Desktop |
 | `memoria workspace run` and scheduled CLI commands | VPS |
-| qmd index for background work | VPS |
+| search index for background work | VPS |
 | Co-PI query flow | Either desktop or VPS through explicit CLI/API invocation |
 | Runtime workspace files | Synced between desktop and VPS |
 

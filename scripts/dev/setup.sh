@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Memoria dev bootstrap — run ONCE per fresh clone to wire the local quality gate.
 #
-#   bash scripts/dev-setup.sh                 # toolchain + repo-local Node tools + qmd index
-#   bash scripts/dev-setup.sh --with-hooks    # also wire qmd auto-refresh git hooks
+#   bash scripts/dev/setup.sh                 # toolchain + repo-local Node prose tools
 #
 # This sets up the CONTRIBUTOR toolchain (the pre-commit hook + linters). It does
 # NOT install or run the Memoria product — that is scripts/install.sh. Idempotent;
@@ -11,12 +10,9 @@
 set -eu
 
 unset CDPATH
-cd "$(dirname -- "$0")/.." || exit 1
+cd "$(dirname -- "$0")/../.." || exit 1
 
 note() { printf '  %s\n' "$1"; }
-
-WITH_HOOKS=0
-[ "${1:-}" = "--with-hooks" ] && WITH_HOOKS=1
 
 echo "==> Installing Python dev tooling"
 PY=$(command -v python3 || command -v python || true)
@@ -56,7 +52,7 @@ else
   note "pre-commit not found — install requirements-dev.txt, then run: pre-commit install --install-hooks"
 fi
 
-echo "==> Setting up repo-local Node dev tools and qmd index (needs Node >=22)"
+echo "==> Setting up repo-local Node prose tools (needs Node >=22)"
 NODE=$(command -v node || true)
 NODE_MAJOR=0
 if [ -n "$NODE" ]; then
@@ -64,25 +60,18 @@ if [ -n "$NODE" ]; then
 fi
 if [ -n "$NODE" ] && [ "${NODE_MAJOR:-0}" -ge 22 ] 2>/dev/null; then
   if command -v npm >/dev/null 2>&1 && npm ci --silent; then
-    note "repo-local Node tools ready (code search, cspell, markdownlint)"
-    bash scripts/qmd-codebase-index.sh \
-      || note "qmd index build skipped/failed — re-run: bash scripts/qmd-codebase-index.sh"
-    if [ "$WITH_HOOKS" -eq 1 ]; then
-      bash scripts/qmd-install-hooks.sh || note "qmd hook install skipped"
-    else
-      note "(auto-refresh hooks not wired — add them with: bash scripts/qmd-install-hooks.sh)"
-    fi
+    note "repo-local Node tools ready (cspell, markdownlint)"
   else
-    note "npm ci failed — run it manually, then: bash scripts/qmd-codebase-index.sh"
+    note "npm ci failed — run it manually after fixing Node/npm"
   fi
 else
-  note "Node >=22 not found — repo Node tools and code search skipped."
+  note "Node >=22 not found — repo Node prose tools skipped."
   note "  fnm gives a standalone Node (independent of any runtime): https://github.com/Schniz/fnm"
-  note "  then: fnm install 22 && npm ci && bash scripts/qmd-codebase-index.sh"
+  note "  then: fnm install 22 && npm ci"
 fi
 
 echo "==> Local hook tools:"
-for t in pre-commit no-commit-to-branch check-json ruff yamllint shellcheck cspell markdownlint; do
+for t in pre-commit no-commit-to-branch check-json ruff yamllint shellcheck gitleaks cspell markdownlint; do
   if PATH="node_modules/.bin:$PATH" command -v "$t" >/dev/null 2>&1; then
     note "✓ $t"
   else
