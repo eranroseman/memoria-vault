@@ -84,7 +84,7 @@ def iter_files(root: Path):
             continue
         rel_parts = set(path.relative_to(ROOT).parts)
         rel = path.relative_to(ROOT).as_posix()
-        if rel in ALLOW_TEXT_FILES or rel.startswith("docs/adr/"):
+        if rel in ALLOW_TEXT_FILES:
             continue
         if rel_parts & SKIP_PARTS:
             continue

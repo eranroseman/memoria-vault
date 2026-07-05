@@ -12,7 +12,7 @@ deployed vault carries no test code.
 
 | Level | Purpose | Runs |
 | --- | --- | --- |
-| `static` | formatting, lint, schema, docs refs, spell, ADR index, workflow safety | local hook, every PR |
+| `static` | formatting, lint, schema, docs refs, spell, design history, workflow safety | local hook, every PR |
 | `unit` | deterministic Python behavior | every PR |
 | `contract` | CLI, operations, capability manifests, templates, projections | every PR |
 | `package` | wheel build/install smoke, installer/e2e smoke helpers | package-facing PRs, release PRs |

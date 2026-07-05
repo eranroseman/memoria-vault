@@ -15,7 +15,6 @@ SKIP_PARTS = {
     ".pytest_cache",
     "__pycache__",
     "node_modules",
-    "docs/adr",
     "scratch",
     "scripts/checks/checked_terminology_gate.py",
 }

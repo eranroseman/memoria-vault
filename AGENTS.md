@@ -21,8 +21,8 @@ Human contributors: see [Contributing to Memoria](CONTRIBUTING.md).
   - A `disabled_toolsets` entry only hides a tool from the model
     (`registry.dispatch` still runs any registered tool by name); the policy
     plugin's hard-deny is the boundary.
-  - An ADR may describe a boundary, but it must name the enforcing mechanism and
-    a check that proves it.
+  - A decision record may describe a boundary, but it must name the enforcing
+    mechanism and a check that proves it.
 
 ---
 
@@ -39,12 +39,13 @@ An ExecPlan is a **working artifact, not a permanent record.** The instance
 lives on the `scratch` branch under `releases/<version>/` for the
 current release or checkpoint (tracked for handoff, deleted before that release
 closes — `_notes/` is gitignored, so a plan meant to be resumed never lives
-there); its durable outputs route as usual — decisions to ADRs, readiness/state
-to issues.
+there); its durable outputs route as usual — decisions to the active release
+decision ledger and then `design-history/`, readiness/state to issues.
 Tactical sequencing lives in the plan's Execution log; architectural and product
-decisions still go to an ADR (§"ADR template") and are linked, never recorded
-only in the plan. Skip the ceremony for small, single-sitting changes — use the
-[handoff template](.agents/templates/handoff.md) or just make the change.
+decisions still go to the release decision ledger (§"Decision records") and are
+linked, never recorded only in the plan. Skip the ceremony for small,
+single-sitting changes — use the [handoff template](.agents/templates/handoff.md)
+or just make the change.
 
 ---
 
@@ -193,7 +194,7 @@ worktree has no tracked `.agents/`, `.github/`, `docs/`, `scripts/`, `src/`,
 `tests/`, or `vault-template/` tree to analyze.
 
 Never merge the `scratch` branch into `main`. Promote durable content by copying
-it into `docs/`, `docs/adr/`, issues, or release notes on a normal `main` PR.
+it into `docs/`, `design-history/`, issues, or release notes on a normal `main` PR.
 The `pr-policy` check blocks `scratch/` paths in PRs targeting `main`.
 
 ---
@@ -209,7 +210,7 @@ a reader mirror guarded by `python scripts/checks/agents_doctor.py`.
 | Check | Validates |
 |---|---|
 | `pr-policy` | Three-tier PR policy: auto-approve docs-only, flag sensitive paths, block untrusted |
-| `lint` | Runs `python scripts/verify l0`: `ruff`, `ruff format --check`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
+| `lint` | Runs `python scripts/verify l0`: pinned pre-commit `ruff` and `ruff-format`, `docs-doctor` (docs link text/frontmatter/README plus `vault-template/` docs refs), `status-doctor` (release/test/contributor link/path drift), `agents-doctor` (agent guidance), `github-doctor` (issue-template/dependabot hygiene), `ruleset-doctor` (required-check contract), syntax checks, generated-reference checks, and schema/design drift checks |
 | `shellcheck (scripts/install.sh)` | Shell lint |
 | `PSScriptAnalyzer (scripts/install.ps1)` | PowerShell lint |
 | `python-selftest` | the L1 `pytest` suite in `tests/` (vault tooling + repo scripts) |
@@ -239,15 +240,14 @@ This reader mirror is owned by `.github/scripts/pr_policy.py` and covered by
 
 | Decision | Trigger |
 |---|---|
-| `auto_approve` | Trusted author + all files in safe prose paths (`docs/` except `docs/adr/`, or `_notes/`; `.md`/`.txt` only) |
+| `auto_approve` | Trusted author + all files in safe prose paths (`docs/` or `_notes/`; `.md`/`.txt` only) |
 | `needs_human` | Manual merge required: trusted author on sensitive paths, untrusted author on safe paths, draft PRs, or application/unclassified paths. This classification disables auto-merge; it is not a GitHub approval gate by itself. |
 | `block` | Untrusted author on sensitive paths, or any PR that includes `scratch/` paths |
 
 Sensitive paths: `.github/`, `.agents/`, `.claude/`, `.codex/`, `.kilo/`,
 `scripts/`, `src/memoria_vault/runtime/policy/`,
 `src/memoria_vault/runtime/subsystems/`, `vault-template/.memoria/`,
-`docs/adr/` (the decision record — review-required even though it sits under
-the otherwise-safe docs tree), and `AGENTS.md`.
+`design-history/` (the durable design record), and `AGENTS.md`.
 Trusted authors: `eranroseman`, `github-actions[bot]`, `dependabot[bot]`.
 
 On `auto_approve` PRs, the workflow enables squash auto-merge immediately. On
@@ -261,7 +261,7 @@ to the maintainer.
 **Docstrings** — module docstrings are mandatory; function/class docstrings are
 judgment-based:
 
-- Every module gets a docstring. One line is enough; name the file's role and reference an ADR when one governs it.
+- Every module gets a docstring. One line is enough; name the file's role and reference a decision record when one governs it.
 - Functions and classes get a docstring only when the name and signature don't tell the full story — a non-obvious invariant, a surprising side-effect, or a constraint the caller must know. If removing the docstring would leave a reader confused, write one; otherwise omit it.
 
 No Args:/Returns:/Raises: sections. If the parameter contract needs prose, the function is too complex — split it first.
@@ -302,7 +302,7 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 | Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
 | Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
 | Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `docs/adr/`, `AGENTS.md`, or agent guidance directories |
+| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance directories |
 | Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
 | New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release <version>" parent issue with readiness/stage sub-issues; release-please owns version/notes |
 
@@ -362,62 +362,29 @@ install a project-local search index.
 
 Mixed-purpose pages are wrong — split them.
 
-- **Links:** `docs/` files → relative links; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
-  - From `docs/`, cross-folder references follow the target's **Pages route**. ADRs (`docs/adr/`) are published, so links to them are ordinary intra-`docs/` relative links. Root files such as `CONTRIBUTING.md`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
+- **Links:** `docs/` files → relative links for published docs pages; `vault-template/` files → absolute website URLs (`https://eranroseman.github.io/memoria-vault/…`).
+  - From `docs/`, cross-folder references follow the target's **Pages route**. Root files such as `CONTRIBUTING.md`, `design-history/`, agent playbooks, and other unpublished targets use **GitHub blob URLs** (`https://github.com/eranroseman/memoria-vault/blob/main/…`).
   - Never relative-link into `src/` from a published page — those paths 404 on the site. Cite a source file as an **inline-code path** (`` `vault-template/.memoria/…` ``), or an absolute tag-pinned `blob/<tag>/…` URL only when a click genuinely adds value.
-  - **ADR references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as **title-text links** — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
+  - **Decision-history references** belong only in **explanation** prose (inline, or an optional per-page footer "Decisions" list), always as title-text links to `design-history/` — never bare `(ADR-NN)` codes, and not in tutorial / how-to / reference body text.
 - **Indexing:** every new page goes in its section README; how-to pages also go in `how-to-guides/README.md`. Assign `nav_order` so the folder reads in logical sequence.
 - **How-to titles:** concise, no "How to…" prefix; match the README link text and filename.
 - **Citations:** new works go in `reference/bibliography.md` (ACM author-date, `<a id="…"></a>` anchor); docs pages link in-text mentions to the published bibliography anchor for their folder depth.
 - **Spelling:** American English only — `-ize`/`-or` endings, not `-ise`/`-our` (write "behavior", "normalize"). `cspell` is the gate. Never suppress a flag with an inline `<!-- cspell:words … -->` / `<!-- cspell:ignore … -->` tag — for each unknown word, either **reword the prose** or, if it's a real term (proper noun, tool name, code token, jargon), **add it to `project-words.txt`** (one lowercase word per line, sorted; a lowercase entry matches every casing).
 
-### ADR template (`docs/adr/`)
+### Decision records
 
-ADRs are the **single home for every live decision** — there is no separate
-proposals/RFC folder. An open proposal is an ADR with `status: proposed`; accepted
-future direction is `status: accepted` even when implementation is later; a
-considered-and-declined option is `status: rejected`. There is no `superseded`
-status: a replaced decision's ADR is **deleted** so only live decisions sit on
-`main`. Its successor records what it absorbed via `supersedes:` and prose; the
-original — with its `superseded_by`/`supersedes` lineage — stays recoverable in git
-history for later investigation.
-Scheduling and readiness live in GitHub issues, not ADR status. Every proposed ADR
-gets a linked GitHub issue in the Memoria Issue Tracker, normally `Status: Backlog`
-and `Readiness: Needs shaping`; when a decision is accepted and implemented, its
-implementation issue is closed `Done`, or a separate implementation issue remains
-open with the correct Readiness. Full template + nav fields in
-[`docs/adr/_template.md`](docs/adr/_template.md).
+ADRs are retired as the live decision mechanism. Historical ADRs are evidence,
+not authority. Current decision capture happens in the active release workspace,
+normally `releases/<version>/decisions.md` on the `scratch` branch, as dated
+Y-statements with typed pointers to evidence, implementation, tests, and
+reversals.
 
-```markdown
----
-topic: decisions
-id: <NN>
-title: <Short title>
-status: proposed | accepted | rejected
-date_proposed: YYYY-MM-DD
-date_resolved: YYYY-MM-DD
-assumes: []          # ADR/mechanism deps — so a change that invalidates this is detectable
-supersedes: []
-superseded_by: []
-# proposed ADRs also carry: nav_exclude: true   (unlisted on the site until accepted)
----
-
-# ADR-<NN>: <Title>
-
-## Context
-## Decision
-## Consequences
-## When this matters   # proposed only — priority context for the cadence review, NOT a gate
-## Alternatives considered
-```
-
-Background design analysis lives **in the ADR itself** — there is no separate
-design-notes folder. Forward-looking work uses `status: proposed` until the
-decision is made; once the choice is made, the ADR becomes `accepted` even if the
-implementation issue has Readiness `Later`. `docs/` describes only the current
-system; the decision history lives in the ADRs (and the full git history).
-Transient scratch that never graduates to a decision stays in the gitignored
-`_notes/`.
+At release close, accepted and rejected decisions are folded into a frozen
+chapter under `design-history/`, and `design-history/arcs.md` is updated with the
+current released line plus any pending unreleased questions. Scheduling and
+readiness remain in GitHub issues, not in decision-record status. `docs/`
+describes only the current system; `design-history/` preserves how the current
+system got there.
 
 ### Release process
 
@@ -434,20 +401,20 @@ prose; do not create a repository release-plan folder.
 
 | Item | Goes to |
 |---|---|
-| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc on the `scratch` branch in `releases/<version>/` (deleted before the release closes); its decisions still go to ADRs, state to issues |
+| Complex feature, refactor, or migration (multi-hour) | An [ExecPlan](.agents/playbooks/exec-plan.md) working doc on the `scratch` branch in `releases/<version>/` (deleted before the release closes); decisions go to that release's decision ledger, state to issues |
 | Bug, enhancement, doc fix, question | GitHub issue in Memoria Issue Tracker (Project fields; milestone only if scheduled) |
-| Any decision — open proposal *or* closed choice + rationale | ADR in `docs/adr/` (open ones `status: proposed`) |
+| Any decision — open proposal *or* closed choice + rationale | The active release decision ledger, then `design-history/` at release close |
 | Release scope | the GitHub milestone named for the SemVer version, such as `0.1.0` or `0.1.0-alpha.11`, plus Memoria Issue Tracker view filtered to that milestone |
 | Release readiness | the **"Release <version>" parent issue** and its readiness/stage sub-issues, not markdown plan sections |
-| Durable analysis behind a decision | the ADR itself (`docs/adr/`; `status: proposed` until decided) |
+| Durable analysis behind a decision | The release workspace while live; the frozen design-history chapter after release close |
 | Transient scratch / personal notes | `_notes/` (gitignored) |
 
 - GitHub Project: "Memoria Issue Tracker" — fields `Status` and `Readiness`; see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Labels stay minimal: `bug` / `documentation` for repo-wide search plus bot-managed labels (`dependencies`, `python`, `github_actions`, `release`, `autorelease:*`). Status and Readiness live in Project fields; release scope lives in milestones.
 - Milestones are releases. No milestone = unscheduled backlog.
-- ADR/issue alignment: proposed ADRs link open shaping issues; accepted implemented
-  ADRs link closed `Done` issues or an explicit open implementation issue; superseded
-  ADR bundles link their replacement ADRs and close any replaced umbrella issues.
+- Decision/issue alignment: release decision entries link open shaping issues;
+  accepted implemented decisions link closed `Done` issues or an explicit open
+  implementation issue.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
 
 ---
@@ -456,6 +423,6 @@ prose; do not create a repository release-plan folder.
 
 - One scope → one branch → one PR → squash-merge → delete. Target ≤1 day or ≤10 commits.
 - Rebase onto `origin/main` daily and before every PR: `git fetch && git rebase origin/main`.
-- No two branches may implement the same ADR or rewrite the same files.
+- No two branches may implement the same decision/issue or rewrite the same files.
 - Structural/destructive changes (folder moves, deletions, schema bumps) get their own tiny PR, merged first — active branches rebase the same day.
 - Stop-check: if `git log -3` shows a co-author who isn't you, you're on someone else's branch — make your own.

@@ -38,7 +38,7 @@ pythonpath = [
   ".github/scripts",
 ]
 markers = [
-  "static: formatting, lint, schema, docs refs, spell, ADR index, workflow safety",
+  "static: formatting, lint, schema, docs refs, spell, design history, workflow safety",
   "unit: deterministic Python behavior with no runtime fixture",
   "contract: CLI, operations, manifests, templates, projections, and compatibility contracts",
   "package: build/install/smoke and installer-facing behavior",

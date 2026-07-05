@@ -18,7 +18,7 @@ Read the full documentation surface:
 - `docs/reference/`
 - `docs/explanation/`
 - `docs/design/`
-- `docs/adr/`
+- `design-history/`
 - root `CONTRIBUTING.md`
 
 Scan the rest of the repository only where needed to verify implementation
@@ -42,7 +42,7 @@ the audit.
 
 Treat `docs/explanation/` and `docs/design/` as one conceptual surface split by
 "how it works" vs. "why this design." Ordinary docs describe the current system;
-decision history belongs in `docs/adr/`; release state lives in GitHub.
+decision history belongs in `design-history/`; release state lives in GitHub.
 
 Use subagents only for independent audit slices. Verify their claimed coverage
 before relying on it.
@@ -80,7 +80,6 @@ Run the focused docs checks:
 ```bash
 python scripts/checks/docs_doctor.py docs
 python scripts/checks/agents_doctor.py
-python scripts/checks/gen_adr_index.py --check
 python scripts/checks/docs_doctor.py --vault-links
 ```
 

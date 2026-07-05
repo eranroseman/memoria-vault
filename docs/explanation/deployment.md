@@ -40,4 +40,4 @@ one engine instance writes task state for a workspace at a time.
 - Installer inventories (what gets copied where): [Installer (bootstrap)](../reference/installer.md)
 - Distribution rationale: [Distribution model](../design/distribution-model.md)
 - Installer rationale: [Bootstrap installer](../design/bootstrap-installer.md)
-- The repo-as-install-unit decision: [ADR-125](../adr/125-standalone-cli-engine-architecture.md)
+- The repo-as-install-unit decision: [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)

@@ -23,20 +23,20 @@ find the owning file, then fix the stale consumer rather than the source.
 | Dropped Obsidian baseline payload | `scripts/checks/alpha14_negative_gate.py` + `scripts/checks/plugin_provenance_doctor.py` | `tests/test_plugin_provenance.py`, package smoke, current docs |
 | Installer behavior and flags | `scripts/install.sh`, `scripts/install/`, and `scripts/install.ps1` | Installer reference and setup guides |
 | Required CI behavior | `.github/workflows/` and `.github/ruleset-contract.yaml` | Live branch ruleset, `scripts/checks/ruleset_doctor.py`, and `AGENTS.md` |
-| Offline e2e smoke stages | `scripts/sandbox/e2e_smoke.py` | `scripts/sandbox/e2e_smoke.py`, ADR-125/testing docs, release stage evidence |
+| Offline e2e smoke stages | `scripts/sandbox/e2e_smoke.py` | `scripts/sandbox/e2e_smoke.py`, design-history/testing docs, release stage evidence |
 | Standalone disposable install harness | `scripts/sandbox/install-test-vault-local-llm.sh` | `tests/test_install_test_vault_local_llm.py`, testing verification matrix |
-| Contributor Python tooling | `requirements-dev.txt` | Dev setup, lint workflows, python-selftest, Dependabot |
+| Contributor Python tooling | `requirements-dev.txt` + `.pre-commit-config.yaml` | Dev setup, lint workflows, python-selftest, Dependabot |
 | Contributor code search (qmd) | `package.json` + `scripts/qmd-codebase-index.sh` / `scripts/qmd-install-hooks.sh` | AGENTS.md "Searching the codebase (qmd)", dev setup |
 | GitHub issue and dependency hygiene | `.github/ISSUE_TEMPLATE/` and `.github/dependabot.yml` | `scripts/checks/github_doctor.py`, issue tracking docs |
 | Agent change-impact registry | `.agents/system/change-impact.yaml` | Generated change-impact map and agent doctor |
 | PR trust classification | `.github/scripts/pr_policy.py` | `.github/workflows/pr-review-gate.yml`, policy tests |
-| ADR decision state | `docs/adr/` frontmatter and `docs/adr/README.md` | Linked GitHub issues for implementation/readiness |
-| Work readiness and scheduling | Memoria Issue Tracker fields (`Status`, `Readiness`) and milestones | ADR Related sections and release plans |
+| Release decision state | Active `scratch` branch `releases/<version>/decisions.md`, then `design-history/` at release close | Linked GitHub issues for implementation/readiness |
+| Work readiness and scheduling | Memoria Issue Tracker fields (`Status`, `Readiness`) and milestones | Decision ledger links and release plans |
 | Release scope | GitHub milestone + Memoria Issue Tracker view | Release plan prose and release parent issue |
 | Release readiness | `Release <version>` parent issue + gate/stage sub-issues | Release plan and release playbook |
 | Release design scratch | `scratch` branch, under `releases/<version>/` while in progress | Release playbook, ExecPlan playbook |
 | Release scope/readiness | GitHub milestone, Memoria Issue Tracker, and "Release <version>" parent issue/sub-issues | Release playbook and release template |
-| Product decisions | `docs/adr/` | Current docs and implementation |
+| Product decisions | Active release decision ledger, then `design-history/` | Current docs and implementation |
 | Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design Book |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 
@@ -69,5 +69,5 @@ When two files disagree:
 1. Identify the owner in this map.
 2. Confirm the owner still represents the intended current decision.
 3. Update consumers and tests together.
-4. If ownership itself must change, record the decision in an ADR before moving
-   the contract.
+4. If ownership itself must change, record the decision in the active release
+   decision ledger before moving the contract.

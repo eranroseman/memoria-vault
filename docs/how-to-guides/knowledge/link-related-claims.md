@@ -11,7 +11,7 @@ Add a typed `supports` / `contradicts` / `extends` link between checked
 `note` Concepts. The PI chooses whether a relationship is real; the worker only
 records and traces the accepted edit.
 
-> **`links:` vs catalog relations.** `links:` are authored edges on knowledge Concepts (your thinking); catalog relations are given facts from ingest/enrichment records ([ADR-126](../../adr/126-four-type-knowledge-model.md)).
+> **`links:` vs catalog relations.** `links:` are authored edges on knowledge Concepts (your thinking); catalog relations are given facts from ingest/enrichment records ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ## Prerequisites
 

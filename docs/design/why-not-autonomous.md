@@ -58,7 +58,7 @@ Code is the one domain where the three preconditions could hold:
 
 So a bounded code experiment loop could be admissible in principle.
 
-**But no autonomy exception exists anywhere in the current system** ([ADR-128](../adr/128-no-write-time-correctness-oracle.md), [ADR-125](../adr/125-standalone-cli-engine-architecture.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
+**But no autonomy exception exists anywhere in the current system** ([ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). The Engineer posture does not grant Memoria terminal, file, or execution capability. It cannot run a test suite or a keep/revert loop; it scaffolds the code handoff, records provenance, and points at an external agent the PI reviews. No operation carries an autonomous keep/revert loop.
 
 The synthesis gate remains structurally untouched. The request envelope,
 trusted-writer checks, read barrier, and optional adapter policy hook still block

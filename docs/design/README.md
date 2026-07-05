@@ -12,10 +12,11 @@ The Design Book carries Memoria's maintained arguments: what the system is, whic
 ideas it borrows from, which alternatives it rejects, and why the architecture is
 bounded the way it is.
 
-> **Design Book vs. ADRs.** A Design Book page holds the maintained argument; an
-> [ADR](../adr) holds the dated decision. When both cover the same ground, each
-> links to the other rather than restating it. Change the reasoning here; reverse
-> the decision in a superseding ADR.
+> **Design Book vs. design history.** A Design Book page holds the maintained
+> argument; [design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+> holds the dated release record. When both cover the same ground, each links to
+> the other rather than restating it. Change the reasoning here; record reversals
+> in the active release decision ledger before they close into design history.
 
 ## Foundations
 
@@ -61,4 +62,4 @@ bounded the way it is.
 - The operational explanations these arguments shape: [Explanation](../explanation/README.md)
 - Exact contracts and generated references: [Reference](../reference/README.md)
 - Pattern lookup table: [Pattern provenance table](../reference/pattern-provenance.md)
-- The dated decisions these arguments pair with: [Decision records](../adr)
+- The dated decisions these arguments pair with: [Decision records](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)

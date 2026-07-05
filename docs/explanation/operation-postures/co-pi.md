@@ -12,7 +12,7 @@ interview operations. Its mission has three verbs: **question** (sharpen the
 PI's thinking), **explain** (account for what Memoria is doing), and **route**
 (turn durable work into explicit CLI/engine requests). Its product is the PI's
 sharpened thinking and well-routed work - never a direct file write
-([ADR-125](../../adr/125-standalone-cli-engine-architecture.md)).
+([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 

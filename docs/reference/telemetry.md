@@ -9,9 +9,9 @@ grand_parent: Reference
 Every signal Memoria records about its own operation, with log inventory and
 shared conventions. Audit and analytics logs live under `system/logs/`; the
 diagnostic plane lives outside the workspace under the OS state directory.
-Rationale: [ADR-20](../adr/20-publication-path.md),
-[ADR-62](../adr/62-measurement-and-verification-harnesses.md), and
-[ADR-105](../adr/105-diagnostic-plane.md).
+Rationale: [ADR-20](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
+[ADR-62](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
+[ADR-105](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 ## Conventions
 

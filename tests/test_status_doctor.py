@@ -11,15 +11,15 @@ targets = _m.targets
 def _routing_root(tmp_path):
     (tmp_path / ".agents" / "playbooks").mkdir(parents=True)
     (tmp_path / ".agents" / "templates").mkdir(parents=True)
-    (tmp_path / "docs" / "adr").mkdir(parents=True)
-    (tmp_path / "docs" / "adr" / "x.md").write_text("# x\n")
+    (tmp_path / "design-history").mkdir(parents=True)
+    (tmp_path / "design-history" / "arcs.md").write_text("# arcs\n")
     return tmp_path
 
 
 def test_check_file_accepts_valid_links_and_placeholders(tmp_path):
     root = _routing_root(tmp_path)
     good = root / "CONTRIBUTING.md"
-    good.write_text("[x](docs/adr/x.md) {{ #NN }} placeholder ok\n")
+    good.write_text("[x](design-history/arcs.md) {{ #NN }} placeholder ok\n")
 
     assert check_file(good, root) == []
 

@@ -57,15 +57,15 @@ Archive/retraction state is runtime state, not a folder move. Current readers us
 the DB/read API `check_status = checked` verdict; unchecked and quarantined Concepts stay out of the
 checked index and Ask path.
 
-The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-126](../../adr/126-four-type-knowledge-model.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
+The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
 ## Generated views; the Linter keeps them sound
 
 Catalog records and knowledge Concepts surface through generated indexes and
 optional editor views. Views are projections; Concept frontmatter is governed by
-[ADR-126](../../adr/126-four-type-knowledge-model.md), and catalog rows that feed
+[ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and catalog rows that feed
 bibliography/materialization are governed by
-[ADR-124](../../adr/124-standalone-catalog-citation-authority.md).
+[ADR-124](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 Bases has no schema or constraints. The **Linter operation** supplies that layer: it validates records against `.memoria/schemas/`, flags drift, blocks malformed git-tracked writes at pre-commit, and monitors live edits through scheduled or CI sweeps. A bad in-app edit can briefly appear in a Base before the next sweep; that window is accepted under the solo premise. Shipped product-file repair comes from package/template refresh, not an in-vault restore baseline.
 

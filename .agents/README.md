@@ -19,6 +19,7 @@ copying their implementation details.
 | Playbook | Use |
 |---|---|
 | [Code review](playbooks/code-review.md) | Review a patch for defects, regressions, complexity, and missing tests |
+| [Design history](playbooks/design-history.md) | Capture release decisions and close them into frozen design-history chapters |
 | [Documentation audit](playbooks/docs-audit.md) | Run a fresh whole-docs consistency, Diátaxis, generated-reference, terminology, coverage, and live-link audit |
 | [Documentation review](playbooks/docs-review.md) | Check Diátaxis placement, links, indexing, and terminology |
 | [ExecPlan](playbooks/exec-plan.md) | Author and run a self-contained living plan for a complex, multi-hour task |

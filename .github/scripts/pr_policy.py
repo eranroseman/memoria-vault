@@ -7,9 +7,7 @@ Emits two GitHub Actions outputs:
 Auto-approve: PRs from a trusted author whose changes are entirely within safe
 paths get decision=auto_approve, which causes the workflow to enable auto-merge.
 Safe prose paths are docs/ or _notes/ with .md/.txt files only. Safe PRs can be
-any size — a single docs pass legitimately touches 100+ nav_order fields. Note:
-docs/adr/ is the one docs/ subtree that is NOT auto-approved (it holds the
-decision record — see below).
+any size — a single docs pass legitimately touches 100+ nav_order fields.
 
 Needs-human: the check passes but does not enable auto-merge. It is a manual-merge
 classification, not a required-approval mechanism.
@@ -17,10 +15,10 @@ classification, not a required-approval mechanism.
 Block: scratch/ is branch-owned ephemeral working material. It lives on the
 scratch branch and is not merged into main by PR.
 
-Block: any PR touching sensitive paths (.github/, vault-template/.memoria/, scripts/, or
-ADRs at docs/adr/) is blocked for untrusted authors; trusted authors require a
-human review. Agent instruction surfaces are also sensitive: they can change
-what future automation is allowed or encouraged to do.
+Block: any PR touching sensitive paths (.github/, vault-template/.memoria/,
+scripts/, or design-history/) is blocked for untrusted authors; trusted authors
+require a human review. Agent instruction surfaces are also sensitive: they can
+change what future automation is allowed or encouraged to do.
 
     python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
@@ -48,9 +46,8 @@ SAFE_PROSE_PREFIXES = (
 SAFE_SUFFIXES = (".md", ".txt")
 MAIN_EXCLUDED_PREFIXES = ("scratch/",)
 
-# Any change to these paths is always blocked for human review. docs/adr/ holds the
-# decision record (ADRs at every lifecycle status) and stays review-required even
-# though it lives under the otherwise-safe docs/ tree — is_sensitive wins over is_safe.
+# Any change to these paths is always blocked for human review. design-history/
+# holds the durable design record and stays review-required.
 SENSITIVE_PREFIXES = (
     ".github/",
     ".agents/",
@@ -61,7 +58,7 @@ SENSITIVE_PREFIXES = (
     "src/memoria_vault/runtime/policy/",
     "src/memoria_vault/runtime/subsystems/",
     "vault-template/.memoria/",
-    "docs/adr/",
+    "design-history/",
 )
 SENSITIVE_PATHS = {
     "AGENTS.md",

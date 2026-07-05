@@ -44,10 +44,10 @@ Read:
    - Every home appears in the installer skeleton.
    - Templates begin schema-valid.
    - Bases and dashboards reference fields emitted by schemas/templates.
-   - Unknown fields remain allowed unless an ADR changes that contract.
+   - Unknown fields remain allowed unless a release decision changes that contract.
    - Proposal, verification, and work-prompt card shapes remain distinct.
 5. Decide whether migration is needed. A breaking schema or folder change
-   requires an ADR, migration guidance, and tests for old vault state.
+   requires a release decision entry, migration guidance, and tests for old vault state.
 6. Run focused schema tests from `test-selection.md`, relevant component tests,
    and the full gate before PR handoff.
 

@@ -82,6 +82,6 @@ Each trades breadth for less installer code:
 ## Related
 
 - **Reference:** [Installer (bootstrap)](../reference/installer.md) — platform matrix, install-flow steps, component checklist, secrets and skills tables.
-- **Decisions:** [ADR-125](../adr/125-standalone-cli-engine-architecture.md) (standalone CLI + engine; absorbs the former repo-as-install-unit decision).
+- **Decisions:** [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (standalone CLI + engine; absorbs the former repo-as-install-unit decision).
 - **Design:** [Distribution model](distribution-model.md), Hermes boundary.
 - **How-to:** [Quickstart](../how-to-guides/setup/quickstart.md), [Set up the vault](../how-to-guides/setup/set-up-the-vault.md).

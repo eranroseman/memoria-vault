@@ -16,7 +16,7 @@ MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
 
 
-def _local_hook(hook_id: str) -> dict:
+def _hook(hook_id: str) -> dict:
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
     hooks = [h for repo in config["repos"] for h in repo["hooks"] if h["id"] == hook_id]
     assert len(hooks) == 1
@@ -43,19 +43,28 @@ def test_node_workflows_do_not_download_cli_packages_at_run_time():
         assert "npm ci --ignore-scripts" in text
 
 
-def test_precommit_hooks_use_local_pinned_tools():
+def test_precommit_hooks_use_pinned_tool_environments():
     config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
-    assert [repo["repo"] for repo in config["repos"]] == ["local"]
+    pinned_repos = {
+        repo["repo"]: repo["rev"] for repo in config["repos"] if repo["repo"] != "local"
+    }
+    assert pinned_repos == {
+        "https://github.com/pre-commit/pre-commit-hooks": "v6.0.0",
+        "https://github.com/gitleaks/gitleaks": "v8.30.1",
+        "https://github.com/astral-sh/ruff-pre-commit": "v0.15.20",
+        "https://github.com/adrienverge/yamllint": "v1.38.0",
+        "https://github.com/shellcheck-py/shellcheck-py": "v0.11.0.1",
+    }
 
     requirements = REQUIREMENTS_DEV.read_text(encoding="utf-8").splitlines()
     for package in (
         "pre-commit==4.6.0",
         "pre-commit-hooks==6.0.0",
-        "ruff==0.15.20",
-        "shellcheck-py==0.11.0.1",
-        "yamllint==1.38.0",
     ):
         assert package in requirements
+    assert "ruff==0.15.20" not in requirements
+    assert "shellcheck-py==0.11.0.1" not in requirements
+    assert "yamllint==1.38.0" not in requirements
 
 
 def test_runtime_package_declares_yaml_dependency():
@@ -69,7 +78,7 @@ def test_precommit_node_hooks_fail_fast_without_network_downloads():
         ("cspell", "cspell lint --no-progress --no-must-find-files"),
         ("markdownlint-structural", "markdownlint --config .markdownlint.json"),
     ):
-        entry = _local_hook(hook_id)["entry"]
+        entry = _hook(hook_id)["entry"]
         assert "PATH=node_modules/.bin:$PATH" in entry
         assert command in entry
         assert "npx" not in entry

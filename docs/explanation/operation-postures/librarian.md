@@ -15,7 +15,7 @@ Its posture is **faithful**: include generously, report state accurately, and le
 
 A research librarian does both intake and literature search, so corpus work
 (scope reports, gap analysis, cluster maps) belongs with the same faithful
-posture ([ADR-125](../../adr/125-standalone-cli-engine-architecture.md)). Alpha.15
+posture ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Alpha.15
 implements that posture through checked operation manifests and request rows, not
 installed profile packages.
 

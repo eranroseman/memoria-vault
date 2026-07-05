@@ -22,36 +22,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 L0_COMMANDS = [
-    [
-        "ruff",
-        "check",
-        "src/memoria_vault",
-        "scripts",
-        "vault-template/.memoria",
-        ".github/scripts",
-        "tests",
-    ],
-    [
-        "ruff",
-        "format",
-        "--check",
-        "src/memoria_vault",
-        "scripts",
-        "vault-template/.memoria",
-        ".github/scripts",
-        "tests",
-    ],
+    ["pre-commit", "run", "ruff", "--all-files"],
+    ["pre-commit", "run", "ruff-format", "--all-files"],
     ["python3", "scripts/checks/docs_doctor.py", "docs"],
     ["python3", "scripts/checks/alpha14_negative_gate.py"],
     ["python3", "scripts/checks/checked_terminology_gate.py"],
     ["python3", "scripts/checks/docs_doctor.py", "--vault-links"],
     ["python3", "scripts/checks/status_doctor.py"],
-    ["python3", "scripts/checks/adr_code_doctor.py"],
     ["python3", "scripts/checks/agents_doctor.py"],
     ["python3", "scripts/checks/github_doctor.py"],
     ["python3", "scripts/checks/ruleset_doctor.py"],
     ["python3", "scripts/checks/plugin_provenance_doctor.py"],
-    ["python3", "scripts/checks/gen_adr_index.py", "--check"],
     [
         "env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",

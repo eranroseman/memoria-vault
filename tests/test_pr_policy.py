@@ -57,7 +57,7 @@ def test_is_sensitive_flags_policy_and_runtime_surfaces():
         "src/memoria_vault/runtime/subsystems/processing/project/structural_impact.py",
         "vault-template/.memoria/schemas/folders.yaml",
         "vault-template/.memoria/design-system.md",
-        "docs/adr/125-standalone-cli-engine-architecture.md",
+        "design-history/arcs.md",
     ]
 
     assert all(is_sensitive(path) for path in sensitive_paths)
@@ -86,7 +86,7 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
     sensitive_decision, reason = decide(
         ["scripts/install.sh", "docs/reference/policy-mcp.md"], "eranroseman", False
     )
-    adr_decision, _ = decide(["docs/adr/03-structural-review-gate.md"], "eranroseman", False)
+    design_history_decision, _ = decide(["design-history/arcs.md"], "eranroseman", False)
     mixed_decision, _ = decide(
         ["docs/reference/glossary.md", "vault-template/.memoria/schemas/types/note.yaml"],
         "eranroseman",
@@ -96,7 +96,7 @@ def test_decide_routes_trusted_sensitive_or_mixed_changes_to_human_review():
 
     assert sensitive_decision == "needs_human"
     assert "sensitive" in reason.lower()
-    assert adr_decision == "needs_human"
+    assert design_history_decision == "needs_human"
     assert mixed_decision == "needs_human"
     assert root_decision == "needs_human"
 

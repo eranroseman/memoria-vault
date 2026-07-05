@@ -54,7 +54,8 @@ and [the review gate](../design/why-review-gate-is-structural.md).
 ## For decisions and direction
 
 The maintained arguments live in the [Design Book](../design/README.md). Dated
-decisions live in [Decision records](../adr); forward-looking decisions are ADRs
-too (`status: proposed`) until accepted or rejected. Scheduling and readiness live
-on GitHub issues and milestones. Release procedure lives in
+decisions live in [design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md);
+forward-looking decisions live in the active release decision ledger until they
+are accepted, rejected, or closed into design history. Scheduling and readiness
+live on GitHub issues and milestones. Release procedure lives in
 `.agents/playbooks/release.md`.

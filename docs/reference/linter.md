@@ -6,8 +6,8 @@ grand_parent: Reference
 
 # Linter: detectors and auto-fix
 
-The Linter is an **operation, not an agent** ([ADR-125](../adr/125-standalone-cli-engine-architecture.md));
-its schema contract comes from [ADR-126](../adr/126-four-type-knowledge-model.md).
+The Linter is an **operation, not an agent** ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md));
+its schema contract comes from [ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Question | Answer |
 | --- | --- |
@@ -25,14 +25,14 @@ its schema contract comes from [ADR-126](../adr/126-four-type-knowledge-model.md
 | Detector | Severity | Catches |
 | --- | --- | --- |
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum, bad nested `links:` shape). |
-| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve ([ADR-126](../adr/126-four-type-knowledge-model.md)). Catalog Work evidence is checked by catalog and citation sweeps instead. |
+| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Catalog Work evidence is checked by catalog and citation sweeps instead. |
 | `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
 | `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
-| `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-127](../adr/127-quarantine-and-verify-integrity.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
+| `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — rerun the installer/refresh helper or create it. Checked only in installed vaults (`.git` present); the repo's `vault-template/` ships no empty dirs. |
-| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-126](../adr/126-four-type-knowledge-model.md) Tier 1; report-only, never auto-created). |
-| `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-127](../adr/127-quarantine-and-verify-integrity.md)) — so growth is surfaced here instead of staying silent. |
+| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) Tier 1; report-only, never auto-created). |
+| `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
 | `fama-exposure` | HIGH | A downstream note wikilinking a **superseded** claim (`lifecycle: archived` or `superseded_by` set) — reuse of obsolete memory. |
@@ -53,13 +53,13 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault
 
 ## The pre-commit hook
 
-The pre-commit hook ([ADR-126](../adr/126-four-type-knowledge-model.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The pre-commit hook ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 
 ## Per-request digests
 
-`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-127](../adr/127-quarantine-and-verify-integrity.md): a deterministic audit digest, not an LLM summary.
+`memoria_vault.runtime.subsystems.integrity.linter.session_summary` writes the second log from [ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md): a deterministic audit digest, not an LLM summary.
 
 | Aspect | Contract |
 | --- | --- |

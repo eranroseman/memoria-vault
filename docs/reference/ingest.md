@@ -89,7 +89,7 @@ input rebuild.
 ## Related
 
 - Catalog source record fields: [Frontmatter fields](frontmatter.md)
-- DOI enrichment gate decision: [ADR-123](../adr/123-doi-catalog-enrichment-gate.md)
+- DOI enrichment gate decision: [ADR-123](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - Folder homes and skeleton: [Memoria configuration](configuration.md)
 - Checked-only retrieval: [Search](search.md)
 - Trusted writer and journal behavior: [System actions](system-actions.md)
