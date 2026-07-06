@@ -4,6 +4,7 @@ from scripts.checks import status_doctor as _m
 
 Path = _m.Path
 _release_scratch = _m._release_scratch
+check_design_history = _m.check_design_history
 check_file = _m.check_file
 targets = _m.targets
 
@@ -12,7 +13,11 @@ def _routing_root(tmp_path):
     (tmp_path / ".agents" / "playbooks").mkdir(parents=True)
     (tmp_path / ".agents" / "templates").mkdir(parents=True)
     (tmp_path / "design-history").mkdir(parents=True)
-    (tmp_path / "design-history" / "arcs.md").write_text("# arcs\n")
+    (tmp_path / "design-history" / "README.md").write_text(
+        "# Design History\n\nLatest completed checkpoint: `alpha.16`\n"
+    )
+    (tmp_path / "design-history" / "16-alpha.16.md").write_text("## alpha.16\n")
+    (tmp_path / "design-history" / "arcs.md").write_text("# arcs\nCurrent (as of alpha.16)\n")
     return tmp_path
 
 
@@ -114,6 +119,30 @@ def test_release_scratch_rejects_private_memory_links(tmp_path):
     scratch.write_text("[private](../../../../.claude/projects/x/memory/rule.md)\n")
 
     assert any("local/private memory" in e for e in check_file(scratch, root))
+
+
+def test_check_design_history_accepts_latest_checkpoint_chapter_and_arc(tmp_path):
+    root = _routing_root(tmp_path)
+
+    assert check_design_history(root) == []
+
+
+def test_check_design_history_requires_latest_checkpoint_chapter(tmp_path):
+    root = _routing_root(tmp_path)
+    (root / "design-history" / "16-alpha.16.md").unlink()
+
+    errs = check_design_history(root)
+
+    assert any("16-alpha.16.md" in err for err in errs)
+
+
+def test_check_design_history_requires_latest_checkpoint_arc_current_line(tmp_path):
+    root = _routing_root(tmp_path)
+    (root / "design-history" / "arcs.md").write_text("# arcs\nCurrent (as of alpha.15)\n")
+
+    errs = check_design_history(root)
+
+    assert any("Current (as of alpha.16)" in err for err in errs)
 
 
 def test_main_returns_nonzero_with_findings_and_zero_when_clean(tmp_path):

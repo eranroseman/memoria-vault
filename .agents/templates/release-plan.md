@@ -41,7 +41,11 @@ This release is done when every gate/stage sub-issue below is closed.
 5. Documentation integrity is complete: shipped behavior is covered, stale
    claims are fixed, and durable decisions are captured in the release decision
    ledger for close-out into `design-history/`.
-6. `releases/{{ version }}/` scratch is deleted from the `scratch`
+6. Design history is closed: `design-history/<NN>-{{ version }}.md` exists,
+   `design-history/arcs.md` references `{{ version }}`, and
+   `design-history/README.md` names `{{ version }}` as the latest completed
+   checkpoint.
+7. `releases/{{ version }}/` scratch is deleted from the `scratch`
    branch after durable content is moved to `design-history/`, docs, release
    notes, or issues.
 

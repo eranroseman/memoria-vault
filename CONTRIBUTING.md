@@ -43,7 +43,7 @@ See [Quickstart](docs/how-to-guides/setup/quickstart.md) for the product install
 | Live planning state | Memoria Issue Tracker project fields |
 | Release scope | GitHub milestones |
 | Release readiness | The parent "Release <version>" issue and its sub-issues |
-| Decisions and durable rationale | [ADRs](docs/adr/) |
+| Decisions and durable rationale | [Design history](design-history/README.md) |
 
 The Project carries two fields:
 

@@ -20,7 +20,6 @@ scripts/, or design-history/) is blocked for untrusted authors; trusted authors
 require a human review. Agent instruction surfaces are also sensitive: they can
 change what future automation is allowed or encouraged to do.
 
-    python pr_policy.py --self-test      # offline unit tests (no GitHub API)
 """
 
 import json

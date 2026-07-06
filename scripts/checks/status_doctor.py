@@ -46,6 +46,7 @@ STALE_TESTING_NAMES = {
 }
 
 PRIVATE_SCRATCH_LINK_RE = re.compile(r"(?:^|[/(])\.claude/projects/|/memory/")
+LATEST_CHECKPOINT_RE = re.compile(r"^Latest completed checkpoint:\s*`([^`]+)`\s*$", re.MULTILINE)
 ROUTING_DOCS = (
     Path("CONTRIBUTING.md"),
     Path(".agents/playbooks/release.md"),
@@ -103,11 +104,59 @@ def _release_scratch(rel: Path) -> bool:
     return len(parts) >= 3 and parts[0] == "releases"
 
 
+def _expected_design_history_chapter(root: Path, checkpoint: str) -> tuple[Path | None, str]:
+    history = root / "design-history"
+    if found := re.fullmatch(r"alpha\.(\d+)", checkpoint):
+        number = int(found.group(1))
+        name = "01-alpha.1-baseline.md" if number == 1 else f"{number:02d}-alpha.{number}.md"
+        return history / name, name
+
+    suffix = f"-{checkpoint}.md"
+    matches = sorted(path for path in history.glob("*.md") if path.name.endswith(suffix))
+    if len(matches) == 1:
+        return matches[0], matches[0].name
+    return None, f"*{suffix}"
+
+
+def check_design_history(root: Path) -> list[str]:
+    """Return release-close drift findings for the durable design-history record."""
+    errors: list[str] = []
+    history = root / "design-history"
+    readme = history / "README.md"
+    arcs = history / "arcs.md"
+    if not readme.is_file():
+        return ["design-history/README.md: missing latest completed checkpoint marker"]
+
+    text = readme.read_text(encoding="utf-8").replace("\r\n", "\n")
+    match = LATEST_CHECKPOINT_RE.search(text)
+    if not match:
+        errors.append(
+            "design-history/README.md: missing latest checkpoint marker "
+            "(example line: Latest completed checkpoint: `alpha.16`)"
+        )
+        return errors
+
+    checkpoint = match.group(1)
+    chapter, expected = _expected_design_history_chapter(root, checkpoint)
+    if not chapter or not chapter.is_file():
+        errors.append(
+            f"design-history/README.md: latest checkpoint `{checkpoint}` needs "
+            f"design-history/{expected}"
+        )
+
+    if not arcs.is_file():
+        errors.append("design-history/arcs.md: missing")
+    elif f"Current (as of {checkpoint})" not in arcs.read_text(encoding="utf-8"):
+        errors.append(f"design-history/arcs.md: missing `Current (as of {checkpoint})` line")
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     files = targets(ROOT)
     for p in files:
         errors.extend(check_file(p, ROOT))
+    errors.extend(check_design_history(ROOT))
     if errors:
         print(f"status-doctor: {len(errors)} issue(s)\n")
         for e in errors:

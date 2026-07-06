@@ -101,6 +101,9 @@
      honest — this is how a fresh agent resumes. -->
 
 - [ ] {{ YYYY-MM-DD HH:MM }} — {{ milestone }}
+- [ ] {{ release/checkpoint close only }} — `design-history/<NN>-<release>.md`,
+      `design-history/arcs.md`, and `design-history/README.md` latest-checkpoint
+      marker updated, or explicitly N/A for non-release work
 
 ## 8. Execution log
 

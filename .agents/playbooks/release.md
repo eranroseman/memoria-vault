@@ -53,8 +53,9 @@ Do not create a second markdown state table for gate or stage progress.
    and no release-milestone issue has `Readiness: Blocked`.
 2. Re-run the relevant Release Gate checks from a fresh clone or record why a
    check is not applicable.
-3. Fold accepted/rejected release decisions into `design-history/` and update
-   `design-history/arcs.md` with current and pending lines.
+3. Fold accepted/rejected release decisions into `design-history/`, update
+   `design-history/arcs.md` with current and pending lines, and update
+   `design-history/README.md`'s latest completed checkpoint marker.
 4. Merge the release-please PR for formal releases. It owns version bump,
    changelog, tag, and GitHub Release notes.
 5. Close the milestone and release parent issue, rolling unfinished issues forward.
