@@ -74,8 +74,9 @@ created a third, inconsistent definition of "seam" alongside
 language). Checked directly against the not-yet-installed `interface-design`
 plugin for a name collision: real word overlap on "Depth" and "Interface,"
 but different domains (visual UI vs. module API) and already-disambiguated
-trigger surfaces — no fix needed. Evidence: `exec-plan §3.B.7`,
-`wedgcpoi3` retirement audit, direct read of `interface-design`'s SKILL.md.
+trigger surfaces — no fix needed. Evidence: the `tdd`-seams / canonical-
+vocabulary decision above, `wedgcpoi3` retirement audit, direct read of
+`interface-design`'s SKILL.md.
 
 **Y: Promote `improve`'s precedence note (vs. `subagent-driven-development`)
 from deferred/optional to required.**
@@ -112,7 +113,8 @@ for" list doesn't cover. Evidence: `wdlhfiiar` (check+verify),
 
 **Y: Add `.agents/playbooks/security-review.md`'s "Escalate to a full
 audit" section, justified as following this same plan's own precedent
-(step 9's `code-review.md` edit), not a pre-existing repo pattern.**
+(its `code-review.md` cross-reference edit, in the same repo PR), not a
+pre-existing repo pattern.**
 Because: the first-draft justification claimed to follow "the precedent
 set by `code-review.md`'s cross-reference to `requesting-code-review`" —
 verification found no such precedent exists anywhere in this codebase's
