@@ -21,11 +21,11 @@ from memoria_vault.runtime.vaultio import (
 from memoria_vault.runtime.worker import enqueue_operation, run_request
 
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
-CONCEPT_TYPES = {"note", "work", "hub", "project"}
+CONCEPT_TYPES = {"note", "work", "digest", "source-note", "hub", "project"}
 CONCEPT_HOMES = {
-    "note": "knowledge/notes",
-    "hub": "knowledge/hubs",
-    "project": "knowledge/projects",
+    "note": "notes",
+    "hub": "hubs",
+    "project": "projects",
 }
 VIEW_SPEC_VERSION = "view-spec.v1"
 READ_API_VERSION = "engine-read-api.v1"
@@ -330,7 +330,10 @@ def write_new_concept(
     if concept_type not in CONCEPT_HOMES:
         raise ValueError(f"unsupported concept type: {concept_type}")
     slug = safe_filename(title.lower()).strip("._-") or concept_type
-    rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}.md")
+    if concept_type == "project":
+        rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}/project.md")
+    else:
+        rel = _unique_rel(workspace, f"{CONCEPT_HOMES[concept_type]}/{slug}.md")
     frontmatter = {"type": concept_type, "title": title, "tags": tags, "links": {}}
     frontmatter.update({key: value for key, value in extra.items() if value not in (None, "")})
     apply_universal_concept_frontmatter(frontmatter, rel)

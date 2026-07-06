@@ -102,7 +102,7 @@ def gated_prefixes(folders: dict) -> list[str]:
 # Dependency-free fallback for the structural review gate. The schema no longer
 # declares gated prefixes; machine writes route through worker staging,
 # promotion, and quarantine instead.
-FALLBACK_GATED_PREFIXES = ("knowledge/notes/", "knowledge/hubs/")
+FALLBACK_GATED_PREFIXES = ("notes/", "hubs/")
 
 
 def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
@@ -195,13 +195,11 @@ def validate_frontmatter(
     """Validate one document's frontmatter against its type schema.
 
     Returns a list of human-readable error strings (empty = valid).
-    Unknown extra fields are rejected; use the schema-declared ``x`` map for extensions.
+    Unknown extra fields are accepted. The schema enforces required meaning fields
+    without making hand-authored markdown brittle during alpha migrations.
     """
     errors: list[str] = []
     enums = schema.get("enums", {})
-    declared = set(schema.get("required") or {}) | set(schema.get("optional") or {})
-    for field in sorted(set(fm) - declared):
-        errors.append(f"undeclared field: {field} (put custom data under x)")
     for field, kind in (schema.get("required") or {}).items():
         if field not in fm or fm[field] in (None, ""):
             errors.append(f"missing required field: {field}")

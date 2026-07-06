@@ -1,0 +1,17 @@
+type: digest
+category: works
+gated: false
+required:
+  type: literal:digest
+  id: ulid
+  title: str
+  tags: list
+  links: links
+  work_id: str
+optional:
+  anchors: list
+  archived: bool
+  citations: list
+  description: str
+  evidence_set: list
+  x: map

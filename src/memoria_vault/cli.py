@@ -1,4 +1,4 @@
-"""Alpha.15 stdlib CLI entry point."""
+"""Alpha.16 stdlib CLI entry point."""
 
 from __future__ import annotations
 
@@ -95,6 +95,11 @@ def _build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--once", action="store_true")
     serve.add_argument("--poll-interval", type=float, default=1.0)
     serve.set_defaults(handler=_cmd_serve)
+
+    migrate = sub.add_parser("migrate")
+    _common(migrate)
+    migrate.add_argument("--from-alpha15", required=True)
+    migrate.set_defaults(handler=_cmd_migrate)
 
     mcp = sub.add_parser("mcp")
     mcp.add_argument("--workspace", required=True)
@@ -474,16 +479,7 @@ def _cmd_init(args: argparse.Namespace) -> int:
         return _emit(_init_dry_run_report(workspace, created), args)
     if not args.yes and workspace.exists() and any(workspace.iterdir()):
         return _fail("init on a non-empty workspace requires --yes", json_output=args.json)
-    workspace.mkdir(parents=True, exist_ok=True)
-    for rel in created:
-        (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(workspace, overwrite=False)
-    state.connect(workspace).close()
-    _ensure_control_files(workspace)
-    from memoria_vault.runtime.projections import write_tracked_projections
-
-    write_tracked_projections(workspace)
-    _ensure_git(workspace)
+    _initialize_workspace_files(workspace)
     return _emit({"ok": True, "workspace": str(workspace), "created": created}, args)
 
 
@@ -662,6 +658,19 @@ def _cmd_mcp(args: argparse.Namespace) -> int:
         return _fail("mcp requires at least one --read-scope", json_output=False)
     run_mcp_server(_workspace(args), read_scope=args.read_scope, actor=args.actor)
     return 0
+
+
+def _cmd_migrate(args: argparse.Namespace) -> int:
+    workspace = _workspace(args)
+    source = Path(args.from_alpha15).expanduser().resolve()
+    if not source.is_dir():
+        return _fail(f"alpha.15 workspace not found: {source}", json_output=args.json)
+    if workspace == source:
+        return _fail("migrate requires a separate alpha.16 workspace", json_output=args.json)
+    if not (workspace / ".memoria/schemas/folders.yaml").is_file():
+        _initialize_workspace_files(workspace)
+    result = _migrate_alpha15_workspace(source, workspace)
+    return _emit({"ok": True, "workspace": str(workspace), **result}, args)
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
@@ -908,7 +917,7 @@ def _cmd_project_suggest_hubs(args: argparse.Namespace) -> int:
             for tag in _string_list(frontmatter.get("tags")):
                 existing.add(tag.lower())
             continue
-        if frontmatter.get("type") not in {"work", "note"}:
+        if frontmatter.get("type") not in {"work", "digest", "note"}:
             continue
         for term in _concept_terms(frontmatter):
             counts[term] += 1
@@ -1549,7 +1558,7 @@ def _seeded_error_bundle_path(workspace: Path) -> Path:
 def _workspace_scan_fixture(workspace: Path, fixture: str) -> dict[str, str]:
     if fixture != "direct-write-generated-projection":
         raise ValueError(f"unknown workspace scan fixture: {fixture}")
-    rel = "knowledge/_views/index.md"
+    rel = "index.md"
     path = workspace / rel
     if not path.is_file():
         raise FileNotFoundError(path)
@@ -1565,7 +1574,7 @@ def _workspace_recover_fixture(workspace: Path, fixture: str) -> dict[str, str]:
         raise ValueError(f"unknown workspace recover fixture: {fixture}")
     from memoria_vault.runtime.trusted_writer import promote_checked, stage_concept
 
-    rel = "knowledge/notes/crash-before-materialization.md"
+    rel = "notes/crash-before-materialization.md"
     content = (
         "---\n"
         "type: note\n"
@@ -1610,7 +1619,14 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
     slug = safe_filename(target.strip().lower())
     for path in iter_markdown(workspace):
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") not in {"note", "work", "hub", "project"}:
+        if frontmatter.get("type") not in {
+            "note",
+            "work",
+            "digest",
+            "source-note",
+            "hub",
+            "project",
+        }:
             continue
         if target in {
             str(frontmatter.get("id") or ""),
@@ -1626,12 +1642,24 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
 
 def _workspace_plan(workspace: Path) -> list[str]:
     return [
-        "knowledge",
+        "inbox",
+        "works",
+        "sources",
+        "notes",
+        "hubs",
+        "projects",
         "system",
+        "system/incidents",
         "system/eval",
+        "system/metrics",
         ".memoria/blobs",
         ".memoria/config",
         ".memoria/index/search/checked",
+        ".memoria/staging/works",
+        ".memoria/staging/sources",
+        ".memoria/staging/notes",
+        ".memoria/staging/hubs",
+        ".memoria/staging/projects",
     ]
 
 
@@ -1694,16 +1722,125 @@ def _seed_workspace(workspace: Path, *, overwrite: bool) -> None:
 
 
 def _repair_workspace(workspace: Path) -> list[str]:
+    _initialize_workspace_files(workspace, overwrite=True)
+    return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
+
+
+def _initialize_workspace_files(workspace: Path, *, overwrite: bool = False) -> None:
+    workspace.mkdir(parents=True, exist_ok=True)
     for rel in _workspace_plan(workspace):
         (workspace / rel).mkdir(parents=True, exist_ok=True)
-    _seed_workspace(workspace, overwrite=True)
+    _seed_workspace(workspace, overwrite=overwrite)
     state.connect(workspace).close()
     _ensure_control_files(workspace)
     from memoria_vault.runtime.projections import write_tracked_projections
 
     write_tracked_projections(workspace)
     _ensure_git(workspace)
-    return sorted([target for _, target in (*SEED_TREES, *SEED_FILES)])
+
+
+def _migrate_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
+    copied: list[str] = []
+    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/notes", "notes"))
+    copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/hubs", "hubs"))
+    copied.extend(_copy_alpha15_projects(source, workspace))
+    copied.extend(_copy_alpha15_works(source, workspace))
+    bibliography = source / "references.bib"
+    if bibliography.is_file():
+        target = workspace / "bibliography.bib"
+        if target.exists() and target.read_text(encoding="utf-8").strip():
+            raise FileExistsError(target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(bibliography, target)
+        copied.append("bibliography.bib")
+    return {"imported": sorted(copied), "imported_count": len(copied)}
+
+
+def _copy_alpha15_tree(source: Path, workspace: Path, old_root: str, new_root: str) -> list[str]:
+    root = source / old_root
+    if not root.is_dir():
+        return []
+    copied: list[str] = []
+    for path in sorted(root.rglob("*.md")):
+        rel = path.relative_to(root).as_posix()
+        target = workspace / new_root / rel
+        _copy_no_overwrite(path, target)
+        copied.append(target.relative_to(workspace).as_posix())
+    return copied
+
+
+def _copy_alpha15_projects(source: Path, workspace: Path) -> list[str]:
+    root = source / "knowledge/projects"
+    if not root.is_dir():
+        return []
+    copied: list[str] = []
+    for path in sorted(root.rglob("*.md")):
+        rel = path.relative_to(root)
+        if len(rel.parts) == 1:
+            target = workspace / "projects" / path.stem / "project.md"
+        else:
+            target = workspace / "projects" / rel
+        _copy_no_overwrite(path, target)
+        copied.append(target.relative_to(workspace).as_posix())
+    return copied
+
+
+def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
+    from memoria_vault.runtime.paths import safe_filename
+    from memoria_vault.runtime.vaultio import new_ulid, split_frontmatter
+
+    root = source / "knowledge/works"
+    if not root.is_dir():
+        return []
+    copied: list[str] = []
+    for path in sorted(root.glob("*.md")):
+        frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
+        work_id = safe_filename(str(frontmatter.get("work_id") or path.stem)).strip("._-")
+        if not work_id:
+            work_id = path.stem
+        work_dir = workspace / "works" / work_id
+        record_path = work_dir / "record.md"
+        digest_path = work_dir / "digest.md"
+        record = {
+            "type": "work",
+            "id": new_ulid(),
+            "title": str(frontmatter.get("title") or path.stem),
+            "tags": list(frontmatter.get("tags") or []),
+            "links": dict(frontmatter.get("links") or {}),
+            "work_id": work_id,
+        }
+        for key in ("citekey", "description", "evidence_set", "citations"):
+            if frontmatter.get(key) not in (None, ""):
+                record[key] = frontmatter[key]
+        digest = dict(frontmatter)
+        digest.update({"type": "digest", "id": new_ulid(), "work_id": work_id})
+        digest.setdefault("title", record["title"])
+        digest.setdefault("tags", [])
+        digest.setdefault("links", {})
+        _write_no_overwrite(record_path, record, f"# {record['title']}\n\n")
+        _write_no_overwrite(digest_path, digest, body)
+        copied.extend(
+            [
+                record_path.relative_to(workspace).as_posix(),
+                digest_path.relative_to(workspace).as_posix(),
+            ]
+        )
+    return copied
+
+
+def _copy_no_overwrite(source: Path, target: Path) -> None:
+    if target.exists():
+        raise FileExistsError(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+
+
+def _write_no_overwrite(target: Path, frontmatter: dict[str, Any], body: str) -> None:
+    from memoria_vault.runtime.vaultio import write_frontmatter_doc
+
+    if target.exists():
+        raise FileExistsError(target)
+    write_frontmatter_doc(target, frontmatter, body, create_parent=True)
 
 
 def _copy_seed_tree(source_rel: str, target: Path, *, overwrite: bool) -> None:
@@ -1729,6 +1866,9 @@ def _ensure_control_files(workspace: Path) -> None:
     overrides = workspace / ".memoria/overrides.jsonl"
     if not overrides.exists():
         write_text_durable(overrides, "", create_parent=True)
+    manifest = workspace / "system/manifest.jsonl"
+    if not manifest.exists():
+        write_text_durable(manifest, "", create_parent=True)
 
 
 def _ensure_git(workspace: Path) -> None:

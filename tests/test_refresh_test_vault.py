@@ -33,8 +33,8 @@ def test_refresh_helper_preserves_runtime_only_state():
     text = _script()
     for marker in (
         ".memoria/.venv/bin/python",
-        "system/logs",
-        "system/exports",
+        "corpus roots",
+        "active inbox projections",
     ):
         assert marker in text
     assert 'rsync -a --delete "$SRC"/ "$VAULT"/' not in text
@@ -44,23 +44,21 @@ def test_refresh_helper_updates_source_owned_surfaces():
     text = _script()
     for marker in (
         "system/dashboards",
+        "system/incidents",
+        "system/metrics",
         "system/scripts",
         "system/templates",
-        "spaces",
         ".git/hooks/pre-commit",
         "PYTHONPATH_VALUE",
         "index.md",
-        "catalog/index.md",
-        "knowledge/index.md",
-        "knowledge/_views/index.md",
-        "references.bib",
+        "bibliography.bib",
     ):
         assert marker in text
 
 
 def test_refresh_helper_removes_dropped_obsidian_payloads():
     text = _script()
-    assert 'rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog/catalog.base"' in text
+    assert '"$VAULT/catalog" "$VAULT/knowledge" "$VAULT/spaces" "$VAULT/references.bib"' in text
     assert '"$SRC/.obsidian"/' not in text
     assert "obsidian-local-rest-api" not in text
 

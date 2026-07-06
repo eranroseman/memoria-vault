@@ -8,8 +8,8 @@ permalink: /how-to-guides/project/
 
 # Project
 
-Steer an inquiry to output. Alpha.15 project Concepts live under
-`knowledge/projects/`; project analysis and Canvas rendering run through the
+Steer an inquiry to output. Alpha.16 project Concepts live at
+`projects/<slug>/project.md`; project analysis and Canvas rendering run through the
 `memoria project` CLI commands.
 
 | Guide | What it covers |

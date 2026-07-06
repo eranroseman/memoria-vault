@@ -61,7 +61,7 @@ def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
 
 
 def sync_file_verdicts(vault: Path) -> None:
-    for root in ("catalog", "knowledge"):
+    for root in ("catalog", "knowledge", "works", "sources", "notes", "hubs", "projects"):
         base = vault / root
         if not base.exists():
             continue
@@ -102,7 +102,7 @@ def catalog_db_source(vault: Path, source_id: str, content_text: str) -> str:
 
 def test_integrity_check_routes_shadow_before_active_flags(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/seeded.md"
+    target = "notes/seeded.md"
     (vault / target).parent.mkdir(parents=True)
     (vault / target).write_text(note_text("Seeded"), encoding="utf-8")
 
@@ -133,7 +133,7 @@ def test_integrity_check_routes_shadow_before_active_flags(tmp_path: Path) -> No
 
 def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/bad-evidence.md"
+    target = "notes/bad-evidence.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -175,7 +175,7 @@ def test_evidence_integrity_rejects_removed_source_markdown_without_catalog_row(
         "# Removed Source\n",
         encoding="utf-8",
     )
-    target = "knowledge/notes/removed-evidence.md"
+    target = "notes/removed-evidence.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -201,7 +201,7 @@ def test_evidence_integrity_rejects_removed_source_markdown_without_catalog_row(
 def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     source_ref = catalog_db_source(vault, "db-source", "The checked source text is in SQLite.")
-    target = "knowledge/notes/db-evidence.md"
+    target = "notes/db-evidence.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -240,7 +240,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
         text_status="full-text",
         check_status="checked",
     )
-    target = "knowledge/notes/stale.md"
+    target = "notes/stale.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -266,8 +266,8 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
 
 def test_claim_quote_support_flags_unwarranted_claim(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/unwarranted.md"
-    control = "knowledge/notes/supported.md"
+    target = "notes/unwarranted.md"
+    control = "notes/supported.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -303,8 +303,8 @@ def test_claim_quote_support_flags_unwarranted_claim(tmp_path: Path) -> None:
 
 def test_prompt_injection_marker_flags_checked_concept_text(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/injected.md"
-    control = "knowledge/notes/control.md"
+    target = "notes/injected.md"
+    control = "notes/control.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -358,7 +358,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
         citekey="partial2026",
         machine="capture-machine",
     )
-    target = "knowledge/notes/partial-source-note.md"
+    target = "notes/partial-source-note.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -393,8 +393,8 @@ def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path
         "The study measured survey response rates.",
         machine="capture-machine",
     )
-    target = "knowledge/notes/wrong-extraction.md"
-    control = "knowledge/notes/anchored.md"
+    target = "notes/wrong-extraction.md"
+    control = "notes/anchored.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -437,8 +437,8 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
         "db-anchor",
         "The measured endpoint was survey response, not mortality.",
     )
-    target = "knowledge/notes/db-wrong-extraction.md"
-    control = "knowledge/notes/db-anchored.md"
+    target = "notes/db-wrong-extraction.md"
+    control = "notes/db-anchored.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / target).write_text(
         "---\n"
@@ -903,13 +903,15 @@ def test_db_capture_does_not_create_entity_identity_findings(
 
 def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/works/bad-contradiction.md"
-    control = "knowledge/works/good-contradiction.md"
-    good_target = "knowledge/works/other.md"
+    target = "works/bad-contradiction/digest.md"
+    control = "works/good-contradiction/digest.md"
+    good_target = "works/other/digest.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
+    (vault / control).parent.mkdir(parents=True, exist_ok=True)
+    (vault / good_target).parent.mkdir(parents=True, exist_ok=True)
     (vault / good_target).write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "check_status: checked\n"
         "title: Other\n"
         "description: Other digest.\n"
@@ -920,26 +922,26 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     )
     (vault / target).write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "check_status: checked\n"
         "title: Bad contradiction\n"
         "description: Missing contradiction target.\n"
         "source_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - knowledge/works/missing.md\n"
+        "  - works/missing/digest.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",
     )
     (vault / control).write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "check_status: checked\n"
         "title: Good contradiction\n"
         "description: Resolving contradiction target.\n"
         "source_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - knowledge/works/other.md\n"
+        "  - works/other/digest.md\n"
         "---\n"
         "# Good contradiction\n",
         encoding="utf-8",
@@ -951,7 +953,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     [finding] = result["findings"]
     assert finding["check"] == "contradiction-link"
     assert finding["target_id"] == target
-    assert finding["reason"] == "unresolved contradiction target: knowledge/works/missing.md"
+    assert finding["reason"] == "unresolved contradiction target: works/missing/digest.md"
     assert finding["route"] == "ask"
 
 
@@ -965,8 +967,8 @@ def test_contradiction_tier1_gate_beats_lexical_overlap_baseline() -> None:
 
 def test_surface_tensions_degraded_gate_writes_attention_without_links(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-not-up.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-not-up.md"
     _stage_checked_note(vault, left, "Recall up", "The intervention improved recall.")
     _stage_checked_note(vault, right, "Recall not up", "The intervention did not improve recall.")
 
@@ -1001,8 +1003,8 @@ def test_surface_tensions_degraded_gate_writes_attention_without_links(tmp_path:
 
 def test_surface_tensions_tier2_runs_on_tier1_abstain_without_links(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-down.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-down.md"
     left_text = "The field trial improved recall for novice readers."
     right_text = "The field trial reduced recall for novice readers."
     _stage_checked_note(vault, left, "Recall up", left_text)
@@ -1037,8 +1039,8 @@ def test_surface_tensions_tier2_runs_on_tier1_abstain_without_links(tmp_path: Pa
 
 def test_surface_tensions_tier2_not_called_for_tier1_refuted(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-not-up.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-not-up.md"
     _stage_checked_note(vault, left, "Recall up", "The intervention improved recall.")
     _stage_checked_note(vault, right, "Recall not up", "The intervention did not improve recall.")
 
@@ -1056,8 +1058,8 @@ def test_surface_tensions_tier2_not_called_for_tier1_refuted(tmp_path: Path) -> 
 
 def test_surface_tensions_tier2_runs_for_degraded_hard_cases(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-not-up.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-not-up.md"
     _stage_checked_note(vault, left, "Recall up", "The intervention improved recall.")
     _stage_checked_note(vault, right, "Recall not up", "The intervention did not improve recall.")
 
@@ -1099,8 +1101,8 @@ def test_surface_tensions_tier2_runs_for_degraded_hard_cases(tmp_path: Path) -> 
 
 def test_surface_tensions_tier2_requires_grounded_quotes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-down.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-down.md"
     _stage_checked_note(vault, left, "Recall up", "The field trial improved recall.")
     _stage_checked_note(vault, right, "Recall down", "The field trial reduced recall.")
 
@@ -1125,8 +1127,8 @@ def test_surface_tensions_tier2_requires_grounded_quotes(tmp_path: Path) -> None
 
 def test_surface_tensions_refuses_tampered_checked_file_before_tier2(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    left = "knowledge/notes/recall-up.md"
-    right = "knowledge/notes/recall-down.md"
+    left = "notes/recall-up.md"
+    right = "notes/recall-down.md"
     _stage_checked_note(vault, left, "Recall up", "The field trial improved recall.")
     _stage_checked_note(vault, right, "Recall down", "The field trial reduced recall.")
     (vault / left).write_text(
@@ -1159,8 +1161,8 @@ def test_surface_tensions_dedupes_same_canonical_id(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     shared_id = "01ARZ3NDEKTSV4RRFFQ69G5FAV"
     for rel, body in {
-        "knowledge/notes/recall-up.md": "The intervention improved recall.",
-        "knowledge/notes/recall-not-up.md": "The intervention did not improve recall.",
+        "notes/recall-up.md": "The intervention improved recall.",
+        "notes/recall-not-up.md": "The intervention did not improve recall.",
     }.items():
         path = vault / rel
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1190,8 +1192,8 @@ def test_surface_tensions_dedupes_same_canonical_id(tmp_path: Path) -> None:
 
 def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/bad-link.md"
-    good_target = "knowledge/notes/other.md"
+    target = "notes/bad-link.md"
+    good_target = "notes/other.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / good_target).write_text(note_text("Other"), encoding="utf-8")
     (vault / target).write_text(
@@ -1201,8 +1203,8 @@ def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
         "title: Bad link\n"
         "links:\n"
         "  supports:\n"
-        "    - knowledge/notes/missing.md\n"
-        "    - knowledge/notes/other.md\n"
+        "    - notes/missing.md\n"
+        "    - notes/other.md\n"
         "    - https://example.test/outside\n"
         "---\n"
         "# Bad link\n",
@@ -1215,7 +1217,7 @@ def test_link_targets_flag_missing_targets(tmp_path: Path) -> None:
     [finding] = result["findings"]
     assert finding["check"] == "link-target"
     assert finding["target_id"] == target
-    assert finding["reason"] == "unresolved link target: knowledge/notes/missing.md"
+    assert finding["reason"] == "unresolved link target: notes/missing.md"
     assert finding["route"] == "ask"
 
 
@@ -1250,7 +1252,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
         ],
         machine="note-machine",
     )
-    pi_note = "knowledge/notes/pi-downstream.md"
+    pi_note = "notes/pi-downstream.md"
     pi_path = vault / pi_note
     pi_path.parent.mkdir(parents=True, exist_ok=True)
     pi_path.write_text(note_text("PI downstream"), encoding="utf-8")
@@ -1324,7 +1326,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
 
 def test_cascade_rollback_restores_previous_file_version_with_git(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/versioned.md"
+    target = "notes/versioned.md"
     version_one = (
         "---\ntype: note\ntitle: Version one\ntags: []\nlinks: {}\n---\nVersion one body.\n"
     )

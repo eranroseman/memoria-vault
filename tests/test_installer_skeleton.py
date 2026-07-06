@@ -38,21 +38,24 @@ def test_skeleton_covers_every_type_home():
         assert home in installed, f"type {t} home {home} not in SKELETON_DIRS"
 
 
-def test_alpha11_fresh_package_contract_is_shipped():
+def test_alpha16_fresh_package_contract_is_shipped():
     required_dirs = {
         ".memoria/index/search",
         ".memoria/config",
         ".memoria/quarantine",
-        ".memoria/staging/knowledge",
-        "journal",
-        "catalog",
-        "catalog/sources",
-        "catalog/entities",
-        "knowledge",
-        "knowledge/works",
-        "knowledge/notes",
-        "knowledge/hubs",
-        "knowledge/projects",
+        ".memoria/staging/works",
+        ".memoria/staging/sources",
+        ".memoria/staging/notes",
+        ".memoria/staging/hubs",
+        ".memoria/staging/projects",
+        "inbox",
+        "works",
+        "sources",
+        "notes",
+        "hubs",
+        "projects",
+        "system/incidents",
+        "system/metrics",
     }
     skeleton = set(schema.load_folders()["skeleton"])
     installed = _skeleton_dirs()
@@ -63,10 +66,8 @@ def test_alpha11_fresh_package_contract_is_shipped():
         assert (ROOT / "vault-template" / rel).is_dir(), rel
     for rel in (
         "index.md",
-        "catalog/index.md",
-        "knowledge/index.md",
-        "knowledge/_views/index.md",
-        "references.bib",
+        "bibliography.bib",
+        "system/manifest.jsonl",
         "steering.md",
         ".memoria/config/providers.yaml",
     ):
@@ -74,18 +75,19 @@ def test_alpha11_fresh_package_contract_is_shipped():
     for rel in (
         ".memoria/index/search",
         ".memoria/quarantine",
-        ".memoria/staging/knowledge",
-        "journal",
+        ".memoria/staging/works",
+        ".memoria/staging/sources",
+        ".memoria/staging/notes",
+        ".memoria/staging/hubs",
+        ".memoria/staging/projects",
     ):
         assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
     assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()
+    assert not (ROOT / "vault-template/references.bib").exists()
 
 
 def test_alpha11_template_has_no_removed_alpha10_root_files():
     removed_roots = (
-        "vault-template/inbox",
-        "vault-template/notes",
-        "vault-template/projects",
         "vault-template/catalog/papers",
         "vault-template/catalog/people",
         "vault-template/catalog/organizations",
@@ -134,7 +136,7 @@ def test_alpha11_template_has_no_removed_alpha10_path_literals():
     assert not offenders
 
 
-def test_alpha15_installer_does_not_ship_installed_profiles():
+def test_alpha16_installer_does_not_ship_installed_profiles():
     text = INSTALL.read_text(encoding="utf-8")
     assert "ALL_PROFILES" not in text
     assert "--profiles-only" not in text

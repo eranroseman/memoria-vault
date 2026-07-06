@@ -42,7 +42,7 @@ memoria work digest --workspace . <work-id>
 
 **5. Keep your own note if needed.**
 
-Draft or edit a note under `knowledge/notes/`, then run:
+Draft or edit a note under `notes/`, then run:
 
 ```bash
 memoria workspace scan --workspace .

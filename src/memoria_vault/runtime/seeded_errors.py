@@ -309,13 +309,13 @@ def _set_catalog_stale(vault: Path, source_id: str) -> None:
 
 
 def _checked_broken_digest(vault: Path) -> dict[str, Any]:
-    target = "knowledge/works/seeded-missing-digest-evidence.md"
+    target = "works/seeded-missing-digest-evidence/digest.md"
     stage = stage_concept(
         vault,
         target,
         concept_text(
             {
-                "type": "work",
+                "type": "digest",
                 "title": "Seeded missing digest evidence",
                 "description": "Injected structural error.",
                 "work_id": "missing-digest-source",
@@ -337,13 +337,13 @@ def _checked_broken_digest(vault: Path) -> dict[str, Any]:
 
 
 def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
-    target = "knowledge/works/seeded-missing-contradiction.md"
+    target = "works/seeded-missing-contradiction/digest.md"
     stage = stage_concept(
         vault,
         target,
         concept_text(
             {
-                "type": "work",
+                "type": "digest",
                 "title": "Seeded missing contradiction",
                 "description": "Injected structural contradiction-link error.",
                 "work_id": "seed-source",
@@ -351,7 +351,7 @@ def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
                 "links": {},
                 "source_id": "catalog/sources/seed-source",
                 "evidence_set": ["catalog/sources/seed-source"],
-                "contradictions": ["knowledge/works/missing-contradiction-target.md"],
+                "contradictions": ["works/missing-contradiction-target/digest.md"],
             },
             "Seeded missing contradiction",
             "This checked digest intentionally points at a missing contradiction target.",
@@ -368,7 +368,7 @@ def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
 
 
 def _checked_false_link_note(vault: Path) -> dict[str, Any]:
-    target = "knowledge/notes/seeded-false-link.md"
+    target = "notes/seeded-false-link.md"
     stage = stage_concept(
         vault,
         target,
@@ -379,7 +379,7 @@ def _checked_false_link_note(vault: Path) -> dict[str, Any]:
                 "description": "Injected structural Link target error.",
                 "tags": [],
                 "source_id": "catalog/sources/seed-source",
-                "links": {"supports": ["knowledge/notes/missing-linked-note.md"]},
+                "links": {"supports": ["notes/missing-linked-note.md"]},
             },
             "Seeded false link",
             "This checked note intentionally links to a missing Concept.",

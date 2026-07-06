@@ -1,5 +1,5 @@
 type: work
-category: knowledge
+category: works
 gated: false
 required:
   type: literal:work
@@ -12,6 +12,11 @@ optional:
   aliases: list
   archived: bool
   citations: list
+  citekey: str
+  csl_json: map
   description: str
   evidence_set: list
+  identifiers: map
+  source_type: str
+  source_sha256: str
   x: map

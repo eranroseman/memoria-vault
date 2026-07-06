@@ -18,11 +18,11 @@ navigation.
 
 | Surface | Dashboard | File | Shows |
 | --- | --- | --- | --- |
-| Queue | Inbox | `spaces/inbox.md` | Daily attention queue (`projection: queue`), reached from the rail's *Now*: compact in-process Activity first, then `Needs me`. |
-| Maintenance | Maintenance | `spaces/maintenance.md` | Weekly structural-debt collection (`projection: maintenance`): drift watch, loose ends, queue state, and new-this-week digest. |
-| Space | Library | `spaces/library.md` | Source intake space: reading pipeline, discuss queue, and checked Works. |
-| Space | Knowledge | `spaces/knowledge.md` | Synthesis space: checked note status, open questions, contradictions, hubs, and patterns. |
-| Space | Project | `spaces/project.md` | Project steering space: active projects, refutation-stamp gate, saturation, and project gaps. |
+| Queue | Inbox | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
+| Maintenance | Maintenance | `system/dashboards/` | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
+| Corpus | Library | `works/`, `sources/`, `bibliography.bib` | Source intake, source notes, checked Work bundles, and bibliography projection. |
+| Corpus | Knowledge | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
+| Corpus | Project | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
 | Runtime ops | Audit log | `system/dashboards/audit-log.md` | `system/logs/audit.jsonl` — recent writes (each view row-capped, not time-windowed); unhandled denies -> flag. |
 | Runtime ops | Eval trend | `system/dashboards/eval-trend.md` | Quarterly vault-eval capability scores (recall@k, support-rate, FAMA-clean) from `system/metrics/eval/runs.jsonl` — diagnostic, never gating. |
@@ -43,7 +43,7 @@ governed by the decision that [standalone catalog is the citation authority](htt
 
 | Base | Lives at | View over |
 | --- | --- | --- |
-| `knowledge.base` | `knowledge/views/` | Work, note, hub, and project Concepts by home. Verdicts stay in SQLite/read API. |
+| Optional adapter views | Adapter-owned profile files | Work, source-note, note, hub, and project Concepts by home. Verdicts stay in SQLite/read API. |
 
 ## Verdict band (Maintenance drift watch)
 

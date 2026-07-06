@@ -63,7 +63,7 @@ silent drift.
 | User services die on logout | The VPS runtime must keep user timers alive across SSH logout. |
 | Secrets drift between hosts | Provider and optional-adapter config must be copied through an explicit operator-owned secret process. |
 | Two dispatchers run at once | The topology requires a single active dispatcher per vault. |
-| Bibliography projection sync is partial | `references.bib` needs a worker-owned regeneration path, not a half-written sync read. |
+| Bibliography projection sync is partial | `bibliography.bib` needs a worker-owned regeneration path, not a half-written sync read. |
 
 ## Related
 

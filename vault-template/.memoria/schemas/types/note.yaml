@@ -1,9 +1,10 @@
 type: note
-category: knowledge
+category: notes
 gated: false
 enums:
   mode: [claim, question]
   question_status: [open, resolved]
+  certainty: [reported, contested, unknown]
 required:
   type: literal:note
   id: ulid
@@ -23,9 +24,12 @@ optional:
   question_status: enum:question_status
   quote: str
   source_id: str
-  temporal_scope: map
+  temporal_scope: str
   tense: str
   topics: list
   qualifier: str
+  certainty: enum:certainty
+  superseded: bool
+  reading: str
   anchors: list
   x: map

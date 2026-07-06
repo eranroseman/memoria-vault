@@ -10,7 +10,11 @@ allowed_paths:
 - catalog/
 - inbox/
 - journal/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - system/vocabulary.md
 allowed_network: []
 runner:

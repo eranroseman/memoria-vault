@@ -15,7 +15,7 @@ records and traces the accepted edit.
 
 ## Prerequisites
 
-- At least two checked notes under `knowledge/notes/`
+- At least two checked notes under `notes/`
 - The target relationship is your judgment, not an automatic promotion
 
 ## Steps
@@ -38,8 +38,8 @@ Run the link command with the starting note path, link type, and target path. Th
 worker records the journal row and commits the checked note update.
 
 ```bash
-memoria link --workspace <vault> knowledge/notes/receptivity-varies-by-burden.md \
-  knowledge/notes/receptivity-decreases-under-high-cognitive-load.md --rel contradicts
+memoria link --workspace <vault> notes/receptivity-varies-by-burden.md \
+  notes/receptivity-decreases-under-high-cognitive-load.md --rel contradicts
 ```
 
 For a direct PI edit, extend the note's `links:` map:
@@ -48,13 +48,13 @@ For a direct PI edit, extend the note's `links:` map:
 links:
   supports: []
   contradicts:
-    - knowledge/notes/receptivity-decreases-under-high-cognitive-load.md
+    - notes/receptivity-decreases-under-high-cognitive-load.md
 ```
 
 Both keys can carry lists — a claim may support one claim and contradict another.
 
 Plain-editor shorthand is also available: writing
-`[[supports::knowledge/notes/target.md]]` in a checked Concept body creates an
+`[[supports::notes/target.md]]` in a checked Concept body creates an
 unchecked Inbox prompt for review. It does not update `links:` until you curate
 it; a bare `[[wikilink]]` never becomes a `supports`, `contradicts`, or
 `extends` edge automatically.

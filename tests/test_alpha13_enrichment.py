@@ -221,7 +221,7 @@ def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) 
     assert done["text_status"] == "full-text"
     assert done["content_path"].startswith(".memoria/blobs/source-content/source-alpha/")
     assert not (vault / "catalog/sources/source-alpha/source.md").exists()
-    assert not (vault / "references.bib").exists()
+    assert not (vault / "bibliography.bib").exists()
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT title, doi, check_status, text_status, content_path FROM catalog_sources"
@@ -402,8 +402,8 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert done is not None
     assert done["status"] == "done"
     assert done["enrichment_status"] == "enriched"
-    assert done["references_path"] == "references.bib"
-    assert "@article{alpha2026," in (vault / "references.bib").read_text(encoding="utf-8")
+    assert done["references_path"] == "bibliography.bib"
+    assert "@article{alpha2026," in (vault / "bibliography.bib").read_text(encoding="utf-8")
     with state.connect(vault) as conn:
         source = conn.execute(
             "SELECT check_status, provider_coverage, csl_json FROM catalog_sources"
@@ -418,7 +418,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
             "SELECT namespace, value FROM external_ids ORDER BY namespace, value"
         ).fetchall()
         materialization = conn.execute(
-            "SELECT materialization_status FROM outputs WHERE output_id = 'references.bib'"
+            "SELECT materialization_status FROM outputs WHERE output_id = 'bibliography.bib'"
         ).fetchone()
         graph_edges = conn.execute(
             "SELECT relation_type, target_id FROM work_graph_edges ORDER BY relation_type, target_id"
@@ -477,7 +477,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     assert committed == {
         *done["discovery_candidate_paths"],
         state.JOURNAL_HEAD_REL,
-        "references.bib",
+        "bibliography.bib",
     }
 
 
@@ -503,7 +503,7 @@ def test_enrich_source_replays_provider_payload_blobs(tmp_path: Path) -> None:
             "SELECT provider, normalized_json FROM provider_payloads ORDER BY provider"
         ).fetchall()
         projection = conn.execute(
-            "SELECT output_sha256 FROM outputs WHERE output_id = 'references.bib'"
+            "SELECT output_sha256 FROM outputs WHERE output_id = 'bibliography.bib'"
         ).fetchone()
         [payload_row] = conn.execute(
             "SELECT raw_path FROM provider_payloads WHERE provider = 'openalex'"
@@ -614,8 +614,8 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
             "SELECT check_status, text_status FROM catalog_sources WHERE source_id = 'source-alpha'"
         ).fetchone()
     assert tuple(row) == ("unchecked", "abstract-only")
-    assert not (vault / "references.bib").exists()
-    assert not (vault / "knowledge/works/source-alpha.md").exists()
+    assert not (vault / "bibliography.bib").exists()
+    assert not (vault / "works/source-alpha/digest.md").exists()
 
 
 def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:

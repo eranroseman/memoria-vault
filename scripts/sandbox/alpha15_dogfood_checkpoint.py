@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report alpha.15 dogfood checkpoint state for an existing workspace."""
+"""Report alpha.16 dogfood checkpoint state for an existing workspace."""
 
 from __future__ import annotations
 
@@ -57,10 +57,10 @@ def snapshot_workspace(workspace: Path) -> dict[str, Any]:
         "model_call_count": _journal_event_count(workspace, "model_call"),
         "final_state": {
             "has_checked_work": bool(checked_works),
-            "has_checked_digest": concept_counts.get("work", {}).get("checked", 0) > 0,
+            "has_checked_digest": concept_counts.get("digest", {}).get("checked", 0) > 0,
             "has_checked_note": concept_counts.get("note", {}).get("checked", 0) > 0,
             "has_project": sum(concept_counts.get("project", {}).values()) > 0,
-            "has_references_bib": (workspace / "references.bib").is_file(),
+            "has_bibliography_bib": (workspace / "bibliography.bib").is_file(),
         },
     }
 

@@ -24,11 +24,12 @@ The mechanical layer is the catalog source row: capture populates bibliographic
 facts, identifiers, hashes, source text paths, and source-derived aspects. These
 are derivable from the source metadata and existing corpus without PI judgment.
 
-The knowledge layer is checked `work`, `note`, `hub`, and `project` Concepts
-under `knowledge/`. Work records hold machine-owned source summaries; notes,
-hubs, and project curation carry PI judgment. A useful note captures the thesis,
-the key findings that will actually be cited, and the source's relevance to the
-research direction.
+The knowledge layer is checked `work`, `digest`, `source-note`, `note`, `hub`,
+and `project` Concepts under the alpha.16 corpus roots. Work records and digests
+hold machine-owned source summaries; source-notes, notes, hubs, and project
+curation carry PI judgment. A useful note captures the thesis, the key findings
+that will actually be cited, and the source's relevance to the research
+direction.
 
 The Critique section is where source work earns its place in a knowledge system
 rather than a bibliography. A source summary without critical engagement — what

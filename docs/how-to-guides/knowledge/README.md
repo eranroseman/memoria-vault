@@ -8,13 +8,14 @@ permalink: /how-to-guides/knowledge/
 
 # Knowledge
 
-Build durable synthesis. Alpha.15 uses checked Concepts under `knowledge/`;
-machine-written candidates become visible only after the worker checks them, and
-PI edits are direct then observed/backfilled.
+Build durable synthesis. Alpha.16 uses checked Concepts under `notes/`, `hubs/`,
+`works/`, `sources/`, and `projects/`; machine-written candidates become visible
+only after the worker checks them, and PI edits are direct then
+observed/backfilled.
 
 | Guide | What it covers |
 | --- | --- |
 | [Link checked notes](link-checked-notes.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
-| [Build a hub](build-a-hub.md) | Curate a checked hub under `knowledge/hubs/` |
+| [Build a hub](build-a-hub.md) | Curate a checked hub under `hubs/` |
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |

@@ -6,7 +6,11 @@ operation_id: render-project-argument-canvas
 allowed_tools:
 - projection_writer
 allowed_paths:
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - journal/
 allowed_network: []
 runner:

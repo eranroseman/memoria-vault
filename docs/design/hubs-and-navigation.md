@@ -26,7 +26,7 @@ A hub adds perspective a query cannot produce: framing, curation, and a diagnosi
 
 ## Why curation can't be delegated
 
-Hubs live under `knowledge/hubs/`, a review-gated Concept home: a machine write
+Hubs live under `hubs/`, a review-gated Concept home: a machine write
 there degrades to a proposal ([Document types and epistemic roles](../explanation/knowledge/document-types.md), [Wikilink and link conventions](../reference/wikilink-and-link-conventions.md)). That follows from what a hub is for. The curation *is* the hub: framing, membership, and "why these belong together" annotations. A generated list that looks curated is worse than no hub because it asks the reader to trust organization no one performed ([Common pitfalls](../explanation/knowledge/common-pitfalls.md)).
 
 So the engine stops at the threshold of judgment. A gap-analysis operation may

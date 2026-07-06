@@ -132,7 +132,7 @@ def check_evidence_integrity(
         frontmatter = read_frontmatter(path)
         if not _is_checked_concept(vault, rel):
             continue
-        if frontmatter.get("type") not in {"work", "note"}:
+        if frontmatter.get("type") not in {"work", "digest", "note"}:
             continue
         for evidence_rel in _evidence_refs(frontmatter):
             status = _evidence_status(vault, evidence_rel)
@@ -862,7 +862,7 @@ def check_contradiction_links(
     for path in iter_markdown(vault):
         rel = path.relative_to(vault).as_posix()
         frontmatter = read_frontmatter(path)
-        if frontmatter.get("type") != "work" or not _is_checked_concept(vault, rel):
+        if frontmatter.get("type") not in {"work", "digest"} or not _is_checked_concept(vault, rel):
             continue
         contradictions = frontmatter.get("contradictions")
         if not isinstance(contradictions, list):
@@ -1896,11 +1896,11 @@ def _link_ref(value: str) -> str:
     if raw.startswith("[[") and raw.endswith("]]"):
         raw = raw[2:-2].split("|", 1)[0].strip()
     rel = _concept_rel(raw)
-    if rel.startswith(("knowledge/", "capabilities/", "catalog/entities/")) and not rel.endswith(
+    if rel.startswith(("works/", "sources/", "notes/", "hubs/", "projects/")) and not rel.endswith(
         ".md"
     ):
         rel = f"{rel}.md"
-    if rel.endswith(".md") or rel.startswith(("catalog/", "knowledge/", "capabilities/")):
+    if rel.endswith(".md") or rel.startswith("catalog/"):
         return rel
     return ""
 

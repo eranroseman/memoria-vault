@@ -19,7 +19,7 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
@@ -506,7 +506,7 @@ def note_curation_status(vault: Path, concept_id: str) -> str:
     status = ""
     with connect(vault) as conn:
         rows = conn.execute("SELECT payload_json FROM journal_events ORDER BY event_id").fetchall()
-    # ponytail: journal scan is fine for alpha.15; project if candidate volume matters.
+    # ponytail: journal scan is fine for alpha.16; project if candidate volume matters.
     for row in rows:
         try:
             payload = json.loads(row["payload_json"])
@@ -1139,12 +1139,47 @@ def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
 
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
+    if current == 4:
+        _migrate_v4_to_v5(conn)
+        current = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if current not in {0, SCHEMA_VERSION}:
         raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if applied != SCHEMA_VERSION:
         raise RuntimeError(f"Memoria DB schema initialization failed: {applied}")
+
+
+def _migrate_v4_to_v5(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        DROP VIEW IF EXISTS concept_status;
+        ALTER TABLE concepts RENAME TO concepts_v4;
+        CREATE TABLE concepts (
+            concept_id TEXT PRIMARY KEY,
+            concept_type TEXT NOT NULL
+                CHECK (concept_type IN (
+                    'source', 'source-note', 'work', 'digest', 'note', 'hub', 'capability',
+                    'operation', 'skill', 'adapter', 'workflow', 'person',
+                    'organization', 'venue', 'project'
+                )),
+            store TEXT NOT NULL CHECK (store IN ('db', 'file'))
+        );
+        INSERT INTO concepts(concept_id, concept_type, store)
+        SELECT concept_id, concept_type, store
+        FROM concepts_v4;
+        DROP TABLE concepts_v4;
+        CREATE VIEW concept_status AS
+        SELECT
+            c.concept_id,
+            c.concept_type,
+            c.store,
+            COALESCE(v.check_status, 'unchecked') AS check_status
+        FROM concepts c
+        LEFT JOIN concept_verdicts v ON v.concept_id = c.concept_id;
+        PRAGMA user_version = 5;
+        """
+    )
 
 
 def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str, Any]) -> None:

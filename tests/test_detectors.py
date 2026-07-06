@@ -27,21 +27,21 @@ def test_detectors():
             for d in (
                 "notes/fleeting",
                 "inbox/_answers",
-                "knowledge/notes",
-                "knowledge/hubs",
-                "knowledge/projects/proj",
+                "notes",
+                "hubs",
+                "projects/proj",
                 "spaces",
                 "system/dashboards",
                 "system/templates",
             ):
                 (v / d).mkdir(parents=True, exist_ok=True)
 
-            (v / "knowledge/notes/good.md").write_text(
+            (v / "notes/good.md").write_text(
                 "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
                 "tags: []\nlinks: {}\ntitle: Good\n---\nA note. [[good]]\n",
                 encoding="utf-8",
             )
-            (v / "knowledge/notes/bad.md").write_text(
+            (v / "notes/bad.md").write_text(
                 "---\ntype: note\n---\nNote with a [[ghost]] link.\n",
                 encoding="utf-8",
             )
@@ -49,7 +49,7 @@ def test_detectors():
                 "---\ntitle: Library\nprojection: space\n---\n# Library\n",
                 encoding="utf-8",
             )
-            (v / "knowledge/notes/notes.md.bak").write_text("x", encoding="utf-8")
+            (v / "notes/notes.md.bak").write_text("x", encoding="utf-8")
             fl = v / "notes/fleeting/old.md"
             fl.write_text("idea", encoding="utf-8")
             old = time.time() - 8 * 86400
@@ -60,12 +60,12 @@ def test_detectors():
             ad.write_text("draft answer", encoding="utf-8")
             old_ad = time.time() - 100 * 86400
             os.utime(ad, (old_ad, old_ad))
-            (v / "knowledge/notes/oldnote.md").write_text(
+            (v / "notes/oldnote.md").write_text(
                 "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAW\n"
                 "tags: []\nlinks: {}\ntitle: Old\nstatus: superseded\n---\nOld note.\n",
                 encoding="utf-8",
             )
-            (v / "knowledge/projects/proj/project.md").write_text(
+            (v / "projects/proj/project.md").write_text(
                 "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAX\n"
                 "tags: []\nlinks: {}\ntitle: P\ndescription: Project\n---\n"
                 "We still rely on [[oldnote]] here.\n",
@@ -80,17 +80,17 @@ def test_detectors():
                 "---\ncreated: 2026-01-01\ncssclasses:\n  - dashboard\n---\n# Home\n",
                 encoding="utf-8",
             )
-            (v / "knowledge/notes/tablelink.md").write_text(
+            (v / "notes/tablelink.md").write_text(
                 "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAY\n"
                 "tags: []\nlinks: {}\ntitle: Table\n---\n"
                 "| col | [[good\\|Good]] |\n",
                 encoding="utf-8",
             )
             (v / "system/dashboards/d.md").write_text(
-                '```dataview\nTABLE check_status, projct\nFROM "knowledge"\nSORT file.mtime DESC\n```\n',
+                '```dataview\nTABLE check_status, projct\nFROM "notes"\nSORT file.mtime DESC\n```\n',
                 encoding="utf-8",
             )
-            (v / "knowledge/hubs/stray-note.md").write_text(
+            (v / "hubs/stray-note.md").write_text(
                 "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAZ\n"
                 "tags: []\nlinks: {}\ntitle: Stray\n---\nWrong home.\n",
                 encoding="utf-8",
@@ -108,8 +108,8 @@ def test_detectors():
             (v / "system/logs").mkdir(parents=True, exist_ok=True)
             import hashlib as _hashlib
 
-            (v / "knowledge/projects/x").mkdir(parents=True, exist_ok=True)
-            (v / "knowledge/projects/x/ok.md").write_text("ok body", encoding="utf-8")
+            (v / "projects/x").mkdir(parents=True, exist_ok=True)
+            (v / "projects/x/ok.md").write_text("ok body", encoding="utf-8")
             _ok_hash = "sha256:" + _hashlib.sha256(b"ok body").hexdigest()
             (v / "system/logs/audit.jsonl").write_text(
                 "\n".join(
@@ -120,7 +120,7 @@ def test_detectors():
                             "timestamp": _ts(2),
                             "actor": "adapter",
                             "action": "write",
-                            "path": "knowledge/projects/x/lost.md",
+                            "path": "projects/x/lost.md",
                             "request_id": "REQ-LOST",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "a" * 64,
@@ -130,7 +130,7 @@ def test_detectors():
                             "timestamp": _ts(2),
                             "actor": "adapter",
                             "action": "write",
-                            "path": "knowledge/projects/x/ok.md",
+                            "path": "projects/x/ok.md",
                             "request_id": "REQ-OK",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "b" * 64,
@@ -139,7 +139,7 @@ def test_detectors():
                             "timestamp": _ts(2),
                             "actor": "adapter",
                             "action": "write",
-                            "path": "knowledge/projects/x/ok.md",
+                            "path": "projects/x/ok.md",
                             "request_id": "REQ-OK",
                             "decision": "write_complete",
                             "before_hash": "sha256:" + "b" * 64,
@@ -150,7 +150,7 @@ def test_detectors():
                             "timestamp": _ts(0.17),
                             "actor": "adapter",
                             "action": "write",
-                            "path": "knowledge/projects/x/fresh.md",
+                            "path": "projects/x/fresh.md",
                             "request_id": "REQ-FRESH",
                             "decision": "allow_with_log",
                             "before_hash": "sha256:" + "d" * 64,
@@ -205,8 +205,8 @@ def test_detectors():
                 not any("home.md" in x.path for x in by("schema-check")),
             )
             check(
-                "schema-check exempts navigation spaces",
-                not any("spaces/library.md" in x.path for x in by("schema-check")),
+                "schema-check flags retired spaces",
+                any("spaces/library.md" in x.path for x in by("schema-check")),
             )
             check(
                 "dashboard-field-drift flags 'projct'",
@@ -234,11 +234,11 @@ def test_detectors():
             )
             check(
                 "misplaced-note flags note under the wrong knowledge home",
-                any("knowledge/hubs/stray-note.md" in x.path for x in by("misplaced-note")),
+                any("hubs/stray-note.md" in x.path for x in by("misplaced-note")),
             )
             check(
                 "misplaced-note ignores correctly-placed note",
-                not any("knowledge/notes/good.md" in x.path for x in by("misplaced-note")),
+                not any("notes/good.md" in x.path for x in by("misplaced-note")),
             )
             check(
                 "misplaced-note flags stray top-level folder",
@@ -249,13 +249,13 @@ def test_detectors():
                 not any(x.path == ".githooks" for x in by("misplaced-note")),
             )
             check(
-                "misplaced-note ignores spaces root",
-                not any(x.path == "spaces" for x in by("misplaced-note")),
+                "misplaced-note flags retired spaces root",
+                any(x.path == "spaces" for x in by("misplaced-note")),
             )
             check(
                 "audit-unpaired-writes flags the stale unpaired allow",
                 any(
-                    x.path == "knowledge/projects/x/lost.md" and "REQ-LOST" in x.message
+                    x.path == "projects/x/lost.md" and "REQ-LOST" in x.message
                     for x in by("audit-unpaired-writes")
                 ),
             )
@@ -420,8 +420,8 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
         "## topics\n",
         encoding="utf-8",
     )
-    (v / "knowledge/notes").mkdir(parents=True)
-    (v / "knowledge/notes/off-topic.md").write_text(
+    (v / "notes").mkdir(parents=True)
+    (v / "notes/off-topic.md").write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB0\n"
         "tags: []\nlinks: {}\ntitle: Off topic\ntopics: [not-a-topic]\n---\n",
         encoding="utf-8",
@@ -433,8 +433,8 @@ def test_schema_check_flags_off_vocabulary_values(tmp_path):
 
 
 def _topic_note(v, name, topics):
-    (v / "knowledge/notes").mkdir(parents=True, exist_ok=True)
-    (v / f"knowledge/notes/{name}.md").write_text(
+    (v / "notes").mkdir(parents=True, exist_ok=True)
+    (v / f"notes/{name}.md").write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\n"
         f"tags: []\nlinks: {{}}\ntitle: {name}\ntopics: {topics}\n---\nBody.\n",
         encoding="utf-8",
@@ -458,8 +458,8 @@ def test_hub_threshold(tmp_path):
     f = _m.hub_threshold(v, threshold=3)
     assert len(f) == 1 and f[0].severity == "LOW" and "sleep" in f[0].message.lower()
     # an existing hub for the topic suppresses the alert
-    (v / "knowledge/hubs").mkdir(parents=True, exist_ok=True)
-    (v / "knowledge/hubs/sleep.md").write_text(
+    (v / "hubs").mkdir(parents=True, exist_ok=True)
+    (v / "hubs/sleep.md").write_text(
         "---\ntype: hub\nid: hubs/sleep\ncheck_status: checked\nstanding: current\n"
         "links: {}\ntitle: Sleep\ndescription: Sleep topic\n---\n",
         encoding="utf-8",
@@ -502,9 +502,9 @@ def test_skeleton_drift(tmp_path):
     (v / ".git").mkdir()
     assert _m.skeleton_drift(v) == []
     # remove one skeleton dir -> MEDIUM finding for exactly that path
-    (v / "system/logs/sessions").rmdir()
+    (v / "system/incidents").rmdir()
     f = _m.skeleton_drift(v)
-    assert [x.path for x in f] == ["system/logs/sessions"]
+    assert [x.path for x in f] == ["system/incidents"]
     assert f[0].severity == "MEDIUM" and f[0].detector == "skeleton-drift"
 
 

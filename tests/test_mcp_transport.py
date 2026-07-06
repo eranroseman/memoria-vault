@@ -66,7 +66,7 @@ def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.Mon
             "--workspace",
             str(workspace),
             "--read-scope",
-            "knowledge/notes",
+            "notes",
             "--actor",
             "review-agent",
         ]
@@ -75,7 +75,7 @@ def test_cli_mcp_passes_scope_and_actor(workspace: Path, monkeypatch: pytest.Mon
     assert rc == 0
     assert captured == {
         "workspace": workspace,
-        "read_scope": ["knowledge/notes"],
+        "read_scope": ["notes"],
         "actor": "review-agent",
     }
 
@@ -94,7 +94,7 @@ def test_mcp_app_requires_non_root_read_scope(workspace: Path) -> None:
 def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["knowledge/notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
 
     assert sorted(tool.name for tool in app._tool_manager.list_tools()) == [
         "attention",
@@ -114,7 +114,7 @@ def test_mcp_tool_roster_is_closed(workspace: Path) -> None:
 
 def test_mcp_public_call_tool_serializes_structured_result(workspace: Path) -> None:
     pytest.importorskip("mcp")
-    app = make_mcp_app(workspace, read_scope=["knowledge/notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
 
     content, structured = asyncio.run(app.call_tool("status", {}))
 
@@ -150,14 +150,14 @@ def test_mcp_read_tools_pass_session_scope(
     ):
         monkeypatch.setattr(mcp_transport.engine_api, name, record(name))
 
-    app = make_mcp_app(workspace, read_scope=["knowledge/notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
     for tool_name, arguments in {
         "requests": {},
         "request": {"request_id": "r1"},
         "attention": {},
         "attention_card": {"path": "inbox/a.md"},
         "concepts": {},
-        "concept": {"target": "knowledge/notes/a.md"},
+        "concept": {"target": "notes/a.md"},
         "work": {"work_id": "w1"},
         "journal": {},
         "journal_event": {"event_id": 1},
@@ -165,15 +165,15 @@ def test_mcp_read_tools_pass_session_scope(
         _call(app, tool_name, **arguments)
 
     assert seen == [
-        ("read_requests", ["knowledge/notes"]),
-        ("read_request", ["knowledge/notes"]),
-        ("read_attention", ["knowledge/notes"]),
-        ("read_attention_card", ["knowledge/notes"]),
-        ("read_concepts", ["knowledge/notes"]),
-        ("read_concept", ["knowledge/notes"]),
-        ("read_work", ["knowledge/notes"]),
-        ("read_journal", ["knowledge/notes"]),
-        ("read_journal_event", ["knowledge/notes"]),
+        ("read_requests", ["notes"]),
+        ("read_request", ["notes"]),
+        ("read_attention", ["notes"]),
+        ("read_attention_card", ["notes"]),
+        ("read_concepts", ["notes"]),
+        ("read_concept", ["notes"]),
+        ("read_work", ["notes"]),
+        ("read_journal", ["notes"]),
+        ("read_journal_event", ["notes"]),
     ]
 
 
@@ -181,28 +181,28 @@ def test_mcp_reads_are_engine_scoped(workspace: Path) -> None:
     pytest.importorskip("mcp")
     tool_error = pytest.importorskip("mcp.server.fastmcp.exceptions").ToolError
 
-    _write_note(workspace, "knowledge/notes/alpha.md", "Alpha")
-    _write_note(workspace, "knowledge/notes/beta.md", "Beta")
-    app = make_mcp_app(workspace, read_scope=["knowledge/notes/alpha.md"], actor="agent")
+    _write_note(workspace, "notes/alpha.md", "Alpha")
+    _write_note(workspace, "notes/beta.md", "Beta")
+    app = make_mcp_app(workspace, read_scope=["notes/alpha.md"], actor="agent")
 
     listed = _call(app, "concepts")
 
-    assert [row["path"] for row in listed["concepts"]] == ["knowledge/notes/alpha.md"]
+    assert [row["path"] for row in listed["concepts"]] == ["notes/alpha.md"]
     with pytest.raises(tool_error, match="target not found"):
-        _call(app, "concept", target="knowledge/notes/beta.md")
+        _call(app, "concept", target="notes/beta.md")
 
 
 def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
     pytest.importorskip("mcp")
 
-    app = make_mcp_app(workspace, read_scope=["knowledge/notes"], actor="agent")
+    app = make_mcp_app(workspace, read_scope=["notes"], actor="agent")
 
     response = _call(
         app,
         "operation_run",
         operation_id="create-concept",
         payload={
-            "target_path": "knowledge/notes/mcp.md",
+            "target_path": "notes/mcp.md",
             "content": "---\ntype: note\ntitle: MCP\ntags: []\nlinks: {}\n---\nBody.\n",
             "concept_type": "note",
         },
@@ -225,7 +225,7 @@ def test_mcp_operation_run_uses_request_envelope(workspace: Path) -> None:
         "surface": "memoria-mcp",
         "command": "mcp:create-concept",
     }
-    assert json.loads(row["args_json"])["target_path"] == "knowledge/notes/mcp.md"
+    assert json.loads(row["args_json"])["target_path"] == "notes/mcp.md"
 
 
 def _call(app: Any, name: str, **arguments: Any) -> dict[str, Any]:

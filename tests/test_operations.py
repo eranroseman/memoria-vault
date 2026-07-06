@@ -147,7 +147,7 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         "Alpha content about framing, methods, outcomes, gaps, and impact.",
         machine="capture-machine",
     )
-    curated_hub = vault / "knowledge/hubs/framing.md"
+    curated_hub = vault / "hubs/framing.md"
     curated_hub.parent.mkdir(parents=True)
     curated_text = (
         "---\ntype: hub\ncheck_status: checked\ntitle: Framing\n"
@@ -163,30 +163,30 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         run_id="compile-alpha",
     )
 
-    digest = vault / "knowledge/works/source-alpha.md"
+    digest = vault / "works/source-alpha/digest.md"
     digest_fm = read_frontmatter(digest)
-    assert digest_fm["type"] == "work"
+    assert digest_fm["type"] == "digest"
     assert "check_status" not in digest_fm
     assert digest_fm["work_id"] == "source-alpha"
-    assert state.concept_check_status(vault, "knowledge/works/source-alpha.md") == "checked"
+    assert state.concept_check_status(vault, "works/source-alpha/digest.md") == "checked"
     assert result["derived"]["inputs"][0]["id"] == "catalog/sources/source-alpha"
     assert result["hub_paths"] == [
-        "knowledge/hubs/methods.md",
-        "knowledge/hubs/outcomes.md",
-        "knowledge/hubs/gaps.md",
-        "knowledge/hubs/impact.md",
+        "hubs/methods.md",
+        "hubs/outcomes.md",
+        "hubs/gaps.md",
+        "hubs/impact.md",
     ]
     assert len(result["hub_suggestions"]) == 1
     assert curated_hub.read_text(encoding="utf-8") == curated_text
 
-    staged_hub = vault / ".memoria/staging/knowledge/hubs/framing.md"
+    staged_hub = vault / ".memoria/staging/hubs/framing.md"
     assert staged_hub.is_file()
     assert read_frontmatter(staged_hub)["tags"] == ["suggestion"]
-    promoted_hub = vault / "knowledge/hubs/methods.md"
+    promoted_hub = vault / "hubs/methods.md"
     promoted_hub_fm = read_frontmatter(promoted_hub)
     assert "check_status" not in promoted_hub_fm
     assert promoted_hub_fm["tag"] == "methods"
-    assert state.concept_check_status(vault, "knowledge/hubs/methods.md") == "checked"
+    assert state.concept_check_status(vault, "hubs/methods.md") == "checked"
 
     events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
     assert [event["event"] for event in events] == [
@@ -212,16 +212,16 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert events[1]["model_params"] == {"temperature": 0}
     assert events[1]["prompt_hash"].startswith("sha256:")
     assert events[-1]["suggestions"] == result["hub_suggestions"]
-    assert events[-1]["outputs"] == ["knowledge/works/source-alpha.md", *result["hub_paths"]]
+    assert events[-1]["outputs"] == ["works/source-alpha/digest.md", *result["hub_paths"]]
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         state.JOURNAL_HEAD_REL,
-        "knowledge/works/source-alpha.md",
-        "knowledge/hubs/gaps.md",
-        "knowledge/hubs/impact.md",
-        "knowledge/hubs/methods.md",
-        "knowledge/hubs/outcomes.md",
+        "works/source-alpha/digest.md",
+        "hubs/gaps.md",
+        "hubs/impact.md",
+        "hubs/methods.md",
+        "hubs/outcomes.md",
     }
 
 
@@ -284,7 +284,7 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
 
     assert f"text_status is {text_status}" in str(exc.value)
     assert "attention_path is inbox/flag-digest-full-text-source-alpha.md" in str(exc.value)
-    assert not (vault / "knowledge/works/source-alpha.md").exists()
+    assert not (vault / "works/source-alpha/digest.md").exists()
     attention = vault / "inbox/flag-digest-full-text-source-alpha.md"
     attention_fm = read_frontmatter(attention)
     assert attention_fm["projection"] == "attention"
@@ -323,7 +323,7 @@ def test_compile_source_digest_rejects_unsupported_required_promotion_check(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/works/source-alpha.md").exists()
+    assert not (vault / "works/source-alpha/digest.md").exists()
 
 
 def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
@@ -341,7 +341,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
         vault,
         "source-alpha",
         "The PI cares about the methods caveat.",
-        project_id="knowledge/projects/project-alpha.md",
+        project_id="projects/project-alpha/project.md",
         machine="copi-machine",
     )
     result = compile_source_digest(
@@ -487,7 +487,7 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/works/source-alpha.md").exists()
+    assert not (vault / "works/source-alpha/digest.md").exists()
 
 
 def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
@@ -526,4 +526,4 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "knowledge/works/source-alpha.md").exists()
+    assert not (vault / "works/source-alpha/digest.md").exists()

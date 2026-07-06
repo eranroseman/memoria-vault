@@ -1,4 +1,4 @@
-"""Alpha.15 runtime-local gate replay."""
+"""Alpha.16 runtime-local gate replay."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ from memoria_vault.runtime.trusted_writer import (
 from tests.helpers import patch_pydantic_ai
 
 
-def test_alpha15_runtime_gate_replays_user_facing_commands(
+def test_alpha16_runtime_gate_replays_user_facing_commands(
     tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    workspace = tmp_path / "workspace-alpha15"
+    workspace = tmp_path / "workspace-alpha16"
     provider_replay = tmp_path / "providers.json"
     provider_replay.write_text(json.dumps(_provider_payloads()), encoding="utf-8")
     interview = tmp_path / "interview.json"
@@ -29,7 +29,7 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
             {
                 "prompt": "What matters?",
                 "response": "The PI cares about the methods caveat.",
-                "project_id": "knowledge/projects/project-alpha.md",
+                "project_id": "projects/project-alpha/project.md",
             }
         ),
         encoding="utf-8",
@@ -139,7 +139,7 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
         "--workspace",
         str(workspace),
         note_path,
-        "knowledge/notes/thesis.md",
+        "notes/thesis.md",
         "--rel",
         "supports",
         "--reason",
@@ -157,7 +157,7 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
         "--fixture",
         "crash-before-materialization",
     )
-    assert recovered["restored"] == ["knowledge/notes/crash-before-materialization.md"]
+    assert recovered["restored"] == ["notes/crash-before-materialization.md"]
 
     runner = _run_json(
         capsys,
@@ -185,7 +185,7 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
     )
     assert scan["quarantine"]["finding_count"] == 1
     assert scan["needs_check_count"] == 0
-    assert (workspace / ".memoria/quarantine/knowledge/_views/index.md").is_file()
+    assert (workspace / ".memoria/quarantine/index.md").is_file()
 
     _run_json(
         capsys,
@@ -246,7 +246,7 @@ def test_alpha15_runtime_gate_replays_user_facing_commands(
         "gate-project-ask",
     )
     assert project_answer["result"]["project_context"]["project_path"] == (
-        "knowledge/projects/project-alpha.md"
+        "projects/project-alpha/project.md"
     )
     export = _run_json(
         capsys,
@@ -351,31 +351,31 @@ def _write_project_fixture(workspace: Path) -> None:
         "description: Runtime gate project\n"
         "tags: []\n"
         "links: {}\n"
-        "thesis: knowledge/notes/thesis.md\n"
+        "thesis: notes/thesis.md\n"
         "---\n"
         "Body.\n"
     )
     note = "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\n---\nBody.\n"
     stage_concept(
         workspace,
-        "knowledge/projects/project-alpha.md",
+        "projects/project-alpha/project.md",
         project,
         operation="runtime-gate-fixture",
         machine="memoria-cli",
     )
-    promote_checked(workspace, "knowledge/projects/project-alpha.md", machine="memoria-cli")
+    promote_checked(workspace, "projects/project-alpha/project.md", machine="memoria-cli")
     stage_concept(
         workspace,
-        "knowledge/notes/thesis.md",
+        "notes/thesis.md",
         note,
         operation="runtime-gate-fixture",
         machine="memoria-cli",
     )
-    promote_checked(workspace, "knowledge/notes/thesis.md", machine="memoria-cli")
+    promote_checked(workspace, "notes/thesis.md", machine="memoria-cli")
     commit_writer_changes(
         workspace,
         "runtime gate project fixture",
-        ["knowledge/projects/project-alpha.md", "knowledge/notes/thesis.md"],
+        ["projects/project-alpha/project.md", "notes/thesis.md"],
         machine="memoria-cli",
     )
 

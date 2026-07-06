@@ -6,7 +6,11 @@ operation_id: analyze-project-argument
 allowed_tools:
 - read_checked_concepts
 allowed_paths:
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}

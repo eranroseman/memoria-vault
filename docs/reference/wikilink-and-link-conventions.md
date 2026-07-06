@@ -7,10 +7,10 @@ nav_order: 5
 
 # Wikilink and link conventions
 
-Alpha.15 has four knowledge Concept types: `work`, `note`, `hub`, and
-`project`. Wikilinks and `links:` express authored PI relationships between
-those Concepts. Catalog source/entity rows live in SQLite and provider payloads;
-they are not `source`, `paper`, `person`, or `venue` Concept files.
+Alpha.16 has file-backed Concept types for `work`, `digest`, `source-note`,
+`note`, `hub`, and `project`. Wikilinks and `links:` express authored PI
+relationships between those Concepts. Catalog source rows live in SQLite and
+provider payloads; they are not `paper`, `person`, or `venue` Concept files.
 
 ---
 
@@ -18,9 +18,9 @@ they are not `source`, `paper`, `person`, or `venue` Concept files.
 
 | Form | Example | Meaning |
 | --- | --- | --- |
-| Body wikilink | `[[knowledge/notes/receptivity.md]]` | Plain human reference; never becomes an argument edge by itself. |
-| Typed body shorthand | `[[supports::knowledge/notes/target.md]]` | Creates an unchecked edge-candidate attention item; the worker does not edit `links:` automatically. |
-| Frontmatter `links:` | `supports: [knowledge/notes/target.md]` | Authored argument edge accepted into the Concept frontmatter. |
+| Body wikilink | `[[notes/receptivity.md]]` | Plain human reference; never becomes an argument edge by itself. |
+| Typed body shorthand | `[[supports::notes/target.md]]` | Creates an unchecked edge-candidate attention item; the worker does not edit `links:` automatically. |
+| Frontmatter `links:` | `supports: [notes/target.md]` | Authored argument edge accepted into the Concept frontmatter. |
 | Hub tag membership | `tags: [jitai]` with hub `tag: jitai` | Mechanical topic membership; the hub body owns curation and ordering. |
 
 ---
@@ -40,7 +40,7 @@ Knowledge Concepts carry `links:` as the authored relationship map specified by
 ```yaml
 links:
   supports:
-    - knowledge/notes/target.md
+    - notes/target.md
   contradicts: []
   extends: []
 ```
@@ -79,7 +79,7 @@ hub
 project
   -> one-way project -> corpus references
   -> thesis role through the project schema
-  -> project exports under knowledge/projects/<project>/exports/
+  -> project exports under projects/<project>/exports/
 ```
 
 ---
@@ -97,10 +97,12 @@ navigation page.
 
 | Concept | Path shape | Example |
 | --- | --- | --- |
-| `work` | `knowledge/works/<slug>.md` | `personal-informatics-sensemaking.md` |
-| `note` | `knowledge/notes/<claim-or-question>.md` | `receptivity-decreases-under-high-burden.md` |
-| `hub` | `knowledge/hubs/<topic>.md` | `jitai.md` |
-| `project` | `knowledge/projects/<project>/project.md` | `knowledge/projects/dissertation/project.md` |
+| `work` | `works/<work-id>/record.md` | `works/personal-informatics-sensemaking/record.md` |
+| `digest` | `works/<work-id>/digest.md` | `works/personal-informatics-sensemaking/digest.md` |
+| `source-note` | `sources/<slug>.md` | `sources/interview-protocol.md` |
+| `note` | `notes/<claim-or-question>.md` | `receptivity-decreases-under-high-burden.md` |
+| `hub` | `hubs/<topic>.md` | `jitai.md` |
+| `project` | `projects/<project>/project.md` | `projects/dissertation/project.md` |
 
 The stable identity is the ULID `id`, not the filename. Renames are still rare:
 they churn links and require a scan/check pass.

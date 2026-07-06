@@ -88,7 +88,7 @@ def test_capture_source_populates_work_aspect_read_model(tmp_path: Path) -> None
             "memoria": {
                 "aspects": {
                     "key_idea": "Coordination work is visible in local traces.",
-                    "projected_impact": "Excluded from the alpha.15 aspect model.",
+                    "projected_impact": "Excluded from the alpha.16 aspect model.",
                 }
             },
         },
@@ -613,9 +613,9 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
     assert result["changed"] is True
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, "references.bib"}
+    assert committed == {state.JOURNAL_HEAD_REL, "bibliography.bib"}
 
-    (vault / "references.bib").write_text("stale\n", encoding="utf-8")
+    (vault / "bibliography.bib").write_text("stale\n", encoding="utf-8")
     assert not check_references_bib(vault)
 
 

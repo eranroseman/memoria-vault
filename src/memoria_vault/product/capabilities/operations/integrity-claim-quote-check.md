@@ -7,7 +7,11 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - journal/
 allowed_network: []
 runner:

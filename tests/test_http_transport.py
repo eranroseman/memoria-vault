@@ -111,20 +111,18 @@ def test_http_transport_reads_attention_view_spec(workspace: Path) -> None:
 
 
 def test_http_transport_passes_read_scope_to_engine_reads(workspace: Path) -> None:
-    _write_note(workspace, "knowledge/notes/alpha.md", "Alpha")
-    _write_note(workspace, "knowledge/notes/beta.md", "Beta")
+    _write_note(workspace, "notes/alpha.md", "Alpha")
+    _write_note(workspace, "notes/beta.md", "Beta")
 
-    response, http_status = _dispatch(
-        workspace, "GET", "/concepts?read_scope=knowledge/notes/alpha.md", dict
-    )
+    response, http_status = _dispatch(workspace, "GET", "/concepts?read_scope=notes/alpha.md", dict)
 
     assert http_status == HTTPStatus.OK
-    assert [row["path"] for row in response["concepts"]] == ["knowledge/notes/alpha.md"]
+    assert [row["path"] for row in response["concepts"]] == ["notes/alpha.md"]
     with pytest.raises(FileNotFoundError, match="target not found"):
         _dispatch(
             workspace,
             "GET",
-            "/concept?target=knowledge/notes/beta.md&read_scope=knowledge/notes/alpha.md",
+            "/concept?target=notes/beta.md&read_scope=notes/alpha.md",
             dict,
         )
 
@@ -142,7 +140,7 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
         lambda: {
             "operation_id": "create-concept",
             "payload": {
-                "target_path": "knowledge/notes/http.md",
+                "target_path": "notes/http.md",
                 "content": ("---\ntype: note\ntitle: HTTP note\ntags: []\nlinks: {}\n---\nBody.\n"),
                 "concept_type": "note",
             },
@@ -172,7 +170,7 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
         "surface": "memoria-http",
         "command": "http:create-concept",
     }
-    assert json.loads(row["args_json"])["target_path"] == "knowledge/notes/http.md"
+    assert json.loads(row["args_json"])["target_path"] == "notes/http.md"
 
 
 def test_http_transport_unknown_write_does_not_create_request(workspace: Path) -> None:

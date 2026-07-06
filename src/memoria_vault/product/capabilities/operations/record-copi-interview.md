@@ -7,7 +7,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/sources/
-- knowledge/projects/
+- projects/
 - journal/
 allowed_network: []
 runner:

@@ -75,7 +75,7 @@ without explicit permission.
   disposable caches may live in normal OS cache locations such as
   `~/.cache/pre-commit`; keep them untracked, and only place them under
   `~/memoria-vault/.cache` when a sandbox or local permission rule requires it.
-- Alpha.15's required surface is the `memoria` CLI plus the local workspace
+- Alpha.16's required surface is the `memoria` CLI plus the local workspace
   engine. Obsidian, Hermes, MCP, and installed profiles are optional adapter
   concerns only.
 - Test only against disposable workspaces under `~/memoria-vault/sandbox`; never use a
@@ -323,7 +323,7 @@ the manual security review and is a first line against the "never commit
 
 ## Platform & runtime facts
 
-- **Standalone baseline:** alpha.15 is a local `memoria` CLI/runtime workspace.
+- **Standalone baseline:** alpha.16 is a local `memoria` CLI/runtime workspace.
   Hermes, Obsidian, Zotero live APIs, installed profiles, and external adapter
   APIs are optional edges, not required product dependencies.
 - **Hermes adapter decisions:** if a future optional Hermes adapter is discussed,

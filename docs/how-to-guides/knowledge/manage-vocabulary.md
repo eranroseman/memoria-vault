@@ -64,15 +64,15 @@ to keep.
 
 ## Step 3 — Rename a term safely
 
-Renaming a vocabulary value across a fresh alpha.15 sandbox is a
+Renaming a vocabulary value across a fresh alpha.16 sandbox is a
 git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
 vocabulary-specific points:
 
 - **Also update `system/vocabulary.md`** in the same pass — the controlled list and the notes must move together.
 - **Your selector is a frontmatter or catalog metadata value**, so enumerate with
   `memoria ask`/read-API inspection, Obsidian global search, or `grep -rl
-  "old-term" knowledge/ system/` before editing Concepts. Use `memoria work
-  export` for catalog Work metadata.
+  "old-term" works/ sources/ notes/ hubs/ projects/ system/` before editing
+  Concepts. Use `memoria work export` for catalog Work metadata.
 
 ## Step 4 — Annual vocabulary review
 

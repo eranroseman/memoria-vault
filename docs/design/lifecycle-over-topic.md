@@ -10,8 +10,9 @@ nav_order: 20
 Two organizational decisions shape the vault: **a Concept's position in the
 system is its type, never its topic**, and **read state is record state, not a
 folder**. Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`knowledge/`, with SQLite-backed catalog state). Where a record
-stands for reading is `check_status`, not a path move.
+`folders.yaml` (`works/`, `sources/`, `notes/`, `hubs/`, and `projects/`, with
+SQLite-backed catalog state). Where a record stands for reading is
+`check_status`, not a path move.
 
 ---
 
@@ -19,9 +20,9 @@ stands for reading is `check_status`, not a path move.
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of checked bundle this is.
-Alpha.15 file-backed Concepts are Work, note, hub, and project; catalog Work
-records live in SQLite with blob-backed source content. Topics live in catalog
-metadata, Concept frontmatter facets, and authored links, following the
+Alpha.16 file-backed Concepts are work, digest, source-note, note, hub, and
+project; catalog source records live in SQLite with blob-backed source content.
+Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
 foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
@@ -29,8 +30,8 @@ foundations](intellectual-foundations.md#luhmanns-zettelkasten).
 
 ## Read state lives with the record
 The vault is organized by **category**
-([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): `knowledge/` holds
-Work, note, hub, and project Concepts, SQLite holds catalog working state, and
+([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): the alpha.16
+bundle roots hold file-backed Concepts, SQLite holds catalog working state, and
 packaged product data holds operation manifests. It never mixes lifecycle state
 into folder names. The full tree is catalogued in [On-disk layout](../reference/on-disk-layout.md).
 A note does not travel when the PI checks it; a catalog Work does not become a
@@ -64,8 +65,8 @@ cited it — *archive, never delete* with zero file churn.
 thing?" is a folder/type fact, and "what's it about?" is a facet query — three
 different questions, three different mechanisms, none overloaded onto the others.
 
-**The agent's permissions stay tractable.** Type homes such as `knowledge/notes/`
-and `knowledge/hubs/` are stable paths that never gain or lose members through state
+**The agent's permissions stay tractable.** Type homes such as `notes/`
+and `hubs/` are stable paths that never gain or lose members through state
 changes. The policy gate reasons about *where an agent may write*, and the answer
 never shifts under it mid-task.
 
@@ -83,7 +84,7 @@ encoded as **facets** on catalog Work rows and note Concepts:
 - `methodology` — a controlled vocabulary covering method and study design
 - `topics` on notes where the local schema supports them
 
-Topical *navigation* is built on top by **hubs** (`knowledge/hubs/`): curated
+Topical *navigation* is built on top by **hubs** (`hubs/`): curated
 notes that link the relevant Works and notes for an area, regardless of state or
 project. A hub is authored perspective over the graph, not a folder in disguise.
 

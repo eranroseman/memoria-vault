@@ -6,7 +6,7 @@ operation_id: curate-note-link
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- knowledge/notes/
+- notes/
 - journal/
 allowed_network: []
 runner:

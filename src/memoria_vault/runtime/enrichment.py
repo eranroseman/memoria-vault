@@ -292,7 +292,7 @@ def enrich_source(
         for edge in graph_edges
         if edge["relation_type"] in {"references", "related"}
     ]
-    references_path = "references.bib"
+    references_path = "bibliography.bib"
     references_text = render_references_bib(vault)
     write_text_durable(vault / references_path, references_text, create_parent=True)
     state.record_projection_output(
@@ -524,7 +524,7 @@ def _provider_payload(
     spec = _provider_spec(config, provider)
     timeout = float(spec.get("timeout_seconds") or 10)
     started = time.monotonic()
-    headers = {"User-Agent": "memoria-vault/0.1 alpha15"}
+    headers = {"User-Agent": "memoria-vault/0.1 alpha16"}
     header_env = spec.get("header_env")
     if isinstance(header_env, dict):
         for header, env_name in header_env.items():
@@ -636,7 +636,7 @@ def _fetch_discovered_full_text(policy: dict[str, Any], payloads: dict[str, dict
             require_allowed_network(policy, url)
         except PermissionError:
             continue
-        req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha15"})
+        req = request.Request(url, headers={"User-Agent": "memoria-vault/0.1 alpha16"})
         try:
             with request.urlopen(req, timeout=20) as resp:
                 raw = resp.read()

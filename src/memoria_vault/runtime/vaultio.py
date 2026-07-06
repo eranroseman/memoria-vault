@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
-UNIVERSAL_CONCEPT_BUNDLES = frozenset({"knowledge"})
-UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "work", "hub", "project"})
+UNIVERSAL_CONCEPT_BUNDLES = frozenset({"works", "sources", "notes", "hubs", "projects"})
+UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "work", "digest", "source-note", "hub", "project"})
 ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 RETIRED_FRONTMATTER_FIELDS = frozenset(
     {
@@ -99,7 +99,7 @@ def frontmatter_doc(frontmatter: dict[str, Any], body: str) -> str:
 def apply_universal_concept_frontmatter(
     frontmatter: dict[str, Any], rel_path: str
 ) -> dict[str, Any]:
-    """Add alpha.15 universal meaning fields for knowledge Concepts."""
+    """Add alpha.16 universal meaning fields for knowledge Concepts."""
     normalized = rel_path.replace("\\", "/")
     if not normalized.endswith(".md"):
         return frontmatter

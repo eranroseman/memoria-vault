@@ -145,7 +145,10 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
 def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
     if not rel.startswith(("works/", "graph-neighborhoods/")):
         return False
-    source = state.catalog_source(vault, Path(rel).stem)
+    source_id = _source_id_from_generated_path(rel)
+    if not source_id:
+        return False
+    source = state.catalog_source(vault, source_id)
     return bool(source and source.get("check_status") == "checked")
 
 
@@ -224,11 +227,17 @@ def _project_context(
     for path, _text, frontmatter in docs:
         if frontmatter.get("type") != "project":
             continue
-        path_id = path.removesuffix(".md")
+        path_id = (
+            path.removesuffix("/project.md")
+            if path.endswith("/project.md")
+            else path.removesuffix(".md")
+        )
+        project_slug = Path(path).parent.name if path.endswith("/project.md") else Path(path).stem
         aliases = {
             path,
             path_id,
             Path(path).stem,
+            project_slug,
             str(frontmatter.get("slug") or ""),
             str(frontmatter.get("title") or ""),
         }
@@ -336,7 +345,7 @@ def evaluate_bm25(
 
 
 def _is_searchable_frontmatter(frontmatter: dict[str, Any], *, include_stale: bool = False) -> bool:
-    if frontmatter.get("type") not in {"work", "note", "hub", "project"}:
+    if frontmatter.get("type") not in {"work", "digest", "note", "hub", "project"}:
         return False
     return include_stale or not _hard_staleness("", frontmatter)
 
@@ -382,7 +391,7 @@ def _bundle_roots(vault: Path) -> list[str]:
     return [
         normalize_path(root)
         for root in folders.get("bundle_roots") or []
-        if normalize_path(root) in {"catalog", "knowledge"}
+        if normalize_path(root) in {"works", "sources", "notes", "hubs", "projects"}
     ]
 
 
@@ -404,7 +413,7 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
         }
         docs.append(
             _generated_doc(
-                f"works/{safe_filename(source_id)}.md",
+                f"works/{safe_filename(source_id)}/fulltext.md",
                 work_frontmatter,
                 [
                     f"# {source['title']}",
@@ -441,6 +450,19 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
                 )
             )
     return docs
+
+
+def _source_id_from_generated_path(rel: str) -> str:
+    rel = normalize_path(rel)
+    if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
+        return Path(rel).stem
+    if rel.startswith("works/"):
+        parts = rel.split("/")
+        if len(parts) == 3 and parts[2] == "fulltext.md":
+            return parts[1]
+        if len(parts) == 2 and parts[1].endswith(".md"):
+            return Path(parts[1]).stem
+    return ""
 
 
 def _work_aspect_body(vault: Path, source_id: str) -> list[str]:

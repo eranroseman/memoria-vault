@@ -43,7 +43,7 @@ Common YAML errors:
 Obsidian masks the raw YAML in Properties view. Open the file in VS Code or Notepad++ to see exactly what's in the frontmatter block:
 
 ```powershell
-code "knowledge\notes\<note>.md"
+code "notes\<note>.md"
 ```
 
 **2. Locate and fix the malformed line.**
@@ -65,7 +65,7 @@ In Obsidian, run this Dataview query in a new note to confirm the repaired note
 is visible:
 
 ```dataview
-FROM "knowledge/notes"
+FROM "notes"
 WHERE file.name = "<note>"
 ```
 

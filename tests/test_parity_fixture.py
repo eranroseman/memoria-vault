@@ -1,4 +1,4 @@
-"""Alpha.15 user-facing parity fixture."""
+"""Alpha.16 user-facing parity fixture."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ def test_palette_actions_have_standalone_cli_parity(
         == 0
     )
     trace = json.loads(capsys.readouterr().out)
-    assert trace["result"]["project_path"] == "knowledge/projects/project-alpha.md"
+    assert trace["result"]["project_path"] == "projects/project-alpha/project.md"
     assert trace["result"]["relation_count"] == 1
 
     assert (
@@ -238,7 +238,7 @@ def _write_attention_fixture(workspace: Path) -> None:
             "attention_kind: flag\n"
             "attention_status: open\n"
             "routing_class: ask\n"
-            "target: knowledge/notes/palette.md\n"
+            "target: notes/palette.md\n"
             "---\n"
             "# Attention\n\nPalette parity fixture.\n",
             encoding="utf-8",
@@ -246,7 +246,7 @@ def _write_attention_fixture(workspace: Path) -> None:
 
 
 def _write_project_argument_fixture(workspace: Path) -> None:
-    project = workspace / "knowledge/projects/project-alpha.md"
+    project = workspace / "projects/project-alpha/project.md"
     project.parent.mkdir(parents=True, exist_ok=True)
     project.write_text(
         "---\n"
@@ -254,20 +254,20 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "title: Alpha project\n"
         "tags: []\n"
         "links: {}\n"
-        "thesis: knowledge/notes/thesis.md\n"
+        "thesis: notes/thesis.md\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/projects/project-alpha.md", "project")
-    thesis = workspace / "knowledge/notes/thesis.md"
-    support = workspace / "knowledge/notes/support.md"
+    mark_file_status(workspace, "projects/project-alpha/project.md", "project")
+    thesis = workspace / "notes/thesis.md"
+    support = workspace / "notes/support.md"
     thesis.parent.mkdir(parents=True, exist_ok=True)
     thesis.write_text(
         "---\ntype: note\ntitle: Thesis\ntags: []\nlinks: {}\nstatus: accepted\n---\nThesis.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/notes/thesis.md", "note")
+    mark_file_status(workspace, "notes/thesis.md", "note")
     support.write_text(
         "---\n"
         "type: note\n"
@@ -276,9 +276,9 @@ def _write_project_argument_fixture(workspace: Path) -> None:
         "status: accepted\n"
         "links:\n"
         "  supports:\n"
-        "    - knowledge/notes/thesis.md\n"
+        "    - notes/thesis.md\n"
         "---\n"
         "Support.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "knowledge/notes/support.md", "note")
+    mark_file_status(workspace, "notes/support.md", "note")

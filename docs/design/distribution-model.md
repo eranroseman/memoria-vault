@@ -45,7 +45,7 @@ Empty content dirs are recreated from `.memoria/schemas/folders.yaml`.
 
 ## Product-file refresh
 
-Alpha.15 does not maintain an in-vault product-file restore baseline. Product
+Alpha.16 does not maintain an in-vault product-file restore baseline. Product
 files come from `vault-template/` and the installed `memoria_vault` package;
 repair is a fresh workspace refresh or package reinstall, not migration or
 three-way reconciliation inside the vault.
@@ -54,7 +54,7 @@ three-way reconciliation inside the vault.
 
 ## Capabilities, Not Installed Profiles
 
-Alpha.15 ships capability manifests inside the Python package under
+Alpha.16 ships capability manifests inside the Python package under
 `src/memoria_vault/product/capabilities/`, with one checked Markdown file per
 operation. Those manifests are the runtime
 allowlist: they describe the operation id, input/output schema, allowed tools,

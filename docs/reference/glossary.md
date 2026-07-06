@@ -16,18 +16,18 @@ For the short version of the core terms, see [Home](../README.md).
 ## System
 
 **ACP** (Agent Client Protocol) — an optional editor-level protocol for external
-chat adapters. Alpha.15 does not ship an ACP/Hermes profile setup.
+chat adapters. Alpha.16 does not ship an ACP/Hermes profile setup.
 
-**Co-PI** — the research-partner role exposed in alpha.15 through the
+**Co-PI** — the research-partner role exposed in alpha.16 through the
 standalone `memoria ask` / `memoria project ask` commands. Older designs mapped
-this role to a Hermes profile; alpha.15 does not ship that profile.
+this role to a Hermes profile; alpha.16 does not ship that profile.
 
 **Operation** — a checked capability manifest plus runner behavior invoked by
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](operations.md).
 
 **Hermes** — an optional external agent runtime that may wrap the CLI/engine in
-future adapter work. It is not required by alpha.15.
+future adapter work. It is not required by alpha.16.
 
 **Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
@@ -37,7 +37,7 @@ runtime state.
 every triage, disposition, and promotion decision. Single-user by design.
 (Older pages say "the human".)
 
-**Agent** — a model-backed process doing work. Alpha.15 exposes agents through
+**Agent** — a model-backed process doing work. Alpha.16 exposes agents through
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
@@ -48,9 +48,10 @@ the CLI or observed file edits, the engine owns request/write/recovery state,
 and adapters are presentation layers over the same contracts. The older
 seven-layer architecture is historical context in [the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-**Workspace** — the runtime vault root containing `catalog/`, `knowledge/`,
-`journal/`, and `.memoria/`. Optional editors open this root. `knowledge/` is
-the checked knowledge bundle inside the vault, not the editor vault root.
+**Workspace** — the runtime vault root containing `works/`, `sources/`,
+`notes/`, `hubs/`, `projects/`, `inbox/`, `system/`, and `.memoria/`.
+Optional editors open this root; the top-level bundle roots are the checked
+corpus homes.
 
 ---
 
@@ -61,12 +62,13 @@ the checked knowledge bundle inside the vault, not the editor vault root.
 **Now** — the rail's top band: what is waiting on you right now — **Action
 queue** (your Inbox queue) and **Drift** (open integrity flags).
 
-**Places** — the rail's lower band: the three durable **spaces** — Library, Knowledge, Project.
+**Places** — the rail's lower band over durable corpus homes: Library
+(`works/`, `sources/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
+Project (`projects/`).
 
-**Space** — a navigation surface that is also a dashboard-as-note
-(`projection: space`): Library, Knowledge, Project, each exposing workspace
-state through Markdown views and CLI/read-API commands. "Gate" is reserved for
-the review gate, never a space.
+**Space** — historical name for the Library, Knowledge, and Project navigation
+surfaces. Alpha.16 stores their content directly in the corpus roots instead of
+shipping `spaces/*.md` dashboard notes.
 
 **Queue** — the **Inbox** (`projection: queue`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then
@@ -81,8 +83,8 @@ Clearing it to empty is the goal.
 `alert` attention projections; non-zero means structural debt is waiting in
 Maintenance.
 
-**System dashboard** — one of the read-only, Dataview-backed notes in
-`system/dashboards/`; the spaces and Maintenance carry the action surfaces.
+**System dashboard** — one of the read-only notes in `system/dashboards/`;
+`inbox/` and CLI request/attention views carry the action surfaces.
 
 **Home** — `home.md`, the fresh-vault launch screen — not a navigation front door (the homepage front door was retired in [the thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
@@ -93,7 +95,7 @@ Maintenance.
 **Ceiling** — the maximum write scope an optional adapter policy grants. Request
 payloads may narrow that scope, but never widen it.
 
-**Dispatcher** — alpha.15 dispatcher behavior lives in the local worker queue:
+**Dispatcher** — alpha.16 dispatcher behavior lives in the local worker queue:
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
@@ -115,7 +117,7 @@ sweep in Bases.
 `alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
 the owning state is journal/check/queue data.
 
-**Hub** — a checked `hub` Concept in `knowledge/hubs/` aggregating a topic's
+**Hub** — a checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI
 adopts them.
 

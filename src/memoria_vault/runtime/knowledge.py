@@ -188,7 +188,7 @@ def emit_note_candidates(
 
     digest_rel = _digest_rel(digest_path)
     _require_path(policy, digest_rel)
-    digest_fm = _checked_frontmatter(vault, digest_rel, "work")
+    digest_fm = _checked_frontmatter(vault, digest_rel, "digest")
     rows = list(candidates)
     if not rows:
         raise ValueError("at least one note candidate is required")
@@ -1180,7 +1180,7 @@ def _tag_candidates(vault: Path) -> list[dict[str, Any]]:
     counts: dict[str, int] = defaultdict(int)
     refs: dict[str, set[str]] = defaultdict(set)
     for rel, frontmatter in _checked_concepts(vault):
-        if frontmatter.get("type") != "work":
+        if frontmatter.get("type") not in {"work", "digest"}:
             continue
         path = vault / rel
         _frontmatter, body = split_frontmatter(path.read_text(encoding="utf-8"))
@@ -1226,7 +1226,7 @@ def _write_tag_candidate_attention(
         if path.exists():
             continue
         refs = [str(ref) for ref in candidate.get("refs") or []]
-        target = refs[0] if refs else "knowledge/works"
+        target = refs[0] if refs else "works"
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             "\n".join(
@@ -1443,11 +1443,13 @@ def _discovery_candidate_rel(source_id: str, edge: dict[str, Any]) -> str:
 def _retrieval_bucket(source: dict[str, Any]) -> str:
     path = str(source.get("path") or "")
     source_type = source.get("type")
-    if path.startswith(("works/", "graph-neighborhoods/", "catalog/sources/")):
+    if path.startswith(("graph-neighborhoods/", "catalog/sources/")) or (
+        path.startswith("works/") and path.endswith("/fulltext.md")
+    ):
         return "sources"
-    if path.startswith("knowledge/works/") or source_type == "work":
+    if path.startswith("works/") or source_type in {"work", "digest"}:
         return "digests"
-    if path.startswith("knowledge/notes/") or source_type == "note":
+    if path.startswith("notes/") or source_type == "note":
         return "notes"
     return ""
 
@@ -1463,7 +1465,11 @@ def _gap_identity(path: str, bucket: str) -> str:
 def _source_id_from_path(path: str) -> str:
     rel = normalize_path(path)
     if rel.startswith("works/") and rel.endswith(".md"):
-        return Path(rel).stem
+        parts = rel.split("/")
+        if len(parts) == 3 and parts[2] in {"fulltext.md", "record.md", "digest.md"}:
+            return parts[1]
+        if len(parts) == 2:
+            return Path(rel).stem
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
     if rel.startswith("catalog/sources/"):
@@ -1825,7 +1831,7 @@ def _append_project_export_findings(
 
 
 def _append_project_export_references(lines: list[str], vault: Path) -> None:
-    references = vault / "references.bib"
+    references = vault / "bibliography.bib"
     if not references.is_file():
         return
     text = references.read_text(encoding="utf-8").strip()
@@ -1835,7 +1841,7 @@ def _append_project_export_references(lines: list[str], vault: Path) -> None:
 
 
 def _project_export_hubs(vault: Path, project_rel: str) -> list[dict[str, str]]:
-    base = vault / "knowledge/hubs"
+    base = vault / "hubs"
     if not base.exists():
         return []
     rows = []
@@ -1920,7 +1926,7 @@ def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[s
 
 
 def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
-    for root in ("knowledge/works", "knowledge/notes"):
+    for root in ("works", "notes"):
         base = vault / root
         if not base.exists():
             continue
@@ -1933,9 +1939,9 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
 
 def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     concept_type = frontmatter.get("type")
-    if relpath.startswith("knowledge/works/") and concept_type == "work":
+    if relpath.startswith("works/") and concept_type in {"work", "digest"}:
         return "digests"
-    if relpath.startswith("knowledge/notes/") and concept_type == "note":
+    if relpath.startswith("notes/") and concept_type == "note":
         return "notes"
     return ""
 
@@ -2175,9 +2181,7 @@ def _link_target(value: Any) -> str:
 def _is_current_concept(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> bool:
     if not _is_current_frontmatter(frontmatter):
         return False
-    return not relpath.startswith("knowledge/notes/") or _is_current_note(
-        vault, relpath, frontmatter
-    )
+    return not relpath.startswith("notes/") or _is_current_note(vault, relpath, frontmatter)
 
 
 def _is_current_frontmatter(frontmatter: dict[str, Any]) -> bool:
@@ -2192,7 +2196,7 @@ def _is_current_note(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> 
 def _digest_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel and not rel.endswith(".md"):
-        rel = f"knowledge/works/{rel}.md"
+        rel = f"works/{rel}/digest.md"
     if not rel.endswith(".md"):
         rel += ".md"
     return rel
@@ -2201,20 +2205,20 @@ def _digest_rel(path: str) -> str:
 def _project_rel(vault: Path, path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel:
-        flat = f"knowledge/projects/{rel}.md"
-        nested = f"knowledge/projects/{rel}/project.md"
+        flat = f"projects/{rel}.md"
+        nested = f"projects/{rel}/project.md"
         return nested if (Path(vault) / nested).is_file() else flat
     if not rel.endswith(".md"):
         rel += ".md"
-    if not rel.startswith("knowledge/projects/"):
-        raise ValueError(f"project must live under knowledge/projects: {rel}")
+    if not rel.startswith("projects/"):
+        raise ValueError(f"project must live under projects: {rel}")
     return rel
 
 
 def _project_canvas_rel(project_rel: str) -> str:
     if project_rel.endswith("/project.md"):
         return f"{project_rel.removesuffix('/project.md')}/argument.canvas"
-    return f"knowledge/projects/{Path(project_rel).stem}/argument.canvas"
+    return f"projects/{Path(project_rel).stem}/argument.canvas"
 
 
 def _source_rel(path: str) -> str:
@@ -2230,25 +2234,25 @@ def _source_rel(path: str) -> str:
 def _note_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel:
-        rel = f"knowledge/notes/{rel}"
+        rel = f"notes/{rel}"
     if not rel.endswith(".md"):
         rel += ".md"
-    if not rel.startswith("knowledge/notes/"):
-        raise ValueError(f"note candidate must live under knowledge/notes: {rel}")
+    if not rel.startswith("notes/"):
+        raise ValueError(f"note candidate must live under notes: {rel}")
     return rel
 
 
 def _concept_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel:
-        rel = f"knowledge/notes/{rel}"
+        rel = f"notes/{rel}"
     if rel.startswith("catalog/sources/"):
         rel = rel.rstrip("/")
         if rel.count("/") != 2:
             raise ValueError(f"source must be a catalog source row ref: {rel}")
     elif not rel.endswith(".md"):
         rel += ".md"
-    if not rel.startswith(("catalog/sources/", "knowledge/notes/", "knowledge/hubs/")):
+    if not rel.startswith(("catalog/sources/", "sources/", "notes/", "hubs/")):
         raise ValueError(f"unsupported note link target: {rel}")
     return rel
 
@@ -2285,12 +2289,12 @@ def _require_path(policy: dict[str, Any], path: str) -> None:
 
 def _unique_note_rel(vault: Path, title: str) -> str:
     slug = safe_filename(title.lower().replace(" ", "-")).strip("._-") or "note"
-    base = f"knowledge/notes/{slug}.md"
+    base = f"notes/{slug}.md"
     candidate = base
     index = 1
     while (vault / candidate).exists() or (vault / ".memoria/staging" / candidate).exists():
         index += 1
-        candidate = f"knowledge/notes/{slug}-{index}.md"
+        candidate = f"notes/{slug}-{index}.md"
     return candidate
 
 

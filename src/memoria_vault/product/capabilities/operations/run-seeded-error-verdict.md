@@ -9,7 +9,11 @@ allowed_tools:
 allowed_paths:
 - system/eval/
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - journal/
 allowed_network: []
 runner:
@@ -23,7 +27,7 @@ risk_class: high
 required_checks:
 - seeded-error-bar
 tags:
-- alpha15
+- alpha16
 - gate
 id: operations/run-seeded-error-verdict
 links: {}

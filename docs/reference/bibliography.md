@@ -200,7 +200,7 @@ James Thorne, Andreas Vlachos, Christos Christodoulopoulos, and Arpit Mittal. 20
 
 ## Notes on this list
 
-- **Coverage.** This list holds works *cited in the documentation*, not Memoria's full reading corpus (the working bibliography lives in Zotero, with `references.bib` generated from checked SQLite catalog rows). The wider literature reviewed for the design — ~400 papers — sits in `_papers/` (Zotero export `_papers/Exported Items.bib`), with synthesized adopt/borrow/reject verdicts in `_papers/REVIEW-SUMMARY.md`.
+- **Coverage.** This list holds works *cited in the documentation*, not Memoria's full reading corpus (the working bibliography lives in Zotero, with `bibliography.bib` generated from checked SQLite catalog rows). The wider literature reviewed for the design — ~400 papers — sits in `_papers/` (Zotero export `_papers/Exported Items.bib`), with synthesized adopt/borrow/reject verdicts in `_papers/REVIEW-SUMMARY.md`.
 - **Preprints.** Most contemporary entries are arXiv preprints (`pubstate: prepublished`); the `arXiv:ID` is the stable identifier.
 
 ---

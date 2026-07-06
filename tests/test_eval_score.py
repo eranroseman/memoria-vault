@@ -44,7 +44,7 @@ def _vault(tmp_path: Path) -> Path:
         "description: Fixture source.\nsource_id: bert-paper\ncitekey: devlin2019bert\n---\n",
         encoding="utf-8",
     )
-    notes = tmp_path / "knowledge/notes"
+    notes = tmp_path / "notes"
     notes.mkdir(parents=True)
     (notes / "old-claim.md").write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: Old\nstatus: superseded\n"
@@ -90,12 +90,11 @@ def test_superseded_classification_matches_the_linter_detector(tmp_path):
     from memoria_vault.runtime.subsystems.integrity.linter import detectors
 
     v = _vault(tmp_path)
-    # a downstream source citing every note: the detector flags exactly the superseded set
-    src = v / "catalog/sources/uses"
-    src.mkdir(parents=True)
-    (src / "source.md").write_text(
-        "---\ntype: source\ncheck_status: checked\ntitle: Uses\n"
-        "description: Fixture source.\nsource_id: uses\n---\n"
+    # a downstream project citing every note: the detector flags exactly the superseded set
+    project = v / "projects/uses/project.md"
+    project.parent.mkdir(parents=True)
+    project.write_text(
+        "---\ntype: project\ncheck_status: checked\ntitle: Uses\n---\n"
         "[[old-claim]] [[replaced-claim]] [[good-claim]]\n",
         encoding="utf-8",
     )

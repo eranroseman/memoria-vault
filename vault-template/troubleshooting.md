@@ -21,7 +21,7 @@ Run from a terminal:
 | Integrity | `.memoria/.venv/bin/python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault .` | final verdict is `PASS` or gives concrete findings |
 | Git | `git status --short` | only expected local edits appear |
 
-Alpha.15 does not require Hermes, Obsidian, Zotero, or installed profiles. If an
+Alpha.16 does not require Hermes, Obsidian, Zotero, or installed profiles. If an
 optional adapter is broken, keep working through the `memoria` CLI and repair the
 adapter separately.
 
@@ -59,5 +59,5 @@ are available.
 - [ ] Rebuild search with `memoria workspace rebuild --search`.
 
 Last resort: create a fresh workspace with the bootstrap installer and copy only
-user-authored content across intentionally. Alpha.15 has no profile-only
+user-authored content across intentionally. Alpha.16 has no profile-only
 redeploy mode.

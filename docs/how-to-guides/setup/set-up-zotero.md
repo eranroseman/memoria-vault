@@ -9,7 +9,7 @@ nav_order: 4
 # Set up Zotero
 
 Optional setup for users who keep references in Zotero. Memoria generates
-`references.bib` from checked SQLite catalog rows; Zotero does not write a live
+`bibliography.bib` from checked SQLite catalog rows; Zotero does not write a live
 bibliography file into the vault and is not required for the standalone runtime.
 
 ## Prerequisites
@@ -39,7 +39,7 @@ This produces keys in the `mamykina2010sense` shape — lowercase author, year, 
 Do not create a Better BibTeX auto-export into the vault. Export generic BibTeX
 or CSL files outside the workspace, then import them explicitly. Portable
 BibTeX/CSL files are standalone imports: they stage unchecked SQLite Work rows
-and queue DOI enrichment; `references.bib` is regenerated only after enrichment
+and queue DOI enrichment; `bibliography.bib` is regenerated only after enrichment
 checks the Work.
 
 **4. Pin citekeys for existing items.**
@@ -62,14 +62,14 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 
 ## Export an item snapshot
 
-Alpha.15 capture reads portable files. Export a Zotero item to generic CSL JSON
+Alpha.16 capture reads portable files. Export a Zotero item to generic CSL JSON
 or copy BibTeX for the item, then import it with `memoria work import --format
 csl` or `memoria work import --format bibtex`. Live Zotero Local API capture is
 not part of the standalone runtime.
 
 ## MarkDB-Connect
 
-Do not configure MarkDB-Connect as an alpha.15 setup path. It assumes flat
+Do not configure MarkDB-Connect as an alpha.16 setup path. It assumes flat
 citekey-named note files, while Memoria source authority lives in SQLite catalog
 rows plus source-content blobs.
 

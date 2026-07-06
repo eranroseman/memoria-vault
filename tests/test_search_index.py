@@ -31,7 +31,7 @@ def note(
     *,
     db_status: str | None = "",
 ) -> Path:
-    path = vault / "knowledge" / "notes" / f"{name}.md"
+    path = vault / "notes" / f"{name}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         f"---\ntype: note\ncheck_status: {status}\ntitle: {name}\n{extra}---\n{body}\n",
@@ -97,16 +97,16 @@ def test_rebuild_checked_search_index_copies_only_checked_concepts(tmp_path: Pat
     assert manifest["backend"] == "bm25"
     assert manifest["mode"] == "bm25"
     assert [row["path"] for row in manifest["documents"]] == [
-        "knowledge/notes/checked.md",
-        "knowledge/notes/superseded.md",
+        "notes/checked.md",
+        "notes/superseded.md",
     ]
-    assert (vault / ".memoria/index/search/checked/knowledge/notes/checked.md").is_file()
-    assert (vault / ".memoria/index/search/checked/knowledge/notes/superseded.md").is_file()
+    assert (vault / ".memoria/index/search/checked/notes/checked.md").is_file()
+    assert (vault / ".memoria/index/search/checked/notes/superseded.md").is_file()
     assert not (vault / ".memoria/index/search/checked/capabilities").exists()
-    assert not (vault / ".memoria/index/search/checked/knowledge/notes/candidate.md").exists()
-    assert not (vault / ".memoria/index/search/checked/knowledge/notes/unchecked.md").exists()
-    assert not (vault / ".memoria/index/search/checked/knowledge/notes/quarantined.md").exists()
-    assert not (vault / ".memoria/index/search/checked/knowledge/notes/forged.md").exists()
+    assert not (vault / ".memoria/index/search/checked/notes/candidate.md").exists()
+    assert not (vault / ".memoria/index/search/checked/notes/unchecked.md").exists()
+    assert not (vault / ".memoria/index/search/checked/notes/quarantined.md").exists()
+    assert not (vault / ".memoria/index/search/checked/notes/forged.md").exists()
 
 
 def test_checked_search_refuses_tampered_checked_file_and_enqueues_scan(tmp_path: Path) -> None:
@@ -215,10 +215,10 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
 
     assert [row["path"] for row in manifest["documents"]] == [
         "graph-neighborhoods/source-alpha.md",
-        "knowledge/notes/checked.md",
-        "works/source-alpha.md",
+        "notes/checked.md",
+        "works/source-alpha/fulltext.md",
     ]
-    work = vault / ".memoria/index/search/checked/works/source-alpha.md"
+    work = vault / ".memoria/index/search/checked/works/source-alpha/fulltext.md"
     graph = vault / ".memoria/index/search/checked/graph-neighborhoods/source-alpha.md"
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
     assert "coordination-aspect interviews" in work.read_text(encoding="utf-8")
@@ -235,9 +235,12 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     assert filter_checked_results(vault, [{"file": graph.as_posix()}]) == [
         {"file": graph.as_posix()}
     ]
-    assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "works/source-alpha.md"
     assert (
-        answer_query(vault, "coordination-aspect")["sources"][0]["path"] == "works/source-alpha.md"
+        answer_query(vault, "rarealpha")["sources"][0]["path"] == "works/source-alpha/fulltext.md"
+    )
+    assert (
+        answer_query(vault, "coordination-aspect")["sources"][0]["path"]
+        == "works/source-alpha/fulltext.md"
     )
     concept_only = [
         (path.relative_to(vault).as_posix(), _tokens(path.read_text(encoding="utf-8")))
@@ -262,7 +265,7 @@ def test_filter_checked_results_applies_read_barrier_to_search_rows(tmp_path: Pa
     checked = note(vault, "checked", "checked", "alpha beta")
     note(vault, "unchecked", "unchecked", "poison alpha")
     rows = [
-        {"file": "search://vault/knowledge/notes/unchecked.md", "title": "Unchecked"},
+        {"file": "search://vault/notes/unchecked.md", "title": "Unchecked"},
         {"file": checked.as_posix(), "title": "Checked absolute"},
         {"file": "search://vault/missing.md", "title": "Missing"},
     ]
@@ -278,8 +281,8 @@ def test_bm25_eval_harness_uses_only_checked_concepts(tmp_path: Path) -> None:
     result = evaluate_bm25(
         vault,
         [
-            {"query": "alpha", "relevant": ["knowledge/notes/checked.md"]},
-            {"query": "poison", "relevant": ["knowledge/notes/unchecked.md"]},
+            {"query": "alpha", "relevant": ["notes/checked.md"]},
+            {"query": "poison", "relevant": ["notes/unchecked.md"]},
         ],
     )
 
@@ -287,7 +290,7 @@ def test_bm25_eval_harness_uses_only_checked_concepts(tmp_path: Path) -> None:
     assert result["queries"] == 2
     assert result["hits"] == 1
     assert result["recall_at_k"] == 0.5
-    assert result["results"][0]["hits"] == ["knowledge/notes/checked.md"]
+    assert result["results"][0]["hits"] == ["notes/checked.md"]
     assert result["results"][1]["hits"] == []
 
 
@@ -298,7 +301,7 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
         "checked",
         "checked",
         "alpha beta",
-        "contradictions:\n  - knowledge/notes/tension.md\n",
+        "contradictions:\n  - notes/tension.md\n",
     )
     stale = note(vault, "superseded", "checked", "alpha stale")
     candidate = note(vault, "candidate", "checked", "alpha candidate")
@@ -312,36 +315,36 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
     assert answer["engine"] == "bm25"
     assert answer["unknowns"] == []
     assert [source["path"] for source in answer["sources"]] == [
-        "knowledge/notes/superseded.md",
-        "knowledge/notes/checked.md",
+        "notes/superseded.md",
+        "notes/checked.md",
     ]
     assert answer["staleness"] == [
         {
-            "path": "knowledge/notes/superseded.md",
+            "path": "notes/superseded.md",
             "field": "stale",
             "value": True,
         }
     ]
     assert answer["contradictions"] == [
         {
-            "path": "knowledge/notes/checked.md",
-            "contradiction": "knowledge/notes/tension.md",
+            "path": "notes/checked.md",
+            "contradiction": "notes/tension.md",
         }
     ]
 
     stale_answer = answer_query(vault, "candidate stale", include_stale=True, k=3)
     assert [source["path"] for source in stale_answer["sources"]] == [
-        "knowledge/notes/candidate.md",
-        "knowledge/notes/superseded.md",
+        "notes/candidate.md",
+        "notes/superseded.md",
     ]
     assert stale_answer["staleness"] == [
         {
-            "path": "knowledge/notes/candidate.md",
+            "path": "notes/candidate.md",
             "field": "note_curation_status",
             "value": "candidate",
         },
         {
-            "path": "knowledge/notes/superseded.md",
+            "path": "notes/superseded.md",
             "field": "stale",
             "value": True,
         },
@@ -354,14 +357,14 @@ def test_answer_query_contract_reports_sources_unknowns_and_contradictions(tmp_p
 
 def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    project = vault / "knowledge/projects/project-alpha.md"
+    project = vault / "projects/project-alpha/project.md"
     project.parent.mkdir(parents=True, exist_ok=True)
     project.write_text(
         "---\n"
         "type: project\n"
         "check_status: checked\n"
         "title: Framing project\n"
-        "thesis: knowledge/notes/thesis.md\n"
+        "thesis: notes/thesis.md\n"
         "---\n"
         "Project body.\n",
         encoding="utf-8",
@@ -372,13 +375,13 @@ def test_answer_query_carries_project_context(tmp_path: Path) -> None:
     answer = answer_query(vault, "what matters", project_id="project-alpha")
 
     assert answer["project_context"] == {
-        "project_id": "knowledge/projects/project-alpha",
-        "project_path": "knowledge/projects/project-alpha.md",
+        "project_id": "projects/project-alpha",
+        "project_path": "projects/project-alpha/project.md",
         "title": "Framing project",
-        "thesis_path": "knowledge/notes/thesis.md",
+        "thesis_path": "notes/thesis.md",
     }
     assert [source["path"] for source in answer["sources"]][:1] == [
-        "knowledge/projects/project-alpha.md"
+        "projects/project-alpha/project.md"
     ]
 
 
@@ -386,14 +389,14 @@ def test_project_answer_expands_bm25_query_with_project_and_thesis_terms(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path / "vault")
-    project = vault / "knowledge/projects/project-alpha.md"
+    project = vault / "projects/project-alpha/project.md"
     project.parent.mkdir(parents=True, exist_ok=True)
     project.write_text(
         "---\n"
         "type: project\n"
         "check_status: checked\n"
         "title: Framing project\n"
-        "thesis: knowledge/notes/thesis.md\n"
+        "thesis: notes/thesis.md\n"
         "scope_topics: [sensemaking]\n"
         "facets:\n"
         "  methodology: [qualitative]\n"

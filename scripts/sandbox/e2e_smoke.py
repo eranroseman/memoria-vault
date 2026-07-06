@@ -23,7 +23,7 @@ STAGE_LABELS = {
     "vault-assembly-2": "2. vault-assembly: git hook wiring",
     "vault-assembly-3": "3. vault-assembly: fresh-vault integrity",
     "commit-gate": "4. commit-gate: malformed note blocks, valid note passes",
-    "offline-ingest-1": "5. offline-ingest: checked source + references projection",
+    "offline-ingest-1": "5. offline-ingest: checked source + bibliography projection",
     "offline-ingest-2": "6. offline-ingest: argument graph projection",
     "workflow-replay": "7. workflow-replay: package-gate test-env harness",
     "final-integrity": "8. final-integrity: lint over the worked vault",
@@ -92,8 +92,8 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
     assert (vault / result["content_path"]).is_file()
     assert (vault / result["raw_path"]).is_file()
     write_references_bib(vault)
-    assert "@article{x2024demo" in (vault / "references.bib").read_text(encoding="utf-8")
-    print("   checked source + references projection asserted")
+    assert "@article{x2024demo" in (vault / "bibliography.bib").read_text(encoding="utf-8")
+    print("   checked source + bibliography projection asserted")
 
 
 def assert_typed_graph(root: Path, vault: Path) -> None:
@@ -103,13 +103,13 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
     from memoria_vault.runtime.knowledge import write_project_argument_canvas
     from memoria_vault.runtime.policy.audit import sha256_file
 
-    project = vault / "knowledge/projects/package-gate.md"
-    thesis = vault / "knowledge/notes/package-thesis.md"
-    support = vault / "knowledge/notes/package-support.md"
+    project = vault / "projects/package-gate/project.md"
+    thesis = vault / "notes/package-thesis.md"
+    support = vault / "notes/package-support.md"
     _write_note(
         project,
         "type: project\nid: 01KBN6V6KX0000000000000001\nlinks: {}\ntitle: Package gate\n"
-        "description: Package gate project.\nthesis: knowledge/notes/package-thesis.md\n",
+        "description: Package gate project.\nthesis: notes/package-thesis.md\n",
         "Package gate project.",
     )
     _write_note(
@@ -120,7 +120,7 @@ def assert_typed_graph(root: Path, vault: Path) -> None:
     _write_note(
         support,
         "type: note\nid: 01KBN6V6KX0000000000000003\ntitle: Package support\n"
-        "links:\n  supports:\n    - knowledge/notes/package-thesis.md\n",
+        "links:\n  supports:\n    - notes/package-thesis.md\n",
         "Package support.",
     )
     for path, concept_type in ((project, "project"), (thesis, "note"), (support, "note")):
@@ -146,14 +146,14 @@ def _write_note(path: Path, frontmatter: str, body: str) -> None:
 
 def assert_workflow_replay_artifacts(vault: Path) -> None:
     for rel in [
-        "knowledge/projects/harness.md",
-        "knowledge/notes/harness-thesis.md",
-        "knowledge/notes/harness-support.md",
-        "knowledge/notes/harness-refutation.md",
-        "knowledge/projects/harness/argument.canvas",
+        "projects/harness/project.md",
+        "notes/harness-thesis.md",
+        "notes/harness-support.md",
+        "notes/harness-refutation.md",
+        "projects/harness/argument.canvas",
     ]:
         assert (vault / rel).is_file(), f"workflow replay artifact missing: {rel}"
-    forbidden = vault / "knowledge/notes/blocked-by-harness.md"
+    forbidden = vault / "notes/blocked-by-harness.md"
     assert not forbidden.exists(), "workflow replay left forbidden note behind"
     print("   workflow replay artifacts and forbidden-file absence asserted")
 
@@ -296,9 +296,9 @@ def _commit_gate(vault: Path, env: dict[str, str]) -> None:
         message="baseline commit blocked",
         env=env,
     )
-    bad = vault / "knowledge/notes/bad.md"
+    bad = vault / "notes/bad.md"
     bad.write_text('---\ntype: note\ntitle: "Bad"\n---\nx\n', encoding="utf-8")
-    _git_or_fail(vault, "add", "knowledge/notes/bad.md", message="bad note add failed", env=env)
+    _git_or_fail(vault, "add", "notes/bad.md", message="bad note add failed", env=env)
     result = _git(
         vault,
         "-c",
@@ -313,17 +313,15 @@ def _commit_gate(vault: Path, env: dict[str, str]) -> None:
     if result.returncode == 0:
         _fail("the gate let a malformed note through")
     print("   malformed note blocked at commit")
-    _git_or_fail(
-        vault, "reset", "-q", "HEAD", "knowledge/notes/bad.md", message="reset failed", env=env
-    )
+    _git_or_fail(vault, "reset", "-q", "HEAD", "notes/bad.md", message="reset failed", env=env)
     bad.unlink()
-    good = vault / "knowledge/notes/good.md"
+    good = vault / "notes/good.md"
     good.write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\ntags: []\nlinks: {}\n"
         'title: "Good"\n---\nBody.\n',
         encoding="utf-8",
     )
-    _git_or_fail(vault, "add", "knowledge/notes/good.md", message="good note add failed", env=env)
+    _git_or_fail(vault, "add", "notes/good.md", message="good note add failed", env=env)
     _git_or_fail(
         vault,
         "-c",

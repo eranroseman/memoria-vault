@@ -1,4 +1,4 @@
-"""Alpha.15 templates begin schema-valid for PI-created Concept types."""
+"""Alpha.16 templates begin schema-valid for PI-created Concept types."""
 
 import re
 from pathlib import Path
@@ -31,7 +31,7 @@ def _frontmatter_text(path: Path) -> str:
     return m.group(1)
 
 
-def test_alpha15_templates_are_only_pi_created_types():
+def test_alpha16_templates_are_only_pi_created_types():
     names = {p.stem for p in TEMPLATES.glob("*.md")}
     assert names == PI_CREATED_TYPES
 

@@ -8,7 +8,7 @@ permalink: /how-to-guides/inbox/
 
 # Inbox
 
-Act on what needs you. In alpha.15, Inbox files are attention projections:
+Act on what needs you. In alpha.16, Inbox files are attention projections:
 proposals, work prompts, flags, and alerts that need a PI decision.
 
 | Guide | What it covers |

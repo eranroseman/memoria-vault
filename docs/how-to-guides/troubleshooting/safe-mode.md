@@ -35,12 +35,12 @@ requires human review.
 ## Export A Draft
 
 ```bash
-memoria project export --workspace <workspace> knowledge/projects/<project>/project.md \
+memoria project export --workspace <workspace> projects/<project>/project.md \
   --format docx --output /tmp/output.docx
 ```
 
 If the export command is blocked by missing Pandoc or citation tooling, use
-Pandoc directly after verifying `references.bib`.
+Pandoc directly after verifying `bibliography.bib`.
 
 ## Quick System Check
 

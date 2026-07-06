@@ -6,7 +6,7 @@ operation_id: frame-paper
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- knowledge/projects/
+- projects/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -18,7 +18,7 @@ io_schema:
 risk_class: low
 required_checks: []
 tags:
-- alpha15
+- alpha16
 - project
 id: operations/frame-paper
 links: {}

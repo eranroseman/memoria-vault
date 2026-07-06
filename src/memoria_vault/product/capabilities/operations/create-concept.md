@@ -6,7 +6,11 @@ operation_id: create-concept
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - journal/
 allowed_network: []
 runner:
@@ -20,7 +24,7 @@ risk_class: medium
 required_checks:
 - memoria-runtime
 tags:
-- alpha15
+- alpha16
 - engine-api
 id: operations/create-concept
 links: {}

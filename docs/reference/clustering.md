@@ -7,7 +7,7 @@ nav_order: 15
 
 # Clustering
 
-Alpha.15 keeps graph-aware retrieval and gap analysis in the standalone runtime,
+Alpha.16 keeps graph-aware retrieval and gap analysis in the standalone runtime,
 but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 
 ## Current Baseline
@@ -19,7 +19,7 @@ but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 | Argument graph inspection | `memoria project trace` and `render-project-argument-canvas`. |
 | Retrieval ranking | search over checked retrieval documents, with deterministic BM25 fallback in `memoria_vault.runtime.search_index`. |
 
-## Not Shipped In Alpha.15
+## Not Shipped In Alpha.16
 
 NetworkX community detection, BERTopic topic modeling, and generated cluster
 Canvas adapters are not baseline commands. If they return later, they should be

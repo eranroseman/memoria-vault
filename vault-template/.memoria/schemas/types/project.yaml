@@ -1,5 +1,5 @@
 type: project
-category: knowledge
+category: projects
 gated: false
 required:
   type: literal:project
@@ -14,4 +14,5 @@ optional:
   thesis: str
   outcome_frame: map
   paper_plan: map
+  question: str
   x: map

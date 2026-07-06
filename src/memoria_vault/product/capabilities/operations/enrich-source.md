@@ -11,7 +11,7 @@ allowed_paths:
 - .memoria/config/providers.yaml
 - inbox/
 - journal/
-- references.bib
+- bibliography.bib
 allowed_network:
 - https://api.crossref.org/
 - https://api.openalex.org/

@@ -61,25 +61,25 @@ def test_metrics_by_error_class_counts_matching_check_false_positives() -> None:
         {
             "id": "expected",
             "error_class": "structural:quote-anchor",
-            "target_id": "knowledge/notes/expected.md",
+            "target_id": "notes/expected.md",
             "expected_check": "quote-anchor",
             "rollback": "include-target",
         }
     ]
     findings = [
         {
-            "target_id": "knowledge/notes/expected.md",
+            "target_id": "notes/expected.md",
             "check": "quote-anchor",
             "route": "ask",
         },
         {
-            "target_id": "knowledge/notes/control.md",
+            "target_id": "notes/control.md",
             "check": "quote-anchor",
             "route": "ask",
         },
     ]
 
-    by_class = _metrics_by_error_class(cases, findings, ["knowledge/notes/expected.md"], [])
+    by_class = _metrics_by_error_class(cases, findings, ["notes/expected.md"], [])
 
     assert by_class["structural:quote-anchor"]["detected_errors"] == 1
     assert by_class["structural:quote-anchor"]["false_positives"] == 1
@@ -125,20 +125,20 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         bundle_path=BUNDLE,
     )
 
-    target = "knowledge/notes/seeded-missing-evidence.md"
-    unchecked_target = "knowledge/notes/seeded-unchecked-evidence.md"
-    contradiction_target = "knowledge/works/seeded-missing-contradiction.md"
-    digest_target = "knowledge/works/seeded-missing-digest-evidence.md"
-    false_link_target = "knowledge/notes/seeded-false-link.md"
+    target = "notes/seeded-missing-evidence.md"
+    unchecked_target = "notes/seeded-unchecked-evidence.md"
+    contradiction_target = "works/seeded-missing-contradiction/digest.md"
+    digest_target = "works/seeded-missing-digest-evidence/digest.md"
+    false_link_target = "notes/seeded-false-link.md"
     conflicting_doi_target = "catalog/sources/conflicting-doi"
     ambiguous_entity_target = "catalog/sources/ambiguous-entity"
-    stale_target = "knowledge/notes/seeded-stale-as-current.md"
-    claim_target = "knowledge/notes/seeded-unwarranted-claim.md"
-    injection_target = "knowledge/notes/seeded-crafted-injection.md"
-    checkpoint_target = "knowledge/notes/seeded-provenance-checkpoint.md"
+    stale_target = "notes/seeded-stale-as-current.md"
+    claim_target = "notes/seeded-unwarranted-claim.md"
+    injection_target = "notes/seeded-crafted-injection.md"
+    checkpoint_target = "notes/seeded-provenance-checkpoint.md"
     poisoned_target = "catalog/sources/poisoned-span"
-    extraction_target = "knowledge/notes/seeded-wrong-extraction.md"
-    control = "knowledge/notes/seeded-valid-evidence.md"
+    extraction_target = "notes/seeded-wrong-extraction.md"
+    control = "notes/seeded-valid-evidence.md"
     assert result["passed"] is True
     assert result["mode"] == "test"
     assert result["operation_id"] == "run-seeded-error-verdict"

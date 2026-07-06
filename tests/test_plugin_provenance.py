@@ -1,4 +1,4 @@
-"""Alpha.15 ships no Obsidian plugin implementation payload."""
+"""Alpha.16 ships no Obsidian plugin implementation payload."""
 
 import sys
 from pathlib import Path
