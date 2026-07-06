@@ -272,13 +272,47 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     _common(trace)
     trace.add_argument("project_path")
     trace.set_defaults(handler=_cmd_project_trace)
+    slice_cmd = project_sub.add_parser("slice")
+    _common(slice_cmd)
+    slice_cmd.add_argument("project_path")
+    slice_cmd.add_argument("--query", default="")
+    slice_cmd.add_argument("--limit", type=int, default=20)
+    slice_cmd.set_defaults(handler=_cmd_project_slice)
+    compose = project_sub.add_parser("compose")
+    _common(compose)
+    compose.add_argument("project_path")
+    compose.add_argument("--token-budget", type=int, default=4000)
+    compose.set_defaults(handler=_cmd_project_compose)
+    verify = project_sub.add_parser("verify")
+    _common(verify)
+    verify.add_argument("project_path")
+    verify.set_defaults(handler=_cmd_project_verify)
+    resolve_evidence = project_sub.add_parser("resolve-evidence")
+    _common(resolve_evidence)
+    resolve_evidence.add_argument("project_path")
+    resolve_evidence.add_argument("--evidence-id", required=True)
+    resolve_evidence.add_argument("--decision", choices=("accept", "reject"), required=True)
+    resolve_evidence.add_argument("--reason", default="")
+    resolve_evidence.set_defaults(handler=_cmd_project_resolve_evidence)
+    promote = project_sub.add_parser("promote")
+    _common(promote)
+    promote.add_argument("project_path")
+    promote.add_argument("--title", required=True)
+    promote.add_argument("--passage", required=True)
+    promote.add_argument("--source-id", default="")
+    promote.set_defaults(handler=_cmd_project_promote)
     export = project_sub.add_parser("export")
     _common(export)
     export.add_argument("project_path")
     export.add_argument("--format", choices=("markdown", "docx", "pdf", "odt"), default="markdown")
     export.add_argument("--output")
     export.add_argument("--ready-only", action="store_true")
+    export.add_argument("--draft", action="store_true")
     export.set_defaults(handler=_cmd_project_export)
+    explore = project_sub.add_parser("explore")
+    _common(explore)
+    explore.add_argument("--limit", type=int, default=10)
+    explore.set_defaults(handler=_cmd_project_explore)
     suggest = project_sub.add_parser("suggest-hubs")
     _common(suggest)
     suggest.add_argument("--min-count", type=int, default=2)
@@ -936,6 +970,89 @@ def _cmd_project_trace(args: argparse.Namespace) -> int:
     )
 
 
+def _cmd_project_slice(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "write-project-slice",
+            {
+                "project_path": args.project_path,
+                "query": args.query,
+                "limit": args.limit,
+            },
+        ),
+        args,
+    )
+
+
+def _cmd_project_compose(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "compose-project-draft",
+            {
+                "project_path": args.project_path,
+                "token_budget": args.token_budget,
+            },
+        ),
+        args,
+    )
+
+
+def _cmd_project_verify(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(args, "verify-project-draft", {"project_path": args.project_path}),
+        args,
+    )
+
+
+def _cmd_project_resolve_evidence(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.knowledge import resolve_evidence_review, verify_project_draft
+
+    workspace = _workspace(args)
+    verification = verify_project_draft(workspace, args.project_path)
+    evidence_ids = {str(row["id"]) for row in verification["evidence_sets"]}
+    if args.evidence_id not in evidence_ids:
+        return _fail(
+            f"evidence id is not in this project draft: {args.evidence_id}",
+            json_output=args.json,
+        )
+    event = resolve_evidence_review(
+        workspace,
+        args.evidence_id,
+        decision=args.decision,
+        reason=args.reason,
+        machine=args.actor,
+    )
+    return _emit(
+        {
+            "ok": True,
+            "project_path": verification["project_path"],
+            "draft_path": verification["draft_path"],
+            "evidence_id": args.evidence_id,
+            "decision": args.decision,
+            "event": event,
+        },
+        args,
+    )
+
+
+def _cmd_project_promote(args: argparse.Namespace) -> int:
+    return _emit(
+        _enqueue_and_run(
+            args,
+            "promote-draft-passage",
+            {
+                "project_path": args.project_path,
+                "title": args.title,
+                "passage": args.passage,
+                "source_id": args.source_id,
+            },
+        ),
+        args,
+    )
+
+
 def _cmd_project_export(args: argparse.Namespace) -> int:
     result = _enqueue_and_run(
         args,
@@ -945,6 +1062,7 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
             "format": args.format,
             "output_path": args.output or "",
             "ready_only": args.ready_only,
+            "draft": args.draft,
         },
     )
     if result.get("ok") and not args.json and not args.quiet:
@@ -956,6 +1074,15 @@ def _cmd_project_export(args: argparse.Namespace) -> int:
             print(export_result.get("output_path") or "ok")
         return 0
     return _emit(result, args)
+
+
+def _cmd_project_explore(args: argparse.Namespace) -> int:
+    from memoria_vault.runtime.knowledge import exploration_channel
+
+    return _emit(
+        {"ok": True, "exploration": exploration_channel(_workspace(args), limit=args.limit)},
+        args,
+    )
 
 
 def _cmd_link(args: argparse.Namespace) -> int:

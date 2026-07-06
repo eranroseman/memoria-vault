@@ -91,7 +91,7 @@ def test_pyproject_exposes_memoria_console_script() -> None:
     assert data["project"]["scripts"]["memoria"] == "memoria_vault.cli:main"
 
 
-def test_alpha16_cli_command_surface_is_exact() -> None:
+def test_alpha17_cli_command_surface_is_exact() -> None:
     assert _cli_command_surface() == {
         "memoria init",
         "memoria status",
@@ -121,6 +121,12 @@ def test_alpha16_cli_command_surface_is_exact() -> None:
         "memoria project trace",
         "memoria project frame-paper",
         "memoria project gaps",
+        "memoria project slice",
+        "memoria project compose",
+        "memoria project verify",
+        "memoria project resolve-evidence",
+        "memoria project promote",
+        "memoria project explore",
         "memoria project suggest-hubs",
         "memoria project export",
         "memoria request answer",
@@ -988,6 +994,189 @@ def test_cli_project_trace_and_export_markdown(
     assert [(row["request_id"], row["operation_id"]) for row in rows] == [
         ("project-export", "export-project"),
         ("project-trace", "analyze-project-argument"),
+    ]
+
+
+def test_cli_project_slice_writes_outline(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+
+    rc = main(
+        [
+            "project",
+            "slice",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--query",
+            "support thesis",
+            "--limit",
+            "2",
+            "--json",
+            "--idempotency-key",
+            "project-slice",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    result = output["result"]
+    assert result["retrieval_engine"] == "bm25"
+    assert result["outline_path"] == "projects/project-alpha/outline.md"
+    assert result["member_count"] == 2
+    assert {member["path"] for member in result["members"]} == {
+        "notes/support.md",
+        "notes/thesis.md",
+    }
+    assert result["edges"] == [
+        {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"}
+    ]
+    outline = (workspace / "projects/project-alpha/outline.md").read_text(encoding="utf-8")
+    assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — BM25 score " in outline
+    assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — BM25 score " in outline
+    with state.connect(workspace) as conn:
+        row = conn.execute(
+            "SELECT operation_id FROM operation_requests WHERE request_id = ?",
+            ("project-slice",),
+        ).fetchone()
+    assert row["operation_id"] == "write-project-slice"
+
+
+def test_cli_project_compose_writes_draft(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    workspace = tmp_path / "workspace"
+    main(["init", "--workspace", str(workspace), "--yes", "--json"])
+    capsys.readouterr()
+    _write_project_argument_fixture(workspace)
+    (workspace / "projects/project-alpha/outline.md").write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 -- Support first\n"
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 -- Thesis second\n",
+        encoding="utf-8",
+    )
+
+    rc = main(
+        [
+            "project",
+            "compose",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--token-budget",
+            "400",
+            "--json",
+            "--idempotency-key",
+            "project-compose",
+        ]
+    )
+    output = json.loads(capsys.readouterr().out)
+
+    assert rc == 0
+    assert output["ok"] is True
+    result = output["result"]
+    assert result["draft_path"] == "projects/project-alpha/draft.md"
+    assert result["member_count"] == 2
+    assert result["evidence_set_count"] == 2
+    evidence_ids = [marker["id"] for marker in result["evidence_markers"]]
+    draft = (workspace / "projects/project-alpha/draft.md").read_text(encoding="utf-8")
+    assert "## Support" in draft
+    assert "%%ev:" in draft
+    rc = main(
+        [
+            "project",
+            "verify",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--json",
+            "--idempotency-key",
+            "project-verify",
+        ]
+    )
+    verified = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert verified["ok"] is True
+    assert verified["result"]["ready"] is False
+    assert verified["result"]["max_findings"] == 20
+    assert verified["result"]["triaged_count"] == 4
+    rc = main(
+        [
+            "project",
+            "export",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--draft",
+            "--json",
+            "--idempotency-key",
+            "project-export-draft",
+        ]
+    )
+    refused = json.loads(capsys.readouterr().out)
+    assert rc == 1
+    assert refused["ok"] is False
+    assert "project draft is not export-ready" in refused["result"]["error"]
+    for evidence_id in evidence_ids:
+        rc = main(
+            [
+                "project",
+                "resolve-evidence",
+                "--workspace",
+                str(workspace),
+                "project-alpha",
+                "--evidence-id",
+                evidence_id,
+                "--decision",
+                "accept",
+                "--reason",
+                "PI accepted fixture evidence",
+                "--json",
+            ]
+        )
+        resolved = json.loads(capsys.readouterr().out)
+        assert rc == 0
+        assert resolved["ok"] is True
+        assert resolved["evidence_id"] == evidence_id
+    rc = main(
+        [
+            "project",
+            "verify",
+            "--workspace",
+            str(workspace),
+            "project-alpha",
+            "--json",
+            "--idempotency-key",
+            "project-verify-after-disposition",
+        ]
+    )
+    verified_after_disposition = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert verified_after_disposition["ok"] is True
+    assert verified_after_disposition["result"]["ready"] is True
+    with state.connect(workspace) as conn:
+        rows = conn.execute(
+            """
+            SELECT request_id, operation_id
+            FROM operation_requests
+            WHERE request_id IN (
+              'project-compose',
+              'project-verify',
+              'project-export-draft',
+              'project-verify-after-disposition'
+            )
+            ORDER BY request_id
+            """
+        ).fetchall()
+    assert [(row["request_id"], row["operation_id"]) for row in rows] == [
+        ("project-compose", "compose-project-draft"),
+        ("project-export-draft", "export-project"),
+        ("project-verify", "verify-project-draft"),
+        ("project-verify-after-disposition", "verify-project-draft"),
     ]
 
 
@@ -2839,13 +3028,18 @@ def _write_project_argument_fixture(workspace: Path) -> None:
     )
     mark_file_status(workspace, "projects/project-alpha/project.md", "project")
     notes = {
-        "thesis": "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
+        "thesis": (
+            "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n"
+            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n"
+        ),
         "support": (
             "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
+            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
             "links:\n  supports:\n    - notes/thesis.md\n"
         ),
         "refute": (
             "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
+            "id: 01ARZ3NDEKTSV4RRFFQ69G5FA3\n"
             "links:\n  contradicts:\n    - notes/thesis.md\n"
         ),
     }

@@ -11,13 +11,16 @@ Citation states, export routes, editor feature comparison, and deliverable
 folder targets. For choosing between routes and failure modes see
 [Export a draft](../how-to-guides/project/export-a-draft.md).
 
-`memoria project export` is the checked-project export surface: it renders a
-project Concept, its paper plan when present, its argument state, linked checked
-hubs, and `bibliography.bib` to Markdown by default, with `.docx`, `.pdf`, and
-`.odt` available when Pandoc is installed. Add `--ready-only` when the export
-must fail closed unless the project has required paper framing and checked
-support. For citation-rich manuscript drafts, live Zotero field workflows, or
-custom CSL routes, use the direct Pandoc routes below.
+`memoria project export` is the checked-project export surface. By default it
+renders a project Concept, its paper plan when present, its argument state,
+linked checked hubs, and `bibliography.bib` to Markdown. Add `--draft` to render
+`projects/<project>/draft.md` instead: draft-internal evidence markers become
+Pandoc citekeys and block anchors are stripped from the exported artifact.
+`.docx`, `.pdf`, and `.odt` remain available when Pandoc is installed. Add
+`--ready-only` when the export must fail closed unless the project has required
+paper framing and checked support. For citation-rich manuscript drafts, live
+Zotero field workflows, or custom CSL routes, use the direct Pandoc routes
+below.
 
 ---
 
@@ -39,6 +42,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | Option | Output format | Use case | Tool chain |
 | --- | --- | --- | --- |
 | **Memoria project export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked project composition or review packet | `memoria project export <project> --format <format> --output <path> [--ready-only]` |
+| **Memoria draft export** | `.md` / `.docx` / `.pdf` / `.odt` | Verified `projects/<project>/draft.md` with evidence markers converted to citations | `memoria project export <project> --draft --format <format> --output <path> [--ready-only]` |
 | **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography bibliography.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
@@ -84,7 +88,8 @@ top-level deliverables tree.
 ## Pandoc command shape
 
 Use this shape for hand-authored manuscript drafts that need citation processing
-or live-citation conversion beyond the deterministic checked-project export.
+or live-citation conversion beyond the deterministic checked-project or draft
+export.
 
 ```bash
 pandoc projects/<project>/drafts/<chapter>.md \
@@ -100,7 +105,10 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 
 ## Export gate
 
-An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+An exported artifact is terminal — rendered once from its source composition or
+draft and not edited in place; an update is a re-export from that source. Agents
+propose; the export itself is a human-run step ([checked means checks passed,
+not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 

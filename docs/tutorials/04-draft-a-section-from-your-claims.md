@@ -2,15 +2,23 @@
 title: "Tutorial 04: Draft a section from your claims"
 parent: Tutorials
 nav_order: 4
-status: deferred
 ---
 
 # Tutorial 04: Draft a section from your claims
 
-> **Status: deferred.** This alpha.10 walkthrough is preserved as a placeholder
-> while the alpha.16 tutorial arc is rewritten.
+Use the project WRITE loop to turn checked notes into a draft section.
 
-This walkthrough is not current alpha.16 operating guidance. It depended on the
-old claim surface and the removed `Memoria: draft section` command.
+```bash
+memoria project slice --workspace <vault> projects/<project>/project.md --query "<topic>"
+```
 
-Use the current [Tutorials](README.md) index for alpha.16 entry points.
+Edit `projects/<project>/outline.md` so the checked note IDs are in the order
+you want.
+
+```bash
+memoria project compose --workspace <vault> projects/<project>/project.md
+memoria project verify --workspace <vault> projects/<project>/project.md
+```
+
+If verification reports unresolved evidence, fix the notes, edit the draft, or
+record the PI disposition before exporting.

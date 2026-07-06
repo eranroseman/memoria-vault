@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import posixpath
 import re
 import shutil
 import subprocess
@@ -34,6 +35,7 @@ from memoria_vault.runtime.trusted_writer import (
     stage_concept,
 )
 from memoria_vault.runtime.vaultio import (
+    apply_universal_concept_frontmatter,
     concept_text,
     frontmatter_doc,
     iter_markdown,
@@ -557,6 +559,64 @@ def analyze_gaps(
             }
         )
     return result
+
+
+def exploration_channel(vault: Path, *, limit: int = 10) -> dict[str, Any]:
+    """Return relevance-independent coverage candidates from the citation graph."""
+    vault = Path(vault)
+    limit = max(1, int(limit))
+    sources = [
+        source
+        for source in state.catalog_sources(vault)
+        if source.get("check_status") == "checked" and _is_current_catalog_source(source)
+    ]
+    source_by_id = {str(source["source_id"]): source for source in sources}
+    captured = _captured_work_ids(vault)
+    candidates = []
+    if source_by_id:
+        with state.connect(vault) as conn:
+            rows = conn.execute(
+                """
+                SELECT work_id, relation_type, target_id, target_title, target_doi,
+                       source_provider
+                FROM work_graph_edges
+                WHERE relation_type IN ('references', 'related')
+                ORDER BY work_id, relation_type, target_id
+                """,
+            ).fetchall()
+        for row in rows:
+            edge = dict(row)
+            if str(edge["work_id"]) not in source_by_id:
+                continue
+            if _edge_is_captured(edge, captured):
+                continue
+            source = source_by_id[str(edge["work_id"])]
+            title = str(edge.get("target_title") or edge["target_id"])
+            candidates.append(
+                {
+                    "source_id": edge["work_id"],
+                    "source_title": source["title"],
+                    "candidate_work_id": edge["target_id"],
+                    "candidate_title": title,
+                    "candidate_doi": edge.get("target_doi") or "",
+                    "relation_type": edge["relation_type"],
+                    "provider": edge.get("source_provider") or "",
+                    "why": (
+                        f"Coverage candidate: checked source `{edge['work_id']}` "
+                        f"{edge['relation_type']} uncaptured work `{edge['target_id']}`."
+                    ),
+                }
+            )
+    items = _coverage_round_robin(candidates, limit)
+    contrary_items = _contrary_channel_items(vault, limit=limit)
+    return {
+        "mode": "mmr-baseline",
+        "ranker": "coverage-diversity",
+        "relevance_independent": True,
+        "items": items,
+        "contrary_items": contrary_items,
+        "empty": not items and not contrary_items,
+    }
 
 
 def _gap_payload(
@@ -1325,6 +1385,90 @@ def _candidate_edges(vault: Path, source_ids: Iterable[str]) -> dict[str, list[d
     return edges
 
 
+def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    remaining = sorted(
+        candidates,
+        key=lambda row: (
+            str(row["relation_type"]) != "references",
+            str(row["source_id"]),
+            str(row["candidate_work_id"]),
+        ),
+    )
+    selected = []
+    used_sources: set[str] = set()
+    while remaining and len(selected) < limit:
+        index = next(
+            (idx for idx, row in enumerate(remaining) if str(row["source_id"]) not in used_sources),
+            0,
+        )
+        row = remaining.pop(index)
+        selected.append(row)
+        used_sources.add(str(row["source_id"]))
+        if len(used_sources) >= len({str(item["source_id"]) for item in remaining}):
+            used_sources.clear()
+    return selected
+
+
+def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
+    rows = []
+    for rel, frontmatter in _checked_concepts(vault):
+        contradictions = frontmatter.get("contradictions")
+        if not isinstance(contradictions, list):
+            continue
+        for target in contradictions:
+            target_ref = str(target).strip()
+            if not target_ref:
+                continue
+            rows.append(
+                {
+                    "path": rel,
+                    "title": str(frontmatter.get("title") or Path(rel).stem),
+                    "target": target_ref,
+                    "why": f"Contrary lane: checked concept `{rel}` declares contradiction `{target_ref}`.",
+                }
+            )
+    rows = sorted(rows, key=lambda row: (row["path"], row["target"]))
+    remaining = max(0, limit - len(rows))
+    if remaining:
+        rows.extend(_nli_contrary_channel_items(vault, limit=remaining))
+    return rows[:limit]
+
+
+def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
+    from memoria_vault.runtime.integrity import (
+        NLI_REFUTED,
+        contradiction_tier1_gate,
+        surface_tensions,
+    )
+
+    if not contradiction_tier1_gate()["passed"]:
+        return []
+    try:
+        result = surface_tensions(vault, max_pairs=limit, tier2=False)
+    except Exception:  # noqa: BLE001 -- exploration must degrade to honest empty.
+        return []
+    rows = []
+    for candidate in result.get("candidates") or []:
+        if candidate.get("verdict") != NLI_REFUTED:
+            continue
+        left = str(candidate.get("left") or "").strip()
+        right = str(candidate.get("right") or "").strip()
+        if not left or not right:
+            continue
+        rows.append(
+            {
+                "path": left,
+                "title": str(candidate.get("left_title") or left),
+                "target": right,
+                "why": (
+                    "Contrary lane: NLI REFUTED candidate between "
+                    f"`{left}` and `{right}` ({candidate.get('warrant')})."
+                ),
+            }
+        )
+    return rows[:limit]
+
+
 def _gap_source_ids(gap: dict[str, Any]) -> list[str]:
     ids = []
     if isinstance(gap.get("source_id"), str):
@@ -1545,13 +1689,24 @@ def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
 
 def render_project_argument_canvas(vault: Path, project_path: str) -> dict[str, Any]:
     """Render the checked project argument graph as Obsidian JSON Canvas data."""
+    project_rel = _project_rel(Path(vault), project_path)
+    if (Path(vault) / _project_outline_rel(project_rel)).is_file():
+        project_slice = read_project_slice(vault, project_rel)
+        nodes = [{"path": member["path"]} for member in project_slice["members"]]
+        return _canvas_from_nodes_edges(nodes, project_slice["edges"])
     result = analyze_project_argument(vault, project_path)
+    return _canvas_from_nodes_edges(result["nodes"], result["edges"])
+
+
+def _canvas_from_nodes_edges(
+    nodes_in: list[dict[str, Any]], edges_in: list[dict[str, str]]
+) -> dict[str, Any]:
     node_ids = {
         node["path"]: f"n-{hashlib.sha256(node['path'].encode()).hexdigest()[:12]}"
-        for node in result["nodes"]
+        for node in nodes_in
     }
     nodes = []
-    for index, node in enumerate(result["nodes"]):
+    for index, node in enumerate(nodes_in):
         nodes.append(
             {
                 "id": node_ids[node["path"]],
@@ -1564,7 +1719,7 @@ def render_project_argument_canvas(vault: Path, project_path: str) -> dict[str, 
             }
         )
     edges = []
-    for index, edge in enumerate(result["edges"]):
+    for index, edge in enumerate(edges_in):
         source = node_ids.get(edge["source"])
         target = node_ids.get(edge["target"])
         if not source or not target:
@@ -1623,6 +1778,504 @@ def write_project_argument_canvas(
         "edge_count": len(canvas["edges"]),
         "event": event,
         "commit": commit_id,
+    }
+
+
+def propose_project_slice(
+    vault: Path,
+    project_path: str,
+    *,
+    query: str = "",
+    limit: int = 20,
+) -> dict[str, Any]:
+    """Propose checked note membership for a project slice using BM25 only."""
+    from memoria_vault.runtime.search_index import search_checked_index
+
+    vault = Path(vault)
+    if limit < 1:
+        raise ValueError("project slice limit must be at least 1")
+    project_rel = _project_rel(vault, project_path)
+    project = _checked_frontmatter(vault, project_rel, "project")
+    retrieval_query = _project_slice_query(vault, project_rel, project, query)
+    notes = _checked_notes_by_path(vault)
+    members = []
+    skipped = []
+    for hit in search_checked_index(vault, retrieval_query, k=max(limit * 4, limit)):
+        rel = str(hit["path"])
+        frontmatter = notes.get(rel)
+        if frontmatter is None:
+            continue
+        note_id = str(frontmatter.get("id") or "").strip()
+        if not note_id:
+            skipped.append({"path": rel, "reason": "missing stable note id"})
+            continue
+        members.append(
+            {
+                "id": note_id,
+                "path": rel,
+                "title": str(frontmatter.get("title") or Path(rel).stem),
+                "reasoning": _project_slice_reason(retrieval_query, float(hit["score"])),
+                "order": len(members),
+                "score": float(hit["score"]),
+                "check_status": "checked",
+            }
+        )
+        if len(members) >= limit:
+            break
+    return {
+        "project_path": project_rel,
+        "outline_path": _project_outline_rel(project_rel),
+        "retrieval_engine": "bm25",
+        "query": retrieval_query,
+        "members": members,
+        "skipped": skipped,
+    }
+
+
+def write_project_outline(
+    vault: Path,
+    project_path: str,
+    *,
+    query: str = "",
+    limit: int = 20,
+    commit: bool = False,
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Write a host-neutral project outline from a BM25 project-slice proposal."""
+    vault = Path(vault)
+    proposal = propose_project_slice(vault, project_path, query=query, limit=limit)
+    outline_rel = str(proposal["outline_path"])
+    outline_path = vault / outline_rel
+    outline_path.parent.mkdir(parents=True, exist_ok=True)
+    outline_path.write_text(_outline_text(proposal["members"]), encoding="utf-8")
+    project_slice = read_project_slice(vault, str(proposal["project_path"]))
+    event = None
+    commit_id = ""
+    if commit:
+        event = append_journal_event(
+            vault,
+            {
+                "event": "run",
+                "run_id": f"project-slice:{outline_rel}",
+                "workflow": "write-project-slice",
+                "status": "done",
+                "inputs": [proposal["project_path"]],
+                "outputs": [outline_rel],
+                "retrieval_engine": proposal["retrieval_engine"],
+                "query": proposal["query"],
+                "member_count": len(project_slice["members"]),
+            },
+            machine=machine,
+        )
+        commit_id = commit_writer_changes(
+            vault,
+            "write project slice outline",
+            [outline_rel],
+            machine=machine,
+        )
+    return {
+        "project_path": proposal["project_path"],
+        "outline_path": outline_rel,
+        "retrieval_engine": proposal["retrieval_engine"],
+        "query": proposal["query"],
+        "members": project_slice["members"],
+        "edges": project_slice["edges"],
+        "missing": project_slice["missing"],
+        "skipped": proposal["skipped"],
+        "member_count": len(project_slice["members"]),
+        "edge_count": len(project_slice["edges"]),
+        "event": event,
+        "commit": commit_id,
+    }
+
+
+def compose_project_draft(
+    vault: Path,
+    project_path: str,
+    *,
+    token_budget: int = 4000,
+    commit: bool = False,
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Compose a deterministic draft from a project's outline slice."""
+    from memoria_vault.runtime.evidence import (
+        EvidenceMarker,
+        evidence_ids_in_text,
+        mint_evidence_id,
+        serialize_evidence_marker,
+    )
+
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    project = _checked_frontmatter(vault, project_rel, "project")
+    project_slice = read_project_slice(vault, project_rel)
+    members = list(project_slice["members"])
+    if not members:
+        raise ValueError("project outline has no checked members")
+    token_budget = max(200, int(token_budget))
+    per_node_budget = max(80, token_budget // max(len(members), 1))
+    existing_ids = _existing_evidence_ids(vault, evidence_ids_in_text)
+    allocated_ids = set(existing_ids)
+    lines = [
+        "---",
+        "type: draft",
+        f"project: {project_rel}",
+        "generated_by: compose-project-draft",
+        "---",
+        "",
+        f"# {project.get('title') or Path(project_rel).stem}",
+        "",
+        f"Slice includes {len(members)} checked notes.",
+        "",
+    ]
+    evidence_markers = []
+    for member in members:
+        note_rel = str(member["path"])
+        frontmatter, body = split_frontmatter((vault / note_rel).read_text(encoding="utf-8"))
+        evidence_id = mint_evidence_id(allocated_ids)
+        allocated_ids.add(evidence_id)
+        items = _draft_evidence_items(vault, frontmatter)
+        evidence_type = _draft_evidence_type(items)
+        state_value = "complete" if items else "evidence-incomplete"
+        marker = EvidenceMarker(
+            evidence_id=evidence_id,
+            evidence_type=evidence_type,
+            state=state_value,
+            review_required=evidence_type in {"implicit", "multi-hop"},
+            items=tuple(items),
+        )
+        evidence_markers.append(marker)
+        block_anchor = f"^blk-{evidence_id.removeprefix('ev-')}"
+        excerpt = _draft_note_excerpt(body, per_node_budget)
+        lines.extend(
+            [
+                f"## {member['title']}",
+                "",
+                f"Source note: `{note_rel}`",
+                "",
+                f"{excerpt} {block_anchor} {serialize_evidence_marker(marker)}".strip(),
+                "",
+            ]
+        )
+    draft_rel = _project_draft_rel(project_rel)
+    draft_path = vault / draft_rel
+    draft_path.parent.mkdir(parents=True, exist_ok=True)
+    draft_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    rebuild = state.rebuild_evidence_sets_from_markers(
+        vault,
+        run_id=f"compose-project-draft:{project_rel}",
+    )
+    draft = read_project_draft(vault, project_rel)
+    event = None
+    commit_id = ""
+    if commit:
+        event = append_journal_event(
+            vault,
+            {
+                "event": "run",
+                "run_id": f"compose-project-draft:{draft_rel}",
+                "workflow": "compose-project-draft",
+                "status": "done",
+                "inputs": [project_rel, project_slice["outline_path"]],
+                "outputs": [draft_rel],
+                "member_count": len(members),
+                "evidence_set_count": len(evidence_markers),
+            },
+            machine=machine,
+        )
+        commit_id = commit_writer_changes(
+            vault,
+            "compose project draft",
+            [draft_rel],
+            machine=machine,
+        )
+    return {
+        **draft,
+        "member_count": len(members),
+        "evidence_set_count": len(evidence_markers),
+        "rebuild": rebuild,
+        "event": event,
+        "commit": commit_id,
+    }
+
+
+def read_project_draft(vault: Path, project_path: str) -> dict[str, Any]:
+    """Read a composed project draft and its evidence markers."""
+    from memoria_vault.runtime.evidence import extract_evidence_markers
+
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    _checked_frontmatter(vault, project_rel, "project")
+    draft_rel = _project_draft_rel(project_rel)
+    draft_path = vault / draft_rel
+    if not draft_path.is_file():
+        return {
+            "project_path": project_rel,
+            "draft_path": draft_rel,
+            "content": "",
+            "evidence_markers": [],
+            "evidence_sets": [],
+        }
+    content = draft_path.read_text(encoding="utf-8")
+    markers = extract_evidence_markers(content)
+    evidence_sets = [
+        row for row in state.evidence_sets(vault) if str(row["block_ref"]).startswith(draft_rel)
+    ]
+    return {
+        "project_path": project_rel,
+        "draft_path": draft_rel,
+        "content": content,
+        "evidence_markers": [
+            {
+                "id": marker.evidence_id,
+                "type": marker.evidence_type,
+                "state": marker.state,
+                "review_required": marker.review_required,
+                "items": list(marker.items),
+            }
+            for marker in markers
+        ],
+        "evidence_sets": evidence_sets,
+    }
+
+
+def verify_project_draft(
+    vault: Path,
+    project_path: str,
+    *,
+    max_findings: int = 20,
+) -> dict[str, Any]:
+    """Run deterministic structural/evidence checks for a composed project draft."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    _checked_frontmatter(vault, project_rel, "project")
+    draft_rel = _project_draft_rel(project_rel)
+    draft_path = vault / draft_rel
+    if not draft_path.is_file():
+        return {
+            "project_path": project_rel,
+            "draft_path": draft_rel,
+            "ready": False,
+            "ok": False,
+            "status": "missing-draft",
+            "missing": ["draft"],
+            "findings": [{"kind": "missing-draft", "severity": "high"}],
+            "evidence_sets": [],
+            "rebuild": {"deleted": 0, "inserted": 0},
+        }
+    rebuild = state.rebuild_evidence_sets_from_markers(
+        vault,
+        run_id=f"verify-project-draft:{project_rel}",
+    )
+    draft = read_project_draft(vault, project_rel)
+    findings = []
+    disposed = _disposed_evidence_ids(vault)
+    for row in draft["evidence_sets"]:
+        if row["id"] in disposed:
+            continue
+        if row["state"] == "evidence-incomplete":
+            findings.append(
+                {
+                    "kind": "evidence-incomplete",
+                    "severity": "high",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                }
+            )
+        if row["review_required"]:
+            findings.append(
+                {
+                    "kind": "review-required",
+                    "severity": "medium",
+                    "evidence_id": row["id"],
+                    "block_ref": row["block_ref"],
+                }
+            )
+    findings.extend(_draft_structural_reference_findings(vault, draft["content"]))
+    findings.extend(_draft_number_findings(vault, project_rel, draft["content"]))
+    total_findings = len(findings)
+    max_findings = max(1, int(max_findings))
+    findings = findings[:max_findings]
+    ok = not findings and bool(draft["evidence_sets"])
+    return {
+        "project_path": project_rel,
+        "draft_path": draft_rel,
+        "ready": ok,
+        "ok": ok,
+        "status": "verified" if ok else "needs-review",
+        "missing": [] if ok else _verification_finding_labels(findings),
+        "findings": findings,
+        "evidence_sets": draft["evidence_sets"],
+        "rebuild": rebuild,
+        "max_findings": max_findings,
+        "triaged_count": total_findings,
+    }
+
+
+def resolve_evidence_review(
+    vault: Path,
+    evidence_id: str,
+    *,
+    decision: str,
+    reason: str = "",
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Record a PI disposition for one evidence-set review item."""
+    evidence_id = evidence_id.strip()
+    decision = decision.strip().lower()
+    if not re.fullmatch(r"ev-[0-9a-f]{8}", evidence_id):
+        raise ValueError(f"invalid evidence id: {evidence_id}")
+    if decision not in {"accept", "reject"}:
+        raise ValueError("evidence review decision must be accept or reject")
+    return append_journal_event(
+        Path(vault),
+        {
+            "event": "resolved",
+            "operation": "resolve-evidence-review",
+            "evidence_id": evidence_id,
+            "decision": decision,
+            "reason": reason.strip(),
+        },
+        machine=machine,
+    )
+
+
+def promote_draft_passage(
+    vault: Path,
+    project_path: str,
+    *,
+    title: str,
+    passage: str,
+    source_id: str = "",
+    commit: bool = False,
+    machine: str | None = None,
+) -> dict[str, Any]:
+    """Extract a selected draft passage into a new unchecked note."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    draft_rel = _project_draft_rel(project_rel)
+    draft_path = vault / draft_rel
+    if not draft_path.is_file():
+        raise FileNotFoundError(draft_path)
+    selected = passage.strip()
+    if not selected:
+        raise ValueError("draft passage is required")
+    draft_content = draft_path.read_text(encoding="utf-8")
+    if selected not in draft_content:
+        raise ValueError("draft passage was not found in the project draft")
+    note_title = title.strip()
+    if not note_title:
+        raise ValueError("draft note title is required")
+    note_rel = _unique_note_rel(vault, note_title)
+    note_source = _draft_source_id(source_id)
+    frontmatter: dict[str, Any] = {
+        "type": "note",
+        "title": note_title,
+        "tags": [],
+        "links": {},
+    }
+    if note_source:
+        frontmatter["source_id"] = f"catalog/sources/{note_source}"
+    apply_universal_concept_frontmatter(frontmatter, note_rel)
+    content = frontmatter_doc(frontmatter, selected + "\n")
+    run_id = f"draft-writeback:{draft_rel}:{Path(note_rel).stem}"
+    stage = stage_concept(
+        vault,
+        note_rel,
+        content,
+        inputs=[{"id": draft_rel, "sha256": sha256_file(draft_path)}],
+        operation="promote-draft-passage",
+        run_id=run_id,
+        actor="pi",
+        machine=machine,
+    )
+    materialized = materialize_unchecked(vault, note_rel)
+    link = _draft_note_markdown_link(draft_rel, note_rel, note_title)
+    if link not in draft_content:
+        draft_path.write_text(
+            draft_content.rstrip() + "\n\n## Extracted Notes\n\n" + f"- {link}\n",
+            encoding="utf-8",
+        )
+    event = append_journal_event(
+        vault,
+        {
+            "event": "resolved",
+            "operation": "promote-draft-passage",
+            "run_id": run_id,
+            "draft_path": draft_rel,
+            "output_id": note_rel,
+            "source_id": frontmatter.get("source_id", ""),
+        },
+        machine=machine,
+    )
+    commit_id = ""
+    if commit:
+        commit_id = commit_writer_changes(
+            vault,
+            "promote draft passage",
+            [note_rel, draft_rel],
+            machine=machine,
+        )
+    return {
+        "project_path": project_rel,
+        "draft_path": draft_rel,
+        "note_path": note_rel,
+        "check_status": state.concept_check_status(vault, note_rel),
+        "source_id": frontmatter.get("source_id", ""),
+        "stage": stage,
+        "materialized": materialized,
+        "event": event,
+        "commit": commit_id,
+    }
+
+
+def read_project_slice(vault: Path, project_path: str) -> dict[str, Any]:
+    """Read a project's host-neutral outline slice and computed argument edges."""
+    vault = Path(vault)
+    project_rel = _project_rel(vault, project_path)
+    _checked_frontmatter(vault, project_rel, "project")
+    outline_rel = _project_outline_rel(project_rel)
+    outline_path = vault / outline_rel
+    if not outline_path.is_file():
+        return {
+            "project_path": project_rel,
+            "outline_path": outline_rel,
+            "members": [],
+            "edges": [],
+            "missing": [],
+        }
+
+    notes = _checked_notes_by_path(vault)
+    by_id = {str(fm.get("id") or ""): rel for rel, fm in notes.items() if fm.get("id")}
+    members = []
+    missing = []
+    for index, item in enumerate(_parse_outline_members(outline_path.read_text(encoding="utf-8"))):
+        rel = by_id.get(item["id"])
+        if rel is None:
+            missing.append({"id": item["id"], "line": item["line"]})
+            continue
+        members.append(
+            {
+                "id": item["id"],
+                "path": rel,
+                "title": str(notes[rel].get("title") or Path(rel).stem),
+                "reasoning": item["reasoning"],
+                "order": index,
+                "check_status": "checked",
+            }
+        )
+    member_paths = {member["path"] for member in members}
+    edges = [
+        edge
+        for edge in _note_edges({rel: notes[rel] for rel in member_paths})
+        if edge["source"] in member_paths and edge["target"] in member_paths
+    ]
+    return {
+        "project_path": project_rel,
+        "outline_path": outline_rel,
+        "members": members,
+        "edges": sorted(edges, key=lambda edge: (edge["source"], edge["target"], edge["type"])),
+        "missing": missing,
     }
 
 
@@ -1712,18 +2365,30 @@ def write_project_export(
     export_format: str = "markdown",
     output_path: str = "",
     ready_only: bool = False,
+    draft: bool = False,
 ) -> dict[str, Any]:
     """Write or return a deterministic project export."""
     vault = Path(vault)
     export_format = export_format.strip().lower() or "markdown"
     if export_format not in {"markdown", "docx", "pdf", "odt"}:
         raise ValueError(f"unsupported project export format: {export_format}")
-    readiness = project_export_readiness(vault, project_path)
+    readiness = (
+        verify_project_draft(vault, project_path)
+        if draft
+        else project_export_readiness(vault, project_path)
+    )
     if ready_only and not readiness["ready"]:
         missing = ", ".join(readiness["missing"])
         raise ValueError(f"project is not export-ready: {missing}")
+    if draft and not readiness["ok"]:
+        reasons = ", ".join(_verification_finding_labels(readiness["findings"]))
+        raise ValueError(f"project draft is not export-ready: {reasons}")
 
-    rendered = render_project_export_markdown(vault, project_path)
+    rendered = (
+        render_project_draft_export_markdown(vault, project_path)
+        if draft
+        else render_project_export_markdown(vault, project_path)
+    )
     content = str(rendered["content"])
     output = output_path.strip()
     if export_format == "markdown":
@@ -1762,6 +2427,26 @@ def write_project_export(
     }
 
 
+def render_project_draft_export_markdown(vault: Path, project_path: str) -> dict[str, Any]:
+    """Render a verified project draft with internal evidence markers stripped."""
+    vault = Path(vault)
+    verification = verify_project_draft(vault, project_path)
+    if not verification["ok"]:
+        reasons = ", ".join(_verification_finding_labels(verification["findings"]))
+        raise ValueError(f"project draft is not export-ready: {reasons}")
+    draft = read_project_draft(vault, project_path)
+    _frontmatter, body = split_frontmatter(draft["content"])
+    return {
+        "project_path": draft["project_path"],
+        "draft_path": draft["draft_path"],
+        "format": "markdown",
+        "content": _render_draft_export_body(vault, body).strip() + "\n",
+        "node_count": 0,
+        "edge_count": 0,
+        "relation_count": 0,
+    }
+
+
 def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
     """Return structural export readiness for a checked paper project."""
     vault = Path(vault)
@@ -1775,6 +2460,9 @@ def project_export_readiness(vault: Path, project_path: str) -> dict[str, Any]:
         missing.append("thesis")
     if argument["supports_count"] < 1:
         missing.append("checked support")
+    if (vault / _project_draft_rel(project_rel)).is_file():
+        draft_verification = verify_project_draft(vault, project_rel)
+        missing.extend(draft_verification["missing"])
     return {
         "ready": not missing,
         "status": "export-ready" if not missing else "needs-work",
@@ -1935,6 +2623,14 @@ def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
             rel = path.relative_to(vault).as_posix()
             if _has_checked_verdict(vault, rel) and _is_current_concept(vault, rel, frontmatter):
                 yield rel, frontmatter
+
+
+def _checked_notes_by_path(vault: Path) -> dict[str, dict[str, Any]]:
+    return {
+        rel: frontmatter
+        for rel, frontmatter in _checked_concepts(vault)
+        if frontmatter.get("type") == "note" and _is_current_note(vault, rel, frontmatter)
+    }
 
 
 def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
@@ -2219,6 +2915,285 @@ def _project_canvas_rel(project_rel: str) -> str:
     if project_rel.endswith("/project.md"):
         return f"{project_rel.removesuffix('/project.md')}/argument.canvas"
     return f"projects/{Path(project_rel).stem}/argument.canvas"
+
+
+def _project_outline_rel(project_rel: str) -> str:
+    if project_rel.endswith("/project.md"):
+        return f"{project_rel.removesuffix('/project.md')}/outline.md"
+    return f"projects/{Path(project_rel).stem}/outline.md"
+
+
+def _project_draft_rel(project_rel: str) -> str:
+    if project_rel.endswith("/project.md"):
+        return f"{project_rel.removesuffix('/project.md')}/draft.md"
+    return f"projects/{Path(project_rel).stem}/draft.md"
+
+
+def _project_slice_query(
+    vault: Path,
+    project_rel: str,
+    project: dict[str, Any],
+    query: str,
+) -> str:
+    frontmatter, body = split_frontmatter((vault / project_rel).read_text(encoding="utf-8"))
+    terms = [
+        query,
+        *list(_frontmatter_text_terms(frontmatter)),
+        body,
+    ]
+    thesis_raw = str(project.get("thesis") or project.get("active_thesis") or "").strip()
+    if thesis_raw:
+        try:
+            thesis_rel = _concept_rel(thesis_raw)
+            thesis = _checked_frontmatter(vault, thesis_rel, "note")
+            _thesis_fm, thesis_body = split_frontmatter(
+                (vault / thesis_rel).read_text(encoding="utf-8")
+            )
+            terms.extend([*list(_frontmatter_text_terms(thesis)), thesis_body])
+        except (FileNotFoundError, ValueError):
+            terms.append(thesis_raw)
+    text = " ".join(str(term).strip() for term in terms if str(term).strip())
+    return text or Path(project_rel).stem
+
+
+def _frontmatter_text_terms(frontmatter: dict[str, Any]) -> Iterable[str]:
+    for field in (
+        "title",
+        "description",
+        "research_question",
+        "central_contribution",
+        "gap_statement",
+        "claim_text",
+    ):
+        value = frontmatter.get(field)
+        if isinstance(value, str) and value.strip():
+            yield value.strip()
+    for field in ("scope_topics", "topics", "tags", "keywords", "research_area", "methodology"):
+        yield from _string_list(frontmatter.get(field))
+    plan = frontmatter.get("paper_plan")
+    if isinstance(plan, dict):
+        for field in ("research_question", "central_contribution", "gap_statement"):
+            value = plan.get(field)
+            if isinstance(value, str) and value.strip():
+                yield value.strip()
+
+
+def _project_slice_reason(query: str, score: float) -> str:
+    label = " ".join(query.split())[:80]
+    return f"BM25 score {score:.3f} for project query: {label}"
+
+
+def _outline_text(members: Iterable[dict[str, Any]]) -> str:
+    lines = []
+    for member in members:
+        note_id = str(member["id"]).strip()
+        reasoning = str(member.get("reasoning") or "").strip()
+        lines.append(f"- {note_id} — {reasoning}")
+    return "\n".join(lines) + ("\n" if lines else "")
+
+
+def _existing_evidence_ids(vault: Path, extractor: Any) -> set[str]:
+    ids: set[str] = set()
+    for path in sorted(vault.rglob("*.md")):
+        rel = path.relative_to(vault)
+        if any(part in {".git", ".memoria"} for part in rel.parts):
+            continue
+        ids.update(extractor(path.read_text(encoding="utf-8")))
+    return ids
+
+
+def _draft_evidence_items(vault: Path, frontmatter: dict[str, Any]) -> list[str]:
+    items = []
+    for source_id in _draft_source_ids(frontmatter):
+        if state.catalog_source(vault, source_id):
+            items.append(f"{source_id}#^p0001")
+    return sorted(set(items))
+
+
+def _draft_source_ids(frontmatter: dict[str, Any]) -> Iterable[str]:
+    for field in ("work_id", "source_id"):
+        value = frontmatter.get(field)
+        if isinstance(value, str):
+            source_id = _draft_source_id(value)
+            if source_id:
+                yield source_id
+    evidence_set = frontmatter.get("evidence_set")
+    values = evidence_set if isinstance(evidence_set, list) else [evidence_set]
+    for value in values:
+        if isinstance(value, str):
+            source_id = _draft_source_id(value)
+            if source_id:
+                yield source_id
+
+
+def _draft_source_id(value: str) -> str:
+    text = value.strip().split("#", 1)[0].rstrip("/")
+    if not text:
+        return ""
+    if text.startswith("catalog/sources/"):
+        return text.rsplit("/", 1)[-1]
+    if text.startswith(("works/", "graph-neighborhoods/")):
+        return _source_id_from_path(text)
+    if "/" not in text:
+        return text
+    return ""
+
+
+def _draft_evidence_type(items: list[str]) -> str:
+    if not items:
+        return "implicit"
+    return "single-span" if len(items) == 1 else "multi-span"
+
+
+def _draft_note_excerpt(body: str, token_budget: int) -> str:
+    text = body.strip()
+    if not text:
+        return "Abstain: this checked note has no draftable body text."
+    words = text.split()
+    if len(words) <= token_budget:
+        return text
+    return " ".join(words[:token_budget]).rstrip() + "\n\nAbstain: note text exceeded budget."
+
+
+def _verification_finding_labels(findings: Iterable[dict[str, Any]]) -> list[str]:
+    labels = []
+    for finding in findings:
+        kind = str(finding.get("kind") or "finding")
+        evidence_id = str(finding.get("evidence_id") or "").strip()
+        labels.append(f"{kind}:{evidence_id}" if evidence_id else kind)
+    return labels
+
+
+def _disposed_evidence_ids(vault: Path) -> set[str]:
+    with state.connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id
+            FROM journal_events
+            WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
+              AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
+            """
+        ).fetchall()
+    return {str(row["evidence_id"]) for row in rows if row["evidence_id"]}
+
+
+def _draft_structural_reference_findings(vault: Path, content: str) -> list[dict[str, Any]]:
+    refs = _draft_source_note_refs(content)
+    if not refs:
+        return [{"kind": "missing-structural-reference", "severity": "high"}]
+    findings: list[dict[str, Any]] = []
+    for reference in refs:
+        try:
+            rel = normalize_path(reference)
+        except ValueError:
+            findings.append(
+                {
+                    "kind": "broken-structural-reference",
+                    "severity": "high",
+                    "reference": reference,
+                }
+            )
+            continue
+        if not rel.endswith(".md"):
+            rel += ".md"
+        if not (vault / rel).is_file():
+            findings.append(
+                {
+                    "kind": "broken-structural-reference",
+                    "severity": "high",
+                    "reference": reference,
+                }
+            )
+            continue
+        try:
+            _checked_frontmatter(vault, rel, "note")
+        except ValueError:
+            findings.append(
+                {
+                    "kind": "unchecked-structural-reference",
+                    "severity": "high",
+                    "reference": reference,
+                }
+            )
+    return findings
+
+
+def _draft_source_note_refs(content: str) -> list[str]:
+    return [
+        match.group("path").strip()
+        for match in re.finditer(r"(?m)^Source note:\s*`(?P<path>[^`]+)`\s*$", content)
+        if match.group("path").strip()
+    ]
+
+
+def _draft_number_findings(vault: Path, project_rel: str, content: str) -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    expected_count = len(read_project_slice(vault, project_rel)["members"])
+    for match in re.finditer(r"Slice includes (?P<count>\d+) checked notes?\.", content):
+        observed = int(match.group("count"))
+        if observed != expected_count:
+            findings.append(
+                {
+                    "kind": "deterministic-number-mismatch",
+                    "severity": "high",
+                    "number": "slice_checked_note_count",
+                    "expected": expected_count,
+                    "observed": observed,
+                }
+            )
+    if re.search(r"\b(analysis-computed|analysis code|code-warrant)\b", content, re.I):
+        findings.append(
+            {
+                "kind": "analysis-number-evidence-incomplete",
+                "severity": "high",
+            }
+        )
+    return findings
+
+
+def _render_draft_export_body(vault: Path, content: str) -> str:
+    from memoria_vault.runtime.evidence import parse_evidence_marker, parse_source_span_ref
+
+    def citation(match: re.Match[str]) -> str:
+        marker = parse_evidence_marker(match.group(0).strip())
+        citekeys = []
+        for item in marker.items:
+            try:
+                source = parse_source_span_ref(item)
+            except ValueError:
+                continue
+            compact = state.compact_citation(vault, source.work_id)
+            if compact.get("citekey"):
+                citekeys.append(f"@{compact['citekey']}")
+        return f" [{'; '.join(citekeys)}]" if citekeys else ""
+
+    text = re.sub(r"\s*%%ev:\s*.*?%%", citation, content)
+    return re.sub(r"\s+\^blk-[A-Za-z0-9_-]+", "", text)
+
+
+def _draft_note_markdown_link(draft_rel: str, note_rel: str, title: str) -> str:
+    start = Path(draft_rel).parent.as_posix()
+    href = posixpath.relpath(note_rel, start=start)
+    return f"[{title}]({href}) %%embed: {note_rel}%%"
+
+
+def _parse_outline_members(text: str) -> list[dict[str, Any]]:
+    members = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        raw = line.strip()
+        if not raw.startswith("- "):
+            continue
+        body = raw[2:].strip()
+        if not body:
+            continue
+        if " — " in body:
+            note_id, reasoning = body.split(" — ", 1)
+        elif " -- " in body:
+            note_id, reasoning = body.split(" -- ", 1)
+        else:
+            note_id, reasoning = body, ""
+        members.append({"id": note_id.strip(), "reasoning": reasoning.strip(), "line": line_number})
+    return members
 
 
 def _source_rel(path: str) -> str:

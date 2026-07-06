@@ -7,11 +7,11 @@ nav_order: 3
 
 # The Writer
 
-The Writer is not an installed alpha.16 profile. It is the future
-draft-proposal posture for turning checked evidence into structured prose:
-section drafts with bound citations and competing outlines. Its posture remains
-**generative, draft-only**: every output is a proposal, and nothing becomes
-canonical synthesis or a deliverable without the PI.
+The Writer is the project-draft posture that turns checked outline slices into
+structured prose through `memoria project compose`. Its posture remains
+**generative, draft-only**: every output is a proposal in `draft.md`, and
+nothing becomes canonical synthesis or a deliverable without verification and
+the PI.
 
 ---
 
@@ -23,8 +23,8 @@ workspace context or an explicit request. Blurring them produces writing that
 sounds like the PI's thinking but never was.
 
 **Not a promoter.** A draft becoming part of a checked note, hub, or deliverable
-is the PI's move. The Writer can mark a draft ready — an FYI, not an approval
-request.
+is the PI's move. `memoria project promote` creates an unchecked note from a
+selected passage; review/check promotion stays separate.
 
 ---
 

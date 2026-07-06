@@ -22,8 +22,12 @@ contract.
 
 ## The shipped operations
 
-Eight prompt operations ship as package-owned operation manifests and are
-runnable when manifest validation passes. Each file stem is its `pattern_id`.
+Eight prompt-operation patterns ship as package-owned operation manifests and
+are runnable when manifest validation passes. Each file stem is its
+`pattern_id`. Deterministic alpha.17 project WRITE operations such as
+`write-project-slice`, `compose-project-draft`, `verify-project-draft`, and
+`promote-draft-passage` are also packaged capability manifests, but they are
+not prompt patterns and are listed through `memoria operation list`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |

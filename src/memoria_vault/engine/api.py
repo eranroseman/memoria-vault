@@ -8,6 +8,9 @@ from typing import Any
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import render_capability_index
+from memoria_vault.runtime.knowledge import exploration_channel as _exploration_channel
+from memoria_vault.runtime.knowledge import read_project_draft as _read_project_draft
+from memoria_vault.runtime.knowledge import read_project_slice as _read_project_slice
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path, within_scope
 from memoria_vault.runtime.read_barrier import is_consumable_checked_file
@@ -59,6 +62,10 @@ def read_operations(workspace: Path) -> dict[str, Any]:
             }
         )
     return _read_payload(operations=operations)
+
+
+def read_exploration(workspace: Path, *, limit: int = 10) -> dict[str, Any]:
+    return _read_payload(exploration=_exploration_channel(Path(workspace), limit=limit))
 
 
 def read_requests(
@@ -197,6 +204,96 @@ def read_work(
         raise FileNotFoundError(f"work not found: {work_id}")
     _require_any_scope(_work_paths(work), read_scope, f"work not found: {work_id}")
     return _read_payload(work=_tag_work(work))
+
+
+def read_slice(
+    workspace: Path, project_path: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    project_slice = _read_project_slice(Path(workspace), project_path)
+    _require_scope(
+        project_slice["outline_path"], read_scope, f"project slice not found: {project_path}"
+    )
+    return _read_payload(slice=project_slice, view=_slice_table_view(project_slice))
+
+
+def read_outline(
+    workspace: Path, project_path: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    return read_slice(workspace, project_path, read_scope=read_scope)
+
+
+def read_draft(
+    workspace: Path, project_path: str, *, read_scope: list[str] | None = None
+) -> dict[str, Any]:
+    draft = _read_project_draft(Path(workspace), project_path)
+    _require_scope(draft["draft_path"], read_scope, f"project draft not found: {project_path}")
+    return _read_payload(draft=draft, view=_draft_view(draft))
+
+
+def compose_draft(
+    workspace: Path,
+    project_path: str,
+    *,
+    token_budget: int = 4000,
+    idempotency_key: str | None = None,
+    schedule_id: str | None = None,
+    actor: str = "pi",
+) -> dict[str, Any]:
+    return run_operation(
+        workspace,
+        "compose-project-draft",
+        {"project_path": project_path, "token_budget": token_budget},
+        idempotency_key=idempotency_key,
+        schedule_id=schedule_id,
+        actor=actor,
+        command="compose-project-draft",
+    )
+
+
+def verify_draft(
+    workspace: Path,
+    project_path: str,
+    *,
+    idempotency_key: str | None = None,
+    schedule_id: str | None = None,
+    actor: str = "pi",
+) -> dict[str, Any]:
+    return run_operation(
+        workspace,
+        "verify-project-draft",
+        {"project_path": project_path},
+        idempotency_key=idempotency_key,
+        schedule_id=schedule_id,
+        actor=actor,
+        command="verify-project-draft",
+    )
+
+
+def promote_draft_passage(
+    workspace: Path,
+    project_path: str,
+    *,
+    title: str,
+    passage: str,
+    source_id: str = "",
+    idempotency_key: str | None = None,
+    schedule_id: str | None = None,
+    actor: str = "pi",
+) -> dict[str, Any]:
+    return run_operation(
+        workspace,
+        "promote-draft-passage",
+        {
+            "project_path": project_path,
+            "title": title,
+            "passage": passage,
+            "source_id": source_id,
+        },
+        idempotency_key=idempotency_key,
+        schedule_id=schedule_id,
+        actor=actor,
+        command="promote-draft-passage",
+    )
 
 
 def read_journal(
@@ -568,6 +665,68 @@ def _attention_card_view(card: dict[str, Any]) -> dict[str, Any]:
                     "loudness": card["loudness"],
                 },
                 "body_data": card["body_data"],
+            }
+        ],
+    }
+
+
+def _slice_table_view(project_slice: dict[str, Any]) -> dict[str, Any]:
+    rows = [
+        {
+            "ref": member["path"],
+            "check_status": member["check_status"],
+            "cells": {
+                "order": member["order"],
+                "title": member["title"],
+                "reasoning": member["reasoning"],
+            },
+        }
+        for member in project_slice["members"]
+    ]
+    return {
+        "version": VIEW_SPEC_VERSION,
+        "kind": "project-slice",
+        "blocks": [
+            {
+                "id": safe_filename(project_slice["outline_path"]),
+                "kind": "table",
+                "title": "Project slice",
+                "check_status": "checked" if rows and not project_slice["missing"] else "unchecked",
+                "refs": [row["ref"] for row in rows],
+                "columns": ["order", "title", "reasoning"],
+                "rows": rows,
+            }
+        ],
+    }
+
+
+def _draft_view(draft: dict[str, Any]) -> dict[str, Any]:
+    rows = [
+        {
+            "ref": str(row["block_ref"]),
+            "check_status": "unchecked" if row["state"] != "complete" else "checked",
+            "cells": {
+                "id": row["id"],
+                "type": row["type"],
+                "state": row["state"],
+                "review_required": row["review_required"],
+            },
+        }
+        for row in draft["evidence_sets"]
+    ]
+    ready = bool(rows) and all(row["check_status"] == "checked" for row in rows)
+    return {
+        "version": VIEW_SPEC_VERSION,
+        "kind": "project-draft",
+        "blocks": [
+            {
+                "id": safe_filename(draft["draft_path"]),
+                "kind": "table",
+                "title": "Project draft evidence",
+                "check_status": "checked" if ready else "unchecked",
+                "refs": [draft["draft_path"]],
+                "columns": ["id", "type", "state", "review_required"],
+                "rows": rows,
             }
         ],
     }

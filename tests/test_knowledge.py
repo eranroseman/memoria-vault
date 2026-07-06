@@ -16,8 +16,10 @@ from memoria_vault.runtime.knowledge import (
     curate_note_link,
     emit_note_candidates,
     frame_project_paper,
+    read_project_slice,
     write_project_argument_canvas,
     write_project_export,
+    write_project_outline,
 )
 from memoria_vault.runtime.operations import compile_source_digest
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -800,6 +802,104 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
     assert result["findings"] == [{"kind": "thin-argument", "severity": "medium"}]
     assert [row["kind"] for row in result["gap_findings"]] == ["conflict"]
     assert [row["kind"] for row in result["advisories"]] == ["structural"]
+
+
+def test_read_project_slice_uses_outline_order_and_computed_edges(tmp_path: Path) -> None:
+    _md(
+        tmp_path / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Thesis\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+    )
+    _md(
+        tmp_path / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Support\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    _md(
+        tmp_path / "notes/outside.md",
+        "type: note\ncheck_status: checked\ntitle: Outside\nid: 01ARZ3NDEKTSV4RRFFQ69G5FA3\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    outline = tmp_path / "projects/project-alpha/outline.md"
+    outline.write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — Lead with the support\n"
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — Then state the thesis\n"
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FZZ — Missing member\n",
+        encoding="utf-8",
+    )
+
+    result = read_project_slice(tmp_path, "project-alpha")
+
+    assert [member["path"] for member in result["members"]] == [
+        "notes/support.md",
+        "notes/thesis.md",
+    ]
+    assert [member["reasoning"] for member in result["members"]] == [
+        "Lead with the support",
+        "Then state the thesis",
+    ]
+    assert result["edges"] == [
+        {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"}
+    ]
+    assert result["missing"] == [{"id": "01ARZ3NDEKTSV4RRFFQ69G5FZZ", "line": 3}]
+
+    canvas_result = write_project_argument_canvas(tmp_path, "project-alpha")
+    canvas = json.loads((tmp_path / canvas_result["canvas_path"]).read_text(encoding="utf-8"))
+    assert {node["file"] for node in canvas["nodes"]} == {
+        "notes/support.md",
+        "notes/thesis.md",
+    }
+
+
+def test_write_project_outline_proposes_bm25_slice_and_computes_edges(
+    tmp_path: Path,
+) -> None:
+    vault = workspace(tmp_path)
+    _md(
+        vault / "projects/project-alpha/project.md",
+        "type: project\ncheck_status: checked\ntitle: Alpha project\n"
+        "description: Sleep plasticity project\nthesis: notes/thesis.md\n",
+    )
+    _md(
+        vault / "notes/thesis.md",
+        "type: note\ncheck_status: checked\ntitle: Sleep plasticity thesis\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA1\n",
+    )
+    _md(
+        vault / "notes/support.md",
+        "type: note\ncheck_status: checked\ntitle: Sleep plasticity support\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
+        "links:\n  supports:\n    - notes/thesis.md\n",
+    )
+    _md(
+        vault / "notes/outside.md",
+        "type: note\ncheck_status: checked\ntitle: Unrelated archive\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA3\n",
+    )
+
+    result = write_project_outline(
+        vault,
+        "project-alpha",
+        query="sleep plasticity",
+        limit=2,
+    )
+
+    assert result["retrieval_engine"] == "bm25"
+    assert result["outline_path"] == "projects/project-alpha/outline.md"
+    assert {member["path"] for member in result["members"]} == {
+        "notes/support.md",
+        "notes/thesis.md",
+    }
+    outline = (vault / "projects/project-alpha/outline.md").read_text(encoding="utf-8")
+    assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA1 — BM25 score " in outline
+    assert "- 01ARZ3NDEKTSV4RRFFQ69G5FA2 — BM25 score " in outline
+    assert result["edges"] == [
+        {"source": "notes/support.md", "target": "notes/thesis.md", "type": "supports"}
+    ]
 
 
 def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:

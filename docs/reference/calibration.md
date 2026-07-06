@@ -26,6 +26,11 @@ If any threshold is `null`, the score is report-only. It may log shadow telemetr
 or appear in a review surface, but it must not auto-accept, auto-defer, hide,
 merge, block, or reorder canonical work.
 
+Seeded-error probes follow the same rule. They can surface calibration findings
+in the ordinary review stream, and reviewers can record accept/reject
+dispositions on those findings, but those dispositions train future threshold
+work rather than changing the canonical artifact automatically.
+
 ## Drift
 
 Recalibrate any enabled block when the scoring model, embedding model, upstream
