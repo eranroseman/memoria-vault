@@ -21,7 +21,7 @@ This release is done when every gate/stage sub-issue below is closed.
 |---|---|---|
 | Source | Repo contracts, docs, schemas, Python tests, and static checks are coherent. | CI and `scripts/verify pr` summary |
 | Package | Disposable vault assembly and model-free workflow replay work. | `scripts/verify package` summary |
-| Runtime | Hermes, MCP, Obsidian bridge, model endpoint, cron, and policy boundaries work live. | `scripts/verify runtime` or explicit skip reason |
+| Runtime | Optional transports, scheduled wrappers, model endpoint, and policy boundaries work live when the release claims them. | `scripts/verify runtime` or explicit skip reason |
 | Product | The product workflow produces reviewable value, telemetry, GUI evidence, and output-quality evidence when claimed. | Product/manual sub-issue |
 | Release | Blockers, docs, versioning, notes, and close-out are ready. | Release parent/sub-issues |
 
@@ -34,8 +34,8 @@ This release is done when every gate/stage sub-issue below is closed.
 
 1. Required CI is green on `main`.
 2. `scripts/verify rc` passes, or Runtime is skipped with a concrete reason.
-3. Fresh install or profile redeploy succeeds against a disposable vault, never
-   the production `~/Memoria`.
+3. Fresh install or runtime replay succeeds against a disposable workspace under
+   `~/memoria-vault/sandbox`, never a personal workspace.
 4. Product, manual GUI, failure/recovery, and runtime checks required by the
    release scope are recorded in sub-issues.
 5. Documentation integrity is complete: shipped behavior is covered, stale
