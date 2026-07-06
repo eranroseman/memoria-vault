@@ -11,6 +11,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
@@ -408,11 +410,6 @@ def _hard_staleness(path: str, frontmatter: dict[str, Any]) -> dict[str, Any]:
 
 
 def _bundle_roots(vault: Path) -> list[str]:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("search index requires PyYAML to load folders.yaml") from exc
-
     folders = yaml.safe_load(
         (Path(vault) / ".memoria/schemas/folders.yaml").read_text(encoding="utf-8")
     )

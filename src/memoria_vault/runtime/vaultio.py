@@ -10,6 +10,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
 UNIVERSAL_CONCEPT_BUNDLES = frozenset({"works", "sources", "notes", "hubs", "projects"})
 UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "work", "digest", "source-note", "hub", "project"})
@@ -49,10 +51,6 @@ def parse_frontmatter(text: str) -> dict[str, Any]:
         return {}
     raw = text[3:end]
     try:
-        import yaml
-    except ImportError:  # pragma: no cover - exercised in runtime deployments without PyYAML
-        return _parse_frontmatter_minimal(raw)
-    try:
         data = yaml.safe_load(raw) or {}
     except yaml.YAMLError:
         return {}
@@ -80,11 +78,6 @@ def strip_frontmatter(text: str) -> str:
 
 
 def dump_frontmatter(frontmatter: dict[str, Any]) -> str:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("PyYAML is required to write frontmatter") from exc
-
     return yaml.safe_dump(frontmatter, sort_keys=False, allow_unicode=True).strip()
 
 
@@ -219,22 +212,3 @@ def iter_markdown(
         for name in sorted(filenames):
             if name.endswith(".md"):
                 yield Path(dirpath) / name
-
-
-def _parse_frontmatter_minimal(raw: str) -> dict[str, Any]:
-    data: dict[str, Any] = {}
-    for line in raw.splitlines():
-        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
-            continue
-        if line.startswith((" ", "\t")):
-            continue
-        key, _, value = line.partition(":")
-        value = value.strip().strip("\"'")
-        if value.startswith("[") and value.endswith("]"):
-            inner = value[1:-1].strip()
-            data[key.strip()] = [
-                item.strip().strip("\"'") for item in inner.split(",") if item.strip()
-            ]
-        else:
-            data[key.strip()] = value
-    return data

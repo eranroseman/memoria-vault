@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from memoria_vault.runtime import state
+from memoria_vault.runtime.capabilities import DEFAULT_RUNNER_POLICY, read_capability_manifest
 from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -14,16 +15,15 @@ def test_gap_and_project_argument_operations_are_read_only_capabilities() -> Non
     for operation in ("analyze-gaps", "analyze-project-argument"):
         path = OPERATIONS / f"{operation}.md"
         text = path.read_text(encoding="utf-8")
-        fm = read_frontmatter(path)
+        raw_fm = read_frontmatter(path)
+        fm = read_capability_manifest("operation", operation)["frontmatter"]
         assert fm["type"] == "operation"
         assert "check_status" not in fm
         assert "standing" not in fm
         assert fm["operation_id"] == operation
         assert fm["allowed_tools"] == ["read_checked_concepts"]
-        assert fm["runner"] == {
-            "test": {"provider": "local", "model": "deterministic-fixture", "temperature": 0},
-            "live": {"provider": "gateway", "model": "deterministic-fixture", "temperature": 0},
-        }
+        assert "runner" not in raw_fm
+        assert fm["runner"] == DEFAULT_RUNNER_POLICY
         assert "write" not in text.lower()
 
 

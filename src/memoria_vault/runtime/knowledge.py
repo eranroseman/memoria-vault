@@ -1023,34 +1023,25 @@ def _write_full_text_gap_attention(
             f"Gap analysis found `{target}` has `text_status: {text_status}`; "
             "checked digests and retrieval require full text."
         )
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            "\n".join(
-                [
-                    "---",
-                    f'title: "{_yaml_str(title)}"',
-                    "projection: attention",
-                    "attention_kind: flag",
-                    "attention_status: open",
-                    f'finding: "{_yaml_str(finding)}"',
-                    "agent_recommendation: issues-found",
-                    f'target: "{_yaml_str(target)}"',
-                    "raised_by: analyze-gaps",
-                    "loudness: alert",
-                    f"created: {date.today().isoformat()}",
-                    "---",
-                    "",
-                    "# Finding",
-                    "",
-                    finding,
-                    "",
-                    "# Evidence",
-                    "",
-                    f"`{target}` must acquire or attach full text before digest compilation.",
-                    "",
-                ]
+        write_frontmatter_doc(
+            path,
+            {
+                "title": title,
+                "projection": "attention",
+                "attention_kind": "flag",
+                "attention_status": "open",
+                "finding": finding,
+                "agent_recommendation": "issues-found",
+                "target": target,
+                "raised_by": "analyze-gaps",
+                "loudness": "alert",
+                "created": date.today().isoformat(),
+            },
+            (
+                f"# Finding\n\n{finding}\n\n# Evidence\n\n"
+                f"`{target}` must acquire or attach full text before digest compilation.\n"
             ),
-            encoding="utf-8",
+            create_parent=True,
         )
         paths.append(rel)
     if not paths:
@@ -1287,34 +1278,24 @@ def _write_tag_candidate_attention(
             continue
         refs = [str(ref) for ref in candidate.get("refs") or []]
         target = refs[0] if refs else "works"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            "\n".join(
-                [
-                    "---",
-                    f'title: "Review tag candidate: {_yaml_str(phrase)}"',
-                    "projection: attention",
-                    "attention_kind: candidate",
-                    "attention_status: open",
-                    f'candidate_tag: "{_yaml_str(phrase)}"',
-                    f'target: "{_yaml_str(target)}"',
-                    f"source_count: {len(refs)}",
-                    "raised_by: analyze-gaps",
-                    "loudness: notice",
-                    f"created: {date.today().isoformat()}",
-                    "---",
-                    "",
-                    "# Candidate Tag",
-                    "",
-                    phrase,
-                    "",
-                    "# Evidence",
-                    "",
-                    "\n".join(f"- `{ref}`" for ref in refs),
-                    "",
-                ]
-            ),
-            encoding="utf-8",
+        write_frontmatter_doc(
+            path,
+            {
+                "title": f"Review tag candidate: {phrase}",
+                "projection": "attention",
+                "attention_kind": "candidate",
+                "attention_status": "open",
+                "candidate_tag": phrase,
+                "target": target,
+                "source_count": len(refs),
+                "raised_by": "analyze-gaps",
+                "loudness": "notice",
+                "created": date.today().isoformat(),
+            },
+            f"# Candidate Tag\n\n{phrase}\n\n# Evidence\n\n"
+            + "\n".join(f"- `{ref}`" for ref in refs)
+            + "\n",
+            create_parent=True,
         )
         new_paths.append(rel)
     if not new_paths:
@@ -1437,12 +1418,9 @@ def _contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
 def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, str]]:
     from memoria_vault.runtime.integrity import (
         NLI_REFUTED,
-        contradiction_tier1_gate,
         surface_tensions,
     )
 
-    if not contradiction_tier1_gate()["passed"]:
-        return []
     try:
         result = surface_tensions(vault, max_pairs=limit, tier2=False)
     except Exception:  # noqa: BLE001 -- exploration must degrade to honest empty.
@@ -1621,10 +1599,6 @@ def _source_id_from_path(path: str) -> str:
         if len(parts) >= 3:
             return parts[2]
     return ""
-
-
-def _yaml_str(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def analyze_project_argument(vault: Path, project_path: str) -> dict[str, Any]:
@@ -2372,23 +2346,15 @@ def write_project_export(
     export_format = export_format.strip().lower() or "markdown"
     if export_format not in {"markdown", "docx", "pdf", "odt"}:
         raise ValueError(f"unsupported project export format: {export_format}")
-    readiness = (
-        verify_project_draft(vault, project_path)
-        if draft
-        else project_export_readiness(vault, project_path)
-    )
-    if ready_only and not readiness["ready"]:
-        missing = ", ".join(readiness["missing"])
-        raise ValueError(f"project is not export-ready: {missing}")
-    if draft and not readiness["ok"]:
-        reasons = ", ".join(_verification_finding_labels(readiness["findings"]))
-        raise ValueError(f"project draft is not export-ready: {reasons}")
-
-    rendered = (
-        render_project_draft_export_markdown(vault, project_path)
-        if draft
-        else render_project_export_markdown(vault, project_path)
-    )
+    if draft:
+        rendered = render_project_draft_export_markdown(vault, project_path)
+        readiness = rendered["readiness"]
+    else:
+        readiness = project_export_readiness(vault, project_path)
+        if ready_only and not readiness["ready"]:
+            missing = ", ".join(readiness["missing"])
+            raise ValueError(f"project is not export-ready: {missing}")
+        rendered = render_project_export_markdown(vault, project_path)
     content = str(rendered["content"])
     output = output_path.strip()
     if export_format == "markdown":
@@ -2439,6 +2405,7 @@ def render_project_draft_export_markdown(vault: Path, project_path: str) -> dict
     return {
         "project_path": draft["project_path"],
         "draft_path": draft["draft_path"],
+        "readiness": verification,
         "format": "markdown",
         "content": _render_draft_export_body(vault, body).strip() + "\n",
         "node_count": 0,

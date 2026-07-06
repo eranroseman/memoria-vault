@@ -11,9 +11,6 @@ allowed_paths:
 - bibliography.bib
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: regenerate-references-bib.v1
 io_schema:
   input: checked_catalog_works

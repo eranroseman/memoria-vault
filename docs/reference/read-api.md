@@ -16,7 +16,6 @@ Alpha.17 adds project WRITE reads and wrappers:
 | Function | Contract |
 | --- | --- |
 | `read_slice(workspace, project_path)` | Reads `outline.md`, checked members, and computed in-slice links. |
-| `read_outline(workspace, project_path)` | Alias for `read_slice`. |
 | `read_draft(workspace, project_path)` | Reads `draft.md`, evidence markers, and derived evidence rows. |
 | `compose_draft(...)` | Queues `compose-project-draft`. |
 | `verify_draft(...)` | Queues `verify-project-draft`. |

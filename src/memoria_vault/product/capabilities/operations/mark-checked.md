@@ -15,9 +15,6 @@ allowed_paths:
 - capabilities/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: mark-checked.v1
 io_schema:
   input: target_path

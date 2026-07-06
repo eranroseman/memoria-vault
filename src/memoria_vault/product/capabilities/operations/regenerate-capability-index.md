@@ -9,9 +9,6 @@ allowed_paths:
 - .memoria/index/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: regenerate-capability-index.v1
 io_schema:
   input: packaged_capability_manifests

@@ -14,9 +14,6 @@ allowed_paths:
 - projects/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: integrity-quote-anchor-check.v1
 io_schema:
   input: anchored_notes

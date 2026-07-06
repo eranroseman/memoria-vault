@@ -11,6 +11,7 @@ from memoria_vault.runtime import capabilities as capability_module
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capabilities import (
     CAPABILITY_INDEX_PATH,
+    DEFAULT_RUNNER_POLICY,
     check_capability_index,
     iter_capability_manifests,
     render_capability_index,
@@ -41,7 +42,14 @@ def test_capability_index_renderer_covers_shipped_operations() -> None:
     assert rows["compile-source-digest"]["trust"]["source"] == "product"
     assert rows["compile-source-digest"]["trust"]["sha256"].startswith("sha256:")
     assert rows["compile-source-digest"]["path"].startswith("product/capabilities/operations/")
+    assert rows["compile-source-digest"]["runner"] == DEFAULT_RUNNER_POLICY
     assert "check_status" not in rows["compile-source-digest"]
+
+    operations = ROOT / "src/memoria_vault/product/capabilities/operations"
+    assert not any(
+        re.search(r"^runner:", path.read_text(encoding="utf-8"), re.M)
+        for path in operations.glob("*.md")
+    )
 
 
 def test_worker_operations_are_cataloged_and_policy_shaped() -> None:

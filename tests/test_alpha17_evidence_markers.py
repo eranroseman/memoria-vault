@@ -3,14 +3,12 @@ from __future__ import annotations
 import pytest
 
 from memoria_vault.runtime.evidence import (
-    BlockRef,
     EvidenceMarker,
     SourceSpanRef,
     evidence_ids_in_text,
     evidence_ref_kind,
     extract_evidence_markers,
     mint_evidence_id,
-    parse_block_ref,
     parse_evidence_marker,
     parse_source_span_ref,
     serialize_evidence_marker,
@@ -58,12 +56,6 @@ def test_evidence_ref_validation_accepts_source_spans_and_nested_evidence_sets()
 def test_evidence_ref_validation_rejects_citekey_shaped_span() -> None:
     with pytest.raises(ValueError, match="invalid source-span ref"):
         evidence_ref_kind("@smith2024#^p0001")
-
-
-def test_block_refs_are_local_workspace_refs() -> None:
-    assert parse_block_ref("notes/claim.md#^blk-abc123") == BlockRef("notes/claim.md", "abc123")
-    with pytest.raises(ValueError, match="invalid block ref path"):
-        parse_block_ref("../notes/claim.md#^blk-abc123")
 
 
 def test_mint_evidence_id_retries_on_collision() -> None:

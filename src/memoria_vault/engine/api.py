@@ -216,12 +216,6 @@ def read_slice(
     return _read_payload(slice=project_slice, view=_slice_table_view(project_slice))
 
 
-def read_outline(
-    workspace: Path, project_path: str, *, read_scope: list[str] | None = None
-) -> dict[str, Any]:
-    return read_slice(workspace, project_path, read_scope=read_scope)
-
-
 def read_draft(
     workspace: Path, project_path: str, *, read_scope: list[str] | None = None
 ) -> dict[str, Any]:

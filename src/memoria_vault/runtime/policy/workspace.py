@@ -4,14 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 from .model import ActorPolicy
 from .paths import REVIEW_GATED_PREFIXES
-
-try:  # PyYAML is a runtime dependency; pure decisions still import without it.
-    import yaml
-except ImportError:
-    yaml = None  # type: ignore[assignment]
-
 
 POLICY_CONFIG_RELPATH = ".memoria/config/policy.yaml"
 
@@ -19,8 +15,6 @@ POLICY_CONFIG_RELPATH = ".memoria/config/policy.yaml"
 def load_gated_prefixes(workspace: Path) -> tuple[str, ...]:
     """Load review-gated prefixes, with a stdlib fallback."""
     try:
-        import yaml
-
         path = Path(workspace) / ".memoria" / "schemas" / "folders.yaml"
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
         prefixes = tuple(data.get("gated_prefixes") or ())
@@ -59,8 +53,6 @@ def parse_actor_policy(actor: str, doc: dict) -> ActorPolicy:
 
 def load_policy_map(workspace: Path) -> dict[str, ActorPolicy]:
     """Read and parse workspace actor policy config."""
-    if yaml is None:
-        raise RuntimeError("PyYAML not installed; reinstall the Memoria runtime package.")
     path = workspace / POLICY_CONFIG_RELPATH
     if not path.is_file():
         raise FileNotFoundError(f"workspace policy config not found at {path}")

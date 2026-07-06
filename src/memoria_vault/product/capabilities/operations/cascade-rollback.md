@@ -15,9 +15,6 @@ allowed_paths:
 - journal/
 - .memoria/quarantine/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: cascade-rollback.v1
 io_schema:
   input: traced_target

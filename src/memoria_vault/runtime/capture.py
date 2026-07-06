@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
@@ -37,19 +36,6 @@ _ASPECT_HEADING_ALIASES = {
     "result": "outcome",
     "results": "outcome",
 }
-
-
-def source_requires_enrichment(
-    *,
-    identifiers: dict[str, Any] | None = None,
-    csl_json: dict[str, Any] | None = None,
-) -> bool:
-    identifiers = identifiers if isinstance(identifiers, dict) else {}
-    csl_json = csl_json if isinstance(csl_json, dict) else {}
-    return bool(
-        str(identifiers.get("doi") or identifiers.get("isbn") or "").strip()
-        or str(csl_json.get("DOI") or csl_json.get("ISBN") or "").strip()
-    )
 
 
 def _normalize_text_status(value: str) -> str:
@@ -659,18 +645,6 @@ def parse_bibtex_entry(text: str) -> dict[str, Any]:
     }
 
 
-def parse_bibtex_entries(text: str) -> Iterator[dict[str, Any]]:
-    index = 0
-    while True:
-        start = text.find("@", index)
-        if start == -1:
-            return
-        open_index = _first_container(text[start:]) + start
-        close_index = _matching_container(text, open_index)
-        yield parse_bibtex_entry(text[start : close_index + 1])
-        index = close_index + 1
-
-
 def render_references_bib(vault: Path) -> str:
     """Render checked SQLite catalog Works as the generated bibliography.bib projection."""
     entries = []
@@ -725,14 +699,6 @@ def write_references_bib(
 def check_references_bib(vault: Path, *, output_path: str = "bibliography.bib") -> bool:
     path = Path(vault) / output_path
     return path.is_file() and path.read_text(encoding="utf-8") == render_references_bib(vault)
-
-
-def _has_bibliography_fields(frontmatter: dict[str, Any]) -> bool:
-    return bool(
-        str(frontmatter.get("citekey") or "").strip()
-        or frontmatter.get("csl_json")
-        or frontmatter.get("identifiers")
-    )
 
 
 def _source_id(value: str) -> str:

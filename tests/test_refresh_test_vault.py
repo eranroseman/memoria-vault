@@ -1,6 +1,5 @@
 """Fast sandbox refresh helper keeps runtime state out of the blast radius."""
 
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -9,18 +8,6 @@ SCRIPT = ROOT / "scripts" / "sandbox" / "refresh-test-vault.sh"
 
 def _script() -> str:
     return SCRIPT.read_text(encoding="utf-8")
-
-
-def _refresh_entries(sync_call: str) -> set[str]:
-    match = re.search(
-        rf"for rel in \\\n(?P<body>.*?)\ndo\n  {sync_call} \"\$rel\"", _script(), re.S
-    )
-    assert match, f"{sync_call} loop not found"
-    return {
-        line.strip().removesuffix("\\").strip()
-        for line in match.group("body").splitlines()
-        if line.strip()
-    }
 
 
 def test_refresh_test_vault_helper_exists_and_is_executable():

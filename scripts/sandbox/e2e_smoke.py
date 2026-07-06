@@ -31,10 +31,6 @@ STAGE_LABELS = {
 STAGE_ORDER = tuple(STAGE_LABELS)
 
 
-def print_stage_label(name: str) -> None:
-    print(STAGE_LABELS[name])
-
-
 def assert_vault_skeleton(root: Path, vault: Path) -> None:
     folders = yaml.safe_load((root / "vault-template/.memoria/schemas/folders.yaml").read_text())
     for folder in folders["skeleton"]:

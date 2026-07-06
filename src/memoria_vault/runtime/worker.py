@@ -1329,13 +1329,6 @@ def _finish_job(vault: Path, status: str, job: dict[str, Any]) -> None:
     state.finish_request(vault, str(job["job_id"]), status, job)
 
 
-def _first_existing(*paths: Path) -> Path:
-    for path in paths:
-        if path.is_file():
-            return path
-    return paths[-1]
-
-
 def _payload_bool(payload: dict[str, Any], key: str, default: bool) -> bool:
     value = payload.get(key)
     if value is None:

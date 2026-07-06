@@ -28,6 +28,7 @@ from memoria_vault.runtime.trusted_writer import (
 )
 from memoria_vault.runtime.vaultio import (
     concept_text,
+    frontmatter_doc,
     safe_read,
     split_frontmatter,
 )
@@ -647,30 +648,23 @@ def _write_digest_text_attention(
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        "\n".join(
-            [
-                "---",
-                f'title: "{_yaml_str(title)}"',
-                "projection: attention",
-                "attention_kind: flag",
-                "attention_status: open",
-                f'finding: "{_yaml_str(finding)}"',
-                "agent_recommendation: issues-found",
-                f'target: "{_yaml_str(source_ref)}"',
-                "raised_by: compile-source-digest",
-                "loudness: alert",
-                f"created: {date.today().isoformat()}",
-                "---",
-                "",
-                "# Finding",
-                "",
-                finding,
-                "",
-                "# Evidence",
-                "",
-                f"`{source_ref}` must acquire full text before digest compilation.",
-                "",
-            ]
+        frontmatter_doc(
+            {
+                "title": title,
+                "projection": "attention",
+                "attention_kind": "flag",
+                "attention_status": "open",
+                "finding": finding,
+                "agent_recommendation": "issues-found",
+                "target": source_ref,
+                "raised_by": "compile-source-digest",
+                "loudness": "alert",
+                "created": date.today().isoformat(),
+            },
+            (
+                f"# Finding\n\n{finding}\n\n# Evidence\n\n"
+                f"`{source_ref}` must acquire full text before digest compilation.\n"
+            ),
         ),
         encoding="utf-8",
     )
@@ -690,10 +684,6 @@ def _write_digest_text_attention(
     )
     commit_writer_changes(vault, f"flag digest full text {source_id}", [rel], machine=machine)
     return rel
-
-
-def _yaml_str(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _source_input_sha(vault: Path, source_ref: str, source_fm: dict[str, Any]) -> str:
@@ -1032,13 +1022,6 @@ def _allowed_network_prefixes(policy: dict[str, Any]) -> list[str]:
 def _network_target(target_url: str) -> str:
     text = str(target_url).strip()
     return text if text.endswith("://") else text.rstrip("/") + "/"
-
-
-def _require_network_label(policy: dict[str, Any], label: str) -> None:
-    allowed = {str(value).strip().rstrip("/") for value in policy.get("allowed_network") or []}
-    if label in allowed:
-        return
-    raise PermissionError(f"operation {policy['operation_id']} cannot access {label}")
 
 
 def _sha256_text(text: str) -> str:
