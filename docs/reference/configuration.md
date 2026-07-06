@@ -22,7 +22,7 @@ linked reference pages and schema files.
 | Calibration | `vault-template/.memoria/schemas/calibration.yaml` | workspace source | Memoria | Edit source | calibration and linter tests |
 | Search index state | checked-only BM25 input tree and manifest | `<workspace>/.memoria/index/search/` | generated | Rebuild; do not hand-edit | `memoria doctor --check search` |
 | Scheduled-task runner | `vault-template/.memoria/scripts/cron-runner.sh` | workspace source for operator-managed scheduled tasks | Memoria | Edit source | shellcheck |
-| Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of alpha.16 baseline | adapter tests |
+| Optional editor adapter settings | adapter package, not the standalone template | adapter-owned files | adapter owner | Not part of standalone baseline | adapter tests |
 
 ## Required redeploys
 

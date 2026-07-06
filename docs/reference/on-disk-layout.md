@@ -31,7 +31,7 @@ Where every file lives.
 ├── sources/                 human source-notes bridging works into notes
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
-├── projects/<slug>/         project.md, evidence.md, gaps.md
+├── projects/<slug>/         project.md, outline.md, draft.md, evidence/gap/export artifacts
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies

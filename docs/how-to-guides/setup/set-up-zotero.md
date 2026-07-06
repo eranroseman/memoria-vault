@@ -32,7 +32,11 @@ Citation Keys tab → Citation key formula:
 [auth.lower][year][shorttitle1_0]
 ```
 
-This produces keys in the `mamykina2010sense` shape — lowercase author, year, and the first significant title word (`shorttitle(1,0)`) — which is the format Memoria's vault file names, frontmatter, and Dataview queries all expect. This matches the canonical formula per [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
+This produces keys in the `mamykina2010sense` shape — lowercase author, year,
+and the first significant title word (`shorttitle(1,0)`) — which keeps Zotero
+aliases stable for imports, citations, and exports. Memoria's durable source
+identity remains the SQLite `source_id`/`work_id`; citekeys are aliases. This
+matches the canonical formula per [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
 
 **3. Leave bibliography generation to Memoria.**
 
@@ -62,14 +66,14 @@ Zotero and that the item's Extra field contains `bibtex: <citekey>`.
 
 ## Export an item snapshot
 
-Alpha.16 capture reads portable files. Export a Zotero item to generic CSL JSON
+Memoria capture reads portable files. Export a Zotero item to generic CSL JSON
 or copy BibTeX for the item, then import it with `memoria work import --format
 csl` or `memoria work import --format bibtex`. Live Zotero Local API capture is
 not part of the standalone runtime.
 
 ## MarkDB-Connect
 
-Do not configure MarkDB-Connect as an alpha.16 setup path. It assumes flat
+Do not configure MarkDB-Connect as a standalone setup path. It assumes flat
 citekey-named note files, while Memoria source authority lives in SQLite catalog
 rows plus source-content blobs.
 

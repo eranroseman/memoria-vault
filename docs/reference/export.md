@@ -92,11 +92,11 @@ or live-citation conversion beyond the deterministic checked-project or draft
 export.
 
 ```bash
-pandoc projects/<project>/drafts/<chapter>.md \
+pandoc projects/<project>/<draft>.md \
   --citeproc \
   --bibliography bibliography.bib \
   --csl .memoria/csl/apa.csl \
-  -o projects/<project>/exports/<chapter>.docx
+  -o projects/<project>/exports/<draft>.docx
 ```
 
 CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placeholder; place your `.csl` files there before export.

@@ -11,8 +11,8 @@ Failure modes that recur in research vaults built this way. Most of them look li
 
 ## Treating agent output as verified content
 
-The future Writer posture or a generative draft operation produces prose from
-checked evidence. It looks good. A paragraph gets copied into a composition.
+The Writer posture or a generative draft operation produces prose from checked
+evidence. It looks good. A paragraph gets copied into a composition.
 Later it emerges that the draft cited paper X for a claim that paper X does not
 actually make - the semantic similarity was there, but the specific claim
 wasn't.

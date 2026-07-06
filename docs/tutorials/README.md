@@ -7,11 +7,11 @@ permalink: /tutorials/
 
 # Tutorials
 
-The tutorial arc is **deferred** for alpha.16. The alpha.10 walkthrough pages
+The tutorial arc is **deferred** for the current alpha line. The alpha.10 walkthrough pages
 remain as deferred placeholders because they depended on the bundled
 Mediterranean-diet sample vault and QuickAdd commands that no longer ship.
 
-For alpha.16, use the current setup and task guides against a fresh vault:
+Use the current setup and task guides against a fresh vault:
 
 | Need | Start here |
 | --- | --- |

@@ -18,7 +18,7 @@ plain Markdown editor for the workspace keep-set.
 ## Steps
 
 1. Open the workspace folder in Obsidian.
-2. Do not install or enable Memoria-specific plugins for alpha.16.
+2. Do not install or enable Memoria-specific plugins for the standalone baseline.
 3. Use the terminal for Memoria actions:
 
 ```bash
