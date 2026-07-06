@@ -13,7 +13,7 @@ forensic value. This page explains the operating model. Exact schemas live in
 [Telemetry log schemas](../../reference/telemetry-logs.md); the decisions are
 [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
 [the content-light diagnostic plane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
-[Hermes-session-store cost and disposition capture](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+[cost and disposition capture](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Plane | What it answers | Where it lives |
 | --- | --- | --- |
