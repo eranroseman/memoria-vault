@@ -64,4 +64,4 @@ hub/project context.
 
 **Decisions**
 
-- [ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) — historical work-prompt and batch-worklist decision
+- [Checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) — historical work-prompt and batch-worklist decision

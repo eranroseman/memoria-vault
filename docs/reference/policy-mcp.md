@@ -2,6 +2,7 @@
 title: Policy gate
 parent: Agents and control
 grand_parent: Reference
+nav_order: 8
 ---
 
 # Policy gate

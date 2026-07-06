@@ -2,6 +2,7 @@
 title: On-disk layout
 parent: System and infrastructure
 grand_parent: Reference
+nav_order: 3
 ---
 
 # On-disk layout
@@ -11,7 +12,7 @@ Where every file lives.
 - The repo ships the vault source under **`vault-template/`**.
 - The installer scaffolds a runtime vault, then populates it from `vault-template/`.
 - Product operation manifests ship inside the installed Python package, not the runtime vault.
-- The legal root categories come from [ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and `vault-template/.memoria/schemas/folders.yaml`.
+- The legal root categories come from [the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---

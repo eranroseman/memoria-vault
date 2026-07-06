@@ -2,6 +2,7 @@
 title: Prompt operations
 parent: Agents and control
 grand_parent: Reference
+nav_order: 14
 ---
 
 # Prompt operations
@@ -91,7 +92,7 @@ mode/provider/model/params and a prompt hash.
 
 Every run is prefixed with the shared voice preamble; the packaged operation
 manifest remains the runner authority
-([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). `{{input}}` in
+([the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). `{{input}}` in
 the operation body is replaced with a reference to sealed untrusted data. When
 `input_ref` or `input_refs` are supplied, the runner first reads each checked
 Concept allowed by the operation policy and joins the referenced text under

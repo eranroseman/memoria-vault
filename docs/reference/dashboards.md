@@ -2,6 +2,7 @@
 title: Surfaces, Bases, and dashboards
 parent: Agents and control
 grand_parent: Reference
+nav_order: 13
 ---
 
 # Surfaces, Bases, and dashboards
@@ -37,8 +38,8 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 Obsidian Bases (`.base` files), when present, are optional views over the same
 workspace files. Bases are views only; Concept frontmatter is governed by
-[ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and SQLite catalog rows are
-governed by [ADR-124](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+[the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and SQLite catalog rows are
+governed by the decision that [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |

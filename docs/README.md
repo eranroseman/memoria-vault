@@ -38,7 +38,7 @@ keeps the work visible, traceable, and review-gated.
 | Term | Meaning |
 | --- | --- |
 | PI | The human principal investigator. The PI decides what enters the vault and what can be cited. |
-| Co-PI | The read-only conversational posture behind `memoria ask` and guided interviews. It explains, questions, reads, and routes durable work into requests. |
+| Co-PI | The read-only conversational posture behind `memoria ask`. See [The Co-PI](explanation/operation-postures/co-pi.md) for its full mission. |
 | Operations | Checked capability-backed units of work such as capture, enrich, digest, ask, verify, and export. |
 | Request table | The SQLite control plane. It records operation requests, status, blockers, review, and completion. |
 | Workspace | The local folder tree. It holds knowledge bundles, catalog state, attention projections, and system outputs. |

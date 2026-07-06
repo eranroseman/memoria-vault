@@ -2,6 +2,7 @@
 title: Clustering
 parent: Agents and control
 grand_parent: Reference
+nav_order: 15
 ---
 
 # Clustering

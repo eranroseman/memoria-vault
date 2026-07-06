@@ -2,6 +2,7 @@
 title: Frontmatter fields
 parent: Vault data model
 grand_parent: Reference
+nav_order: 1
 ---
 
 # Frontmatter fields

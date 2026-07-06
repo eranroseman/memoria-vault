@@ -2,6 +2,7 @@
 title: External integrations
 parent: System and infrastructure
 grand_parent: Reference
+nav_order: 1
 ---
 
 # External integrations

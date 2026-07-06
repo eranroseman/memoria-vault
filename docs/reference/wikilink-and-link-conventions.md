@@ -2,6 +2,7 @@
 title: Wikilink and link conventions
 parent: Vault data model
 grand_parent: Reference
+nav_order: 5
 ---
 
 # Wikilink and link conventions
@@ -27,7 +28,7 @@ they are not `source`, `paper`, `person`, or `venue` Concept files.
 ## Authored links
 
 Knowledge Concepts carry `links:` as the authored relationship map specified by
-[ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and the generated
+[the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and the generated
 [Frontmatter fields](frontmatter.md). The only frontmatter link relations are:
 
 | Link | Direction |
@@ -117,7 +118,7 @@ hand-authored frontmatter vocabulary.
 
 ## Related
 
-- How-to for setting authored links: [Link checked notes](../how-to-guides/knowledge/link-related-claims.md)
+- How-to for setting authored links: [Link checked notes](../how-to-guides/knowledge/link-checked-notes.md)
 - Field contract: [Frontmatter fields](frontmatter.md)
 - Current Concept types: [Document types](document-types.md)
 - Why notes are filed by lifecycle, not topic: [Lifecycle, not topic — and state, not folders](../design/lifecycle-over-topic.md)

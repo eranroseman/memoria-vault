@@ -2,6 +2,7 @@
 title: Sweeps
 parent: Pipelines and I/O
 grand_parent: Reference
+nav_order: 2
 ---
 
 # Sweeps

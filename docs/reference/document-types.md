@@ -2,6 +2,7 @@
 title: Document types
 parent: Vault data model
 grand_parent: Reference
+nav_order: 3
 ---
 
 # Document types

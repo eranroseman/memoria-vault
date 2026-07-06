@@ -42,7 +42,7 @@ attention item or Concept can produce audit and request-state races.
 
 The current design maps work modes to dashboard notes — Inbox, Maintenance, Library,
 Knowledge, and Project — rather than to saved Obsidian workspaces
-([ADR-130](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). A space is content the vault can
+([the thin-read-API-surfaces-over-one-engine decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). A space is content the vault can
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 

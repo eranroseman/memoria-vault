@@ -14,7 +14,7 @@ PI edits are direct then observed/backfilled.
 
 | Guide | What it covers |
 | --- | --- |
-| [Link checked notes](link-related-claims.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
+| [Link checked notes](link-checked-notes.md) | Add typed `supports` / `contradicts` / `extends` relations between checked notes |
 | [Build a hub](build-a-hub.md) | Curate a checked hub under `knowledge/hubs/` |
 | [Manage your topic vocabulary](manage-vocabulary.md) | Add terms, rename safely, prune the active list |
 | [Query the vault](query-the-vault.md) | Use the Co-PI for read-only synthesis grounded in your notes |

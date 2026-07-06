@@ -2,6 +2,7 @@
 title: Export routes and formats
 parent: Pipelines and I/O
 grand_parent: Reference
+nav_order: 4
 ---
 
 # Export routes and formats
@@ -68,7 +69,7 @@ Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft
 
 Drafts live under the project folder in `knowledge/projects/<project>/`, and
 every export lands beside them under `exports/` — the project is self-contained
-([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). There is no separate
+([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). There is no separate
 top-level deliverables tree.
 
 | Artifact | Folder |
@@ -99,7 +100,7 @@ CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placehol
 
 ## Export gate
 
-An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+An exported artifact is terminal — rendered once from its source composition and not edited in place; an update is a re-export from the composition. Agents propose; the export itself is a human-run step ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 

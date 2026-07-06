@@ -2,11 +2,12 @@
 title: Vault eval
 parent: Agents and control
 grand_parent: Reference
+nav_order: 7
 ---
 
 # Vault eval
 
-`vault-eval` ([ADR-11](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) is Memoria's system-level evaluation: a small, hand-curated gold set per workflow that measures whether the deployed system finds, extracts, links, and verifies correctly on this vault. It is diagnostic, not gating.
+`vault-eval` ([vault-eval as a maintenance capability](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) is Memoria's system-level evaluation: a small, hand-curated gold set per workflow that measures whether the deployed system finds, extracts, links, and verifies correctly on this vault. It is diagnostic, not gating.
 
 ---
 
@@ -25,7 +26,7 @@ runtime eval operation can run and score it with nothing but the file.
 | `title` | str | The request title fragment. |
 | `lifecycle` | `proposed → current → archived` | Only `current` tasks dispatch. |
 | `workflow` | str | The capability under test (`find` · `extract` · `link` · `verify` · …). |
-| `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
+| `eval_role` | enum | Diagnostic routing bucket: `catalog` · `extract` · `link` · `map` · `verify` ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). It does not imply shipped lane packages. Draft and code eval roles remain deferred. |
 | `references` | list (optional) | Citekeys the task presupposes in the catalog. |
 | `created` | date (optional) | — |
 
@@ -47,7 +48,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 
 ## Dispatch
 
-`memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([ADR-129](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) discipline).
+`memoria eval run` / `memoria_vault.runtime.subsystems.telemetry.eval.eval_dispatch` — a sweeps-shaped operation: deterministic, no-LLM, creates idempotent local eval task plans and lets the runtime request queue provide serialization and dedup ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 - One local eval task plan per `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
@@ -112,7 +113,7 @@ and uses `eval_score --from-json` once result payloads exist.
 
 ## Related
 
-- The decision: [ADR-11](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- The decision: [vault-eval as a maintenance capability](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - The machinery that guards the gold set: [Linter: detectors and auto-fix](linter.md)
 - The trend dashboard and metric bands: [Dashboards](dashboards.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](installer.md)

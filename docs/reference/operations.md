@@ -2,6 +2,7 @@
 title: Operations
 parent: Agents and control
 grand_parent: Reference
+nav_order: 2
 ---
 
 # Operations
@@ -34,14 +35,14 @@ Shared dependency-light helpers for operation code live under `memoria_vault.run
 | Integrity retraction | `memoria_vault.runtime.subsystems.integrity.retraction.retraction` | None | Scheduled task, CI, PI | Runs retraction lookups, surfacing findings as Inbox `alert` attention items. |
 | Eval telemetry | `memoria eval run`; `memoria_vault.runtime.subsystems.telemetry.eval.*` | None | Scheduled task, CI, PI | Dispatches and scores vault-eval runs. |
 | Linter | `memoria_vault.runtime.subsystems.integrity.linter.detectors`; `hub_handoff` | None | Scheduled task, CI, pre-commit, PI | Validates schemas, links, graph health, audit-chain integrity, session digests, and opt-in hub-threshold handoffs. |
-| Batch worklists | `memoria_vault.runtime.subsystems.lib.worklists` | None | Reports, tests, PI | Emits [ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) `worklist-item` rows from a report and raises one aggregate Inbox `work-prompt` for the batch. |
+| Batch worklists | `memoria_vault.runtime.subsystems.lib.worklists` | None | Reports, tests, PI | Emits `worklist-item` rows (per [checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) from a report and raises one aggregate Inbox `work-prompt` for the batch. |
 
 ## Related
 
 - Why operations are separate from agents: [Operations — the deterministic layer](../explanation/operations.md)
 - Ingest command details: [Ingest routing](ingest.md)
-- Runtime state boundary: [ADR-122](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
-- DOI enrichment gate: [ADR-123](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- Runtime state boundary: [SQLite working state behind the checked-concept boundary](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- DOI enrichment gate: [DOI catalog enrichment gates checked source promotion](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - Project-gate cache details: [Project structural impact](project-structural-impact.md)
 - Sweep command details: [Sweeps](sweeps.md)
 - Batch worklist command details: [Worklists](worklists.md)

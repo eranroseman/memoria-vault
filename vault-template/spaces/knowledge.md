@@ -40,7 +40,7 @@ cssclasses: memoria-space
 
 Step-by-step for working this space:
 
-- [Link related claims](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-related-claims.html)
+- [Link checked notes](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/link-checked-notes.html)
 - [Build a hub](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/build-a-hub.html)
 - [Manage your topic vocabulary](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/manage-vocabulary.html)
 - [Query the vault](https://eranroseman.github.io/memoria-vault/how-to-guides/knowledge/query-the-vault.html)

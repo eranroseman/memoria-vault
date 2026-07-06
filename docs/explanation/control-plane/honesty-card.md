@@ -7,7 +7,7 @@ nav_order: 2
 
 # The honesty prompt
 
-An Inbox prompt is the one artifact the PI is guaranteed to read, so its format is where automation bias is won or lost. Research is blunt about the failure mode: hand a human a confident verdict and their scrutiny drops. And for a *proposal*, the verdict is a **given** — the agent surfaced the item because it recommends it, so printing "recommend: ACCEPT" adds nothing and subtracts attention. The honesty body ([ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) is the answer: **proposals carry an honest argument, not a verdict; verification prompts lead with the finding.**
+An Inbox prompt is the one artifact the PI is guaranteed to read, so its format is where automation bias is won or lost. Research is blunt about the failure mode: hand a human a confident verdict and their scrutiny drops. And for a *proposal*, the verdict is a **given** — the agent surfaced the item because it recommends it, so printing "recommend: ACCEPT" adds nothing and subtracts attention. The honesty body ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) is the answer: **proposals carry an honest argument, not a verdict; verification prompts lead with the finding.**
 
 Inbox prompts are generated attention projections, not durable Concept types.
 Operations share one attention writer, so every prompt of a given attention kind
@@ -48,7 +48,7 @@ The 30-minute test is owned by [Interaction channels](../architecture/interactio
 
 | Not an attention prompt | Why |
 | --- | --- |
-| Classification | It is audited, correctable metadata; gating it would be a rubber stamp ([ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
+| Classification | It is audited, correctable metadata; gating it would be a rubber stamp ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | High-cardinality screening | It becomes a Bases-backed worklist plus one aggregate work-prompt, not dozens of prompts. |
 | `review-request` | Any request awaiting the PI is represented as attention, pointing at the artifact under review. |
 

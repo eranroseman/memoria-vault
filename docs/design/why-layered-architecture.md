@@ -9,8 +9,9 @@ nav_order: 10
 
 Memoria separates orchestration, execution, and settled knowledge into distinct
 layers. This is not a layering convention; it is the mechanism that makes
-retries safe, handoffs lossless, and review enforceable. [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
-records the older layered decision; alpha.15 implements the same separation
+retries safe, handoffs lossless, and review enforceable. The
+[standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+decision records the older layered version of this rule; alpha.15 implements the same separation
 through the standalone CLI, SQLite request table, worker operations, and checked
 workspace.
 
@@ -58,7 +59,7 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 
 The original three-layer framing separated board, workers, and vault, but
 conflated two distinctions: *where* things live (structure) and *who* acts
-(actor-kind). [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) pulled them apart
+(actor-kind). [The standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) decision pulled them apart
 into the seven-layer stack. Alpha.15 keeps the boundary but replaces the board,
 MCP, and installed-profile mechanics with CLI/API requests, runtime policy, and
 operation manifests.
@@ -79,7 +80,7 @@ Each refinement carries the same argument further:
   scheduled jobs are direct edges that the engine observes or executes through
   explicit requests.
 
-The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+The file-as-bus, durable-state core — thick files, thin everything else — is unchanged in [the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) decision.
 
 ---
 

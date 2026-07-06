@@ -72,6 +72,6 @@ then render it again.
 
 ## Related
 
-- Link the checked notes first: [Link checked notes](../knowledge/link-related-claims.md)
+- Link the checked notes first: [Link checked notes](../knowledge/link-checked-notes.md)
 - Operation contract: [System actions](../../reference/system-actions.md)
 - Project type: [Document types](../../reference/document-types.md)

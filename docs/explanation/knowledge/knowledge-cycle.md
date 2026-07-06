@@ -72,7 +72,7 @@ become gaps in the provenance graph. A deleted source work breaks every claim
 that cited it; a deleted claim leaves later notes without their grounding.
 
 Archiving preserves the chain, and since the archive marker is frontmatter rather
-than a folder move ([ADR-126](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)),
+than a folder move ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)),
 it costs nothing structurally: the note stays in its type-home, remains readable
 and in Git history, drops out of active views and the agents' working scope, and
 can still be traced from any note that linked to it. No file moves, so no links
@@ -92,4 +92,4 @@ just forward. Archiving itself is propose-only for every actor but the PI.
 **How-to**
 
 - The weekly maintenance pass: [Run the weekly review](../../how-to-guides/inbox/run-the-weekly-review.md)
-- The cycle's key linking step: [Link checked notes](../../how-to-guides/knowledge/link-related-claims.md)
+- The cycle's key linking step: [Link checked notes](../../how-to-guides/knowledge/link-checked-notes.md)
