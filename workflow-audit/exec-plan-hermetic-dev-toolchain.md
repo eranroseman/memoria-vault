@@ -7,13 +7,17 @@
   - Layer 1 implementation → `~/memoria-vault/worktrees/precommit-managed-hooks` · `feat/precommit-managed-hooks`
   - Layer 2 implementation → `~/memoria-vault/worktrees/mise-runtimes` · `feat/mise-runtimes`
   - This plan file → `scratch/workflow-audit/exec-plan-hermetic-dev-toolchain.md`, pushed to `origin/scratch`
-- **Related ADR:** ADR-131 — *Hermetic dev toolchain* (to be created at `docs/adr/131-hermetic-dev-toolchain.md`; 131 is the next free number — highest existing is 130. Confirm with `python scripts/checks/gen_adr_index.py --check` at authoring time).
-- **Related issues / milestone:** issue to be created in the Memoria Issue Tracker ("Harden dev toolchain against version drift"); no milestone (unscheduled backlog) unless the maintainer schedules it.
-- **Started:** 2026-07-05 · **Last updated:** 2026-07-05
+- **Decision record:** `scratch/releases/0.1.0-beta.1/decisions.md` —
+  *Pinned pre-commit environments define third-party lint tools*. ADR-131 was not
+  created because PR #1273 retired `docs/adr/` as the live decision mechanism.
+- **Related issues / milestone:** no separate implementation issue was created;
+  PR #1273 completed the repo-owned implementation and routed the durable
+  decision to the beta.1 release ledger.
+- **Started:** 2026-07-05 · **Last updated:** 2026-07-06
 
 ## 1. Purpose / big picture
 
-Contributors run quality gates twice: locally via **pre-commit** (a git-hook framework that runs linters on `git commit`) and again in **CI** (GitHub Actions on every PR). Today those two paths share only *version numbers written in text files* — they execute the tools through entirely different mechanisms and, critically, the local hooks resolve each tool from the developer's ambient `PATH`. On a real machine that `PATH` is a jumble (conda base, `~/.local/bin` standalone binaries, global npm, Windows npm via WSL interop), so the version that actually runs locally is whatever happens to be first — not the pin. When it disagrees with CI, the contributor discovers it only after pushing.
+Contributors run quality gates twice: locally via **pre-commit** (a git-hook framework that runs linters on `git commit`) and again in **CI** (GitHub Actions on every PR). At plan start, those two paths shared only *version numbers written in text files* — they executed the tools through entirely different mechanisms and, critically, the local hooks resolved each tool from the developer's ambient `PATH`. On a real machine that `PATH` is a jumble (conda base, `~/.local/bin` standalone binaries, global npm, Windows npm via WSL interop), so the version that actually ran locally was whatever happened to be first — not the pin. When it disagreed with CI, the contributor discovered it only after pushing.
 
 This work makes version parity **structural instead of conventional**: pre-commit owns the pinned lint-tool versions in isolated per-hook environments, CI runs those *same* hooks, and the language runtimes (Python, Node) are pinned declaratively so the ambient `PATH` stops mattering. After it lands, a fresh clone runs one setup command and gets byte-identical tool behavior to CI; a wrong tool on `PATH` can no longer shadow a pinned one; and a missing tool (e.g. gitleaks) or an under-version runtime (Node < 22) fails **loudly and actionably** instead of silently skipping or emitting a cryptic error.
 
@@ -25,7 +29,7 @@ Assume no prior exposure to this repo. Terms are defined on first use.
 
 **Repository & working layout** (from `AGENTS.md` §"Where things live"): the project container is `~/memoria-vault`. Durable source is the `main` checkout at `~/memoria-vault/main`. Task work happens in a **git worktree** (a second working directory backed by the same repository, with its own branch and index) under `~/memoria-vault/worktrees/<name>`. This plan file lives on the **scratch branch** — an orphan branch whose tracked tree holds only scratch-only roots (`releases/`, `workflow-audit/`, …), checked out at the locked linked worktree `~/memoria-vault/scratch`. Never edit repo source from the scratch worktree.
 
-**The quality gate as it exists today** (verified 2026-07-05 against `main`):
+**Baseline quality gate before PR #1273** (verified 2026-07-05 against `main`):
 
 - **`.pre-commit-config.yaml`** — every hook is `language: system`, meaning pre-commit does *not* manage the tool; it runs whatever the entry command resolves to on `PATH`. The lint hooks are:
   - `gitleaks` → `gitleaks protect --staged --redact --verbose` (secret scanner; `always_run`)
@@ -36,7 +40,7 @@ Assume no prior exposure to this repo. Terms are defined on first use.
   - The first-party "doctors" (`scripts/checks/docs_doctor.py`, `agents_doctor.py`, `status_doctor.py`, `github_doctor.py`, `ruleset_doctor.py`, `gen_adr_index.py`, `plugin_provenance_doctor.py`, …) are repo Python scripts, correctly `language: system`; they are **out of scope** — they are not third-party tools with an upstream pin.
 - **Version pins** live in two files:
   - `requirements-dev.txt`: `pre-commit==4.6.0`, `pre-commit-hooks==6.0.0`, `pytest==9.1.1`, `PyYAML==6.0.3`, `ruff==0.15.20`, `shellcheck-py==0.11.0.1`, `yamllint==1.38.0`.
-  - `package.json` devDependencies: `cspell` (currently `8.19.4`; open PR #1272 bumps to `10.0.1`), `markdownlint-cli 0.49.0`. `engines.node: ">=22"`.
+  - `package.json` devDependencies: `cspell 8.19.4` at plan start (PR #1272 later bumped it to `10.0.1`), `markdownlint-cli 0.49.0`. `engines.node: ">=22"`.
 - **CI (`.github/workflows/`)** runs the tools through *three different mechanisms*, none of which is pre-commit:
   - `lint.yml` → job **`lint`** (a **required** check): `actions/setup-python@… 3.12` → `pip install -r requirements-dev.txt` → `python scripts/verify l0`. Ruff runs *inside* the l0 gate, from the pip-installed `ruff==0.15.20`. The l0 gate also runs the doctors + drift + syntax checks, so `lint` is much more than ruff.
   - `lint-installers.yml` → job **`shellcheck (scripts/install.sh)`** (**required**) uses the third-party GitHub Action `ludeeus/action-shellcheck` — which bundles *its own* shellcheck build, unrelated to the `shellcheck-py==0.11.0.1` pin. Job **`PSScriptAnalyzer (scripts/install.ps1)`** (**required**) runs `Invoke-ScriptAnalyzer` under `pwsh`.
@@ -62,7 +66,7 @@ Three phases, sequenced so the structural change lands first and alone (per `AGE
 
 **Phase 1 — Layer 1: pre-commit owns the lint-tool versions, and CI runs the same hooks (PR-A, structural, merge first).** Convert the four `language: system` lint hooks — `ruff`/`ruff-format`, `shellcheck`, `gitleaks`, `yamllint` — to pinned upstream hooks so pre-commit builds an isolated, cached environment per hook at an exact `rev`, independent of ambient `PATH`. Then make CI execute those *same* hooks:
 - `shellcheck (scripts/install.sh)` job: replace the `ludeeus/action-shellcheck` step with `pre-commit run shellcheck --all-files` (same job name → contract untouched).
-- `gitleaks` job: replace the advisory docker step with `pre-commit run gitleaks --all-files`; decide in the ADR whether to keep it advisory (`continue-on-error`) or make it blocking (recommended: make it blocking, since it becomes cheap and the local hook is the only real gate today).
+- `gitleaks` job: replace the advisory docker step with `pre-commit run gitleaks --all-files`; decide in the durable decision record whether to keep it advisory (`continue-on-error`) or make it blocking (recommended: make it blocking, since it becomes cheap and the local hook was the only real gate at plan start).
 - `lint` job: ruff currently runs inside `scripts/verify l0`. Add a `pre-commit run ruff ruff-format yamllint --all-files` step (or have `scripts/verify l0` shell out to `pre-commit run` for these three) so the *pinned hook* is the single ruff/yamllint execution both locally and in CI. Keep the doctors/drift portion of l0 as-is.
 - Cache `~/.cache/pre-commit` in every job that runs pre-commit (`actions/cache` keyed on the hash of `.pre-commit-config.yaml`), or each job re-builds hook envs (~30–60 s).
 - Remove `ruff`, `shellcheck-py`, `yamllint` from `requirements-dev.txt` (pre-commit now owns them); keep `pre-commit`, `pre-commit-hooks`, `pytest`, `PyYAML`. The single pin home for these three becomes the `rev:` in `.pre-commit-config.yaml`.
@@ -75,7 +79,12 @@ The node prose tools (`cspell`, `markdownlint`) are already effectively managed 
 - Repo change (PR-B): add `mise.toml` pinning `python 3.12` + `node 22`; teach `scripts/dev/setup.sh` to prefer `mise install` when mise is present, and — regardless of mise — add a **hard `node >= 22` assertion** that fails with an actionable message (replacing the current silent skip). CI runtime pinning is already correct (`lint` uses `setup-python 3.12`, `cspell` uses `node 22`), so mise in CI is optional; keep the change local-dev-focused.
 - Personal-env change (guarded, reversible until the final delete): install mise → `mise use -g python@3.12 node@22` → reinstall the dev toolchain against mise's Python (`pip install -r requirements-dev.txt`) → verify `pre-commit run --all-files` and the test suite green → **only then** remove the `conda initialize` block from `~/.bashrc` and delete `~/miniforge3`. **Pre-flight check:** confirm nothing outside this repo (a notebook workflow, another project) uses the conda base before deleting.
 
-**Phase 3 — record the decision (ADR-131 + issue).** Write `docs/adr/131-hermetic-dev-toolchain.md` capturing: pre-commit owns lint-tool versions (rev-pinned); CI runs the same hooks; runtimes pinned declaratively via mise; conda retired. Alternatives considered and rejected: (a) a custom "toolchain doctor" that asserts installed==pinned — rejected as *detection, not prevention*, and bespoke code reinventing pre-commit; (b) keeping `language: system` — rejected as the status quo that caused the drift. Enable `pre-commit.ci` (weekly `rev:` autoupdate — the path aligned with pre-commit, unlike Renovate's beta pre-commit manager) and Dependabot for npm/pip. Open the linked implementation issue.
+**Phase 3 — record the decision.** The ADR path was superseded while this plan
+was running: PR #1273 retired live ADRs and made the active release decision
+ledger the current record. The shipped decision is recorded in
+`scratch/releases/0.1.0-beta.1/decisions.md`. Dependabot now owns pre-commit,
+npm, pip, and GitHub Actions update PRs in `.github/dependabot.yml`; pre-commit.ci
+was not enabled from repo code.
 
 ## 4. Concrete steps
 
@@ -146,7 +155,9 @@ Each step is idempotent and shows expected output. Steps run from the noted dire
    # only after green: remove the conda-init block from ~/.bashrc and:  rm -rf ~/miniforge3
    ```
 
-9. **ADR + issue** (Phase 3): create `docs/adr/131-hermetic-dev-toolchain.md` (`status: proposed`), open the linked issue, enable pre-commit.ci + Dependabot. Run `python scripts/checks/gen_adr_index.py --check` and `python scripts/checks/agents_doctor.py` clean.
+9. **Decision + update routing** (Phase 3): record the shipped decision in the
+   active release decision ledger, verify Dependabot covers the pre-commit/npm/pip
+   update surfaces, and run `python scripts/checks/agents_doctor.py` clean.
 
 ## 5. Validation and acceptance
 
@@ -170,41 +181,67 @@ Each step is idempotent and shows expected output. Steps run from the noted dire
 
 ## 7. Progress
 
-- [x] 2026-07-05 14:00 — Phase 0: version currency (#1271 merged; #1272 open/green) + local realignment (ruff 0.15.20, shellcheck-py 0.11.0.1, gitleaks v8.30.1 installed)
-- [ ] 2026-07-05 —- Phase 1 / PR-A: pre-commit-managed lint hooks + CI runs the same hooks
-- [ ] Phase 2 / PR-B: `mise.toml` + `scripts/dev/setup.sh` node>=22 assertion
-- [ ] Phase 2: retire conda (after green verification)
-- [ ] Phase 3: ADR-131 + issue + pre-commit.ci/Dependabot
+- [x] 2026-07-05 14:00 — Phase 0: version currency (#1271 and #1272 merged) + local realignment (ruff 0.15.20, shellcheck-py 0.11.0.1, gitleaks v8.30.1 installed)
+- [x] 2026-07-05 — Phase 1 / PR-A: pre-commit-managed lint hooks + CI runs the same hooks (shipped in PR #1273)
+- [x] 2026-07-05 — Phase 2 / PR-B: `mise.toml` + `scripts/dev/setup.sh` node>=22 assertion (shipped in PR #1273)
+- [ ] Phase 2: retire conda (personal environment only; not repo-verifiable and not performed by this plan closeout)
+- [x] 2026-07-05 — Phase 3: decision recorded in the beta.1 scratch ledger; Dependabot covers pre-commit/npm/pip updates
+- [x] 2026-07-06 — Closeout audit: main implementation and documentation verified; this plan updated with shipped outcomes
 
 ## 8. Execution log
 
-- 2026-07-05 — Chose to keep required-check job *names* identical and only change job *internals*, so `.github/ruleset-contract.yaml` and the GitHub ruleset need no edit (avoids the emergency-bypass path in `AGENTS.md` §PR flow). Architectural decision (pre-commit-managed toolchain + declarative runtimes) → ADR-131 at `docs/adr/131-hermetic-dev-toolchain.md`.
+- 2026-07-05 — Chose to keep required-check job *names* identical and only change job *internals*, so `.github/ruleset-contract.yaml` and the GitHub ruleset need no edit (avoids the emergency-bypass path in `AGENTS.md` §PR flow). The architectural decision was later routed to the beta.1 release decision ledger after PR #1273 retired live ADRs.
 - 2026-07-05 — Sequenced Layer 1 before Layer 2 (structural-first, `AGENTS.md` §Merge discipline); conda retirement gated behind a green verification because it is the only irreversible step.
+- 2026-07-05 — PR #1273 merged the repo-owned work: pinned upstream pre-commit hook environments, CI callers, `mise.toml`, setup guard, Dependabot pre-commit updates, and the ADR-to-design-history routing change. The decision record moved from planned ADR-131 to `scratch/releases/0.1.0-beta.1/decisions.md`.
+- 2026-07-06 — Closeout audit found no exact GitHub issue titled "Harden dev toolchain against version drift"; no retroactive issue was opened because PR #1273 completed the repo-owned implementation and no repo follow-up remains.
 
 ## 9. Surprises & discoveries
 
-- CI runs the three lint tools via **three different mechanisms**, none of them pre-commit: ruff inside `scripts/verify l0` (pip), shellcheck via `ludeeus/action-shellcheck` (its own bundled build, unrelated to the `shellcheck-py` pin), gitleaks via docker `v8.30.1`. So local↔CI parity was never structural.
-- The CI `gitleaks` job is **`continue-on-error: true`** and **not a required check** — advisory only. The *local* pre-commit `gitleaks` hook is therefore the only enforcing secret-scan pre-merge — and it was broken (binary not installed), so commits failed with `Executable 'gitleaks' not found`.
+- CI ran the three lint tools via **three different mechanisms**, none of them pre-commit: ruff inside `scripts/verify l0` (pip), shellcheck via `ludeeus/action-shellcheck` (its own bundled build, unrelated to the `shellcheck-py` pin), gitleaks via docker `v8.30.1`. So local↔CI parity was never structural.
+- The CI `gitleaks` job was **`continue-on-error: true`** and **not a required check** — advisory only. The *local* pre-commit `gitleaks` hook was therefore the only enforcing secret-scan pre-merge — and it was broken (binary not installed), so commits failed with `Executable 'gitleaks' not found`.
 - conda is **load-bearing right now** (active `python3`, hosts pytest/pre-commit/shellcheck) even though only the `base` env exists — "unused" was the wrong description; removal requires replacing the Python source first.
 - `scripts/dev/setup.sh` treats Node < 22 as a **silent skip**, so the qmd/Node tooling step just quietly doesn't run.
+- `docs/adr/` was retired by the same workflow-audit implementation, so the
+  plan's ADR-131 target became stale while the plan was running. The current
+  source of truth is the beta.1 decision ledger.
 
 ## 10. Interfaces & dependencies
 
 - **pre-commit hook sources (new pins, single source of truth for lint versions):** `astral-sh/ruff-pre-commit@v0.15.20` (hooks `ruff`, `ruff-format`), `gitleaks/gitleaks@v8.30.1` (hook `gitleaks`), `adrienverge/yamllint@v1.38.0` (hook `yamllint`), `shellcheck-py@v0.11.0.1` (hook `shellcheck`). Confirm exact tag spellings against each repo's `.pre-commit-hooks.yaml` at authoring time.
 - **Contract files that must stay consistent:** `.github/ruleset-contract.yaml` (required-check roster; job names unchanged), its `AGENTS.md` §"Required CI checks" mirror (guarded by `scripts/checks/agents_doctor.py` + `ruleset_doctor.py`).
 - **Runtime pins:** `mise.toml` → `python 3.12`, `node 22`. `package.json` `engines.node ">=22"` (unchanged). `pyproject.toml` `requires-python ">=3.12"` (unchanged).
-- **Auto-update:** pre-commit.ci (weekly `rev:` bumps); Dependabot for `package.json`/`requirements-dev.txt`. (Renovate's pre-commit manager is beta/disabled-by-default and misaligned with pre-commit — do not use it for the `rev:`s.)
+- **Auto-update:** Dependabot for pre-commit, `package.json`/`package-lock.json`, `requirements-dev.txt`, and GitHub Actions. pre-commit.ci was not enabled from repo code.
 - **Removed pins:** `ruff`, `shellcheck-py`, `yamllint` leave `requirements-dev.txt` (pre-commit owns them).
 
 ## 11. Artifacts & notes
 
-- Phase 0 realignment (this session): `ruff --version` → `ruff 0.15.20` on `~/.local/bin`; `python -m pip show shellcheck-py` → `0.11.0.1`; `gitleaks version` → `8.30.1`; PR #1271 merged (`f8db508c` → main `79e73ab7`); PR #1272 green (`cspell` CI check passed on node 22).
+- Phase 0 realignment (this session): `ruff --version` → `ruff 0.15.20` on `~/.local/bin`; `python -m pip show shellcheck-py` → `0.11.0.1`; `gitleaks version` → `8.30.1`; PR #1271 merged (`f8db508c` → main `79e73ab7`); PR #1272 later merged (`cspell` 10.0.1).
 - Current required roster (`.github/ruleset-contract.yaml`): `pr-policy, lint, shellcheck (scripts/install.sh), PSScriptAnalyzer (scripts/install.ps1), python-selftest, cspell, lint-config, markdownlint`.
-- Current CI mechanisms to replace: `lint.yml` (`python scripts/verify l0`), `lint-installers.yml` (`ludeeus/action-shellcheck`), `gitleaks.yml` (`docker … ghcr.io/gitleaks/gitleaks:v8.30.1`, `continue-on-error: true`).
+- Original CI mechanisms replaced by PR #1273: `lint.yml` (`python scripts/verify l0` using pip ruff), `lint-installers.yml` (`ludeeus/action-shellcheck`), `gitleaks.yml` (`docker … ghcr.io/gitleaks/gitleaks:v8.30.1`, `continue-on-error: true`).
 
 ## 12. Outcomes & retrospective
 
-- **Shipped:** {{ fill at close — pre-commit-managed hooks live; CI runs them; mise/setup guard in place; conda retired }}
-- **Still open:** {{ fill — e.g. folding cspell/markdownlint into pre-commit node hooks; pwsh pinning if install.ps1 work resumes }}
-- **Routed to:** ADR-131 (`docs/adr/131-hermetic-dev-toolchain.md`), issue #{{ NN }}; this plan deleted from `scratch/workflow-audit/` before the checkpoint closes.
-- **Lessons:** {{ fill at close }}
+- **Shipped:** pre-commit-managed third-party lint hooks live in
+  `.pre-commit-config.yaml`; CI runs ruff, ruff-format, yamllint, shellcheck, and
+  gitleaks through those hooks; `requirements-dev.txt` no longer owns those tool
+  pins; `mise.toml` pins Python 3.12 and Node 22; `scripts/dev/setup.sh` runs
+  `mise install` when available and hard-fails on missing or under-version Node;
+  `AGENTS.md`, `.agents/`, tests, and Dependabot were updated in PR #1273.
+- **Still open:** personal conda retirement only. It is outside repo state and
+  should be done manually after confirming no non-repo workflow depends on
+  `~/miniforge3`. pre-commit.ci was not enabled; repo-native Dependabot
+  pre-commit updates are the shipped update path.
+- **Routed to:** PR #1273
+  (`https://github.com/eranroseman/memoria-vault/pull/1273`) and
+  `scratch/releases/0.1.0-beta.1/decisions.md`.
+- **Closeout verification (2026-07-06):** `python -m pytest
+  tests/test_node_tooling.py -q` → 6 passed; `pre-commit run ruff --all-files`,
+  `pre-commit run ruff-format --all-files`, `pre-commit run yamllint
+  --all-files`, `pre-commit run shellcheck --all-files`, and `pre-commit run
+  gitleaks --all-files` → Passed; fake `ruff 0.0.1` first on `PATH` still left
+  `pre-commit run ruff --all-files` Passed; `python scripts/verify l0` → 96
+  static tests passed and L0 gate clean.
+- **Lessons:** keep ExecPlans in the active release scratch tree and route
+  durable decisions to release ledgers as soon as they are made; otherwise the
+  plan can preserve an obsolete destination even after the implementation fixes
+  the destination.
