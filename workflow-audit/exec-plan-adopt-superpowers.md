@@ -1,19 +1,27 @@
-# ExecPlan — Adopt github.com/obra/superpowers into the agent skill toolkit
+# ExecPlan — Build the complete agent skill workflow, with `obra/superpowers` as the base
 
 ## 0. Metadata
 
-- **Task:** Install the `obra/superpowers` plugin (13 usable skills:
-  systematic-debugging, test-driven-development, brainstorming,
+- **Task:** Originally scoped to installing `obra/superpowers` alone;
+  broadened per explicit direction ("the scope is the entire workflow with
+  superpowers as the base") to cover the full agent-skill toolkit:
+  superpowers as the foundational layer, plus every personal skill it
+  collides with or should cross-reference, plus this repo's own `.agents/`
+  conventions, plus a set of gap-filling third-party plugins identified
+  separately (frontend/UI design+review, deep security review, technical
+  writing, API design) that close real holes superpowers itself doesn't
+  cover. Concretely: install the `obra/superpowers` plugin (13 usable
+  skills: systematic-debugging, test-driven-development, brainstorming,
   receiving-code-review, requesting-code-review, writing-plans,
   writing-skills, verification-before-completion, using-git-worktrees,
   finishing-a-development-branch, dispatching-parallel-agents,
   subagent-driven-development, executing-plans — plus the bundle's own
   onboarding meta-skill `using-superpowers`) for both Claude Code and Codex;
-  retire the superseded local `tdd` skill; **retire, adapt, or cross-reference
-  every existing skill and repo convention this bundle collides with or
-  duplicates** (not just install the new thing); and verify the combined
-  toolkit behaves correctly, not merely that the skill list shows the new
-  names.
+  retire the superseded local `tdd` skill; install the four gap-filling
+  plugins (§3.E); **retire, adapt, or cross-reference every existing skill
+  and repo convention any of this collides with or duplicates** (not just
+  install the new things); and verify the combined toolkit behaves
+  correctly, not merely that the skill lists show the new names.
 - **Worktree / branch:** None on `memoria-vault` for the *implementation* —
   the skill/plugin files live under `~/.claude/` and `~/.codex/` (per-user
   tool config, not repo content), so `AGENTS.md` §1's git-worktree setup does
