@@ -199,13 +199,19 @@ estimating.
    live "should-I-yield" judgment call on every single response the way the
    smaller patch would. Fix in `rethink`'s own `hooks/directive.md` (the
    user's own repo, safe and appropriate to edit directly): narrow the
-   Persistence trigger to exclude brainstorming's exact stated territory
-   ("creating features, building components, adding functionality, or
-   modifying behavior"), **conditioned on `brainstorming`/`obra/superpowers`
-   actually being installed** — the conditional guard is load-bearing: an
-   unconditional exclusion would regress every solo-rethink installer (no
-   superpowers) by silently dropping standing design coverage for
-   feature/component-creation questions they still rely on.
+   Persistence trigger, unconditionally, to exclude brainstorming's exact
+   stated territory ("creating features, building components, adding
+   functionality, or modifying behavior"), and update rethink's own
+   description (`plugin.json` + `skills/rethink/SKILL.md` frontmatter) to
+   state plainly that it's designed to pair with `obra/superpowers`.
+   **No runtime conditional guard, and deliberately so:** rethink is a
+   homebrew, single-user plugin — there is no install base of other users
+   running it standalone without superpowers to protect against
+   regression, so a live "is brainstorming installed this session" check
+   would be solving a non-problem at the cost of real complexity. This
+   plan's earlier revision proposed exactly that conditional guard
+   (framed around a hypothetical "solo-rethink installer"); it's removed
+   here as unnecessary machinery once that premise is corrected.
 3. **`rethink-audit` vs. `brainstorming`, separately** — `rethink-audit` is
    self-contained and doesn't inherit `directive.md`'s Rules section, so
    fix #2 doesn't reach it; needs its own boundary clause.
@@ -408,10 +414,13 @@ transcript, not just the skill-list membership.
    *.md, docs/superpowers/plans/*.md): write normal.`
 
 7. **Fix `rethink`'s double-trigger with `brainstorming` — narrow the
-   trigger, conditioned on superpowers being present**
+   trigger, unconditionally, and update the description**
    (`~/.claude/plugins/marketplaces/rethink/plugins/rethink/` — the user's
-   own plugin, released by them, safe to edit directly). In
-   `hooks/directive.md`, change the Persistence section from:
+   own plugin, released by them, safe to edit directly). No runtime
+   conditional guard: rethink is a homebrew, single-user plugin, not a
+   published tool with a solo-install base to protect against regression
+   — narrowing the trigger unconditionally is the simpler, correct fix.
+   In `hooks/directive.md`, change the Persistence section from:
 
    `ACTIVE EVERY RESPONSE for design and architecture questions. No drift
    back to "here's how to tweak the current code." Still active if
@@ -421,19 +430,23 @@ transcript, not just the skill-list membership.
 
    `ACTIVE EVERY RESPONSE for design and architecture questions — except
    creating a new feature, building a new component, or adding new
-   functionality from scratch, when the obra/superpowers plugin's
-   brainstorming skill is also installed and available this session: that
-   skill's interactive, user-approved design gate governs new-build
-   requests instead, and rethink stays quiet on them. Rethink continues to
-   govern narrower/tactical-but-still-architectural questions below that
-   threshold (e.g. "should this be async or sync," "how should this API be
-   shaped") that brainstorming's own trigger doesn't reach and rethink's own
-   "scoped, tactical question" exclusion doesn't catch either. If
-   brainstorming isn't installed this session, rethink's original
-   all-design-questions trigger applies unchanged — no regression for
-   solo-rethink installers. No drift back to "here's how to tweak the
-   current code" for the territory rethink still owns. Still active if
+   functionality from scratch: that territory belongs to
+   obra/superpowers' brainstorming skill, which this plugin is designed to
+   pair with. Rethink continues to govern narrower/tactical-but-still-
+   architectural questions below that threshold (e.g. "should this be
+   async or sync," "how should this API be shaped") that brainstorming's
+   own trigger doesn't reach and rethink's own "scoped, tactical question"
+   exclusion doesn't catch either. No drift back to "here's how to tweak
+   the current code" for the territory rethink still owns. Still active if
    unsure. Off only: "stop rethink" / "normal mode".`
+
+   Also update rethink's own description to name the pairing explicitly:
+   in `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`, append
+   to the `description` field: `" — designed to pair with obra/superpowers'
+   brainstorming skill for new-feature/component design; rethink covers
+   standing first-principles reasoning for narrower architectural
+   questions."` Same addition to `skills/rethink/SKILL.md`'s frontmatter
+   `description`.
 
    In `skills/rethink-audit/SKILL.md`, under `## Boundaries` (unchanged in
    substance from the prior revision — rethink-audit is self-contained,
@@ -506,15 +519,15 @@ transcript, not just the skill-list membership.
      switch to brainstorming-always-wins instead (accept the ceremony cost)
      rather than patching the threshold further.
    - **Design/architecture reasoning (rethink vs. brainstorming):**
-     `rethink`'s own directive is narrowed (see `rethink`'s
-     `hooks/directive.md`, fixed in step 7 above) to exclude
-     new-feature/component-creation work when `brainstorming` is installed
-     and available — that territory routes to brainstorming's interactive,
-     approved-spec flow instead. Rethink continues to govern standing
-     first-principles reasoning for narrower/tactical-but-still-
-     architectural questions below that threshold (e.g. "should this be
-     async or sync") that neither skill's own stated scope otherwise
-     reaches.
+     `rethink`'s own directive is narrowed unconditionally (see `rethink`'s
+     `hooks/directive.md`, fixed in step 7 above — rethink now describes
+     itself as designed to pair with `obra/superpowers`) to exclude
+     new-feature/component-creation work — that territory routes to
+     brainstorming's interactive, approved-spec flow instead. Rethink
+     continues to govern standing first-principles reasoning for
+     narrower/tactical-but-still-architectural questions below that
+     threshold (e.g. "should this be async or sync") that neither skill's
+     own stated scope otherwise reaches.
    - **Test-first ordering:** when TDD (`superpowers:test-driven-development`)
      is in effect for a change, its test-first ordering wins over
      `ponytail`'s default code-first-then-check sequencing.
@@ -675,8 +688,17 @@ transcript, not just the skill-list membership.
   step 8's bullet now states directly.
 - **Decision #2 resolved — rethink's retirement/narrowing scope.** Same
   workflow, same rigor, applied to three options (keep-and-yield / full
-  retirement / narrow-the-trigger). Adopted: narrow the trigger (step 7),
-  conditioned on superpowers being present. Verification struck two
+  retirement / narrow-the-trigger). Adopted: narrow the trigger
+  unconditionally (step 7), plus update rethink's own description to name
+  the `obra/superpowers` pairing explicitly. An earlier pass of this
+  revision proposed a runtime conditional guard ("only narrow if
+  brainstorming is installed this session") to avoid regressing
+  hypothetical "solo-rethink" installers — corrected after direct
+  pushback: rethink is a homebrew, single-user plugin with no such install
+  base to protect, so the conditional was solving a non-problem at the
+  cost of real complexity; removed. Verification (run before that
+  correction, so scoped to the three-option choice, not the conditional
+  question) struck two
   fabricated/miscounted claims from the full-retirement option before they
   could mislead a future reader: a claim that rethink's SKILL.md names
   "three traps (legacy trap, analogy trap, complexity trap)" — grepped the
