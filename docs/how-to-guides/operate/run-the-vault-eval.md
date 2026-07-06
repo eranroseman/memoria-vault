@@ -40,8 +40,8 @@ memoria eval run --workspace . --json
 **4. Score the run.** The deterministic, zero-LLM scorer reads reported result payloads and computes only what each result makes computable — no faked scores:
 
 ```bash
-python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --from-json results.json
-python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --quarter previous --from-json results.json
+python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --from-json results.json
+python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault . --quarter previous --from-json results.json
 ```
 
 Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute without appending to the log.

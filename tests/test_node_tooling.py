@@ -84,6 +84,19 @@ def test_precommit_node_hooks_fail_fast_without_network_downloads():
         assert "npx" not in entry
 
 
+def test_local_precommit_python_hooks_use_python3():
+    config = yaml.safe_load(PRECOMMIT.read_text(encoding="utf-8"))
+    local_hooks = next(repo["hooks"] for repo in config["repos"] if repo["repo"] == "local")
+
+    bare_python_entries = [
+        hook["entry"]
+        for hook in local_hooks
+        if hook["entry"].startswith("python ") or " python -m " in hook["entry"]
+    ]
+
+    assert bare_python_entries == []
+
+
 def test_lint_config_and_markdownlint_are_required_checks():
     contract = yaml.safe_load(CONTRACT.read_text(encoding="utf-8"))
 

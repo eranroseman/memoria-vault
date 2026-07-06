@@ -12,8 +12,8 @@ nav_order: 4
 ## Command
 
 ```bash
-python -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug>
-python -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug> --dry-run --json
+python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug>
+python3 -m memoria_vault.runtime.subsystems.processing.project.structural_impact --vault <vault> --project <project-slug> --dry-run --json
 ```
 
 | Option | Contract |

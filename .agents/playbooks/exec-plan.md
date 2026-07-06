@@ -101,7 +101,7 @@ Validation follows the [verify-change](verify-change.md) playbook:
 1. State each acceptance as an observable claim:
    `Given <state>, when <action>, then <result>.`
 2. Prove it with the lowest-cost evidence (focused test → CLI repro → smoke
-   test → disposable-vault install → runtime), using `python scripts/verify`.
+   test → disposable-vault install → runtime), using `python3 scripts/verify`.
 3. Paste the actual command transcript into Artifacts & notes. "Tests pass" is
    supporting evidence, not the whole report.
 

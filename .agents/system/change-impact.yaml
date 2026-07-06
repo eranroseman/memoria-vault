@@ -9,7 +9,7 @@ areas:
       - Linter and pre-commit behavior
       - Note-type and frontmatter documentation
     checks:
-      - python -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
+      - python3 -m pytest tests/test_schemas.py tests/test_templates.py tests/test_bases.py tests/test_precommit_schema.py tests/test_detectors.py
   - area: Folder home, staging/quarantine root, or skeleton
     paths:
       - vault-template/.memoria/schemas/folders.yaml
@@ -19,7 +19,7 @@ areas:
       - Installer scaffold and golden-copy behavior
       - Dashboards and links
     checks:
-      - python -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_runtime_policy.py tests/test_patterns.py tests/test_detectors.py
+      - python3 -m pytest tests/test_schemas.py tests/test_installer_skeleton.py tests/test_runtime_policy.py tests/test_patterns.py tests/test_detectors.py
   - area: Dropped installed profile package
     paths:
       - scripts/checks/alpha14_negative_gate.py
@@ -31,7 +31,7 @@ areas:
       - Current docs that still describe shipped installed profiles
       - Optional adapter follow-up scope
     checks:
-      - python -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
+      - python3 -m pytest tests/test_profiles.py tests/test_installer_skeleton.py
   - area: Runtime policy
     paths:
       - vault-template/.memoria/plugins/memoria-policy-gate/**
@@ -43,7 +43,7 @@ areas:
       - Optional adapter tool mappings
       - Fail-closed direct tool denial
     checks:
-      - python -m pytest tests/test_runtime_policy.py tests/test_policy_hook.py tests/test_policy_gate_plugin.py tests/test_policy_gate_completeness.py tests/test_schemas.py
+      - python3 -m pytest tests/test_runtime_policy.py tests/test_policy_hook.py tests/test_policy_gate_plugin.py tests/test_policy_gate_completeness.py tests/test_schemas.py
   - area: Runtime helpers
     paths:
       - src/memoria_vault/runtime/vaultio.py
@@ -56,8 +56,8 @@ areas:
       - UTC timestamp format expected by telemetry/audit rows
       - Runtime modules that still carry duplicate helper code
     checks:
-      - python -m pytest tests/test_runtime_helpers.py tests/test_package_spine.py
-      - python -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
+      - python3 -m pytest tests/test_runtime_helpers.py tests/test_package_spine.py
+      - python3 -m pytest tests/test_loudness.py tests/test_project_structural_impact.py tests/test_test_env_harness.py
   - area: Capture or linter operation
     paths:
       - src/memoria_vault/runtime/capture.py
@@ -68,7 +68,7 @@ areas:
       - Source catalog state and content/blob writes
       - Scheduled-task wrappers and dashboard fields
     checks:
-      - python -m pytest tests/test_capture.py tests/test_inbox_cards.py tests/test_detectors.py
+      - python3 -m pytest tests/test_capture.py tests/test_inbox_cards.py tests/test_detectors.py
   - area: Installer
     paths:
       - scripts/install.sh
@@ -81,7 +81,7 @@ areas:
       - PowerShell bridge
     checks:
       - bash -n scripts/install.sh
-      - python -m pytest tests/test_installer_skeleton.py
+      - python3 -m pytest tests/test_installer_skeleton.py
       - bash scripts/sandbox/e2e_smoke.py
   - area: Dropped Obsidian baseline payload
     paths:
@@ -93,8 +93,8 @@ areas:
       - Optional adapter wording does not become baseline behavior
       - Alpha.14 negative gate covers deleted payload contracts
     checks:
-      - python scripts/checks/plugin_provenance_doctor.py
-      - python -m pytest tests/test_plugin_provenance.py
+      - python3 scripts/checks/plugin_provenance_doctor.py
+      - python3 -m pytest tests/test_plugin_provenance.py
   - area: Offline e2e smoke harness
     paths:
       - scripts/sandbox/e2e_smoke.py
@@ -107,7 +107,7 @@ areas:
       - Workflow-replay artifacts and deny audit row
       - Shell entrypoint compatibility
     checks:
-      - python -m pytest tests/test_e2e_smoke_helpers.py tests/test_test_env_harness.py
+      - python3 -m pytest tests/test_e2e_smoke_helpers.py tests/test_test_env_harness.py
       - bash scripts/sandbox/e2e_smoke.py
   - area: Standalone disposable install harness
     paths:
@@ -119,7 +119,7 @@ areas:
       - Golden-copy, detector, and CLI doctor assertions
     checks:
       - bash scripts/sandbox/install-test-vault-local-llm.sh --help
-      - python -m pytest tests/test_install_test_vault_local_llm.py
+      - python3 -m pytest tests/test_install_test_vault_local_llm.py
   - area: Testing gate mechanism
     paths:
       - scripts/verify
@@ -133,8 +133,8 @@ areas:
       - Release evidence and manual follow-up wording
       - Required-check roster and scripts/verify mode behavior
     checks:
-      - python scripts/checks/status_doctor.py
-      - python scripts/checks/agents_doctor.py
+      - python3 scripts/checks/status_doctor.py
+      - python3 scripts/checks/agents_doctor.py
   - area: GitHub workflow or PR policy
     paths:
       - .github/workflows/**
@@ -145,8 +145,8 @@ areas:
       - Safe and sensitive paths
       - Trusted authors
     checks:
-      - python scripts/checks/ruleset_doctor.py
-      - python -m pytest tests/test_pr_policy.py tests/test_ruleset_doctor.py
+      - python3 scripts/checks/ruleset_doctor.py
+      - python3 -m pytest tests/test_pr_policy.py tests/test_ruleset_doctor.py
   - area: Documentation or agent guidance
     paths:
       - docs/**
@@ -158,8 +158,8 @@ areas:
       - Referenced commands and repository paths
       - Generated agent references
     checks:
-      - python scripts/checks/docs_doctor.py docs
-      - python scripts/checks/docs_doctor.py --vault-links
-      - python scripts/checks/status_doctor.py
-      - python scripts/checks/agents_doctor.py
+      - python3 scripts/checks/docs_doctor.py docs
+      - python3 scripts/checks/docs_doctor.py --vault-links
+      - python3 scripts/checks/status_doctor.py
+      - python3 scripts/checks/agents_doctor.py
       - npm run spellcheck

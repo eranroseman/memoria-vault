@@ -226,7 +226,7 @@ All must pass before merge.
 
 The check-name roster is owned by
 [`.github/ruleset-contract.yaml`](.github/ruleset-contract.yaml). This table is
-a reader mirror guarded by `python scripts/checks/agents_doctor.py`.
+a reader mirror guarded by `python3 scripts/checks/agents_doctor.py`.
 
 | Check | Validates |
 |---|---|
@@ -308,8 +308,8 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 ## Test before opening a PR
 
 - **Shell** (`scripts/install.sh`, `scripts/install/*.sh`): `bash -n scripts/install.sh scripts/install/*.sh` (parse) + an installer `--dry-run` pass when installer behavior changes.
-- **Python** (vault tooling + repo scripts): `python -m pytest tests/` (or `python scripts/verify l1`). The L1 tests live in `tests/`, not inline in the modules.
-- **Standard PR verification:** `python scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `python scripts/verify runtime` / `python scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
+- **Python** (vault tooling + repo scripts): `python3 -m pytest tests/` (or `python3 scripts/verify l1`). The L1 tests live in `tests/`, not inline in the modules.
+- **Standard PR verification:** `python3 scripts/verify pr` runs the source checks and writes a JSON evidence bundle. Use `python3 scripts/verify package` for changes that affect the shipped vault, installer skeleton, hooks, plugins, or workflow replay; `python3 scripts/verify runtime` / `python3 scripts/verify rc` add the opt-in local runtime smoke (standalone `memoria` CLI/worker/gate pytest replay) when prerequisites are available.
 - **PowerShell** (`scripts/install.ps1`): when `pwsh` is available, run `Invoke-ScriptAnalyzer -Path scripts/install.ps1 -Severity Warning,Error -Settings ./scripts/PSScriptAnalyzerSettings.psd1`; CI enforces it otherwise. `Write-Host` is intentional and excluded via the settings file. Functions must use approved verbs (`Install-`, not `Ensure-`).
 - **Installer end-to-end:** `bash scripts/sandbox/install-test-vault-local-llm.sh --root ~/memoria-vault/sandbox` — never test against the real `~/Memoria`.
 
