@@ -36,5 +36,5 @@ section: [explanation/dashboards/](../dashboards/README.md).
 
 ## Related
 
-- How to use Obsidian as an optional editor: [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian)
-- Workspace, callout, and dashboard reference pages: [Reference](../../reference)
+- How to use Obsidian as an optional editor: [how-to-guides/using-obsidian/](../../how-to-guides/using-obsidian/)
+- Workspace, callout, and dashboard reference pages: [Reference](../../reference/)

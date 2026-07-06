@@ -24,7 +24,7 @@ Alpha.16 file-backed Concepts are work, digest, source-note, note, hub, and
 project; catalog source records live in SQLite with blob-backed source content.
 Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
-foundations](intellectual-foundations.md#luhmanns-zettelkasten).
+foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-foundations.html#luhmanns-zettelkasten).
 
 ---
 

@@ -10,7 +10,7 @@ permalink: /reference/
 Lookup material for Memoria — fields, values, commands, schemas, folder paths,
 and runtime contracts. For design rationale and decision history, see
 [Developers](../developers.md); for operational explanations, see
-[Explanation](../explanation).
+[Explanation](../explanation/).
 
 The reference pages are grouped by domain in the site navigation. Pages that
 summarize schema-owned contracts name the owning source rather than mirroring

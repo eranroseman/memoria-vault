@@ -4,6 +4,7 @@ from scripts.checks import docs_doctor as _m
 
 check_broken_vault_wikilinks = _m.check_broken_vault_wikilinks
 check_bare_adr_codes = _m.check_bare_adr_codes
+check_doc_refs = _m.check_doc_refs
 check_frontmatter = _m.check_frontmatter
 check_hidden_compatibility_page = _m.check_hidden_compatibility_page
 check_link_text = _m.check_link_text
@@ -229,6 +230,24 @@ def test_reference_readme_index_flags_missing_reference_pages(tmp_path):
 
     assert len(errors) == 1
     assert "reference index omits page(s): b.md" in errors[0]
+
+
+def test_check_doc_refs_accepts_pages_html_urls(tmp_path):
+    (tmp_path / "docs" / "reference").mkdir(parents=True)
+    (tmp_path / "docs" / "reference" / "memory-substrates.md").write_text(
+        "# Memory substrates\n",
+        encoding="utf-8",
+    )
+    source = tmp_path / "source.md"
+    source.write_text(
+        "[Memory substrates](https://eranroseman.github.io/memoria-vault/reference/memory-substrates.html)\n",
+        encoding="utf-8",
+    )
+
+    errors: list[str] = []
+    check_doc_refs(tmp_path, [str(source)], errors)
+
+    assert errors == []
 
 
 def test_check_template_frontmatter_validates_yaml_fences(tmp_path):

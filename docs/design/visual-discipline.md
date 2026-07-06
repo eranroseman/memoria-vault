@@ -9,7 +9,7 @@ nav_order: 22
 
 Memoria's Obsidian surface keeps the architecture invisible during normal use and
 legible when something goes wrong ([Obsidian — the human
-surface](../explanation/obsidian/README.md)). The rules below keep indicators
+surface](../explanation/obsidian/)). The rules below keep indicators
 tied to real decisions rather than turning the vault into a cockpit.
 
 ---

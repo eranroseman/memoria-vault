@@ -20,9 +20,9 @@ adapters may present chat, board, or editor views, but they do not replace the
 CLI/engine authority.
 
 Start with [Home](../README.md) if the basic vocabulary is unfamiliar. If you
-need to *do* something, see [How-to guides](../how-to-guides). If you need exact
+need to *do* something, see [How-to guides](../how-to-guides/). If you need exact
 values, field names, runtime contracts, or configuration formats, see
-[Reference](../reference). If you want the maintained rationale and decision
+[Reference](../reference/). If you want the maintained rationale and decision
 history, see [Developers](../developers.md).
 
 ## Reading map
