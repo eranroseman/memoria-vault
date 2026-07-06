@@ -306,15 +306,13 @@ def test_check_site_excluded_targets_blocks_published_links_to_excluded_docs(tmp
     root = tmp_path / "docs"
     ref = root / "reference"
     internal = root / "internal"
-    adr = root / "adr"
     ref.mkdir(parents=True)
     internal.mkdir()
-    adr.mkdir()
     (root / "_config.yml").write_text("exclude:\n  - internal/\n", encoding="utf-8")
     (internal / "README.md").write_text("# Internal\n", encoding="utf-8")
-    (adr / "README.md").write_text("# Decisions\n", encoding="utf-8")
+    (root / "explanation.md").write_text("# Explanation\n", encoding="utf-8")
     page = ref / "page.md"
-    page.write_text("[bad](../internal/README.md)\n[good](../adr/README.md)\n")
+    page.write_text("[bad](../internal/README.md)\n[good](../explanation.md)\n")
     _m._SITE_EXCLUDE_CACHE.clear()
 
     errs: list[str] = []
@@ -396,36 +394,29 @@ def test_check_site_nav_hierarchy_requires_grandparent_for_nested_children(tmp_p
     assert any("parent 'Group' under 'Missing' has no published page" in error for error in errors)
 
 
-def test_check_bare_adr_codes_requires_links_in_published_docs(tmp_path):
+def test_check_bare_adr_codes_blocks_bare_codes_in_published_docs(tmp_path):
     root = tmp_path / "docs"
     ref = root / "reference"
-    adr = root / "adr"
     releasing = root / "releasing"
     ref.mkdir(parents=True)
-    adr.mkdir()
     releasing.mkdir()
 
     bad = ref / "bad.md"
     bad.write_text("This mentions (ADR-12) bare.\n")
     good = ref / "good.md"
-    good.write_text("This links [ADR-12](../adr/12-no-frontend-linter.md).\n")
-    historical = adr / "12-no-frontend-linter.md"
-    historical.write_text("Historical prose can say (ADR-12).\n")
+    good.write_text("This links [the design-history context](../README.md).\n")
     internal = releasing / "plan.md"
     internal.write_text("Release scratch can say (ADR-12).\n")
 
     bad_errs: list[str] = []
     good_errs: list[str] = []
-    historical_errs: list[str] = []
     internal_errs: list[str] = []
     check_bare_adr_codes(bad, root, bad_errs)
     check_bare_adr_codes(good, root, good_errs)
-    check_bare_adr_codes(historical, root, historical_errs)
     check_bare_adr_codes(internal, root, internal_errs)
 
     assert len(bad_errs) == 1
     assert good_errs == []
-    assert historical_errs == []
     assert internal_errs == []
 
 

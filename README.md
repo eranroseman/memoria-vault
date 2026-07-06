@@ -92,7 +92,8 @@ for `memoria doctor bundle`, `memoria workspace rebuild --search`, and
 | `scripts/install.sh` / `scripts/install.ps1` | Bootstrap installers: Linux/WSL testing and native Windows production |
 | `src/memoria_vault/` | The installable Python package |
 | `vault-template/` | The workspace source tree — the installer copies it out as a standalone Memoria workspace |
-| `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`), decision records (`adr/`), and maintained design arguments (`design/`) |
+| `docs/` | Product and system documentation: the Diátaxis quadrants (`tutorials/`, `how-to-guides/`, `reference/`, `explanation/`) and maintained design arguments (`design/`) |
+| `design-history/` | Frozen release-history chapters plus the maintained design arcs and decision-record rules |
 
 ## Documentation
 

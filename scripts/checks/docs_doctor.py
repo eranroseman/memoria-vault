@@ -23,8 +23,7 @@ Checks:
   6. Vault wikilinks  — a vault [[note]]/[[note|alias]] must resolve to an existing
                         vault note (an aliased link to a missing note is otherwise
                         silent).
-  7. ADR code links   — current published docs must link ADR mentions instead of
-                        leaving bare `(ADR-NN)` codes.
+  7. ADR code links   — current published docs must avoid bare `(ADR-NN)` codes.
 
 Exit 0 if clean, 1 if any error.
 Usage: python scripts/checks/docs_doctor.py [docs_root]   (default: docs)
@@ -485,9 +484,8 @@ def check_site_nav_hierarchy(root: Path, errors: list[str]) -> None:
 
 
 def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
-    # Current public docs should link ADR references so readers can jump to the decision
-    # record. ADR files themselves and repo-internal release/testing docs keep
-    # historical prose and are excluded by _published().
+    # Current public docs should describe the design-history entry, not cite a bare
+    # retired ADR key. Repo-internal release/testing docs keep historical prose.
     if not _published(md, root) or "adr" in md.relative_to(root).parts:
         return
     text = INLINE_CODE_RE.sub("", FENCE_RE.sub("", read(md)))
@@ -495,7 +493,7 @@ def check_bare_adr_codes(md: Path, root: Path, errors: list[str]) -> None:
         match = BARE_ADR_CODE_RE.search(line)
         if match:
             errors.append(
-                f"{md}:{line_no}: bare ADR code {match.group(0)} — link it to the ADR page"
+                f"{md}:{line_no}: bare ADR code {match.group(0)} — link to the design-history context"
             )
 
 
