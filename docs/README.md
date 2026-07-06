@@ -14,8 +14,8 @@ dispositions before they become checked knowledge.
 
 If you want a guided first experience, start with the
 [Quickstart](how-to-guides/setup/quickstart.md). If you need to _do_
-something, see [How-to guides](how-to-guides). If you need exact values, field
-names, or configuration formats, see [Reference](reference).
+something, see [How-to guides](how-to-guides/). If you need exact values, field
+names, or configuration formats, see [Reference](reference/).
 
 **Status: v0.1 alpha source install** — alpha.16 is cutting over to the
 standalone CLI/engine; the full end-to-end release gate is still open. ·

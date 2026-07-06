@@ -14,6 +14,7 @@ REQUIREMENTS_DEV = ROOT / "requirements-dev.txt"
 CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
+DOCS_CONFIG = ROOT / "docs" / "_config.yml"
 
 
 def _hook(hook_id: str) -> dict:
@@ -104,3 +105,9 @@ def test_lint_config_and_markdownlint_are_required_checks():
     assert "markdownlint" in contract["required_checks"]
     assert contract["workflow_jobs"]["lint-config"] == ".github/workflows/lint-config.yml"
     assert contract["workflow_jobs"]["markdownlint"] == ".github/workflows/markdownlint.yml"
+
+
+def test_pages_rewrites_relative_markdown_links():
+    config = yaml.safe_load(DOCS_CONFIG.read_text(encoding="utf-8"))
+
+    assert "jekyll-relative-links" in config["plugins"]

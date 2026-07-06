@@ -35,6 +35,12 @@ class _Links(HTMLParser):
 class CrawlResult:
     pages: int = 0
     links: int = 0
+    internal_targets_checked: int = 0
+    internal_link_refs_checked: int = 0
+    broken_internal_targets: int = 0
+    bad_internal_fragments: int = 0
+    external_targets_checked: int = 0
+    broken_external_targets: int = 0
     warnings: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -76,8 +82,10 @@ class LiveDocsChecker:
             target = parse.urljoin(page_url, href)
             clean, fragment = parse.urldefrag(target)
             if self._is_internal(clean):
+                self.result.internal_link_refs_checked += 1
                 ids = self._ids_for(clean)
                 if fragment and fragment not in ids:
+                    self.result.bad_internal_fragments += 1
                     self.result.errors.append(f"{page_url}: missing fragment {target}")
                 if self._looks_like_page(clean):
                     self._crawl_page(clean)
@@ -98,14 +106,20 @@ class LiveDocsChecker:
         if url in self.html_cache:
             return self.html_cache[url]
         try:
+            if self._is_internal(url):
+                self.result.internal_targets_checked += 1
             with request.urlopen(url, timeout=self.timeout) as response:
                 content_type = response.headers.get("content-type", "")
                 body = response.read()
         except error.HTTPError as exc:
+            if self._is_internal(url):
+                self.result.broken_internal_targets += 1
             self.result.errors.append(f"{url}: HTTP {exc.code}")
             self.html_cache[url] = None
             return None
         except (OSError, TimeoutError, error.URLError) as exc:
+            if self._is_internal(url):
+                self.result.broken_internal_targets += 1
             self.result.errors.append(f"{url}: {exc}")
             self.html_cache[url] = None
             return None
@@ -120,12 +134,17 @@ class LiveDocsChecker:
     def _check_fragment(self, url: str, ids: set[str]) -> None:
         _, fragment = parse.urldefrag(url)
         if fragment and fragment not in ids:
+            self.result.bad_internal_fragments += 1
             self.result.errors.append(f"{url}: missing fragment")
 
     def _check_external(self, url: str, source: str) -> None:
         if url in self.seen_external:
             return
         self.seen_external.add(url)
+        self.result.external_targets_checked += 1
+        self._check_external_seen(url, source)
+
+    def _check_external_seen(self, url: str, source: str) -> None:
         req = request.Request(url, method="HEAD", headers={"User-Agent": "MemoriaLinkCheck/1"})
         try:
             with request.urlopen(req, timeout=self.timeout):
@@ -134,6 +153,7 @@ class LiveDocsChecker:
             if exc.code in {405, 403}:
                 return
             if exc.code in HARD_EXTERNAL_FAILURES:
+                self.result.broken_external_targets += 1
                 self.result.errors.append(f"{source}: external HTTP {exc.code} {url}")
             else:
                 self.result.warnings.append(f"{source}: external HTTP {exc.code} {url}")
@@ -141,15 +161,20 @@ class LiveDocsChecker:
             self.result.warnings.append(f"{source}: external unchecked {url} ({exc})")
 
     def _check_same_repo_github(self, url: str, source: str) -> None:
+        if url in self.seen_external:
+            return
+        self.seen_external.add(url)
+        self.result.external_targets_checked += 1
         parsed = parse.urlparse(url)
         parts = parsed.path.removeprefix(GITHUB_REPO_PATH).split("/")
         if len(parts) < 3 or parts[1] != "main" or parts[0] not in {"blob", "tree"}:
-            self._check_external(url, source)
+            self._check_external_seen(url, source)
             return
 
         local = self.root / "/".join(parts[2:])
         exists = local.is_dir() if parts[0] == "tree" else local.is_file()
         if not exists:
+            self.result.broken_external_targets += 1
             self.result.errors.append(
                 f"{source}: GitHub {parts[0]} target missing locally: {local}"
             )
@@ -196,7 +221,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"warning: {warning}", file=sys.stderr)
     for failure in result.errors:
         print(f"error: {failure}", file=sys.stderr)
-    print(f"live-docs-links: {result.pages} pages, {result.links} links")
+    print(f"live-docs-links: pages crawled: {result.pages}")
+    print(f"live-docs-links: internal targets checked: {result.internal_targets_checked}")
+    print(f"live-docs-links: internal link refs checked: {result.internal_link_refs_checked}")
+    print(f"live-docs-links: broken internal targets: {result.broken_internal_targets}")
+    print(f"live-docs-links: bad internal fragments: {result.bad_internal_fragments}")
+    print(f"live-docs-links: external targets checked: {result.external_targets_checked}")
+    print(f"live-docs-links: broken external targets: {result.broken_external_targets}")
+    print(f"live-docs-links: total links checked: {result.links}")
     if result.errors:
         print(f"live-docs-links: FAILED ({len(result.errors)} error(s))", file=sys.stderr)
         return 1
