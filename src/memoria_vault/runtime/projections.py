@@ -7,30 +7,23 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-from memoria_vault.runtime import state
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-from memoria_vault.runtime.vaultio import read_frontmatter
 
-BUNDLE_ROOTS = ("catalog", "knowledge")
-INDEX_PATHS = ("index.md", "catalog/index.md", "knowledge/index.md")
-KNOWLEDGE_VIEWS_INDEX_PATH = "knowledge/_views/index.md"
+BUNDLE_ROOTS = ("works", "sources", "notes", "hubs", "projects")
+INDEX_PATHS = ("index.md",)
 TRACKED_PROJECTION_PATHS = (
     *INDEX_PATHS,
-    KNOWLEDGE_VIEWS_INDEX_PATH,
-    "references.bib",
+    "bibliography.bib",
 )
 
 
 def render_workspace_index(vault: Path, index_path: str) -> str:
     """Render one generated OKF-style index.md projection."""
     rel = normalize_path(index_path)
-    if rel == "index.md":
-        return _workspace_index()
-    if rel not in INDEX_PATHS:
+    if rel != "index.md":
         raise ValueError(f"unsupported index projection: {index_path}")
-    bundle = rel.split("/", 1)[0]
-    return _bundle_index(Path(vault), bundle)
+    return _workspace_index()
 
 
 def render_tracked_projection(vault: Path, projection_path: str) -> str:
@@ -38,9 +31,7 @@ def render_tracked_projection(vault: Path, projection_path: str) -> str:
     rel = normalize_path(projection_path)
     if rel in INDEX_PATHS:
         return render_workspace_index(vault, rel)
-    if rel == KNOWLEDGE_VIEWS_INDEX_PATH:
-        return _knowledge_views_index(Path(vault))
-    if rel == "references.bib":
+    if rel == "bibliography.bib":
         from memoria_vault.runtime.capture import render_references_bib
 
         return render_references_bib(vault)
@@ -114,18 +105,9 @@ def write_tracked_projections(
 
     vault = Path(vault)
     index_result = write_workspace_indexes(vault)
-    knowledge_views_changed: list[str] = []
-    output = vault / KNOWLEDGE_VIEWS_INDEX_PATH
-    text = render_tracked_projection(vault, KNOWLEDGE_VIEWS_INDEX_PATH)
-    old = output.read_text(encoding="utf-8") if output.exists() else None
-    if old != text:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(text, encoding="utf-8")
-        knowledge_views_changed.append(KNOWLEDGE_VIEWS_INDEX_PATH)
     references_result = write_references_bib(vault)
     changed = [
         *index_result["changed"],
-        *knowledge_views_changed,
         *([references_result["path"]] if references_result["changed"] else []),
     ]
     event = None
@@ -207,84 +189,19 @@ def check_workspace_indexes(vault: Path) -> bool:
 
 
 def _workspace_index() -> str:
-    rows = "\n".join(f"- [{root}]({root}/index.md)" for root in BUNDLE_ROOTS)
+    labels = {
+        "works": "Works corpus",
+        "sources": "Source notes",
+        "notes": "Claim and question notes",
+        "hubs": "Topic hubs",
+        "projects": "Projects",
+    }
+    rows = "\n".join(f"- [{labels[root]}]({root}/)" for root in BUNDLE_ROOTS)
     return _generated(
         "Memoria workspace index",
         "Generated workspace projection. Edit catalog rows or Concept files, not this file.",
         rows,
     )
-
-
-def _bundle_index(vault: Path, bundle: str) -> str:
-    bundle_root = vault / bundle
-    concept_paths = _concept_paths(bundle_root)
-    if bundle == "catalog":
-        concept_paths = [
-            path for path in concept_paths if not _catalog_source_markdown(bundle_root, path)
-        ]
-    rows = [_concept_row(bundle_root, path) for path in concept_paths]
-    if bundle == "catalog":
-        rows.extend(_catalog_source_rows(vault))
-    body = "\n".join(rows) if rows else "_No checked Concepts._"
-    note = (
-        "Generated catalog projection. Edit catalog Work rows, not this file."
-        if bundle == "catalog"
-        else "Generated bundle projection. Edit Concept files, not this file."
-    )
-    return _generated(f"{bundle.title()} index", note, body)
-
-
-def _knowledge_views_index(vault: Path) -> str:
-    root = vault / "knowledge"
-    counts: dict[str, int] = {}
-    for path in _concept_paths(root):
-        frontmatter = read_frontmatter(path)
-        concept_type = str(frontmatter.get("type") or "concept")
-        counts[concept_type] = counts.get(concept_type, 0) + 1
-    rows = "\n".join(f"- `{kind}`: {counts[kind]}" for kind in sorted(counts))
-    body = rows if rows else "_No checked knowledge Concepts._"
-    return _generated(
-        "Knowledge views index",
-        "Generated knowledge view projection. Edit Concept files, not this file.",
-        body,
-    )
-
-
-def _concept_paths(root: Path) -> list[Path]:
-    if not root.is_dir():
-        return []
-    vault = root.parent
-    return sorted(
-        path
-        for path in root.rglob("*.md")
-        if path.name != "index.md"
-        and state.concept_check_status(vault, path.relative_to(vault).as_posix()) == "checked"
-    )
-
-
-def _concept_row(bundle_root: Path, path: Path) -> str:
-    frontmatter = read_frontmatter(path)
-    rel = path.relative_to(bundle_root).as_posix()
-    title = str(frontmatter.get("title") or path.stem)
-    concept_type = str(frontmatter.get("type") or "concept")
-    description = str(frontmatter.get("description") or "").strip()
-    suffix = f" — {description}" if description else ""
-    return f"- [{title}]({rel}) `{concept_type}`{suffix}"
-
-
-def _catalog_source_markdown(bundle_root: Path, path: Path) -> bool:
-    rel = path.relative_to(bundle_root).as_posix()
-    return rel.startswith("sources/")
-
-
-def _catalog_source_rows(vault: Path) -> list[str]:
-    rows: list[str] = []
-    for source in state.catalog_sources(vault):
-        title = str(source.get("title") or source["source_id"])
-        description = str(source.get("description") or "").strip()
-        suffix = f" — {description}" if description else ""
-        rows.append(f"- {title} `source` `catalog/sources/{source['source_id']}`{suffix}")
-    return rows
 
 
 def _generated(title: str, note: str, body: str) -> str:

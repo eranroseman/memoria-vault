@@ -7,7 +7,7 @@ nav_order: 1
 
 # Document types and epistemic roles
 
-Alpha.15 treats durable knowledge files as **Concepts**. The folder root and
+Alpha.16 treats durable knowledge files as **Concepts**. The folder root and
 frontmatter say what kind of Concept the file is; SQLite/read-API verdict state
 says whether it is readable as checked knowledge.
 
@@ -18,7 +18,7 @@ says whether it is readable as checked knowledge.
 | Store | Holds | Types |
 | --- | --- | --- |
 | Catalog state | Source rows, source blobs, provider payloads, external IDs, and graph edges. | SQLite catalog rows and `.memoria/blobs/**`, not frontmatter Concept types |
-| `knowledge/` | Durable knowledge files and PI curation. | `note`, `work`, `hub`, `project` |
+| `works/`, `sources/`, `notes/`, `hubs/`, `projects/` | Durable corpus files and PI curation. | `work`, `digest`, `source-note`, `note`, `hub`, `project` |
 | Packaged capability bundle | Operation manifests and product capability metadata. | Packaged data under `memoria_vault.product.capabilities`, not runtime-vault Concepts |
 
 The exhaustive field lists live in [Document types](../../reference/document-types.md).

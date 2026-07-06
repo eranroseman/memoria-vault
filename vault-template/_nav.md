@@ -5,25 +5,29 @@ cssclasses: memoria-nav
 
 **Now**
 
-[[spaces/inbox|Action queue]]
+`inbox/`
 
-[[spaces/maintenance|Maintenance]]
+`system/`
 
 ---
 
 **Places**
 
-[[spaces/library|Library]]
+`works/`
 
-[[spaces/knowledge|Knowledge]]
+`sources/`
 
-[[spaces/project|Project]]
+`notes/`
+
+`hubs/`
+
+`projects/`
 
 ---
 
 **Actions**
 
-- Capture source: `memoria work capture --workspace . --doi <doi>`
+- Capture source: `memoria work add --workspace . --doi <doi>`
 - Import bibliography: `memoria work import --workspace . --format bibtex --file <file>`
 - Ask the workspace: `memoria ask --workspace . --question "<question>"`
 - Check workspace: `memoria workspace check --workspace .`

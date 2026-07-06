@@ -260,7 +260,7 @@ def test_pi_can_edit_candidate_text_before_accepting(tmp_path: Path) -> None:
 def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     _md(
-        vault / "knowledge/notes/already.md",
+        vault / "notes/already.md",
         "type: note\ncheck_status: checked\ntitle: Already\n",
     )
 
@@ -275,11 +275,11 @@ def test_curate_note_candidate_rejects_non_candidate_status(tmp_path: Path) -> N
 def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     _md(
-        vault / "knowledge/notes/source.md",
+        vault / "notes/source.md",
         "type: note\ncheck_status: checked\ntitle: Source\nstatus: accepted\n",
     )
     _md(
-        vault / "knowledge/notes/target.md",
+        vault / "notes/target.md",
         "type: note\ncheck_status: checked\ntitle: Target\nstatus: accepted\n",
     )
 
@@ -292,19 +292,19 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
         machine="curator",
     )
 
-    source_fm = read_frontmatter(vault / "knowledge/notes/source.md")
-    assert source_fm["links"] == {"supports": ["knowledge/notes/target.md"]}
-    assert result["source_note_path"] == "knowledge/notes/source.md"
-    assert result["target_path"] == "knowledge/notes/target.md"
+    source_fm = read_frontmatter(vault / "notes/source.md")
+    assert source_fm["links"] == {"supports": ["notes/target.md"]}
+    assert result["source_note_path"] == "notes/source.md"
+    assert result["target_path"] == "notes/target.md"
     assert result["link_type"] == "supports"
     assert result["changed"] is True
     event = list(iter_jsonl(vault / "journal/curator.jsonl"))[-1]
     assert event["event"] == "resolved"
     assert event["operation"] == "curate-note-link"
-    assert event["linked_id"] == "knowledge/notes/target.md"
+    assert event["linked_id"] == "notes/target.md"
     assert event["reason"] == "PI linked claims"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/source.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "notes/source.md"}
 
 
 def _md(path: Path, frontmatter: str) -> None:
@@ -326,7 +326,7 @@ def _md(path: Path, frontmatter: str) -> None:
 
 def _vault_root(path: Path) -> Path:
     for parent in path.parents:
-        if parent.name in {"catalog", "knowledge", "capabilities"}:
+        if parent.name in {"works", "sources", "notes", "hubs", "projects", "capabilities"}:
             return parent.parent
     return path.parent
 
@@ -341,13 +341,13 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         csl_json={"memoria": {"tags": ["sleep"]}},
     )
     _md(
-        tmp_path / "knowledge/works/source-alpha.md",
-        "type: work\ncheck_status: checked\ntitle: Alpha digest\n"
+        tmp_path / "works/source-alpha/digest.md",
+        "type: digest\ncheck_status: checked\ntitle: Alpha digest\nwork_id: source-alpha\n"
         "description: Alpha\nsource_id: catalog/sources/source-alpha\ntags: [sleep]\n",
     )
     for idx in range(2):
         _md(
-            tmp_path / f"knowledge/notes/warrant-{idx}.md",
+            tmp_path / f"notes/warrant-{idx}.md",
             f"type: note\ncheck_status: checked\ntitle: Warrant {idx}\ntags: [warrant]\n",
         )
     state.upsert_catalog_record(
@@ -359,7 +359,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         csl_json={"memoria": {"tags": ["balanced"]}},
     )
     _md(
-        tmp_path / "knowledge/notes/balanced.md",
+        tmp_path / "notes/balanced.md",
         "type: note\ncheck_status: checked\ntitle: Balanced note\ntags: [balanced]\n",
     )
     state.upsert_catalog_record(
@@ -387,7 +387,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         csl_json={"memoria": {"tags": ["stale-only"], "standing": "retracted"}},
     )
     for idx in range(2):
-        path = tmp_path / f"knowledge/notes/candidate-{idx}.md"
+        path = tmp_path / f"notes/candidate-{idx}.md"
         _md(
             path,
             f"type: note\ncheck_status: checked\ntitle: Candidate {idx}\ntags: [candidate-only]\n",
@@ -531,7 +531,7 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
     assert gap["gap_type"] == "undigested"
     _assert_gap_contract(gap, "undigested")
     assert gap["retrieval_engine"] == "bm25"
-    assert gap["retrieval_sources"][0]["path"] == "works/source-alpha.md"
+    assert gap["retrieval_sources"][0]["path"] == "works/source-alpha/fulltext.md"
     citation_gap = {row["topic"]: row for row in result["gaps"]}[
         "Citation neighborhood: Alpha Source"
     ]
@@ -560,12 +560,12 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
 def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     shutil.copytree(ROOT / "vault-template/system", vault / "system")
-    work_rel = "knowledge/works/source-alpha.md"
+    work_rel = "works/source-alpha/digest.md"
     work = vault / work_rel
     work.parent.mkdir(parents=True, exist_ok=True)
     work.write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FC0\n"
         "title: Retrieval practice digest\n"
         "tags: []\n"
@@ -579,7 +579,7 @@ def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) ->
         "Personal informatics supports reflection.\n",
         encoding="utf-8",
     )
-    _checked(vault, work_rel, "work")
+    _checked(vault, work_rel, "digest")
 
     result = analyze_gaps(vault, machine="gap-machine")
 
@@ -743,29 +743,29 @@ def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
 
 def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+        "description: Project\nthesis: notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/thesis.md",
+        tmp_path / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\n",
     )
     _md(
-        tmp_path / "knowledge/notes/support.md",
+        tmp_path / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/refute.md",
+        tmp_path / "notes/refute.md",
         "type: note\ncheck_status: checked\ntitle: Refute\n"
-        "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  contradicts:\n    - notes/thesis.md\n",
     )
-    candidate = tmp_path / "knowledge/notes/candidate.md"
+    candidate = tmp_path / "notes/candidate.md"
     _md(
         candidate,
         "type: note\ncheck_status: checked\ntitle: Candidate\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
     state.append_journal_event(
         tmp_path,
@@ -778,8 +778,8 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
 
     result = analyze_project_argument(tmp_path, "project-alpha")
 
-    assert result["project_path"] == "knowledge/projects/project-alpha.md"
-    assert result["thesis_path"] == "knowledge/notes/thesis.md"
+    assert result["project_path"] == "projects/project-alpha/project.md"
+    assert result["thesis_path"] == "notes/thesis.md"
     assert result["argument_stage"] == "developing"
     assert result["relation_count"] == 2
     assert result["supports_count"] == 1
@@ -793,9 +793,9 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
         "has_refutation": True,
     }
     assert {node["path"] for node in result["nodes"]} == {
-        "knowledge/notes/thesis.md",
-        "knowledge/notes/support.md",
-        "knowledge/notes/refute.md",
+        "notes/thesis.md",
+        "notes/support.md",
+        "notes/refute.md",
     }
     assert result["findings"] == [{"kind": "thin-argument", "severity": "medium"}]
     assert [row["kind"] for row in result["gap_findings"]] == ["conflict"]
@@ -804,29 +804,29 @@ def test_analyze_project_argument_reads_checked_note_links(tmp_path: Path) -> No
 
 def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+        "description: Project\nthesis: notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/thesis.md",
+        tmp_path / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
     )
     _md(
-        tmp_path / "knowledge/notes/support.md",
+        tmp_path / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/refute.md",
+        tmp_path / "notes/refute.md",
         "type: note\ncheck_status: checked\ntitle: Refute\nstatus: accepted\n"
-        "links:\n  contradicts:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  contradicts:\n    - notes/thesis.md\n",
     )
 
     result = analyze_gaps(tmp_path, project_path="project-alpha")
 
-    assert result["project_path"] == "knowledge/projects/project-alpha.md"
-    assert result["thesis_path"] == "knowledge/notes/thesis.md"
+    assert result["project_path"] == "projects/project-alpha/project.md"
+    assert result["thesis_path"] == "notes/thesis.md"
     assert result["argument_stage"] == "developing"
     assert result["argument_gap_count"] == 2
     assert result["paper_readiness_gap_count"] == 1
@@ -845,7 +845,7 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
         "ready": True,
         "claim_saturation": [
             {
-                "claim": "knowledge/notes/thesis.md",
+                "claim": "notes/thesis.md",
                 "has_support": True,
                 "has_counterpoint": True,
                 "saturated": True,
@@ -862,15 +862,15 @@ def test_analyze_gaps_adds_project_argument_health(tmp_path: Path) -> None:
 
 def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n"
+        "description: Project\nthesis: notes/thesis.md\n"
         "scope_topics: [sensemaking]\n"
         "facets:\n"
         "  methodology: [qualitative]\n",
     )
     _md(
-        tmp_path / "knowledge/notes/thesis.md",
+        tmp_path / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n"
         "keywords: [patient-generated-data]\n"
         "facets:\n"
@@ -889,54 +889,54 @@ def test_analyze_gaps_seeds_project_scope_and_thesis_terms(tmp_path: Path) -> No
 
 def test_write_project_argument_canvas_projects_checked_note_links(tmp_path: Path) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+        "description: Project\nthesis: notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/thesis.md",
+        tmp_path / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
     )
     _md(
-        tmp_path / "knowledge/notes/support.md",
+        tmp_path / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
 
     result = write_project_argument_canvas(tmp_path, "project-alpha")
 
-    assert result["canvas_path"] == "knowledge/projects/project-alpha/argument.canvas"
+    assert result["canvas_path"] == "projects/project-alpha/argument.canvas"
     assert result["node_count"] == 2
     assert result["edge_count"] == 1
     canvas = json.loads((tmp_path / result["canvas_path"]).read_text(encoding="utf-8"))
     assert {node["file"] for node in canvas["nodes"]} == {
-        "knowledge/notes/thesis.md",
-        "knowledge/notes/support.md",
+        "notes/thesis.md",
+        "notes/support.md",
     }
     assert canvas["edges"][0]["label"] == "supports"
 
 
 def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+        "description: Project\nthesis: notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/notes/thesis.md",
+        tmp_path / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\nstatus: accepted\n",
     )
     _md(
-        tmp_path / "knowledge/notes/support.md",
+        tmp_path / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\nstatus: accepted\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
     _md(
-        tmp_path / "knowledge/hubs/alpha-hub.md",
+        tmp_path / "hubs/alpha-hub.md",
         "type: hub\ncheck_status: checked\ntitle: Alpha hub\n"
-        "description: Curated project context\nproject: knowledge/projects/project-alpha.md\n",
+        "description: Curated project context\nproject: projects/project-alpha/project.md\n",
     )
-    (tmp_path / "references.bib").write_text("@article{alpha,title={Alpha}}\n", encoding="utf-8")
+    (tmp_path / "bibliography.bib").write_text("@article{alpha,title={Alpha}}\n", encoding="utf-8")
 
     result = write_project_export(
         tmp_path,
@@ -944,16 +944,16 @@ def test_write_project_export_renders_checked_project_markdown(tmp_path: Path) -
         output_path="exports/project-alpha.md",
     )
 
-    assert result["project_path"] == "knowledge/projects/project-alpha.md"
+    assert result["project_path"] == "projects/project-alpha/project.md"
     assert result["format"] == "markdown"
     assert result["output_path"] == "exports/project-alpha.md"
     assert result["content"] == ""
     text = (tmp_path / result["output_path"]).read_text(encoding="utf-8")
     assert "# Alpha project" in text
     assert "## Argument Snapshot" in text
-    assert "- Thesis: `knowledge/notes/thesis.md`" in text
+    assert "- Thesis: `notes/thesis.md`" in text
     assert "- Support --supports--> Thesis" in text
-    assert "- Alpha hub: `knowledge/hubs/alpha-hub.md` -- Curated project context" in text
+    assert "- Alpha hub: `hubs/alpha-hub.md` -- Curated project context" in text
     assert "```bibtex\n@article{alpha,title={Alpha}}\n```" in text
 
 
@@ -964,7 +964,7 @@ def _valid_paper_plan() -> dict[str, object]:
         "research_question": "Can Memoria support standalone CLI research?",
         "central_contribution": "A checked CLI loop can produce usable evidence.",
         "gap_statement": "Existing PKM loops lack local checked export.",
-        "claim_evidence_map": {"CLI loop works": "knowledge/notes/support.md"},
+        "claim_evidence_map": {"CLI loop works": "notes/support.md"},
         "figure_plan": {"Figure 1": "CLI loop stages"},
         "limitations": "Single-corpus dogfood run.",
     }
@@ -972,7 +972,7 @@ def _valid_paper_plan() -> dict[str, object]:
 
 def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    project = vault / "knowledge/projects/project-alpha.md"
+    project = vault / "projects/project-alpha/project.md"
     project.parent.mkdir(parents=True)
     project.write_text(
         "---\n"
@@ -987,7 +987,7 @@ def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path:
         "Body.\n",
         encoding="utf-8",
     )
-    _checked(vault, "knowledge/projects/project-alpha.md", "project")
+    _checked(vault, "projects/project-alpha/project.md", "project")
 
     result = frame_project_paper(
         vault,
@@ -997,7 +997,7 @@ def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path:
         run_id="frame-run",
     )
 
-    assert result["project_path"] == "knowledge/projects/project-alpha.md"
+    assert result["project_path"] == "projects/project-alpha/project.md"
     assert result["check_status"] == "unchecked"
     frontmatter = read_frontmatter(project)
     assert frontmatter["paper_plan"]["research_question"].startswith("Can Memoria")
@@ -1009,24 +1009,24 @@ def test_frame_project_paper_records_plan_and_leaves_project_unchecked(tmp_path:
         "status": "framed",
     }
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/projects/project-alpha.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "projects/project-alpha/project.md"}
 
 
 def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Path) -> None:
     vault = tmp_path
     _md(
-        vault / "knowledge/projects/project-alpha.md",
+        vault / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n"
-        "description: Project\nthesis: knowledge/notes/thesis.md\n",
+        "description: Project\nthesis: notes/thesis.md\n",
     )
     _md(
-        vault / "knowledge/notes/thesis.md",
+        vault / "notes/thesis.md",
         "type: note\ncheck_status: checked\ntitle: Thesis\n",
     )
     with pytest.raises(ValueError, match="target"):
         write_project_export(vault, "project-alpha", ready_only=True)
 
-    project = vault / "knowledge/projects/project-alpha.md"
+    project = vault / "projects/project-alpha/project.md"
     frontmatter, body = project.read_text(encoding="utf-8").split("---\n", 2)[1:]
     project.write_text(
         "---\n"
@@ -1038,7 +1038,7 @@ def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Pat
         + "  central_contribution: A checked CLI loop can produce usable evidence.\n"
         + "  gap_statement: Existing PKM loops lack local checked export.\n"
         + "  claim_evidence_map:\n"
-        + "    CLI loop works: knowledge/notes/support.md\n"
+        + "    CLI loop works: notes/support.md\n"
         + "  figure_plan:\n"
         + "    Figure 1: CLI loop stages\n"
         + "  limitations: Single-corpus dogfood run.\n"
@@ -1046,11 +1046,11 @@ def test_ready_only_export_requires_paper_plan_and_checked_support(tmp_path: Pat
         + body,
         encoding="utf-8",
     )
-    _checked(vault, "knowledge/projects/project-alpha.md", "project")
+    _checked(vault, "projects/project-alpha/project.md", "project")
     _md(
-        vault / "knowledge/notes/support.md",
+        vault / "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "links:\n  supports:\n    - knowledge/notes/thesis.md\n",
+        "links:\n  supports:\n    - notes/thesis.md\n",
     )
 
     result = write_project_export(vault, "project-alpha", ready_only=True)
@@ -1065,7 +1065,7 @@ def test_write_project_export_requires_pandoc_for_non_markdown(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _md(
-        tmp_path / "knowledge/projects/project-alpha.md",
+        tmp_path / "projects/project-alpha/project.md",
         "type: project\ncheck_status: checked\ntitle: Alpha project\n",
     )
     monkeypatch.setattr("memoria_vault.runtime.knowledge.shutil.which", lambda _name: None)

@@ -1,5 +1,5 @@
 type: hub
-category: knowledge
+category: hubs
 gated: false
 required:
   type: literal:hub
@@ -13,4 +13,5 @@ optional:
   archived: bool
   citations: list
   description: str
+  salience: str
   x: map

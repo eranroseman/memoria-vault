@@ -9,21 +9,25 @@ nav_order: 1
 
 The vault is where durable knowledge lives. Everything else in Memoria - the
 CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
-This page explains the alpha.15 workspace shape, Concept homes, and write boundary.
+This page explains the alpha.16 workspace shape, Concept homes, and write boundary.
 
 ---
 
 ## Bundle roots
 
-The top level has three OKF-compatible bundle roots plus workspace-level state.
+The top level has alpha.16 bundle roots plus workspace-level state.
 The knowledge graph is a network, not a pipeline: direction lives in `steering.md`,
 project framing, typed links, and `check_status`, not in lifecycle folders.
 
 ```text
 <vault-root>/
 ├── steering.md     ← PI-authored program memory
-├── catalog/        ← source and entity records
-├── knowledge/      ← Works, notes, hubs, projects
+├── works/          ← Work bundles: record, full text, digest, source assets
+├── sources/        ← Source notes
+├── notes/          ← Claim and question notes
+├── hubs/           ← Curated topic hubs
+├── projects/       ← Project bundles
+├── inbox/          ← Attention projections
 ├── system/         ← visible infrastructure: templates, dashboards, eval, logs
 └── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
 ```
@@ -40,7 +44,7 @@ in [Document types](../../reference/document-types.md).
 | Area | Examples | Trust posture |
 | --- | --- | --- |
 | Catalog | source and entity rows | Objective records from capture/import; checked before consumption. |
-| Knowledge | work, note, hub, project | The working graph. Works can be machine-owned digests; notes and hub curation are PI judgment. |
+| Knowledge | work, digest, source-note, note, hub, project | The working graph. Work records and digests can be machine-owned; source-notes, notes, hubs, and project curation carry PI judgment. |
 | System | templates, dashboards, eval, logs | Visible infrastructure and generated projections; product operations live in the installed package. |
 
 ## Write Boundary

@@ -17,14 +17,14 @@ terminal operation you run yourself — there is no export lane or palette comma
 - Memoria CLI installed for checked project exports
 - Pandoc installed and on your `PATH` (`pandoc --version` returns a version) for
   `.docx`, `.pdf`, `.odt`, or direct manuscript routes
-- A checked project Concept under `knowledge/projects/`; author it as Markdown,
+- A checked project Concept under `projects/`; author it as Markdown,
   then run `memoria workspace scan --workspace <vault>`
 - For readiness-gated exports, a paper frame recorded with
   `memoria project frame-paper --frame-file <json>` and the project checked
   afterward
 - The draft reviewed by you; automated Writer/Verifier draft flows are not part
-  of the alpha.15 shipped path
-- `references.bib` current (generated from checked SQLite catalog rows)
+  of the alpha.16 shipped path
+- `bibliography.bib` current (generated from checked SQLite catalog rows)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
 ## Steps
@@ -42,7 +42,7 @@ memoria project export \
   --workspace /path/to/workspace \
   project-alpha \
   --format markdown \
-  --output knowledge/projects/project-alpha/exports/project-alpha.md \
+  --output projects/project-alpha/exports/project-alpha.md \
   --ready-only
 ```
 
@@ -55,13 +55,13 @@ For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
 Run from the vault root; keep project drafts under the project folder:
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/drafts/<draft>.md \
   --from markdown+smart \
   --to docx \
   --citeproc \
-  --bibliography references.bib \
+  --bibliography bibliography.bib \
   --csl .memoria/csl/apa.csl \
-  --output knowledge/projects/<project>/exports/<output>.docx
+  --output projects/<project>/exports/<output>.docx
 ```
 
 **4. Export a manuscript draft to PDF.**
@@ -69,23 +69,23 @@ pandoc knowledge/projects/<project>/drafts/<draft>.md \
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/drafts/<draft>.md \
   --from markdown+smart \
   --to pdf \
   --pdf-operation=lualatex \
   --citeproc \
-  --bibliography references.bib \
+  --bibliography bibliography.bib \
   --csl .memoria/csl/apa.csl \
-  --output knowledge/projects/<project>/exports/<output>.pdf
+  --output projects/<project>/exports/<output>.pdf
 ```
 
 **5. Export a manuscript draft to clean Markdown** (conference systems, CMS upload):
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/drafts/<draft>.md \
   --from markdown+smart --to gfm --citeproc \
-  --bibliography references.bib \
-  --output knowledge/projects/<project>/exports/<output>.md
+  --bibliography bibliography.bib \
+  --output projects/<project>/exports/<output>.md
 ```
 
 **6. Convert wikilinks first.**
@@ -101,10 +101,10 @@ The routes above produce static citations. For live, restylable Zotero fields in
 **Do not add `--citeproc`** — `zotero.lua` handles citation conversion:
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/drafts/<draft>.md \
   --from markdown+smart --to docx \
   --lua-filter=/path/to/zotero.lua \
-  --output knowledge/projects/<project>/exports/<output>.docx
+  --output projects/<project>/exports/<output>.docx
 ```
 
 Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live fields and a bibliography is inserted.
@@ -122,7 +122,7 @@ Open the `.docx` in Word → Zotero tab → Refresh: citations convert to live f
 - The output file opens cleanly and the bibliography renders at the end
 - All `[@citekey]` citations resolved — none appear as bare `[@...]` in the output
 - The export landed where you pointed it; the draft `.md` under
-  `knowledge/projects/<project>/` remains the source of truth
+  `projects/<project>/` remains the source of truth
 
 ## Related
 

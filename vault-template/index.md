@@ -3,5 +3,8 @@
 
 Generated workspace projection. Edit catalog rows or Concept files, not this file.
 
-- [catalog](catalog/index.md)
-- [knowledge](knowledge/index.md)
+- [Works corpus](works/)
+- [Source notes](sources/)
+- [Claim and question notes](notes/)
+- [Topic hubs](hubs/)
+- [Projects](projects/)

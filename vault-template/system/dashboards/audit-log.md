@@ -42,8 +42,8 @@ if (!text || !text.trim()) { dv.paragraph("_No data yet._"); return; }
 const events = text.trim().split("\n").filter(Boolean).map(l => JSON.parse(l));
 const canonical = events
   .filter(e => e.path && (
-    e.path.startsWith("knowledge/notes/") ||
-    e.path.startsWith("knowledge/hubs/")
+    e.path.startsWith("notes/") ||
+    e.path.startsWith("hubs/")
   ))
   .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
   .slice(0, 20);

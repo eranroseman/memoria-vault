@@ -25,7 +25,7 @@ memoria attention list --workspace <workspace>
 
 ## WIP Limits
 
-Alpha.15 does not enforce Hermes board WIP limits. Concurrency belongs to the
+Alpha.16 does not enforce Hermes board WIP limits. Concurrency belongs to the
 standalone engine/runner and any operator-managed scheduler that invokes it.
 
 ## Related

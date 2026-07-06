@@ -19,12 +19,14 @@ engine request API. Do not emulate the worker by editing files directly. The
 worker reads request rows from SQLite, writes staged outputs, and records
 check/verdict state before anything becomes readable as checked knowledge.
 
-## Where things live (ADR-126)
+## Where things live
 
-`catalog/` source and entity records · `knowledge/` Works, notes, hubs, and
-projects · `inbox/` transient attention projections · `system/` templates,
-dashboards, eval, metrics, and logs. Product operation manifests live in the
-installed `memoria_vault` package, not in a workspace `capabilities/` tree.
+`works/` source records, full text, raw files, and digests · `sources/`
+source-notes · `notes/` claims/questions · `hubs/` topic hubs · `projects/`
+project evidence and gaps · `inbox/` transient attention projections · `system/`
+visible manifests, incidents, metrics, templates, and eval fixtures. Product
+operation manifests live in the installed `memoria_vault` package, not in a
+workspace `capabilities/` tree.
 `archived` is a *state*, not a folder.
 
 ## State and signals (ADR-126/127)

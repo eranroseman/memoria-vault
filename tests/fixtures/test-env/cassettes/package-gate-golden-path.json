@@ -14,12 +14,12 @@
         "verdict": "str"
       },
       "args": {
-        "path": "knowledge/projects/harness.md",
+        "path": "projects/harness/project.md",
         "verdict": "checked",
-        "content": "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC0\ntags: []\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.15 project.\nthesis: knowledge/notes/harness-thesis.md\n---\n\n# Harness project\n"
+        "content": "---\ntype: project\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC0\ntags: []\nlinks: {}\ntitle: Harness project\ndescription: Package-gate alpha.16 project.\nthesis: notes/harness-thesis.md\n---\n\n# Harness project\n"
       },
       "expect": {
-        "writes": ["knowledge/projects/harness.md"]
+        "writes": ["projects/harness/project.md"]
       }
     },
     {
@@ -31,12 +31,12 @@
         "verdict": "str"
       },
       "args": {
-        "path": "knowledge/notes/harness-thesis.md",
+        "path": "notes/harness-thesis.md",
         "verdict": "checked",
         "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC1\ntags: []\nlinks: {}\ntitle: Harness thesis\n---\n\nHarnessed workflows make durable research systems testable.\n"
       },
       "expect": {
-        "writes": ["knowledge/notes/harness-thesis.md"]
+        "writes": ["notes/harness-thesis.md"]
       }
     },
     {
@@ -48,12 +48,12 @@
         "verdict": "str"
       },
       "args": {
-        "path": "knowledge/notes/harness-support.md",
+        "path": "notes/harness-support.md",
         "verdict": "checked",
-        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC2\ntags: []\ntitle: Harness support\nlinks:\n  supports:\n    - knowledge/notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC2\ntags: []\ntitle: Harness support\nlinks:\n  supports:\n    - notes/harness-thesis.md\n---\n\nHarnessed workflows support the project thesis.\n"
       },
       "expect": {
-        "writes": ["knowledge/notes/harness-support.md"]
+        "writes": ["notes/harness-support.md"]
       }
     },
     {
@@ -65,12 +65,12 @@
         "verdict": "str"
       },
       "args": {
-        "path": "knowledge/notes/harness-refutation.md",
+        "path": "notes/harness-refutation.md",
         "verdict": "checked",
-        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC3\ntags: []\ntitle: Harness refutation\nlinks:\n  contradicts:\n    - knowledge/notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
+        "content": "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FC3\ntags: []\ntitle: Harness refutation\nlinks:\n  contradicts:\n    - notes/harness-thesis.md\n---\n\nSparse fixtures can miss live-runtime failures.\n"
       },
       "expect": {
-        "writes": ["knowledge/notes/harness-refutation.md"]
+        "writes": ["notes/harness-refutation.md"]
       }
     },
     {
@@ -110,7 +110,7 @@
         "project": "harness"
       },
       "expect": {
-        "writes": ["knowledge/projects/harness/argument.canvas"]
+        "writes": ["projects/harness/argument.canvas"]
       }
     },
     {
@@ -129,7 +129,7 @@
         "title": "Review harness argument canvas",
         "action": "Review the cassette-backed source, notes, and argument canvas.",
         "what_happened": "The model-free package-gate harness replay reached the project handoff.",
-        "target": "knowledge/projects/harness/argument.canvas",
+        "target": "projects/harness/argument.canvas",
         "request_id": "HARNESS-PACKAGE",
         "posture": "writer",
         "raised_by": "test-env-harness"
@@ -141,12 +141,12 @@
   ],
   "final_assertions": {
     "exists": [
-      "knowledge/projects/harness.md",
-      "knowledge/notes/harness-thesis.md",
-      "knowledge/notes/harness-support.md",
-      "knowledge/notes/harness-refutation.md",
-      "knowledge/projects/harness/argument.canvas"
+      "projects/harness/project.md",
+      "notes/harness-thesis.md",
+      "notes/harness-support.md",
+      "notes/harness-refutation.md",
+      "projects/harness/argument.canvas"
     ],
-    "not_exists": ["knowledge/notes/blocked-by-harness.md"]
+    "not_exists": ["notes/blocked-by-harness.md"]
   }
 }

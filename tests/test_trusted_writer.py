@@ -53,23 +53,23 @@ def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) 
 
     event = stage_concept(
         vault,
-        "knowledge/notes/alpha.md",
+        "notes/alpha.md",
         note_text(),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         run_id="run-1",
         machine="test-machine",
     )
 
-    staged = vault / ".memoria/staging/knowledge/notes/alpha.md"
+    staged = vault / ".memoria/staging/notes/alpha.md"
     assert staged.is_file()
-    assert not (vault / "knowledge/notes/alpha.md").exists()
+    assert not (vault / "notes/alpha.md").exists()
     frontmatter = read_frontmatter(staged)
     assert "check_status" not in frontmatter
     assert is_ulid(frontmatter["id"])
     assert "standing" not in frontmatter
     assert frontmatter["links"] == {}
     assert event["event"] == "derived"
-    assert event["output_id"] == "knowledge/notes/alpha.md"
+    assert event["output_id"] == "notes/alpha.md"
     assert events(vault) == [event]
 
 
@@ -79,14 +79,14 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
     with pytest.raises(ValueError, match="retired frontmatter field is ignored: check_status"):
         stage_concept(
             vault,
-            "knowledge/notes/alpha.md",
+            "notes/alpha.md",
             "---\ntype: note\ncheck_status: checked\ntitle: Alpha note\ntags: []\nlinks: {}\n---\nAlpha body.\n",
             machine="test-machine",
         )
     with pytest.raises(ValueError, match="retired frontmatter field is ignored: status"):
         stage_concept(
             vault,
-            "knowledge/notes/alpha.md",
+            "notes/alpha.md",
             "---\ntype: note\ntitle: Alpha note\nstatus: candidate\ntags: []\nlinks: {}\n---\nAlpha body.\n",
             machine="test-machine",
         )
@@ -94,20 +94,20 @@ def test_stage_concept_rejects_retired_frontmatter_fields(tmp_path: Path) -> Non
 
 def test_promote_checked_writes_bundle_file_and_records_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    stage_concept(vault, "knowledge/notes/alpha.md", note_text(), machine="test-machine")
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
 
-    event = promote_checked(vault, "knowledge/notes/alpha.md", machine="test-machine")
+    event = promote_checked(vault, "notes/alpha.md", machine="test-machine")
 
-    target = vault / "knowledge/notes/alpha.md"
+    target = vault / "notes/alpha.md"
     assert target.is_file()
-    assert not (vault / ".memoria/staging/knowledge/notes/alpha.md").exists()
+    assert not (vault / ".memoria/staging/notes/alpha.md").exists()
     assert "check_status" not in read_frontmatter(target)
-    assert state.concept_check_status(vault, "knowledge/notes/alpha.md") == "checked"
+    assert state.concept_check_status(vault, "notes/alpha.md") == "checked"
     assert event["event"] == "check-fired"
     assert event["status"] == "passed"
     assert event["output_sha256"] == sha256_file(target)
-    assert rebuild_trace_state(vault)["knowledge/notes/alpha.md"] == event
-    assert quarantine_untraced(vault, ["knowledge/notes/alpha.md"], machine="test-machine") == []
+    assert rebuild_trace_state(vault)["notes/alpha.md"] == event
+    assert quarantine_untraced(vault, ["notes/alpha.md"], machine="test-machine") == []
 
 
 def test_promote_checked_records_payload_before_bundle_file_write(
@@ -115,7 +115,7 @@ def test_promote_checked_records_payload_before_bundle_file_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/crash.md"
+    target = "notes/crash.md"
     stage_concept(vault, target, note_text(title="Crash"), machine="test-machine")
 
     def crash_write(*_args, **_kwargs) -> None:
@@ -152,18 +152,18 @@ def test_promote_checked_records_payload_before_bundle_file_write(
 
 def test_promote_checked_rejects_unsupported_promotion_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    stage_concept(vault, "knowledge/notes/alpha.md", note_text(), machine="test-machine")
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
 
     with pytest.raises(ValueError, match="unsupported promotion checks: later-integrity"):
         promote_checked(
             vault,
-            "knowledge/notes/alpha.md",
+            "notes/alpha.md",
             checks=["later-integrity"],
             machine="test-machine",
         )
 
-    assert not (vault / "knowledge/notes/alpha.md").exists()
-    assert (vault / ".memoria/staging/knowledge/notes/alpha.md").is_file()
+    assert not (vault / "notes/alpha.md").exists()
+    assert (vault / ".memoria/staging/notes/alpha.md").is_file()
 
 
 def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) -> None:
@@ -172,17 +172,17 @@ def test_commit_writer_changes_couples_concept_and_journal_only(tmp_path: Path) 
     (vault / "other.md").write_text("unrelated\n", encoding="utf-8")
     git(vault, "add", "other.md")
 
-    stage_concept(vault, "knowledge/notes/alpha.md", note_text(), machine="test-machine")
-    promote_checked(vault, "knowledge/notes/alpha.md", machine="test-machine")
+    stage_concept(vault, "notes/alpha.md", note_text(), machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
     commit_hash = commit_writer_changes(
         vault,
         "trusted write alpha",
-        ["knowledge/notes/alpha.md"],
+        ["notes/alpha.md"],
         machine="test-machine",
     )
 
     committed = set(git(vault, "show", "--name-only", "--format=", commit_hash).splitlines())
-    assert committed == {state.JOURNAL_HEAD_REL, "knowledge/notes/alpha.md"}
+    assert committed == {state.JOURNAL_HEAD_REL, "notes/alpha.md"}
     assert (vault / state.JOURNAL_HEAD_REL).read_text(
         encoding="utf-8"
     ).strip() == state.journal_head(vault)
@@ -196,15 +196,15 @@ def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
     init_git(vault, "writer@example.invalid", "Trusted Writer")
     content = note_text().replace(
         "Alpha body.",
-        "Typed [[supports::knowledge/notes/beta.md]] and bare [[knowledge/notes/gamma.md]].",
+        "Typed [[supports::notes/beta.md]] and bare [[notes/gamma.md]].",
     )
 
-    stage_concept(vault, "knowledge/notes/alpha.md", content, machine="test-machine")
-    promote_checked(vault, "knowledge/notes/alpha.md", machine="test-machine")
+    stage_concept(vault, "notes/alpha.md", content, machine="test-machine")
+    promote_checked(vault, "notes/alpha.md", machine="test-machine")
     commit_hash = commit_writer_changes(
         vault,
         "trusted write alpha",
-        ["knowledge/notes/alpha.md"],
+        ["notes/alpha.md"],
         machine="test-machine",
     )
 
@@ -212,16 +212,16 @@ def test_commit_writer_extracts_typed_edge_candidates_without_mutating_links(
     assert len(prompts) == 1
     prompt_text = prompts[0].read_text(encoding="utf-8")
     assert "supports" in prompt_text
-    assert "knowledge/notes/beta.md" in prompt_text
-    assert "knowledge/notes/gamma.md" not in prompt_text
-    assert read_frontmatter(vault / "knowledge/notes/alpha.md")["links"] == {}
+    assert "notes/beta.md" in prompt_text
+    assert "notes/gamma.md" not in prompt_text
+    assert read_frontmatter(vault / "notes/alpha.md")["links"] == {}
     committed = set(git(vault, "show", "--name-only", "--format=", commit_hash).splitlines())
     assert prompts[0].relative_to(vault).as_posix() in committed
 
 
 def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "knowledge/notes/pi.md"
+    target = vault / "notes/pi.md"
     target.parent.mkdir(parents=True)
     target.write_text(note_text(title="PI note"), encoding="utf-8")
     prior_sha = sha256_file(target)
@@ -229,7 +229,7 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
 
     event = observe_pi_edit(
         vault,
-        "knowledge/notes/pi.md",
+        "notes/pi.md",
         prior_sha,
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         machine="test-machine",
@@ -243,26 +243,26 @@ def test_observe_pi_edit_backfills_prior_head_and_live_check(tmp_path: Path) -> 
     assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"][-1] == {
-        "id": "knowledge/notes/pi.md",
+        "id": "notes/pi.md",
         "sha256": prior_sha,
         "role": "prior-head",
     }
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status FROM outputs WHERE output_id = 'knowledge/notes/pi.md'"
+            "SELECT check_status FROM outputs WHERE output_id = 'notes/pi.md'"
         ).fetchone()
         consumable = conn.execute(
-            "SELECT output_id FROM consumable_outputs WHERE output_id = 'knowledge/notes/pi.md'"
+            "SELECT output_id FROM consumable_outputs WHERE output_id = 'notes/pi.md'"
         ).fetchone()
     assert row["check_status"] == "unchecked"
     assert consumable is None
 
-    check_event = mark_checked(vault, "knowledge/notes/pi.md", machine="test-machine")
+    check_event = mark_checked(vault, "notes/pi.md", machine="test-machine")
 
     assert "check_status" not in read_frontmatter(target)
-    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "checked"
+    assert state.concept_check_status(vault, "notes/pi.md") == "checked"
     assert check_event["status"] == "passed"
-    assert rebuild_trace_state(vault)["knowledge/notes/pi.md"] == check_event
+    assert rebuild_trace_state(vault)["notes/pi.md"] == check_event
 
 
 def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -> None:
@@ -270,31 +270,29 @@ def test_observe_pi_edit_from_head_keeps_prior_upstream_inputs(tmp_path: Path) -
     init_git(vault, "writer@example.invalid", "Trusted Writer")
     stage_concept(
         vault,
-        "knowledge/notes/pi.md",
+        "notes/pi.md",
         note_text(title="PI note"),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         machine="test-machine",
     )
-    promote_checked(vault, "knowledge/notes/pi.md", machine="test-machine")
-    commit_writer_changes(
-        vault, "trusted write pi", ["knowledge/notes/pi.md"], machine="test-machine"
-    )
-    prior_sha = sha256_file(vault / "knowledge/notes/pi.md")
-    (vault / "knowledge/notes/pi.md").write_text(
+    promote_checked(vault, "notes/pi.md", machine="test-machine")
+    commit_writer_changes(vault, "trusted write pi", ["notes/pi.md"], machine="test-machine")
+    prior_sha = sha256_file(vault / "notes/pi.md")
+    (vault / "notes/pi.md").write_text(
         note_text(title="PI note") + "\nPI edit.\n",
         encoding="utf-8",
     )
 
-    event = observe_pi_edit_from_head(vault, "knowledge/notes/pi.md", machine="test-machine")
+    event = observe_pi_edit_from_head(vault, "notes/pi.md", machine="test-machine")
 
     assert event["event"] == "observed_external_edit"
     assert event["actor"] == "pi"
     assert event["inputs"] == [
         {"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"},
-        {"id": "knowledge/notes/pi.md", "sha256": prior_sha, "role": "prior-head"},
+        {"id": "notes/pi.md", "sha256": prior_sha, "role": "prior-head"},
     ]
-    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/pi.md")
-    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "unchecked"
+    assert "check_status" not in read_frontmatter(vault / "notes/pi.md")
+    assert state.concept_check_status(vault, "notes/pi.md") == "unchecked"
 
 
 def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Path) -> None:
@@ -302,25 +300,23 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
     init_git(vault, "writer@example.invalid", "Trusted Writer")
     stage_concept(
         vault,
-        "knowledge/notes/pi.md",
+        "notes/pi.md",
         note_text(title="PI note"),
         inputs=[{"id": "catalog/sources/source-a/source.md", "sha256": "sha256:abc"}],
         machine="test-machine",
     )
-    promote_checked(vault, "knowledge/notes/pi.md", machine="test-machine")
-    commit_writer_changes(
-        vault, "trusted write pi", ["knowledge/notes/pi.md"], machine="test-machine"
-    )
-    (vault / "knowledge/notes/pi.md").write_text(
+    promote_checked(vault, "notes/pi.md", machine="test-machine")
+    commit_writer_changes(vault, "trusted write pi", ["notes/pi.md"], machine="test-machine")
+    (vault / "notes/pi.md").write_text(
         note_text(title="PI note") + "\nPI edit.\n",
         encoding="utf-8",
     )
-    new_path = vault / "knowledge/notes/pi-new.md"
+    new_path = vault / "notes/pi-new.md"
     new_path.write_text(note_text(title="PI new"), encoding="utf-8")
 
     result = observe_pi_edits_from_status(vault, machine="test-machine")
 
-    assert result["paths"] == ["knowledge/notes/pi-new.md", "knowledge/notes/pi.md"]
+    assert result["paths"] == ["notes/pi-new.md", "notes/pi.md"]
     assert [event["event"] for event in result["observed"]] == [
         "observed_external_edit",
         "observed_external_edit",
@@ -334,72 +330,72 @@ def test_observe_pi_edits_from_status_commits_pi_files_and_journal(tmp_path: Pat
         "id": "catalog/sources/source-a/source.md",
         "sha256": "sha256:abc",
     }
-    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/pi.md")
+    assert "check_status" not in read_frontmatter(vault / "notes/pi.md")
     assert "check_status" not in read_frontmatter(new_path)
-    assert state.concept_check_status(vault, "knowledge/notes/pi.md") == "unchecked"
-    assert state.concept_check_status(vault, "knowledge/notes/pi-new.md") == "unchecked"
+    assert state.concept_check_status(vault, "notes/pi.md") == "unchecked"
+    assert state.concept_check_status(vault, "notes/pi-new.md") == "unchecked"
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         state.JOURNAL_HEAD_REL,
-        "knowledge/notes/pi-new.md",
-        "knowledge/notes/pi.md",
+        "notes/pi-new.md",
+        "notes/pi.md",
     }
     assert git(vault, "status", "--short", "--", "journal", "knowledge") == ""
 
 
 def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    staged = vault / ".memoria/staging/knowledge/notes/bad.md"
+    staged = vault / ".memoria/staging/notes/bad.md"
     staged.parent.mkdir(parents=True)
     staged.write_text("---\ntype: note\ntags: []\nlinks: {}\n---\nBody.\n", encoding="utf-8")
 
     try:
-        promote_checked(vault, "knowledge/notes/bad.md", machine="test-machine")
+        promote_checked(vault, "notes/bad.md", machine="test-machine")
     except ValueError as exc:
         assert "missing required field 'title'" in str(exc)
     else:
         raise AssertionError("invalid staged Concept should not promote")
 
-    assert not (vault / "knowledge/notes/bad.md").exists()
+    assert not (vault / "notes/bad.md").exists()
 
 
 def test_quarantine_untraced_moves_explicit_foreign_file(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    foreign = vault / "knowledge/notes/foreign.md"
+    foreign = vault / "notes/foreign.md"
     foreign.parent.mkdir(parents=True)
     foreign.write_text(note_text(title="Foreign"), encoding="utf-8")
     original_sha = sha256_file(foreign)
 
     [event] = quarantine_untraced(
         vault,
-        ["knowledge/notes/foreign.md"],
+        ["notes/foreign.md"],
         machine="test-machine",
     )
 
-    quarantined = vault / ".memoria/quarantine/knowledge/notes/foreign.md"
+    quarantined = vault / ".memoria/quarantine/notes/foreign.md"
     assert not foreign.exists()
     assert quarantined.is_file()
     assert "check_status" not in read_frontmatter(quarantined)
-    assert state.concept_check_status(vault, "knowledge/notes/foreign.md") == "quarantined"
+    assert state.concept_check_status(vault, "notes/foreign.md") == "quarantined"
     assert event["event"] == "check-fired"
     assert event["status"] == "failed"
     assert event["reason"] == "foreign-untraced"
     assert event["target_sha256"] == original_sha
-    assert event["quarantined_id"] == ".memoria/quarantine/knowledge/notes/foreign.md"
+    assert event["quarantined_id"] == ".memoria/quarantine/notes/foreign.md"
 
 
 def test_quarantine_untraced_from_status_scans_bundle_changes(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     git(vault, "init", "-q")
-    foreign = vault / "knowledge/notes/foreign-status.md"
+    foreign = vault / "notes/foreign-status.md"
     foreign.parent.mkdir(parents=True)
     foreign.write_text(note_text(title="Foreign status"), encoding="utf-8")
 
     [event] = quarantine_untraced_from_status(vault, machine="test-machine")
 
-    assert event["target_id"] == "knowledge/notes/foreign-status.md"
+    assert event["target_id"] == "notes/foreign-status.md"
     assert not foreign.exists()
-    assert (vault / ".memoria/quarantine/knowledge/notes/foreign-status.md").is_file()
+    assert (vault / ".memoria/quarantine/notes/foreign-status.md").is_file()
 
 
 def test_two_device_git_writes_keep_per_machine_journals_mergeable(tmp_path: Path) -> None:
@@ -424,25 +420,25 @@ def test_two_device_git_writes_keep_per_machine_journals_mergeable(tmp_path: Pat
         git(clone, "config", "user.email", email)
         git(clone, "config", "user.name", clone.name)
 
-    stage_concept(device_a, "knowledge/notes/from-a.md", note_text(title="From A"), machine="a")
-    promote_checked(device_a, "knowledge/notes/from-a.md", machine="a")
-    commit_writer_changes(device_a, "device a write", ["knowledge/notes/from-a.md"], machine="a")
+    stage_concept(device_a, "notes/from-a.md", note_text(title="From A"), machine="a")
+    promote_checked(device_a, "notes/from-a.md", machine="a")
+    commit_writer_changes(device_a, "device a write", ["notes/from-a.md"], machine="a")
     git(device_a, "push", "-q", "origin", "main")
 
     git(device_b, "pull", "-q", "--ff-only", "origin", "main")
-    stage_concept(device_b, "knowledge/notes/from-b.md", note_text(title="From B"), machine="b")
-    promote_checked(device_b, "knowledge/notes/from-b.md", machine="b")
-    commit_writer_changes(device_b, "device b write", ["knowledge/notes/from-b.md"], machine="b")
+    stage_concept(device_b, "notes/from-b.md", note_text(title="From B"), machine="b")
+    promote_checked(device_b, "notes/from-b.md", machine="b")
+    commit_writer_changes(device_b, "device b write", ["notes/from-b.md"], machine="b")
     git(device_b, "push", "-q", "origin", "main")
 
     git(device_a, "pull", "-q", "--ff-only", "origin", "main")
 
     assert (device_a / "journal/a.jsonl").is_file()
     assert (device_a / state.JOURNAL_HEAD_REL).is_file()
-    assert (device_a / "knowledge/notes/from-a.md").is_file()
-    assert (device_a / "knowledge/notes/from-b.md").is_file()
+    assert (device_a / "notes/from-a.md").is_file()
+    assert (device_a / "notes/from-b.md").is_file()
     trace_state = rebuild_trace_state(device_a)
-    assert set(trace_state) == {"knowledge/notes/from-a.md"}
+    assert set(trace_state) == {"notes/from-a.md"}
     assert git(device_a, "status", "--short") == ""
 
 
@@ -455,9 +451,9 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     git(seed, "config", "user.name", "Seed")
     git(seed, "add", "-f", ".gitignore", ".memoria/schemas")
     git(seed, "commit", "-q", "-m", "seed schema")
-    stage_concept(seed, "knowledge/notes/shared.md", note_text(title="Shared"), machine="seed")
-    promote_checked(seed, "knowledge/notes/shared.md", machine="seed")
-    commit_writer_changes(seed, "seed shared note", ["knowledge/notes/shared.md"], machine="seed")
+    stage_concept(seed, "notes/shared.md", note_text(title="Shared"), machine="seed")
+    promote_checked(seed, "notes/shared.md", machine="seed")
+    commit_writer_changes(seed, "seed shared note", ["notes/shared.md"], machine="seed")
     remote = tmp_path / "remote.git"
     git(tmp_path, "init", "--bare", "-q", "-b", "main", remote.as_posix())
     git(seed, "remote", "add", "origin", remote.as_posix())
@@ -471,12 +467,12 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
         git(clone, "config", "user.email", email)
         git(clone, "config", "user.name", clone.name)
 
-    stage_concept(device_a, "knowledge/notes/shared.md", note_text(title="From A"), machine="a")
-    promote_checked(device_a, "knowledge/notes/shared.md", machine="a")
-    commit_writer_changes(device_a, "device a edit", ["knowledge/notes/shared.md"], machine="a")
-    stage_concept(device_b, "knowledge/notes/shared.md", note_text(title="From B"), machine="b")
-    promote_checked(device_b, "knowledge/notes/shared.md", machine="b")
-    commit_writer_changes(device_b, "device b edit", ["knowledge/notes/shared.md"], machine="b")
+    stage_concept(device_a, "notes/shared.md", note_text(title="From A"), machine="a")
+    promote_checked(device_a, "notes/shared.md", machine="a")
+    commit_writer_changes(device_a, "device a edit", ["notes/shared.md"], machine="a")
+    stage_concept(device_b, "notes/shared.md", note_text(title="From B"), machine="b")
+    promote_checked(device_b, "notes/shared.md", machine="b")
+    commit_writer_changes(device_b, "device b edit", ["notes/shared.md"], machine="b")
 
     git(device_a, "push", "-q", "origin", "main")
     rejected = subprocess.run(
@@ -498,6 +494,6 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     )
     assert conflict.returncode != 0
     assert "UU .memoria/journal-head" in git(device_b, "status", "--short")
-    assert "UU knowledge/notes/shared.md" in git(device_b, "status", "--short")
-    assert "<<<<<<<" in (device_b / "knowledge/notes/shared.md").read_text(encoding="utf-8")
+    assert "UU notes/shared.md" in git(device_b, "status", "--short")
+    assert "<<<<<<<" in (device_b / "notes/shared.md").read_text(encoding="utf-8")
     assert (device_b / "journal/b.jsonl").is_file()

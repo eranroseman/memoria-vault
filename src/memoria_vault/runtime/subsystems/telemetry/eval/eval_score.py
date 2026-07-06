@@ -91,7 +91,7 @@ def catalog_citekeys(vault: Path) -> set[str]:
 def superseded_claims(vault: Path) -> set[str]:
     """Claim-bearing note stems that are superseded, mirroring fama_exposure."""
     out: set[str] = set()
-    for p in (vault / "knowledge" / "notes").glob("*.md"):
+    for p in (vault / "notes").glob("*.md"):
         fm = eval_dispatch.parse_frontmatter(p.read_text(encoding="utf-8"))
         sup = fm.get("superseded_by")
         status = str(fm.get("status", "")).strip()

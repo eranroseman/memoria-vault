@@ -31,7 +31,7 @@ checks, and read barrier.
 
 ## Memory
 
-The alpha.15 baseline treats durable memory as checked workspace state, not a
+The alpha.16 baseline treats durable memory as checked workspace state, not a
 profile-owned chat transcript. Anything worth keeping must become a checked note,
 digest, project update, or request outcome recorded in the journal.
 

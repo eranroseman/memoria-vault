@@ -38,13 +38,11 @@ def test_cassette_replay_runs_model_free_l4_path(tmp_path):
     summary = harness.replay(ROOT, tmp_path, CASSETTE)
 
     assert summary["cassette"] == "package-gate-golden-path"
-    assert "knowledge/projects/harness.md" in summary["artifacts"]
-    assert "knowledge/notes/harness-support.md" in summary["artifacts"]
-    assert "knowledge/projects/harness/argument.canvas" in summary["artifacts"]
-    assert not (tmp_path / "knowledge/notes/blocked-by-harness.md").exists()
+    assert "projects/harness/project.md" in summary["artifacts"]
+    assert "notes/harness-support.md" in summary["artifacts"]
+    assert "projects/harness/argument.canvas" in summary["artifacts"]
+    assert not (tmp_path / "notes/blocked-by-harness.md").exists()
 
-    canvas = json.loads(
-        (tmp_path / "knowledge/projects/harness/argument.canvas").read_text(encoding="utf-8")
-    )
+    canvas = json.loads((tmp_path / "projects/harness/argument.canvas").read_text(encoding="utf-8"))
     assert len(canvas["nodes"]) == 3
     assert {edge["label"] for edge in canvas["edges"]} == {"contradicts", "supports"}

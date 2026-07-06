@@ -20,7 +20,7 @@ risk_class: medium
 required_checks:
 - memoria-runtime
 tags:
-- alpha15
+- alpha16
 - catalog
 id: operations/update-work
 links: {}

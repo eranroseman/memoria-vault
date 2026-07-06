@@ -49,7 +49,7 @@ grouping notes under each distinct value:
 
 ```dataview
 TABLE rows.file.link AS Notes
-FROM "knowledge/notes"
+FROM "notes"
 FLATTEN topics AS value
 GROUP BY value
 ```

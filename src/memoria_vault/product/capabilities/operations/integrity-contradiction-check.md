@@ -6,7 +6,11 @@ operation_id: integrity-contradiction-check
 allowed_tools:
 - integrity_checker
 allowed_paths:
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - journal/
 allowed_network: []
 runner:

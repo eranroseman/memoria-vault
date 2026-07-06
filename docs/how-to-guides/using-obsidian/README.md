@@ -9,7 +9,7 @@ permalink: /how-to-guides/using-obsidian/
 # Using Obsidian
 
 Optional guidance for reading and editing the Memoria Markdown workspace in
-Obsidian. Alpha.15 actions run through the `memoria` CLI; Obsidian is not the
+Obsidian. Alpha.16 actions run through the `memoria` CLI; Obsidian is not the
 required UI, scheduler, model runner, operation API, or write-policy boundary.
 
 | Guide | What it covers |

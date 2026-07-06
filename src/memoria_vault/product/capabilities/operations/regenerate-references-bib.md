@@ -1,5 +1,5 @@
 ---
-title: Regenerate references.bib
+title: Regenerate bibliography.bib
 type: operation
 description: Regenerate the tracked BibTeX projection from checked SQLite catalog
   rows.
@@ -8,7 +8,7 @@ allowed_tools:
 - projection_writer
 allowed_paths:
 - catalog/
-- references.bib
+- bibliography.bib
 - journal/
 allowed_network: []
 runner:
@@ -17,7 +17,7 @@ runner:
 prompt_version: regenerate-references-bib.v1
 io_schema:
   input: checked_catalog_works
-  output: references_bib_projection
+  output: bibliography_bib_projection
 risk_class: low
 required_checks:
 - projection-drift
@@ -30,4 +30,4 @@ links: {}
 
 # Operation
 
-Render `references.bib` from checked SQLite catalog rows.
+Render `bibliography.bib` from checked SQLite catalog rows.

@@ -7,7 +7,11 @@ allowed_tools:
 - indexer
 allowed_paths:
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - capabilities/
 - .memoria/index/
 allowed_network: []

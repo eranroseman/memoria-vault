@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS concepts (
     concept_id TEXT PRIMARY KEY,
     concept_type TEXT NOT NULL
         CHECK (concept_type IN (
-            'source', 'work', 'note', 'hub', 'capability',
+            'source', 'source-note', 'work', 'digest', 'note', 'hub', 'capability',
             'operation', 'skill', 'adapter', 'workflow', 'person',
             'organization', 'venue', 'project'
         )),
@@ -207,4 +207,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 4;
+PRAGMA user_version = 5;

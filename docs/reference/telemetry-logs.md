@@ -29,7 +29,7 @@ One row per detector finding.
   "timestamp": "2026-06-01T02:00:00Z",
   "detector": "fama-exposure",
   "severity": "HIGH",
-  "path": "knowledge/projects/draft-x/notes/n.md",
+  "path": "projects/draft-x/notes/n.md",
   "message": "cites superseded claim [[oldclaim]]"
 }
 ```
@@ -41,7 +41,7 @@ one row per touched path.
 
 ```json
 {"kind": "summary", "timestamp": "2026-06-01T02:00:00Z", "request_count": 4}
-{"kind": "path", "path": "knowledge/notes/n.md", "writes": 1, "denies": 0}
+{"kind": "path", "path": "notes/n.md", "writes": 1, "denies": 0}
 ```
 
 ## system/metrics/eval/runs.jsonl

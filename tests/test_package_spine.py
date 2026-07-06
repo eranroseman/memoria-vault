@@ -26,7 +26,7 @@ def test_pyproject_declares_installable_memoria_package():
     assert data["tool"]["setuptools"]["package-data"]["memoria_vault"] == ["runtime/*.sql"]
 
 
-def test_alpha15_stack_dependencies_stay_small_and_no_orm():
+def test_alpha16_stack_dependencies_stay_small_and_no_orm():
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     dependencies = {
         dependency.split("[", 1)[0].split(">=", 1)[0]
@@ -44,7 +44,7 @@ def test_runtime_sqlite_schema_is_packaged_resource():
     source = (ROOT / "src/memoria_vault/runtime/state.py").read_text(encoding="utf-8")
 
     assert "CREATE TABLE IF NOT EXISTS operation_requests" in schema
-    assert "PRAGMA user_version = 4" in schema
+    assert "PRAGMA user_version = 5" in schema
     assert "CREATE TABLE IF NOT EXISTS" not in source
 
 

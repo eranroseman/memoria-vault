@@ -24,11 +24,12 @@ _DESIGN_SCAN_PREFIXES = (
     "troubleshooting.md",
     "AGENTS.md",
     "system/",
+    "works/",
+    "sources/",
     "notes/",
-    "catalog/",
+    "hubs/",
     "inbox/",
     "projects/",
-    "spaces/",
     ".obsidian/snippets/",
 )
 _DESIGN_SCAN_SUFFIXES = (".md", ".css", ".html")

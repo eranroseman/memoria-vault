@@ -13,22 +13,19 @@ SKELETON_DIRS=(
   .memoria/blobs
   .memoria/blobs/provider-payloads
   .memoria/blobs/source-content
-  .memoria/staging/catalog
-  .memoria/staging/knowledge
-  journal
-  catalog
-  catalog/sources
-  catalog/entities
-  knowledge
-  knowledge/works
-  knowledge/notes
-  knowledge/hubs
-  knowledge/projects
-  knowledge/views
-  system/exports
-  system/exports/assets
-  system/logs
-  system/logs/sessions
+  .memoria/staging/works
+  .memoria/staging/sources
+  .memoria/staging/notes
+  .memoria/staging/hubs
+  .memoria/staging/projects
+  inbox
+  works
+  sources
+  notes
+  hubs
+  projects
+  system
+  system/incidents
   system/metrics
-  system/dashboards
+  system/eval
 )

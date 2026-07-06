@@ -1,4 +1,4 @@
-"""The canonical alpha.15 schema home: every consumer reads .memoria/schemas/."""
+"""The canonical alpha.16 schema home: every consumer reads .memoria/schemas/."""
 
 import shutil
 from pathlib import Path
@@ -7,16 +7,19 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
 
-ALPHA15_TYPES = {
+ALPHA16_TYPES = {
+    "digest",
     "note",
+    "source-note",
     "work",
     "hub",
     "project",
 }
+CONCEPT_ROOTS = {"works", "sources", "notes", "hubs", "projects"}
 
 
 def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
-    if "knowledge" in path.parts:
+    if CONCEPT_ROOTS & set(path.parts):
         frontmatter.setdefault("id", "01KBN6V6KX0000000000000001")
         frontmatter.setdefault("tags", [])
         frontmatter.setdefault("links", {})
@@ -37,7 +40,7 @@ def _empty_workspace(root: Path) -> Path:
 def _m0_schema_reset_fixture(root: Path) -> Path:
     _empty_workspace(root)
     _md(
-        root / "knowledge/works/source-alpha.md",
+        root / "works/source-alpha/record.md",
         {
             "type": "work",
             "title": "Alpha digest",
@@ -46,14 +49,31 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
         },
     )
     _md(
-        root / "knowledge/notes/alpha-method.md",
+        root / "works/source-alpha/digest.md",
+        {
+            "type": "digest",
+            "title": "Alpha digest",
+            "description": "Per-source synthesis.",
+            "work_id": "source-alpha",
+        },
+    )
+    _md(
+        root / "sources/source-alpha.md",
+        {
+            "type": "source-note",
+            "title": "Alpha source note",
+            "work_id": "source-alpha",
+        },
+    )
+    _md(
+        root / "notes/alpha-method.md",
         {
             "type": "note",
             "title": "Alpha method reduces drift",
         },
     )
     _md(
-        root / "knowledge/hubs/drift.md",
+        root / "hubs/drift.md",
         {
             "type": "hub",
             "title": "Drift",
@@ -62,7 +82,7 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
         },
     )
     _md(
-        root / "knowledge/projects/project-alpha/project.md",
+        root / "projects/project-alpha/project.md",
         {
             "type": "project",
             "title": "Alpha project",
@@ -72,9 +92,9 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
     return root
 
 
-def test_alpha15_concept_types_load():
+def test_alpha16_concept_types_load():
     types = schema.load_types()
-    assert set(types) == ALPHA15_TYPES
+    assert set(types) == ALPHA16_TYPES
 
 
 def test_frontmatter_has_no_verdict_or_standing_fields():
@@ -92,7 +112,7 @@ def test_type_field_matches_filename_literal():
         assert sc["required"]["type"] == f"literal:{name}"
 
 
-def test_alpha15_portable_fields_declared():
+def test_alpha16_portable_fields_declared():
     types = schema.load_types()
     for name, sc in types.items():
         required = sc.get("required") or {}
@@ -104,10 +124,12 @@ def test_alpha15_portable_fields_declared():
         assert optional.get("archived") == "bool", name
         assert optional.get("x") == "map", name
     assert types["work"]["required"]["work_id"] == "str"
+    assert types["digest"]["required"]["work_id"] == "str"
+    assert types["source-note"]["required"]["work_id"] == "str"
     assert types["hub"]["required"]["tag"] == "str"
 
 
-def test_folder_map_covers_every_alpha15_type():
+def test_folder_map_covers_every_alpha16_type():
     types = schema.load_types()
     folders = schema.load_folders()
     for name in types:
@@ -141,7 +163,7 @@ def test_validate_frontmatter_round_trip():
     assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), work))
 
 
-def test_schema_rejects_undeclared_fields_but_allows_x():
+def test_schema_accepts_undeclared_meaning_fields_during_alpha16_migration():
     note = schema.load_types()["note"]
     good = {
         "id": "01KBN6V6KX0000000000000001",
@@ -152,8 +174,7 @@ def test_schema_rejects_undeclared_fields_but_allows_x():
         "x": {"local": "ok"},
     }
     assert schema.validate_frontmatter(good, note) == []
-    errors = schema.validate_frontmatter(dict(good, surprise=True), note)
-    assert any("undeclared field: surprise" in error for error in errors)
+    assert schema.validate_frontmatter(dict(good, surprise=True), note) == []
 
 
 def test_note_links_are_typed_maps():
@@ -163,7 +184,7 @@ def test_note_links_are_typed_maps():
         "type": "note",
         "title": "T",
         "tags": [],
-        "links": {"supports": ["knowledge/notes/target.md"]},
+        "links": {"supports": ["notes/target.md"]},
     }
     assert schema.validate_frontmatter(good, note) == []
     assert any("links" in e for e in schema.validate_frontmatter(dict(good, links=[]), note))
@@ -174,13 +195,13 @@ def test_note_links_are_typed_maps():
     assert any(
         "links.supports: expected list" in e
         for e in schema.validate_frontmatter(
-            dict(good, links={"supports": "knowledge/notes/target.md"}), note
+            dict(good, links={"supports": "notes/target.md"}), note
         )
     )
     assert any(
         "expected local Concept target" in e
         for e in schema.validate_frontmatter(
-            dict(good, links={"supports": ["[[/knowledge/notes/target.md]]"]}), note
+            dict(good, links={"supports": ["[[/notes/target.md]]"]}), note
         )
     )
     assert any(
@@ -195,7 +216,7 @@ def test_okf_core_empty_workspace_validates(tmp_path):
 
 def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
     root = _empty_workspace(tmp_path)
-    bad = root / "knowledge/notes/bad.md"
+    bad = root / "notes/bad.md"
     bad.parent.mkdir(parents=True, exist_ok=True)
     bad.write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: Bad\nlinks: []\n---\nBody.\n",
@@ -211,7 +232,7 @@ def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
 def test_memoria_workspace_rejects_malformed_concept(tmp_path):
     root = _empty_workspace(tmp_path)
     _md(
-        root / "knowledge/works/bad.md",
+        root / "works/bad/record.md",
         {"type": "work", "title": "Bad"},
     )
     errors = schema.validate_memoria_workspace(root)

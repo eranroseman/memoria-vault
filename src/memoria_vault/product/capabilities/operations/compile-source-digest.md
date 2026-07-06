@@ -9,8 +9,8 @@ allowed_tools:
 allowed_paths:
 - catalog/sources/
 - .memoria/blobs/source-content/
-- knowledge/works/
-- knowledge/hubs/
+- works/
+- hubs/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -30,7 +30,7 @@ posture: co-pi
 mode: knowledge
 action: synthesize
 input: checked-work
-output_target: .memoria/staging/knowledge/
+output_target: .memoria/staging/works/
 version: '1.0'
 created: 2026-06-29
 id: operations/compile-source-digest

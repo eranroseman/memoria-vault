@@ -15,7 +15,8 @@ The frontmatter contract for every typed document. The single source is
 `src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit hook,
 and installer-skeleton tests all read it.
 
-Per-type schemas currently exist for `hub`, `note`, `project`, and `work`.
+Per-type schemas currently exist for `digest`, `hub`, `note`, `project`,
+`source-note`, and `work`.
 
 ## The field-kind grammar
 
@@ -34,12 +35,13 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are **rejected**. Put local extension data under the
-schema-declared `x:` map. A schema example (`types/note.yaml`):
+Unknown extra fields are accepted during the alpha.16 migration. Schema-declared
+fields still enforce the required meaning contract. A schema example
+(`types/note.yaml`):
 
 ```yaml
 type: note
-category: knowledge
+category: notes
 gated: false
 enums:
   mode: [claim, question]
@@ -86,10 +88,10 @@ frontmatter verdict fields so a forged file field cannot grant a checked verdict
 ## Links and catalog resources
 
 Work Concepts use `work_id` to point at the SQLite catalog Work row. Backing
-resource URLs and external identifiers live in `.memoria/memoria.sqlite`, not in
-Concept frontmatter. `links` is the required relation field for knowledge
-Concepts. It is a map from `supports`, `contradicts`, or `extends` to lists of
-local Concept targets.
+resource URLs and external identifiers live in `.memoria/memoria.sqlite` and
+`works/<work_id>/record.md` projections, not in human note frontmatter. `links`
+is the required relation field for Concepts. It is a map from `supports`,
+`contradicts`, or `extends` to lists of local Concept targets.
 
 ## Other universal fields
 

@@ -27,14 +27,14 @@ runnable when manifest validation passes. Each file stem is its `pattern_id`.
 
 | Pattern (`id`) | Title | `posture` | `action` | `mode` | `input` | `output_target` |
 | --- | --- | --- | --- | --- | --- | --- |
-| `analyze-claims` | Analyze claims | peer-reviewer | analyze | both | selection-or-note | `.memoria/staging/knowledge/` |
-| `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `.memoria/staging/knowledge/` |
-| `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/knowledge/` |
-| `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/knowledge/` |
-| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `.memoria/staging/knowledge/` |
-| `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/knowledge/` |
-| `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/knowledge/` |
-| `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/knowledge/` |
+| `analyze-claims` | Analyze claims | peer-reviewer | analyze | both | selection-or-note | `.memoria/staging/notes/` |
+| `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `.memoria/staging/notes/` |
+| `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/works/` |
+| `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/notes/` |
+| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `.memoria/staging/notes/` |
+| `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/notes/` |
+| `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/notes/` |
+| `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/notes/` |
 
 `mode` filters the picker: `library` operations are for ongoing reading,
 `project` operations for a writing project, `knowledge` operations for the
@@ -57,7 +57,7 @@ The body is the prompt; `{{input}}` is the one substitution token.
 | `mode` | `library` \| `project` \| `knowledge` \| `both` | Which picker view the operation appears in. |
 | `action` | str | The operation verb. |
 | `input` | str | Expected input shape; documentation for the caller, not enforced. |
-| `output_target` | path | Where the run's product is meant to land; shipped prompt operations stage under `.memoria/staging/knowledge/`. |
+| `output_target` | path | Where the run's product is meant to land; shipped prompt operations stage under `.memoria/staging/notes/` or `.memoria/staging/works/`. |
 | `runner` | map | Required `test` and `live` branches; each branch pins `{provider, model, temperature}` and may include other runner params. |
 | `untrusted_fields` | list | Raw user/provider text fields that must be sealed before entering a model prompt. |
 | `version` | str | Logged with every run for provenance. |
@@ -79,10 +79,10 @@ operations. File refs must be checked Concepts under the operation's
 declared `runner.test` or `runner.live` branch; the runner cannot choose an
 undeclared provider or model.
 
-The result stages one unchecked `note` report under `.memoria/staging/knowledge/`
+The result stages one unchecked `note` report under `.memoria/staging/notes/`
 with an `evidence_set` pointing at the checked inputs and request/journal rows
 for the run, model call, derived output, and note-candidate status. The canonical
-`knowledge/notes/...` target is not materialized or checked until the normal
+`notes/...` target is not materialized or checked until the normal
 promotion path accepts it. `model_call` rows include resolved
 mode/provider/model/params and a prompt hash.
 

@@ -37,6 +37,52 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
+def test_sqlite_schema_migrates_v4_concepts_to_alpha16_types(tmp_path: Path) -> None:
+    db = tmp_path / state.DB_REL
+    db.parent.mkdir(parents=True)
+    with sqlite3.connect(db) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE concepts (
+                concept_id TEXT PRIMARY KEY,
+                concept_type TEXT NOT NULL
+                    CHECK (concept_type IN (
+                        'source', 'work', 'note', 'hub', 'capability',
+                        'operation', 'skill', 'adapter', 'workflow', 'person',
+                        'organization', 'venue', 'project'
+                    )),
+                store TEXT NOT NULL CHECK (store IN ('db', 'file'))
+            );
+            CREATE TABLE concept_verdicts (
+                concept_id TEXT PRIMARY KEY,
+                check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined'))
+            );
+            CREATE VIEW concept_status AS
+            SELECT
+                c.concept_id,
+                c.concept_type,
+                c.store,
+                COALESCE(v.check_status, 'unchecked') AS check_status
+            FROM concepts c
+            LEFT JOIN concept_verdicts v ON v.concept_id = c.concept_id;
+            INSERT INTO concepts(concept_id, concept_type, store)
+            VALUES ('notes/old.md', 'note', 'file');
+            PRAGMA user_version = 4;
+            """
+        )
+
+    with state.connect(tmp_path) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
+        conn.execute(
+            "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
+            ("works/source-alpha/digest.md", "digest", "file"),
+        )
+        conn.execute(
+            "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
+            ("sources/source-alpha.md", "source-note", "file"),
+        )
+
+
 def note_text(title: str = "Alpha note") -> str:
     return f"---\ntype: note\ntitle: {title}\ntags: []\nlinks: {{}}\n---\n# {title}\n\nBody.\n"
 
@@ -59,10 +105,10 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
         "answer-query",
         payload={"query": "alpha", "k": 1},
         idempotency_key="ask-alpha",
-        input_refs=["knowledge/notes/input.md"],
-        output_intents=[{"id": "knowledge/notes/alpha.md", "kind": "answer"}],
-        primary_target="knowledge/notes/alpha.md",
-        precondition_hashes={"knowledge/notes/input.md": "sha256:abc"},
+        input_refs=["notes/input.md"],
+        output_intents=[{"id": "notes/alpha.md", "kind": "answer"}],
+        primary_target="notes/alpha.md",
+        precondition_hashes={"notes/input.md": "sha256:abc"},
         causal_refs=[{"id": "journal:1"}],
         provenance={"surface": "workspace-scan", "source": "pytest"},
         schedule_id="manual-scan",
@@ -85,10 +131,10 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
     } <= set(envelope)
     assert "trigger_type" not in envelope
     assert envelope["args"] == {"query": "alpha", "k": 1}
-    assert envelope["input_refs"] == [{"id": "knowledge/notes/input.md"}]
-    assert envelope["output_intents"] == [{"id": "knowledge/notes/alpha.md", "kind": "answer"}]
-    assert envelope["primary_target"] == "knowledge/notes/alpha.md"
-    assert envelope["precondition_hashes"] == {"knowledge/notes/input.md": "sha256:abc"}
+    assert envelope["input_refs"] == [{"id": "notes/input.md"}]
+    assert envelope["output_intents"] == [{"id": "notes/alpha.md", "kind": "answer"}]
+    assert envelope["primary_target"] == "notes/alpha.md"
+    assert envelope["precondition_hashes"] == {"notes/input.md": "sha256:abc"}
     assert envelope["provenance"]["surface"] == "workspace-scan"
     assert envelope["schedule_id"] == "manual-scan"
 
@@ -103,10 +149,10 @@ def test_enqueue_operation_persists_unified_request_envelope(tmp_path: Path) -> 
     assert tuple(row) == (
         "answer-query",
         '{"k":1,"query":"alpha"}',
-        '[{"id":"knowledge/notes/input.md"}]',
-        '[{"id":"knowledge/notes/alpha.md","kind":"answer"}]',
-        "knowledge/notes/alpha.md",
-        '{"knowledge/notes/input.md":"sha256:abc"}',
+        '[{"id":"notes/input.md"}]',
+        '[{"id":"notes/alpha.md","kind":"answer"}]',
+        "notes/alpha.md",
+        '{"notes/input.md":"sha256:abc"}',
         '{"source":"pytest","surface":"workspace-scan"}',
         "manual-scan",
     )
@@ -116,7 +162,7 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     queued = enqueue_trusted_write(
         vault,
-        "knowledge/notes/sqlite-worker.md",
+        "notes/sqlite-worker.md",
         note_text("SQLite worker"),
         idempotency_key="sqlite-worker",
     )
@@ -127,8 +173,8 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
     assert done["status"] == "done"
     assert done["job_id"] == queued["job_id"]
     assert not (vault / ".memoria/queue").exists()
-    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/sqlite-worker.md")
-    assert state.concept_check_status(vault, "knowledge/notes/sqlite-worker.md") == "checked"
+    assert "check_status" not in read_frontmatter(vault / "notes/sqlite-worker.md")
+    assert state.concept_check_status(vault, "notes/sqlite-worker.md") == "checked"
     with state.connect(vault) as conn:
         status = conn.execute(
             "SELECT status FROM operation_requests WHERE request_id = 'sqlite-worker'"
@@ -139,27 +185,25 @@ def test_worker_runs_sqlite_pending_request(tmp_path: Path) -> None:
 def test_file_output_read_barrier_requires_checked_and_materialized(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
 
-    stage_concept(vault, "knowledge/notes/barrier.md", note_text("Barrier"), machine="writer")
+    stage_concept(vault, "notes/barrier.md", note_text("Barrier"), machine="writer")
     with state.connect(vault) as conn:
         assert conn.execute("SELECT COUNT(*) FROM consumable_outputs").fetchone()[0] == 0
 
-    promote_checked(vault, "knowledge/notes/barrier.md", machine="writer")
+    promote_checked(vault, "notes/barrier.md", machine="writer")
     with state.connect(vault) as conn:
         assert conn.execute("SELECT COUNT(*) FROM consumable_outputs").fetchone()[0] == 0
 
-    commit_writer_changes(
-        vault, "promote barrier", ["knowledge/notes/barrier.md"], machine="writer"
-    )
+    commit_writer_changes(vault, "promote barrier", ["notes/barrier.md"], machine="writer")
     with state.connect(vault) as conn:
         row = conn.execute("SELECT output_id FROM consumable_outputs").fetchone()
-    assert row["output_id"] == "knowledge/notes/barrier.md"
+    assert row["output_id"] == "notes/barrier.md"
 
 
 def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    target = vault / "knowledge/notes/forged.md"
+    target = vault / "notes/forged.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(
         "---\n"
@@ -181,16 +225,16 @@ def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status FROM concept_status WHERE concept_id = ?",
-            ("knowledge/notes/forged.md",),
+            ("notes/forged.md",),
         ).fetchone()
         verdict = conn.execute(
             "SELECT check_status FROM concept_verdicts WHERE concept_id = ?",
-            ("knowledge/notes/forged.md",),
+            ("notes/forged.md",),
         ).fetchone()
     assert row["check_status"] == "unchecked"
     assert verdict is None
 
-    state.set_concept_verdict(vault, "knowledge/notes/forged.md", "checked")
+    state.set_concept_verdict(vault, "notes/forged.md", "checked")
     rebuilt = rebuild_concept_mirror_from_files(vault)
 
     assert rebuilt["deleted"] >= 1
@@ -198,37 +242,37 @@ def test_rebuild_concept_mirror_from_files_does_not_trust_frontmatter_status(
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status FROM concept_status WHERE concept_id = ?",
-            ("knowledge/notes/forged.md",),
+            ("notes/forged.md",),
         ).fetchone()
     assert row["check_status"] == "checked"
 
 
 def test_pending_checked_file_materialization_replays_from_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    stage_concept(vault, "knowledge/notes/replay.md", note_text("Replay"), machine="writer")
-    promote_checked(vault, "knowledge/notes/replay.md", machine="writer")
+    stage_concept(vault, "notes/replay.md", note_text("Replay"), machine="writer")
+    promote_checked(vault, "notes/replay.md", machine="writer")
     state.write_journal_head_anchor(vault)
-    git(vault, "add", "--", "knowledge/notes/replay.md", state.JOURNAL_HEAD_REL)
+    git(vault, "add", "--", "notes/replay.md", state.JOURNAL_HEAD_REL)
     git(vault, "commit", "-m", "commit replay target")
     commit = git(vault, "rev-parse", "HEAD")
-    (vault / "knowledge/notes/replay.md").unlink()
+    (vault / "notes/replay.md").unlink()
 
     restored = state.recover_pending_materializations(vault)
 
-    assert restored == ["knowledge/notes/replay.md"]
-    assert "check_status" not in read_frontmatter(vault / "knowledge/notes/replay.md")
-    assert state.concept_check_status(vault, "knowledge/notes/replay.md") == "checked"
+    assert restored == ["notes/replay.md"]
+    assert "check_status" not in read_frontmatter(vault / "notes/replay.md")
+    assert state.concept_check_status(vault, "notes/replay.md") == "checked"
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT materialization_status, materialized_commit FROM outputs WHERE output_id = ?",
-            ("knowledge/notes/replay.md",),
+            ("notes/replay.md",),
         ).fetchone()
     assert tuple(row) == ("materialized", commit)
 
 
 def test_pending_materialization_recovery_refinalizes_committed_file(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "knowledge/notes/refinalize.md"
+    target = "notes/refinalize.md"
     stage_concept(vault, target, note_text("Refinalize"), machine="writer")
     promote_checked(vault, target, machine="writer")
     state.write_journal_head_anchor(vault)
@@ -256,7 +300,7 @@ def test_pending_materialization_recovery_fails_uncommitted_file(
     vault = workspace(tmp_path)
     git(vault, "add", "--", ".memoria/schemas")
     git(vault, "commit", "-m", "seed workspace")
-    target = "knowledge/notes/uncommitted.md"
+    target = "notes/uncommitted.md"
     stage_concept(vault, target, note_text("Uncommitted"), machine="writer")
     promote_checked(vault, target, machine="writer")
 
@@ -289,10 +333,10 @@ def test_hash_only_pending_materialization_fails_closed(tmp_path: Path) -> None:
                 output_sha256
             )
             VALUES (
-                'knowledge/notes/hash-only.md',
+                'notes/hash-only.md',
                 'note',
                 'file',
-                'knowledge/notes/hash-only.md',
+                'notes/hash-only.md',
                 'checked',
                 'pending',
                 'sha256:missing'
@@ -304,7 +348,7 @@ def test_hash_only_pending_materialization_fails_closed(tmp_path: Path) -> None:
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT materialization_status, failure_reason FROM outputs WHERE output_id = ?",
-            ("knowledge/notes/hash-only.md",),
+            ("notes/hash-only.md",),
         ).fetchone()
     assert tuple(row) == ("failed", "missing durable materialization payload")
 
@@ -336,9 +380,9 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
     with state.connect(vault) as conn:
         row = conn.execute("SELECT title, doi, check_status FROM catalog_sources").fetchone()
     assert tuple(row) == ("Alpha Source", "10.1000/alpha", "checked")
-    assert not (vault / "references.bib").exists()
+    assert not (vault / "bibliography.bib").exists()
     write_references_bib(vault)
-    assert "@article{alpha2026," in (vault / "references.bib").read_text(encoding="utf-8")
+    assert "@article{alpha2026," in (vault / "bibliography.bib").read_text(encoding="utf-8")
     assert check_references_bib(vault)
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL}
@@ -346,7 +390,7 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
 
 def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "knowledge/works/missing-citation.md"
+    target = vault / "works/missing-citation/record.md"
     target.parent.mkdir(parents=True)
     target.write_text(
         "---\n"
@@ -359,17 +403,17 @@ def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> N
         "# Missing citation\n",
         encoding="utf-8",
     )
-    mark_file_verdict(vault, "knowledge/works/missing-citation.md", "work", "checked")
+    mark_file_verdict(vault, "works/missing-citation/record.md", "work", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "knowledge/works/missing-citation.md"
+    assert result["findings"][0]["target_id"] == "works/missing-citation/record.md"
 
 
 def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "knowledge/hubs/source-linked.md"
+    target = vault / "hubs/source-linked.md"
     target.parent.mkdir(parents=True)
     target.write_text(
         "---\n"
@@ -383,17 +427,17 @@ def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> Non
         "# Source linked\n",
         encoding="utf-8",
     )
-    mark_file_verdict(vault, "knowledge/hubs/source-linked.md", "hub", "checked")
+    mark_file_verdict(vault, "hubs/source-linked.md", "hub", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "knowledge/hubs/source-linked.md"
+    assert result["findings"][0]["target_id"] == "hubs/source-linked.md"
 
 
 def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    stage_concept(vault, "knowledge/notes/journal.md", note_text("Journal"), machine="writer")
+    stage_concept(vault, "notes/journal.md", note_text("Journal"), machine="writer")
 
     with state.connect(vault) as conn:
         first = conn.execute("SELECT event_id, prev_hash, row_hash FROM journal_events").fetchone()

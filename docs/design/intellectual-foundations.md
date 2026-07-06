@@ -63,7 +63,7 @@ The ~400-paper review (`_papers/`) grounds the design in what the field has trie
 
 Its main result is convergence. Separate research lines re-derive the structural
 review gate, durable vault-as-memory, explicit tool/write boundaries,
-deterministic ingest, and stage-gated handoffs. Alpha.15 implements that through
+deterministic ingest, and stage-gated handoffs. Alpha.16 implements that through
 the standalone CLI/engine, read API, request envelope, runtime policy, and
 trusted writer; MCP is optional transport context, not the core sandbox. The
 review also scopes what Memoria rejects: advisory-only LLM review, scalar

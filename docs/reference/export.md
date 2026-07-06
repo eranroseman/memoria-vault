@@ -13,7 +13,7 @@ folder targets. For choosing between routes and failure modes see
 
 `memoria project export` is the checked-project export surface: it renders a
 project Concept, its paper plan when present, its argument state, linked checked
-hubs, and `references.bib` to Markdown by default, with `.docx`, `.pdf`, and
+hubs, and `bibliography.bib` to Markdown by default, with `.docx`, `.pdf`, and
 `.odt` available when Pandoc is installed. Add `--ready-only` when the export
 must fail closed unless the project has required paper framing and checked
 support. For citation-rich manuscript drafts, live Zotero field workflows, or
@@ -39,7 +39,7 @@ A citation passes through up to four states. Conversions are mostly one-way.
 | Option | Output format | Use case | Tool chain |
 | --- | --- | --- | --- |
 | **Memoria project export** | `.md` / `.docx` / `.pdf` / `.odt` | Checked project composition or review packet | `memoria project export <project> --format <format> --output <path> [--ready-only]` |
-| **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography references.bib --csl .memoria/csl/<style>.csl` |
+| **A — Pandoc static** *(default)* | `.docx` / `.odt` | Final submission; frozen citations | `pandoc … --citeproc --bibliography bibliography.bib --csl .memoria/csl/<style>.csl` |
 | **B — Live Word fields** | `.docx` with Zotero fields | Advisor feedback rounds on Word | Pandoc + `zotero.lua` filter → Word + Zotero plugin |
 | **C — Live LibreOffice** | `.odt` with Reference Marks | Advisor feedback rounds on LibreOffice | Pandoc → `.odt` → Zotero RTF/ODF Scan |
 | **D — Google Docs** | (manual) | Real-time co-authoring only | No Pandoc route; insert citations manually via Zotero Connector |
@@ -67,17 +67,17 @@ Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft
 
 ## Export target folder
 
-Drafts live under the project folder in `knowledge/projects/<project>/`, and
+Drafts live under the project folder in `projects/<project>/`, and
 every export lands beside them under `exports/` — the project is self-contained
 ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). There is no separate
 top-level deliverables tree.
 
 | Artifact | Folder |
 | --- | --- |
-| Manuscripts (papers, articles, preprints) | `knowledge/projects/<project>/exports/` |
-| Presentations (slides, talks, posters) | `knowledge/projects/<project>/exports/` |
-| Media (figures, infographics, web assets) | `knowledge/projects/<project>/exports/` |
-| Releases (datasets, models, code, supplementary) | `knowledge/projects/<project>/exports/` |
+| Manuscripts (papers, articles, preprints) | `projects/<project>/exports/` |
+| Presentations (slides, talks, posters) | `projects/<project>/exports/` |
+| Media (figures, infographics, web assets) | `projects/<project>/exports/` |
+| Releases (datasets, models, code, supplementary) | `projects/<project>/exports/` |
 
 ---
 
@@ -87,11 +87,11 @@ Use this shape for hand-authored manuscript drafts that need citation processing
 or live-citation conversion beyond the deterministic checked-project export.
 
 ```bash
-pandoc knowledge/projects/<project>/drafts/<chapter>.md \
+pandoc projects/<project>/drafts/<chapter>.md \
   --citeproc \
-  --bibliography references.bib \
+  --bibliography bibliography.bib \
   --csl .memoria/csl/apa.csl \
-  -o knowledge/projects/<project>/exports/<chapter>.docx
+  -o projects/<project>/exports/<chapter>.docx
 ```
 
 CSL files live in `.memoria/csl/`. The folder ships as an empty `.keep` placeholder; place your `.csl` files there before export.

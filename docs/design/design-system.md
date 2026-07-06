@@ -49,7 +49,7 @@ The vault file is the live implementation; this page explains the philosophy.
 When the brand evolves, the vault file changes first — the docs follow. The
 Linter's `design-system-drift` detector reports consumer drift: off-palette
 colors, font sizes outside the scale, emoji in note titles, ad-hoc callout
-variants, and terminology/capitalization drift. Alpha.15 does not ship CSS
+variants, and terminology/capitalization drift. Alpha.16 does not ship CSS
 snippets or editor-plugin link styling; optional editor adapters may render the
 same design tokens later, but they are not part of the baseline.
 

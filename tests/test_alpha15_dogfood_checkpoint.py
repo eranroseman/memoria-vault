@@ -1,4 +1,4 @@
-"""Tests for the alpha.15 dogfood checkpoint report."""
+"""Tests for the alpha.16 dogfood checkpoint report."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ def test_dogfood_checkpoint_reports_state_and_friction_metrics(tmp_path: Path) -
         "has_checked_digest": True,
         "has_checked_note": True,
         "has_project": True,
-        "has_references_bib": True,
+        "has_bibliography_bib": True,
         "required_requests_done": True,
         "seeded_error_passed": True,
         "model_calls_within_limit": True,
@@ -91,10 +91,10 @@ def _seed_checkpoint_workspace(vault: Path, required_operations: set[str]) -> No
         citekey="alpha2026",
     )
     for rel, concept_type, check_status in (
-        ("knowledge/works/work-alpha.md", "work", "checked"),
-        ("knowledge/notes/note-alpha.md", "note", "checked"),
-        ("knowledge/projects/project-alpha.md", "project", "checked"),
-        ("knowledge/notes/unchecked-alpha.md", "note", "unchecked"),
+        ("works/work-alpha/digest.md", "digest", "checked"),
+        ("notes/note-alpha.md", "note", "checked"),
+        ("projects/project-alpha/project.md", "project", "checked"),
+        ("notes/unchecked-alpha.md", "note", "unchecked"),
     ):
         state.record_observed_file_edit(
             vault,
@@ -103,7 +103,7 @@ def _seed_checkpoint_workspace(vault: Path, required_operations: set[str]) -> No
             output_sha256=EMPTY_SHA256,
         )
         state.set_concept_verdict(vault, rel, check_status)
-    (vault / "references.bib").write_text("@article{alpha2026}\n", encoding="utf-8")
+    (vault / "bibliography.bib").write_text("@article{alpha2026}\n", encoding="utf-8")
     _write_attention(vault / "inbox/open-alpha.md", "open")
     _write_attention(vault / "inbox/resolved-alpha.md", "resolved")
     state.append_journal_event(vault, {"event": "model_call", "run_id": "run-alpha"})
@@ -130,7 +130,7 @@ def _write_attention(path: Path, status: str) -> None:
         "projection: attention\n"
         "attention_kind: flag\n"
         f"attention_status: {status}\n"
-        "target: knowledge/notes/note-alpha.md\n"
+        "target: notes/note-alpha.md\n"
         "routing_class: ask\n"
         "---\n"
         "# Attention\n\nFixture.\n",

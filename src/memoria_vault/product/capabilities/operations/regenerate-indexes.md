@@ -8,7 +8,11 @@ allowed_tools:
 allowed_paths:
 - index.md
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - capabilities/
 - journal/
 allowed_network: []

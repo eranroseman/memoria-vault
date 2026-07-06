@@ -7,7 +7,11 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - capabilities/
 - journal/
 allowed_network: []

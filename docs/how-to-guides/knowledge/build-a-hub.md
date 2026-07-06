@@ -7,7 +7,7 @@ nav_order: 4
 
 # Build a hub
 
-Curate a `hub` Concept in `knowledge/hubs/` that gives a dense checked-note
+Curate a `hub` Concept in `hubs/` that gives a dense checked-note
 cluster a stable entry point: what the topic holds, what's settled, and what's
 still contested. The worker may suggest hub updates, but the PI owns curation.
 
@@ -21,7 +21,7 @@ navigate.
 
 **1. Create the note from the template.**
 
-In `knowledge/hubs/`, create a new note from `system/templates/hub.md`:
+In `hubs/`, create a new note from `system/templates/hub.md`:
 
 ```yaml
 type: hub

@@ -672,7 +672,7 @@ def parse_bibtex_entries(text: str) -> Iterator[dict[str, Any]]:
 
 
 def render_references_bib(vault: Path) -> str:
-    """Render checked SQLite catalog Works as the generated references.bib projection."""
+    """Render checked SQLite catalog Works as the generated bibliography.bib projection."""
     entries = []
     sources = state.catalog_sources(vault)
     for frontmatter in sources:
@@ -687,11 +687,11 @@ def render_references_bib(vault: Path) -> str:
 def write_references_bib(
     vault: Path,
     *,
-    output_path: str = "references.bib",
+    output_path: str = "bibliography.bib",
     commit: bool = False,
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Write the generated references.bib projection."""
+    """Write the generated bibliography.bib projection."""
     vault = Path(vault)
     output = vault / output_path
     text = render_references_bib(vault)
@@ -706,8 +706,8 @@ def write_references_bib(
             vault,
             {
                 "event": "run",
-                "run_id": "projection:references.bib",
-                "workflow": "generate_references_bib",
+                "run_id": "projection:bibliography.bib",
+                "workflow": "generate_bibliography_bib",
                 "status": "done",
                 "outputs": [output_path],
             },
@@ -715,14 +715,14 @@ def write_references_bib(
         )
         commit_id = commit_writer_changes(
             vault,
-            "regenerate references.bib",
+            "regenerate bibliography.bib",
             [output_path],
             machine=machine,
         )
     return {"path": output_path, "changed": changed, "event": event, "commit": commit_id}
 
 
-def check_references_bib(vault: Path, *, output_path: str = "references.bib") -> bool:
+def check_references_bib(vault: Path, *, output_path: str = "bibliography.bib") -> bool:
     path = Path(vault) / output_path
     return path.is_file() and path.read_text(encoding="utf-8") == render_references_bib(vault)
 

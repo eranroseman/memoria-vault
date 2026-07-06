@@ -22,26 +22,22 @@ def workspace(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Path:
 
 
 def test_engine_read_scope_filters_and_blocks_concepts(workspace: Path) -> None:
-    _write_note(workspace, "knowledge/notes/alpha.md", "Alpha")
-    _write_note(workspace, "knowledge/notes/beta.md", "Beta")
+    _write_note(workspace, "notes/alpha.md", "Alpha")
+    _write_note(workspace, "notes/beta.md", "Beta")
 
-    listed = api.read_concepts(workspace, read_scope=["knowledge/notes/alpha.md"])
-    visible = api.read_concept(
-        workspace, "knowledge/notes/alpha.md", read_scope=["knowledge/notes/"]
-    )
+    listed = api.read_concepts(workspace, read_scope=["notes/alpha.md"])
+    visible = api.read_concept(workspace, "notes/alpha.md", read_scope=["notes/"])
 
     assert listed["api_version"] == api.READ_API_VERSION
     assert visible["api_version"] == api.READ_API_VERSION
-    assert [row["path"] for row in listed["concepts"]] == ["knowledge/notes/alpha.md"]
-    assert visible["path"] == "knowledge/notes/alpha.md"
+    assert [row["path"] for row in listed["concepts"]] == ["notes/alpha.md"]
+    assert visible["path"] == "notes/alpha.md"
     with pytest.raises(FileNotFoundError, match="target not found"):
-        api.read_concept(
-            workspace, "knowledge/notes/beta.md", read_scope=["knowledge/notes/alpha.md"]
-        )
+        api.read_concept(workspace, "notes/beta.md", read_scope=["notes/alpha.md"])
 
 
 def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> None:
-    path = workspace / "knowledge/notes/alpha.md"
+    path = workspace / "notes/alpha.md"
     _write_note(workspace, path.relative_to(workspace).as_posix(), "Alpha")
     path.write_text(
         "---\ntype: note\ntitle: Alpha\ntags: []\nlinks: {}\n---\nTampered.\n",
@@ -49,7 +45,7 @@ def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> N
     )
 
     with pytest.raises(PermissionError, match="not consumable until scan runs"):
-        api.read_concept(workspace, "knowledge/notes/alpha.md")
+        api.read_concept(workspace, "notes/alpha.md")
     with state.connect(workspace) as conn:
         row = conn.execute(
             """
@@ -62,28 +58,26 @@ def test_engine_read_concept_refuses_tampered_checked_file(workspace: Path) -> N
     assert row["status"] == "pending"
     assert row["schedule_id"] == "read-guard"
     assert row["operation_id"] == "observe-pi-edits"
-    assert json.loads(row["args_json"])["target_path"] == "knowledge/notes/alpha.md"
+    assert json.loads(row["args_json"])["target_path"] == "notes/alpha.md"
 
 
 def test_engine_read_scope_filters_attention_by_card_or_target(workspace: Path) -> None:
-    _write_attention(workspace, "alpha", target="knowledge/notes/alpha.md")
-    _write_attention(workspace, "beta", target="knowledge/notes/beta.md")
+    _write_attention(workspace, "alpha", target="notes/alpha.md")
+    _write_attention(workspace, "beta", target="notes/beta.md")
 
-    listed = api.read_attention(workspace, read_scope=["knowledge/notes/alpha.md"])
+    listed = api.read_attention(workspace, read_scope=["notes/alpha.md"])
 
     assert [card["path"] for card in listed["attention"]] == ["inbox/alpha.md"]
     with pytest.raises(FileNotFoundError, match="attention projection not found"):
-        api.read_attention_card(workspace, "inbox/beta.md", read_scope=["knowledge/notes/alpha.md"])
+        api.read_attention_card(workspace, "inbox/beta.md", read_scope=["notes/alpha.md"])
 
 
 def test_engine_attention_read_api_returns_table_and_card_view_specs(workspace: Path) -> None:
-    _write_attention(workspace, "alpha", target="knowledge/notes/alpha.md")
-    _write_attention(workspace, "beta", target="knowledge/notes/beta.md")
+    _write_attention(workspace, "alpha", target="notes/alpha.md")
+    _write_attention(workspace, "beta", target="notes/beta.md")
 
-    listed = api.read_attention(workspace, read_scope=["knowledge/notes/alpha.md"])
-    shown = api.read_attention_card(
-        workspace, "inbox/alpha.md", read_scope=["knowledge/notes/alpha.md"]
-    )
+    listed = api.read_attention(workspace, read_scope=["notes/alpha.md"])
+    shown = api.read_attention_card(workspace, "inbox/alpha.md", read_scope=["notes/alpha.md"])
 
     assert listed["view"] == {
         "version": "view-spec.v1",
@@ -104,7 +98,7 @@ def test_engine_attention_read_api_returns_table_and_card_view_specs(workspace: 
                             "title": "alpha",
                             "kind": "gap",
                             "status": "open",
-                            "target": "knowledge/notes/alpha.md",
+                            "target": "notes/alpha.md",
                         },
                     }
                 ],

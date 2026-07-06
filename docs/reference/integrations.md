@@ -18,8 +18,8 @@ source of truth.
 
 | Integration | Role | Notes |
 |---|---|---|
-| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Generic CSL JSON and BibTeX files exported from Zotero are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. The alpha.15 runtime does not fetch from a live Zotero API, and Zotero annotations are not imported. See [Citekey naming convention](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md). |
-| **`references.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
+| **Zotero + Better BibTeX** | Optional source for exported citekeys, PDFs, and bibliographic metadata | Generic CSL JSON and BibTeX files exported from Zotero are standalone imports that stage unchecked SQLite Work rows and queue DOI enrichment. Live Zotero API and annotation import land later in alpha.16. See [Citekey naming convention](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md). |
+| **`bibliography.bib`** | Generated BibTeX projection | Rebuilt from checked SQLite catalog rows by the worker and materialized after bibliography-changing captures or enrichment; never hand-maintained. |
 
 ---
 
@@ -73,14 +73,14 @@ organization, and venue graph records.
 | **`memoria` CLI** | Required workspace control surface. All mutating work enters through request envelopes and the engine lifecycle. |
 | **search** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the degraded fallback when search is not ready. |
 | **Optional editor adapters** | Future presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
-| **MarkDB-Connect** (Zotero add-on) | Not an alpha.15 setup path. It assumes flat citekey-named note files, while Memoria's source authority is SQLite catalog state plus source-content blobs. |
+| **MarkDB-Connect** (Zotero add-on) | Not an alpha.16 setup path. It assumes flat citekey-named note files, while Memoria's source authority is SQLite catalog state plus source-content blobs. |
 | **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` in the local runtime environment if the push adapter is installed. |
 
 ---
 
 ## Planned search and retrieval
 
-These are not current alpha.15 provider calls. They are candidate future inputs
+These are not current alpha.16 provider calls. They are candidate future inputs
 for broader source discovery.
 
 | API | Coverage |
@@ -95,9 +95,9 @@ for broader source discovery.
 
 | Integration | Role |
 |---|---|
-| **Kilo Code gateway** | Optional `gateway` model provider for the standalone runner, configured through `<workspace>/.memoria/config/providers.yaml` `runner_providers.gateway` plus its named key env var. No Hermes profile defaults ship in alpha.15. |
+| **Kilo Code gateway** | Optional `gateway` model provider for the standalone runner, configured through `<workspace>/.memoria/config/providers.yaml` `runner_providers.gateway` plus its named key env var. No Hermes profile defaults ship in alpha.16. |
 | **pydantic-ai runner** | Required operation runner. Operation manifests pin both `runner.test` and `runner.live`; `--mode test\|live` selects the branch, and `memoria doctor --check runner` verifies package/provider construction. Add `--live` for an opt-in dispatch against the configured OpenAI-compatible endpoint. |
-| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the alpha.15 baseline. |
+| **Kilocode / Aider / Claude Code** | Planned external coding-agent handoff target for optional adapter work. It is not invoked by the alpha.16 baseline. |
 
 ---
 
@@ -108,7 +108,7 @@ Tools evaluated and not in the current design:
 | Tool | Why not |
 |---|---|
 | **ZotLit** | Obsidian-native Zotero integration — not the shipped connector. Its evaluation, status, and how it compares to the bundled `obsidian-citation-plugin` are in [Zotero plugins](zotero-plugins.md). |
-| **PubMed, Scite, DataCite** | Deferred provider integrations. Alpha.15 uses Crossref, OpenAlex, Unpaywall, and optional keyed Semantic Scholar for DOI enrichment. |
+| **PubMed, Scite, DataCite** | Deferred provider integrations. Alpha.16 uses Crossref, OpenAlex, Unpaywall, and optional keyed Semantic Scholar for DOI enrichment. |
 
 ---
 

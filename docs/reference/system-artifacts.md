@@ -12,19 +12,17 @@ Obsidian. They are not hidden `.memoria/` internals.
 
 | Runtime path | What it is | Reference |
 | --- | --- | --- |
-| `index.md`, `catalog/index.md`, `knowledge/index.md` | Generated OKF-style workspace and bundle indexes. | [Operations](operations.md) |
-| `knowledge/_views/index.md` | Generated knowledge view summary from checked knowledge Concepts. | [Operations](operations.md) |
-| `references.bib` | Generated BibTeX projection from checked SQLite catalog rows with citekeys. | [Ingest routing](ingest.md) |
+| `index.md` | Generated OKF-style workspace index over alpha.16 bundle roots. | [Operations](operations.md) |
+| `bibliography.bib` | Generated BibTeX projection from checked SQLite catalog rows with citekeys. | [Ingest routing](ingest.md) |
 | `system/vocabulary.md` | Controlled vocabulary for Work `research_area`/`methodology` metadata and claim-bearing note `topics`. | [Vocabulary](vocabulary.md) |
 | `system/eval/` | Gold-task fixtures for vault-eval dispatch and scoring. | [Vault eval](vault-eval.md) |
-| `knowledge/views/knowledge.base` | Bases views over `work`, `note`, `hub`, and `project` Concepts. | [Dashboards](dashboards.md) |
 
 The source copies are tracked in
-[`vault-template/system/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/system),
-[`vault-template/knowledge/views/knowledge.base`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/knowledge/views/knowledge.base).
-`references.bib` is generated from checked SQLite catalog rows, and the root,
-bundle, and knowledge view `index.md` files are generated from checked Concept files. The
-tracked projection drift check covers all committed projections. Packaged
+[`vault-template/system/`](https://github.com/eranroseman/memoria-vault/tree/main/vault-template/system)
+and [`vault-template/index.md`](https://github.com/eranroseman/memoria-vault/blob/main/vault-template/index.md).
+`bibliography.bib` is generated from checked SQLite catalog rows, and the root,
+workspace `index.md` is generated from checked Concept files. The tracked
+projection drift check covers all committed projections. Packaged
 capability manifests can be inspected through the ignored local cache
 `.memoria/index/capability-index.json`.
 The installer copies template-owned artifacts into the runtime vault; package or

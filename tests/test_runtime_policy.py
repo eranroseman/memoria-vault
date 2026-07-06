@@ -103,14 +103,34 @@ def test_runtime_policy_core():
         engineer = ActorPolicy(
             actor="engineer",
             allow_write=[],
-            deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
+            deny_write=[
+                "works/**",
+                "sources/**",
+                "notes/**",
+                "hubs/**",
+                "projects/**",
+                "knowledge/**",
+                "catalog/**",
+                "inbox/**",
+                "system/**",
+            ],
             require=["audit_log"],
             write_scope=[],
         )
         writer = ActorPolicy(
             actor="writer",
             allow_write=[],
-            deny_write=["notes/**", "knowledge/**", "catalog/**", "inbox/**", "system/**"],
+            deny_write=[
+                "works/**",
+                "sources/**",
+                "notes/**",
+                "hubs/**",
+                "projects/**",
+                "knowledge/**",
+                "catalog/**",
+                "inbox/**",
+                "system/**",
+            ],
             require=["audit_log"],
             write_scope=[],
         )
@@ -118,7 +138,15 @@ def test_runtime_policy_core():
         write_fixture = ActorPolicy(
             actor="write-fixture",
             allow_write=["projects/**"],
-            deny_write=["knowledge/notes/**", "catalog/**", "inbox/**", "system/**"],
+            deny_write=[
+                "works/**",
+                "sources/**",
+                "notes/**",
+                "hubs/**",
+                "catalog/**",
+                "inbox/**",
+                "system/**",
+            ],
             require=["audit_log"],
             write_scope=["projects/"],
         )
@@ -126,7 +154,15 @@ def test_runtime_policy_core():
             actor="integrity",
             allow_write=["system/logs/**"],
             allow_auto_fix_classes=["safe-and-unambiguous", "authorized-targeted"],
-            deny_write=["inbox/**", "catalog/**", "notes/**", "projects/**"],
+            deny_write=[
+                "inbox/**",
+                "catalog/**",
+                "works/**",
+                "sources/**",
+                "notes/**",
+                "hubs/**",
+                "projects/**",
+            ],
             deny_auto_fix_classes=["schema-content", "review-gated-edit"],
             require=["audit_log"],
             write_scope=["system/logs/"],
@@ -135,27 +171,37 @@ def test_runtime_policy_core():
             actor="cataloger",
             allow_write=[],
             deny_write=[
-                "catalog/**",
+                "works/**",
+                "sources/**",
+                "notes/**",
+                "hubs/**",
+                "projects/**",
                 "knowledge/**",
+                "catalog/**",
                 "capabilities/**",
                 "inbox/**",
-                "notes/**",
-                "projects/**",
                 "system/**",
             ],
             require=["audit_log"],
-            write_scope=[".memoria/staging/catalog/", ".memoria/staging/knowledge/"],
+            write_scope=[
+                ".memoria/staging/sources/",
+                ".memoria/staging/works/",
+                ".memoria/staging/notes/",
+            ],
         )
         reviewer = ActorPolicy(
             actor="reviewer",
             allow_write=[],
             deny_write=[
+                "works/**",
+                "sources/**",
                 "notes/**",
+                "hubs/**",
+                "projects/**",
                 "knowledge/**",
                 "catalog/**",
                 "capabilities/**",
                 "inbox/**",
-                "projects/**",
                 "system/**",
             ],
             require=["audit_log"],
@@ -187,15 +233,15 @@ def test_runtime_policy_core():
         )
         check(
             "Writer write to review-gated reference -> deny (deferred)",
-            d(writer, "write", "knowledge/hubs/r.md") == "deny",
+            d(writer, "write", "hubs/r.md") == "deny",
         )
         check(
             "Writer write to claims -> deny (policy deny beats degrade)",
-            d(writer, "write", "knowledge/notes/c.md") == "deny",
+            d(writer, "write", "notes/c.md") == "deny",
         )
         check(
             "Co-PI write anywhere -> deny (hard write-denial)",
-            d(copi, "write", "knowledge/notes/f.md") == "deny",
+            d(copi, "write", "notes/f.md") == "deny",
         )
 
         # ---- read decisions ---------------------------------------------------- #
@@ -205,7 +251,7 @@ def test_runtime_policy_core():
         )
         check(
             "Engineer read review-gated -> allow_with_log",
-            d(engineer, "read", "knowledge/notes/c.md") == "allow_with_log",
+            d(engineer, "read", "notes/c.md") == "allow_with_log",
         )
 
         # ---- auto_fix class gating (Linter) ------------------------------------ #
@@ -270,7 +316,7 @@ def test_runtime_policy_core():
         )
         check(
             "X1 Librarian write to claims -> deny (write-wall)",
-            d(cataloger, "write", "knowledge/notes/c.md") == "deny",
+            d(cataloger, "write", "notes/c.md") == "deny",
         )
         check(
             "Librarian write to projects/system -> deny",
@@ -288,7 +334,7 @@ def test_runtime_policy_core():
         )
         check(
             "Peer-reviewer write to claims -> deny (write-wall)",
-            d(reviewer, "write", "knowledge/notes/c.md") == "deny",
+            d(reviewer, "write", "notes/c.md") == "deny",
         )
 
         # ---- invalid action + missing request_id ------------------------------- #
@@ -397,9 +443,9 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
         "actors:\n"
         "  operation:\n"
         "    allow:\n"
-        '      write: ["knowledge/hubs/**"]\n'
+        '      write: ["hubs/**"]\n'
         '    require: ["audit_log"]\n'
-        '    write_scope: ["knowledge/hubs/"]\n',
+        '    write_scope: ["hubs/"]\n',
         encoding="utf-8",
     )
     (tmp_path / "inbox").mkdir()
@@ -416,7 +462,7 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
     )
 
     engine = PolicyEngine(tmp_path)
-    blocked = engine.check("operation", "write", "knowledge/hubs/h.md", "REQ-BLOCK")
+    blocked = engine.check("operation", "write", "hubs/h.md", "REQ-BLOCK")
     assert blocked["decision"] == "deny"
     assert blocked["policy_rule"] == "loudness.block.active"
     assert blocked["blockers"][0]["path"] == "inbox/block.md"
@@ -432,7 +478,7 @@ def test_open_block_loudness_card_blocks_review_gated_promotion_until_acknowledg
         "---\n",
         encoding="utf-8",
     )
-    unblocked = engine.check("operation", "write", "knowledge/hubs/h.md", "REQ-OPEN")
+    unblocked = engine.check("operation", "write", "hubs/h.md", "REQ-OPEN")
     assert unblocked["decision"] == "dry_run"
     assert unblocked["policy_rule"] == "review_gated.dry_run"
 

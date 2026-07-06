@@ -7,7 +7,11 @@ allowed_tools:
 - read_checked_index
 allowed_paths:
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 - .memoria/index/
 allowed_network: []
 runner:

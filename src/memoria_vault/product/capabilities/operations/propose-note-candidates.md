@@ -7,8 +7,8 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/sources/
-- knowledge/works/
-- knowledge/notes/
+- works/
+- notes/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -26,7 +26,7 @@ posture: co-pi
 mode: knowledge
 action: distill
 input: checked-digest
-output_target: .memoria/staging/knowledge/
+output_target: .memoria/staging/notes/
 version: '1.0'
 created: 2026-06-29
 id: operations/propose-note-candidates

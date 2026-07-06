@@ -326,7 +326,7 @@ def run_prompt_operation(
         },
         machine=machine,
     )
-    output_path = f"knowledge/notes/{safe_filename(operation_id)}-{safe_filename(run_id)}.md"
+    output_path = f"notes/{safe_filename(operation_id)}-{safe_filename(run_id)}.md"
     frontmatter = {
         "type": "note",
         "title": f"{policy['title']} report",
@@ -444,12 +444,12 @@ def compile_source_digest(
     if not content_path.is_file():
         raise FileNotFoundError(content_path)
 
-    digest_rel = f"knowledge/works/{source_id}.md"
+    digest_rel = f"works/{source_id}/digest.md"
     _require_path(policy, source_ref)
     _require_path(policy, content_rel)
     _require_path(policy, digest_rel)
     for topic in topics:
-        _require_path(policy, f"knowledge/hubs/{_topic_slug(topic)}.md")
+        _require_path(policy, f"hubs/{_topic_slug(topic)}.md")
 
     run_id = run_id or f"{operation_id}:{source_id}"
     started = append_journal_event(
@@ -486,7 +486,7 @@ def compile_source_digest(
     )
 
     digest_frontmatter = {
-        "type": "work",
+        "type": "digest",
         "title": f"Digest: {source_fm['title']}",
         "description": source_fm["description"],
         "work_id": source_id,
@@ -527,7 +527,7 @@ def compile_source_digest(
     hub_checks = []
     hub_paths = []
     for topic in topics:
-        hub_rel = f"knowledge/hubs/{_topic_slug(topic)}.md"
+        hub_rel = f"hubs/{_topic_slug(topic)}.md"
         hub_exists = (vault / hub_rel).exists()
         hub_frontmatter = {
             "type": "hub",

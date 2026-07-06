@@ -6,8 +6,10 @@ operation_id: export-project
 allowed_tools:
 - projection_writer
 allowed_paths:
-- knowledge/
-- references.bib
+- projects/
+- notes/
+- hubs/
+- bibliography.bib
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -19,7 +21,7 @@ io_schema:
 risk_class: low
 required_checks: []
 tags:
-- alpha15
+- alpha16
 - project
 - export
 id: operations/export-project

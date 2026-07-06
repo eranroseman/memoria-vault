@@ -20,7 +20,7 @@ risk_class: medium
 required_checks:
 - memoria-runtime
 tags:
-- alpha15
+- alpha16
 - capture
 id: operations/capture-bibtex-source
 links: {}
@@ -30,4 +30,4 @@ links: {}
 
 Parse a BibTeX record, write durable source-content blobs, stage an unchecked
 SQLite catalog row, and queue DOI enrichment when a DOI is present. The
-operation does not create source/entity markdown or update `references.bib`.
+operation does not create source/entity markdown or update `bibliography.bib`.

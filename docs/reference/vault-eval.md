@@ -15,7 +15,7 @@ nav_order: 7
 
 Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They carry
 `type: eval-task` frontmatter for eval dispatch, but `eval-task` is not an
-alpha.15 Concept type and has no schema under
+alpha.16 Concept type and has no schema under
 `vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
 `## Input`, an `## Expected behavior`, and an `## Scoring rubric` section, so a
 runtime eval operation can run and score it with nothing but the file.
@@ -88,7 +88,7 @@ reported `unscored`, and a result with no computable field is `reported`.
 | Metric | 0–1, higher is better | Computed when |
 | --- | --- | --- |
 | `recall_at_k` | Fraction of the task's gold citekeys (frontmatter `references`) in the top-*k* of `retrieved` (default k=3, the rubrics' "top 3" window; `--k`). | `retrieved` reported and the task has `references`. |
-| `support_rate` | Fraction of `cited` citekeys resolving to a real catalog record (note stem or `citekey:` frontmatter under `catalog/`). | `cited` reported, non-empty. |
+| `support_rate` | Fraction of `cited` citekeys resolving to a real SQLite catalog source row. | `cited` reported, non-empty. |
 | `fama_clean` | 1.0 if no note in `claims` is a superseded/archived claim, else 0.0 — the same superseded-reuse check the Linter's detector enforces (a test guards the parity, see [Linter: detectors and auto-fix](linter.md#the-detectors)); offenders are named in `fama_exposed`. | `claims` reported (`[]` counts: no claims used → clean). |
 
 The task rubric's `self_score` is recorded per task for comparison but never

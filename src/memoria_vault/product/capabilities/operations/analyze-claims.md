@@ -7,7 +7,11 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}
@@ -25,7 +29,7 @@ posture: peer-reviewer
 mode: both
 action: analyze
 input: selection-or-note
-output_target: .memoria/staging/knowledge/
+output_target: .memoria/staging/notes/
 model_hint: ''
 version: '1.0'
 adapted_from: fabric/analyze_claims

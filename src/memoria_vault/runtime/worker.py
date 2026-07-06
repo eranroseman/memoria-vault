@@ -60,9 +60,9 @@ INTEGRITY_FINDING_OPERATIONS = {
 }
 OVERRIDE_LOG_REL = ".memoria/overrides.jsonl"
 CREATE_CONCEPT_HOMES = {
-    "note": "knowledge/notes",
-    "hub": "knowledge/hubs",
-    "project": "knowledge/projects",
+    "note": "notes",
+    "hub": "hubs",
+    "project": "projects",
 }
 
 

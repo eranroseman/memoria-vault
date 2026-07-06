@@ -15,7 +15,7 @@ from tests.helpers import ROOT, copy_memoria_dirs
 FIXTURE = ROOT / "tests/fixtures/retrieval-substrate-spike.json"
 
 
-def test_alpha15_retrieval_substrate_verdict_is_committed() -> None:
+def test_alpha16_retrieval_substrate_verdict_is_committed() -> None:
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     assert fixture["verdict"]["selected"] == "bm25"
@@ -51,7 +51,7 @@ def test_packaged_search_has_no_vector_dependency() -> None:
 
 def test_bm25_verdict_matches_rebuild_manifest(tmp_path: Path) -> None:
     copy_memoria_dirs(tmp_path, "schemas")
-    note = tmp_path / "knowledge/notes/checked.md"
+    note = tmp_path / "notes/checked.md"
     note.parent.mkdir(parents=True)
     note.write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: checked\n---\nalpha\n",

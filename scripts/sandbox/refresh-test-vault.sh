@@ -89,16 +89,17 @@ sync_file() {
 }
 
 hdr "Refresh source-owned vault files"
-# Runtime content is preserved by omission: this script never syncs system/logs,
-# system/exports, notes, project content, catalog records, or inbox cards.
+# Runtime content is preserved by omission: this script never syncs logs,
+# corpus roots, or active inbox projections.
 for rel in \
   .githooks \
   .memoria/plugins \
   .memoria/schemas \
   .memoria/scripts \
-  spaces \
   system/dashboards \
   system/eval \
+  system/incidents \
+  system/metrics \
   system/patterns \
   system/templates
 do
@@ -114,17 +115,14 @@ for rel in \
   index.md \
   steering.md \
   troubleshooting.md \
-  catalog/index.md \
-  knowledge/index.md \
-  knowledge/_views/index.md \
-  references.bib \
+  bibliography.bib \
   system/vocabulary.md
 do
   sync_file "$rel"
 done
 
 hdr "Remove dropped standalone baseline payloads"
-run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog/catalog.base"
+run rm -rf "$VAULT/.obsidian" "$VAULT/system/scripts" "$VAULT/catalog" "$VAULT/knowledge" "$VAULT/spaces" "$VAULT/references.bib"
 
 hdr "Wire git hook"
 if [ -d "$VAULT/.git" ] && [ -f "$VAULT/.githooks/pre-commit" ]; then

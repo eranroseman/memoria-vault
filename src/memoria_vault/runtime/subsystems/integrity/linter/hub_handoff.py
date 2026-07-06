@@ -3,7 +3,7 @@
 
 Tier 1 stays report-only in detectors.py. This Tier 2 operation reads those
 findings and creates a review-gated proposal handoff: an operation may draft a
-hub proposal in staging, but the canonical hub home (knowledge/hubs/) remains
+hub proposal in staging, but the canonical hub home (hubs/) remains
 PI-owned.
 
     python hub_handoff.py --vault <path> [--threshold 15] [--json]
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from memoria_vault.runtime.subsystems.integrity.linter import detectors
 
-_ALLOWED_PATHS = ["knowledge/notes/maps/"]
+_ALLOWED_PATHS = ["notes/maps/"]
 _FINDING_RE = re.compile(r"topic '(.+)' has (\d+) notes")
 
 
@@ -39,10 +39,10 @@ def _expected_outputs(topic: str) -> str:
     proposal = _slug(topic)
     return "\n".join(
         [
-            f"- Draft one unchecked note proposal at knowledge/notes/maps/hub-proposal-{proposal}.md.",
+            f"- Draft one unchecked note proposal at notes/maps/hub-proposal-{proposal}.md.",
             "- The proposal should include schema-shaped hub frontmatter as a quoted template: title, type: hub, id, tags: [], links: {}, tag.",
             "- Include only candidate member links and the threshold evidence; do not write curation prose or annotations as if approved.",
-            "- Do not write, move, or create files under knowledge/hubs/; the PI curates the final hub.",
+            "- Do not write, move, or create files under hubs/; the PI curates the final hub.",
         ]
     )
 
@@ -55,7 +55,7 @@ def _context(finding: detectors.Finding, topic: str, count: int, threshold: int)
             f"Topic: {topic}",
             f"Count: {count}; threshold: {threshold}",
             "The Linter is report-only. A map-proposal operation may stage a "
-            "proposal, but knowledge/hubs/ is PI-curated.",
+            "proposal, but hubs/ is PI-curated.",
         ]
     )
 
@@ -88,7 +88,7 @@ def handoff_hub_thresholds(
                 "allowed_paths": list(_ALLOWED_PATHS),
                 "expected_outputs": _expected_outputs(topic),
                 "review_checks": "Confirm the proposal is only a suggestion; PI curation is "
-                "required before anything enters knowledge/hubs/.",
+                "required before anything enters hubs/.",
                 "idempotency_key": key,
             }
         )

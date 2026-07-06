@@ -48,7 +48,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     run_trusted_write(
         vault,
-        "knowledge/notes/thesis.md",
+        "notes/thesis.md",
         (
             "---\n"
             "type: note\n"
@@ -62,7 +62,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     )
     run_trusted_write(
         vault,
-        "knowledge/projects/project-alpha.md",
+        "projects/project-alpha/project.md",
         (
             "---\n"
             "type: project\n"
@@ -70,7 +70,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
             "description: A disposable alpha.11 cycle project.\n"
             "tags: []\n"
             "links: {}\n"
-            "thesis: knowledge/notes/thesis.md\n"
+            "thesis: notes/thesis.md\n"
             "---\n"
             "Project framing.\n"
         ),
@@ -108,7 +108,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         key="capture-source",
     )
     source_id = capture["source_id"]
-    source_ref = f"catalog/sources/{source_id}/source.md"
+    source_ref = f"catalog/sources/{source_id}"
     assert source_id == "doi-10.1000_cycle.2026"
     assert capture["check_status"] == "unchecked"
     assert capture["enrichment_job"]["operation_id"] == "enrich-source"
@@ -151,7 +151,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         {
             "source_id": "doi-10.1000_cycle.2026",
             "response": "The PI cares about recall evidence for the thesis.",
-            "project_id": "knowledge/projects/project-alpha.md",
+            "project_id": "projects/project-alpha/project.md",
         },
         key="record-interview",
     )
@@ -170,7 +170,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         },
         key="compile-digest",
     )
-    assert digest["digest_path"] == "knowledge/works/doi-10.1000_cycle.2026.md"
+    assert digest["digest_path"] == "works/doi-10.1000_cycle.2026/digest.md"
     assert len(digest["hub_paths"]) == 5
 
     notes = run_operation(
@@ -218,7 +218,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         "curate-note-link",
         {
             "source_note_path": note_path,
-            "target_path": "knowledge/notes/thesis.md",
+            "target_path": "notes/thesis.md",
             "link_type": "supports",
             "reason": "PI linked support",
         },
@@ -244,7 +244,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     manifest = run_operation(vault, "rebuild-checked-search-index", key="rebuild-search")
     indexed_paths = {row["path"] for row in manifest["documents"]}
-    assert f"works/{source_id}.md" in indexed_paths
+    assert f"works/{source_id}/fulltext.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
     assert note_path in indexed_paths
 

@@ -42,17 +42,15 @@ TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 TYPE_HOME = {
-    "source": "catalog/sources/",
-    "person": "catalog/entities/",
-    "organization": "catalog/entities/",
-    "venue": "catalog/entities/",
-    "work": "knowledge/works/",
-    "note": "knowledge/notes/",
-    "hub": "knowledge/hubs/",
-    "project": "knowledge/projects/",
+    "work": "works/",
+    "digest": "works/",
+    "source-note": "sources/",
+    "note": "notes/",
+    "hub": "hubs/",
+    "project": "projects/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"catalog", "knowledge", "spaces", "system", "inbox"}
+KNOWN_TOP_DIRS = {"works", "sources", "notes", "hubs", "projects", "system", "inbox"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
@@ -63,7 +61,7 @@ SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns
 
 def is_untyped_infra(rp: str) -> bool:
     """Infrastructure, navigation, and attention projections are not Concepts."""
-    return rp.startswith(("catalog/", "spaces/", "system/", "inbox/"))
+    return rp.startswith(("system/", "inbox/"))
 
 
 LEFTOVER_PATTERNS = [
@@ -117,9 +115,9 @@ DATAVIEW_KEYWORDS = {
     "not",
     "reverse",
 }
-# Only queries over these folders read *note frontmatter*; queries over the board
-# (cards) or system logs/metrics (JSONL) drift on different schemas, not this one.
-NOTE_FOLDERS = ("catalog", "knowledge")
+# Only queries over these folders read *Concept frontmatter*; queries over logs
+# or metrics drift on different schemas, not this one.
+NOTE_FOLDERS = ("works", "sources", "notes", "hubs", "projects")
 # Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
@@ -139,7 +137,7 @@ try:
         for path in _FOLDERS.get("transient_prefixes") or []
         if str(path).strip("/")
     }
-    KNOWN_TOP_DIRS.add("spaces")
+    NOTE_FOLDERS = tuple(_FOLDERS.get("bundle_roots") or NOTE_FOLDERS)
 except Exception:  # noqa: BLE001 -- dependency-free fallback when schemas cannot load
     _schema = None
 
@@ -485,7 +483,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("knowledge/works/", "knowledge/notes/", "knowledge/hubs/")
+    synth = ("works/", "sources/", "notes/", "hubs/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):
@@ -507,7 +505,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
     notes = list(iter_notes(vault))
     superseded: dict[str, str] = {}
     for p in notes:
-        if not relpath(vault, p).startswith("knowledge/notes/"):
+        if not relpath(vault, p).startswith("notes/"):
             continue
         fm = parse_frontmatter(read(p))
         sup = fm.get("superseded_by")
@@ -520,7 +518,7 @@ def fama_exposure(vault: Path) -> list[Finding]:
     out = []
     for p in notes:
         rp = relpath(vault, p)
-        if rp.startswith(("system/", "knowledge/notes/")):
+        if rp.startswith(("system/", "notes/")):
             continue
         for m in link_re.finditer(read(p)):
             stem = Path(m.group(1).strip()).stem
@@ -587,7 +585,7 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
                 if isinstance(v, str) and v.strip():
                     hubbed.add(v.strip().lower())
             continue
-        if not rp.startswith("knowledge/notes/"):
+        if not rp.startswith("notes/"):
             continue
         terms: list[str] = []
         for field in ("topics", "tags", "research_area"):
@@ -612,7 +610,7 @@ def hub_threshold(vault: Path, threshold: int = 15) -> list[Finding]:
                 Finding(
                     "hub-threshold",
                     "LOW",
-                    "knowledge/hubs/",
+                    "hubs/",
                     f"topic '{label[key]}' has {counts[key]} notes "
                     f"(threshold {threshold}) and no hub -- consider creating one",
                 )

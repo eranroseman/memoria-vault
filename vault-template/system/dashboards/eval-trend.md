@@ -79,4 +79,4 @@ dv.table(["Task", "Workflow", "Eval role"], missing.map(t => [t.task, t.workflow
 
 ## Related
 
-- [[spaces/maintenance#Drift watch|Drift watch]] — structural health; gold-set rot (a broken gold reference) surfaces there.
+- `system/metrics/` — structural health and gold-set rot evidence live with exported metrics.

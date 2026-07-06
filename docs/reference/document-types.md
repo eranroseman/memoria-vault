@@ -17,7 +17,8 @@ Each type schema declares its category, folder home, initial read state, require
 fields, optional fields, and enum-backed fields. The linter, pre-commit hook,
 trusted writer, and tests read those YAML files directly.
 
-The current schema defines 4 document types: `hub`, `note`, `project`, and `work`.
+The current schema defines 6 document types: `digest`, `hub`, `note`,
+`project`, `source-note`, and `work`.
 
 For field grammar and validation behavior, see [Frontmatter fields](frontmatter.md).
 

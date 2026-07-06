@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that alpha.15 ships no Obsidian plugin implementation payload."""
+"""Validate that alpha.16 ships no Obsidian plugin implementation payload."""
 
 from __future__ import annotations
 
@@ -32,13 +32,13 @@ def check(root: Path = ROOT) -> list[str]:
     for rel in FORBIDDEN_REL:
         path = root / rel
         if path.exists():
-            findings.append(f"{rel.as_posix()}: not shipped in alpha.15")
+            findings.append(f"{rel.as_posix()}: not shipped in alpha.16")
     for pattern in FORBIDDEN_GLOBS:
         for path in sorted(root.glob(pattern)):
             if path.exists():
                 findings.append(
                     f"{path.relative_to(root).as_posix()}: "
-                    "Obsidian plugin or adapter implementation is excluded from alpha.15"
+                    "Obsidian plugin or adapter implementation is excluded from alpha.16"
                 )
     return findings
 

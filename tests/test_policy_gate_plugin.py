@@ -18,7 +18,7 @@ actors:
         - "inbox/**"
     deny:
       write:
-        - "knowledge/notes/**"
+        - "notes/**"
     require:
       - audit_log
     write_scope:
@@ -48,7 +48,7 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
 
     result = gate._gate(
         "mcp_obsidian_vault_write",
-        {"filepath": "knowledge/notes/blocked.md", "content": "must not land"},
+        {"filepath": "notes/blocked.md", "content": "must not land"},
         "REQ-DENY",
     )
     audit = [
@@ -63,7 +63,7 @@ def test_plugin_blocks_known_deny_mcp_obsidian_write_and_audits(tmp_path):
     assert audit[-1]["decision"] == "deny"
     assert audit[-1]["policy_rule"] == "Adapter.deny.write"
     assert audit[-1]["actor"] == "adapter"
-    assert audit[-1]["path"] == "knowledge/notes/blocked.md"
+    assert audit[-1]["path"] == "notes/blocked.md"
     assert audit[-1]["request_id"] == "REQ-DENY"
 
 

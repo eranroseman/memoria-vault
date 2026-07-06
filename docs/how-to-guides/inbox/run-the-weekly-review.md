@@ -12,7 +12,7 @@ Walk the Friday ritual: refresh your steering, sweep the Inbox, use Maintenance'
 ## Prerequisites
 
 - A local workspace available to the `memoria` CLI
-- `spaces/maintenance.md` or the equivalent CLI attention/request views available — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
+- `system/dashboards/` or the equivalent CLI attention/request views available — the Friday collection: loose ends, drift watch, board state, and the week's new catalog entries and notes
 
 ## Steps
 

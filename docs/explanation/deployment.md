@@ -21,7 +21,7 @@ and for maintained rationale see the Design Book links below.
 | --- | --- |
 | Workspace | Local folder populated from `vault-template/` by the installer. |
 | Runtime | Standalone `memoria` CLI/engine plus workspace-local `.memoria/memoria.sqlite`. |
-| Bibliography | Memoria generates tracked `references.bib` from checked SQLite catalog rows. |
+| Bibliography | Memoria generates tracked `bibliography.bib` from checked SQLite catalog rows. |
 | Dispatch | CLI commands, file-change observers, and operator-managed scheduled tasks call the same engine. |
 | Secrets | Per-machine environment/provider config, never committed or synced. |
 

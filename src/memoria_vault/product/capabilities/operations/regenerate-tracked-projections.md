@@ -7,9 +7,7 @@ allowed_tools:
 - projection_writer
 allowed_paths:
 - index.md
-- catalog/
-- knowledge/
-- references.bib
+- bibliography.bib
 - journal/
 allowed_network: []
 runner:
@@ -31,5 +29,4 @@ links: {}
 
 # Operation
 
-Render `index.md`, bundle indexes, `knowledge/_views/index.md`, and
-`references.bib`.
+Render `index.md` and `bibliography.bib`.

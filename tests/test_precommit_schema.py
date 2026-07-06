@@ -6,24 +6,24 @@ from memoria_vault.runtime.subsystems.integrity.linter import precommit_check
 
 
 def _vault(tmp_path: Path) -> Path:
-    for rel in ("knowledge/notes", "system", "inbox"):
+    for rel in ("notes", "system", "inbox"):
         (tmp_path / rel).mkdir(parents=True)
     return tmp_path
 
 
 def test_clean_note_passes(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/n.md").write_text(
+    (vault / "notes/n.md").write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
         "tags: []\nlinks: {}\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
-    assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
+    assert precommit_check.check_paths(vault, ["notes/n.md"]) == []
 
 
 def test_generated_note_provenance_fields_pass(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/n.md").write_text(
+    (vault / "notes/n.md").write_text(
         "---\n"
         "type: note\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
@@ -46,14 +46,14 @@ def test_generated_note_provenance_fields_pass(tmp_path):
         "Body.\n",
         encoding="utf-8",
     )
-    assert precommit_check.check_paths(vault, ["knowledge/notes/n.md"]) == []
+    assert precommit_check.check_paths(vault, ["notes/n.md"]) == []
 
 
 def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/works").mkdir(parents=True)
-    (vault / "knowledge/hubs").mkdir(parents=True)
-    (vault / "knowledge/works/source-alpha.md").write_text(
+    (vault / "works/source-alpha").mkdir(parents=True)
+    (vault / "hubs").mkdir(parents=True)
+    (vault / "works/source-alpha/record.md").write_text(
         "---\n"
         "type: work\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
@@ -70,7 +70,7 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
         "Body.\n",
         encoding="utf-8",
     )
-    (vault / "knowledge/hubs/topic.md").write_text(
+    (vault / "hubs/topic.md").write_text(
         "---\n"
         "type: hub\n"
         "id: 01BRZ3NDEKTSV4RRFFQ69G5FAV\n"
@@ -88,7 +88,7 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
     assert (
         precommit_check.check_paths(
             vault,
-            ["knowledge/works/source-alpha.md", "knowledge/hubs/topic.md"],
+            ["works/source-alpha/record.md", "hubs/topic.md"],
         )
         == []
     )
@@ -96,46 +96,46 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
 
 def test_schema_violation_blocks(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/bad.md").write_text(
+    (vault / "notes/bad.md").write_text(
         "---\ntype: note\nid: notes/bad\ncheck_status: pending\nlinks: []\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
-    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
+    errors = precommit_check.check_paths(vault, ["notes/bad.md"])
     assert any("check_status" in error for error in errors)
     assert any("id" in error for error in errors)
     assert any("tags" in error for error in errors)
     assert any("links" in error for error in errors)
 
 
-def test_undeclared_frontmatter_field_blocks(tmp_path):
+def test_declared_frontmatter_field_shape_blocks(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/bad.md").write_text(
+    (vault / "notes/bad.md").write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
-        "tags: []\nlinks: {}\ntitle: T\nsurprise: true\n---\nBody.\n",
+        "tags: []\nlinks: {}\ntitle: T\ntopics: personal-informatics\n---\nBody.\n",
         encoding="utf-8",
     )
-    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
-    assert any("undeclared field: surprise" in error for error in errors)
+    errors = precommit_check.check_paths(vault, ["notes/bad.md"])
+    assert any("topics: expected list" in error for error in errors)
 
 
 def test_nested_link_shape_blocks(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/bad.md").write_text(
+    (vault / "notes/bad.md").write_text(
         "---\ntype: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
-        "tags: []\nlinks:\n  related:\n    - knowledge/notes/target.md\ntitle: T\n---\nBody.\n",
+        "tags: []\nlinks:\n  related:\n    - notes/target.md\ntitle: T\n---\nBody.\n",
         encoding="utf-8",
     )
-    errors = precommit_check.check_paths(vault, ["knowledge/notes/bad.md"])
+    errors = precommit_check.check_paths(vault, ["notes/bad.md"])
     assert any("links.related: unknown relation" in error for error in errors)
 
 
 def test_unknown_type_blocks(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "knowledge/notes/odd.md").write_text(
+    (vault / "notes/odd.md").write_text(
         "---\ntype: reference-note\ncheck_status: checked\n---\n",
         encoding="utf-8",
     )
-    errors = precommit_check.check_paths(vault, ["knowledge/notes/odd.md"])
+    errors = precommit_check.check_paths(vault, ["notes/odd.md"])
     assert any("unknown type" in e for e in errors)
 
 
@@ -147,12 +147,12 @@ def test_vault_local_schema_overrides_packaged_default(tmp_path):
         "type: local-note\nrequired:\n  type: literal:local-note\n  title: str\n",
         encoding="utf-8",
     )
-    (vault / "knowledge/notes/local.md").write_text(
+    (vault / "notes/local.md").write_text(
         "---\ntype: local-note\ntitle: Local\n---\nBody.\n",
         encoding="utf-8",
     )
 
-    assert precommit_check.check_paths(vault, ["knowledge/notes/local.md"]) == []
+    assert precommit_check.check_paths(vault, ["notes/local.md"]) == []
 
 
 def test_untyped_infra_and_outside_paths_exempt(tmp_path):

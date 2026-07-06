@@ -9,7 +9,11 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - inbox/
-- knowledge/
+- works/
+- sources/
+- notes/
+- hubs/
+- projects/
 allowed_network: []
 runner:
   test: {provider: local, model: deterministic-fixture, temperature: 0}

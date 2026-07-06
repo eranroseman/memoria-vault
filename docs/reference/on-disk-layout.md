@@ -23,27 +23,23 @@ Where every file lives.
 <vault>/
 ├── index.md                 generated workspace index
 ├── home.md                  launch/reset welcome note
-├── _nav.md                  plain Markdown navigation rail
 ├── steering.md              program memory; the PI's standing steering
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
-├── catalog/                 source and entity record projections
-│   ├── index.md              generated catalog index
-│   ├── sources/
-│   └── entities/
-├── knowledge/               Work, note, hub, and project Concepts
-│   ├── index.md              generated knowledge index
-│   ├── works/  notes/  hubs/  projects/
-│   └── views/knowledge.base
+├── bibliography.bib         generated portable bibliography
+├── works/<work_id>/         objective work record, full text, digest, raw source
+├── sources/                 human source-notes bridging works into notes
+├── notes/                   claim and question notes
+├── hubs/                    topic hubs with human salience
+├── projects/<slug>/         project.md, evidence.md, gaps.md
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
     ├── templates/             starter notes per type
-    ├── dashboards/            read-only system dashboards
-    ├── patterns/              shared prompt preamble
     ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
-    ├── metrics/               derived metric notes and eval/runs.jsonl
-    └── logs/                  audit.jsonl, sessions/
+    ├── incidents/             visible incident copies
+    ├── manifest.jsonl         visible audit manifest
+    └── metrics/               exported metrics
 ```
 
 The workspace bundle roots are declared in `folders.yaml`, along with the
@@ -75,7 +71,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── design-system.md
 ```
 
-Alpha.15 deliberately does **not** ship hidden operation-package homes, installed
+Alpha.16 deliberately does **not** ship hidden operation-package homes, installed
 profile packages, lane override packages, or profile tool registries. Operation
 manifests live under `memoria_vault.product.capabilities.operations`; operation
 code lives in the installed `memoria_vault` package.
@@ -104,19 +100,10 @@ Runtime-only (created in the deployed vault, never shipped):
 
 ## Editor configuration
 
-Alpha.15 ships no editor app configuration. Optional editors may keep local
+Alpha.16 ships no editor app configuration. Optional editors may keep local
 state beside or inside a working copy, but that state is not part of the
 standalone template, installer skeleton, request lifecycle, or source-of-truth
 layout.
-
-### The Bases view
-
-The shipped `.base` file sits alongside the checked knowledge Concepts:
-`knowledge/views/knowledge.base`. It is an optional editor view over the same
-files; the CLI/read API remains authoritative. What it shows is in
-[Dashboards](dashboards.md#the-bases-views).
-
----
 
 ## Outside the vault
 

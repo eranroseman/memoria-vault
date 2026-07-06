@@ -26,8 +26,8 @@ Use `memoria work import --format bibtex|csl --file <path>` for portable
 metadata, including records that carry ISBN metadata. Imports write unchecked
 Work rows and queue DOI enrichment when a DOI is present. They do not fetch from
 a reference-manager API, create source/entity Markdown, or update
-`references.bib` at import time. There is no standalone `memoria work add
---isbn` route in alpha.15.
+`bibliography.bib` at import time. There is no standalone `memoria work add
+--isbn` route in alpha.16.
 
 **3. Confirm the catalog row and blobs.**
 
@@ -45,12 +45,12 @@ and live under `.memoria/blobs/source-content/<source_id>/`.
 **4. Confirm the trace.**
 
 The journal has `run`, `derived`, and `check-fired` events. Source-content blobs
-are gitignored; tracked projections such as `references.bib` are committed only
+are gitignored; tracked projections such as `bibliography.bib` are committed only
 when enrichment or projection refresh makes them current.
 
 ## Deferred UI
 
-Reference-manager adapters are not part of the standalone alpha.15 runtime.
+Reference-manager adapters are not part of the standalone alpha.16 runtime.
 
 ## Related
 

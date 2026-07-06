@@ -1,4 +1,4 @@
-"""Retrieval-substrate selection and the alpha.15 spike helpers."""
+"""Retrieval-substrate selection and the alpha.16 spike helpers."""
 
 from __future__ import annotations
 
