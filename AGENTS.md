@@ -157,6 +157,27 @@ git fetch origin
 git merge --ff-only origin/main
 ```
 
+After any merge, aborted task, or deleted remote branch, sweep stale task
+worktrees from the main checkout:
+
+```bash
+cd ~/memoria-vault/main
+git fetch --prune origin
+git worktree list --porcelain
+git worktree prune --dry-run
+```
+
+Keep `~/memoria-vault/main` and the locked `~/memoria-vault/scratch` worktree.
+For each task worktree, run `git -C <path> status --short --branch`. If it is
+dirty, stop and either commit, stash, or ask before removing it. If it is clean
+and its branch is merged, patch-equivalent to `main`, or already deleted
+upstream, remove both the worktree and local branch:
+
+```bash
+git worktree remove ~/memoria-vault/worktrees/<session>
+git branch -D <branch>
+```
+
 If a PR shows `BEHIND`: `gh pr update-branch <n>` (or `gh api -X PUT repos/eranroseman/memoria-vault/pulls/<n>/update-branch`), then wait for checks to re-run.
 
 **Emergency bypass (policy-code deadlock only):** when a PR changes `.github/scripts/` or `.github/workflows/` AND the `pr_policy.py` code itself, temporarily disable "Require a pull request" and "Require status checks" in Settings → Rules → Rulesets → "main", push directly to main, then re-enable both. For policy-code fixes only.
