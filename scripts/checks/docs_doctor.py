@@ -26,7 +26,7 @@ Checks:
   7. ADR code links   — current published docs must avoid bare `(ADR-NN)` codes.
 
 Exit 0 if clean, 1 if any error.
-Usage: python scripts/checks/docs_doctor.py [docs_root]   (default: docs)
+Usage: python3 scripts/checks/docs_doctor.py [docs_root]   (default: docs)
 
 One script, two triggers: run locally (pre-commit) and in CI (GitHub Actions).
 """
