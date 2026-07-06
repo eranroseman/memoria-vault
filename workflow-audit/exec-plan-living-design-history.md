@@ -277,11 +277,11 @@ the link sweep is complete.
 
 ## 7. Progress
 
-- [ ] {{ set on execution }} — Stage 0: bootstrap decision entry on scratch
-- [ ] Stage 1: design-history/ split PR merged, verify l0 green
-- [ ] Stage 2: AGENTS.md + .agents/ cutover PR merged, agents-doctor green
-- [ ] OWNER CHECKPOINT: confirm Stage 3 (delete docs/adr/) before branching
-- [ ] Stage 3: absorb + retire docs/adr PR merged, docs-doctor green
+- [x] Stage 0: bootstrap decision entry on scratch
+- [x] Stage 1: design-history/ split PR merged, verify l0 green
+- [x] Stage 2: AGENTS.md + .agents/ cutover PR merged, agents-doctor green
+- [x] OWNER CHECKPOINT: confirm Stage 3 (delete docs/adr/) before branching
+- [x] Stage 3: absorb + retire docs/adr PR merged, docs-doctor green
 
 ## 8. Execution log
 
@@ -292,6 +292,11 @@ the link sweep is complete.
   cutover (Stage 2) before destructive (Stage 3) so every PR is independently
   revertible and the owner checkpoint sits before the only irreversible-ish
   step.
+- 2026-07-06 — Implementation audit found the staged work landed, with one
+  small remaining cutover gap: root README/CONTRIBUTING and docs-doctor fixtures
+  still referenced `docs/adr/` as live decision material. Patched those in
+  `agent/design-history-implementation-audit`; `python scripts/verify l0`
+  passed.
 
 ## 9. Surprises & discoveries
 
@@ -320,15 +325,32 @@ the link sweep is complete.
 
 ## 11. Artifacts & notes
 
-<!-- Filled during execution: split-script line accounting, verify l0
-     transcripts, the Stage 3 link-sweep diff stat. -->
+- `design-history/` has 18 Markdown files: 16 frozen chapters, `README.md`, and
+  `arcs.md`.
+- `design-history/arcs.md`: 10 `Current (as of alpha.15)` lines and 10
+  `Pending (unreleased)` lines.
+- Frozen chapter audit: 16 chapter files match the source monolith section
+  content with source separator blanks accounted outside stored EOF whitespace.
+- `docs/adr/` contains only `README.md`.
+- ``rg -n 'go to.*ADR|to an ADR|ADR in `docs/adr/`' AGENTS.md .agents/``:
+  no matches.
+- `rg -n 'adr/' docs --glob '!docs/adr/**'`: no matches.
+- `python -m pytest tests/test_docs_doctor.py tests/test_pr_policy.py`: 33
+  passed.
+- `python scripts/checks/docs_doctor.py docs`: clean.
+- `python scripts/verify l0`: PASS; evidence
+  `/tmp/memoria-verify/20260706T013511Z-l0/summary.json`.
 
 ## 12. Outcomes & retrospective
 
 <!-- Filled at close. -->
 
-- **Shipped:** {{ }}
-- **Still open:** {{ }}
+- **Shipped:** `design-history/` replaced live ADRs as the decision record,
+  workflow guidance points at the release-ledger + design-history model, and
+  `docs/adr/` is retired to a tombstone.
+- **Still open:** none for this plan's implementation audit.
 - **Routed to:** the Stage 0 decision entry → `16-beta.1.md` chapter;
   state/scheduling → "Release beta.1" sub-issues.
-- **Lessons:** {{ }}
+- **Lessons:** root README/CONTRIBUTING and checker fixtures are consumer docs
+  too; include them in future cutover greps, not only `docs/`, `AGENTS.md`, and
+  `.agents/`.
