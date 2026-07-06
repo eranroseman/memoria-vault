@@ -19,8 +19,8 @@ Local troubleshooting records for Memoria-owned Python runtime modules and Opera
 | Default level | `warn` and `error`; raise with `MEMORIA_DIAGNOSTIC_LEVEL` or `MEMORIA_DIAGNOSTIC_LEVEL_<COMPONENT>` |
 | Default content | typed `code`, `component`, `level`, timestamp, payload SHA-256, payload byte length, and content-light details |
 | Raw capture | one process only with `MEMORIA_DIAGNOSTIC_RAW_ONCE=1`; the flag is consumed after one event and stored only as redacted text |
-| Bundle command | `python -m memoria_vault.runtime.diagnostics --bundle ~/memoria-diagnostics.tgz` |
-| Redaction self-test | `python -m memoria_vault.runtime.diagnostics --self-test` |
+| Bundle command | `python3 -m memoria_vault.runtime.diagnostics --bundle ~/memoria-diagnostics.tgz` |
+| Redaction self-test | `python3 -m memoria_vault.runtime.diagnostics --self-test` |
 
 Diagnostic detail fields hash strings and paths instead of writing them verbatim.
 The user-triggered bundle is a compressed archive with a README and redacted JSONL

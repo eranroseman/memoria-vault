@@ -31,5 +31,5 @@ released design claim.
   match is historical, a retirement note, or an explicit verification example.
 - Run the relevant focused tests for any changed doctor, policy, or docs link
   behavior.
-- Run `python scripts/verify l0` before merge unless the task explicitly scopes
+- Run `python3 scripts/verify l0` before merge unless the task explicitly scopes
   to docs-only evidence and the maintainer accepts a narrower check.

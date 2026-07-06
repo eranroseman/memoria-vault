@@ -14,7 +14,7 @@ git diff --check
 Run the nearest focused tests for the changed contract. Before PR handoff, run:
 
 ```bash
-python scripts/verify pr
+python3 scripts/verify pr
 ```
 
 If the environment lacks pytest or another required dependency, report that
@@ -32,7 +32,7 @@ instead of creating another table here.
 
 ## Full-gate triggers
 
-Always run `python scripts/verify pr` when a change:
+Always run `python3 scripts/verify pr` when a change:
 
 - Touches a shared schema, policy, profile, installer, or CI contract
 - Affects more than one runtime subsystem

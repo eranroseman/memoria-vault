@@ -33,8 +33,8 @@ match their filename and index link text.
 Run:
 
 ```bash
-python scripts/checks/docs_doctor.py docs
-python scripts/checks/docs_doctor.py --vault-links
+python3 scripts/checks/docs_doctor.py docs
+python3 scripts/checks/docs_doctor.py --vault-links
 ```
 
 Distinguish blocking failures from known advisory warnings.

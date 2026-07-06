@@ -98,9 +98,9 @@ aggregated - only the machine metrics trend.
 **The log.** Each scoring run appends one JSONL line to `system/metrics/eval/runs.jsonl` — timestamp, quarter, k, per-task records, and per-metric aggregates (`mean` + `n`, plus scored/reported/unscored counts). When a quarter produced no result blocks at all, nothing is appended. The **eval-trend dashboard** (`system/dashboards/eval-trend.md`) renders the newest line per quarter as the trend, plus the latest run's per-task breakdown — see [Dashboards](dashboards.md).
 
 ```sh
-python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
-python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter previous --from-json results.json
-python -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter 2026-Q2 --from-json results.json --dry-run
+python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --from-json results.json
+python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter previous --from-json results.json
+python3 -m memoria_vault.runtime.subsystems.telemetry.eval.eval_score --vault <vault> --quarter 2026-Q2 --from-json results.json --dry-run
 ```
 
 ## Cadence

@@ -53,7 +53,7 @@ repos:
       - id: docs-doctor
         name: docs-doctor
         language: system
-        entry: python scripts/checks/docs_doctor.py docs
+        entry: python3 scripts/checks/docs_doctor.py docs
         files: ^docs/|^scripts/checks/docs_doctor\.py
         pass_filenames: false
 
@@ -69,7 +69,7 @@ repos:
       - id: pytest
         name: pytest-collect
         language: system
-        entry: python scripts/verify check
+        entry: python3 scripts/verify check
         files: \.py$
         pass_filenames: false
 
@@ -77,7 +77,7 @@ repos:
       - id: check-doc-refs
         name: check-doc-refs
         language: system
-        entry: python scripts/checks/docs_doctor.py --doc-refs
+        entry: python3 scripts/checks/docs_doctor.py --doc-refs
         files: \.(md|py|ya?ml)$
         exclude: ^design-history/
         pass_filenames: true
@@ -86,7 +86,7 @@ repos:
       - id: dashboard-schema-drift
         name: dashboard-schema-drift
         language: system
-        entry: env PYTHONPATH=src python -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault vault-template --gate dashboard-field-drift
+        entry: env PYTHONPATH=src python3 -m memoria_vault.runtime.subsystems.integrity.linter.detectors --vault vault-template --gate dashboard-field-drift
         files: ^vault-template/system/dashboards/.*\.md$|^vault-template/system/templates/.*\.md$
         pass_filenames: false
 
@@ -114,27 +114,27 @@ repos:
       - id: status-doctor
         name: status-doctor
         language: system
-        entry: python scripts/checks/status_doctor.py
+        entry: python3 scripts/checks/status_doctor.py
         files: ^CONTRIBUTING\.md$|^\.agents/playbooks/(release|verify-change|exec-plan)\.md$|^\.agents/templates/.*\.md$|^releases/.*\.md$|^scripts/checks/status_doctor\.py$
         pass_filenames: false
 
       - id: agents-doctor
         name: agents-doctor
         language: system
-        entry: python scripts/checks/agents_doctor.py
+        entry: python3 scripts/checks/agents_doctor.py
         files: ^(\.agents/|\.claude/|\.codex/|\.kilo/|AGENTS\.md$|scripts/checks/agents_doctor\.py$)
         pass_filenames: false
 
       - id: github-doctor
         name: github-doctor
         language: system
-        entry: python scripts/checks/github_doctor.py
+        entry: python3 scripts/checks/github_doctor.py
         files: ^\.github/(ISSUE_TEMPLATE/|dependabot\.yml$)|^scripts/checks/github_doctor\.py$
         pass_filenames: false
 
       - id: plugin-provenance-doctor
         name: plugin-provenance-doctor
         language: system
-        entry: python scripts/checks/plugin_provenance_doctor.py
+        entry: python3 scripts/checks/plugin_provenance_doctor.py
         files: ^vault-template/\.obsidian/(community-plugins\.json|plugin-provenance-lock\.json|plugins/)|^scripts/checks/plugin_provenance_doctor\.py$|^tests/test_plugin_provenance\.py$
         pass_filenames: false

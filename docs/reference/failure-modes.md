@@ -43,7 +43,7 @@ Sorted by severity, then topic.
 | Request not progressing (`running` / `ready` / `blocked`) | MEDIUM | Worker crashed mid-run or human decision is owed on a blocked request | See full recipe in [Fix a stuck card](../how-to-guides/troubleshooting/fix-stuck-card.md). |
 | Citekey alias not found at ingest | LOW | Import payload or catalog row lacks the alias | Re-import the BibTeX/CSL file or capture the source by DOI/file path. |
 | Pandoc + BBT DOCX corrupt | LOW | Known Pandoc/Better BibTeX issue with some citation styles | Rerun Pandoc; test on a single-citation document first. |
-| Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the template/workspace | Delete the profile/lane package and run `python scripts/checks/alpha14_negative_gate.py`. |
+| Removed profile directory appears | LOW | A pre-alpha.14 profile package or lane override was copied into the template/workspace | Delete the profile/lane package and run `python3 scripts/checks/alpha14_negative_gate.py`. |
 
 ---
 

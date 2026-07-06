@@ -85,7 +85,7 @@
      claim, then the command that proves it. Validation is NOT optional. -->
 
 - **Claim:** Given {{ state }}, when {{ action }}, then {{ observable result }}.
-  - **Prove with:** `{{ python scripts/verify … or CLI repro }}`
+  - **Prove with:** `{{ python3 scripts/verify … or CLI repro }}`
 - {{ add one claim per requested outcome, plus key failure behavior }}
 
 ## 6. Idempotence and recovery

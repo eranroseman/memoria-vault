@@ -78,9 +78,9 @@ Make the smallest durable change:
 Run the focused docs checks:
 
 ```bash
-python scripts/checks/docs_doctor.py docs
-python scripts/checks/agents_doctor.py
-python scripts/checks/docs_doctor.py --vault-links
+python3 scripts/checks/docs_doctor.py docs
+python3 scripts/checks/agents_doctor.py
+python3 scripts/checks/docs_doctor.py --vault-links
 ```
 
 Then run the standard source gate:

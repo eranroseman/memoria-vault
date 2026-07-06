@@ -19,9 +19,9 @@ deployed vault carries no test code.
 | `runtime` | worker loops, recovery, idempotence, state transitions, long checks | nightly, release candidate |
 | `live` | real external services/providers | manual or scheduled only |
 
-Run the PR source gate with `python scripts/verify pr`.
-Target a level with `python -m pytest tests/ -q -m unit` or `python scripts/verify l1`.
-Use `python -m pytest tests/ -q -m "not slow"` for the fast local loop.
+Run the PR source gate with `python3 scripts/verify pr`.
+Target a level with `python3 -m pytest tests/ -q -m unit` or `python3 scripts/verify l1`.
+Use `python3 -m pytest tests/ -q -m "not slow"` for the fast local loop.
 Higher-gate procedure lives in
 [verify-change](../.agents/playbooks/verify-change.md).
 
@@ -34,7 +34,7 @@ contract tests over chasing a global percentage:
   each new rule, including malformed input and "should be ignored" paths.
 - Any changed runtime module should cover the main success path, fail-closed/error
   path, idempotency behavior, and boundary cases for path/schema handling.
-- Use `python -m pytest tests/ --cov=. --cov-branch` locally when reviewing risk.
+- Use `python3 -m pytest tests/ --cov=. --cov-branch` locally when reviewing risk.
   Treat large drops or uncovered changed branches as review findings.
 
 Do not add a hard global coverage threshold until the project adopts a ratcheting
