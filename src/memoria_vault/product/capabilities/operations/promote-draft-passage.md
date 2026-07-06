@@ -10,9 +10,6 @@ allowed_paths:
 - notes/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: promote-draft-passage.v1
 io_schema:
   input: draft_passage

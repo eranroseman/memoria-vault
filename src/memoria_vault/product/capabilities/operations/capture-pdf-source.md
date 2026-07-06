@@ -9,9 +9,6 @@ allowed_paths:
 - .memoria/blobs/source-content/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: capture-pdf-source.v1
 io_schema:
   input: pdf_blob

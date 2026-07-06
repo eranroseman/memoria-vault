@@ -26,7 +26,7 @@ from memoria_vault.runtime.integrity import record_integrity_check
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.paths import normalize_path
 from memoria_vault.runtime.trusted_writer import append_journal_event, commit_writer_changes
-from memoria_vault.runtime.vaultio import write_text_durable
+from memoria_vault.runtime.vaultio import frontmatter_doc, write_text_durable
 
 PROVIDER_CONFIG = ".memoria/config/providers.yaml"
 
@@ -423,31 +423,20 @@ def _write_attention_flag(
     path = vault / rel
     if path.exists():
         return rel
-    path.parent.mkdir(parents=True, exist_ok=True)
-    text = "\n".join(
-        [
-            "---",
-            f'title: "{_yaml_str(title)}"',
-            "projection: attention",
-            "attention_kind: flag",
-            "attention_status: open",
-            f'finding: "{_yaml_str(finding)}"',
-            "agent_recommendation: issues-found",
-            f'target: "{_yaml_str(target)}"',
-            "raised_by: enrich-source",
-            "loudness: alert",
-            f"created: {date.today().isoformat()}",
-            "---",
-            "",
-            "# Finding",
-            "",
-            finding,
-            "",
-            "# Evidence",
-            "",
-            evidence,
-            "",
-        ]
+    text = frontmatter_doc(
+        {
+            "title": title,
+            "projection": "attention",
+            "attention_kind": "flag",
+            "attention_status": "open",
+            "finding": finding,
+            "agent_recommendation": "issues-found",
+            "target": target,
+            "raised_by": "enrich-source",
+            "loudness": "alert",
+            "created": date.today().isoformat(),
+        },
+        f"# Finding\n\n{finding}\n\n# Evidence\n\n{evidence}\n",
     )
     write_text_durable(path, text, create_parent=True)
     return rel
@@ -471,37 +460,26 @@ def _write_discovery_candidate(
     path = vault / rel
     if path.exists():
         return rel
-    text = "\n".join(
-        [
-            "---",
-            f'title: "Review discovered Work: {_yaml_str(target_title)}"',
-            "projection: attention",
-            "attention_kind: candidate",
-            "attention_status: open",
-            f'target: "catalog/sources/{_yaml_str(str(source["source_id"]))}"',
-            f'discovered_work_id: "{_yaml_str(target_id)}"',
-            f'relation_type: "{_yaml_str(str(edge["relation_type"]))}"',
-            f"raised_by: {_yaml_str(raised_by)}",
-            "loudness: normal",
-            f"created: {date.today().isoformat()}",
-            "---",
-            "",
-            "# Candidate Work",
-            "",
-            target_title,
-            "",
-            "# Evidence",
-            "",
-            f"{source['source_id']} {edge['relation_type']} this Work in provider metadata.",
-            "",
-        ]
+    text = frontmatter_doc(
+        {
+            "title": f"Review discovered Work: {target_title}",
+            "projection": "attention",
+            "attention_kind": "candidate",
+            "attention_status": "open",
+            "target": f"catalog/sources/{source['source_id']}",
+            "discovered_work_id": target_id,
+            "relation_type": str(edge["relation_type"]),
+            "raised_by": raised_by,
+            "loudness": "normal",
+            "created": date.today().isoformat(),
+        },
+        (
+            f"# Candidate Work\n\n{target_title}\n\n# Evidence\n\n"
+            f"{source['source_id']} {edge['relation_type']} this Work in provider metadata.\n"
+        ),
     )
     write_text_durable(path, text, create_parent=True)
     return rel
-
-
-def _yaml_str(value: str) -> str:
-    return str(value).replace("\\", "\\\\").replace('"', '\\"')
 
 
 def _provider_payload(

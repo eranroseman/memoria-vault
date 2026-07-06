@@ -17,9 +17,6 @@ allowed_paths:
 - projects/
 - system/vocabulary.md
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: analyze-gaps.v1
 io_schema:
   input: checked_workspace

@@ -12,9 +12,6 @@ allowed_paths:
 - works/
 - hubs/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: compile-source-digest.v1
 untrusted_fields:
 - input

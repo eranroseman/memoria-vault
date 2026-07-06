@@ -831,14 +831,6 @@ def catalog_sources(vault: Path, *, checked_only: bool = True) -> list[dict[str,
     return [_source_row(row) for row in rows]
 
 
-def has_catalog_sources(vault: Path) -> bool:
-    if not db_path(vault).is_file():
-        return False
-    with connect(vault) as conn:
-        row = conn.execute("SELECT COUNT(*) AS count FROM catalog_sources").fetchone()
-    return bool(row and row["count"])
-
-
 def start_enrichment_run(
     vault: Path,
     *,

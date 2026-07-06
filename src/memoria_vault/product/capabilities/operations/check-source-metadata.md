@@ -10,9 +10,6 @@ allowed_paths:
 - inbox/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: check-source-metadata.v1
 io_schema:
   input: checked_catalog_works

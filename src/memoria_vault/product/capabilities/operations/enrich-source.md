@@ -17,9 +17,6 @@ allowed_network:
 - https://api.openalex.org/
 - https://api.unpaywall.org/
 - https://api.semanticscholar.org/
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: enrich-source.v1
 io_schema:
   input: staged_source_id

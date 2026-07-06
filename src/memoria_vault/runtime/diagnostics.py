@@ -50,15 +50,11 @@ def diagnostics_dir() -> Path:
     return base / "memoria" / "diagnostics"
 
 
-def _is_relative_to(path: Path, parent: Path) -> bool:
-    return path.resolve().is_relative_to(parent.resolve())
-
-
 def assert_outside_vault(path: Path, vault_path: Path | None) -> None:
-    if vault_path and _is_relative_to(path, vault_path):
+    if vault_path and path.resolve().is_relative_to(vault_path.resolve()):
         raise ValueError(f"diagnostic path must be outside the vault: {path}")
     cwd = Path.cwd().resolve()
-    if (cwd / ".git").exists() and _is_relative_to(path, cwd):
+    if (cwd / ".git").exists() and path.resolve().is_relative_to(cwd):
         raise ValueError(f"diagnostic path must be outside the current Git worktree: {path}")
 
 

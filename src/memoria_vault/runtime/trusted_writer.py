@@ -12,6 +12,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import yaml
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
@@ -494,11 +496,6 @@ def rebuild_trace_state(vault: Path) -> dict[str, dict[str, Any]]:
 
 
 def _load_contract(vault: Path, schemas_dir: Path | None) -> dict[str, Any]:
-    try:
-        import yaml
-    except ImportError as exc:  # pragma: no cover - packaged deployments install PyYAML.
-        raise RuntimeError("trusted writer requires PyYAML to load schemas") from exc
-
     root = Path(schemas_dir) if schemas_dir else vault / ".memoria/schemas"
     folders = yaml.safe_load((root / "folders.yaml").read_text(encoding="utf-8")) or {}
     types: dict[str, dict[str, Any]] = {}

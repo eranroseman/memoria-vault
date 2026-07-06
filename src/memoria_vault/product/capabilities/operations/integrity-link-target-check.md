@@ -13,9 +13,6 @@ allowed_paths:
 - projects/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: integrity-link-target-check.v1
 io_schema:
   input: checked_notes

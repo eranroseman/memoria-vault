@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 
 from memoria_vault.runtime.subsystems.lib import loudness as loudness_routing
+from memoria_vault.runtime.vaultio import frontmatter_doc
 
 PROPOSAL_TYPES = {"candidate", "gap"}
 VERIFICATION_TYPES = {"flag", "alert"}
@@ -24,10 +25,6 @@ LOUDNESS = ("quiet", "notice", "alert", "block")
 def _slug(text: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return s[:60] or "card"
-
-
-def _yaml_str(value: str) -> str:
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def write_proposal(
@@ -52,28 +49,27 @@ def write_proposal(
     if loudness not in LOUDNESS:
         raise ValueError(f"loudness must be one of {LOUDNESS}")
     today = datetime.date.today().isoformat()
-    lines = [
-        "---",
-        f"title: {_yaml_str(title)}",
-        "projection: attention",
-        f"attention_kind: {card_type}",
-        "attention_status: open",
-        f"action: {_yaml_str(action)}",
-        f"argument_for: {_yaml_str(argument_for)}",
-        f"argument_against: {_yaml_str(argument_against)}",
-        f"what_tipped_it: {_yaml_str(what_tipped_it)}",
-        f"certainty: {certainty}",
-    ]
+    frontmatter = {
+        "title": title,
+        "projection": "attention",
+        "attention_kind": card_type,
+        "attention_status": "open",
+        "action": action,
+        "argument_for": argument_for,
+        "argument_against": argument_against,
+        "what_tipped_it": what_tipped_it,
+        "certainty": certainty,
+    }
     if citekey:
-        lines.append(f"citekey: {_yaml_str(citekey)}")
+        frontmatter["citekey"] = citekey
     if url:
-        lines.append(f"url: {_yaml_str(url)}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
+        frontmatter["url"] = url
+    frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
     body = (
         f"# Action\n\n{action}\n\n# For\n\n{argument_for}\n\n"
         f"# Against\n\n{argument_against}\n\n# What tipped it\n\n{what_tipped_it}\n"
     )
-    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
+    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
 
 
 def write_finding(
@@ -98,24 +94,23 @@ def write_finding(
     if card_type == "flag" and not (target or citekey):
         raise ValueError("a flag must point at a target or citekey")
     today = datetime.date.today().isoformat()
-    lines = [
-        "---",
-        f"title: {_yaml_str(title)}",
-        "projection: attention",
-        f"attention_kind: {card_type}",
-        "attention_status: open",
-        f"finding: {_yaml_str(finding)}",
-        f"agent_recommendation: {agent_recommendation}",
-    ]
+    frontmatter = {
+        "title": title,
+        "projection": "attention",
+        "attention_kind": card_type,
+        "attention_status": "open",
+        "finding": finding,
+        "agent_recommendation": agent_recommendation,
+    }
     if target:
-        lines.append(f"target: {_yaml_str(target)}")
+        frontmatter["target"] = target
     if citekey:
-        lines.append(f"citekey: {_yaml_str(citekey)}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
+        frontmatter["citekey"] = citekey
+    frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
     body = f"# Finding\n\n{finding}\n"
     if evidence:
         body += f"\n# Evidence\n\n{evidence}\n"
-    return _write(vault, card_type, title, "\n".join(lines) + "\n" + body, loudness=loudness)
+    return _write(vault, card_type, title, frontmatter_doc(frontmatter, body), loudness=loudness)
 
 
 def write_work_prompt(
@@ -141,29 +136,28 @@ def write_work_prompt(
     if not (target or request_id):
         raise ValueError("a work-prompt must point at a target or request_id")
     today = datetime.date.today().isoformat()
-    lines = [
-        "---",
-        f"title: {_yaml_str(title)}",
-        "projection: attention",
-        "attention_kind: work-prompt",
-        "attention_status: open",
-        f"action: {_yaml_str(action)}",
-        f"what_happened: {_yaml_str(what_happened)}",
-    ]
+    frontmatter = {
+        "title": title,
+        "projection": "attention",
+        "attention_kind": "work-prompt",
+        "attention_status": "open",
+        "action": action,
+        "what_happened": what_happened,
+    }
     if target:
-        lines.append(f"target: {_yaml_str(target)}")
+        frontmatter["target"] = target
     if request_id:
-        lines.append(f"request_id: {_yaml_str(request_id)}")
+        frontmatter["request_id"] = request_id
     if posture:
-        lines.append(f"posture: {_yaml_str(posture)}")
+        frontmatter["posture"] = posture
     if prompt_kind:
-        lines.append(f"prompt_kind: {prompt_kind}")
-    lines += [f"raised_by: {raised_by}", f"loudness: {loudness}", f"created: {today}", "---", ""]
+        frontmatter["prompt_kind"] = prompt_kind
+    frontmatter.update({"raised_by": raised_by, "loudness": loudness, "created": today})
     body = f"# Action\n\n{action}\n\n# What happened\n\n{what_happened}\n"
     where = " · ".join(filter(None, (target, request_id and f"request `{request_id}`")))
     if where:
         body += f"\n# Where to look\n\n{where}\n"
-    content = "\n".join(lines) + "\n" + body
+    content = frontmatter_doc(frontmatter, body)
     if dedupe_slug:
         inbox = vault / "inbox"
         inbox.mkdir(parents=True, exist_ok=True)

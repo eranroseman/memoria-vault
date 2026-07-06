@@ -13,19 +13,12 @@ EVIDENCE_STATES = frozenset({"complete", "evidence-incomplete"})
 _EV_ID_RE = re.compile(r"^ev-[0-9a-f]{8}$")
 _EV_MARKER_RE = re.compile(r"%%ev:\s*(?P<body>.*?)%%")
 _SOURCE_SPAN_RE = re.compile(r"^(?P<work_id>[A-Za-z0-9][A-Za-z0-9._-]*)#\^p(?P<page>\d{4,})$")
-_BLOCK_REF_RE = re.compile(r"^(?P<path>[^#\n\r]+)#\^blk-(?P<block_id>[A-Za-z0-9][A-Za-z0-9_-]*)$")
 
 
 @dataclass(frozen=True)
 class SourceSpanRef:
     work_id: str
     page: str
-
-
-@dataclass(frozen=True)
-class BlockRef:
-    path: str
-    block_id: str
 
 
 @dataclass(frozen=True)
@@ -43,18 +36,6 @@ def parse_source_span_ref(ref: str) -> SourceSpanRef:
     if not match:
         raise ValueError(f"invalid source-span ref: {ref!r}")
     return SourceSpanRef(match.group("work_id"), f"p{match.group('page')}")
-
-
-def parse_block_ref(ref: str) -> BlockRef:
-    value = ref.strip()
-    match = _BLOCK_REF_RE.fullmatch(value)
-    if not match:
-        raise ValueError(f"invalid block ref: {ref!r}")
-    path = match.group("path").replace("\\", "/").strip()
-    parts = [part for part in path.split("/") if part and part != "."]
-    if not path or path.startswith("/") or ".." in parts:
-        raise ValueError(f"invalid block ref path: {ref!r}")
-    return BlockRef(path, match.group("block_id"))
 
 
 def evidence_ref_kind(ref: str) -> str:

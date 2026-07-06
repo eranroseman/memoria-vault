@@ -18,7 +18,6 @@ from memoria_vault.runtime.policy import (
     path_matches,
     sha256_file,
 )
-from memoria_vault.runtime.policy.workspace import yaml
 
 
 def test_runtime_policy_core():
@@ -353,7 +352,7 @@ def test_runtime_policy_core():
             vault = Path(td)
             config = vault / POLICY_CONFIG_RELPATH
             config.parent.mkdir(parents=True)
-            # Write a minimal actor policy so load_actor_policy is exercised when PyYAML is present.
+            # Write a minimal actor policy so load_actor_policy is exercised.
             config.write_text(
                 "version: 1\n"
                 "actors:\n"
@@ -367,57 +366,54 @@ def test_runtime_policy_core():
                 encoding="utf-8",
             )
             engine = PolicyEngine(vault)
-            if yaml is not None:
-                resp = engine.check(
-                    "operation", "write", "40-workbench/x/06-code/main.py", "REQ-1", "impl"
-                )
-                check("engine allow includes before_hash", resp.get("before_hash") == EMPTY_SHA256)
-                check("engine logged the allow to audit.jsonl", (vault / AUDIT_RELPATH).is_file())
-                deny = engine.check("operation", "write", "30-synthesis/01-claims/c.md", "REQ-1")
-                check("engine deny on policy-denied path", deny["decision"] == "deny")
-                lines = (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
-                check("audit has one line per decision", len(lines) == 2)
-                check("audit lines are valid JSON", all(json.loads(ln) for ln in lines))
-                first = json.loads(lines[0])
-                check(
-                    "audit stamps review-mode study arm",
-                    first["schema_version"] == 2 and first["review_mode"] == "blocking",
-                )
-                # B5d: complete_write validates the caller's before_hash against the
-                # pre-decision audit record — a different hash is logged, not trusted.
-                done = engine.complete_write(
-                    "operation",
-                    "write",
-                    "40-workbench/x/06-code/main.py",
-                    "REQ-1",
-                    "sha256:" + "f" * 64,
-                )
-                last = json.loads(
-                    (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
-                )
-                check(
-                    "complete_write flags a before_hash mismatch",
-                    done["ok"]
-                    and last["decision"] == "write_complete"
-                    and last.get("hash_mismatch") is True
-                    and last.get("expected_before_hash") == EMPTY_SHA256,
-                )
-                done2 = engine.complete_write(
-                    "operation",
-                    "write",
-                    "40-workbench/x/06-code/main.py",
-                    "REQ-1",
-                    EMPTY_SHA256,
-                )
-                last2 = json.loads(
-                    (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
-                )
-                check(
-                    "complete_write with the matching before_hash is clean",
-                    done2["ok"] and "hash_mismatch" not in last2,
-                )
-            else:
-                print("  SKIP  engine YAML-load checks (PyYAML not installed)")
+            resp = engine.check(
+                "operation", "write", "40-workbench/x/06-code/main.py", "REQ-1", "impl"
+            )
+            check("engine allow includes before_hash", resp.get("before_hash") == EMPTY_SHA256)
+            check("engine logged the allow to audit.jsonl", (vault / AUDIT_RELPATH).is_file())
+            deny = engine.check("operation", "write", "30-synthesis/01-claims/c.md", "REQ-1")
+            check("engine deny on policy-denied path", deny["decision"] == "deny")
+            lines = (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()
+            check("audit has one line per decision", len(lines) == 2)
+            check("audit lines are valid JSON", all(json.loads(ln) for ln in lines))
+            first = json.loads(lines[0])
+            check(
+                "audit stamps review-mode study arm",
+                first["schema_version"] == 2 and first["review_mode"] == "blocking",
+            )
+            # B5d: complete_write validates the caller's before_hash against the
+            # pre-decision audit record — a different hash is logged, not trusted.
+            done = engine.complete_write(
+                "operation",
+                "write",
+                "40-workbench/x/06-code/main.py",
+                "REQ-1",
+                "sha256:" + "f" * 64,
+            )
+            last = json.loads(
+                (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
+            )
+            check(
+                "complete_write flags a before_hash mismatch",
+                done["ok"]
+                and last["decision"] == "write_complete"
+                and last.get("hash_mismatch") is True
+                and last.get("expected_before_hash") == EMPTY_SHA256,
+            )
+            done2 = engine.complete_write(
+                "operation",
+                "write",
+                "40-workbench/x/06-code/main.py",
+                "REQ-1",
+                EMPTY_SHA256,
+            )
+            last2 = json.loads(
+                (vault / AUDIT_RELPATH).read_text(encoding="utf-8").strip().splitlines()[-1]
+            )
+            check(
+                "complete_write with the matching before_hash is clean",
+                done2["ok"] and "hash_mismatch" not in last2,
+            )
             # request_id is mandatory
             no_request = engine.check("operation", "write", "40-workbench/x/06-code/m.py", "")
             check("missing request_id -> deny", no_request["decision"] == "deny")
@@ -427,8 +423,6 @@ def test_runtime_policy_core():
 
 def test_template_no_longer_ships_adapter_policy_config():
     """The standalone template ships no adapter policy config."""
-    if yaml is None:
-        pytest.skip("PyYAML not installed")
     src = Path(__file__).resolve().parent.parent / "vault-template"
     assert not (src / POLICY_CONFIG_RELPATH).exists()
     with pytest.raises(FileNotFoundError):

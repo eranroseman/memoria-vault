@@ -16,8 +16,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 ROOT = Path(__file__).resolve().parents[2]
 for path in (ROOT / "src", ROOT):
     if str(path) not in sys.path:
@@ -84,11 +82,6 @@ def populate_vault(root: Path, vault: Path) -> None:
     folders = schema.load_folders(root / "vault-template/.memoria/schemas")
     for folder in folders["skeleton"]:
         (vault / folder).mkdir(parents=True, exist_ok=True)
-
-
-def write_frontmatter(path: Path, fm: dict[str, Any], body: str) -> None:
-    rendered = yaml.safe_dump(fm, sort_keys=False, allow_unicode=True, default_flow_style=False)
-    path.write_text(f"---\n{rendered}---\n\n{body.lstrip()}", encoding="utf-8")
 
 
 def validate_typed_note(vault: Path, rel: str) -> None:

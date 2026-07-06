@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from memoria_vault.runtime.subsystems.lib import inbox
+from memoria_vault.runtime.vaultio import frontmatter_doc
 
 DECISIONS = ("proposed", "include", "exclude", "maybe", "archived")
 
@@ -27,10 +28,6 @@ DECISIONS = ("proposed", "include", "exclude", "maybe", "archived")
 def _slug(text: str) -> str:
     s = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return s[:60] or "worklist"
-
-
-def _yaml_str(value: str) -> str:
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def _item_ref(item: dict[str, Any], index: int) -> str:
@@ -93,24 +90,23 @@ def emit_worklist(
         item_source = str(row.get("source_report") or source_report).strip()
         item_slug = _slug(f"{rank:03d}-{item_title}")
         path = worklist_dir / f"{item_slug}.md"
-        lines = [
-            "---",
-            f"title: {_yaml_str(item_title)}",
-            "projection: worklist-item",
-            "attention_status: open",
-            f"decision: {decision}",
-            f"worklist: {_yaml_str(slug)}",
-            f"item_ref: {_yaml_str(ref)}",
-        ]
+        frontmatter = {
+            "title": item_title,
+            "projection": "worklist-item",
+            "attention_status": "open",
+            "decision": decision,
+            "worklist": slug,
+            "item_ref": ref,
+        }
         if item_source:
-            lines.append(f"source_report: {_yaml_str(item_source)}")
+            frontmatter["source_report"] = item_source
         if group:
-            lines.append(f"group: {_yaml_str(group)}")
-        lines += [f"rank: {rank}", f"created: {today}", "---", ""]
+            frontmatter["group"] = group
+        frontmatter.update({"rank": rank, "created": today})
         body = [f"# {item_title}", "", f"Reference: `{ref}`", ""]
         if reason:
             body += ["# Reason", "", reason, ""]
-        path.write_text("\n".join(lines + body), encoding="utf-8")
+        path.write_text(frontmatter_doc(frontmatter, "\n".join(body)), encoding="utf-8")
         item_paths.append(path)
 
     target = f"system/worklists/worklists.base#By worklist · system/worklists/{slug}/"

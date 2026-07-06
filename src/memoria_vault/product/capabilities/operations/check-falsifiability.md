@@ -13,9 +13,6 @@ allowed_paths:
 - hubs/
 - projects/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: check-falsifiability.v1
 untrusted_fields:
 - input

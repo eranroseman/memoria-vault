@@ -9,9 +9,6 @@ allowed_paths:
 - catalog/
 - journal/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: integrity-prompt-injection-check.v1
 io_schema:
   input: checked_works

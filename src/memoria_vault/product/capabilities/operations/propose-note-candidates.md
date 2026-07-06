@@ -10,9 +10,6 @@ allowed_paths:
 - works/
 - notes/
 allowed_network: []
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: propose-note-candidates.v1
 untrusted_fields:
 - input

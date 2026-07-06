@@ -60,11 +60,6 @@ def load_folders(schemas_dir: Path | None = None) -> dict:
     return yaml.safe_load(f.read_text(encoding="utf-8"))
 
 
-def load_calibration(schemas_dir: Path | None = None) -> dict:
-    f = _schemas_dir(schemas_dir) / "calibration.yaml"
-    return yaml.safe_load(f.read_text(encoding="utf-8"))
-
-
 def load_vocabulary(
     vocabulary_path: Path | None = None, schemas_dir: Path | None = None
 ) -> dict[str, set[str]]:
@@ -117,10 +112,6 @@ def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
 
 def bundle_roots(folders: dict) -> tuple[str, ...]:
     return tuple(folders.get("bundle_roots") or folders.get("categories") or ())
-
-
-def lifecycle_for(schema: dict) -> list[str]:
-    return list(schema.get("enums", {}).get("lifecycle", []))
 
 
 def check_status_for(schema: dict) -> list[str]:

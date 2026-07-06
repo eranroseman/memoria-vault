@@ -11,9 +11,6 @@ allowed_paths:
 allowed_network:
 - http://
 - https://
-runner:
-  test: {provider: local, model: deterministic-fixture, temperature: 0}
-  live: {provider: gateway, model: deterministic-fixture, temperature: 0}
 prompt_version: capture-url-source.v1
 io_schema:
   input: url
