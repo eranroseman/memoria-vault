@@ -26,6 +26,16 @@ CLI/engine. Optional adapters may present chat or board
 interfaces, but they must call the same engine and may not become the authority
 for capabilities, provider config, or write policy.
 
+## Documents in this section
+
+| Page | What it covers |
+| --- | --- |
+| [The Co-PI](co-pi.md) | The conversational, read-only posture behind `memoria ask` — questions, explains, and routes durable work to CLI/engine requests. |
+| [The Librarian](librarian.md) | The faithful intake-through-mapping posture — catalog, extract, link, and map operations that surface candidates and gaps. |
+| [The Writer](writer.md) | The generative, draft-only posture that turns checked evidence into structured prose proposals. |
+| [The Peer-reviewer](peer-reviewer.md) | The skeptical, independent verification posture that flags soundness issues without auto-fixing them. |
+| [The Engineer](engineer.md) | The handoff posture that scaffolds and records external coding work without granting Memoria code-execution authority. |
+
 ## Delegation posture
 
 Delegation is request based in alpha.15. A request can narrow scope through input

@@ -24,7 +24,7 @@ These are different artifacts written by different components with different lif
 
 | Log | Path | Writer | Lifecycle |
 | --- | --- | --- | --- |
-| **Policy gate audit log** | `system/logs/audit.jsonl` | Policy gate | Append-only **forever** — never rotated ([ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
+| **Policy gate audit log** | `system/logs/audit.jsonl` | Policy gate | Append-only **forever** — never rotated ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)); growth is surfaced by the Linter's `audit-log-size` advisory (50 MB) |
 | **Per-request summaries** | `system/logs/sessions/YYYY-MM-DD-HHMM.jsonl` | Linter (`runtime/subsystems/integrity/linter/session_summary.py`, scheduled integrity run) | One file per request; never rotated; accumulate indefinitely |
 
 The audit log is what the audit-log
@@ -42,7 +42,7 @@ quiet for 24 h, so in-flight requests are never summarized early.
 
 The audit log answers "did this write happen and was it authorized?" — it is
 forensic and append-only. Because each write is hash-paired (the mechanism is
-owned by [Policy gate](../../reference/policy-mcp.md)), a write can be reversed
+owned by [Policy audit log](../../reference/policy-audit-log.md)), a write can be reversed
 and an edit made outside the trail is detectable; the Linter closes the loop over
 this log with its `audit-unpaired-writes` and `vault-hash-drift` detectors (a
 legitimate human edit in an optional editor can surface on the latter too, by
@@ -53,7 +53,7 @@ Combining them would make the audit log verbose (request detail) and would make
 request summaries harder to query (mixed with per-write events). Each log has a
 different reader: the audit log feeds dashboards and tamper detection; request
 summaries are for the PI reviewing what happened. The decision is
-[ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+[quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 ---
 

@@ -74,6 +74,6 @@ not overwrite curated hub judgment.
 
 ## Related
 
-- The note links that fill it: [Link checked notes](../knowledge/link-related-claims.md)
+- The note links that fill it: [Link checked notes](../knowledge/link-checked-notes.md)
 - The hub type and schema: [Document types](../../reference/document-types.md)
 - Why hubs matter to the cycle: [The knowledge cycle](../../explanation/knowledge/knowledge-cycle.md)

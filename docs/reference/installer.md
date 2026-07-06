@@ -2,6 +2,7 @@
 title: Installer (bootstrap)
 parent: System and infrastructure
 grand_parent: Reference
+nav_order: 5
 ---
 
 # Installer (bootstrap)

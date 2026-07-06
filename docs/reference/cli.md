@@ -2,6 +2,7 @@
 title: CLI
 parent: Agents and control
 grand_parent: Reference
+nav_order: 3
 ---
 
 # CLI

@@ -15,7 +15,7 @@ Its posture is **faithful**: include generously, report state accurately, and le
 
 A research librarian does both intake and literature search, so corpus work
 (scope reports, gap analysis, cluster maps) belongs with the same faithful
-posture ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Alpha.15
+posture ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Alpha.15
 implements that posture through checked operation manifests and request rows, not
 installed profile packages.
 
@@ -34,9 +34,9 @@ owns the concrete command and manifest surface.
 | **link** | note-link candidates with evidence and stance reasoning | link proposal |
 | **map** | corpus maps, coverage reports, cluster maps, graph/canvas proposals, gap analysis | `gap` |
 
-The operations are individually triggered, not a pipeline. A human gate, often a
-long gap, sits between each. Gaps found by mapping raise attention that can lead
-to new catalog work: the loop that compounds.
+Like all delegable tasks, these operations are individually triggered, not a
+pipeline — see [The knowledge cycle](../knowledge/knowledge-cycle.md) for the
+human gates between them and the loop that compounds.
 
 ## What the Librarian is not
 

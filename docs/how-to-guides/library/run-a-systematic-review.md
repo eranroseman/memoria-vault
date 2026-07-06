@@ -85,4 +85,4 @@ record the protocol outcome, and resolve the resulting attention item.
 ## Related
 
 - The intake path per paper: [Capture and ingest a source](capture-and-ingest.md)
-- The adopt-on-demand decision: [ADR-16](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- The decision: [adopt-on-demand systematic-review tooling](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)

@@ -2,6 +2,7 @@
 title: Vocabulary
 parent: Vault data model
 grand_parent: Reference
+nav_order: 4
 ---
 
 # Vocabulary

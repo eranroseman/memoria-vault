@@ -2,6 +2,7 @@
 title: Bibliography
 parent: System and infrastructure
 grand_parent: Reference
+nav_order: 8
 ---
 
 # Bibliography
@@ -47,6 +48,9 @@ Weco AI. 2026. AIDE: AI-Driven Exploration in the Space of Code (aideml). Softwa
 
 <a id="idea2paper"></a>
 AgentAlphaAGI. 2026. Idea2Paper. Software. Retrieved from https://github.com/AgentAlphaAGI/Idea2Paper
+
+<a id="xu2026idea2story"></a>
+Tengyue Xu, Zhuoyang Qian, Gaoge Liu, Li Ling, Zhentao Zhang, Biao Wu, Shuo Zhang, et al. 2026. Idea2Story: An Automated Pipeline for Transforming Research Concepts into Complete Scientific Narratives. arXiv:2601.20833. Retrieved from https://arxiv.org/abs/2601.20833
 
 <a id="feng2026visionary"></a>
 Yebo Feng and Yang Liu. 2026. A Visionary Look at Vibe Researching. arXiv:2604.00945. Retrieved from https://arxiv.org/abs/2604.00945

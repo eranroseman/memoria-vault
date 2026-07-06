@@ -9,7 +9,7 @@ nav_order: 21
 
 The vault organizes notes by type and carries topic in links and frontmatter, not folders ([Lifecycle, not topic — and state, not folders](lifecycle-over-topic.md)). That keeps claims reusable across topics and avoids file moves during reorganization. It also removes one useful folder affordance: a place to *go* for a subject. A **hub** restores that place as a first-class note.
 
-> **Lineage.** The hub is Memoria's name for the **Map of Content** from the evergreen-notes tradition, itself descended from Luhmann's structure notes ([Intellectual foundations](intellectual-foundations.md#luhmanns-zettelkasten)). As elsewhere in the knowledge model, the method is borrowed; what Memoria adds is the *delegation boundary* — which parts of maintaining a Map of Content an agent may help with, and which it may not.
+> **Lineage.** The hub is Memoria's name for the **Map of Content** from the [evergreen-notes tradition](../reference/bibliography.md#matuschak-evergreen), itself descended from Luhmann's structure notes ([Intellectual foundations](intellectual-foundations.md#luhmanns-zettelkasten)). As elsewhere in the knowledge model, the method is borrowed; what Memoria adds is the *delegation boundary* — which parts of maintaining a Map of Content an agent may help with, and which it may not.
 
 ---
 

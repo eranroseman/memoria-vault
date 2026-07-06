@@ -28,4 +28,4 @@ make Obsidian a required product surface.
 
 - On-disk layout: [On-disk layout](../../reference/on-disk-layout.md)
 - CLI reference: [Memoria CLI](../../reference/cli.md)
-- Current welcome-note decision: [ADR-130](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- Current welcome-note decision: [thin read-API surfaces over one engine, PI direct access preserved](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)

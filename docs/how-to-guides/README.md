@@ -36,12 +36,11 @@ surface, scheduler, model runner, operation API, or write-policy boundary.
 | Section | Use it for |
 | --- | --- |
 | [Setup]({{ site.baseurl }}/how-to-guides/setup/) | One-time machine, workspace, optional app adapter, Zotero export, and second-workspace setup |
-| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Optional plain-editor guidance and adapter boundary notes |
-| [Using Hermes Agent]({{ site.baseurl }}/how-to-guides/hermes-agent/) | Optional external adapter boundary notes |
 | [Inbox]({{ site.baseurl }}/how-to-guides/inbox/) | Triage, action queue, weekly review, and returning to work |
 | [Library]({{ site.baseurl }}/how-to-guides/library/) | Finding, capturing, ingesting, reading, classifying, and archiving sources |
 | [Knowledge]({{ site.baseurl }}/how-to-guides/knowledge/) | Writing, linking, promoting, refactoring, querying, and pattern-running over knowledge notes |
 | [Project]({{ site.baseurl }}/how-to-guides/project/) | Scoping, framing, drafting, verifying, and exporting |
+| [Using Obsidian]({{ site.baseurl }}/how-to-guides/using-obsidian/) | Optional plain-editor guidance and adapter boundary notes |
 | [Operate]({{ site.baseurl }}/how-to-guides/operate/) | Terminal-side upkeep: linter, sweeps, search, eval, and logs |
 | [Troubleshooting]({{ site.baseurl }}/how-to-guides/troubleshooting/) | Detect-fix-verify recipes for operational failures |
 

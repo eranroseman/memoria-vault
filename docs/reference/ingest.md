@@ -2,6 +2,7 @@
 title: Ingest routing
 parent: Pipelines and I/O
 grand_parent: Reference
+nav_order: 1
 ---
 
 # Ingest routing
@@ -89,7 +90,7 @@ input rebuild.
 ## Related
 
 - Catalog source record fields: [Frontmatter fields](frontmatter.md)
-- DOI enrichment gate decision: [ADR-123](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- DOI enrichment gate decision: [DOI catalog enrichment gates checked source promotion](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - Folder homes and skeleton: [Memoria configuration](configuration.md)
 - Checked-only retrieval: [Search](search.md)
 - Trusted writer and journal behavior: [System actions](system-actions.md)

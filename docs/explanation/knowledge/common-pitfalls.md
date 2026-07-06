@@ -83,6 +83,6 @@ For the explicit mapping of current operation surfaces, see
 ## Related
 
 - Why promotion is gated: [Why promotion is gated](promotion-and-gated-zones.md)
-- The repair surface for overloaded note graphs: [Link checked notes](../../how-to-guides/knowledge/link-related-claims.md)
+- The repair surface for overloaded note graphs: [Link checked notes](../../how-to-guides/knowledge/link-checked-notes.md)
 - Catching unverified agent output: [Run a retraction sweep](../../how-to-guides/operate/run-a-retraction-sweep.md)
 - Current operation surfaces: [Operations](../../reference/operations.md)

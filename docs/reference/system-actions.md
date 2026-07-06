@@ -2,6 +2,7 @@
 title: System actions
 parent: Agents and control
 grand_parent: Reference
+nav_order: 1
 ---
 
 # System actions
@@ -93,7 +94,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | --- | --- | --- |
 | Run detectors | Linter (`detectors.py`, manual or scheduled run) | Runs all registered structural detectors over the vault; findings surface on the drift dashboards. |
 | Pre-commit hook | Linter (`precommit_check.py`, git hook) | Schema-validates staged notes and blocks the commit on a violation — the one check that prevents rather than reports. |
-| Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
+| Session digests | Linter (`session_summary.py`, manual or scheduled run) | Writes one deterministic per-session digest file under `system/logs/sessions/` from the audit log ([the quarantine-and-verify with durable, audit-logged crash recovery decision](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | Hub proposal handoff | Linter (`hub_handoff.py`, PI-run) | Converts current `hub-threshold` findings into idempotent local handoff payloads for map work; `knowledge/hubs/` stays PI-curated. |
 
 ### Sweeps (`memoria_vault.runtime.subsystems`)

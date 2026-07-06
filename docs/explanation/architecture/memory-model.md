@@ -24,7 +24,7 @@ They're grouped below by how much **you** touch them — the ones you steer and 
 `screening-protocol` review mode), **project memory** (one sub-project's
 cross-operation working state — open questions, decisions, framing), and
 **audit memory** (the tamper-evident record of every gated write, append-only
-forever per [ADR-127](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+forever per [quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ## The ones the runtime manages
 
@@ -64,7 +64,7 @@ This is thin-control-over-thick-state applied to memory. Optional adapter memory
 stays thin: working memory, chat notes, and searchable history. Durable state
 lives in checked workspace files plus request/journal rows.
 
-The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+The split also keeps three vault memories apart: program steering, project working state, and the immutable audit record. Collapsing them hid different scopes and lifespans ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 
 ---
 

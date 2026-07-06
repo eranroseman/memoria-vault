@@ -53,4 +53,4 @@ resolved temporal replacement.
 
 - Exact shipped surfaces: [Dashboards](../../reference/dashboards.md)
 - Discussing a source: [Discuss a paper](../../how-to-guides/library/discuss-a-paper.md)
-- Linking claim tensions: [Link related claims](../../how-to-guides/knowledge/link-related-claims.md)
+- Linking claim tensions: [Link related claims](../../how-to-guides/knowledge/link-checked-notes.md)

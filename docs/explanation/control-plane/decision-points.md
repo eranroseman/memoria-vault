@@ -54,5 +54,5 @@ whether to revise.
 
 - Promotion boundary: [Promotion and the write boundary](../knowledge/promotion-and-gated-zones.md)
 - Prompt shape: [The honesty prompt](honesty-card.md)
-- Batch-worklist decision: [ADR-128](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- Batch-worklist decision: [Checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 - How project analysis is queued: [Analyze a project argument](../../how-to-guides/project/analyze-a-project-argument.md)

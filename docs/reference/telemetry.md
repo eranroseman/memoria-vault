@@ -2,6 +2,7 @@
 title: Telemetry & logs
 parent: Pipelines and I/O
 grand_parent: Reference
+nav_order: 6
 ---
 
 # Telemetry & logs
@@ -9,9 +10,9 @@ grand_parent: Reference
 Every signal Memoria records about its own operation, with log inventory and
 shared conventions. Audit and analytics logs live under `system/logs/`; the
 diagnostic plane lives outside the workspace under the OS state directory.
-Rationale: [ADR-20](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
-[ADR-62](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
-[ADR-105](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+Rationale: [the vault-eval-benchmark-first publication path](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md),
+[measurement and verification harnesses](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and
+[the content-light diagnostic plane](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 ## Conventions
 

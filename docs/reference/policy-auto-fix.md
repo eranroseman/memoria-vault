@@ -2,6 +2,7 @@
 title: Policy auto-fix
 parent: Agents and control
 grand_parent: Reference
+nav_order: 10
 ---
 
 # Policy auto-fix

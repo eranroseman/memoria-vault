@@ -2,6 +2,7 @@
 title: Diagnostics
 parent: Pipelines and I/O
 grand_parent: Reference
+nav_order: 8
 ---
 
 # Diagnostics

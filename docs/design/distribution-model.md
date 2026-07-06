@@ -8,7 +8,7 @@ nav_order: 24
 # Distribution model
 
 Memoria ships from the `memoria-vault` repo as a workspace template plus an
-installable Python package ([ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
+installable Python package ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)).
 You clone it, or run the one-line bootstrap that clones it for you, and the
 bootstrap installer at the repo root deploys the standalone workspace.
 
@@ -85,6 +85,6 @@ the write path.
 ## Related
 
 - The installer's design: [Bootstrap installer](bootstrap-installer.md)
-- The decisions: [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), [ADR-125](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
+- The decision: [standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (consolidates the former src-scaffold and repo-as-install-unit decisions)
 - Capability reference: [Operations](../reference/operations.md)
 - On-disk layout reference: [On-disk layout](../reference/on-disk-layout.md)

@@ -43,7 +43,7 @@ Day to day, that work happens at three spaces: you bring sources into the **Libr
 
 ## What Memoria is not
 
-**Not an autonomous research scientist.** Contemporary AI research systems (AI Scientist, AI co-scientist, CORAL) run experiments end-to-end, generate papers without review, and promote outputs to canonical based on scalar metrics. Memoria declines this posture for knowledge work — synthesis quality is not scalar, and synthesis errors compound across everything that later cites them.
+**Not an autonomous research scientist.** Contemporary AI research systems (AI Scientist, AI co-scientist, [CORAL](../reference/bibliography.md#qu2026coral)) run experiments end-to-end, generate papers without review, and promote outputs to canonical based on scalar metrics. Memoria declines this posture for knowledge work — synthesis quality is not scalar, and synthesis errors compound across everything that later cites them.
 
 **Not a general-purpose chat assistant.** Chat history is ephemeral. Conversations are inputs to filing, not the substrate of memory. If a useful answer lives only in a chat transcript, it hasn't been captured.
 

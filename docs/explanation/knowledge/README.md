@@ -17,7 +17,7 @@ to transient _work_: work lives as operation requests and attention, while
 knowledge lives in the vault and persists — a distinction the control-plane
 section develops in [Requests and notes are different things](../control-plane/states.md#requests-and-notes-are-different-things).
 
-> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern "evergreen notes" successors. Memoria's contribution is not the method but its _delegation_: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
+> **Lineage.** This section's core ideas — atomic notes, links over folders, maturing notes, and Maps of Content — descend directly from Luhmann's **Zettelkasten** method and its modern ["evergreen notes"](../../reference/bibliography.md#matuschak-evergreen) successors. Memoria's contribution is not the method but its _delegation_: agents do the Zettelkasten bookkeeping (linking, classifying, drift detection) the method demands while the human keeps the intellectual work. The full intellectual debt is traced in [Intellectual foundations](../../design/intellectual-foundations.md#luhmanns-zettelkasten); the pages below note where each specific idea is borrowed.
 
 ## Documents in this section
 

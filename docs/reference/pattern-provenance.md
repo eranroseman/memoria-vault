@@ -2,6 +2,7 @@
 title: Pattern provenance table
 parent: System and infrastructure
 grand_parent: Reference
+nav_order: 7
 ---
 
 # Pattern provenance table
@@ -14,10 +15,10 @@ used as framing, or rejected. The design argument is
 
 | Pattern | Representative sources | Memoria use |
 | --- | --- | --- |
-| Stage-gated pipeline | ResearchArena, MLR-Copilot, AutoResearchClaw | Library intake and Project output run as distinct stages with validated handoffs. |
+| Stage-gated pipeline | [ResearchArena](bibliography.md#kang2024researcharena), [MLR-Copilot](bibliography.md#li2025mlrcopilot), AutoResearchClaw | Library intake and Project output run as distinct stages with validated handoffs. |
 | Explicit roles per operation | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), [LatteReview](bibliography.md#rouzrokh2026lattereview), [Agent Laboratory](bibliography.md#schmidgall2025agentlaboratory) | Permission-scoped operation manifests and request rows. |
 | Strong schema at handoffs | AI Scientist, AutoResearchClaw | Typed frontmatter catches mismatches that free-text handoffs would compound. |
-| Persistent knowledge graph | [OmegaWiki](bibliography.md#qian2026omegawiki), Idea2Story | Wikilinks, typed relations, hubs, and entity notes. |
+| Persistent knowledge graph | [OmegaWiki](bibliography.md#qian2026omegawiki), [Idea2Story](bibliography.md#xu2026idea2story) | Wikilinks, typed relations, hubs, and entity notes. |
 | Reviewable organization artifacts | LitLLM, [LatteReview](bibliography.md#rouzrokh2026lattereview) | Canvases, hubs, and Bases views keep synthesis visible. |
 | Persistent work queue | Hermes Agent | Historical inspiration; alpha.15 uses operation requests in the workspace DB. |
 | Durable-state thesis | [Chen et al. 2026](bibliography.md#chen2026autonomous), [MetaGPT](bibliography.md#hong2024metagpt), [PARNESS](bibliography.md#wang2026parness) | Thin control over thick state. |
@@ -28,14 +29,14 @@ used as framing, or rejected. The design argument is
 
 | Mechanic kept | Source | Autonomy removed |
 | --- | --- | --- |
-| Discover/select/organize pipeline | ResearchArena | "Organize" becomes human distillation. |
+| Discover/select/organize pipeline | [ResearchArena](bibliography.md#kang2024researcharena) | "Organize" becomes human distillation. |
 | Modular planner/writer/code roles | [AI Scientist](bibliography.md#lu2024aiscientist), [AI Scientist v2](bibliography.md#yamada2025aiscientistv2) | Tree search over synthesis. |
 | Memory + meta-review | [AI co-scientist](bibliography.md#gottweis2025aicoscientist) | Tournament and evolution loop. |
 | Inspiration retrieval before drafting | [SciMON](bibliography.md#wang2024scimon) | Novelty optimizer. |
 | Hypothesis-feedback taxonomy | [MOOSE](bibliography.md#yang2026moose) | Autonomous judgment; used as a verification rubric. |
 | Chain-of-Evidence taxonomy | [ScientistOne](bibliography.md#meng2026scientistone) | Score-as-gate; reserved for Peer-reviewer claim trace. |
 | Scenario-typed retrieval | [PARNESS](bibliography.md#wang2026parness) | Extended relation vocabulary remains deferred. |
-| Per-paper structured representation | [Knows](bibliography.md#yu2026knows) | Automatic ingest population; `work_aspects` read-model rows are queryable. |
+| Per-paper structured representation | [MASSW](bibliography.md#zhang2024massw), [Knows](bibliography.md#yu2026knows) | Five-aspect schema (context/key-idea/method/outcome/projected-impact) drives automatic ingest population; `work_aspects` read-model rows are queryable. |
 | Consensus pre-filter, benchmarks, shared synthesis pool, trace capture, systematic review mode | [AI-Supervisor](bibliography.md#long2026aisupervisor), [CiteME](bibliography.md#press2024citeme), [AutoResearchBench](bibliography.md#xiong2026autoresearchbench), [AgentRxiv](bibliography.md#schmidgall2025agentrxiv), LatteReview, LitLLM | Scores can change what reaches the gate, never where the gate sits. |
 
 ## Reference
@@ -55,7 +56,7 @@ used as framing, or rejected. The design argument is
 | Refused pattern | Example sources | Reason |
 | --- | --- | --- |
 | Full autonomous scientist mode | [AI Scientist v2](bibliography.md#yamada2025aiscientistv2), Sibyl, AI-Researcher, Auto-Research | Runs end-to-end without Memoria's structural gate. |
-| Tree search over synthesis | AIDE ML, AI Scientist v2 | Requires a fixed scalar metric; synthesis quality is not scalar. |
+| Tree search over synthesis | [AIDE ML](bibliography.md#aideml), AI Scientist v2 | Requires a fixed scalar metric; synthesis quality is not scalar. |
 | Autonomous keep/revert | Karpathy Autoresearch | The three safe-loop preconditions fail for knowledge work. |
 | Co-trained generator + reviewer | [CycleResearcher](bibliography.md#weng2025cycleresearcher) | The reviewer's learned preferences become the objective. |
 | Tournament/evolution loop | [AI co-scientist](bibliography.md#gottweis2025aicoscientist) | Sound memory architecture, refused autonomy posture. |
