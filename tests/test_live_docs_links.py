@@ -22,6 +22,8 @@ def test_live_docs_checker_accepts_internal_fragments_and_local_github_links(tmp
 
     assert result.errors == []
     assert result.pages == 2
+    assert result.internal_link_refs_checked == 1
+    assert result.external_targets_checked == 1
 
 
 def test_live_docs_checker_reports_missing_fragment_and_local_github_target(tmp_path):
@@ -39,3 +41,5 @@ def test_live_docs_checker_reports_missing_fragment_and_local_github_target(tmp_
 
     assert any("missing fragment" in error for error in result.errors)
     assert any("GitHub blob target missing locally" in error for error in result.errors)
+    assert result.bad_internal_fragments == 1
+    assert result.broken_external_targets == 1
