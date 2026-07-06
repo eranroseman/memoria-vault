@@ -27,7 +27,7 @@ metadata, including records that carry ISBN metadata. Imports write unchecked
 Work rows and queue DOI enrichment when a DOI is present. They do not fetch from
 a reference-manager API, create source/entity Markdown, or update
 `bibliography.bib` at import time. There is no standalone `memoria work add
---isbn` route in alpha.16.
+--isbn` route.
 
 **3. Confirm the catalog row and blobs.**
 
@@ -50,7 +50,7 @@ when enrichment or projection refresh makes them current.
 
 ## Deferred UI
 
-Reference-manager adapters are not part of the standalone alpha.16 runtime.
+Reference-manager adapters are not part of the standalone runtime.
 
 ## Related
 

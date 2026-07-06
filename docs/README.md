@@ -17,8 +17,8 @@ If you want a guided first experience, start with the
 something, see [How-to guides](how-to-guides/). If you need exact values, field
 names, or configuration formats, see [Reference](reference/).
 
-**Status: v0.1 alpha source install** — alpha.16 is cutting over to the
-standalone CLI/engine; the full end-to-end release gate is still open. ·
+**Status: v0.1 alpha source install** — alpha.17 is the latest closed
+checkpoint; the formal package/tag release gate remains open. ·
 [GitHub](https://github.com/eranroseman/memoria-vault) ·
 [Install](https://github.com/eranroseman/memoria-vault#install) ·
 [Issues](https://github.com/eranroseman/memoria-vault/issues)
@@ -81,7 +81,7 @@ PI-directed and policy-gated.
 
 ## New here? Start with the current path
 
-Alpha.16 does not ship a tutorial arc. Start with
+The current alpha line does not ship a tutorial arc. Start with
 [Quickstart](how-to-guides/setup/quickstart.md), then use the current
 CLI, Library, Knowledge, and Project task guides below.
 
@@ -114,7 +114,7 @@ Design Book foundations, then the Explanation pages in this order.
 **Then learn it by doing**
 
 16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
-17. [Current task guides](how-to-guides/README.md) — work from the implemented alpha.16 surfaces
+17. [Current task guides](how-to-guides/README.md) — work from the implemented CLI surfaces
 
 ---
 
@@ -143,7 +143,7 @@ Design Book foundations, then the Explanation pages in this order.
 | ----------------- | ----------------------------------------------------------------------------- |
 | **Co-PI**         | The read-only conversational posture for questions, explanation, and request routing |
 | **Librarian**     | Intake, extraction, linking, and mapping operations from source capture to corpus maps |
-| **Writer**        | Draft-proposal posture for future prose generation over checked evidence |
+| **Writer**        | Draft-proposal posture for prose generation over checked evidence |
 | **Peer-reviewer** | Verification posture for citation, source, and claim-support checks |
 | **Engineer**      | Handoff posture for external coding work without making Memoria a code runner |
 
@@ -158,15 +158,15 @@ Deterministic **operations** do the mechanical work, behind the policy gate.
 Memoria is in the **v0.1 alpha source-install** phase: the installer and CLI
 engine are being validated as a standalone local product. What is not working today:
 
-- **Release-candidate validation is still pending** — the offline alpha.16
-  runtime gate now replays capture, enrich, digest, ask, export, recovery, and
+- **Release-candidate validation is still pending** — the offline runtime gate
+  replays capture, enrich, digest, ask, project writing/export, recovery, and
   seeded-error evidence (`scripts/verify pr`), but the RC still needs a live
   provider/package run before release.
 - **Mobile capture is not available** — only urgent push (via Telegram) ships today; inbound capture from a phone is planned ([#382](https://github.com/eranroseman/memoria-vault/issues/382)). See [Interaction channels](explanation/architecture/interaction-channels.md).
 - **No autonomous code-experiment loop** — provenance-tracked code experiments are future work.
-- **Broad writability scoring is not implemented** — alpha.16 has structural
-  project export readiness, but it does not decide whether developed claims are
-  ready to become prose.
+- **Broad writability scoring is not implemented** — alpha.17 has structural
+  draft verification and project export readiness, but it does not decide
+  whether developed claims are ready to become prose.
 - **Single-user only** — team and multi-user review are out of scope by design.
 - **macOS is not supported** — only Linux (including WSL2) and Windows are tested.
 - **Some integrations are planned, not shipped** — e.g. expanded reference-manager support.
@@ -177,7 +177,7 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 ## Browse the docs
 
-[**Tutorials**](tutorials/README.md) — No current alpha.16 tutorial arc; use Quickstart and current task guides.
+[**Tutorials**](tutorials/README.md) — No current tutorial arc; use Quickstart and current task guides.
 
 [**How-to guides**](how-to-guides/README.md) — Task recipes.
 

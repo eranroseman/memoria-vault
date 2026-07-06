@@ -57,7 +57,7 @@ with evidence-incomplete or review-required markers.
 Run from the vault root; keep project drafts under the project folder:
 
 ```bash
-pandoc projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/<draft>.md \
   --from markdown+smart \
   --to docx \
   --citeproc \
@@ -71,10 +71,10 @@ pandoc projects/<project>/drafts/<draft>.md \
 Requires a LaTeX operation (`pdflatex` or `lualatex` on your `PATH`):
 
 ```bash
-pandoc projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/<draft>.md \
   --from markdown+smart \
   --to pdf \
-  --pdf-operation=lualatex \
+  --pdf-engine=lualatex \
   --citeproc \
   --bibliography bibliography.bib \
   --csl .memoria/csl/apa.csl \
@@ -84,7 +84,7 @@ pandoc projects/<project>/drafts/<draft>.md \
 **5. Export a manuscript draft to clean Markdown** (conference systems, CMS upload):
 
 ```bash
-pandoc projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/<draft>.md \
   --from markdown+smart --to gfm --citeproc \
   --bibliography bibliography.bib \
   --output projects/<project>/exports/<output>.md
@@ -103,7 +103,7 @@ The routes above produce static citations. For live, restylable Zotero fields in
 **Do not add `--citeproc`** — `zotero.lua` handles citation conversion:
 
 ```bash
-pandoc projects/<project>/drafts/<draft>.md \
+pandoc projects/<project>/<draft>.md \
   --from markdown+smart --to docx \
   --lua-filter=/path/to/zotero.lua \
   --output projects/<project>/exports/<output>.docx

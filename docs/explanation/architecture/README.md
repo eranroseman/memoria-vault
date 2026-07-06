@@ -8,7 +8,7 @@ permalink: /explanation/architecture/
 
 # Architecture
 
-Memoria alpha.16 is a standalone CLI and engine over a local workspace. The
+Memoria is a standalone CLI and engine over a local workspace. The
 durable flow is: PI intent enters through CLI commands or file edits, operations
 run through the request lifecycle, checked outputs materialize into the
 workspace, and the vault keep-set remains readable without the runtime.
