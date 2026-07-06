@@ -32,7 +32,7 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 
 | Command | Purpose |
 | --- | --- |
-| `memoria work add` | Add a DOI, URL, PDF, file, or supplied text. |
+| `memoria work add` | Add a DOI, URL, PDF, or file; attach supplied text with `--text`. |
 | `memoria work import` | Import portable BibTeX or CSL JSON files. |
 | `memoria work enrich <work-id>` | Enrich a work from provider replay/payload inputs. |
 | `memoria work digest <work-id> [--mode test\|live]` | Compile a source digest with the selected manifest-pinned runner branch. |
