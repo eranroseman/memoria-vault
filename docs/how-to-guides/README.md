@@ -10,9 +10,9 @@ permalink: /how-to-guides/
 Task-oriented recipes for getting specific things done with Memoria. Each guide assumes you already
 know the system — if you're new, start with the [Quickstart](setup/quickstart.md).
 
-For operating explanations, see [Explanation](../explanation). For the design
+For operating explanations, see [Explanation](../explanation/). For the design
 rationale, see [Design Book](../design/README.md). For exact field names,
-schemas, and command flags, see [Reference](../reference).
+schemas, and command flags, see [Reference](../reference/).
 
 ---
 

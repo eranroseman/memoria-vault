@@ -27,7 +27,7 @@ L7  Adapters    optional editor/API surfaces that call the same engine
 
 Who the three actor-kinds are (PI, Agents, Operations), and why the layering
 contract binds only the machine write path, are covered in [The
-vault](vault.md#actor-kinds-and-the-write-path).
+vault](https://eranroseman.github.io/memoria-vault/explanation/architecture/vault.html#actor-kinds-and-the-write-path).
 
 ## Documents in this section
 

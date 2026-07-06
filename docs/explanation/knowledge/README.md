@@ -33,4 +33,4 @@ section develops in [Requests and notes are different things](../control-plane/s
 For the complete document-type reference (fields, templates, lifecycle tables),
 see [Document types](../../reference/document-types.md). For the current task
 surface that follows from this model, see the [Knowledge how-to
-guides](../../how-to-guides/knowledge/README.md).
+guides](../../how-to-guides/knowledge/).

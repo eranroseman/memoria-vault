@@ -608,10 +608,11 @@ def check_source_of_truth_mirrors(repo: Path, errors: list[str]) -> None:
 
 def _docs_target_exists(repo: Path, rel: str) -> bool:
     rel = rel.strip("/")
+    stem = rel[:-5] if rel.endswith(".html") else rel
     return any(
         (repo / target).exists()
         for target in (
-            f"docs/{rel}.md",
+            f"docs/{stem}.md",
             f"docs/{rel}/index.md",
             f"docs/{rel}/README.md",
         )
@@ -622,7 +623,7 @@ def _pages_targets(text: str) -> list[str]:
     return sorted(
         set(
             re.findall(
-                rf"{re.escape(PAGES_URL)}/[A-Za-z0-9/_-]+(?:#[A-Za-z0-9_.-]+)?",
+                rf"{re.escape(PAGES_URL)}/[A-Za-z0-9/_-]+(?:\.html)?(?:#[A-Za-z0-9_.-]+)?",
                 text,
             )
         )
