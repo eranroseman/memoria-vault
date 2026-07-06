@@ -4,29 +4,38 @@
 
 - **Task:** Originally scoped to installing `obra/superpowers` alone;
   broadened per explicit direction ("the scope is the entire workflow with
-  superpowers as the base") to cover the full agent-skill toolkit:
-  superpowers as the foundational layer, plus every personal skill it
-  collides with or should cross-reference, plus this repo's own `.agents/`
-  conventions, plus a set of gap-filling third-party plugins identified
-  separately (frontend/UI design+review, deep security review, technical
-  writing, API design) that close real holes superpowers itself doesn't
-  cover. Concretely: install the `obra/superpowers` plugin (13 usable
+  superpowers as the base") to cover the full agent-skill toolkit, and then
+  broadened again per explicit direction to (a) evaluate every existing
+  skill and plugin for retirement, not just conflicts, since some of what
+  was called "hand-authored" loose skills are actually cherry-picked from
+  third parties and deserve the same scrutiny as any adopted capability,
+  and (b) make Claude Code's and Codex's end states as close to identical
+  as possible. Concretely: install the `obra/superpowers` plugin (13 usable
   skills: systematic-debugging, test-driven-development, brainstorming,
   receiving-code-review, requesting-code-review, writing-plans,
   writing-skills, verification-before-completion, using-git-worktrees,
   finishing-a-development-branch, dispatching-parallel-agents,
   subagent-driven-development, executing-plans — plus the bundle's own
   onboarding meta-skill `using-superpowers`) for both Claude Code and Codex;
-  retire the superseded local `tdd` skill; install the four gap-filling
-  plugins (§3.E); **retire, adapt, or cross-reference every existing skill
-  and repo convention any of this collides with or duplicates** (not just
-  install the new things); and verify the combined toolkit behaves
-  correctly, not merely that the skill lists show the new names.
+  retire the superseded local `tdd` skill and the redundant `grill-me`
+  pointer; install five gap-filling plugins across four bundles (§3.E) —
+  `interface-design` + Anthropic's official `frontend-design`,
+  `threat-modeling`, `the-elements-of-style`, `api-design-principles`
+  (vendored as a single skill, not the whole host plugin); close two
+  cross-tool parity gaps by installing `codex-security` on Codex and
+  porting `obsidian-skills` to Codex (§3.G); explicitly decline three
+  candidates that would not actually improve anything (the official
+  `code-review` marketplace plugin, `coderabbit` on Codex, a runtime
+  conditional guard on rethink's fix); **retire, adapt, or cross-reference
+  every existing skill, plugin, and repo convention any of this collides
+  with or duplicates** (not just install the new things); and verify the
+  combined toolkit behaves correctly on both tools, not merely that the
+  skill lists show the new names.
 - **Worktree / branch:** None on `memoria-vault` for the *implementation* —
   the skill/plugin files live under `~/.claude/` and `~/.codex/` (per-user
   tool config, not repo content), so `AGENTS.md` §1's git-worktree setup does
   not apply there. It does apply to two specific `memoria-vault`-tracked
-  edits this plan makes (`AGENTS.md` and four files under `.agents/`) — those
+  edits this plan makes (`AGENTS.md` and five files under `.agents/`) — those
   go through the normal worktree → branch → PR flow, not a direct edit on
   `main`. This plan file itself lives on the **`scratch`** branch under
   `scratch/workflow-audit/` (this repo's holding area for cross-cutting,
@@ -141,17 +150,48 @@ assumed):
   independently-updated plugins in this toolkit, and both get the
   CLAUDE.md-note treatment, never a direct file edit.
 
-**What's already installed, for context:**
+**What's already installed, for context.** Correction applied this revision:
+skills previously described as "hand-authored" are not — they are cherry-picked
+FROM third-party repos and installed as loose files with no live
+auto-update mechanism (unlike a real marketplace-managed plugin). They are
+safe to edit directly for that reason, but were still evaluated for
+retirement with the same rigor as any adopted capability, not assumed safe
+by default:
+
+**Claude Code** (`claude plugin list` + `~/.claude/skills/`):
 
 | Name | Kind | Source |
 |---|---|---|
 | `ponytail` | plugin (hooks-based, always-on), v4.7.0 | `DietrichGebert/ponytail` |
 | `rethink` | plugin (hooks-based, always-on), v1.1.0 | `eranroseman/rethink` (this session's own repo) |
-| `grilling` | loose skill | cherry-picked from `mattpocock/skills` |
-| `tdd` | loose skill | cherry-picked from `mattpocock/skills` — **retired by this plan** |
-| `codebase-design` | loose skill (+2 reference files) | cherry-picked from `mattpocock/skills` |
-| `improve` | loose skill (+3 reference files) | cherry-picked from `shadcn/improve` |
-| `caveman` | loose skill (skill-only, no hooks/MCP) | cherry-picked from `JuliusBrussee/caveman` |
+| `pr-review-toolkit` | plugin (6 subagents), v1.0.0 | official Anthropic (`claude-code-plugins` marketplace) — **not previously tracked in this plan; evaluated in §3.B.9** |
+| `security-guidance` | plugin (hooks-only, passive), v2.0.0 | official Anthropic (`claude-code-plugins` marketplace) — **not previously tracked in this plan; evaluated in §3.E (threat-modeling bundle)** |
+| `obsidian-skills` (`obsidian:*`) | nested plugin (skills-directory auto-detect), 5 sub-skills | `kepano/obsidian-skills` (Steph Ango) — **Codex-porting evaluated in §3.G** |
+| `grilling` | loose skill, cherry-picked | `mattpocock/skills` |
+| `tdd` | loose skill, cherry-picked | `mattpocock/skills` — **retired by this plan** |
+| `codebase-design` | loose skill (+2 reference files), cherry-picked | `mattpocock/skills` |
+| `improve` | loose skill (+3 reference files), cherry-picked | `shadcn/improve` |
+| `caveman` | loose skill (skill-only, no hooks/MCP), cherry-picked | `JuliusBrussee/caveman` |
+| `grill-me` | loose skill, Claude-only thin pointer to `/grilling` | — **retired by this plan (§3.F), not ported to Codex** |
+
+**Codex** (`codex plugin list` + `~/.codex/skills/`): `ponytail` v4.8.4,
+`rethink` v1.0.1 (installed, enabled); `caveman`, `codebase-design`,
+`grilling`, `improve`, `tdd` (same cherry-picks, no `grill-me`); no
+`pr-review-toolkit`/`security-guidance`/`obsidian-skills` equivalent
+installed. Three configured marketplaces: `ponytail`, `rethink`,
+`openai-curated` (~180 pre-vetted plugins, all "not installed" except
+ponytail/rethink). Relevant `openai-curated` entries, not yet installed:
+`superpowers@openai-curated` v5.1.3 (obra/superpowers itself — all 13
+skills + `using-superpowers` confirmed present, a simpler install path than
+adding a new marketplace), `codex-security@openai-curated` v0.1.10
+(official OpenAI security-scan suite — **installed for parity, §3.G**),
+`coderabbit@openai-curated` v1.1.4 (third-party, external-service-backed —
+**evaluated and declined, §3.G**). Also present, pre-dating this session
+(mtime 2026-06-18): an official OpenAI-curated `security-threat-model`
+skill at `~/.codex/vendor_imports/skills/skills/.curated/security-threat-model`,
+installable via Codex's native `$skill-installer` — a lower-friction,
+higher-trust alternative to cloning the third-party `fr33d3m0n/threat-modeling`
+repo, surfaced only during the retirement/parity audit and weighed in §3.G.
 
 **What `obra/superpowers` provides**, and the disposition each got after two
 rounds of adversarial re-checking against primary sources (full per-skill
@@ -263,14 +303,86 @@ estimating.
    as the canonical vocabulary source, and state the seams-before-tests
    practice as standing guidance. See §4 step 8 for the exact text.
 8. **`improve` vs. `subagent-driven-development`/`writing-plans`/
-   `verification-before-completion` — checked in depth, no fix required.**
-   Surface similarity (dispatch-review-verdict-loop) is real, but every
-   load-bearing mechanic diverges (single-plan-single-verdict vs.
-   multi-task-two-verdict; disposable vs. mergeable worktree; different plan
-   template shapes). Optional, non-blocking: one sentence in `improve`'s
-   `SKILL.md` naming the precedence (single audit finding → `improve`'s own
-   `execute`; a spec-derived multi-task plan → `subagent-driven-development`)
-   — deferred, not required for success.
+   `verification-before-completion` — checked in depth twice (once for
+   conflict, once retirement-biased), confirmed genuinely distinct on 3
+   axes, fix promoted from optional to required.** Surface similarity
+   (dispatch-review-verdict-loop) is real, but every load-bearing mechanic
+   diverges: (1) dispatch shape — `execute` runs exactly one executor
+   subagent for one plan with the verdict rendered by the calling agent
+   itself; `subagent-driven-development` dispatches one implementer plus
+   two separate reviewer subagents per task, continuously across every task
+   in a plan, unattended; (2) plan durability — `improve`'s plans stamp a
+   git SHA for drift detection and live in a persistent `plans/README.md`
+   backlog with `quick`/`deep`/`branch`/`next`/`--issues`/`reconcile`
+   variants meant to survive across sessions; `writing-plans`/
+   `subagent-driven-development` plans are meant to execute immediately in
+   the same arc, with no drift/backlog concept at all; (3) worktree
+   disposition — `improve`'s Hard Rules forbid ever merging, pushing, or
+   committing to the user's branch (a disposable review sandbox the human
+   decides whether to apply); `subagent-driven-development`'s worktree *is*
+   the real feature branch, terminating at `finishing-a-development-branch`
+   (i.e., shipping it). The precedence note was previously deferred as
+   optional; re-evaluated and promoted to required now that the final
+   toolkit adds several more overlapping-sounding names (`interface-design`,
+   `threat-modeling`, etc.), which increases the real cost of an agent
+   guessing wrong about which tool a request should route through.
+9. **`pr-review-toolkit` vs. superpowers' own `code-reviewer.md` template —
+   evaluated, no fix needed, both kept running independently.** Superpowers
+   bundles its own `code-reviewer.md` agent template inside
+   `requesting-code-review` — a direct naming collision with
+   `pr-review-toolkit`'s installed `code-reviewer` subagent worth checking.
+   5 of `pr-review-toolkit`'s 6 agents (`comment-analyzer`,
+   `pr-test-analyzer`, `silent-failure-hunter`, `type-design-analyzer`,
+   `code-simplifier`) have no superpowers equivalent at all and are kept
+   unconditionally. The 6th, `code-reviewer`, only *partially* overlaps
+   superpowers' template: `pr-review-toolkit`'s version is a registered
+   subagent Claude can proactively self-invoke, tightly scoped to CLAUDE.md
+   compliance + bug detection with a 0-100 confidence gate (only ≥80
+   reported); superpowers' template is a manually-filled prompt dispatched
+   via a bare `general-purpose` Task, checking plan alignment,
+   architecture, test quality, and production-readiness, ending in an
+   explicit "Ready to merge: Yes/No/With fixes" verdict — capabilities
+   `pr-review-toolkit`'s agent doesn't have and, being a live-updated
+   marketplace plugin, cannot be edited to add. **A first draft of this fix
+   proposed routing superpowers' dispatch to `pr-review-toolkit:code-reviewer`
+   instead of its own template — adversarial verification correctly killed
+   this: it drops superpowers' unique review dimensions at exactly its
+   "Mandatory" checkpoints (after each task, before merge) rather than
+   preserving both, since passing extra prompt text to a subagent whose own
+   instructions never ask for those checks doesn't reliably restore them.**
+   Correct resolution: no consolidation. Keep both running independently
+   when a review checkpoint is hit; some overlap on the bug-finding
+   dimension is an acceptable, minor cost next to the alternative of
+   silently losing coverage. Separately confirmed: the official (uninstalled)
+   Anthropic `code-review` marketplace plugin should **not** be installed
+   — not because it duplicates the other two (it doesn't: it's a
+   GitHub-PR-native bot that posts inline `gh` comments to a live remote
+   PR and includes two genuinely novel review angles, git-blame historical
+   context and past-PR-comment precedent, that exist nowhere else in this
+   toolkit) but because that bot-oriented, remote-PR-posting mechanism
+   doesn't fit this user's current interactive local workflow — installing
+   it would add a third overlapping reviewer for no realized value here.
+   This is a documented "considered and declined" item (§3.F), not a
+   retirement (it was never installed).
+10. **`codebase-design` vs. the not-yet-installed `interface-design` — checked
+    directly, no fix needed.** Elevating `codebase-design` to canonical
+    vocabulary status (item 7 above) creates a real risk if another newly
+    adopted skill defines the same terms independently — flagged as an
+    open, unverified risk by the retirement audit since no cached copy of
+    `interface-design` existed on disk at the time. Resolved directly here
+    against `interface-design`'s actual SKILL.md (fetched and read in full
+    earlier this session): it uses "Depth" for visual elevation/layering
+    (z-axis, shadow/border stacking — "choose ONE and commit: borders-only,
+    subtle shadows, layered shadows, surface-color shifts") and "Interface"
+    only in its own name, never as a defined term — a genuine word overlap
+    with `codebase-design`'s "Depth" (Ousterhout's interface-simplicity
+    ratio) and "Interface" (a module's public API), but in a completely
+    different domain (visual UI craft vs. software module design), and the
+    two skills' trigger surfaces are already cleanly disambiguated
+    (dashboard/SaaS UI vs. module/seam design questions) the same way
+    `codebase-design`'s "Interface" echo with `interface-design`'s own name
+    was independently checked and cleared in §3.E. No CLAUDE.md caveat
+    needed beyond this record of having checked it.
 
 ### C. Repo-convention fixes in `memoria-vault` itself
 
@@ -353,6 +465,289 @@ least one skill from each of the three fixed conflict pairs (TDD vs.
 ponytail; a design request, to confirm rethink now yields to brainstorming's
 gate when appropriate; grilling vs. brainstorming routing) and read the
 transcript, not just the skill-list membership.
+
+### E. Gap-filling plugins — five plugins, four bundles, all verified via a
+   Check→Verify workflow against primary sources, not taken on the original
+   research pass's word
+
+1. **`interface-design` (Dammyjay93) + Anthropic's official `frontend-design`
+   — install both, add a CLAUDE.md routing bullet.** Both cover UI
+   generation but split unevenly: `interface-design` explicitly excludes
+   "landing pages, marketing sites, campaigns, brand-only work" in its own
+   frontmatter and owns product/dashboard/SaaS/admin UI, with the only
+   standalone review commands in the pair (`/interface-design:design-review`,
+   `/interface-design:design-deslop`) and persisted cross-session memory
+   (`.interface-design/system.md`). `frontend-design` has no such
+   self-limit — its trigger is generic "building new UI or reshaping an
+   existing one," and its README usage examples include a dashboard — so a
+   bare "build me a dashboard" request could plausibly fire both. The split
+   is one-sided (only `interface-design` self-limits), which is exactly why
+   a rule is still needed for the dashboard case specifically. Fix: a
+   CLAUDE.md routing bullet (exact text in §4 step 12) — any request to
+   review/critique/audit/de-slop already-built UI routes to
+   `interface-design` (the only one with a review command); for new UI,
+   route by the surface's job (a working tool a user operates repeatedly →
+   `interface-design`; a one-off promotional/showcase surface →
+   `frontend-design`), ask if genuinely ambiguous. **Gate: land this bullet
+   in the same change that installs `interface-design` and enables
+   `frontend-design`** — a precedence rule for two currently-inactive
+   skills is a dead reference. No `codebase-design`/`improve` collision
+   (checked directly, zero UI vocabulary in either) and no memoria-vault
+   `.agents/` cross-reference needed (confirmed empirically: zero `.tsx`/
+   `.jsx`/`.vue` files, no `/components` or `/ui` directory anywhere in the
+   repo; the 45 grep hits for "dashboard"/"design system" are Obsidian-note
+   homonyms, not application UI).
+2. **`threat-modeling` (fr33d3m0n) — install, fix via CLAUDE.md, not a
+   direct SKILL.md edit.** A git-clone-based skill (no plugin manifest) with
+   its own upstream repo a user might resync — qualifies for this plan's
+   "never edit a file with an independent upstream" rule the same as
+   `ponytail`/`superpowers`, even though it isn't marketplace-managed. Its
+   own frontmatter says it "MUST be invoked instead of analyzing security
+   yourself," which over-triggers on a narrow follow-up about one
+   already-flagged finding (e.g. "is this actually exploitable?") — a case
+   its own "NOT for" list doesn't cover. Fix: a CLAUDE.md precedence note
+   (exact text in §4 step 13) routing single-finding follow-ups to a direct
+   answer, reserving the full 8-phase run for a deliberate, explicit
+   request. Also add a short, optional final section to
+   `.agents/playbooks/security-review.md` naming `threat-modeling` as an
+   "if installed" whole-system-audit escalation path for when a diff-scoped
+   review surfaces something systemic — worded as following **this same
+   plan's own step 9 pattern** (which is what first establishes a
+   skill-name cross-reference in `code-review.md`), not a pre-existing
+   repo precedent, since no such precedent exists anywhere in this
+   codebase's history today. Install path assumed as
+   `~/.claude/skills/threat-modeling` by analogy with the other loose
+   skills — not yet confirmed, flag as an assumption during execution.
+3. **`the-elements-of-style` (obra) — install, no fix required.** Closes an
+   already-named soft dependency: superpowers' own `brainstorming` skill
+   references "elements-of-style:writing-clearly-and-concisely skill if
+   available" in its spec-writing step, confirmed to be this exact plugin
+   (same author, matching skill id). Lowest trust surface examined in this
+   whole plan — plain markdown wrapping the public-domain 1918 Strunk text,
+   zero hooks/scripts/bash permissions. No real collision with `caveman`
+   (caveman governs live chat-response terseness; this governs durable
+   written prose — different artifact class), but add one optional,
+   precautionary CLAUDE.md line making that split explicit for the two
+   output types caveman's own exemption list doesn't already name (docs/
+   UI-text/error-strings, and saved reports) — skip if minimizing CLAUDE.md
+   churn is preferred, since no wrong-output case is observed or plausible
+   today.
+4. **`api-design-principles` — vendor only the one skill, don't install the
+   host plugin.** Originally planned as a full-plugin install from
+   `wshobson/agents`' `backend-development` plugin; verification found that
+   installing at plugin granularity pulls in **9 full skills, not 1**
+   (architecture-patterns, cqrs-implementation, event-store-design,
+   microservices-patterns, projection-patterns, saga-orchestration,
+   temporal-python-testing, workflow-orchestration-patterns alongside
+   `api-design-principles`), several with broad triggers
+   ("designing new backend services/microservices from scratch") that
+   compete directly with `rethink`'s and `brainstorming`'s new-build
+   territory, plus a `tdd-orchestrator`/`test-automator` pair and a
+   `/feature-development --methodology tdd` command that reintroduce a
+   parallel, non-superpowers TDD pipeline this plan is retiring `tdd` in
+   favor of avoiding. Fix: vendor **only** `plugins/backend-development/
+   skills/api-design-principles/` (SKILL.md + references/ + assets/) into
+   `~/.claude/skills/api-design-principles/` (and the Codex mirror) —
+   `wshobson/agents` is MIT-licensed, confirmed via `gh api`, the identical
+   precedent already used for `codebase-design` itself ("Adapted from
+   github.com/mattpocock/skills (MIT License)"). This avoids every
+   collision above by construction; no CLAUDE.md precedence note needed.
+   No collision with `codebase-design` (confirmed: its glossary explicitly
+   says "Interface... Avoid: API, signature" — it deliberately reserves
+   "interface" for internal-module vocabulary and steers away from "API,"
+   the opposite of a clash). No memoria-vault repo-convention touch (zero
+   REST/GraphQL/OpenAPI surface anywhere in the repo, confirmed by grep).
+
+### F. Retirements — evaluated across the entire toolkit with an explicit
+   bias toward finding removal candidates, not just conflict patches
+
+1. **`tdd` (loose skill) — retire.** Already covered in §3.B.7/§4 step 4;
+   fully superseded by `superpowers:test-driven-development`, its one
+   unique idea (seams-before-tests) ported to the CLAUDE.md note, not the
+   file.
+2. **`grill-me` (loose skill, Claude-only) — retire, do not port to Codex.**
+   Re-examined with an explicit bias toward retirement, alongside
+   `grilling`/`caveman`/`codebase-design`/`improve` (all four of which
+   survive with their fixes above confirmed necessary, not rubber-stamped).
+   `grill-me`'s entire body is one line, "Run a `/grilling` session," with
+   `disable-model-invocation: true`. Every path it offers — explicit
+   `/grilling` invocation, or conversational "grill" trigger phrases — is
+   already served by `grilling` directly (its own description already
+   covers "any 'grill' trigger phrases"). It adds no independent
+   capability; the Simplicity-First case for deleting it ("no abstractions
+   for single-use code... no flexibility that wasn't requested") is
+   stronger than the case for maintaining and parity-porting a second file
+   across two tools forever. Confirmed this is not a disguised technical
+   necessity: Codex's `disable-model-invocation` analog
+   (`agents/openai.yaml`'s `policy.allow_implicit_invocation: false`)
+   could support an equivalent, so the Claude-only asymmetry isn't a
+   platform limitation — it just isn't worth replicating. Retiring it is
+   itself the cleanest form of parity: absent on both tools, rather than a
+   redundant pointer with Codex-specific shim machinery on one side.
+   Action: `rm -rf ~/.claude/skills/grill-me` (§4 step 4). No Codex-side
+   action — `~/.codex/skills/` already has no `grill-me`.
+3. **Official Anthropic `code-review` marketplace plugin — considered,
+   declined, never installed.** Covered in §3.B.9: workflow-mismatch with
+   this user's local interactive style (it's a GitHub-PR-native bot
+   posting inline `gh` comments to a live remote PR), not a clean
+   duplicate of anything already here (it has two genuinely novel review
+   angles — git-blame historical context, past-PR-comment precedent — that
+   exist nowhere else in this toolkit) but not worth adding a third
+   overlapping reviewer for value not realized under the current workflow.
+4. **`coderabbit@openai-curated` (Codex) — considered for pr-review-toolkit
+   parity, declined.** See §3.G.4 — a real external-service dependency
+   (separate CLI install, separate CodeRabbit account/auth, data egress),
+   and installing it wouldn't even achieve real parity (a different
+   mechanism entirely, not a substitute), so it would trade one asymmetry
+   for a worse one.
+5. **Runtime conditional guard on rethink's brainstorming fix — considered,
+   removed.** Covered in §3.B.2/§9 — solved a non-problem (rethink has no
+   external "solo installer" base to protect), unnecessary complexity, cut
+   in favor of an unconditional trigger narrowing.
+
+### G. Cross-tool parity — closing the gap between what Claude Code and
+   Codex end up with, item by item, not accepting asymmetry by default
+
+1. **`codex-security@openai-curated` — install on Codex.** Official OpenAI,
+   MCP-backed, 10 explicit-invocation-only skills (security-scan,
+   security-diff-scan, deep-security-scan, threat-model, finding-discovery,
+   validation, attack-path-analysis, fix-finding, triage-finding,
+   track-findings). Not a passive twin of `security-guidance` (nothing on
+   Codex fires automatically the way `security-guidance`'s hooks do — that
+   asymmetry is accepted, not solved, see item 4 below) but the
+   capability-coverage-maximizing move: without it Codex has at most 1
+   active security tool (`threat-modeling`, once mirrored) against Claude's
+   2 (`security-guidance` + `threat-modeling`); with it, both tools reach 2.
+   Command: `codex plugin add codex-security@openai-curated`.
+2. **Collision fix: `codex-security`'s internal `threat-model` phase-skill
+   vs. a standalone `threat-modeling` request.** `codex-security`'s
+   `threat-model` skill triggers on "the user explicitly asks to create,
+   update, or persist a repository threat model" — broad enough to also
+   catch a request meant for the separately-installed `threat-modeling`
+   (fr33d3m0n) skill. Verification found the first-draft fix (a narrow
+   routing note anchored only on that one phrase) was too narrow: the real
+   `threat-modeling` skill's actual trigger text — confirmed from a draft
+   already present in this session's own scratchpad — is far broader
+   ("MUST be invoked instead of analyzing security yourself," firing on
+   generic "security audit," "find vulnerabilities," "analyze attack
+   surface"), so the real collision surface is `codex-security`'s **entire
+   scan family** (`security-scan`, `security-diff-scan`,
+   `deep-security-scan`, `finding-discovery`), not just its narrow internal
+   `threat-model` phase. Fix (broadened; exact text in §4 step 14): append
+   to `~/.codex/AGENTS.md` (confirmed present, currently empty — the
+   direct Codex structural analog of `~/.claude/CLAUDE.md`, so this is its
+   first content) a routing note that `codex-security`'s own `threat-model`
+   phase is scan-internal only (per its own hard rule, "do not use as the
+   primary trigger for full PR, commit, branch, patch, or repository
+   scans"), and that any standalone whole-system audit/STRIDE request goes
+   to `threat-modeling` instead — regardless of which of `codex-security`'s
+   scan-family skills might also match the phrasing.
+3. **Mirror `threat-modeling` onto Codex — the one layer where true file
+   identity, not just capability parity, is achievable.** Same loose-skill
+   mechanism already used for `caveman`/`grilling`/`codebase-design`/
+   `improve`. Install the identical file tree at
+   `~/.codex/skills/threat-modeling` once §3.E.2 finalizes it for Claude.
+   **Alternative surfaced during the parity audit, to weigh explicitly
+   before executing this step:** Codex already carries a pre-existing
+   (2026-06-18, predates this whole session) official OpenAI-curated
+   `security-threat-model` skill at `~/.codex/vendor_imports/skills/skills/
+   .curated/security-threat-model`, installable via Codex's own native
+   `$skill-installer` — a lower-friction, higher-trust, officially-curated
+   alternative to cloning a third-party GitHub repo onto Codex. Decide at
+   execution time: mirror `fr33d3m0n/threat-modeling` for true cross-tool
+   file identity, or use Codex's own native equivalent for a
+   lower-trust-surface Codex-side install and accept a *capability-parity*
+   (not file-identity) outcome instead. Not resolved here — this plan
+   surfaces the choice rather than picking silently.
+4. **Residual, accepted asymmetry: no Codex equivalent to
+   `security-guidance`'s passive hook layer.** Codex supports hooks
+   structurally (`[features] hooks = true` already set, `ponytail`/
+   `rethink` already fire there every session) but no off-the-shelf plugin
+   replicates `security-guidance`'s automatic pattern-warnings + Stop-hook
+   diff review + agentic commit reviewer. Building one is new engineering,
+   out of scope for a plugin-adoption pass. Document via the same
+   `~/.codex/AGENTS.md` note (§4 step 14): Codex does not get the same
+   always-on diff-review safety net Claude gets without the user
+   explicitly invoking a `codex-security` scan.
+5. **Known friction, not a blocker: `codex-security`'s `deep-security-scan`
+   will hit a blocked capability gate under this machine's current
+   config.** `~/.codex/config.toml` has `max_depth = 1` under
+   `[features] multi_agent = true` (v1 mode, no `multi_agent_v2`).
+   `codex-security`'s own `deep_security_scan` capability profile marks
+   `agent_depth_2`, `delegated_workers`, and `usable_worker_slots_6` as
+   **`block`** severity (not warn/suggest, corrected after verification —
+   the first-draft finding understated this), which its own
+   `config-preflight.md` defines as "the requested workflow cannot be
+   claimed honestly when unmet," triggering a mandatory stop-and-ask
+   remediation dialogue. `security-scan` and `security-diff-scan` (the
+   primary entry points) have only warn/suggest requirements and are
+   unaffected — so install and basic use are not blocked, only the deepest
+   scan mode. No config change recommended now; treat raising
+   `agents.max_depth` as its own deliberate performance decision if the
+   full parallel `deep-security-scan` is wanted later.
+6. **`coderabbit@openai-curated` — evaluated for pr-review-toolkit parity,
+   declined (§3.F.4).** Confirmed via its own SKILL.md: it curl-installs a
+   separate `coderabbit` binary, requires `coderabbit auth login --agent`
+   against an external CodeRabbit account, and ships diff content off for
+   remote analysis ("remote processing" named explicitly in its own
+   stay-silent instructions) — a genuine new external-service dependency
+   with no counterpart on the Claude side, unlike `pr-review-toolkit`'s
+   fully self-contained, zero-egress prompt-template agents. Installing it
+   would not produce real parity (a different mechanism, not a
+   substitute) — it would trade one asymmetry for a worse one. Accepted
+   resolution: once `obra/superpowers` lands identically on both tools,
+   `requesting-code-review`'s own bundled `code-reviewer.md` template
+   already gives both tools a mechanically equivalent, self-contained
+   baseline reviewer with zero new dependency — closing most of the real
+   gap without touching `coderabbit` at all. The only genuine residual
+   asymmetry is `pr-review-toolkit`'s 5 other specialized personas
+   (`comment-analyzer`, `pr-test-analyzer`, `silent-failure-hunter`,
+   `type-design-analyzer`, `code-simplifier`), which `coderabbit` — one
+   external generalist — could not fill anyway. Accepted, not solved;
+   porting those 5 agent prompts as loose Codex skill files is a possible
+   future step, deliberately deferred (no Codex-native equivalent exists
+   to adopt instead, and manufacturing new Codex-side content is a bigger
+   scope change than this plan's own gap-filling mandate covers).
+7. **Port `obsidian-skills` (5 sub-skills) to Codex.** Author-blessed:
+   upstream `kepano/obsidian-skills`'s own README documents a Codex CLI
+   install path verbatim ("Copy the `skills/` directory into your Codex
+   skills path, typically `~/.codex/skills`"). All 5 SKILL.md files use
+   only portable `name`+`description` frontmatter, no Claude-specific
+   mechanics, matching the same flat-loose-skill convention already used
+   for `caveman`/`codebase-design`/`grilling`/`improve` on Codex. No
+   `.codex-plugin` manifest exists upstream, so a marketplace-plugin
+   install isn't an option — a flat `cp -r` per sub-skill is. Commands
+   (§4 step 15): `cp -r ~/.claude/skills/obsidian-skills/skills/{obsidian-cli,
+   json-canvas,obsidian-bases,defuddle,obsidian-markdown} ~/.codex/skills/`.
+   **Justification corrected after verification:** the first-draft
+   rationale for accepting the resulting packaging asymmetry (Claude's
+   copy stays a git-backed marketplace plugin because "only it can have
+   live updates") is false — `claude plugin list` shows `obsidian@skills-dir`
+   under the separate "Skills-directory plugins" heading, not real
+   marketplace-tracked "Installed plugins"; it has zero entries in
+   `known_marketplaces.json`/`installed_plugins.json`. Its only actual
+   update path is a manual `git pull` inside the directory (it's a plain
+   git clone with an `origin` remote) — a capability that could be
+   replicated identically on Codex by cloning instead of copying, if
+   symmetric live-updatability is ever wanted. The simpler `cp -r`
+   recommendation stands (it matches Codex's existing all-flat-loose-skill
+   convention and needs no new git-tracking machinery there), but the
+   justification is "matches Codex's existing pattern," not "Claude's copy
+   is uniquely updatable." Similarly corrected: the original justification
+   ("memoria-vault is itself an Obsidian vault project") overstates the
+   primary source — `AGENTS.md`/`README.md` describe Memoria as "a
+   standalone local CLI and research engine" with Obsidian listed as one
+   of several optional adapters the installer doesn't enable by default;
+   this checkout has no `.obsidian/` folder. Real relevance sits one level
+   down, in `vault-template/` (what the installer deploys to an end user's
+   actual vault, which does contain Obsidian-flavored markdown and a
+   `.obsidian/*.json` gitignore entry) — the skills are relevant to
+   vault-template work, not because this repo is itself a personal vault.
+   Footnote, not a blocker: `defuddle`'s skill depends on an unmet local
+   npm package (`npm install -g defuddle`, confirmed not installed) —
+   pre-existing on the Claude side today too, so porting adds no new
+   dependency, just carries over an already-nonfunctional-until-installed
+   skill identically to both tools.
 
 ## 4. Concrete steps
 
@@ -567,11 +962,174 @@ transcript, not just the skill-list membership.
    two consolidated paragraphs (§3.C.1); `.agents/playbooks/code-review.md`'s
    two additions (§3.C.2); `.agents/playbooks/exec-plan.md`'s two additions
    (§3.C.4); `.agents/templates/exec-plan.md`'s one-line pointer (§3.C.5);
-   `.agents/templates/handoff.md`'s new "Result" section (§3.C.6). Exact
-   text for every edit is quoted verbatim in §3 above and in the source
-   workflow findings cited in §2.
+   `.agents/templates/handoff.md`'s new "Result" section (§3.C.6);
+   `.agents/playbooks/security-review.md`'s new "Escalate to a full audit"
+   section (§3.E.2/§4 step 13) — land this one in the same PR as
+   `code-review.md`'s edit, since its own justification depends on that
+   edit landing first (or in the same change) to avoid citing a
+   not-yet-real precedent. Exact text for every edit is quoted verbatim in
+   §3 above and in the source workflow findings cited in §2.
 
-10. **Verify** — see §5 in full; run in a **fresh** Claude Code session and
+11. **Install the gap-filling plugins (§3.E).**
+
+    ```bash
+    # interface-design + Anthropic's official frontend-design (both tools)
+    claude plugin marketplace add Dammyjay93/interface-design
+    claude plugin install interface-design@interface-design
+    # enable frontend-design (already synced locally, currently disabled)
+    claude plugin enable frontend-design@claude-plugins-official
+
+    # threat-modeling (both tools; assumed path, confirm at execution time)
+    git clone https://github.com/fr33d3m0n/threat-modeling ~/.claude/skills/threat-modeling
+    git clone https://github.com/fr33d3m0n/threat-modeling ~/.codex/skills/threat-modeling
+
+    # the-elements-of-style (both tools)
+    claude plugin marketplace add obra/the-elements-of-style
+    claude plugin install the-elements-of-style@the-elements-of-style
+    codex plugin marketplace add obra/the-elements-of-style
+    codex plugin add the-elements-of-style@the-elements-of-style
+
+    # api-design-principles — vendor only the one skill (both tools)
+    mkdir -p ~/.claude/skills/api-design-principles
+    # copy only plugins/backend-development/skills/api-design-principles/{SKILL.md,references/,assets/}
+    # from wshobson/agents (MIT) into ~/.claude/skills/api-design-principles/, then mirror to ~/.codex/skills/
+    ```
+
+12. **Add the frontend/UI routing bullet to `~/.claude/CLAUDE.md`** (§3.E.1),
+    in the same change as step 11's `interface-design`/`frontend-design`
+    install:
+
+    ```markdown
+    - **Product/dashboard UI ownership (interface-design vs. frontend-design):**
+      any request to review, critique, audit, or de-slop already-built UI
+      routes to `interface-design` — only it ships dedicated
+      `/interface-design:design-review` and `/interface-design:design-deslop`
+      commands for that; `frontend-design` has no standalone equivalent
+      (its own "critique, build, critique again" process critiques its own
+      in-progress output during generation, not a separately-built
+      interface). For new UI, the split is one-sided: `interface-design`'s
+      own frontmatter already self-limits away from marketing ("Not for
+      marketing pages, landing pages, campaigns, or brand-only work"), so
+      on that axis it self-disambiguates. `frontend-design` carries no
+      converse carve-out — its trigger is generic "building new UI or
+      reshaping an existing one," and its README usage examples include
+      "create a dashboard for a music streaming app." Because a dashboard
+      is not marketing, interface-design's existing self-limit doesn't
+      resolve the overlap, and a bare "build me a dashboard" request would
+      otherwise plausibly fire both. `interface-design` also owns
+      product/dashboard/SaaS/admin/tool/data UI and is the only one of the
+      two with persisted cross-session design-system memory
+      (`.interface-design/system.md`). Route by the surface's job, not the
+      word "dashboard": a working tool a user will operate repeatedly
+      (data views, admin controls, settings, internal tool) goes to
+      `interface-design`; a one-off promotional/showcase surface, even one
+      styled like a dashboard, goes to `frontend-design`. Genuinely
+      ambiguous case → ask. Trade-off: routing product dashboards to
+      `interface-design` forgoes `frontend-design`'s distinctive-aesthetic-
+      risk angle — invoke `frontend-design` explicitly if that's
+      specifically wanted.
+    ```
+
+13. **Add the security-tooling notes** — `~/.claude/CLAUDE.md` (threat-modeling
+    vs. single-finding questions) and `.agents/playbooks/security-review.md`
+    (optional escalation cross-reference):
+
+    ```markdown
+    ## Skill precedence: threat-modeling vs. single-finding security questions
+
+    threat-modeling (assumed install path: ~/.claude/skills/threat-modeling
+    — git-cloned from fr33d3m0n/threat-modeling, its own upstream repo, no
+    plugin-marketplace manifest) runs a heavyweight 8-phase whole-system
+    STRIDE audit. Its own frontmatter says it MUST be invoked instead of
+    analyzing security yourself, which over-triggers on narrow follow-ups.
+    This note overrides that for one case its own "NOT for" list doesn't
+    cover:
+
+    Do NOT invoke threat-modeling for a follow-up about one already-
+    identified finding (e.g. "is this actually exploitable?", "how bad is
+    this one?") — including findings raised by security-guidance's
+    Stop-hook diff review or commit reviewer. Answer those directly,
+    scoped to that one finding.
+
+    Only invoke threat-modeling when the user deliberately asks for a
+    full, standalone audit/threat model of a codebase, app, or project.
+
+    threat-modeling has its own upstream and may be resynced via `git pull`
+    inside its skill directory; per this file's editing rule, don't edit
+    its SKILL.md directly to narrow triggers — keep precedence rules here.
+    ```
+
+    Append to `.agents/playbooks/security-review.md`:
+
+    ```markdown
+    ## 5. Escalate to a full audit
+
+    This playbook is scoped to the current diff. If review surfaces
+    something beyond one change — systemic exposure, unclear trust
+    boundaries, or a request for a standalone security assessment — that
+    is out of scope here. If the threat-modeling skill is installed, it
+    can run a full 8-phase STRIDE threat model (DFD, risk assessment,
+    pentest plan) as a separate, deliberately-requested activity. Do not
+    reach for it to answer single-finding follow-up questions raised
+    during this review — resolve those in place per section 4.
+    ```
+
+    (This addition is consistent with this same plan's own step 9, which
+    is what first establishes a skill-name cross-reference inside
+    `code-review.md` — not a pre-existing repo precedent; none exists
+    anywhere in this codebase's history today.)
+
+14. **Install `codex-security` and add the Codex-side security routing note**
+    (§3.G.1–5):
+
+    ```bash
+    codex plugin add codex-security@openai-curated
+    ```
+
+    Append to `~/.codex/AGENTS.md` (confirmed present, currently empty —
+    this becomes its first content):
+
+    ```markdown
+    ## Security tooling routing (codex-security vs. threat-modeling)
+
+    Both `codex-security` and `threat-modeling` are installed.
+    `codex-security`'s own scan family (`security-scan`,
+    `security-diff-scan`, `deep-security-scan`, `finding-discovery`) and
+    its internal `threat-model` phase-skill both use broad trigger
+    language that can collide with a standalone `threat-modeling` request.
+    Treat `codex-security`'s `threat-model` skill as scan-internal only
+    (per its own hard rule: "do not use as the primary trigger for full
+    PR, commit, branch, patch, or repository scans"). Route any standalone
+    request to build, update, or review a threat model (STRIDE analysis,
+    trust-boundary mapping, attacker-surface review) that is not part of
+    an active codex-security scan to the `threat-modeling` skill instead.
+
+    Known asymmetry: Claude Code's `security-guidance` (passive, hooks-only,
+    fires automatically on every Edit/Write, Stop, and git commit/push) has
+    no installed Codex equivalent. `codex-security` is the compensating
+    capability on Codex but is active/explicit-invocation only — do not
+    assume Codex gets the same always-on diff-review safety net Claude
+    gets from `security-guidance` without the user explicitly invoking a
+    codex-security scan.
+
+    Known friction: `codex-security`'s `deep-security-scan` requires
+    `agent_depth_2`/`delegated_workers`/`usable_worker_slots_6` at `block`
+    severity; this machine's current `agents.max_depth = 1` (v1 mode) will
+    trip a mandatory remediation dialogue for that specific scan mode.
+    `security-scan`/`security-diff-scan` are unaffected.
+    ```
+
+15. **Port `obsidian-skills` to Codex** (§3.G.7):
+
+    ```bash
+    cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-cli ~/.codex/skills/
+    cp -r ~/.claude/skills/obsidian-skills/skills/json-canvas ~/.codex/skills/
+    cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-bases ~/.codex/skills/
+    cp -r ~/.claude/skills/obsidian-skills/skills/defuddle ~/.codex/skills/
+    cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-markdown ~/.codex/skills/
+    ```
+
+16. **Verify** — see §5 in full; run in a **fresh** Claude Code session and
     a **fresh** Codex session (plugin/skill changes require a new session,
     confirmed via `claude plugin update`'s own "restart required to apply"
     note and this session's earlier finding that Codex needs a restart to
@@ -636,6 +1194,49 @@ transcript, not just the skill-list membership.
   `pr-policy`/`lint`/`cspell`/`markdownlint` all pass (these are pure
   documentation additions, no code paths touched).
   - **Prove with:** `gh pr checks <n> --watch` transcript.
+- **Claim (real behavior):** Given a "build me a dashboard for X" request
+  with both `interface-design` and `frontend-design` active, when the
+  CLAUDE.md routing bullet is in effect, then the agent routes to
+  `interface-design` (or explicitly asks, if genuinely ambiguous) rather
+  than silently picking one or invoking both.
+  - **Prove with:** transcript of one such request in the fresh session.
+- **Claim (real behavior):** Given a follow-up question about one
+  already-flagged security-guidance finding ("is this actually
+  exploitable?"), when the threat-modeling precedence note is in effect,
+  then the agent answers directly, scoped to that finding, without
+  launching the 8-phase STRIDE workflow.
+  - **Prove with:** transcript of one such request.
+- **Claim:** Given `api-design-principles` is vendored as a single skill,
+  when the skill list is inspected, then no `architecture-patterns`,
+  `microservices-patterns`, `cqrs-implementation`, `event-store-design`,
+  `projection-patterns`, `saga-orchestration`, `temporal-python-testing`,
+  or `workflow-orchestration-patterns` skill is present on either tool, and
+  no `tdd-orchestrator`/`test-automator` agent persona exists to compete
+  with the retired `tdd`.
+  - **Prove with:** `find ~/.claude/skills ~/.codex/skills -iname SKILL.md`
+    listing; absence of those 8 names.
+- **Claim:** Given `grill-me` is retired, no `grill-me` entry remains on
+  Claude Code, and Codex already had none.
+  - **Prove with:** `ls ~/.claude/skills/ ~/.codex/skills/` (absent on both).
+- **Claim:** Given `codex-security` is installed on Codex, when
+  `codex plugin list` is run, then `codex-security@openai-curated` shows
+  `installed, enabled`.
+  - **Prove with:** `codex plugin list` transcript.
+- **Claim (real behavior):** Given a standalone "build a threat model for
+  this repo" request on Codex with both `codex-security` and
+  `threat-modeling` installed, when the `~/.codex/AGENTS.md` routing note
+  is in effect, then the request routes to `threat-modeling`, not
+  `codex-security`'s internal `threat-model` phase-skill.
+  - **Prove with:** transcript of one such request.
+- **Claim:** Given `obsidian-skills` is ported to Codex, when
+  `~/.codex/skills/` is inspected, then `obsidian-cli`, `json-canvas`,
+  `obsidian-bases`, `defuddle`, and `obsidian-markdown` are all present
+  with no naming collisions against existing entries.
+  - **Prove with:** `ls ~/.codex/skills/` transcript.
+- **Claim:** Given `coderabbit` and the official `code-review` marketplace
+  plugin were both evaluated and declined, when `claude plugin list` /
+  `codex plugin list` are run, then neither is installed.
+  - **Prove with:** both transcripts, absence confirmed.
 
 ## 6. Idempotence and recovery
 
@@ -661,6 +1262,16 @@ transcript, not just the skill-list membership.
 - [ ] caveman persisted-artifact exemption extended (both tools)
 - [ ] rethink directive.md + rethink-audit fixes applied, version bumped
 - [ ] global `~/.claude/CLAUDE.md` precedence section added
+- [ ] improve's precedence sentence added (promoted from deferred to required)
+- [ ] `grill-me` retired (Claude only; Codex already absent)
+- [ ] `interface-design` installed + `frontend-design` enabled (both), CLAUDE.md routing bullet added in the same change
+- [ ] `threat-modeling` installed on both tools (path confirmed at execution time), CLAUDE.md + security-review.md notes added
+- [ ] `the-elements-of-style` installed on both tools
+- [ ] `api-design-principles` vendored as a single skill on both tools (not the whole backend-development plugin)
+- [ ] `codex-security` installed on Codex, `~/.codex/AGENTS.md` routing note added
+- [ ] threat-modeling-vs-security-threat-model choice made explicitly (mirror fr33d3m0n, or use Codex's native curated skill)
+- [ ] `obsidian-skills` ported to Codex (5 sub-skills)
+- [ ] `coderabbit` and the official `code-review` plugin confirmed NOT installed
 - [ ] repo-side worktree opened, AGENTS.md + 4 `.agents/` files edited, PR opened and merged
 - [ ] all §5 claims proven, transcripts pasted into §11
 - [ ] release/checkpoint close only — N/A (no `design-history/` update needed)
@@ -732,6 +1343,93 @@ transcript, not just the skill-list membership.
   the skill most likely to collide with existing always-on directives was
   the one initially read least carefully (frontmatter + 8 lines, not the
   full ~50-line body).
+- **Gap-plugin integration workflow caught a stale-context bug in its own
+  task framing:** the workflow was told a "Skill precedence" section
+  already existed in `~/.claude/CLAUDE.md` to append to — it doesn't yet
+  (that section only exists as unexecuted step 8 of this same plan). The
+  workflow caught this itself by reading the live file rather than trusting
+  the framing, which is exactly the "verify against the live repo every
+  time, never a snapshot baked into a doc" failure mode CLAUDE.md's own
+  rule 1 warns about. Both sequencings are handled in §4 step 12's text.
+- **A first-draft fix for `api-design-principles` (install the whole
+  `backend-development` plugin) was wrong** — verification found it pulls
+  in 9 skills, 8 agent personas, and a TDD-orchestration command, not "1
+  skill + trivial extras." Caught before it shipped; replaced with
+  vendoring only the target skill (§3.E.4).
+- **A first-draft fix for `pr-review-toolkit` vs. superpowers' own
+  `code-reviewer.md` (route dispatch to `pr-review-toolkit:code-reviewer`
+  "instead of" the superpowers template, "keeping both capabilities") was
+  self-contradictory** — adversarial verification caught that this would
+  drop superpowers' unique review dimensions (plan alignment, architecture,
+  production-readiness, the "Ready to merge" verdict) at exactly its
+  Mandatory checkpoints, not preserve them. Corrected to: no consolidation,
+  run both independently, accept minor overlap on bug-finding as a smaller
+  cost than lost coverage (§3.B.9).
+- **A first-draft justification for declining the official `code-review`
+  marketplace plugin was partly wrong** — it described the two marketplace
+  copies as "near-identical" and claimed both post inline `gh` PR comments;
+  a direct diff showed materially different mechanics (109 vs. 92 lines,
+  different agent counts/models, and the official copy has no inline-
+  comment tool at all, posting one top-level `gh pr comment` instead). The
+  official copy also has two genuinely novel review angles (git-blame
+  historical context, past-PR-comment precedent) nothing else in this
+  toolkit replicates. The decline verdict survives on an independent,
+  correct rationale (workflow mismatch — GitHub-PR-bot-native vs. this
+  user's local interactive style), but the "duplicate, no added value"
+  argument was corrected, not the conclusion (§3.B.9/§3.F.3).
+- **A first-draft security-tooling collision fix for Codex (`codex-security`
+  vs. `threat-modeling`) was too narrow** — anchored only on
+  `codex-security`'s own internal `threat-model` phase-skill trigger text,
+  because the real `threat-modeling` (fr33d3m0n) trigger text hadn't been
+  checked. A draft of that skill was found already sitting in this
+  session's own scratchpad; its actual trigger ("MUST be invoked instead of
+  analyzing security yourself," firing on generic "security audit," "find
+  vulnerabilities") is broad enough to collide with `codex-security`'s
+  entire scan family, not just its narrow internal phase-skill. Broadened
+  before shipping (§3.G.2/§4 step 14).
+- **A first-draft install-friction note for `codex-security` understated
+  severity** — it characterized `agent_depth_2`/worker-slot requirements as
+  "warn/suggest" (non-blocking); verification found `deep_security_scan`'s
+  profile marks these `block` severity specifically, which under this
+  machine's current `max_depth = 1` config genuinely triggers a mandatory
+  remediation dialogue for that one scan mode (not for the two primary
+  entry-point skills). Corrected in §3.G.5.
+- **A first-draft justification for the `obsidian-skills`-on-Codex
+  packaging asymmetry was wrong** — it claimed Claude's copy is "the only
+  side that can have live updates via the plugin marketplace mechanism."
+  `claude plugin list` shows it's not marketplace-tracked at all (it's a
+  `skills-directory` auto-detected plain git clone); the real (and
+  Codex-replicable) update path is just `git pull`. Corrected justification
+  in §3.G.7: the flat-copy recommendation stands, but because it matches
+  Codex's existing all-loose-skill convention, not because Claude's copy is
+  uniquely privileged. A second claim in the same finding — "memoria-vault
+  is itself an Obsidian vault project" — was also corrected to the
+  narrower, verified truth: the repo itself is a standalone CLI/engine with
+  Obsidian as an optional adapter; the real relevance is one level down, in
+  `vault-template/` (what the installer deploys to an end user's vault).
+- **A newly-discovered Codex-native alternative for the security/threat-
+  modeling gap was surfaced only during the parity audit, not the original
+  gap-plugin research:** an official OpenAI-curated `security-threat-model`
+  skill already sits at `~/.codex/vendor_imports/skills/skills/.curated/
+  security-threat-model` (predates this session, installable via Codex's
+  own `$skill-installer`) — a lower-trust-surface alternative to cloning
+  the third-party `fr33d3m0n/threat-modeling` repo onto Codex. This plan
+  does not pick between file-identical mirroring and this native
+  alternative — see §3.G.3, a deliberately surfaced, not silently resolved,
+  choice.
+- **Two citation/counting defects were caught in the retirement-recheck
+  audit and corrected before shipping:** a quote supporting the grilling-
+  vs-brainstorming argument ("this is a checklist you run yourself — not a
+  subagent dispatch") was misattributed to brainstorming's Spec Self-Review
+  section; it actually appears in `writing-plans`' Self-Review section — a
+  different file. And codebase-design's glossary was described as "the
+  formal 11-term glossary," which miscounts the enumerated items (12, by
+  direct count) and omits two section headers that actually exist. Neither
+  error changed the underlying conclusion (grilling and codebase-design
+  both still survive the retirement bias), but both are exactly the kind
+  of quoted "evidence" that gets trusted at face value once baked into an
+  exec-plan — corrected in §3.B.5 and §3.B.10/§3.E.4's text above rather
+  than left as-is.
 
 ## 10. Interfaces & dependencies
 
@@ -740,32 +1438,50 @@ transcript, not just the skill-list membership.
   Code), `.codex-plugin/plugin.json` (Codex).
 - **Files edited outside `memoria-vault`** (no git history inside this
   repo; recovery is this plan's own quoted exact-edit text): `~/.claude/
-  skills/{grilling,caveman}/SKILL.md` + Codex copies; `~/.claude/CLAUDE.md`;
-  `~/.claude/plugins/marketplaces/rethink/plugins/rethink/{hooks/
+  skills/{grilling,caveman,improve}/SKILL.md` + Codex copies; `~/.claude/
+  CLAUDE.md`; `~/.claude/plugins/marketplaces/rethink/plugins/rethink/{hooks/
   directive.md, skills/rethink-audit/SKILL.md, .claude-plugin/plugin.json,
-  .codex-plugin/plugin.json}`.
+  .codex-plugin/plugin.json}`; `~/.codex/AGENTS.md` (new file — currently
+  empty, this plan supplies its first content).
 - **Never edited, on principle:** any file under `~/.claude/plugins/cache/
-  {ponytail,superpowers}/...` or the Codex equivalent — both are
-  third-party plugins with their own release cadence; a direct edit would
-  be silently discarded on the next `claude plugin update` (or `codex
-  plugin update`) and would block a clean upgrade path. Every fix that
-  would otherwise have touched a superpowers-installed file (the `tdd`
-  seams idea, the `brainstorming`/`writing-plans` terminology drift) is
-  instead delivered as standing guidance in `~/.claude/CLAUDE.md` (step 8),
-  the same treatment already used for the `ponytail`-vs-TDD precedence
-  rule.
+  {ponytail,superpowers}/...`, `~/.claude/skills/threat-modeling/` (has its
+  own upstream, `fr33d3m0n/threat-modeling`, resyncable via `git pull`),
+  `~/.codex/plugins/cache/codex-security/`, or any Codex equivalent — all
+  are third-party/upstream-tracked with their own release cadence; a
+  direct edit would be silently discarded (or clobbered on the next
+  resync) and would block a clean upgrade path. Every fix that would
+  otherwise have touched one of these installed files (the `tdd` seams
+  idea, the `brainstorming`/`writing-plans` terminology drift, the
+  `interface-design`/`frontend-design` routing split, the `threat-modeling`
+  trigger narrowing) is instead delivered as standing guidance in
+  `~/.claude/CLAUDE.md` or `~/.codex/AGENTS.md`, the same treatment already
+  used for the `ponytail`-vs-TDD precedence rule.
+- **New installs outside `memoria-vault`, no direct edits, plain
+  install/vendor actions:** `~/.claude/skills/{api-design-principles,
+  threat-modeling}/` + Codex mirrors (vendored/cloned, not edited);
+  `~/.claude/plugins/marketplaces/{interface-design,the-elements-of-style}/`
+  + installs; `frontend-design` enabled (already-synced marketplace copy);
+  `~/.codex/plugins/cache/codex-security/` (installed via
+  `openai-curated`); `~/.codex/skills/{obsidian-cli,json-canvas,
+  obsidian-bases,defuddle,obsidian-markdown}/` (ported from
+  `~/.claude/skills/obsidian-skills/skills/`).
 - **Files edited inside `memoria-vault`** (normal git history, PR-reviewed):
   `AGENTS.md`; `.agents/playbooks/code-review.md`; `.agents/playbooks/
-  exec-plan.md`; `.agents/templates/exec-plan.md`; `.agents/templates/
-  handoff.md`.
-- **Superseded local skill:** `~/.claude/skills/tdd/` and `~/.codex/skills/
-  tdd/` (adapted earlier this session from `mattpocock/skills`). Retired by
-  step 4.
+  exec-plan.md`; `.agents/playbooks/security-review.md` (new "Escalate to
+  a full audit" section); `.agents/templates/exec-plan.md`; `.agents/
+  templates/handoff.md`.
+- **Superseded/retired:** `~/.claude/skills/tdd/` and `~/.codex/skills/
+  tdd/` (adapted earlier this session from `mattpocock/skills`), retired
+  by step 4; `~/.claude/skills/grill-me/` (Claude-only pointer, zero
+  independent capability), retired by step 4 — no Codex-side action, it
+  was never there.
+- **Considered and declined, never installed:** the official Anthropic
+  `code-review` marketplace plugin (both `claude-code-plugins` and
+  `claude-plugins-official` copies); `coderabbit@openai-curated` on Codex.
 - **Checked and left alone, with reasons on file:** `.agents/playbooks/
-  {design-history,release,security-review,verify-change}.md`, `.agents/
+  {design-history,release,verify-change}.md`, `.agents/
   templates/review-report.md`, `.agents/system/*.md` (three maps), `.agents/
-  skills/{policy-change-review,schema-change}/SKILL.md`, `improve`,
-  `codebase-design`.
+  skills/{policy-change-review,schema-change}/SKILL.md`, `codebase-design`.
 
 ## 11. Artifacts & notes
 
