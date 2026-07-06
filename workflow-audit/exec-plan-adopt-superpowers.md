@@ -112,7 +112,17 @@ assumed):
   mechanism: *"User instructions (CLAUDE.md, AGENTS.md, GEMINI.md, etc,
   direct requests) take precedence over skills... Only skip skill workflows
   ... when your human partner has explicitly told you to."* This plan uses
-  that mechanism (§4 step 6) rather than editing the vendored skill file.
+  that mechanism (§4 step 8) rather than editing the vendored skill file —
+  the same rule this plan applies to every superpowers fix: **never edit a
+  file under the plugin's own installed/cached path** (it's overwritten on
+  `claude plugin update superpowers`); route any needed cross-reference or
+  precedence rule through the durable, update-proof `~/.claude/CLAUDE.md`
+  instead. This is unlike `rethink` (the user's own plugin, released by
+  them, safe to edit directly) or `grilling`/`caveman`/`codebase-design`/
+  `improve`/`tdd` (hand-authored loose files with no upstream update
+  mechanism at all) — `ponytail` and `superpowers` are the two third-party,
+  independently-updated plugins in this toolkit, and both get the
+  CLAUDE.md-note treatment, never a direct file edit.
 
 **What's already installed, for context:**
 
@@ -199,19 +209,22 @@ estimating.
    strict reading would compress the substantive content of a spec/plan
    file the same way it compresses ephemeral chat prose. Fix: extend the
    exemption.
-7. **`tdd` retirement's planned "seams" addendum — corrected, not just
-   ported.** The local `tdd` skill's "Seams" section is itself a loose
-   paraphrase of `codebase-design`'s carefully-defined vocabulary (which
-   explicitly lists "boundary" under *Avoid*). Porting it into
-   `test-driven-development` without a cross-reference would create a
-   *third*, inconsistent definition of the same term. Fix: the addendum
-   must open with `**REQUIRED BACKGROUND:** codebase-design`'s vocabulary,
-   using "module"/"seam" — not reintroduce "boundary" as a synonym. The
-   same drift already exists independently in `brainstorming`'s "Design for
-   isolation and clarity" section and `writing-plans`' "File Structure"
-   section (both say "unit"/"boundaries" instead of "module"/"seam") — fix
-   both with the same one-line cross-reference while editing these files
-   anyway.
+7. **`tdd` retirement's "seams" idea, and a terminology drift in
+   `brainstorming`/`writing-plans` — real content gaps, but delivered
+   without touching any superpowers file.** The local `tdd` skill's "Seams"
+   section (pre-agree test boundaries before writing a test) has no
+   equivalent in `test-driven-development`, and is itself a loose paraphrase
+   of `codebase-design`'s carefully-defined vocabulary (which explicitly
+   lists "boundary" under *Avoid*) — porting it in verbatim, even as an
+   edit, would create a *third*, inconsistent definition of the same term.
+   The same drift already exists independently in `brainstorming`'s "Design
+   for isolation and clarity" section and `writing-plans`' "File Structure"
+   section (both say "unit"/"boundaries" instead of "module"/"seam"). Since
+   none of these three files may be edited directly (they're inside the
+   superpowers plugin's own installed path), all three gaps are closed by
+   one global note in `~/.claude/CLAUDE.md` instead: name `codebase-design`
+   as the canonical vocabulary source, and state the seams-before-tests
+   practice as standing guidance. See §4 step 8 for the exact text.
 8. **`improve` vs. `subagent-driven-development`/`writing-plans`/
    `verification-before-completion` — checked in depth, no fix required.**
    Surface similarity (dispatch-review-verdict-loop) is real, but every
@@ -345,58 +358,35 @@ transcript, not just the skill-list membership.
    `[marketplaces.superpowers]` and `[plugins."superpowers@superpowers"]`,
    matching the existing `ponytail`/`rethink` entries' shape.
 
-4. **Retire the standalone `tdd` skill, with the corrected addendum.** In
-   the installed `test-driven-development/SKILL.md` (both tools), insert
-   after "When to Use" / before "The Iron Law":
-
-   ```markdown
-   ## Seams — Where Tests Go
-
-   **REQUIRED BACKGROUND:** You must understand the `codebase-design`
-   skill's module/interface/seam vocabulary — use it as defined there, not
-   synonyms like "boundary."
-
-   A test exercises a module through its seam, never through internals.
-   Before writing the RED test, name the seam under test and confirm it
-   with your human partner; test only at pre-agreed seams.
-   ```
-
-   Mark this with an inline comment noting it's a local patch that must be
-   reapplied after `claude plugin update superpowers`. Then remove the
-   superseded skill:
+4. **Retire the standalone `tdd` skill.** No edit to any superpowers file —
+   the "seams" content it would have contributed lands in step 8's global
+   CLAUDE.md note instead.
 
    ```bash
    rm -rf ~/.claude/skills/tdd ~/.codex/skills/tdd
    ```
 
-5. **Fix the terminology drift in `brainstorming` and `writing-plans`**
-   (both tools' installed copies). In `brainstorming/SKILL.md`, under
-   "Design for isolation and clarity," before its bullet list, add:
-   `**REQUIRED BACKGROUND:** Use the codebase-design skill's vocabulary
-   here — "unit" below means module, "boundaries" means seam/interface
-   placement.` In `writing-plans/SKILL.md`, change the "File Structure"
-   bullet "Design units with clear boundaries and well-defined interfaces"
-   to add `(see the codebase-design skill: unit ≈ module, boundary ≈ seam)`.
-
-6. **Fix `grilling`'s routing ambiguity** (`~/.claude/skills/grilling/
-   SKILL.md` and the Codex copy). Change the frontmatter `description` to:
-   `Grill the user relentlessly about a plan or design that already exists
-   (their own draft, notes, or a prior spec). Use when the user wants to
-   stress-test an EXISTING plan before building, or uses any 'grill' trigger
-   phrases. Not for building a design from scratch — use brainstorming for
-   that.` Add one line to the body: `If no plan or design exists yet — only
-   a bare idea — use the brainstorming skill first to produce and get
+5. **Fix `grilling`'s routing ambiguity** (`~/.claude/skills/grilling/
+   SKILL.md` and the Codex copy — hand-authored loose files, safe to edit
+   directly). Change the frontmatter `description` to: `Grill the user
+   relentlessly about a plan or design that already exists (their own
+   draft, notes, or a prior spec). Use when the user wants to stress-test
+   an EXISTING plan before building, or uses any 'grill' trigger phrases.
+   Not for building a design from scratch — use brainstorming for that.`
+   Add one line to the body: `If no plan or design exists yet — only a
+   bare idea — use the brainstorming skill first to produce and get
    approval on one; grilling assumes a plan is already in hand to
    interrogate, not that one needs to be created.`
 
-7. **Fix `caveman`'s persisted-artifact exemption** (both tools). Change the
-   Boundaries section's first sentence to: `Code/commits/PRs/persisted
-   design docs, specs, and plans (files saved to disk as project artifacts,
-   e.g. docs/superpowers/specs/*.md, docs/superpowers/plans/*.md): write
-   normal.`
+6. **Fix `caveman`'s persisted-artifact exemption** (both tools —
+   hand-authored, safe to edit). Change the Boundaries section's first
+   sentence to: `Code/commits/PRs/persisted design docs, specs, and plans
+   (files saved to disk as project artifacts, e.g. docs/superpowers/specs/
+   *.md, docs/superpowers/plans/*.md): write normal.`
 
-8. **Fix `rethink`'s double-trigger with `brainstorming`**
-   (`~/.claude/plugins/marketplaces/rethink/plugins/rethink/`). In
+7. **Fix `rethink`'s double-trigger with `brainstorming`**
+   (`~/.claude/plugins/marketplaces/rethink/plugins/rethink/` — the user's
+   own plugin, released by them, safe to edit directly). In
    `hooks/directive.md`, under `## Rules`, add: `- **Yield to gated design
    flows:** if a loaded skill hard-gates a finished design behind
    interactive requirements-gathering and user approval (e.g. a
@@ -414,12 +404,20 @@ transcript, not just the skill-list membership.
    still unclear) to lock in file structure and bite-sized TDD tasks; do
    not execute migrate: steps directly.` Bump `plugin.json`/`.codex-plugin/
    plugin.json` versions (1.1.0 → 1.2.0, additive) as done for the earlier
-   rethink revision this session.
+   rethink revision this session. **Note:** the fuller reconsideration of
+   whether `rethink`'s standing directive should be narrowed further or
+   retired entirely (donating its method into `brainstorming`) is a
+   separate, larger decision raised this session and not yet resolved —
+   see §9. This step is the smaller patch; revisit it if that larger
+   question is answered before execution.
 
-9. **Add the global precedence note** (`~/.claude/CLAUDE.md` — durable,
-   update-proof, and this is exactly the mechanism `using-superpowers`'s own
-   text defers to: *"User instructions... take precedence over skills"*).
-   Add a new section:
+8. **Add the global note in `~/.claude/CLAUDE.md`** — durable, update-proof,
+   and the mechanism `using-superpowers`'s own text defers to: *"User
+   instructions... take precedence over skills."* This is also where the
+   `tdd`-seams and `brainstorming`/`writing-plans`-terminology content from
+   step 4/§3.B.7 lands, since none of those three files may be edited
+   directly (all three are inside the superpowers plugin's installed
+   path). Add a new section:
 
    ```markdown
    ## Skill precedence
@@ -437,25 +435,39 @@ transcript, not just the skill-list membership.
    - **Test-first ordering:** when TDD (`superpowers:test-driven-development`)
      is in effect for a change, its test-first ordering wins over
      `ponytail`'s default code-first-then-check sequencing.
+
+   ## Design vocabulary
+
+   - The `codebase-design` skill's module/interface/seam/adapter/leverage/
+     locality vocabulary is canonical whenever a skill decomposes work into
+     units — including where a skill's own text says "unit" or "boundary"
+     instead (e.g. `superpowers:brainstorming`'s "Design for isolation and
+     clarity" section, `superpowers:writing-plans`' "File Structure" step):
+     read "unit" as module and "boundary" as seam.
+   - Before writing a RED test (`superpowers:test-driven-development`), name
+     and confirm the test's seam (per `codebase-design`) with the user
+     first; test only at pre-agreed seams. This is the one idea from the
+     retired local `tdd` skill worth keeping — delivered here, not as an
+     edit to the installed skill.
    ```
 
-10. **Repo-side edits on `memoria-vault`.** Isolate first (`AGENTS.md` §1):
+9. **Repo-side edits on `memoria-vault`.** Isolate first (`AGENTS.md` §1):
 
-    ```bash
-    git fetch origin
-    git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/adopt-superpowers-docs -b docs/adopt-superpowers-repo-notes origin/main
-    cd ~/memoria-vault/worktrees/adopt-superpowers-docs
-    ```
+   ```bash
+   git fetch origin
+   git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/adopt-superpowers-docs -b docs/adopt-superpowers-repo-notes origin/main
+   cd ~/memoria-vault/worktrees/adopt-superpowers-docs
+   ```
 
-    Apply, in this worktree: the two `AGENTS.md` Skills-table rows plus the
-    two consolidated paragraphs (§3.C.1); `.agents/playbooks/code-review.md`'s
-    two additions (§3.C.2); `.agents/playbooks/exec-plan.md`'s two additions
-    (§3.C.4); `.agents/templates/exec-plan.md`'s one-line pointer (§3.C.5);
-    `.agents/templates/handoff.md`'s new "Result" section (§3.C.6). Exact
-    text for every edit is quoted verbatim in §3 above and in the source
-    workflow findings cited in §2.
+   Apply, in this worktree: the two `AGENTS.md` Skills-table rows plus the
+   two consolidated paragraphs (§3.C.1); `.agents/playbooks/code-review.md`'s
+   two additions (§3.C.2); `.agents/playbooks/exec-plan.md`'s two additions
+   (§3.C.4); `.agents/templates/exec-plan.md`'s one-line pointer (§3.C.5);
+   `.agents/templates/handoff.md`'s new "Result" section (§3.C.6). Exact
+   text for every edit is quoted verbatim in §3 above and in the source
+   workflow findings cited in §2.
 
-11. **Verify** — see §5 in full; run in a **fresh** Claude Code session and
+10. **Verify** — see §5 in full; run in a **fresh** Claude Code session and
     a **fresh** Codex session (plugin/skill changes require a new session,
     confirmed via `claude plugin update`'s own "restart required to apply"
     note and this session's earlier finding that Codex needs a restart to
@@ -498,7 +510,7 @@ transcript, not just the skill-list membership.
   description is in effect, then the agent routes to `brainstorming` first
   rather than launching grilling's interview directly.
   - **Prove with:** transcript of one such request.
-- **Claim:** Given the repo-side edits (step 10), when a PR is opened, then
+- **Claim:** Given the repo-side edits (step 9), when a PR is opened, then
   `pr-policy`/`lint`/`cspell`/`markdownlint` all pass (these are pure
   documentation additions, no code paths touched).
   - **Prove with:** `gh pr checks <n> --watch` transcript.
@@ -544,14 +556,26 @@ transcript, not just the skill-list membership.
   "merge locally" option was mistaken for something that pushes to `main`.
   Neither survived a direct re-read of the primary text. Kept here so a
   future reader doesn't re-derive the same mistakes from a stale summary.
-- **Open decision, not resolved here:** ponytail's "ship the lazy version,
+- **Open decision #1, not resolved here:** ponytail's "ship the lazy version,
   question it in the same response" instinct and brainstorming's "every
   project needs an approved design, even a single-function utility" hard
   gate are in genuine tension, not just overlap. This plan does not pick a
   side — flagging it in `~/.claude/CLAUDE.md`'s new precedence section (step
-  9) covers the two *resolved* conflicts (Plan Mode, TDD timing) but
+  8) covers the two *resolved* conflicts (Plan Mode, TDD timing) but
   deliberately leaves this third one for you to decide and add a line for,
   once you've seen how the two skills actually behave together in practice.
+- **Open decision #2, not resolved here:** applying "superpowers takes
+  precedence" strictly argues for retiring `rethink`'s standing SessionStart
+  directive entirely (donating its citation-grounded, first-principles
+  method into `brainstorming`'s approach-proposal step as a technique,
+  rather than keeping a second, independent always-on system that needs a
+  hand-written yield clause to avoid contradicting `using-superpowers` +
+  `brainstorming`). Step 7 currently implements only the smaller patch (add
+  a yield clause, keep the standing directive as-is) because this larger
+  question — whether to fully retire and restructure the user's own
+  published plugin — was raised but not yet answered before this revision.
+  Decide before executing step 7: smaller patch as written, or the fuller
+  restructuring.
 - `using-superpowers`'s aggressive mandatory-invocation framing was found by
   directly reading its full body, not by either cross-check workflow —
   neither workflow was scoped to include it, since earlier passes treated it
@@ -570,10 +594,17 @@ transcript, not just the skill-list membership.
   skills/{grilling,caveman}/SKILL.md` + Codex copies; `~/.claude/CLAUDE.md`;
   `~/.claude/plugins/marketplaces/rethink/plugins/rethink/{hooks/
   directive.md, skills/rethink-audit/SKILL.md, .claude-plugin/plugin.json,
-  .codex-plugin/plugin.json}`; the installed `superpowers` plugin's
-  `test-driven-development`, `brainstorming`, `writing-plans` skill files
-  (both tools — noted as needing reapplication after `claude plugin update
-  superpowers`).
+  .codex-plugin/plugin.json}`.
+- **Never edited, on principle:** any file under `~/.claude/plugins/cache/
+  {ponytail,superpowers}/...` or the Codex equivalent — both are
+  third-party plugins with their own release cadence; a direct edit would
+  be silently discarded on the next `claude plugin update` (or `codex
+  plugin update`) and would block a clean upgrade path. Every fix that
+  would otherwise have touched a superpowers-installed file (the `tdd`
+  seams idea, the `brainstorming`/`writing-plans` terminology drift) is
+  instead delivered as standing guidance in `~/.claude/CLAUDE.md` (step 8),
+  the same treatment already used for the `ponytail`-vs-TDD precedence
+  rule.
 - **Files edited inside `memoria-vault`** (normal git history, PR-reviewed):
   `AGENTS.md`; `.agents/playbooks/code-review.md`; `.agents/playbooks/
   exec-plan.md`; `.agents/templates/exec-plan.md`; `.agents/templates/
