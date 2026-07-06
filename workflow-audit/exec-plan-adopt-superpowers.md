@@ -446,15 +446,18 @@ estimating.
    today, and importing it would be speculative machinery for work this
    repo doesn't do.
 7. **`.agents/playbooks/design-history.md`, `release.md`,
-   `security-review.md`, `.agents/templates/review-report.md`,
-   `.agents/system/*.md` (three maps), `.agents/skills/policy-change-review/
-   SKILL.md`, `.agents/skills/schema-change/SKILL.md`** — all checked in
+   `.agents/templates/review-report.md`, `.agents/system/*.md` (three maps),
+   `.agents/skills/policy-change-review/SKILL.md`,
+   `.agents/skills/schema-change/SKILL.md`** — all checked in
    full against every plausibly-overlapping superpowers skill; all confirmed
    **leave-alone** with specific, verified reasoning per file (distinct
    artifact/audience/trigger, or the repo's own version is already stronger/
    more specific than the generic vendor equivalent, or citing an optional
    plugin by name inside a leaf procedure file would create a dead
-   reference when the plugin isn't installed). No edits.
+   reference when the plugin isn't installed). No edits. (`security-review.md`
+   was originally in this leave-alone set too — superseded by §3.E.2, which
+   gives it one new section for the `threat-modeling` gap-fill; it is no
+   longer untouched.)
 
 ### D. Verification, not just presence-checking
 
