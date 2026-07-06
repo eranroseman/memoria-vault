@@ -22,8 +22,8 @@ terminal operation you run yourself — there is no export lane or palette comma
 - For readiness-gated exports, a paper frame recorded with
   `memoria project frame-paper --frame-file <json>` and the project checked
   afterward
-- The draft reviewed by you; automated Writer/Verifier draft flows are not part
-  of the alpha.16 shipped path
+- For composed drafts, `projects/<project>/outline.md` and `draft.md` created
+  with `memoria project slice`, `compose`, and `verify`
 - `bibliography.bib` current (generated from checked SQLite catalog rows)
 - A CSL style file — create `.memoria/csl/` in the vault and drop your `.csl` there (styles from the [Zotero style repository](https://www.zotero.org/styles))
 
@@ -48,7 +48,9 @@ memoria project export \
 
 For `.docx`, `.pdf`, or `.odt`, keep the same command and change `--format` and
 `--output`; Memoria fails clearly if Pandoc is not installed. Omit
-`--ready-only` for a review packet before the paper plan is complete.
+`--ready-only` for a review packet before the paper plan is complete. Add
+`--draft` to export the composed `draft.md`; Memoria refuses unclean drafts
+with evidence-incomplete or review-required markers.
 
 **3. Export a manuscript draft to Word (`.docx`) — the default static route.**
 

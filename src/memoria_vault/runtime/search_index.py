@@ -176,6 +176,34 @@ def answer_query(
     )
 
 
+def search_checked_index(
+    vault: Path,
+    query: str,
+    *,
+    k: int = 10,
+    include_stale: bool = False,
+) -> list[dict[str, Any]]:
+    """Return BM25 hits over checked retrieval documents."""
+    vault = Path(vault)
+    docs = checked_search_documents(vault, include_stale=include_stale)
+    by_path = {str(document["path"]): document for document in docs}
+    tokenized = [(str(document["path"]), _tokens(str(document["text"]))) for document in docs]
+    rows = []
+    for path, score in _bm25(tokenized, query)[:k]:
+        document = by_path[path]
+        frontmatter = dict(document["frontmatter"])
+        rows.append(
+            {
+                "path": path,
+                "title": frontmatter.get("title") or Path(path).stem,
+                "type": frontmatter.get("type"),
+                "score": score,
+                "frontmatter": frontmatter,
+            }
+        )
+    return rows
+
+
 def _answer_from_hits(
     query: str,
     hits: list[tuple[str, float]],

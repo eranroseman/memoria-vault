@@ -139,6 +139,88 @@ def test_engine_read_scope_filters_and_blocks_requests(workspace: Path) -> None:
         api.read_request(workspace, "create-beta", read_scope=[alpha["path"]])
 
 
+def test_engine_read_slice_returns_project_slice_view(workspace: Path) -> None:
+    _write_checked_concept(
+        workspace,
+        "projects/project-alpha/project.md",
+        "type: project\ntitle: Alpha project\ntags: []\nlinks: {}\nthesis: notes/thesis.md\n",
+        concept_type="project",
+    )
+    _write_checked_concept(
+        workspace,
+        "notes/thesis.md",
+        "type: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\ntitle: Thesis\ntags: []\nlinks: {}\n",
+    )
+    _write_checked_concept(
+        workspace,
+        "notes/support.md",
+        "type: note\n"
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FB2\n"
+        "title: Support\n"
+        "tags: []\n"
+        "links:\n"
+        "  supports:\n"
+        "    - notes/thesis.md\n",
+    )
+    outline = workspace / "projects/project-alpha/outline.md"
+    outline.write_text(
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FB2 -- Support first\n"
+        "- 01ARZ3NDEKTSV4RRFFQ69G5FB1 -- Thesis second\n",
+        encoding="utf-8",
+    )
+
+    result = api.read_slice(workspace, "project-alpha")
+
+    assert result["api_version"] == api.READ_API_VERSION
+    assert [member["path"] for member in result["slice"]["members"]] == [
+        "notes/support.md",
+        "notes/thesis.md",
+    ]
+    block = result["view"]["blocks"][0]
+    assert block["kind"] == "table"
+    assert block["refs"] == ["notes/support.md", "notes/thesis.md"]
+    assert block["rows"][0]["cells"]["reasoning"] == "Support first"
+
+
+def test_engine_compose_and_read_draft_returns_project_draft_view(workspace: Path) -> None:
+    _write_checked_concept(
+        workspace,
+        "projects/project-alpha/project.md",
+        "type: project\ntitle: Alpha project\ntags: []\nlinks: {}\nthesis: notes/thesis.md\n",
+        concept_type="project",
+    )
+    _write_checked_concept(
+        workspace,
+        "notes/thesis.md",
+        "type: note\nid: 01ARZ3NDEKTSV4RRFFQ69G5FB1\ntitle: Thesis\ntags: []\nlinks: {}\n",
+    )
+    outline = workspace / "projects/project-alpha/outline.md"
+    outline.write_text("- 01ARZ3NDEKTSV4RRFFQ69G5FB1 -- Draft thesis\n", encoding="utf-8")
+
+    composed = api.compose_draft(
+        workspace,
+        "project-alpha",
+        token_budget=400,
+        idempotency_key="compose-draft",
+    )
+    verified = api.verify_draft(
+        workspace,
+        "project-alpha",
+        idempotency_key="verify-draft",
+    )
+    readback = api.read_draft(workspace, "project-alpha")
+
+    assert composed["ok"] is True
+    assert composed["result"]["draft_path"] == "projects/project-alpha/draft.md"
+    assert composed["result"]["evidence_set_count"] == 1
+    assert verified["ok"] is True
+    assert verified["result"]["ready"] is False
+    assert readback["api_version"] == api.READ_API_VERSION
+    assert "%%ev:" in readback["draft"]["content"]
+    assert readback["view"]["kind"] == "project-draft"
+    assert readback["view"]["blocks"][0]["rows"][0]["cells"]["state"] == "evidence-incomplete"
+
+
 def _write_note(workspace: Path, rel: str, title: str) -> None:
     path = workspace / rel
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -147,6 +229,25 @@ def _write_note(workspace: Path, rel: str, title: str) -> None:
         workspace,
         output_id=rel,
         concept_type="note",
+        output_sha256=sha256_file(path),
+    )
+    state.set_concept_verdict(workspace, rel, "checked")
+
+
+def _write_checked_concept(
+    workspace: Path,
+    rel: str,
+    frontmatter: str,
+    *,
+    concept_type: str = "note",
+) -> None:
+    path = workspace / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"---\n{frontmatter}---\nBody.\n", encoding="utf-8")
+    state.record_observed_file_edit(
+        workspace,
+        output_id=rel,
+        concept_type=concept_type,
         output_sha256=sha256_file(path),
     )
     state.set_concept_verdict(workspace, rel, "checked")

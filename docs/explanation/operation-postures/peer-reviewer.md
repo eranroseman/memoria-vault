@@ -10,9 +10,10 @@ nav_order: 4
 The Peer-reviewer is the formal, independent verification posture before
 anything ships: the academic peer-review pass. Its posture is **skeptical, and
 deliberately independent**: flag, don't fix. Verification operations run
-judgment checks - citekey resolution, claim-to-source tracing, near-duplicate
-adjudication - and conceptual red-team checks, reading a draft *for soundness,
-not just facts*. Findings land as attention; they do not become automatic fixes.
+evidence-marker checks, citekey/source-span resolution, deterministic number
+checks where the engine owns the arithmetic, and conceptual red-team checks,
+reading a draft *for soundness, not just facts*. Findings land as attention or
+draft verification output; they do not become automatic fixes.
 
 The Peer-reviewer owns judgment checks. Deterministic verification work -
 retraction lookups, duplicate and broken-citation sweeps - lives in

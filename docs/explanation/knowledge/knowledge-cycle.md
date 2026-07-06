@@ -25,7 +25,9 @@ item, is kept or rejected by the PI, and becomes checked source state only after
 the required enrichment and review checks pass. The PI reads it, distills claims
 in their own words, and confirms the links that connect them into the graph.
 Those claims mature and cross-link; once enough accumulate, a project maps the
-corpus, drafts, verifies, and ships.
+corpus into an `outline.md` slice, composes `draft.md`, verifies the evidence
+markers, exports clean drafts, and promotes selected passages back into
+unchecked notes for review.
 
 **The loop that compounds:** gaps found in mapping and verification raise Inbox
 attention that can trigger new capture/catalog work. The output end of the cycle
@@ -57,13 +59,11 @@ A new source's value is not the text it contains but what it contributes to exis
 
 The Inbox and space dashboards surface exactly where work has stopped. Sources awaiting reading and distillation surface in the Library reading pipeline. Unconnected claims surface in Knowledge's Open questions view; low-stakes structural debt surfaces in Maintenance's Loose ends view. Open verification findings surface as Inbox `flag`/`alert` attention items in Maintenance. The correspondence between stuck points and views is not accidental — they were designed to make the cycle's failure modes visible before they compound.
 
-The one transition the dashboards cannot surface is when developed claims are
-never assembled into a draft - that gap is a judgment call, not a structural
-signal. It is also the hardest gap to notice, because a vault full of
-well-developed claims looks healthy even when nothing is being written. Today
-mapping operations surface coverage, clusters, graph/canvas views, and gap
-attention. Alpha.16 can gate structural project export readiness, but broad
-writability scoring remains deferred future work.
+The project transition is now explicit: `memoria project slice` proposes a
+checked outline, `compose` writes a draft, `verify` gates the evidence markers,
+and `promote` turns selected passages into unchecked notes. Broad writability
+scoring remains out of scope; the shipped signal is concrete file state and
+verification findings, not a synthetic score.
 
 ## Why archiving preserves the cycle's integrity
 

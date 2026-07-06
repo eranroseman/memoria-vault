@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import subprocess
 from collections.abc import Iterable
@@ -11,6 +12,12 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
+from memoria_vault.runtime.evidence import (
+    EvidenceMarker,
+    evidence_ref_kind,
+    extract_evidence_markers,
+    parse_source_span_ref,
+)
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -19,7 +26,7 @@ from memoria_vault.runtime.vaultio import write_text_durable
 
 DB_REL = ".memoria/memoria.sqlite"
 JOURNAL_HEAD_REL = ".memoria/journal-head"
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 REQUEST_STATUSES = frozenset({"pending", "running", "done", "failed", "cancelled"})
 CHECK_STATUSES = frozenset({"unchecked", "checked", "quarantined"})
 WORK_ASPECT_TYPES = frozenset(
@@ -1067,6 +1074,58 @@ def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, 
             )
 
 
+def replace_evidence_sets(vault: Path, rows: Iterable[dict[str, Any]]) -> dict[str, int]:
+    rows = list(rows)
+    with connect(vault) as conn:
+        deleted = conn.execute("DELETE FROM evidence_sets").rowcount
+        for row in rows:
+            items = [str(item) for item in row.get("items", [])]
+            conn.execute(
+                """
+                INSERT INTO evidence_sets(
+                    id,
+                    block_ref,
+                    items_json,
+                    type,
+                    state,
+                    review_required,
+                    run_id
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(row["id"]),
+                    normalize_path(str(row["block_ref"])),
+                    _json(items),
+                    str(row["type"]),
+                    str(row["state"]),
+                    1 if bool(row.get("review_required")) else 0,
+                    str(row.get("run_id") or ""),
+                ),
+            )
+    return {"deleted": int(deleted), "inserted": len(rows)}
+
+
+def evidence_sets(vault: Path) -> list[dict[str, Any]]:
+    if not db_path(vault).is_file():
+        return []
+    with connect(vault) as conn:
+        rows = conn.execute(
+            """
+            SELECT id, block_ref, items_json, type, state, review_required, run_id
+            FROM evidence_sets
+            ORDER BY block_ref, id
+            """
+        ).fetchall()
+    return [_evidence_set_row(row) for row in rows]
+
+
+def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict[str, int]:
+    vault = Path(vault)
+    marker_rows = _evidence_marker_rows(vault, run_id=run_id)
+    return replace_evidence_sets(vault, marker_rows)
+
+
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
     if not db_path(vault).is_file():
         return []
@@ -1142,7 +1201,7 @@ def _init(conn: sqlite3.Connection) -> None:
     if current == 4:
         _migrate_v4_to_v5(conn)
         current = int(conn.execute("PRAGMA user_version").fetchone()[0])
-    if current not in {0, SCHEMA_VERSION}:
+    if current not in {0, 5, SCHEMA_VERSION}:
         raise RuntimeError(f"unsupported Memoria DB schema version: {current}")
     conn.executescript(_schema_sql())
     applied = int(conn.execute("PRAGMA user_version").fetchone()[0])
@@ -1232,6 +1291,111 @@ def _source_row(row: sqlite3.Row) -> dict[str, Any]:
         "content_path": row["content_path"],
         "raw_path": row["raw_path"],
     }
+
+
+def _evidence_set_row(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "block_ref": row["block_ref"],
+        "items": json.loads(row["items_json"] or "[]"),
+        "type": row["type"],
+        "state": row["state"],
+        "review_required": bool(row["review_required"]),
+        "run_id": row["run_id"],
+    }
+
+
+def _evidence_marker_rows(vault: Path, *, run_id: str) -> list[dict[str, Any]]:
+    found: list[tuple[str, EvidenceMarker]] = []
+    for path in sorted(vault.rglob("*.md")):
+        if _skip_evidence_scan_path(path.relative_to(vault)):
+            continue
+        rel = normalize_path(path.relative_to(vault).as_posix())
+        found.extend(
+            (rel, marker) for marker in extract_evidence_markers(path.read_text(encoding="utf-8"))
+        )
+
+    marker_ids = {marker.evidence_id for _rel, marker in found}
+    source_spans = _source_span_pages(vault)
+    return [
+        _derived_evidence_row(
+            rel, marker, marker_ids=marker_ids, source_spans=source_spans, run_id=run_id
+        )
+        for rel, marker in found
+    ]
+
+
+def _skip_evidence_scan_path(rel: Path) -> bool:
+    return any(part in {".git", ".memoria"} for part in rel.parts)
+
+
+def _derived_evidence_row(
+    rel: str,
+    marker: EvidenceMarker,
+    *,
+    marker_ids: set[str],
+    source_spans: dict[str, set[str]],
+    run_id: str,
+) -> dict[str, Any]:
+    items = list(marker.items)
+    evidence_type = _derived_evidence_type(items)
+    return {
+        "id": marker.evidence_id,
+        "block_ref": _evidence_block_ref(rel, marker.evidence_id),
+        "items": items,
+        "type": evidence_type,
+        "state": "complete"
+        if _evidence_items_resolve(items, marker_ids=marker_ids, source_spans=source_spans)
+        else "evidence-incomplete",
+        "review_required": evidence_type in {"implicit", "multi-hop"},
+        "run_id": run_id,
+    }
+
+
+def _derived_evidence_type(items: list[str]) -> str:
+    if not items:
+        return "implicit"
+    if any(evidence_ref_kind(item) == "evidence-set" for item in items):
+        return "multi-hop"
+    return "single-span" if len(items) == 1 else "multi-span"
+
+
+def _evidence_items_resolve(
+    items: list[str],
+    *,
+    marker_ids: set[str],
+    source_spans: dict[str, set[str]],
+) -> bool:
+    if not items:
+        return False
+    for item in items:
+        if evidence_ref_kind(item) == "evidence-set":
+            if item not in marker_ids:
+                return False
+            continue
+        source = parse_source_span_ref(item)
+        if source.page not in source_spans.get(source.work_id, set()):
+            return False
+    return True
+
+
+def _source_span_pages(vault: Path) -> dict[str, set[str]]:
+    spans: dict[str, set[str]] = {}
+    for source in catalog_sources(vault, checked_only=False):
+        source_id = str(source["source_id"])
+        content_path = Path(vault) / normalize_path(str(source.get("content_path") or ""))
+        if not content_path.is_file():
+            spans[source_id] = set()
+            continue
+        text = content_path.read_text(encoding="utf-8")
+        spans[source_id] = set(re.findall(r"\^p\d{4,}", text))
+    return {
+        source_id: {page.removeprefix("^") for page in pages} for source_id, pages in spans.items()
+    }
+
+
+def _evidence_block_ref(rel: str, evidence_id: str) -> str:
+    return f"{normalize_path(rel)}#^blk-{evidence_id.removeprefix('ev-')}"
 
 
 def _upsert_concept_mirror_conn(

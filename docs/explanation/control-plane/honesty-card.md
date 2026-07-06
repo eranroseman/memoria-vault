@@ -21,7 +21,7 @@ scan, or scheduled job.
 | Shape | Types | Carries | Deliberately omits | Why |
 | --- | --- | --- | --- | --- |
 | Proposal | candidate/gap attention | evidence for, evidence against, uncertainty, and the source/gap facts | Verdict | The prompt already implies "consider this"; the PI needs decision material, not a rubber stamp. |
-| Verification | flag/alert attention | `finding` and any soft `agent_recommendation` | Human disposal | The point is what the check found; even a `clean` flag closes nothing on its own. |
+| Verification | flag/alert attention | `finding`, evidence marker context, and any soft `agent_recommendation` | Automatic disposal | The point is what the check found; even a `clean` flag closes nothing on its own. Human accept/reject dispositions are recorded separately. |
 | Work prompt | work-prompt attention | The work waiting on the PI | Verdict | It is a review or worklist handle, not a proposal to accept. |
 
 The retired durable-card schema note is in [Inbox card fields](../../reference/inbox-card-fields.md).
@@ -50,6 +50,7 @@ The 30-minute test is owned by [Interaction channels](../architecture/interactio
 | --- | --- |
 | Classification | It is audited, correctable metadata; gating it would be a rubber stamp ([checked means checks passed, not a human verdict](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). |
 | High-cardinality screening | It becomes a Bases-backed worklist plus one aggregate work-prompt, not dozens of prompts. |
+| Seeded-error probes | They are calibration checks surfaced through review; the probe result never silently rewrites or promotes the underlying artifact. |
 | `review-request` | Any request awaiting the PI is represented as attention, pointing at the artifact under review. |
 
 ---

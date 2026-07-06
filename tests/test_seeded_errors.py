@@ -7,11 +7,13 @@ import pytest
 
 from memoria_vault.runtime import state
 from memoria_vault.runtime.seeded_errors import (
+    SEEDED_PROBE_SENTINEL,
     _metrics_by_error_class,
     _verdict_key,
     load_seeded_error_bundle,
     prepare_seeded_error_fixture,
     run_seeded_error_verdict,
+    seeded_probe_review_batch,
 )
 from memoria_vault.runtime.vaultio import read_frontmatter
 
@@ -40,6 +42,18 @@ def test_seeded_error_bundle_is_frozen_contract() -> None:
         "poisoned-span",
         "wrong-extraction",
     ]
+
+
+def test_seeded_error_bundle_can_surface_contained_probe_batch() -> None:
+    bundle = load_seeded_error_bundle(BUNDLE)
+
+    batch = seeded_probe_review_batch(bundle["cases"], max_items=2)
+
+    assert batch["production_enabled"] is False
+    assert batch["sentinel"] == SEEDED_PROBE_SENTINEL
+    assert len(batch["probes"]) == 2
+    assert {probe["sentinel"] for probe in batch["probes"]} == {SEEDED_PROBE_SENTINEL}
+    assert all("run_id" not in probe and "commit" not in probe for probe in batch["probes"])
 
 
 def test_seeded_error_bundle_validation_rejects_duplicate_targets(tmp_path: Path) -> None:

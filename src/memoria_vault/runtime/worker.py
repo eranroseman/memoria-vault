@@ -623,6 +623,98 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "node_count": result["node_count"],
             "edge_count": result["edge_count"],
         }
+    if operation_id == "write-project-slice":
+        from memoria_vault.runtime.knowledge import write_project_outline
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("write-project-slice requires project_path")
+        result = write_project_outline(
+            vault,
+            project_path,
+            query=str(payload.get("query") or ""),
+            limit=int(payload.get("limit") or 20),
+            commit=True,
+            machine=machine,
+        )
+        return {
+            "commit": result["commit"],
+            "project_path": result["project_path"],
+            "outline_path": result["outline_path"],
+            "retrieval_engine": result["retrieval_engine"],
+            "query": result["query"],
+            "member_count": result["member_count"],
+            "edge_count": result["edge_count"],
+            "members": result["members"],
+            "edges": result["edges"],
+            "missing": result["missing"],
+            "skipped": result["skipped"],
+        }
+    if operation_id == "compose-project-draft":
+        from memoria_vault.runtime.knowledge import compose_project_draft
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("compose-project-draft requires project_path")
+        result = compose_project_draft(
+            vault,
+            project_path,
+            token_budget=int(payload.get("token_budget") or 4000),
+            commit=True,
+            machine=machine,
+        )
+        return {
+            "commit": result["commit"],
+            "project_path": result["project_path"],
+            "draft_path": result["draft_path"],
+            "member_count": result["member_count"],
+            "evidence_set_count": result["evidence_set_count"],
+            "evidence_markers": result["evidence_markers"],
+            "evidence_sets": result["evidence_sets"],
+        }
+    if operation_id == "verify-project-draft":
+        from memoria_vault.runtime.knowledge import verify_project_draft
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("verify-project-draft requires project_path")
+        result = verify_project_draft(vault, project_path)
+        return {
+            "project_path": result["project_path"],
+            "draft_path": result["draft_path"],
+            "ready": result["ready"],
+            "ok": result["ok"],
+            "verification_status": result["status"],
+            "missing": result["missing"],
+            "findings": result["findings"],
+            "evidence_sets": result["evidence_sets"],
+            "rebuild": result["rebuild"],
+            "max_findings": result["max_findings"],
+            "triaged_count": result["triaged_count"],
+        }
+    if operation_id == "promote-draft-passage":
+        from memoria_vault.runtime.knowledge import promote_draft_passage
+
+        project_path = str(payload.get("project_path") or "").strip()
+        if not project_path:
+            raise ValueError("promote-draft-passage requires project_path")
+        result = promote_draft_passage(
+            vault,
+            project_path,
+            title=str(payload.get("title") or ""),
+            passage=str(payload.get("passage") or ""),
+            source_id=str(payload.get("source_id") or ""),
+            commit=True,
+            machine=machine,
+        )
+        return {
+            "commit": result["commit"],
+            "project_path": result["project_path"],
+            "draft_path": result["draft_path"],
+            "note_path": result["note_path"],
+            "check_status": result["check_status"],
+            "source_id": result["source_id"],
+        }
     if operation_id == "export-project":
         from memoria_vault.runtime.knowledge import write_project_export
 
@@ -635,6 +727,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             export_format=str(payload.get("format") or "markdown"),
             output_path=str(payload.get("output_path") or ""),
             ready_only=bool(payload.get("ready_only")),
+            draft=bool(payload.get("draft")),
         )
         return {
             "project_path": result["project_path"],

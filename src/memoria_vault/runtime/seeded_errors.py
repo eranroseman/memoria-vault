@@ -42,6 +42,83 @@ REQUIRED_BARS = (
 )
 REQUIRED_CASE_FIELDS = ("id", "error_class", "target_id", "expected_check", "rollback")
 DEFAULT_OPERATION_ID = "run-seeded-error-verdict"
+SEEDED_PROBE_SENTINEL = "__memoria_seeded_probe__"
+GATE_CALIBRATION_DEFAULTS = {
+    "production_enabled": False,
+    "max_items_per_batch": 5,
+    "show_persuasive_explanations": False,
+}
+
+
+def gate_calibration_config(overrides: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return production-disabled seeded-probe calibration settings."""
+    config = dict(GATE_CALIBRATION_DEFAULTS)
+    if overrides:
+        config.update({key: value for key, value in overrides.items() if key in config})
+    config["production_enabled"] = bool(config["production_enabled"]) and False
+    config["max_items_per_batch"] = max(1, int(config["max_items_per_batch"]))
+    config["show_persuasive_explanations"] = False
+    return config
+
+
+def seeded_probe_review_batch(
+    cases: list[dict[str, Any]],
+    *,
+    max_items: int | None = None,
+) -> dict[str, Any]:
+    """Build a contained review batch for seeded-error calibration."""
+    config = gate_calibration_config(
+        {"max_items_per_batch": max_items} if max_items is not None else None
+    )
+    probes = []
+    for case in cases[: config["max_items_per_batch"]]:
+        probes.append(
+            {
+                "sentinel": SEEDED_PROBE_SENTINEL,
+                "case_id": str(case.get("id") or ""),
+                "target_id": str(case.get("target_id") or ""),
+                "error_class": str(case.get("error_class") or ""),
+                "expected_disposition": str(case.get("expected_disposition") or "reject"),
+                "certainty": str(case.get("certainty") or "low"),
+                "self_rebuttal": str(
+                    case.get("self_rebuttal")
+                    or "Seeded probe: reviewer should check whether this proposal is wrong."
+                ),
+            }
+        )
+    return {
+        "production_enabled": config["production_enabled"],
+        "max_items_per_batch": config["max_items_per_batch"],
+        "sentinel": SEEDED_PROBE_SENTINEL,
+        "probes": probes,
+    }
+
+
+def summarize_gate_calibration(dispositions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Summarize both-direction rejudging flips for seeded-probe dispositions."""
+    correct_to_wrong = 0
+    wrong_to_correct = 0
+    judged = 0
+    for row in dispositions:
+        expected = str(row.get("expected_disposition") or "").strip()
+        first = str(row.get("disposition") or "").strip()
+        second = str(row.get("rejudged_disposition") or "").strip()
+        if not expected or not first or not second:
+            continue
+        judged += 1
+        first_correct = first == expected
+        second_correct = second == expected
+        if first_correct and not second_correct:
+            correct_to_wrong += 1
+        elif not first_correct and second_correct:
+            wrong_to_correct += 1
+    return {
+        "production_enabled": False,
+        "judged_count": judged,
+        "correct_to_wrong": correct_to_wrong,
+        "wrong_to_correct": wrong_to_correct,
+        "healthy_direction": wrong_to_correct > correct_to_wrong,
+    }
 
 
 def load_seeded_error_bundle(path: Path) -> dict[str, Any]:
@@ -609,6 +686,8 @@ def run_seeded_error_verdict(
         "detection_timing_by_error_class": detection_timing_by_error_class,
         "metrics": metrics,
         "bar_failures": bar_failures,
+        "calibration": gate_calibration_config(),
+        "review_batch": seeded_probe_review_batch(bundle["cases"]),
         "by_error_class": by_error_class,
         "detected": detected,
         "missed": missed,

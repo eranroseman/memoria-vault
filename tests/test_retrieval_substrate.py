@@ -4,6 +4,8 @@ import json
 import tomllib
 from pathlib import Path
 
+from memoria_vault.runtime import state
+from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.retrieval_substrate import (
     RETRIEVAL_SUBSTRATE_VERDICT,
     SELECTED_RETRIEVAL_SUBSTRATE,
@@ -62,3 +64,31 @@ def test_bm25_verdict_matches_rebuild_manifest(tmp_path: Path) -> None:
 
     assert SELECTED_RETRIEVAL_SUBSTRATE == "bm25"
     assert manifest["backend"] == SELECTED_RETRIEVAL_SUBSTRATE
+
+
+def test_exploration_channel_keeps_relevance_substrate_independent(tmp_path: Path) -> None:
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="source-alpha",
+        title="Alpha",
+        check_status="checked",
+    )
+    state.replace_work_graph_edges(
+        tmp_path,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Uncaptured Work",
+                "target_doi": "10.1000/uncaptured",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+
+    result = exploration_channel(tmp_path)
+
+    assert SELECTED_RETRIEVAL_SUBSTRATE == "bm25"
+    assert result["mode"] == "mmr-baseline"
+    assert result["relevance_independent"] is True

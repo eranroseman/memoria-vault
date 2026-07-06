@@ -22,6 +22,10 @@ The current schema defines 6 document types: `digest`, `hub`, `note`,
 
 For field grammar and validation behavior, see [Frontmatter fields](frontmatter.md).
 
+Project `outline.md` and `draft.md` are project artifacts, not new Concept
+types. Evidence-set markers inside drafts derive SQLite `evidence_sets` rows;
+the marker/DB contract is documented in [Evidence sets](evidence-sets.md).
+
 ## Related
 
 - Field kinds, enums, and per-type field inventory:

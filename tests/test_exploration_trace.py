@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+from memoria_vault.runtime import state
+from memoria_vault.runtime.knowledge import exploration_channel
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -23,3 +25,32 @@ def test_gap_and_project_argument_operations_are_read_only_capabilities() -> Non
             "live": {"provider": "gateway", "model": "deterministic-fixture", "temperature": 0},
         }
         assert "write" not in text.lower()
+
+
+def test_exploration_channel_items_carry_traceable_why(tmp_path: Path) -> None:
+    state.upsert_catalog_record(
+        tmp_path,
+        source_id="source-alpha",
+        title="Alpha",
+        check_status="checked",
+    )
+    state.replace_work_graph_edges(
+        tmp_path,
+        "source-alpha",
+        [
+            {
+                "relation_type": "references",
+                "target_id": "https://openalex.org/W999",
+                "target_title": "Uncaptured Work",
+                "target_doi": "10.1000/uncaptured",
+                "source_provider": "openalex",
+            }
+        ],
+    )
+
+    result = exploration_channel(tmp_path)
+
+    assert result["items"][0]["why"] == (
+        "Coverage candidate: checked source `source-alpha` references uncaptured "
+        "work `https://openalex.org/W999`."
+    )

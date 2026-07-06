@@ -93,6 +93,15 @@ resource URLs and external identifiers live in `.memoria/memoria.sqlite` and
 is the required relation field for Concepts. It is a map from `supports`,
 `contradicts`, or `extends` to lists of local Concept targets.
 
+Draft write-back reuses the existing note `source_id` field for provenance when
+a promoted draft passage is tied to a catalog Work. It does not add a
+draft-origin or maturity frontmatter field; draft-origin remains request/journal
+provenance plus DB `check_status: unchecked`.
+
+Evidence sets for composed drafts are not frontmatter. They live as inline
+`%%ev: ...%%` markers in draft body text with derived rows in SQLite; see
+[Evidence sets](evidence-sets.md).
+
 ## Other universal fields
 
 | Field | Kind | Notes |

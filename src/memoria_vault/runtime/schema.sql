@@ -193,6 +193,17 @@ CREATE TABLE IF NOT EXISTS work_aspects (
     updated_at TEXT NOT NULL,
     PRIMARY KEY (source_id, aspect_type)
 );
+CREATE TABLE IF NOT EXISTS evidence_sets (
+    id TEXT PRIMARY KEY,
+    block_ref TEXT NOT NULL,
+    items_json TEXT NOT NULL DEFAULT '[]',
+    type TEXT NOT NULL CHECK (type IN ('single-span', 'multi-span', 'multi-hop', 'implicit')),
+    state TEXT NOT NULL CHECK (state IN ('complete', 'evidence-incomplete')),
+    review_required INTEGER NOT NULL CHECK (review_required IN (0, 1)),
+    run_id TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_evidence_sets_block_ref
+    ON evidence_sets(block_ref);
 CREATE TABLE IF NOT EXISTS derivations (
     input_id TEXT NOT NULL,
     output_id TEXT NOT NULL,
@@ -207,4 +218,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 5;
+PRAGMA user_version = 6;
