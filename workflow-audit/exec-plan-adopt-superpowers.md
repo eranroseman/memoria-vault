@@ -23,16 +23,25 @@
   `main`. This plan file itself lives on the **`scratch`** branch under
   `scratch/workflow-audit/` (this repo's holding area for cross-cutting,
   non-release-scoped plans).
-- **Related decisions:** One open judgment call this plan surfaces but does
-  not resolve unilaterally — see §9 ("ponytail vs. brainstorming process
-  ceremony"). Everything else below is a verified conflict or gap with a
-  concrete fix, not a product/architecture decision, so no release
-  decision-ledger entry is otherwise needed.
+- **Related decisions:** Two judgment calls this plan originally surfaced
+  without resolving — the ponytail-vs-brainstorming process-ceremony
+  threshold, and the scope of rethink's retirement/narrowing — are both
+  resolved as of this revision, via a Generate→Verify workflow (2
+  independent option-generation agents, then 2 adversarial verification
+  agents re-checking every quoted claim against ponytail's, brainstorming's,
+  and rethink's actual source text). See §9 for the decisions taken, the
+  corrections verification forced, and the residual known-unknowns each
+  recommendation flagged explicitly rather than papering over. Everything
+  else below is a verified conflict or gap with a concrete fix, not a
+  product/architecture decision, so no release decision-ledger entry is
+  otherwise needed.
 - **Related issues / milestone:** — (personal tooling + repo-doc
   consistency, not release-scoped; milestone `0.1.0` is unaffected)
-- **Started:** 2026-07-06 · **Last updated:** 2026-07-06 (revised after two
-  adversarial cross-check workflows plus direct verification of CLI syntax,
-  config state, and the bundle's own onboarding skill)
+- **Started:** 2026-07-06 · **Last updated:** 2026-07-06 (revised again to
+  resolve both open decisions via an adversarially-verified pros/cons
+  workflow, after the earlier revision's two adversarial cross-check
+  workflows plus direct verification of CLI syntax, config state, and the
+  bundle's own onboarding skill)
 
 ## 1. Purpose / big picture
 
@@ -175,14 +184,28 @@ estimating.
    `claude plugin update ponytail`): TDD's ordering wins when TDD is in
    effect for a change; ponytail continues to govern the *size/shape* of
    what gets built once that ordering is satisfied.
-2. **`rethink`'s standing directive vs. `brainstorming` — a real,
-   unresolved double-trigger.** Rethink is "active every response" for
-   design questions and would emit a finished recommendation immediately,
-   silently pre-empting brainstorming's hard gate (interactive Q&A → written,
-   user-approved spec → handoff to `writing-plans`). Fix in
-   `rethink`'s own `hooks/directive.md` (this is the user's own repo, safe
-   and appropriate to edit directly, unlike a vendored plugin): add a
-   "yield to gated design flows" rule.
+2. **`rethink`'s standing directive vs. `brainstorming` — resolved: narrow
+   rethink's trigger, don't just add a yield rule.** Rethink is "active
+   every response" for design questions and would emit a finished
+   recommendation immediately, silently pre-empting brainstorming's hard
+   gate (interactive Q&A → written, user-approved spec → handoff to
+   `writing-plans`). Of three options weighed (keep-and-yield / full
+   retirement / narrow-the-trigger), narrowing wins: it preserves rethink's
+   citation-grounded method completely undiluted for the tactical-but-
+   architectural middle band neither `brainstorming` nor rethink's own
+   existing "scoped, tactical question" exclusion covers (e.g. "should this
+   be async or sync"), without full retirement's dependency on an
+   unsolicited upstream PR into `obra/superpowers`, and without paying a
+   live "should-I-yield" judgment call on every single response the way the
+   smaller patch would. Fix in `rethink`'s own `hooks/directive.md` (the
+   user's own repo, safe and appropriate to edit directly): narrow the
+   Persistence trigger to exclude brainstorming's exact stated territory
+   ("creating features, building components, adding functionality, or
+   modifying behavior"), **conditioned on `brainstorming`/`obra/superpowers`
+   actually being installed** — the conditional guard is load-bearing: an
+   unconditional exclusion would regress every solo-rethink installer (no
+   superpowers) by silently dropping standing design coverage for
+   feature/component-creation questions they still rely on.
 3. **`rethink-audit` vs. `brainstorming`, separately** — `rethink-audit` is
    self-contained and doesn't inherit `directive.md`'s Rules section, so
    fix #2 doesn't reach it; needs its own boundary clause.
@@ -384,32 +407,63 @@ transcript, not just the skill-list membership.
    (files saved to disk as project artifacts, e.g. docs/superpowers/specs/
    *.md, docs/superpowers/plans/*.md): write normal.`
 
-7. **Fix `rethink`'s double-trigger with `brainstorming`**
+7. **Fix `rethink`'s double-trigger with `brainstorming` — narrow the
+   trigger, conditioned on superpowers being present**
    (`~/.claude/plugins/marketplaces/rethink/plugins/rethink/` — the user's
    own plugin, released by them, safe to edit directly). In
-   `hooks/directive.md`, under `## Rules`, add: `- **Yield to gated design
+   `hooks/directive.md`, change the Persistence section from:
+
+   `ACTIVE EVERY RESPONSE for design and architecture questions. No drift
+   back to "here's how to tweak the current code." Still active if
+   unsure.`
+
+   to:
+
+   `ACTIVE EVERY RESPONSE for design and architecture questions — except
+   creating a new feature, building a new component, or adding new
+   functionality from scratch, when the obra/superpowers plugin's
+   brainstorming skill is also installed and available this session: that
+   skill's interactive, user-approved design gate governs new-build
+   requests instead, and rethink stays quiet on them. Rethink continues to
+   govern narrower/tactical-but-still-architectural questions below that
+   threshold (e.g. "should this be async or sync," "how should this API be
+   shaped") that brainstorming's own trigger doesn't reach and rethink's own
+   "scoped, tactical question" exclusion doesn't catch either. If
+   brainstorming isn't installed this session, rethink's original
+   all-design-questions trigger applies unchanged — no regression for
+   solo-rethink installers. No drift back to "here's how to tweak the
+   current code" for the territory rethink still owns. Still active if
+   unsure. Off only: "stop rethink" / "normal mode".`
+
+   In `skills/rethink-audit/SKILL.md`, under `## Boundaries` (unchanged in
+   substance from the prior revision — rethink-audit is self-contained,
+   one-shot, and every option weighed in the retirement-scope analysis
+   agreed it doesn't compete with brainstorming's always-on territory the
+   way the standing directive does), add: `- **Yield to gated design
    flows:** if a loaded skill hard-gates a finished design behind
    interactive requirements-gathering and user approval (e.g. a
-   brainstorming-style skill), do not emit a standalone design/
-   recommendation for that request. Feed rethink's method — requirements,
-   prior-art research, first-principles design, trade-offs — into that
-   skill's approach-proposal and design-presentation steps instead, and let
-   its Q&A and approval gate govern pacing.` In `skills/rethink-audit/
-   SKILL.md`, under `## Boundaries`, add the matching clause (rethink-audit
-   is self-contained and doesn't inherit `directive.md`), plus, at the end
-   of `## Output`: `migrate: is a sequencing sketch, not an implementation
-   plan — it has no file-level structure, task interfaces, or test steps.
-   Before any code is written, route the target design plus gap: to
-   superpowers:writing-plans (or to brainstorming first if requirements are
-   still unclear) to lock in file structure and bite-sized TDD tasks; do
-   not execute migrate: steps directly.` Bump `plugin.json`/`.codex-plugin/
-   plugin.json` versions (1.1.0 → 1.2.0, additive) as done for the earlier
-   rethink revision this session. **Note:** the fuller reconsideration of
-   whether `rethink`'s standing directive should be narrowed further or
-   retired entirely (donating its method into `brainstorming`) is a
-   separate, larger decision raised this session and not yet resolved —
-   see §9. This step is the smaller patch; revisit it if that larger
-   question is answered before execution.
+   brainstorming-style skill) for a new-build request, do not emit a
+   standalone design/recommendation for that request — this audit's
+   clean-slate redesign niche (an existing subsystem) is distinct from
+   new-build design, so the two rarely collide, but state the distinction
+   explicitly when asked to audit something not yet built.` Also add, at
+   the end of `## Output`: `migrate: is a sequencing sketch, not an
+   implementation plan — it has no file-level structure, task interfaces, or
+   test steps. Before any code is written, route the target design plus
+   gap: to superpowers:writing-plans (or to brainstorming first if
+   requirements are still unclear) to lock in file structure and bite-sized
+   TDD tasks; do not execute migrate: steps directly.` Bump
+   `plugin.json`/`.codex-plugin/plugin.json` versions (1.1.0 → 1.2.0,
+   additive) as done for the earlier rethink revision this session.
+
+   **Residual, deliberately left open rather than solved:** if
+   `brainstorming`'s own extremely low invocation bar ("even a 1% chance a
+   skill might apply... you ABSOLUTELY MUST invoke it") turns out in
+   practice to also absorb the tactical middle-band questions this
+   narrowing reserves for rethink, the carve-out is illusory and full
+   retirement (donating rethink's method into `brainstorming` via an
+   upstream PR) becomes the more honest choice. Watch for this in the §5
+   smoke test and revisit if it happens.
 
 8. **Add the global note in `~/.claude/CLAUDE.md`** — durable, update-proof,
    and the mechanism `using-superpowers`'s own text defers to: *"User
@@ -427,11 +481,40 @@ transcript, not just the skill-list membership.
      mode. The `obra/superpowers` plugin's `using-superpowers` skill says to
      invoke `brainstorming` before entering plan mode — that mandate does
      not apply here; a more specific native mechanism already exists.
-   - **Design/architecture reasoning:** `rethink` governs standing
-     first-principles design reasoning in any response. `brainstorming` is
-     available on explicit request for an interactive idea-to-approved-spec
-     dialogue, but is not a mandatory blocking gate before every
-     creative-work request in this environment.
+   - **Design-gate threshold (ponytail vs. brainstorming):** the two mostly
+     don't compete — brainstorming governs the design phase, ponytail the
+     implementation phase, and `using-superpowers`' own protocol sequences
+     design → `writing-plans` → build. The real, narrow collision is
+     timing: ponytail's "ship the lazy version now, question it in the same
+     response" instinct fires at the exact moment brainstorming's hard gate
+     forbids any implementation action before a presented design is
+     approved. Resolve it with a two-signal threshold: route to
+     brainstorming's gate only when (a) the request needs a new dependency
+     that ponytail's own rung 4 would reject ("never add a new one for what
+     a few lines can do" failing), or (b) the request spans multiple
+     independent subsystems or carries genuine ambiguity about
+     purpose/constraints/success criteria. Everything else — single-function
+     changes, config tweaks, anything resolved by stdlib/native/an
+     already-installed dependency — stays on ponytail's fast path with no
+     gate. Known residual risk, accepted rather than solved: this threshold
+     is gameable (an agent under pressure could salami-slice a
+     multi-subsystem feature into dependency-free single changes to dodge
+     the gate) and its two signals are proxies for risk, not risk itself — a
+     one-line change to an auth check needs no new dependency but can carry
+     real unexamined-assumption danger. If unexamined-assumptions-on-
+     trivial-work turns out to be a recurring real problem in practice,
+     switch to brainstorming-always-wins instead (accept the ceremony cost)
+     rather than patching the threshold further.
+   - **Design/architecture reasoning (rethink vs. brainstorming):**
+     `rethink`'s own directive is narrowed (see `rethink`'s
+     `hooks/directive.md`, fixed in step 7 above) to exclude
+     new-feature/component-creation work when `brainstorming` is installed
+     and available — that territory routes to brainstorming's interactive,
+     approved-spec flow instead. Rethink continues to govern standing
+     first-principles reasoning for narrower/tactical-but-still-
+     architectural questions below that threshold (e.g. "should this be
+     async or sync") that neither skill's own stated scope otherwise
+     reaches.
    - **Test-first ordering:** when TDD (`superpowers:test-driven-development`)
      is in effect for a change, its test-first ordering wins over
      `ponytail`'s default code-first-then-check sequencing.
@@ -499,12 +582,30 @@ transcript, not just the skill-list membership.
   - **Prove with:** in the fresh session, ask for a small new feature in a
     disposable scratch repo/file; observe and paste the transcript showing
     RED before GREEN.
-- **Claim (real behavior):** Given a "let's design X" request, when
-  `rethink`'s directive and `brainstorming` are both loaded, then the agent
-  either runs brainstorming's interactive Q&A (not an immediate finished
-  recommendation) or explicitly explains why it judged the request as
-  tactical/out of brainstorming's scope.
+- **Claim (real behavior):** Given a bare "add a small utility function" /
+  "tweak this config value" request (single-function, no new dependency, no
+  cross-subsystem span), when the two-signal threshold is in effect, then
+  the agent proceeds on ponytail's fast path without invoking
+  brainstorming's design gate.
   - **Prove with:** transcript of one such request in the fresh session.
+- **Claim (real behavior):** Given a "let's build a new payments module
+  that needs a new charting library" request (genuinely needs a new
+  dependency — trips ponytail's rung 4), when the two-signal threshold is
+  in effect, then the agent routes to brainstorming's gate before writing
+  implementation code.
+  - **Prove with:** transcript of one such request.
+- **Claim (real behavior):** Given a tactical-but-architectural question
+  ("should this endpoint be async or sync") with both `rethink` and
+  `brainstorming` installed, when rethink's narrowed trigger is in effect,
+  then rethink still produces its standing first-principles analysis
+  (brainstorming's gate does not fire, since this isn't a
+  new-feature/component-creation request).
+  - **Prove with:** transcript of one such request.
+- **Claim (real behavior):** Given a "build a new dashboard widget for X"
+  request (squarely brainstorming's new-build territory) with both
+  installed, when rethink's narrowed trigger is in effect, then rethink
+  stays quiet and brainstorming's interactive design gate runs instead.
+  - **Prove with:** transcript of one such request.
 - **Claim (real behavior):** Given a request phrased as "grill me on my
   rough idea for X" (bare idea, no existing plan), when `grilling`'s fixed
   description is in effect, then the agent routes to `brainstorming` first
@@ -556,26 +657,44 @@ transcript, not just the skill-list membership.
   "merge locally" option was mistaken for something that pushes to `main`.
   Neither survived a direct re-read of the primary text. Kept here so a
   future reader doesn't re-derive the same mistakes from a stale summary.
-- **Open decision #1, not resolved here:** ponytail's "ship the lazy version,
-  question it in the same response" instinct and brainstorming's "every
-  project needs an approved design, even a single-function utility" hard
-  gate are in genuine tension, not just overlap. This plan does not pick a
-  side — flagging it in `~/.claude/CLAUDE.md`'s new precedence section (step
-  8) covers the two *resolved* conflicts (Plan Mode, TDD timing) but
-  deliberately leaves this third one for you to decide and add a line for,
-  once you've seen how the two skills actually behave together in practice.
-- **Open decision #2, not resolved here:** applying "superpowers takes
-  precedence" strictly argues for retiring `rethink`'s standing SessionStart
-  directive entirely (donating its citation-grounded, first-principles
-  method into `brainstorming`'s approach-proposal step as a technique,
-  rather than keeping a second, independent always-on system that needs a
-  hand-written yield clause to avoid contradicting `using-superpowers` +
-  `brainstorming`). Step 7 currently implements only the smaller patch (add
-  a yield clause, keep the standing directive as-is) because this larger
-  question — whether to fully retire and restructure the user's own
-  published plugin — was raised but not yet answered before this revision.
-  Decide before executing step 7: smaller patch as written, or the fuller
-  restructuring.
+- **Decision #1 resolved — ponytail vs. brainstorming ceremony threshold.**
+  Resolved via a Generate→Verify workflow (2 independent option-generation
+  agents, then 2 adversarial verification agents re-checking every quoted
+  claim against ponytail's and brainstorming's actual SKILL.md text).
+  Adopted: the two-signal threshold now in step 8's CLAUDE.md note. Two
+  claims in the generating analysis did not survive verification and were
+  corrected before landing in step 8: one option's "pro" had misattributed
+  brainstorming's own anti-pattern examples ("single-function utility,"
+  "config change") as ponytail's worked examples — the reverse of the
+  truth — and a claim that the threshold's two signals were "objective, not
+  vibes" was overstated (the analysis's own con-list concedes they're
+  gameable). Verification also surfaced a framing point neither original
+  option named: ponytail and brainstorming mostly govern different
+  *phases* (build vs. design), so this was never really a "which skill
+  wins" question — the actual collision is only the narrow timing issue
+  step 8's bullet now states directly.
+- **Decision #2 resolved — rethink's retirement/narrowing scope.** Same
+  workflow, same rigor, applied to three options (keep-and-yield / full
+  retirement / narrow-the-trigger). Adopted: narrow the trigger (step 7),
+  conditioned on superpowers being present. Verification struck two
+  fabricated/miscounted claims from the full-retirement option before they
+  could mislead a future reader: a claim that rethink's SKILL.md names
+  "three traps (legacy trap, analogy trap, complexity trap)" — grepped the
+  whole plugin, zero matches, nothing named "trap" exists in the source —
+  and a claim that brainstorming's checklist has 8 steps (it has 9). Two
+  more consequential gaps neither option's write-up mentioned, and which
+  this plan does not claim to have resolved: (1) `using-superpowers` opens
+  with an explicit `<SUBAGENT-STOP>` self-exclusion for subagent-dispatched
+  tasks — the "non-negotiable, always-on mandate" premise motivating this
+  whole reconciliation doesn't even engage when this harness runs work as a
+  subagent; (2) `using-superpowers`' own "Skill Priority" section only
+  orders process-skills-before-implementation-skills — it says nothing
+  about two competing *process* skills (rethink vs. brainstorming), so even
+  if the recommendation's flagged ambiguity ("is a SessionStart directive a
+  user instruction or a skill?") resolves toward "skill," a second,
+  independent ambiguity remains genuinely open. Neither gap blocks shipping
+  the narrowed-trigger fix, but both are real residual unknowns, not
+  settled questions — noted here rather than papered over.
 - `using-superpowers`'s aggressive mandatory-invocation framing was found by
   directly reading its full body, not by either cross-check workflow —
   neither workflow was scoped to include it, since earlier passes treated it
@@ -625,8 +744,10 @@ transcript, not just the skill-list membership.
 ## 12. Outcomes & retrospective
 
 - **Shipped:** {{ fill at close }}
-- **Still open:** {{ fill at close — including the ponytail/brainstorming
-  judgment call from §9 }}
+- **Still open:** {{ fill at close — both process-ceremony decisions (§9)
+  are resolved in this plan as of this revision; fill in only genuinely new
+  items discovered during execution, e.g. if the §5 smoke tests show either
+  threshold needs adjustment }}
 - **Routed to:** N/A for decisions/design-history; repo-side doc edits go
   through a normal PR
 - **Lessons:** {{ fill at close }}
