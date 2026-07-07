@@ -36,6 +36,8 @@ every field and count.
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
 | [CLI](cli.md) | Alpha.19 `memoria` command surface | Manual |
 | [Engine read API](read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
+| [Local HTTP transport](local-http-transport.md) | REST-like loopback adapter surface, auth, endpoints, scope, write payload, and limits | Manual |
+| [MCP transport](mcp-transport.md) | Optional FastMCP stdio agent surface, required read scope, tool roster, and write provenance | Manual |
 | [Evidence sets](evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
 | [Worklists](worklists.md) | Batch worklist report JSON, emitted item notes, and aggregate review prompt contract | Manual |
