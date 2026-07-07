@@ -13,6 +13,15 @@ user also asks for fixes.
    affected behavior.
 5. Treat commit messages and PR descriptions as context, not proof.
 
+**Dispatching this as an isolated review.** When reviewing your own recent work,
+follow `superpowers:requesting-code-review`'s context-isolation mechanic:
+dispatch reviewers given only the base/head SHAs and requirements, never your
+session history. Run `superpowers:requesting-code-review` on both tools. On
+Claude, also run `pr-review-toolkit:code-reviewer` independently for compliance
+and bug scan; on Codex, use native review for that role. Do not substitute one for
+another. This playbook's own criteria and report format stay authoritative over
+all reviewers.
+
 ## 2. Review behavior
 
 For every changed behavior, trace:
@@ -57,3 +66,6 @@ Use [the review report template](../templates/review-report.md).
 - Separate confirmed findings from open questions.
 - If there are no findings, say so explicitly and state remaining test gaps or
   environmental limitations.
+- After presenting findings, apply `superpowers:receiving-code-review`'s
+  discipline: fix Critical immediately, Important before proceeding, note Minor
+  for later, and push back (with reasoning) on a finding that looks wrong.

@@ -18,6 +18,12 @@ Explicitly out of scope:
 
 - <!-- Adjacent work that must remain untouched. -->
 
+## Tracker
+
+Owning issue: <!-- #NN or N/A with reason -->
+Intended disposition: <!-- refs / closes / folded into #NN / no tracker change -->
+Close condition: <!-- observable condition for closing, or N/A -->
+
 ## Constraints
 
 - Follow `AGENTS.md`.
@@ -42,3 +48,11 @@ Explicitly out of scope:
 ## Open questions
 
 - <!-- Questions that genuinely block safe execution. Leave empty when none. -->
+
+## Result
+
+<!-- Filled by the RECEIVER after completing the handoff, not the dispatcher. -->
+
+**Status:** DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED
+
+<!-- What was actually done, any deviation from Expected outputs, and why. -->
