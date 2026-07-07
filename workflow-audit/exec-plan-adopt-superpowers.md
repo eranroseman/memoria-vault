@@ -96,18 +96,19 @@ Requirements this plan must satisfy (traced in §5):
 | the-elements-of-style | plugin install | loose vendor |
 | api-design-principles | loose vendor | loose vendor |
 | obsidian-skills | nested plugin | loose vendor |
-| threat-modeling | git clone | **decide (step 5)** |
-| interface-design | plugin install | **decide (step 7)** |
+| threat-modeling | git clone | git clone (mirrored — same skill) |
+| interface-design | plugin install | loose vendor (skill; slash-commands Claude-only) |
 | frontend-design | enable | — forced asymmetry (no Codex build) |
 | pr-review-toolkit | ✓ | — forced asymmetry (no Codex equivalent) |
 | security-guidance (passive) | ✓ | — codex-security compensates (active) |
 | codex-security | — | ✓ (compensates for security-guidance) |
 | tdd, grill-me | retired | retired / never present |
 
-Two decisions deferred to execution: threat-modeling on Codex (step 5,
-default: mirror the clone, for identical end states) and interface-design on
-Codex (step 7). Four asymmetries are forced by tool availability and
-documented above. Everything else is identical on both tools.
+Both tools get the same precedence + vocabulary rules (steps 14–15). The
+only asymmetries are four forced by tool availability (frontend-design,
+pr-review-toolkit, security-guidance Claude-only; codex-security Codex-only)
+plus interface-design's two slash-commands being Claude-only (its skill runs
+on both). Everything else is identical.
 
 **Declined (never install):** the official Anthropic `code-review`
 marketplace plugin; `coderabbit@openai-curated`. **Left unedited** (repo
@@ -173,27 +174,19 @@ rm -rf ~/.claude/skills/.api-src
 Verify: `ls ~/.claude/skills/api-design-principles/SKILL.md
 ~/.codex/skills/api-design-principles/SKILL.md`.
 
-### Step 5 — Install threat-modeling (Claude decided; Codex decide)
+### Step 5 — Install threat-modeling (both tools, mirrored)
 
-Claude:
+Mirror the same skill to both tools (identical end states — chosen over
+Codex's native `security-threat-model`, which is a different skill).
 
 ```bash
 git clone https://github.com/fr33d3m0n/threat-modeling ~/.claude/skills/threat-modeling
-```
-
-Codex — **pick one** (default: mirror, for identical end states):
-
-```bash
-# Option A (default, parity): mirror the same skill
 git clone https://github.com/fr33d3m0n/threat-modeling ~/.codex/skills/threat-modeling
-# Option B (lower trust surface): Codex's own curated skill instead
-#   run `$skill-installer` in a Codex session and select security-threat-model
 ```
 
-Verify: `ls ~/.claude/skills/threat-modeling/SKILL.md`; on Codex, the chosen
-skill is present. (Path assumed by analogy with other loose skills — confirm
-`~/.claude/skills/` is the loose-skill root on this machine before relying on
-it.)
+Verify: `ls ~/.claude/skills/threat-modeling/SKILL.md
+~/.codex/skills/threat-modeling/SKILL.md`. (Confirm `~/.claude/skills/` /
+`~/.codex/skills/` are the loose-skill roots on this machine first.)
 
 ### Step 6 — Install codex-security (Codex only)
 
@@ -203,9 +196,9 @@ codex plugin add codex-security@openai-curated
 
 Verify: `codex plugin list` shows `codex-security@openai-curated` enabled.
 
-### Step 7 — Install interface-design + enable frontend-design
+### Step 7 — Install interface-design (both tools) + enable frontend-design (Claude)
 
-Claude:
+Claude — plugin install (skill + both commands):
 
 ```bash
 claude plugin marketplace add Dammyjay93/interface-design
@@ -213,14 +206,21 @@ claude plugin install interface-design@interface-design
 claude plugin enable frontend-design@claude-plugins-official
 ```
 
-`frontend-design` is Claude-only (no Codex build) — accepted asymmetry.
-`interface-design` has no `.codex-plugin` manifest — **Codex decision:**
-vendor its skill folder loose and confirm it loads; its two slash-commands
-(`design-review`, `design-deslop`) are Claude-plugin commands and may not
-port — if they don't, accept skill-only on Codex as a documented asymmetry.
+Codex — vendor the skill folder loose (no `.codex-plugin` manifest; the
+`agents/openai.yaml` shim inside it is the Codex loader):
 
-Verify: `claude plugin list` shows both; `~/.interface-design/` design-memory
-appears only when the skill is first used (not at install).
+```bash
+git clone --depth 1 https://github.com/Dammyjay93/interface-design ~/.codex/skills/.ifd-src
+cp -r ~/.codex/skills/.ifd-src/.claude/skills/interface-design ~/.codex/skills/
+rm -rf ~/.codex/skills/.ifd-src
+```
+
+Decided asymmetries: `frontend-design` is Claude-only (no Codex build); the
+`design-review` / `design-deslop` slash-commands are Claude-only (Codex runs
+the equivalent review inline from the skill, per the skill's own text).
+
+Verify: `claude plugin list` shows `interface-design` + `frontend-design`;
+`ls ~/.codex/skills/interface-design/SKILL.md`.
 
 ### Step 8 — Port obsidian-skills to Codex
 
@@ -278,9 +278,14 @@ add to the Hard Rules (or Invocation-variants) section:
 Precedence: a single already-identified audit finding → this skill's own `execute` (one dispatch, disposable review worktree, human decides whether to apply the diff). A spec-derived multi-task implementation plan → superpowers:subagent-driven-development (multi-task, two-stage review, mergeable branch) instead.
 ```
 
-### Step 13 — Edit rethink (its own repo — directly editable)
+### Step 13 — Edit rethink + release 1.2.0, update both tools
 
-Files under `~/.claude/plugins/marketplaces/rethink/plugins/rethink/`.
+rethink is your own plugin (`eranroseman/rethink`) — make these edits in its
+**source**, release 1.2.0, then update both installs. The two tools are
+already version-skewed (Claude 1.1.0, Codex 1.0.1), and each loads its own
+copy — editing one cache would leave the other stale. Local source checkouts
+live at the marketplace clones `~/.claude/plugins/marketplaces/rethink/
+plugins/rethink/` and `~/.codex/.tmp/marketplaces/rethink/plugins/rethink/`.
 
 In `hooks/directive.md`, replace the Persistence section:
 
@@ -314,7 +319,16 @@ Append to the `description` field in `.claude-plugin/plugin.json`,
 ```
 
 Bump the version in `.claude-plugin/plugin.json` and
-`.codex-plugin/plugin.json` (1.1.0 → 1.2.0).
+`.codex-plugin/plugin.json` (→ 1.2.0). Commit and push to
+`eranroseman/rethink`, then update both installs:
+
+```bash
+claude plugin marketplace update rethink && claude plugin update rethink@rethink
+codex plugin marketplace update rethink && codex plugin update rethink@rethink
+```
+
+Verify: both tools report rethink 1.2.0, and each tool's loaded
+`hooks/directive.md` shows the narrowed Persistence trigger.
 
 ### Step 14 — Add precedence + vocabulary to `~/.claude/CLAUDE.md`
 
@@ -339,7 +353,25 @@ One edit — append both sections:
 
 ### Step 15 — Write `~/.codex/AGENTS.md` (currently empty)
 
+Codex gets the same precedence + vocabulary rules as Claude (step 14),
+adapted for Codex's toolset, plus the Codex-only security routing.
+
 ```markdown
+## Skill precedence
+
+- **Planning:** your own planning workflow governs; `using-superpowers`'s "brainstorm before planning" mandate does not override it.
+- **ponytail vs. brainstorming:** route to brainstorming's design gate only when the request needs a new dependency (fails ponytail's rung 4) or spans multiple independent subsystems or has genuine ambiguity about purpose/constraints/success criteria. Everything else — single-function changes, config tweaks, stdlib/native/existing-dependency solutions — stays on ponytail's fast path.
+- **rethink vs. brainstorming:** new-feature/component/from-scratch design → brainstorming's gated flow. Narrower tactical-but-architectural questions (sync vs. async, API shape) → rethink.
+- **TDD vs. ponytail:** when `superpowers:test-driven-development` is in effect, its test-first ordering wins over ponytail's code-first default; ponytail still governs size/shape once a test exists.
+- **threat-modeling vs. a single finding:** answer a follow-up about one already-flagged finding (including a codex-security finding) directly, scoped to it — do NOT launch threat-modeling's 8-phase run. Invoke threat-modeling only for a deliberate whole-codebase audit.
+- **caveman vs. the-elements-of-style:** caveman governs live chat terseness only; `the-elements-of-style` governs durable written prose (docs, commit messages, PR/issue text, reports, UI strings) regardless of caveman state.
+- **interface-design (UI):** UI review/critique/audit and new product/dashboard/SaaS/admin/tool UI → interface-design (its slash-commands are Claude-only; on Codex run the equivalent review inline from the skill). There is no frontend-design on Codex.
+
+## Design vocabulary
+
+- `codebase-design`'s module/interface/seam/adapter/leverage/locality terms are canonical when any skill decomposes work into units — read "unit"/"boundary" in `brainstorming`/`writing-plans` as module/seam.
+- Before writing a RED test (`superpowers:test-driven-development`), name and confirm the test's seam (per `codebase-design`) first; test only at pre-agreed seams.
+
 ## Security tooling routing
 
 `codex-security`'s scan family (`security-scan`, `security-diff-scan`, `deep-security-scan`, `finding-discovery`) and its internal `threat-model` phase all use broad triggers. Treat that internal `threat-model` phase as scan-internal only. Route any standalone request to build/update/review a threat model (STRIDE, trust boundaries, attack surface) that is not part of an active codex-security scan to the `threat-modeling` skill instead.
@@ -370,7 +402,7 @@ cd ~/memoria-vault/worktrees/adopt-superpowers
 |---|---|---|
 | Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
 | Any docs PR | [`docs-review`](.agents/playbooks/docs-review.md), plus `the-elements-of-style` for prose clarity | Before opening — quadrant fit, links, indexing, terminology, sentence-level clarity |
-| Any PR | [`code-review`](.agents/playbooks/code-review.md), which dispatches `superpowers:requesting-code-review` → `pr-review-toolkit:code-reviewer` | Before opening — bugs, compliance, plan alignment, production-readiness |
+| Any PR | [`code-review`](.agents/playbooks/code-review.md); it may invoke `superpowers:requesting-code-review` and `pr-review-toolkit:code-reviewer` independently (they cover different lenses — don't substitute one for the other) | Before opening — bugs, compliance, plan alignment, production-readiness |
 | Deeper review on a dimension | `pr-review-toolkit` agents: `silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer` | After the above — probe one lens. Ask for the lens you want |
 | Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance |
 | Confirming a fix | [`verify-change`](.agents/playbooks/verify-change.md), plus `superpowers:verification-before-completion` | After a change — confirm actual behavior |
@@ -383,15 +415,16 @@ Add directly under the table:
 This repo's own Critical/High/Medium/Low severity vocabulary is lighter than `requesting-code-review`'s Critical/Important/Minor scale — never mix the two inside one persisted report, issue, or PR comment.
 ```
 
-In the "Passive, when installed" paragraph below the table, add
-`threat-modeling` and `codex-security` alongside the existing
-`security-guidance` mention.
+In the "Passive, when installed" paragraph below the table, name each
+security tool with the tool it runs on: `security-guidance` (Claude,
+passive), `codex-security` (Codex, active), `threat-modeling` (both, on
+demand) — so a reader knows which apply to the tool they're using.
 
 **16c — `.agents/playbooks/code-review.md`.** After "## 1. Establish scope",
 new final paragraph:
 
 ```
-**Dispatching this as an isolated review.** When reviewing your own recent work, follow `superpowers:requesting-code-review`'s context-isolation mechanic: dispatch a reviewer given only the base/head SHAs and requirements, never your session history. Route the bug/compliance pass (section 2) to `pr-review-toolkit:code-reviewer`; its confidence-gated output does not replace the plan-alignment and production-readiness checks this playbook's report format owns.
+**Dispatching this as an isolated review.** When reviewing your own recent work, follow `superpowers:requesting-code-review`'s context-isolation mechanic: dispatch reviewers given only the base/head SHAs and requirements, never your session history. `superpowers:requesting-code-review` (plan-alignment, architecture, production-readiness, merge verdict) and `pr-review-toolkit:code-reviewer` (compliance + bug scan, confidence-gated) run independently — use both, don't substitute one for the other. This playbook's own criteria and report format stay authoritative over both.
 ```
 
 At the end of "## 4. Report", new bullet:
@@ -490,8 +523,12 @@ Presence:
 - **retirements + declines:** `tdd`/`grill-me` absent both tools;
   `code-review`/`coderabbit` absent from `claude plugin list`/`codex plugin
   list`.
-- **AGENTS.md table is real:** every row's linked file exists (`ls`) and
-  every named plugin/skill is installed — zero dangling references.
+- **AGENTS.md table is real (per-tool):** every row's linked file exists
+  (`ls`), and every named plugin/skill is either installed on the tool
+  you're validating or named there as a known cross-tool asymmetry
+  (`codex-security` = Codex-only; `security-guidance`/`frontend-design` =
+  Claude-only). No row names something that is neither installed nor a
+  documented asymmetry.
 - **Layer 3:** in a fresh Claude session opened in `~/memoria-vault/main`, an
   early answer cites an `AGENTS.md`-only fact (e.g. the worktree-first rule)
   before any tool reads `AGENTS.md`.
@@ -536,9 +573,9 @@ Repo PR:
 - [ ] 2 — superpowers installed (both tools)
 - [ ] 3 — the-elements-of-style installed (Claude plugin, Codex loose)
 - [ ] 4 — api-design-principles vendored (both, one skill)
-- [ ] 5 — threat-modeling installed (Claude clone; Codex decision made)
+- [ ] 5 — threat-modeling cloned to both tools (mirrored)
 - [ ] 6 — codex-security installed (Codex)
-- [ ] 7 — interface-design installed + frontend-design enabled (Codex decision made)
+- [ ] 7 — interface-design installed (Claude plugin + Codex loose) + frontend-design enabled
 - [ ] 8 — obsidian-skills ported to Codex
 - [ ] 9 — tdd + grill-me retired
 - [ ] 10 — grilling edited (both)
@@ -564,8 +601,10 @@ Repo PR:
   mandate doesn't engage in subagent-dispatched work; its "Skill Priority"
   section never orders two competing *process* skills. Neither blocks
   shipping.
-- **Decided at execution (steps 5, 7):** threat-modeling on Codex (mirror
-  vs. native) and interface-design on Codex (loose-vendor vs. Claude-only).
+- **interface-design slash-commands are Claude-only:** on Codex the review
+  runs inline from the vendored skill (which its own text supports), not via
+  a `/interface-design:design-review` command. Verify this holds if Codex
+  gains a command mechanism later.
 
 ## 10. Interfaces & dependencies
 

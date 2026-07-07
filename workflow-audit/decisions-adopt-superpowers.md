@@ -159,16 +159,18 @@ colliding with `codex-security`'s whole scan family
 `finding-discovery`), not just its internal `threat-model` sub-skill.
 Evidence: `wedgcpoi3` verify pass.
 
-**Y: Leave the choice between mirroring `fr33d3m0n/threat-modeling` onto
-Codex file-for-file, versus using Codex's own native `security-threat-model`
-skill, open — not resolved by this plan.**
-Because: Codex already carries a pre-existing (2026-06-18, predates this
-session) official OpenAI-curated `security-threat-model` skill, installable
-via Codex's own `$skill-installer` — a lower-friction, higher-trust
-alternative to cloning a third-party repo. Genuinely a trade-off between
-file-identity parity and lower Codex-side trust surface; surfaced rather
-than picked silently. Evidence: `wedgcpoi3` verify pass (found the
-pre-existing skill the original audit missed).
+**Y: Mirror `fr33d3m0n/threat-modeling` onto Codex file-for-file, rather
+than use Codex's own native `security-threat-model` skill.**
+Because: R3 asks for end states as close to identical as possible — the same
+skill on both tools is literally identical; the native `security-threat-model`
+is a *different* skill (less parity). The native option (pre-existing at
+`~/.codex/vendor_imports/.../security-threat-model`, installable via
+`$skill-installer`) has a lower trust surface and stays available as a
+fallback if the third-party clone is ever unwanted, but parity is the
+governing requirement here. Earlier revisions left this open; decided in
+favor of parity after the user flagged that leaving it open contradicted
+downstream validation. Evidence: `wedgcpoi3` verify pass (found both
+options).
 
 **Y: Do not install `coderabbit@openai-curated` on Codex for
 `pr-review-toolkit` parity.**
