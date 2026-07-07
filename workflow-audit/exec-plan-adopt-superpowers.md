@@ -104,7 +104,7 @@ Requirements this plan must satisfy (traced in §5):
 | Item | Claude | Codex |
 |---|---|---|
 | superpowers, ponytail, rethink, grilling, caveman, codebase-design, improve | ✓ | ✓ |
-| the-elements-of-style | plugin install | loose vendor |
+| the-elements-of-style | loose vendor | loose vendor |
 | api-design-principles | loose vendor | loose vendor |
 | obsidian-skills | nested plugin | loose vendor |
 | threat-modeling | git clone | git clone (mirrored — same skill) |
@@ -154,7 +154,7 @@ Then add the marketplace and read the cost:
 
 ```bash
 claude plugin marketplace add obra/superpowers
-claude plugin details superpowers@superpowers
+claude plugin details superpowers@superpowers-dev
 ```
 
 Expect: a backup tarball listed in `~/` (the `||` aborts if `tar` fails —
@@ -171,37 +171,38 @@ out so execution installs exactly what was reviewed, not a later HEAD):
 `fr33d3m0n/threat-modeling` `a0962b73`, `Dammyjay93/interface-design`
 `2f9be320`, `obra/the-elements-of-style` `6099c505`, `wshobson/agents`
 `5cc2549a`, `am-will/codex-skills` `e3437156`. The Claude-side *marketplace
-plugin* installs (superpowers, the-elements-of-style, interface-design) pull
-marketplace-latest, which the plugin mechanism can't pin — skim each
-installed SKILL.md before relying on it.
+plugin* installs (superpowers and interface-design) pull marketplace-latest,
+which the plugin mechanism can't pin — skim each installed SKILL.md before
+relying on it.
 
 ### Step 2 — Install superpowers (both tools)
 
 ```bash
-claude plugin install superpowers@superpowers
+claude plugin install superpowers@superpowers-dev
 codex plugin add superpowers@openai-curated
 ```
 
 Verify: `~/.claude/settings.json` gains
-`enabledPlugins["superpowers@superpowers"] = true`; `~/.codex/config.toml`
+`enabledPlugins["superpowers@superpowers-dev"] = true`; `~/.codex/config.toml`
 gains `[plugins."superpowers@openai-curated"] enabled = true`.
 
 ### Step 3 — Install the-elements-of-style (both tools)
 
-Claude has a `.claude-plugin` manifest; Codex has none → vendor loose.
+Vendor the reviewed `writing-clearly-and-concisely` skill loose on both tools.
+The pinned repo has `.claude-plugin/plugin.json` but no installable
+`.claude-plugin/marketplace.json` for Claude's marketplace flow.
 
 ```bash
-claude plugin marketplace add obra/the-elements-of-style
-claude plugin install the-elements-of-style@the-elements-of-style
-
-rm -rf ~/.codex/skills/writing-clearly-and-concisely ~/.codex/skills/.eos-src
+rm -rf ~/.claude/skills/writing-clearly-and-concisely ~/.codex/skills/writing-clearly-and-concisely ~/.codex/skills/.eos-src
 git clone https://github.com/obra/the-elements-of-style ~/.codex/skills/.eos-src
 git -C ~/.codex/skills/.eos-src checkout 6099c505
+cp -a ~/.codex/skills/.eos-src/skills/writing-clearly-and-concisely ~/.claude/skills/
 cp -a ~/.codex/skills/.eos-src/skills/writing-clearly-and-concisely ~/.codex/skills/
 rm -rf ~/.codex/skills/.eos-src
 ```
 
-Verify: `ls ~/.codex/skills/writing-clearly-and-concisely/SKILL.md`.
+Verify: `ls ~/.claude/skills/writing-clearly-and-concisely/SKILL.md
+~/.codex/skills/writing-clearly-and-concisely/SKILL.md`.
 
 ### Step 4 — Vendor api-design-principles (both tools, one skill only)
 
@@ -639,18 +640,17 @@ lists `~/memoria-vault/worktrees/adopt-superpowers`.
 Presence:
 
 - **superpowers loads (both tools):** fresh Claude session — `claude plugin
-  list` shows `superpowers@superpowers` enabled and the skill reminder lists
+  list` shows `superpowers@superpowers-dev` enabled and the skill reminder lists
   the 13 usable `superpowers:` workflow skills (`using-superpowers` is the
   SessionStart dispatcher — it fires as a reminder, not a separately-listed
   invocable skill, so 13 here, 14 skill files on disk); fresh Codex session —
   `codex plugin list` shows `superpowers@openai-curated` enabled.
 - **gap plugins present:** `ls` confirms
-  `~/.claude/skills/{threat-modeling,api-design-principles}`,
+  `~/.claude/skills/{writing-clearly-and-concisely,threat-modeling,api-design-principles}`,
   `~/.codex/skills/{writing-clearly-and-concisely,api-design-principles,
   threat-modeling,interface-design,frontend-design}`, the five
   `~/.codex/skills/obsidian-*`/`json-canvas`/`defuddle` folders, and
-  `interface-design`/`frontend-design`/`the-elements-of-style` in
-  `claude plugin list`.
+  `interface-design`/`frontend-design` in `claude plugin list`.
 - **api-design-principles is one skill only:** `find ~/.claude/skills
   ~/.codex/skills -iname SKILL.md` shows no `architecture-patterns`,
   `microservices-patterns`, `cqrs-implementation`, `event-store-design`,
@@ -805,8 +805,8 @@ Toolkit doc (step 14):
   `codex-security`, `interface-design`, `frontend-design`,
   `the-elements-of-style`, `obsidian-skills`, `api-design-principles`.
 - **New tool-config files:** `~/.codex/AGENTS.md` (was empty).
-- **Installed/vendored:** superpowers (both), the-elements-of-style (Claude
-  plugin + Codex loose), api-design-principles (loose both), threat-modeling
+- **Installed/vendored:** superpowers (both), the-elements-of-style (loose
+  both), api-design-principles (loose both), threat-modeling
   (Claude clone + Codex mirror), codex-security (Codex), interface-design
   (Claude plugin + Codex loose), frontend-design (Claude enable + Codex
   `am-will/codex-skills` loose, unlicensed/personal-use), obsidian-skills
