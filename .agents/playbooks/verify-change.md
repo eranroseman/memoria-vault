@@ -63,3 +63,7 @@ Report:
   another unavailable dependency
 
 “Tests pass” is supporting evidence, not the entire verification report.
+
+*(If `superpowers:verification-before-completion` is installed, its
+claim-honesty discipline complements this playbook. These steps remain
+authoritative regardless.)*

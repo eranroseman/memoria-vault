@@ -57,6 +57,10 @@ Distinguish blocking failures from known advisory warnings.
   matching generator or drift check. Decision-history changes should update
   `design-history/arcs.md` and the active release decision ledger when they
   change the current or pending design line.
+- If `the-elements-of-style` is installed, apply its
+  `writing-clearly-and-concisely` rules (active voice, omit needless words) as a
+  prose-clarity pass over changed pages — complementary to this section's
+  terminology and citation checks.
 - If routes, navigation, `baseurl`-sensitive links, or public outbound links
   changed, run the live docs link checker after deploy or record why it was not
   applicable.

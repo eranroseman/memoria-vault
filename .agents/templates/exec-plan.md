@@ -35,7 +35,8 @@
 - **Worktree / branch:** `~/memoria-vault/worktrees/<name>` · `feat/<name>` for implementation;
   `scratch/<name>` pushed to `origin/scratch` for this plan file
 - **Related decisions:** {{ release decision entry / design-history link, or — }}
-- **Related issues / milestone:** {{ #NN, 0.1.0 or — }}
+- **Related issues / milestone:** {{ #NN + intended disposition:
+  refs/closes/folded into #NN/no tracker change; 0.1.0 or — }}
 - **Started:** {{ YYYY-MM-DD }} · **Last updated:** {{ YYYY-MM-DD }}
 
 ## 1. Purpose / big picture
@@ -64,6 +65,8 @@
 
 <!-- Exact commands in execution order, each with its EXPECTED output. Step 1 is
      always the AGENTS.md §1 worktree/branch setup. Keep each step idempotent. -->
+<!-- See ../playbooks/exec-plan.md → "Authoring" item 5 and "Reusing superpowers
+     execution techniques" for optional sizing/execution engines. -->
 
 1. **Isolate the session** (`AGENTS.md` §1):
 

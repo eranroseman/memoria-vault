@@ -22,4 +22,10 @@
 
 ## Related issues
 
-Closes #<!-- issue number -->
+Refs #<!-- issue number -->
+
+<!-- Use "Closes #..." only when this PR fully satisfies the issue's close condition.
+For partial, folded, preparatory, or design-only work, use "Refs #..." and leave
+the issue open. -->
+
+Issue tracker updated: <!-- yes / no / N/A, with reason -->

@@ -59,3 +59,12 @@ For each finding include:
 
 If no finding survives, record reviewed surfaces, tests run, and any unresolved
 environmental limitation.
+
+## 5. Escalate to a full audit
+
+This playbook is scoped to the current diff. If review surfaces something beyond
+one change — systemic exposure, unclear trust boundaries, or a request for a
+standalone assessment — and the `threat-modeling` skill is installed, it runs a
+full 8-phase STRIDE model as a separate, deliberately-requested activity. Do not
+reach for it to answer single-finding follow-ups here — resolve those per
+section 4.

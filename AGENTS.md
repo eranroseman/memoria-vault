@@ -322,13 +322,17 @@ Every `# noqa` suppression must have a rationale on the same line: `# noqa: BLE0
 
 | Stage | Skill | Use when |
 |---|---|---|
-| Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) *(portable playbook)* | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
-| Any docs PR | `/docs-review` *(project, when available)* | Before opening — checks quadrant fit, links, indexing, terminology |
-| Any PR | `/code-review` *(plugin, when available)* | Before opening — catches bugs and simplification opportunities |
-| Deeper review on a dimension | `pr-review-toolkit` agents *(plugin, when available)* | After `/code-review` — probe one lens: `silent-failure-hunter` (error handling), `pr-test-analyzer` (coverage/edge cases), `code-simplifier`, `comment-analyzer`. Conversational — ask for the lens you want |
-| Sensitive-path changes | `/security-review` *(plugin, when available)* | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance directories |
-| Confirming a fix | `/verify` *(plugin, when available)* | After a change — runs the app to confirm actual behavior |
-| New or cut release | `/release` *(project, when available)* | Scaffolds the release folder/plan, milestone (scope), and "Release <version>" parent issue with readiness/stage sub-issues; release-please owns version/notes |
+| Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
+| Any docs PR | [`docs-review`](.agents/playbooks/docs-review.md), plus `the-elements-of-style` for prose clarity | Before opening — quadrant fit, links, indexing, terminology, sentence-level clarity |
+| Any PR | [`code-review`](.agents/playbooks/code-review.md), which invokes `superpowers:requesting-code-review` (both tools) plus, **on Claude**, `pr-review-toolkit:code-reviewer`, and **on Codex**, native review — run independently, don't substitute one for another | Before opening — bugs, compliance, plan alignment, production-readiness |
+| Deeper review on a dimension | **Claude:** `pr-review-toolkit` agents (`silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer`). **Codex:** native review covers the same six dimensions (see `.agents/toolkit.md` for the mapping) | After the above — probe one lens |
+| Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance |
+| Confirming a fix | [`verify-change`](.agents/playbooks/verify-change.md), plus `superpowers:verification-before-completion` | After a change — confirm actual behavior |
+| New or cut release | [`release`](.agents/playbooks/release.md) | Scaffolds the release folder/plan, milestone, and parent issue; release-please owns version/notes |
+
+This repo's own Critical/High/Medium/Low severity vocabulary is lighter than
+`requesting-code-review`'s Critical/Important/Minor scale — never mix the two
+inside one persisted report, issue, or PR comment.
 
 Skills and plugins are accelerators, not prerequisites. If a named command is
 unavailable, use the matching portable playbook under
@@ -336,12 +340,13 @@ unavailable, use the matching portable playbook under
 [`.agents/system/`](.agents/system/). They implement this file's policy; they do
 not override it.
 
-**Passive, when installed:** the `security-guidance` plugin runs automatic
-security scans as you work — a per-edit pattern check plus an LLM review on
-`git commit`/`push` (secret leaks, injection, SSRF, weak crypto). It complements
-the manual security review and is a first line against the "never commit
-`OBSIDIAN_API_KEY`/`.env`" rule. The optional review plugins install from the
-`claude-code-plugins` marketplace (`/plugin`).
+**Passive, when installed:** `security-guidance` (Claude, passive) runs
+automatic security scans as you work — a per-edit pattern check plus an LLM
+review on `git commit`/`push` (secret leaks, injection, SSRF, weak crypto).
+`codex-security` (Codex, active) covers explicit security scans, and
+`threat-modeling` (both tools, on demand) covers full audits when escalation is
+warranted. These complement the manual security review and are a first line
+against the "never commit `OBSIDIAN_API_KEY`/`.env`" rule.
 
 ---
 
@@ -440,6 +445,27 @@ prose; do not create a repository release-plan folder.
   accepted implemented decisions link closed `Done` issues or an explicit open
   implementation issue.
 - Never track shared work in `/TODO` or `_notes/` — gitignored and invisible to others.
+
+### Issue tracker loop
+
+The Memoria Issue Tracker is the live work-state owner, not an after-the-fact
+log. For any non-trivial bug, enhancement, documentation change, release task,
+or design decision:
+
+1. **Before work:** identify the owning issue. If none exists, either create one
+   or state explicitly why the work is too small or too local to track.
+2. **During work:** update only Project `Status` and `Readiness`; do not create
+   ad-hoc labels or milestones. Labels stay minimal, and milestones are release
+   scope only.
+3. **In PRs:** use `Refs #NN` for partial, preparatory, folded, or follow-up
+   work. Use `Closes #NN` only when the PR fully satisfies that issue's close
+   condition.
+4. **At close:** close an issue only when it is resolved by merged work,
+   explicitly obsolete, or fully subsumed by another open issue with no
+   independent decision left. Leave folded-but-unresolved issues open until the
+   absorbing issue lands the actual decision or implementation.
+5. **Final report:** say which issue state changed, or state `Issue tracker:
+   no change` when no tracker update was needed.
 
 ---
 

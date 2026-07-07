@@ -31,6 +31,7 @@ claimnote
 cobbe
 conftest
 consolas
+coderabbit
 copi
 counterevidence
 crond
@@ -38,11 +39,13 @@ crossref
 cscw
 cssclasses
 cuda
+dataviz
 dataview
 dataviewjs
 datetimes
 dbmi
 dedup
+defuddle
 devlin
 diataxis
 diffable
@@ -174,6 +177,7 @@ rerank
 restylable
 retargeted
 retorque
+revertable
 rlimit
 rollups
 roseman

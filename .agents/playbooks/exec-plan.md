@@ -79,6 +79,9 @@ produces. Durable outputs route as usual:
    inspect together, and which checks to run.
 4. Write the "Concrete steps" as exact commands with their expected output, in
    the order they must run. Prose first; the only checklist is Progress.
+5. Size tasks using `superpowers:writing-plans`' right-sizing rule (each task
+   independently testable and revertable) — but the deliverable still lands in
+   this file's own template, never a new `docs/superpowers/plans/` file.
 
 ## Running
 
@@ -93,6 +96,15 @@ produces. Durable outputs route as usual:
    and Surprises & discoveries with evidence.
 4. Keep steps **idempotent and recoverable**: a re-run from the top must be
    safe, and each step states how to undo it.
+
+## Reusing superpowers execution techniques
+
+An ExecPlan's Concrete steps may be executed via
+`superpowers:subagent-driven-development` (per-task implementer + two-stage
+reviewer) or `superpowers:executing-plans` (separate-session handoff). This
+file's own Validation, Progress, Execution log, and Surprises sections remain
+authoritative — neither technique's plan-file or recovery ledger substitutes for
+this file's record.
 
 ## Validating
 

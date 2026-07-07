@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 GITHUB = ROOT / ".github"
 ISSUE_TEMPLATES = GITHUB / "ISSUE_TEMPLATE"
 DEPENDABOT = GITHUB / "dependabot.yml"
+PR_TEMPLATE = GITHUB / "pull_request_template.md"
 
 BUG_LABELS = ["bug"]
 FEATURE_LABELS: list[str] = []
@@ -118,6 +119,15 @@ def check(root: Path = ROOT) -> list[str]:
                 errors.append(
                     f"{dependabot.relative_to(root)}: missing update surface(s): {rendered}"
                 )
+    pr_template = root / PR_TEMPLATE.relative_to(ROOT)
+    if not pr_template.is_file():
+        errors.append(f"{pr_template.relative_to(root)}: missing")
+    else:
+        text = pr_template.read_text(encoding="utf-8")
+        if "Closes #" in text and "Refs #" not in text:
+            errors.append(f"{pr_template.relative_to(root)}: mention Refs # when Closes # appears")
+        if "Issue tracker updated" not in text:
+            errors.append(f"{pr_template.relative_to(root)}: must mention Issue tracker updated")
     return errors
 
 
