@@ -714,37 +714,6 @@ def recover_pending_materializations(vault: Path) -> list[str]:
     return restored
 
 
-def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, Any]) -> None:
-    work_id = str(frontmatter.get("work_id") or "").strip()
-    if not work_id:
-        raise ValueError("catalog source requires work_id")
-    identifiers = (
-        frontmatter.get("identifiers") if isinstance(frontmatter.get("identifiers"), dict) else {}
-    )
-    csl_json = frontmatter.get("csl_json") if isinstance(frontmatter.get("csl_json"), dict) else {}
-    doi = str(identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
-    upsert_catalog_record(
-        vault,
-        work_id=work_id,
-        concept_path=source_rel,
-        doi=doi,
-        title=str(frontmatter.get("title") or work_id),
-        description=str(frontmatter.get("description") or ""),
-        resource=str(frontmatter.get("resource") or ""),
-        item_type=str(frontmatter.get("item_type") or csl_json.get("type") or "article"),
-        identifiers=identifiers,
-        citekey=str(frontmatter.get("citekey") or csl_json.get("id") or ""),
-        csl_json=csl_json,
-        provider_coverage=str(frontmatter.get("provider_coverage") or "partial"),
-        text_status=str(frontmatter.get("text_status") or "metadata-only"),
-        check_status=concept_check_status(vault, source_rel),
-        content_hash=str(frontmatter.get("normalized_text_sha256") or ""),
-        raw_hash=str(frontmatter.get("raw_text_sha256") or ""),
-        content_path=str(frontmatter.get("content_path") or ""),
-        raw_path=str(frontmatter.get("raw_copy_path") or ""),
-    )
-
-
 def upsert_catalog_record(
     vault: Path,
     *,

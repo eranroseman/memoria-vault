@@ -86,7 +86,7 @@ def test_frontmatter_has_no_verdict_or_standing_fields():
         payload = {**(sc.get("required") or {}), **(sc.get("optional") or {})}
         assert "check_status" not in payload, name
         assert "standing" not in payload, name
-        assert schema.check_status_for(sc) == [], name
+        assert sc.get("enums", {}).get("check_status", []) == [], name
 
 
 def test_type_field_matches_filename_literal():
@@ -253,5 +253,5 @@ def test_round_trip_holds(tmp_path):
 def test_schema_has_no_gated_prefixes_while_review_gate_keeps_fallback():
     from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
-    assert schema.gated_prefixes(schema.load_folders()) == []
+    assert schema.load_folders().get("gated_prefixes", []) == []
     assert REVIEW_GATED_PREFIXES == ("notes/", "hubs/")
