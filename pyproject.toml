@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memoria-vault"
-version = "0.1.0a16"
+version = "0.1.0a18"
 description = "Memoria vault runtime and tooling"
 readme = "README.md"
 requires-python = ">=3.12"

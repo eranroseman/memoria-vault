@@ -21,7 +21,7 @@ every field and count.
 | File | What it covers | Source |
 | --- | --- | --- |
 | [Frontmatter fields](frontmatter.md) | Schema-owned YAML frontmatter field grammar and ownership | Source-owned |
-| [Inbox card fields](inbox-card-fields.md) | Stable target recording that alpha.16 has no durable Inbox-card Concept schemas | Manual |
+| [Inbox card fields](inbox-card-fields.md) | Stable target recording that the standalone runtime has no durable Inbox-card Concept schemas | Manual |
 | [Document types](document-types.md) | Schema-owned document types and owning files | Source-owned |
 | [Vocabulary](vocabulary.md) | Vocabulary-source values for Work `research_area`/`methodology` metadata and claim-bearing note `topics` | Guarded mirror |
 | [Wikilink and link conventions](wikilink-and-link-conventions.md) | Wikilink conventions, authored-link vocabulary, hub thresholds | Manual |
@@ -34,7 +34,7 @@ every field and count.
 | --- | --- | --- |
 | [System actions](system-actions.md) | Every action the system performs — operations, scheduled tasks, optional adapters, and PI actions — with performer and purpose | Guarded mirror |
 | [Operations](operations.md) | Deterministic operation entry points, facades, direct callers, and responsibilities | Manual |
-| [CLI](cli.md) | Alpha.17 `memoria` command surface | Manual |
+| [CLI](cli.md) | Alpha.18 `memoria` command surface | Manual |
 | [Engine read API](read-api.md) | Host-neutral read/write API functions and project WRITE views | Manual |
 | [Evidence sets](evidence-sets.md) | Draft evidence marker and derived-store contract | Manual |
 | [Project structural impact](project-structural-impact.md) | Project-gate structural-impact command, generated index payload, and write behavior | Manual |
@@ -48,7 +48,7 @@ every field and count.
 | [Calibration](calibration.md) | Drift-bound threshold contracts and shadow-first score calibration | Source-owned |
 | [Dashboards](dashboards.md) | Space dashboards, Inbox, Maintenance, support dashboards, Bases views, verdict bands, and rail badges | Manual |
 | [Prompt operations](prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
-| [Clustering](clustering.md) | Alpha.16 graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
+| [Clustering](clustering.md) | Graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
 ## [Pipelines and I/O](pipelines-and-io.md)
 
