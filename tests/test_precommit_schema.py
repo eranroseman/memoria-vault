@@ -21,7 +21,7 @@ def test_clean_note_passes(tmp_path):
     assert precommit_check.check_paths(vault, ["notes/n.md"]) == []
 
 
-def test_generated_note_provenance_fields_pass(tmp_path):
+def test_generated_note_fields_pass(tmp_path):
     vault = _vault(tmp_path)
     (vault / "notes/n.md").write_text(
         "---\n"
@@ -32,16 +32,11 @@ def test_generated_note_provenance_fields_pass(tmp_path):
         "title: T\n"
         "topics: [personal-informatics]\n"
         "work_id: catalog/sources/source-alpha\n"
-        "evidence_set:\n"
-        "  - catalog/sources/source-alpha\n"
         "extraction_confidence: medium\n"
         "claim_text: Framing changes which outcomes matter.\n"
         "quote: outcome framing\n"
         "annotation_ref:\n"
         "  selector: paragraph-1\n"
-        "citations:\n"
-        "  - work_id: catalog/sources/source-alpha\n"
-        "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
@@ -49,7 +44,7 @@ def test_generated_note_provenance_fields_pass(tmp_path):
     assert precommit_check.check_paths(vault, ["notes/n.md"]) == []
 
 
-def test_generated_digest_and_hub_provenance_fields_pass(tmp_path):
+def test_generated_digest_and_hub_fields_pass(tmp_path):
     vault = _vault(tmp_path)
     (vault / "works/source-alpha").mkdir(parents=True)
     (vault / "hubs").mkdir(parents=True)
@@ -61,11 +56,6 @@ def test_generated_digest_and_hub_provenance_fields_pass(tmp_path):
         "tags: []\n"
         "links: {}\n"
         "work_id: source-alpha\n"
-        "evidence_set:\n"
-        "  - catalog/sources/source-alpha\n"
-        "citations:\n"
-        "  - work_id: catalog/sources/source-alpha\n"
-        "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",
@@ -78,9 +68,6 @@ def test_generated_digest_and_hub_provenance_fields_pass(tmp_path):
         "tags: []\n"
         "links: {}\n"
         "tag: topic\n"
-        "citations:\n"
-        "  - work_id: catalog/sources/source-alpha\n"
-        "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",
         encoding="utf-8",

@@ -8,7 +8,6 @@ import re
 import shutil
 import subprocess
 from collections.abc import Iterable
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -19,13 +18,13 @@ from memoria_vault.runtime.jsonl import append_jsonl, iter_jsonl
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
+from memoria_vault.runtime.subsystems.lib import schema as schema_lib
 from memoria_vault.runtime.subsystems.lib.inbox import write_work_prompt
 from memoria_vault.runtime.time import now_iso
 from memoria_vault.runtime.vaultio import (
     RETIRED_FRONTMATTER_FIELDS,
     apply_universal_concept_frontmatter,
     frontmatter_doc,
-    is_ulid,
     iter_markdown,
     retired_frontmatter_field_errors,
     split_frontmatter,
@@ -608,12 +607,9 @@ def _validate_concept(
         raise ValueError(f"{concept_type} must live under {home or '<missing home>'}: {target}")
     if not strict_writer:
         return
-    enums = schema.get("enums") or {}
-    for field, spec in (schema.get("required") or {}).items():
-        if field not in frontmatter:
-            raise ValueError(f"missing required field {field!r} for {concept_type}")
-        if not _matches(frontmatter[field], str(spec), enums):
-            raise ValueError(f"invalid {field!r} for {concept_type}: expected {spec}")
+    errors = schema_lib.validate_frontmatter(frontmatter, schema)
+    if errors:
+        raise ValueError("; ".join(errors))
     for error in universal_concept_frontmatter_errors(frontmatter, target):
         raise ValueError(error)
 
@@ -652,28 +648,6 @@ def _write_checked(
     state.mark_checked(vault, target, output_sha256, payload_text)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
     return events[0]
-
-
-def _matches(value: Any, spec: str, enums: dict[str, list[Any]]) -> bool:
-    if spec.startswith("literal:"):
-        return value == spec.split(":", 1)[1]
-    if spec.startswith("enum:"):
-        return value in (enums.get(spec.split(":", 1)[1]) or [])
-    if spec == "str":
-        return isinstance(value, str) and bool(value.strip())
-    if spec == "int":
-        return isinstance(value, int) and not isinstance(value, bool)
-    if spec == "bool":
-        return isinstance(value, bool)
-    if spec == "date":
-        return isinstance(value, str | date)
-    if spec == "list":
-        return isinstance(value, list)
-    if spec == "map":
-        return isinstance(value, dict)
-    if spec == "ulid":
-        return isinstance(value, str) and is_ulid(value)
-    return True
 
 
 def _input_rows(inputs: Iterable[str | dict[str, Any]]) -> list[dict[str, Any]]:

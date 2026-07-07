@@ -100,7 +100,10 @@ def apply_universal_concept_frontmatter(
     if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
         return frontmatter
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
-        frontmatter.setdefault("id", new_ulid())
+        if frontmatter.get("type") == "digest":
+            frontmatter.setdefault("id", frontmatter.get("work_id") or new_ulid())
+        else:
+            frontmatter.setdefault("id", new_ulid())
         frontmatter.setdefault("tags", [])
         frontmatter.setdefault("links", {})
     return frontmatter
@@ -115,7 +118,7 @@ def universal_concept_frontmatter_errors(frontmatter: dict[str, Any], rel_path: 
         return []
     errors: list[str] = []
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
-        if not is_ulid(str(frontmatter.get("id") or "")):
+        if frontmatter.get("type") != "digest" and not is_ulid(str(frontmatter.get("id") or "")):
             errors.append("id must be a ULID")
         if not isinstance(frontmatter.get("links"), dict):
             errors.append("links must be a map")

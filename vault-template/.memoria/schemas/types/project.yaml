@@ -15,4 +15,5 @@ optional:
   outcome_frame: map
   paper_plan: map
   question: str
+  todo: list
   x: map

@@ -600,8 +600,11 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
     assert digest.is_file()
     body = digest.read_text(encoding="utf-8")
     assert "Alpha Source" in body
-    assert "10.1000/alpha" in body
-    assert read_frontmatter(digest)["evidence_set"] == ["catalog/sources/doi-10.1000_alpha"]
+    digest_fm = read_frontmatter(digest)
+    assert digest_fm["id"] == "doi-10.1000_alpha"
+    assert digest_fm["work_id"] == "doi-10.1000_alpha"
+    assert "evidence_set" not in digest_fm
+    assert "citations" not in digest_fm
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(

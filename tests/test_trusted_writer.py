@@ -352,7 +352,7 @@ def test_promote_checked_rejects_invalid_staged_concept(tmp_path: Path) -> None:
     try:
         promote_checked(vault, "notes/bad.md", machine="test-machine")
     except ValueError as exc:
-        assert "missing required field 'title'" in str(exc)
+        assert "missing required field: title" in str(exc)
     else:
         raise AssertionError("invalid staged Concept should not promote")
 

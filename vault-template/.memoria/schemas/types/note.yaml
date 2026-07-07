@@ -2,9 +2,10 @@ type: note
 category: notes
 gated: false
 enums:
-  mode: [claim, question]
+  mode: [claim, question, definition, work]
   question_status: [open, resolved]
-  certainty: [reported, contested, unknown]
+  certainty: [reported, contested, unknown, hypothesized]
+  item_type: [paper, dataset, repository, web-page, report]
 required:
   type: literal:note
   id: ulid
@@ -15,11 +16,10 @@ optional:
   aliases: list
   annotation_ref: map
   archived: bool
-  citations: list
   claim_text: str
   description: str
-  evidence_set: list
   extraction_confidence: str
+  item_type: enum:item_type
   mode: enum:mode
   question_status: enum:question_status
   quote: str
@@ -32,4 +32,16 @@ optional:
   superseded: bool
   reading: str
   anchors: list
+  todo: list
   x: map
+required_when:
+  claim_text:
+    field: mode
+    equals: claim
+  question_status:
+    field: mode
+    equals: question
+  work_id:
+    field: mode
+    equals: work
+forbidden: [citations, evidence_set, citekey, project]

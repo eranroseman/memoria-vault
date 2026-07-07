@@ -11,7 +11,8 @@ required:
 optional:
   aliases: list
   archived: bool
-  citations: list
   description: str
   salience: str
+  todo: list
   x: map
+forbidden: [citations]

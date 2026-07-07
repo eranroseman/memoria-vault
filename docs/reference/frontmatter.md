@@ -20,7 +20,8 @@ Per-type schemas currently exist for `digest`, `hub`, `note`, and `project`.
 ## The field-kind grammar
 
 Each type schema declares `required:` and `optional:` maps of `field: kind`,
-plus an `enums:` block and optionally `required_any:`. The kinds:
+plus an `enums:` block and optionally `required_any:`, `required_when:`, and
+`forbidden:`. The kinds:
 
 | Kind | Accepts |
 | --- | --- |
@@ -34,8 +35,9 @@ plus an `enums:` block and optionally `required_any:`. The kinds:
 | `literal:<value>` | exactly that value; for example, `type: literal:note` |
 | `enum:<name>` | one of the values the schema's `enums.<name>` lists |
 
-Unknown extra fields are accepted during the alpha.16 migration. Schema-declared
-fields still enforce the required meaning contract. A schema example
+Unknown extra fields are accepted during the alpha migration. Schema-declared
+fields still enforce the required meaning contract, and `forbidden:` fields are
+rejected even though other unknown extras are allowed. A schema example
 (`types/note.yaml`):
 
 ```yaml
@@ -43,8 +45,10 @@ type: note
 category: notes
 gated: false
 enums:
-  mode: [claim, question]
+  mode: [claim, question, definition, work]
   question_status: [open, resolved]
+  certainty: [reported, contested, unknown, hypothesized]
+  item_type: [paper, dataset, repository, web-page, report]
 required:
   type: literal:note
   id: ulid
@@ -55,9 +59,23 @@ optional:
   aliases: list
   archived: bool
   description: str
+  item_type: enum:item_type
   mode: enum:mode
   question_status: enum:question_status
+  work_id: str
+  todo: list
   x: map
+required_when:
+  claim_text:
+    field: mode
+    equals: claim
+  question_status:
+    field: mode
+    equals: question
+  work_id:
+    field: mode
+    equals: work
+forbidden: [citations, evidence_set, citekey, project]
 ```
 
 ## Creation forms
@@ -86,13 +104,13 @@ frontmatter verdict fields so a forged file field cannot grant a checked verdict
 
 ## Links and catalog resources
 
-Work Concepts use `work_id` to point at the SQLite catalog Work row. Backing
+Documents use `work_id` to point at the SQLite catalog Work row. Backing
 resource URLs and external identifiers live in `.memoria/memoria.sqlite` and
-`works/<work_id>/record.md` projections, not in human note frontmatter. `links`
-is the required relation field for Concepts. It is a map from `supports`,
-`contradicts`, or `extends` to lists of local Concept targets.
+the generated `bibliography.bib` projection, not in human note frontmatter.
+`links` is the required relation field for Concepts. It is a map from
+`supports`, `contradicts`, or `extends` to lists of local Concept targets.
 
-Draft write-back reuses the existing note `source_id` field for provenance when
+Draft write-back reuses the existing note `work_id` field for provenance when
 a promoted draft passage is tied to a catalog Work. It does not add a
 draft-origin or maturity frontmatter field; draft-origin remains request/journal
 provenance plus DB `check_status: unchecked`.
@@ -100,17 +118,19 @@ provenance plus DB `check_status: unchecked`.
 Evidence sets for composed drafts are not frontmatter. They live as inline
 `%%ev: ...%%` markers in draft body text with derived rows in SQLite; see
 [Evidence sets](evidence-sets.md).
+`citations` is not Concept frontmatter either; bibliography completeness is
+checked against the generated `bibliography.bib`.
 
 ## Other universal fields
 
 | Field | Kind | Notes |
 | --- | --- | --- |
 | `type` | `literal:` | Pins the note to its schema. Set at creation; never changed. |
-| `id` | `str` | Required ULID for knowledge Concepts. |
+| `id` | `str` | Required ULID for note/hub/project Concepts; digest uses its `work_id`. |
 | `title` | `str` | Human-readable Concept title. |
 | `links` | `links` | Required for knowledge Concepts, even when empty. |
 | `description` | `str` | Optional human-readable summary where the type supports it. |
-| `tags` | `list` | Optional local classification where the type supports it. |
+| `tags` | `list` | Required local classification list, even when empty. |
 
 ## Enforcement
 

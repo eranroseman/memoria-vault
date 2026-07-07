@@ -1206,29 +1206,6 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     return citation
 
 
-def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
-    concept_type = frontmatter.get("type")
-    if concept_type not in {"note", "digest", "hub"}:
-        return []
-    refs = _source_refs(frontmatter)
-    if not refs:
-        return []
-    citations = frontmatter.get("citations")
-    if not isinstance(citations, list):
-        return ["missing citations payload"]
-    by_source = {
-        str(row.get("work_id") or "").rstrip("/")
-        for row in citations
-        if isinstance(row, dict)
-        and row.get("title")
-        and "authors" in row
-        and "issued" in row
-        and any(row.get(key) for key in ("doi", "url", "citekey"))
-    }
-    missing = [ref for ref in refs if ref.rstrip("/") not in by_source]
-    return [f"missing compact citation for {ref}" for ref in missing]
-
-
 def _init(conn: sqlite3.Connection) -> None:
     current = int(conn.execute("PRAGMA user_version").fetchone()[0])
     if current == 4:
