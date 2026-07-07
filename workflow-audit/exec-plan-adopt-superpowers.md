@@ -518,13 +518,11 @@ skill changes need a restart to load).
 ### Step 18 — Author the toolkit stack document (last step)
 
 Once the stack is installed and verified (steps 1–17), document the whole
-thing. **Store it at `.agents/toolkit.md`** on `main` — the repo's
-agent-guidance home, so it's durable, discoverable, and PR-reviewed;
-`AGENTS.md` stays the authority/policy, `toolkit.md` is the "what's
-available and how to use it" map. (Alternative: `scratch/workflow-audit/`
-alongside this plan, if you'd rather scope it as initiative-only working
-material. Recommend `.agents/toolkit.md` for durability.) Author it in a
-worktree and open a PR (`AGENTS.md` §1; `.agents/` is a sensitive path).
+thing at **`.agents/toolkit.md`** on `main` — the repo's agent-guidance
+home, so it's durable, discoverable, and PR-reviewed; `AGENTS.md` stays the
+authority/policy, `toolkit.md` is the "what's available and how to use it"
+map. Author it in a worktree and open a PR (`AGENTS.md` §1; `.agents/` is a
+sensitive path).
 
 The document covers the **entire** stack, grouped by layer:
 
