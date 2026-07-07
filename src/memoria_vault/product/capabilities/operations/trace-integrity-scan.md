@@ -7,13 +7,13 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
 - capabilities/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: trace-integrity-scan.v1
 io_schema:

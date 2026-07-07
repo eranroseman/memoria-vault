@@ -42,19 +42,19 @@ TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 TYPE_HOME = {
-    "digest": "works/",
+    "digest": "digests/",
+    "fulltext": "fulltext/",
     "note": "notes/",
     "hub": "hubs/",
     "project": "projects/",
 }
 # Top-level folders the vault schema permits; anything else at the root is stray.
-KNOWN_TOP_DIRS = {"works", "sources", "notes", "hubs", "projects", "system", "inbox"}
+KNOWN_TOP_DIRS = {"notes", "hubs", "projects", "digests", "fulltext", "system", "inbox"}
 # Scaffolding, not authored documents: skeleton folders, assets, and the
 # templates (raw Markdown full of placeholder [[links]]). Detectors that assert
 # things about *real* documents (broken wikilinks, type schema) skip these.
-# Templates live in system/templates/ (ADR-47);
-# keep this the single source of truth so the skip can't drift from the move.
-SCAFFOLD_PREFIXES = ("system/templates/", "system/dashboards/", "system/patterns/")
+# Hidden templates/patterns and visible dashboards are scaffolding, not authored docs.
+SCAFFOLD_PREFIXES = (".memoria/templates/", ".memoria/patterns/", "system/dashboards/")
 
 
 def is_untyped_infra(rp: str) -> bool:
@@ -77,6 +77,7 @@ LEFTOVER_PATTERNS = [
 ]
 REQUIRED_FIELDS = {
     "note": ["id", "title", "tags", "links"],
+    "fulltext": ["id", "title", "tags", "links", "work_id"],
     "hub": ["id", "title", "tags", "links", "tag"],
     "project": ["id", "title", "tags", "links"],
 }
@@ -114,7 +115,7 @@ DATAVIEW_KEYWORDS = {
 }
 # Only queries over these folders read *Concept frontmatter*; queries over logs
 # or metrics drift on different schemas, not this one.
-NOTE_FOLDERS = ("works", "sources", "notes", "hubs", "projects")
+NOTE_FOLDERS = ("notes", "hubs", "projects", "digests", "fulltext")
 # Canonical schemas (ADR-122): when .memoria/schemas/ + PyYAML are available the
 # constants above are *derived* from the one schema home; the hardcodes remain
 # the dependency-free fallback so the operation still runs without PyYAML.
@@ -409,7 +410,7 @@ _IDENT = re.compile(r"[A-Za-z_][\w-]*")
 
 def dashboard_field_drift(vault: Path) -> list[Finding]:
     dash = vault / "system" / "dashboards"
-    tmpl = vault / "system" / "templates"
+    tmpl = vault / ".memoria" / "templates"
     if not dash.is_dir() or not tmpl.is_dir():
         return []
     known = set(DATAVIEW_BUILTINS)
@@ -480,7 +481,7 @@ def graph_analyze(vault: Path) -> list[Finding]:
             if tgt in indeg:
                 indeg[tgt] += 1
     out = []
-    synth = ("works/", "sources/", "notes/", "hubs/")
+    synth = ("notes/", "hubs/", "projects/", "digests/", "fulltext/")
     for p in notes:
         rp = relpath(vault, p)
         if not rp.startswith(synth):

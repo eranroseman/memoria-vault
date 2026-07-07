@@ -91,7 +91,7 @@ def _seed_checkpoint_workspace(vault: Path, required_operations: set[str]) -> No
         citekey="alpha2026",
     )
     for rel, concept_type, check_status in (
-        ("works/work-alpha/digest.md", "digest", "checked"),
+        ("digests/work-alpha.md", "digest", "checked"),
         ("notes/note-alpha.md", "note", "checked"),
         ("projects/project-alpha/project.md", "project", "checked"),
         ("notes/unchecked-alpha.md", "note", "unchecked"),

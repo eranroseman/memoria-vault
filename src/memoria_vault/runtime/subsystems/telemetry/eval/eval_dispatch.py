@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """eval_dispatch.py — the vault-eval dispatcher (ADR-11: diagnostic, never gating).
 
-Fans the hand-curated gold set in ``system/eval/`` into one local eval payload
+Fans the hand-curated gold set in ``.memoria/eval/`` into one local eval payload
 per ``lifecycle: current`` gold task, routed to the eval role named in frontmatter.
 It lives with the sweeps operations because it has exactly their shape — a
 deterministic, no-LLM detector-over-the-vault that creates idempotent work
@@ -11,7 +11,7 @@ Each payload carries ``eval:<task-id>:<quarter>``, so scheduled and on-demand
 re-runs inside the same quarter converge to one task intent. The body wraps the
 gold task in the non-committing eval contract (scratch-only writes; results are
 reported back as JSON, never written directly to the vault). A dispatch record
-is written to ``system/eval/last-run.md``.
+is written to ``.memoria/eval/last-run.md``.
 
     python eval_dispatch.py --vault <path>             # dispatch (cron + on-demand)
     python eval_dispatch.py --vault <path> --dry-run   # print the card set, create nothing
@@ -36,7 +36,7 @@ EVAL_ROLE_ASSIGNEE = {
     "verify": "memoria-peer-reviewer",
 }
 
-EVAL_DIR = "system/eval"
+EVAL_DIR = ".memoria/eval"
 LAST_RUN = "last-run.md"
 CREATED_BY = "memoria-eval"
 
@@ -79,7 +79,7 @@ def quarter_of(today: datetime.date | None = None) -> str:
 
 
 def load_gold_tasks(vault: Path) -> list[dict]:
-    """Read the gold set: every `type: eval-task` note in system/eval/.
+    """Read the gold set: every `type: eval-task` note in .memoria/eval/.
 
     Skips non-task files (README, last-run, underscore-prefixed) and tasks not
     at `lifecycle: current` — retired/proposed gold items don't dispatch.

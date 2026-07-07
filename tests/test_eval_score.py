@@ -15,7 +15,7 @@ from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch, eval_
 
 def _vault(tmp_path: Path) -> Path:
     """A minimal vault: two gold tasks, a small catalog, one superseded note."""
-    ev = tmp_path / "system/eval"
+    ev = tmp_path / ".memoria/eval"
     ev.mkdir(parents=True)
     (ev / "find-x.md").write_text(
         "---\ntype: eval-task\ntitle: Find X\nlifecycle: current\n"

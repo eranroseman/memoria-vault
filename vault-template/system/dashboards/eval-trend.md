@@ -1,3 +1,8 @@
+---
+type: dashboard
+title: Eval trend
+---
+
 # Eval trend
 
 vault-eval capability scores over time, from `system/metrics/eval/runs.jsonl` — written by the deterministic scorer (`memoria_vault.runtime.subsystems.telemetry.eval.eval_score`, ADR-11). Open after the quarterly run scores (or an on-demand scoring pass) to see whether the deployed system still finds, extracts, links, and verifies correctly on this vault. The verdict is **diagnostic, never gating** — a dip informs you; it does not pause scheduled work. Reference: [vault eval](https://eranroseman.github.io/memoria-vault/reference/vault-eval) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#eval-trend).

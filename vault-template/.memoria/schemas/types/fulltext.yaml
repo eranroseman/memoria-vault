@@ -1,17 +1,14 @@
-type: digest
-category: digests
+type: fulltext
+category: fulltext
 gated: false
 required:
-  type: literal:digest
+  type: literal:fulltext
   id: str
   title: str
   tags: list
   links: links
   work_id: str
 optional:
-  anchors: list
   archived: bool
   description: str
-  todo: list
   x: map
-forbidden: [citations, evidence_set]

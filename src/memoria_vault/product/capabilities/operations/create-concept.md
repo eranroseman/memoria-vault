@@ -6,12 +6,12 @@ operation_id: create-concept
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: create-concept.v1
 io_schema:

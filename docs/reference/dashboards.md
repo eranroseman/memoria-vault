@@ -20,7 +20,7 @@ navigation.
 | --- | --- | --- | --- |
 | Queue | Inbox | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
 | Maintenance | Maintenance | `system/dashboards/` | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
-| Corpus | Library | `works/`, `sources/`, `bibliography.bib` | Source intake, source notes, checked Work bundles, and bibliography projection. |
+| Corpus | Library | `digests/`, `fulltext/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
 | Corpus | Knowledge | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
 | Corpus | Project | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |
@@ -38,12 +38,12 @@ health** ([Dashboards](../explanation/dashboards/README.md)).
 
 Obsidian Bases (`.base` files), when present, are optional views over the same
 workspace files. Bases are views only; Concept frontmatter is governed by
-[the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and SQLite catalog rows are
+the YAML schemas under `.memoria/schemas/`, and SQLite catalog rows are
 governed by the decision that [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
 | Base | Lives at | View over |
 | --- | --- | --- |
-| Optional adapter views | Adapter-owned profile files | Work, source-note, note, hub, and project Concepts by home. Verdicts stay in SQLite/read API. |
+| Optional adapter views | Adapter-owned profile files | Digest, fulltext, note, hub, and project documents by home. Verdicts stay in SQLite/read API. |
 
 ## Verdict band (Maintenance drift watch)
 

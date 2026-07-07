@@ -148,10 +148,10 @@ def test_http_transport_operation_run_uses_request_envelope(workspace: Path) -> 
 
     assert http_status == HTTPStatus.OK
     assert response["ok"] is True
-    assert (workspace / "journal/memoria-http.jsonl").exists()
-    assert [event["event"] for event in iter_jsonl(workspace / "journal/memoria-http.jsonl")] == [
-        "derived"
-    ]
+    assert (workspace / ".memoria/journal/memoria-http.jsonl").exists()
+    assert [
+        event["event"] for event in iter_jsonl(workspace / ".memoria/journal/memoria-http.jsonl")
+    ] == ["derived"]
     with state.connect(workspace) as conn:
         row = conn.execute(
             """

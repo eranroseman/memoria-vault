@@ -6,8 +6,8 @@ operation_id: analyze-project-argument
 allowed_tools:
 - read_checked_concepts
 allowed_paths:
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/

@@ -1291,7 +1291,7 @@ def _quarantine_catalog_source(
 
 def _latest_derived(vault: Path) -> dict[str, dict[str, Any]]:
     derived: dict[str, dict[str, Any]] = {}
-    for path in sorted((vault / "journal").glob("*.jsonl")):
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
             if event.get("event") not in {EVENT_DERIVED, EVENT_OBSERVED_EXTERNAL_EDIT}:
                 continue
@@ -1665,8 +1665,8 @@ def _link_ref(value: str) -> str:
     if raw.startswith("[[") and raw.endswith("]]"):
         raw = raw[2:-2].split("|", 1)[0].strip()
     rel = _concept_rel(raw)
-    if rel.startswith(("works/", "sources/", "notes/", "hubs/", "projects/")) and not rel.endswith(
-        ".md"
+    if rel.startswith(("notes/", "hubs/", "projects/", "digests/", "fulltext/")) and not (
+        rel.endswith(".md")
     ):
         rel = f"{rel}.md"
     if rel.endswith(".md") or rel.startswith("catalog/"):

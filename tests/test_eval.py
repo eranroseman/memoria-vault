@@ -10,7 +10,7 @@ import yaml
 from memoria_vault.runtime.subsystems.telemetry.eval import eval_dispatch
 
 SRC = Path(__file__).resolve().parent.parent / "vault-template"
-EVAL = SRC / "system" / "eval"
+EVAL = SRC / ".memoria" / "eval"
 
 REQUIRED_SECTIONS = ("## Input", "## Expected behavior", "## Scoring rubric")
 
@@ -72,7 +72,7 @@ def test_gold_task_roles_match_the_routed_roles():
 
 
 def _fixture_vault(tmp_path: Path) -> Path:
-    d = tmp_path / "system/eval"
+    d = tmp_path / ".memoria/eval"
     d.mkdir(parents=True)
     (d / "README.md").write_text("# not a task\n", encoding="utf-8")
     (d / "find-x.md").write_text(
@@ -108,7 +108,7 @@ def test_dry_run_produces_the_right_card_set(tmp_path, capsys):
     assert rows["find-x"]["idempotency_key"] == "eval:find-x:2026-Q2"
     # dry-run prints instead of creating, and writes no dispatch record
     assert "eval:verify-y:2026-Q2" in capsys.readouterr().out
-    assert not (v / "system/eval/last-run.md").exists()
+    assert not (v / ".memoria/eval/last-run.md").exists()
     assert all(r["card_id"] == "DRY" for r in out["dispatched"])
 
 
@@ -132,7 +132,7 @@ def test_dispatch_records_last_run(tmp_path, monkeypatch):
     v = _fixture_vault(tmp_path)
     monkeypatch.setattr(eval_dispatch, "create_card", lambda card: "k-42")
     eval_dispatch.dispatch(v, today=datetime.date(2026, 6, 10))
-    text = (v / "system/eval/last-run.md").read_text(encoding="utf-8")
+    text = (v / ".memoria/eval/last-run.md").read_text(encoding="utf-8")
     assert "2026-Q2" in text and "find-x" in text and "k-42" in text
     # plain markdown, no YAML frontmatter — last-run is untyped system infra
     assert not text.startswith("---")

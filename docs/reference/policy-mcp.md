@@ -49,7 +49,7 @@ actors:
       write: ["inbox/**"]
     deny:
       tools: [web_search, execute_code]
-      write: ["works/**", "sources/**", "notes/**", "hubs/**", "projects/**", "system/**"]
+      write: ["digests/**", "fulltext/**", "notes/**", "hubs/**", "projects/**", "system/**"]
     require: [audit_log]
     write_scope: ["inbox/"]
 ```

@@ -8,7 +8,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - .memoria/blobs/source-content/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: capture-source.v1
 io_schema:

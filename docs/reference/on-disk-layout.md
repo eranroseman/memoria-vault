@@ -12,7 +12,7 @@ Where every file lives.
 - The repo ships the vault source under **`vault-template/`**.
 - The installer scaffolds a runtime vault, then populates it from `vault-template/`.
 - Product operation manifests ship inside the installed Python package, not the runtime vault.
-- The legal root categories come from [the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and `vault-template/.memoria/schemas/folders.yaml`.
+- The legal root categories come from `vault-template/.memoria/schemas/folders.yaml`.
 - `.memoria/` is runtime infrastructure. A PI workflow should never ask the PI to open it.
 
 ---
@@ -27,16 +27,14 @@ Where every file lives.
 ├── AGENTS.md                ground rules for any agent in the vault
 ├── troubleshooting.md       vault-root nav page
 ├── bibliography.bib         generated portable bibliography
-├── works/<work_id>/         objective work record, full text, digest, raw source
-├── sources/                 human source-notes bridging works into notes
 ├── notes/                   claim and question notes
 ├── hubs/                    topic hubs with human salience
 ├── projects/<slug>/         project.md, outline.md, draft.md, evidence/gap/export artifacts
+├── digests/<work_id>.md     checked source digests
+├── fulltext/<work_id>.md    generated full-text reproductions
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
-    ├── templates/             starter notes per type
-    ├── eval/                  the vault-eval gold set (eval-task notes + last-run.md)
     ├── incidents/             visible incident copies
     ├── manifest.jsonl         visible audit manifest
     └── metrics/               exported metrics
@@ -64,6 +62,10 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── blobs/                   gitignored provider payloads and staged source content
 ├── plugins/memoria-policy-gate/   fail-closed write-gate package for optional adapters
 ├── scripts/                 cron-runner for operator-managed scheduled tasks
+├── templates/               starter notes per type
+├── eval/                    the vault-eval gold set and last-run.md
+├── patterns/_preamble.md    shared operation prompt preamble
+├── journal/                 per-machine JSONL file journal
 ├── memoria.sqlite           SQLite working-state DB
 ├── state/                   runtime state owned by the CLI/engine
 ├── audit/                   git-trackable audit anchors
@@ -71,7 +73,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── design-system.md
 ```
 
-Alpha.16 deliberately does **not** ship hidden operation-package homes, installed
+Alpha.18 deliberately does **not** ship hidden operation-package homes, installed
 profile packages, lane override packages, or profile tool registries. Operation
 manifests live under `memoria_vault.product.capabilities.operations`; operation
 code lives in the installed `memoria_vault` package.

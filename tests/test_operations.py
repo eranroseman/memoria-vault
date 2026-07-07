@@ -163,12 +163,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
         run_id="compile-alpha",
     )
 
-    digest = vault / "works/source-alpha/digest.md"
+    digest = vault / "digests/source-alpha.md"
     digest_fm = read_frontmatter(digest)
     assert digest_fm["type"] == "digest"
     assert "check_status" not in digest_fm
     assert digest_fm["work_id"] == "source-alpha"
-    assert state.concept_check_status(vault, "works/source-alpha/digest.md") == "checked"
+    assert state.concept_check_status(vault, "digests/source-alpha.md") == "checked"
     assert result["derived"]["inputs"][0]["id"] == "catalog/sources/source-alpha"
     assert result["hub_paths"] == [
         "hubs/methods.md",
@@ -188,7 +188,7 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert promoted_hub_fm["tag"] == "methods"
     assert state.concept_check_status(vault, "hubs/methods.md") == "checked"
 
-    events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/op-machine.jsonl"))
     assert [event["event"] for event in events] == [
         "run",
         "model_call",
@@ -212,12 +212,12 @@ def test_compile_source_digest_traces_model_call_and_stages_hub_suggestions(
     assert events[1]["model_params"] == {"temperature": 0}
     assert events[1]["prompt_hash"].startswith("sha256:")
     assert events[-1]["suggestions"] == result["hub_suggestions"]
-    assert events[-1]["outputs"] == ["works/source-alpha/digest.md", *result["hub_paths"]]
+    assert events[-1]["outputs"] == ["digests/source-alpha.md", *result["hub_paths"]]
 
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())
     assert committed == {
         state.JOURNAL_HEAD_REL,
-        "works/source-alpha/digest.md",
+        "digests/source-alpha.md",
         "hubs/gaps.md",
         "hubs/impact.md",
         "hubs/methods.md",
@@ -284,7 +284,7 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
 
     assert f"text_status is {text_status}" in str(exc.value)
     assert "attention_path is inbox/flag-digest-full-text-source-alpha.md" in str(exc.value)
-    assert not (vault / "works/source-alpha/digest.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()
     attention = vault / "inbox/flag-digest-full-text-source-alpha.md"
     attention_fm = read_frontmatter(attention)
     assert attention_fm["projection"] == "attention"
@@ -292,7 +292,7 @@ def test_compile_source_digest_blocks_checked_sources_without_full_text(
     assert attention_fm["attention_status"] == "open"
     assert attention_fm["target"] == "catalog/sources/source-alpha"
     assert attention_fm["raised_by"] == "compile-source-digest"
-    events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/op-machine.jsonl"))
     assert events[-1]["check"] == "source-full-text"
     assert events[-1]["attention_path"] == "inbox/flag-digest-full-text-source-alpha.md"
 
@@ -323,7 +323,7 @@ def test_compile_source_digest_rejects_unsupported_required_promotion_check(
             machine="op-machine",
         )
 
-    assert not (vault / "works/source-alpha/digest.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()
 
 
 def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
@@ -414,7 +414,7 @@ def test_compile_source_digest_can_use_pydantic_ai_runner(tmp_path: Path, monkey
     assert "Model-written Alpha framing outcomes." in (vault / result["digest_path"]).read_text(
         encoding="utf-8"
     )
-    events = list(iter_jsonl(vault / "journal/op-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/op-machine.jsonl"))
     assert events[1]["model"] == "memoria-test-model"
 
 
@@ -487,7 +487,7 @@ def test_compile_source_digest_rejects_nonconforming_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "works/source-alpha/digest.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()
 
 
 def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
@@ -526,4 +526,4 @@ def test_compile_source_digest_rejects_ungrounded_pydantic_ai_output(
             machine="op-machine",
         )
 
-    assert not (vault / "works/source-alpha/digest.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()

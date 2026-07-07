@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - catalog/sources/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: record-copi-interview.v1
 io_schema:

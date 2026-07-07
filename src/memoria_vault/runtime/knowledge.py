@@ -464,13 +464,13 @@ def analyze_gaps(
         if source_count == 0 and note_count == 0:
             kind = "new-topic"
             seed = "capture a seed source or project note"
-            why = "No checked works, digests, or notes are present for this requested topic."
+            why = "No checked sources, digests, or notes are present for this requested topic."
             impact, confidence, actionability = 1, 2, 1
         elif source_count >= dense_threshold and note_count == 0:
             kind = "undigested"
             seed = "distill note candidates from checked digests"
             why = (
-                f"{source_count} checked work input(s) mention this topic, "
+                f"{source_count} checked source input(s) mention this topic, "
                 "but no checked notes cover it."
             )
             impact, confidence, actionability = 2, 2, 1
@@ -479,7 +479,7 @@ def analyze_gaps(
             seed = "capture or link supporting sources"
             why = (
                 f"{note_count} checked note(s) mention this topic, "
-                "but no checked works or digests warrant it."
+                "but no checked sources or digests warrant it."
             )
             impact, confidence, actionability = 2, 2, 1
         else:
@@ -1271,7 +1271,7 @@ def _write_tag_candidate_attention(
         if path.exists():
             continue
         refs = [str(ref) for ref in candidate.get("refs") or []]
-        target = refs[0] if refs else "works"
+        target = refs[0] if refs else "catalog/sources"
         write_frontmatter_doc(
             path,
             {
@@ -1559,11 +1559,9 @@ def _discovery_candidate_rel(work_id: str, edge: dict[str, Any]) -> str:
 def _retrieval_bucket(source: dict[str, Any]) -> str:
     path = str(source.get("path") or "")
     item_type = source.get("type")
-    if path.startswith(("graph-neighborhoods/", "catalog/sources/")) or (
-        path.startswith("works/") and path.endswith("/fulltext.md")
-    ):
+    if path.startswith(("graph-neighborhoods/", "catalog/sources/", "fulltext/")):
         return "sources"
-    if path.startswith("works/") or item_type in {"work", "digest"}:
+    if path.startswith("digests/") or item_type == "digest":
         return "digests"
     if path.startswith("notes/") or item_type == "note":
         return "notes"
@@ -1580,12 +1578,10 @@ def _gap_identity(path: str, bucket: str) -> str:
 
 def _work_id_from_path(path: str) -> str:
     rel = normalize_path(path)
-    if rel.startswith("works/") and rel.endswith(".md"):
-        parts = rel.split("/")
-        if len(parts) == 3 and parts[2] in {"fulltext.md", "record.md", "digest.md"}:
-            return parts[1]
-        if len(parts) == 2:
-            return Path(rel).stem
+    if rel.startswith("digests/") and rel.endswith(".md"):
+        return Path(rel).stem
+    if rel.startswith("fulltext/") and rel.endswith(".md"):
+        return Path(rel).stem
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
     if rel.startswith("catalog/sources/"):
@@ -2575,7 +2571,7 @@ def _checked_frontmatter(vault: Path, relpath: str, concept_type: str) -> dict[s
 
 
 def _checked_concepts(vault: Path) -> Iterable[tuple[str, dict[str, Any]]]:
-    for root in ("works", "notes"):
+    for root in ("digests", "notes"):
         base = vault / root
         if not base.exists():
             continue
@@ -2596,7 +2592,7 @@ def _checked_notes_by_path(vault: Path) -> dict[str, dict[str, Any]]:
 
 def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     concept_type = frontmatter.get("type")
-    if relpath.startswith("works/") and concept_type == "digest":
+    if relpath.startswith("digests/") and concept_type == "digest":
         return "digests"
     if relpath.startswith("notes/") and concept_type == "note":
         return "notes"
@@ -2853,7 +2849,7 @@ def _is_current_note(vault: Path, relpath: str, frontmatter: dict[str, Any]) -> 
 def _digest_rel(path: str) -> str:
     rel = normalize_path(path)
     if "/" not in rel and not rel.endswith(".md"):
-        rel = f"works/{rel}/digest.md"
+        rel = f"digests/{rel}.md"
     if not rel.endswith(".md"):
         rel += ".md"
     return rel
@@ -2992,7 +2988,7 @@ def _draft_work_id(value: str) -> str:
         return ""
     if text.startswith("catalog/sources/"):
         return text.rsplit("/", 1)[-1]
-    if text.startswith(("works/", "graph-neighborhoods/")):
+    if text.startswith(("digests/", "fulltext/", "graph-neighborhoods/")):
         return _work_id_from_path(text)
     if "/" not in text:
         return text
@@ -3187,7 +3183,7 @@ def _concept_rel(path: str) -> str:
             raise ValueError(f"source must be a catalog source row ref: {rel}")
     elif not rel.endswith(".md"):
         rel += ".md"
-    if not rel.startswith(("catalog/sources/", "sources/", "notes/", "hubs/")):
+    if not rel.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltext/")):
         raise ValueError(f"unsupported note link target: {rel}")
     return rel
 

@@ -72,7 +72,7 @@ def append_journal_event(
     *,
     machine: str | None = None,
 ) -> dict[str, Any]:
-    """Append one journal event to ``journal/<machine>.jsonl``."""
+    """Append one journal event to ``.memoria/journal/<machine>.jsonl``."""
     row = dict(event)
     row.setdefault("timestamp", now_iso())
     _append_event(Path(vault), machine, row)
@@ -667,11 +667,11 @@ def _append_event(vault: Path, machine: str | None, event: dict[str, Any]) -> No
 
 def _journal_path(vault: Path, machine: str | None) -> Path:
     name = safe_filename(machine or platform.node() or "local")
-    return vault / "journal" / f"{name}.jsonl"
+    return vault / ".memoria/journal" / f"{name}.jsonl"
 
 
 def _iter_events(vault: Path) -> Iterable[dict[str, Any]]:
-    for path in sorted((vault / "journal").glob("*.jsonl")):
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         yield from iter_jsonl(path)
 
 

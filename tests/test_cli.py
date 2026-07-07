@@ -229,13 +229,13 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
         ".memoria/config/providers.yaml",
         ".memoria/locks/worker.lock",
         ".memoria/schemas/folders.yaml",
-        "journal/test-machine.jsonl",
+        ".memoria/journal/test-machine.jsonl",
     ).splitlines() == [
         ".memoria/memoria.sqlite",
         ".memoria/config/providers.yaml",
         ".memoria/locks/worker.lock",
         ".memoria/schemas/folders.yaml",
-        "journal/test-machine.jsonl",
+        ".memoria/journal/test-machine.jsonl",
     ]
 
     rc = main(
@@ -325,13 +325,11 @@ def test_cli_migrate_alpha15_imports_root_level_alpha16_contract(
     assert (workspace / "bibliography.bib").read_text(encoding="utf-8") == (
         "@article{alpha,title={Alpha}}\n"
     )
-    digest = read_frontmatter(workspace / "works/source-alpha/digest.md")
+    digest = read_frontmatter(workspace / "digests/source-alpha.md")
     assert digest["type"] == "digest"
     assert digest["work_id"] == "source-alpha"
     assert not (workspace / "works/source-alpha/record.md").exists()
-    assert "Digest body." in (workspace / "works/source-alpha/digest.md").read_text(
-        encoding="utf-8"
-    )
+    assert "Digest body." in (workspace / "digests/source-alpha.md").read_text(encoding="utf-8")
 
 
 def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
@@ -594,7 +592,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["digest_path"] == "works/doi-10.1000_alpha/digest.md"
+    assert output["result"]["digest_path"] == "digests/doi-10.1000_alpha.md"
     assert output["result"]["interview_count"] == 1
     digest = workspace / output["result"]["digest_path"]
     assert digest.is_file()
@@ -755,7 +753,7 @@ def test_cli_thin_knowledge_loop_runs_end_to_end(
     assert {source["path"] for source in answer["result"]["sources"]} & {
         digest_path,
         note_path,
-        "works/doi-10.1000_alpha/fulltext.md",
+        "fulltext/doi-10.1000_alpha.md",
     }
 
     project_answer = run_json(
@@ -845,7 +843,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "works/source-alpha/digest.md"
+    digest = workspace / "digests/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
@@ -858,7 +856,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "works/source-alpha/digest.md", "digest")
+    mark_file_status(workspace, "digests/source-alpha.md", "digest")
     state.upsert_catalog_record(
         workspace,
         work_id="db-alpha",
@@ -1362,13 +1360,13 @@ def test_cli_operation_list_and_run_use_workspace_operation_concepts(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "works/source-alpha/digest.md"
+    digest = workspace / "digests/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "works/source-alpha/digest.md", "digest")
+    mark_file_status(workspace, "digests/source-alpha.md", "digest")
 
     assert main(["operation", "list", "--workspace", str(workspace), "--json"]) == 0
     listed = json.loads(capsys.readouterr().out)
@@ -1445,13 +1443,13 @@ def test_cli_workspace_run_reports_schedule_id_for_queue_drain(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "works/source-alpha/digest.md"
+    digest = workspace / "digests/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "works/source-alpha/digest.md", "digest")
+    mark_file_status(workspace, "digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1649,13 +1647,13 @@ def test_cli_request_list_show_and_resume_pending_request(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    digest = workspace / "works/source-alpha/digest.md"
+    digest = workspace / "digests/source-alpha.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\ntype: digest\ncheck_status: checked\ntitle: Alpha digest\ntags: [sleep]\n---\nBody.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "works/source-alpha/digest.md", "digest")
+    mark_file_status(workspace, "digests/source-alpha.md", "digest")
     enqueue_operation(
         workspace,
         "analyze-gaps",
@@ -1986,7 +1984,7 @@ def test_cli_wires_alpha16_maintenance_and_pi_commands(
     assert "check_status" not in read_frontmatter(workspace / captured["path"])
     assert state.concept_check_status(workspace, captured["path"]) == "unchecked"
 
-    digest = workspace / "works/hub-seed/digest.md"
+    digest = workspace / "digests/hub-seed.md"
     digest.parent.mkdir(parents=True, exist_ok=True)
     digest.write_text(
         "---\n"
@@ -2001,7 +1999,7 @@ def test_cli_wires_alpha16_maintenance_and_pi_commands(
         "Body.\n",
         encoding="utf-8",
     )
-    mark_file_status(workspace, "works/hub-seed/digest.md", "digest")
+    mark_file_status(workspace, "digests/hub-seed.md", "digest")
     assert (
         main(
             [
@@ -2174,7 +2172,7 @@ def test_cli_wires_alpha16_maintenance_and_pi_commands(
     assert main(["workspace", "scan", "--workspace", str(workspace), "--json"]) == 0
     scan = json.loads(capsys.readouterr().out)
     assert scan["result"]["observed_count"] == 1
-    assert scan["result"]["paths"] == ["works/hub-seed/digest.md"]
+    assert scan["result"]["paths"] == ["digests/hub-seed.md"]
 
     assert (
         main(
@@ -2470,7 +2468,7 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
     assert output["result"]["status"] == "failed"
     assert "checked digest requires full-text source content" in output["result"]["error"]
     assert "attention_path is inbox/flag-digest-full-text-" in output["result"]["error"]
-    assert not (workspace / f"works/{work_id}/digest.md").exists()
+    assert not (workspace / f"digests/{work_id}.md").exists()
     attention = workspace / f"inbox/flag-digest-full-text-{work_id}.md"
     assert read_frontmatter(attention)["target"] == f"catalog/sources/{work_id}"
 
@@ -2537,7 +2535,7 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    assert (workspace / "system/eval/alpha15-seeded-errors.json").is_file()
+    assert (workspace / ".memoria/eval/alpha15-seeded-errors.json").is_file()
 
     def fake_verdict(
         vault: Path,
@@ -2550,7 +2548,7 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
-        assert bundle_path == workspace / "system/eval/alpha15-seeded-errors.json"
+        assert bundle_path == workspace / ".memoria/eval/alpha15-seeded-errors.json"
         assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "live"
         assert runner["provider"] == "gateway"
@@ -2605,9 +2603,9 @@ def test_cli_eval_seeded_error_verdict_uses_seeded_workspace_bundle(
     eval_run = json.loads(capsys.readouterr().out)
     assert eval_run["ok"] is True
     assert eval_run["result"]["operation_id"] == "eval-run"
-    assert eval_run["result"]["outputs"] == ["system/eval/last-run.md"]
+    assert eval_run["result"]["outputs"] == [".memoria/eval/last-run.md"]
     assert eval_run["result"]["dry_run"] is False
-    assert (workspace / "system/eval/last-run.md").is_file()
+    assert (workspace / ".memoria/eval/last-run.md").is_file()
 
 
 def test_cli_eval_select_models_requires_alpha15_seeded_bundle(
@@ -2616,8 +2614,8 @@ def test_cli_eval_select_models_requires_alpha15_seeded_bundle(
     workspace = tmp_path / "workspace"
     main(["init", "--workspace", str(workspace), "--yes", "--json"])
     capsys.readouterr()
-    (workspace / "system/eval/alpha15-seeded-errors.json").unlink()
-    (workspace / "system/eval/alpha12-seeded-errors.json").write_text("{}", encoding="utf-8")
+    (workspace / ".memoria/eval/alpha15-seeded-errors.json").unlink()
+    (workspace / ".memoria/eval/alpha12-seeded-errors.json").write_text("{}", encoding="utf-8")
 
     rc = main(
         [
@@ -2633,7 +2631,7 @@ def test_cli_eval_select_models_requires_alpha15_seeded_bundle(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 2
-    assert "system/eval/alpha15-seeded-errors.json" in output["error"]
+    assert ".memoria/eval/alpha15-seeded-errors.json" in output["error"]
 
 
 def test_cli_eval_select_models_selects_manifest_runner(
@@ -2702,7 +2700,7 @@ def test_cli_eval_select_models_selects_manifest_runner(
     assert output["selection"]["non_sandbox_licensed"] is True
     assert calls[0]["vault"] != workspace
     assert calls[0]["template_root"] == workspace
-    assert calls[0]["bundle_path"] == workspace / "system/eval/alpha15-seeded-errors.json"
+    assert calls[0]["bundle_path"] == workspace / ".memoria/eval/alpha15-seeded-errors.json"
     assert calls[0]["operation_id"] == "run-seeded-error-verdict"
     assert calls[0]["machine"] == "memoria-cli"
 

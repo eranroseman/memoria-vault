@@ -49,7 +49,7 @@ not also grade the result - that is the [Peer-reviewer](peer-reviewer.md)'s
 independence, the anti-rubber-stamp principle.
 
 **Not the ingest operation.** You *run* ingest; you *delegate* to the Librarian.
-Catalog state lives in SQLite and blobs; human source notes live under `sources/`.
+Catalog state lives in SQLite and blobs; source digests live under `digests/`.
 
 ---
 

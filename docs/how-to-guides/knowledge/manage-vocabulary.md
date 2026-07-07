@@ -71,7 +71,7 @@ vocabulary-specific points:
 - **Also update `system/vocabulary.md`** in the same pass — the controlled list and the notes must move together.
 - **Your selector is a frontmatter or catalog metadata value**, so enumerate with
   `memoria ask`/read-API inspection, Obsidian global search, or `grep -rl
-  "old-term" works/ sources/ notes/ hubs/ projects/ system/` before editing
+  "old-term" digests/ fulltext/ notes/ hubs/ projects/ system/` before editing
   Concepts. Use `memoria work export` for catalog Work metadata.
 
 ## Step 4 — Annual vocabulary review

@@ -1,21 +1,22 @@
-# Canonical alpha.16 workspace layout.
+# Canonical alpha.18 workspace layout.
 # Read by: schema validators, the installer skeleton, and worker/promotion code.
-categories: [works, sources, notes, hubs, projects]
-bundle_roots: [works, sources, notes, hubs, projects]
+categories: [notes, hubs, projects, digests, fulltext]
+bundle_roots: [notes, hubs, projects, digests, fulltext]
 
 # type → folder-home (relative to the vault root)
 homes:
-  digest: works
+  digest: digests
+  fulltext: fulltext
   note: notes
   hub: hubs
   project: projects
 
 machine_staging_roots:
-  - .memoria/staging/works
-  - .memoria/staging/sources
   - .memoria/staging/notes
   - .memoria/staging/hubs
   - .memoria/staging/projects
+  - .memoria/staging/digests
+  - .memoria/staging/fulltext
 
 quarantine_root: .memoria/quarantine
 
@@ -29,22 +30,25 @@ skeleton:
   - .memoria/index/search
   - .memoria/audit
   - .memoria/config
+  - .memoria/eval
+  - .memoria/journal
+  - .memoria/patterns
   - .memoria/quarantine
   - .memoria/blobs
   - .memoria/blobs/provider-payloads
   - .memoria/blobs/source-content
-  - .memoria/staging/works
-  - .memoria/staging/sources
   - .memoria/staging/notes
   - .memoria/staging/hubs
   - .memoria/staging/projects
+  - .memoria/staging/digests
+  - .memoria/staging/fulltext
+  - .memoria/templates
   - inbox
-  - works
-  - sources
   - notes
   - hubs
   - projects
+  - digests
+  - fulltext
   - system
   - system/incidents
   - system/metrics
-  - system/eval

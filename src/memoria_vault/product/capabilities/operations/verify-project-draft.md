@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - projects/
 - notes/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: verify-project-draft.v1
 io_schema:

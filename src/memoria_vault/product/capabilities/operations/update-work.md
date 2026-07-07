@@ -7,7 +7,7 @@ operation_id: update-work
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: update-work.v1
 io_schema:

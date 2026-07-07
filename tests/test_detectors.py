@@ -32,7 +32,7 @@ def test_detectors():
                 "projects/proj",
                 "spaces",
                 "system/dashboards",
-                "system/templates",
+                ".memoria/templates",
             ):
                 (v / d).mkdir(parents=True, exist_ok=True)
 
@@ -71,7 +71,7 @@ def test_detectors():
                 "We still rely on [[oldnote]] here.\n",
                 encoding="utf-8",
             )
-            (v / "system/templates/note.md").write_text(
+            (v / ".memoria/templates/note.md").write_text(
                 "---\ntype: note\ncheck_status: unchecked\ntitle: T\n---\n"
                 "Example link: [[placeholder-target]]\n",
                 encoding="utf-8",

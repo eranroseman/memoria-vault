@@ -7,7 +7,7 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
 
-TEMPLATES = Path(__file__).resolve().parent.parent / "vault-template" / "system" / "templates"
+TEMPLATES = Path(__file__).resolve().parent.parent / "vault-template" / ".memoria" / "templates"
 
 _PLACEHOLDER = re.compile(r"\{\{[^}]*\}\}")
 PI_CREATED_TYPES = {"note", "hub", "project"}

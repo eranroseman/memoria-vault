@@ -1,3 +1,8 @@
+---
+type: system
+title: Vocabulary
+---
+
 # Vocabulary
 
 The single source of truth for the controlled values used by catalog sources and

@@ -9,27 +9,27 @@ nav_order: 1
 
 The vault is where durable knowledge lives. Everything else in Memoria - the
 CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
-This page explains the alpha.16 workspace shape, Concept homes, and write boundary.
+This page explains the alpha.18 workspace shape, Concept homes, and write boundary.
 
 ---
 
 ## Bundle roots
 
-The top level has alpha.16 bundle roots plus workspace-level state.
+The top level has alpha.18 bundle roots plus workspace-level state.
 The knowledge graph is a network, not a pipeline: direction lives in `steering.md`,
 project framing, typed links, and `check_status`, not in lifecycle folders.
 
 ```text
 <vault-root>/
 ├── steering.md     ← PI-authored program memory
-├── works/          ← Work bundles: record, full text, digest, source assets
-├── sources/        ← Source notes
+├── digests/        ← Checked source digests
+├── fulltext/       ← Generated full-text reproductions
 ├── notes/          ← Claim and question notes
 ├── hubs/           ← Curated topic hubs
 ├── projects/       ← Project bundles
 ├── inbox/          ← Attention projections
-├── system/         ← visible infrastructure: templates, dashboards, eval, logs
-└── .memoria/       ← hidden runtime: schemas, SQLite request state, staging, quarantine
+├── system/         ← visible infrastructure: dashboards, vocabulary, incidents, metrics
+└── .memoria/       ← hidden runtime: schemas, templates, eval, journal, SQLite, staging, quarantine
 ```
 
 The type to folder-home map is machine-read
@@ -44,8 +44,8 @@ in [Document types](../../reference/document-types.md).
 | Area | Examples | Trust posture |
 | --- | --- | --- |
 | Catalog | source and entity rows | Objective records from capture/import; checked before consumption. |
-| Knowledge | work, digest, source-note, note, hub, project | The working graph. Work records and digests can be machine-owned; source-notes, notes, hubs, and project curation carry PI judgment. |
-| System | templates, dashboards, eval, logs | Visible infrastructure and generated projections; product operations live in the installed package. |
+| Knowledge | digest, fulltext, note, hub, project | The working graph. Digests and generated full text can be machine-owned; notes, hubs, and project curation carry PI judgment. |
+| System | dashboards, vocabulary, templates, eval, journal | Visible infrastructure plus hidden runtime fixtures and support files; product operations live in the installed package. |
 
 ## Write Boundary
 
@@ -84,13 +84,13 @@ Archive/retraction state is runtime state, not a folder move. Current readers us
 the DB/read API `check_status = checked` verdict; unchecked and quarantined Concepts stay out of the
 checked index and Ask path.
 
-The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
+The same trust split applies to connections: `links:` are authored note connections, while entity `relationships` are given facts from ingest. Field contracts live in [Frontmatter fields](../../reference/frontmatter.md).
 
 ## Generated views; the Linter keeps them sound
 
 Catalog records and knowledge Concepts surface through generated indexes and
 optional editor views. Views are projections; Concept frontmatter is governed by
-[the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), and catalog rows that feed
+the YAML schemas under `.memoria/schemas/`, and catalog rows that feed
 bibliography/materialization are governed by the decision that
 [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 

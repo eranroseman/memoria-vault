@@ -1,3 +1,8 @@
+---
+type: system
+title: Steering
+---
+
 # Steering
 
 Your research steering file — the priorities, open questions, and gaps you want the system working on. The Librarian reads it at the start of every session and **weights discovery** by how well candidate papers match what's here, so it's the main lever you have over what gets surfaced. Keep it current; an empty or stale file produces an unfocused Librarian.

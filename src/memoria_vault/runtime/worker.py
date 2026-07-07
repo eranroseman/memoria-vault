@@ -762,7 +762,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "run-seeded-error-verdict":
         from memoria_vault.runtime.seeded_errors import run_seeded_error_verdict
 
-        bundle_path = vault / "system/eval/alpha15-seeded-errors.json"
+        bundle_path = vault / ".memoria/eval/alpha15-seeded-errors.json"
         target_operation_id = str(payload.get("target_operation_id") or operation_id)
         target_policy = load_operation_policy(vault, target_operation_id)
         runner = resolve_operation_runner(vault, target_policy, str(payload.get("mode") or "test"))
@@ -780,7 +780,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
 
         dry_run = bool(payload.get("dry_run", False))
         result = eval_dispatch.dispatch(vault, dry_run=dry_run)
-        outputs = [] if dry_run else ["system/eval/last-run.md"]
+        outputs = [] if dry_run else [".memoria/eval/last-run.md"]
         return {"outputs": outputs, **result}
     if operation_id == "check-source-metadata":
         from memoria_vault.runtime.integrity import check_source_metadata

@@ -9,23 +9,26 @@ SKELETON_DIRS=(
   .memoria/index/search
   .memoria/audit
   .memoria/config
+  .memoria/eval
+  .memoria/journal
+  .memoria/patterns
   .memoria/quarantine
   .memoria/blobs
   .memoria/blobs/provider-payloads
   .memoria/blobs/source-content
-  .memoria/staging/works
-  .memoria/staging/sources
   .memoria/staging/notes
   .memoria/staging/hubs
   .memoria/staging/projects
+  .memoria/staging/digests
+  .memoria/staging/fulltext
+  .memoria/templates
   inbox
-  works
-  sources
   notes
   hubs
   projects
+  digests
+  fulltext
   system
   system/incidents
   system/metrics
-  system/eval
 )

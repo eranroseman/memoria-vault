@@ -8,13 +8,13 @@ allowed_tools:
 allowed_paths:
 - index.md
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
 - capabilities/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: regenerate-indexes.v1
 io_schema:

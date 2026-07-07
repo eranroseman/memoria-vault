@@ -45,7 +45,7 @@ def note_text(*, title: str = "Alpha note") -> str:
 
 
 def events(vault: Path) -> list[dict]:
-    return list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    return list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
 
 
 def test_stage_concept_forces_unchecked_and_journals_derivation(tmp_path: Path) -> None:
@@ -433,7 +433,7 @@ def test_two_device_git_writes_keep_per_machine_journals_mergeable(tmp_path: Pat
 
     git(device_a, "pull", "-q", "--ff-only", "origin", "main")
 
-    assert (device_a / "journal/a.jsonl").is_file()
+    assert (device_a / ".memoria/journal/a.jsonl").is_file()
     assert (device_a / state.JOURNAL_HEAD_REL).is_file()
     assert (device_a / "notes/from-a.md").is_file()
     assert (device_a / "notes/from-b.md").is_file()
@@ -496,4 +496,4 @@ def test_two_device_conflicting_git_writes_fail_visibly(tmp_path: Path) -> None:
     assert "UU .memoria/journal-head" in git(device_b, "status", "--short")
     assert "UU notes/shared.md" in git(device_b, "status", "--short")
     assert "<<<<<<<" in (device_b / "notes/shared.md").read_text(encoding="utf-8")
-    assert (device_b / "journal/b.jsonl").is_file()
+    assert (device_b / ".memoria/journal/b.jsonl").is_file()

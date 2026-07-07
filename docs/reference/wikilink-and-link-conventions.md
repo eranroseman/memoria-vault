@@ -7,10 +7,10 @@ nav_order: 5
 
 # Wikilink and link conventions
 
-Alpha.16 has file-backed Concept types for `work`, `digest`, `source-note`,
-`note`, `hub`, and `project`. Wikilinks and `links:` express authored PI
-relationships between those Concepts. Catalog source rows live in SQLite and
-provider payloads; they are not `paper`, `person`, or `venue` Concept files.
+Alpha.18 has file-backed document types for `digest`, `fulltext`, `note`,
+`hub`, and `project`. Wikilinks and `links:` express authored PI relationships
+between Concept documents. Catalog source rows live in SQLite and provider
+payloads; they are not `paper`, `person`, or `venue` Concept files.
 
 ---
 
@@ -28,8 +28,8 @@ provider payloads; they are not `paper`, `person`, or `venue` Concept files.
 ## Authored links
 
 Knowledge Concepts carry `links:` as the authored relationship map specified by
-[the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) and the generated
-[Frontmatter fields](frontmatter.md). The only frontmatter link relations are:
+the generated [Frontmatter fields](frontmatter.md). The only frontmatter link
+relations are:
 
 | Link | Direction |
 | --- | --- |
@@ -49,8 +49,9 @@ Rules:
 
 - Link for usefulness, not exhaustive coverage.
 - Prefer vault-relative paths over title-only links.
-- A `note` with `mode: claim` needs evidence in its body, anchors, or linked
-  checked Works; `links:` records the argument relation, not the evidence store.
+- A `note` with `mode: claim` needs evidence in its body, anchors, checked
+  digests, or catalog source rows; `links:` records the argument relation, not
+  the evidence store.
 - A bare wikilink remains a body reference.
 - A proposed machine edge is not canonical until accepted through the attention
   path.
@@ -64,12 +65,12 @@ are given facts from ingest/enrichment, not authored `links:` frontmatter.
 ## Expected topology
 
 ```text
-work
-  -> catalog Work row via work_id
+digest/fulltext
+  -> catalog source row via work_id
   -> note/hub/project when the PI authors a local link
 
 note
-  -> work evidence in body text, anchors, and operation records
+  -> source evidence in body text, anchors, digests, and operation records
   -> note/hub/project through supports / contradicts / extends
 
 hub
@@ -97,9 +98,9 @@ navigation page.
 
 | Concept | Path shape | Example |
 | --- | --- | --- |
-| `work` | `works/<work-id>/record.md` | `works/personal-informatics-sensemaking/record.md` |
-| `digest` | `works/<work-id>/digest.md` | `works/personal-informatics-sensemaking/digest.md` |
-| `source-note` | `sources/<slug>.md` | `sources/interview-protocol.md` |
+| catalog work | `catalog/sources/<work-id>` | `catalog/sources/personal-informatics-sensemaking` |
+| `digest` | `digests/<work-id>.md` | `digests/personal-informatics-sensemaking.md` |
+| `fulltext` | `fulltext/<work-id>.md` | `fulltext/personal-informatics-sensemaking.md` |
 | `note` | `notes/<claim-or-question>.md` | `receptivity-decreases-under-high-burden.md` |
 | `hub` | `hubs/<topic>.md` | `jitai.md` |
 | `project` | `projects/<project>/project.md` | `projects/dissertation/project.md` |

@@ -1,4 +1,6 @@
 ---
+type: system
+title: Welcome to Memoria
 created: 2026-06-02
 updated: 2026-06-23
 cssclasses:
@@ -13,7 +15,7 @@ Markdown files are the keep-set you can read and edit with any editor.
 ## Start here
 
 - **Capture a source** - `memoria work add --workspace . --doi <doi>`; checked sources
-  land under `works/<work_id>/` after acquisition and checks.
+  are catalog rows; generated digests and full text land under `digests/` and `fulltext/`.
 - **Import a bibliography** - `memoria work import --workspace . --format bibtex --file <file>`
   or `--format csl`.
 - **Ask the workspace** - `memoria ask --workspace . --question "<question>"`.
@@ -22,10 +24,10 @@ Markdown files are the keep-set you can read and edit with any editor.
 
 ## The five places
 
-- `works/` — objective source records, raw files, full text, and opt-in digests.
-- `sources/` — human source-notes that bridge works into the knowledge graph.
 - `notes/` — claim and question notes.
 - `hubs/` — topic hubs with human salience.
 - `projects/` — project questions, evidence, and gaps.
+- `digests/` — machine-generated per-work digests.
+- `fulltext/` — generated full-text reproductions for checked works.
 
 Anything waiting on a decision collects in `inbox/`; clearing it to empty is the goal.

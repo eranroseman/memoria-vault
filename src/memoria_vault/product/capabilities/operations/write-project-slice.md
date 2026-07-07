@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - notes/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: write-project-slice.v1
 io_schema:

@@ -9,7 +9,7 @@ permalink: /how-to-guides/knowledge/
 # Knowledge
 
 Build durable synthesis. Alpha.16 uses checked Concepts under `notes/`, `hubs/`,
-`works/`, `sources/`, and `projects/`; machine-written candidates become visible
+`digests/`, `fulltext/`, and `projects/`; machine-written candidates become visible
 only after the worker checks them, and PI edits are direct then
 observed/backfilled.
 

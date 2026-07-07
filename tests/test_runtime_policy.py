@@ -103,8 +103,8 @@ def test_runtime_policy_core():
             actor="engineer",
             allow_write=[],
             deny_write=[
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -120,8 +120,8 @@ def test_runtime_policy_core():
             actor="writer",
             allow_write=[],
             deny_write=[
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -138,8 +138,8 @@ def test_runtime_policy_core():
             actor="write-fixture",
             allow_write=["projects/**"],
             deny_write=[
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "catalog/**",
@@ -156,8 +156,8 @@ def test_runtime_policy_core():
             deny_write=[
                 "inbox/**",
                 "catalog/**",
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -170,8 +170,8 @@ def test_runtime_policy_core():
             actor="cataloger",
             allow_write=[],
             deny_write=[
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -183,8 +183,8 @@ def test_runtime_policy_core():
             ],
             require=["audit_log"],
             write_scope=[
-                ".memoria/staging/sources/",
-                ".memoria/staging/works/",
+                ".memoria/staging/fulltext/",
+                ".memoria/staging/digests/",
                 ".memoria/staging/notes/",
             ],
         )
@@ -192,8 +192,8 @@ def test_runtime_policy_core():
             actor="reviewer",
             allow_write=[],
             deny_write=[
-                "works/**",
-                "sources/**",
+                "digests/**",
+                "fulltext/**",
                 "notes/**",
                 "hubs/**",
                 "projects/**",
@@ -320,7 +320,7 @@ def test_runtime_policy_core():
         check(
             "Librarian write to projects/system -> deny",
             d(cataloger, "write", "projects/x/d.md") == "deny"
-            and d(cataloger, "write", "system/templates/claim.md") == "deny",
+            and d(cataloger, "write", ".memoria/templates/claim.md") == "deny",
         )
         check(
             "Peer-reviewer direct write to inbox cards -> deny",

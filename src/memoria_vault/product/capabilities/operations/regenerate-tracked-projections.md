@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - index.md
 - bibliography.bib
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: regenerate-tracked-projections.v1
 io_schema:

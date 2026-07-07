@@ -7,7 +7,7 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - catalog/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: integrity-prompt-injection-check.v1
 io_schema:

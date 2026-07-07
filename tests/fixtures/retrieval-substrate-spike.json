@@ -7,11 +7,11 @@
   },
   "documents": [
     {
-      "path": "works/mobile-adherence-rct/fulltext.md",
+      "path": "fulltext/mobile-adherence-rct.md",
       "body": "Randomized trial of mobile reminders improved medication adherence in chronic care."
     },
     {
-      "path": "works/interview-alarm-fatigue/fulltext.md",
+      "path": "fulltext/interview-alarm-fatigue.md",
       "body": "Interview study: patients described alarm fatigue, patient burden, and notification overload."
     },
     {
@@ -23,17 +23,17 @@
     {
       "slice": "keyword",
       "query": "alarm fatigue",
-      "relevant": ["works/interview-alarm-fatigue/fulltext.md"]
+      "relevant": ["fulltext/interview-alarm-fatigue.md"]
     },
     {
       "slice": "keyword",
       "query": "randomized trial adherence",
-      "relevant": ["works/mobile-adherence-rct/fulltext.md"]
+      "relevant": ["fulltext/mobile-adherence-rct.md"]
     },
     {
       "slice": "semantic",
       "query": "participant workload",
-      "relevant": ["works/interview-alarm-fatigue/fulltext.md"]
+      "relevant": ["fulltext/interview-alarm-fatigue.md"]
     },
     {
       "slice": "semantic",
@@ -43,7 +43,7 @@
     {
       "slice": "hybrid",
       "query": "adherence inconvenience",
-      "relevant": ["works/interview-alarm-fatigue/fulltext.md"]
+      "relevant": ["fulltext/interview-alarm-fatigue.md"]
     }
   ],
   "verdict": {

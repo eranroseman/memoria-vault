@@ -75,7 +75,7 @@ def test_sqlite_schema_migrates_v4_concepts_to_alpha16_types(tmp_path: Path) -> 
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
         conn.execute(
             "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
-            ("works/source-alpha/digest.md", "digest", "file"),
+            ("digests/source-alpha.md", "digest", "file"),
         )
 
 

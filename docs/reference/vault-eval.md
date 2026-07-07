@@ -13,7 +13,7 @@ nav_order: 7
 
 ## The gold set
 
-Gold tasks live in `system/eval/` as diagnostic markdown fixtures. They carry
+Gold tasks live in `.memoria/eval/` as diagnostic markdown fixtures. They carry
 `type: eval-task` frontmatter for eval dispatch, but `eval-task` is not an
 Concept type and has no schema under
 `vault-template/.memoria/schemas/types/`. Each fixture is self-contained: an
@@ -53,7 +53,7 @@ broken-reference finding; gold-set rot is caught by machinery already running.
 - One local eval task plan per `lifecycle: current` gold task.
 - **Idempotency key per (task, quarter):** `eval:<task-id>:<quarter>` — the scheduled wrapper and any on-demand re-runs inside a quarter converge to one request per task; a new quarter re-opens the window.
 - The task body wraps the task in the **non-committing eval contract**: scratch-only writes, results reported as JSON — a run never mutates the vault.
-- The dispatch record is written to `system/eval/last-run.md` (plain markdown, overwritten each run).
+- The dispatch record is written to `.memoria/eval/last-run.md` (plain markdown, overwritten each run).
 
 ```sh
 memoria eval run --workspace <vault> --json            # dispatch

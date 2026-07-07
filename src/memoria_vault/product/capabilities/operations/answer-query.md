@@ -7,8 +7,8 @@ allowed_tools:
 - read_checked_index
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/

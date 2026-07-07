@@ -10,7 +10,7 @@ allowed_paths:
 - .memoria/blobs/
 - .memoria/config/providers.yaml
 - inbox/
-- journal/
+- .memoria/journal/
 - bibliography.bib
 allowed_network:
 - https://api.crossref.org/

@@ -123,7 +123,7 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     assert state.concept_check_status(vault, "notes/worker.md") == "checked"
     assert not (vault / ".memoria/staging/notes/worker.md").exists()
 
-    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    event_log = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert [event["event"] for event in event_log] == ["derived", "check-fired"]
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/worker.md"}
@@ -164,13 +164,13 @@ def test_worker_create_concept_rejects_generic_work_bypass(tmp_path: Path) -> No
         vault,
         "create-concept",
         payload={
-            "target_path": "works/bypass/digest.md",
+            "target_path": "digests/bypass.md",
             "content": work_text("bypass", "Bypass body."),
             "concept_type": "work",
         },
         idempotency_key="agent-create-work",
-        output_intents=[{"id": "works/bypass/digest.md", "kind": "work"}],
-        primary_target="works/bypass/digest.md",
+        output_intents=[{"id": "digests/bypass.md", "kind": "work"}],
+        primary_target="digests/bypass.md",
         actor="agent",
     )
 
@@ -179,7 +179,7 @@ def test_worker_create_concept_rejects_generic_work_bypass(tmp_path: Path) -> No
     assert failed is not None
     assert failed["status"] == "failed"
     assert "create-concept concept_type must be one of" in failed["error"]
-    assert not (vault / "works/bypass/digest.md").exists()
+    assert not (vault / "digests/bypass.md").exists()
 
 
 def test_enqueue_trusted_write_is_idempotent_across_sqlite_states(tmp_path: Path) -> None:
@@ -590,7 +590,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
     assert done["status"] == "failed"
     assert "coherence check" in done["error"]
     assert not (vault / "catalog/sources/pdf-missing-selector").exists()
-    assert not (vault / "journal").exists()
+    assert not (vault / ".memoria/journal").exists()
 
 
 def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> None:
@@ -710,7 +710,7 @@ def test_worker_rejects_capture_url_source_outside_allowed_network(
 
 def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    bad = vault / "works/bad-contradiction/digest.md"
+    bad = vault / "digests/bad-contradiction.md"
     bad.parent.mkdir(parents=True, exist_ok=True)
     bad.write_text(
         "---\n"
@@ -721,12 +721,12 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
         "links: {}\n"
         "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - works/missing/digest.md\n"
+        "  - digests/missing.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "works/bad-contradiction/digest.md", "digest")
+    mark_file_status(vault, "digests/bad-contradiction.md", "digest")
 
     queued = enqueue_operation(
         vault,
@@ -818,7 +818,7 @@ def test_worker_passes_surface_tensions_mode_to_tier2_runner(tmp_path: Path) -> 
     assert done is not None
     assert done["status"] == "done"
     assert done["tier2_evaluated_count"] == 1
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     model_call = next(event for event in events if event.get("route") == "surface-tensions-tier2")
     assert model_call["mode"] == "live"
     assert model_call["provider"] == "gateway"
@@ -921,10 +921,10 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
     assert digest_job["kind"] == "operation"
     assert digest_done is not None
     assert digest_done["status"] == "done"
-    assert digest_done["digest_path"] == "works/source-alpha/digest.md"
+    assert digest_done["digest_path"] == "digests/source-alpha.md"
     assert "check_status" not in read_frontmatter(vault / digest_done["digest_path"])
     assert state.concept_check_status(vault, digest_done["digest_path"]) == "checked"
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     model_call = next(event for event in events if event["event"] == "model_call")
     assert model_call["mode"] == "live"
     assert model_call["provider"] == "gateway"
@@ -1034,7 +1034,7 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
     assert done["status"] == "done"
     assert done["work_id"] == "source-alpha"
     assert done["turn_id"].startswith("journal:copi-interview:")
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[-1]["event"] == "copi-interview"
     assert events[-1]["work_id"] == "source-alpha"
     assert events[-1]["response"] == "The PI cares about the methods caveat."
@@ -1071,8 +1071,8 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         text_status="metadata-only",
         check_status="checked",
     )
-    (vault / "works/source-alpha").mkdir(parents=True)
-    (vault / "works/source-alpha/digest.md").write_text(
+    (vault / "digests").mkdir(parents=True)
+    (vault / "digests/source-alpha.md").write_text(
         "---\n"
         "type: digest\n"
         "title: Alpha digest\n"
@@ -1085,7 +1085,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "Neural retrieval also changes review timing.\n",
         encoding="utf-8",
     )
-    mark_file_status(vault, "works/source-alpha/digest.md", "digest")
+    mark_file_status(vault, "digests/source-alpha.md", "digest")
 
     queued = enqueue_operation(
         vault,
@@ -1345,10 +1345,10 @@ def test_worker_runs_answer_query_operation_jobs(tmp_path: Path) -> None:
 @pytest.mark.slow
 def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    eval_dir = vault / "system/eval"
+    eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
     shutil.copyfile(
-        ROOT / "vault-template/system/eval/alpha15-seeded-errors.json",
+        ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json",
         eval_dir / "alpha15-seeded-errors.json",
     )
 
@@ -1379,10 +1379,10 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     vault = workspace(tmp_path)
-    eval_dir = vault / "system/eval"
+    eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
     shutil.copyfile(
-        ROOT / "vault-template/system/eval/alpha15-seeded-errors.json",
+        ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json",
         eval_dir / "alpha15-seeded-errors.json",
     )
     resolved = []
@@ -1440,7 +1440,7 @@ def test_seeded_error_verdict_resolves_target_operation_runner(
 
 def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    eval_dir = vault / "system/eval"
+    eval_dir = vault / ".memoria/eval"
     eval_dir.mkdir(parents=True)
     (eval_dir / "alpha12-seeded-errors.json").write_text("{}", encoding="utf-8")
 
@@ -1454,7 +1454,7 @@ def test_worker_seeded_error_verdict_requires_alpha15_bundle(tmp_path: Path) -> 
 
     assert done is not None
     assert done["status"] == "failed"
-    assert "system/eval/alpha15-seeded-errors.json" in done["error"]
+    assert ".memoria/eval/alpha15-seeded-errors.json" in done["error"]
 
 
 def test_worker_runs_cascade_rollback_operation_jobs(tmp_path: Path) -> None:
@@ -1539,7 +1539,7 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert done["paths"] == ["notes/pi.md"]
     assert "check_status" not in read_frontmatter(vault / "notes/pi.md")
     assert state.concept_check_status(vault, "notes/pi.md") == "unchecked"
-    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    event_log = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert event_log[-1]["event"] == "observed_external_edit"
     with state.connect(vault) as conn:
         row = conn.execute(
@@ -1557,8 +1557,8 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
 def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     source_rel = "notes/source.md"
-    direct_rel = "works/direct/digest.md"
-    depth_two_rel = "works/depth-two/digest.md"
+    direct_rel = "digests/direct.md"
+    depth_two_rel = "digests/depth-two.md"
     pi_rel = "notes/pi-downstream.md"
 
     enqueue_trusted_write(vault, source_rel, note_text(), idempotency_key="write-source")
@@ -1612,7 +1612,7 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     answer = answer_query(vault, "depthtwomarker", include_stale=True)
     assert [source["path"] for source in answer["sources"]] == [depth_two_rel]
     assert answer["staleness"] == [{"path": depth_two_rel, "field": "stale", "value": True}]
-    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    event_log = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert any(
         event.get("check") == "scan-demotion-propagation"
         and event.get("target_id") == direct_rel
