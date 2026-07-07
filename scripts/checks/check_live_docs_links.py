@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import sys
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
@@ -46,36 +47,59 @@ class CrawlResult:
 
 
 class LiveDocsChecker:
-    def __init__(self, base_url: str, root: Path, timeout: float = 10.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        root: Path,
+        timeout: float = 10.0,
+        internal_workers: int = 16,
+        external_workers: int = 24,
+    ) -> None:
         self.base_url = base_url.rstrip("/") + "/"
         self.base = parse.urlparse(self.base_url)
         self.root = root
         self.timeout = timeout
+        self.internal_workers = max(1, internal_workers)
+        self.external_workers = max(1, external_workers)
         self.seen_pages: set[str] = set()
         self.seen_external: set[str] = set()
+        self.pending_external: dict[str, str] = {}
         self.html_cache: dict[str, str | None] = {}
+        self.page_ids: dict[str, set[str]] = {}
+        self.internal_fragment_refs: list[tuple[str, str, str]] = []
         self.result = CrawlResult()
 
     def run(self) -> CrawlResult:
-        self._crawl_page(self.base_url)
+        pending = {self._page_url(self.base_url)}
+        while pending:
+            batch = sorted(url for url in pending if url not in self.seen_pages)
+            pending = set()
+            if not batch:
+                continue
+            self.seen_pages.update(batch)
+            for page_url, html in self._fetch_pages(batch):
+                if html is None:
+                    continue
+                self.result.pages += 1
+                parser = _Links()
+                parser.feed(html)
+                self.page_ids[page_url] = parser.ids
+                self._check_fragment(page_url, parser.ids)
+                pending.update(self._handle_links(page_url, parser.links))
+        self._check_internal_fragments()
+        self._check_pending_external()
         return self.result
 
-    def _crawl_page(self, url: str) -> None:
-        page_url = self._page_url(url)
-        if page_url in self.seen_pages:
-            return
-        self.seen_pages.add(page_url)
+    def _fetch_pages(self, urls: list[str]) -> list[tuple[str, str | None]]:
+        if len(urls) == 1:
+            url = urls[0]
+            return [(url, self._fetch_html(url))]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.internal_workers) as pool:
+            return list(zip(urls, pool.map(self._fetch_html, urls), strict=True))
 
-        html = self._fetch_html(page_url)
-        if html is None:
-            return
-
-        self.result.pages += 1
-        parser = _Links()
-        parser.feed(html)
-        self._check_fragment(url, parser.ids)
-
-        for href in parser.links:
+    def _handle_links(self, page_url: str, links: list[str]) -> set[str]:
+        pending: set[str] = set()
+        for href in links:
             if self._skip(href):
                 continue
             self.result.links += 1
@@ -83,16 +107,24 @@ class LiveDocsChecker:
             clean, fragment = parse.urldefrag(target)
             if self._is_internal(clean):
                 self.result.internal_link_refs_checked += 1
-                ids = self._ids_for(clean)
-                if fragment and fragment not in ids:
-                    self.result.bad_internal_fragments += 1
-                    self.result.errors.append(f"{page_url}: missing fragment {target}")
+                if fragment:
+                    self.internal_fragment_refs.append((page_url, clean, fragment))
                 if self._looks_like_page(clean):
-                    self._crawl_page(clean)
+                    pending.add(clean)
             elif self._is_same_repo_github(clean):
                 self._check_same_repo_github(clean, page_url)
             else:
                 self._check_external(clean, page_url)
+        return pending
+
+    def _check_internal_fragments(self) -> None:
+        for page_url, clean, fragment in self.internal_fragment_refs:
+            ids = self.page_ids.get(clean)
+            if ids is None:
+                ids = self._ids_for(clean)
+            if fragment not in ids:
+                self.result.bad_internal_fragments += 1
+                self.result.errors.append(f"{page_url}: missing fragment {clean}#{fragment}")
 
     def _ids_for(self, url: str) -> set[str]:
         html = self._fetch_html(url)
@@ -142,35 +174,47 @@ class LiveDocsChecker:
             return
         self.seen_external.add(url)
         self.result.external_targets_checked += 1
-        self._check_external_seen(url, source)
+        self.pending_external[url] = source
 
-    def _check_external_seen(self, url: str, source: str) -> None:
+    def _check_pending_external(self) -> None:
+        if not self.pending_external:
+            return
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.external_workers) as pool:
+            checks = {
+                pool.submit(self._check_external_target, url, source): url
+                for url, source in sorted(self.pending_external.items())
+            }
+            for check in concurrent.futures.as_completed(checks):
+                warnings, errors, broken = check.result()
+                self.result.warnings.extend(warnings)
+                self.result.errors.extend(errors)
+                self.result.broken_external_targets += broken
+
+    def _check_external_target(self, url: str, source: str) -> tuple[list[str], list[str], int]:
         req = request.Request(url, method="HEAD", headers={"User-Agent": "MemoriaLinkCheck/1"})
         try:
             with request.urlopen(req, timeout=self.timeout):
-                return
+                return [], [], 0
         except error.HTTPError as exc:
             if exc.code in {405, 403}:
-                return
+                return [], [], 0
             if exc.code in HARD_EXTERNAL_FAILURES:
-                self.result.broken_external_targets += 1
-                self.result.errors.append(f"{source}: external HTTP {exc.code} {url}")
-            else:
-                self.result.warnings.append(f"{source}: external HTTP {exc.code} {url}")
+                return [], [f"{source}: external HTTP {exc.code} {url}"], 1
+            return [f"{source}: external HTTP {exc.code} {url}"], [], 0
         except (OSError, TimeoutError, error.URLError) as exc:
-            self.result.warnings.append(f"{source}: external unchecked {url} ({exc})")
+            return [f"{source}: external unchecked {url} ({exc})"], [], 0
 
     def _check_same_repo_github(self, url: str, source: str) -> None:
         if url in self.seen_external:
             return
-        self.seen_external.add(url)
-        self.result.external_targets_checked += 1
         parsed = parse.urlparse(url)
         parts = parsed.path.removeprefix(GITHUB_REPO_PATH).split("/")
         if len(parts) < 3 or parts[1] != "main" or parts[0] not in {"blob", "tree"}:
-            self._check_external_seen(url, source)
+            self._check_external(url, source)
             return
 
+        self.seen_external.add(url)
+        self.result.external_targets_checked += 1
         local = self.root / "/".join(parts[2:])
         exists = local.is_dir() if parts[0] == "tree" else local.is_file()
         if not exists:
@@ -214,9 +258,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--root", type=Path, default=Path.cwd(), help="Candidate repo root.")
     parser.add_argument("--timeout", type=float, default=5.0)
+    parser.add_argument("--internal-workers", type=int, default=16)
+    parser.add_argument("--external-workers", type=int, default=24)
     args = parser.parse_args(argv)
 
-    result = LiveDocsChecker(args.base_url, args.root, args.timeout).run()
+    result = LiveDocsChecker(
+        args.base_url,
+        args.root,
+        timeout=args.timeout,
+        internal_workers=args.internal_workers,
+        external_workers=args.external_workers,
+    ).run()
     for warning in result.warnings:
         print(f"warning: {warning}", file=sys.stderr)
     for failure in result.errors:
