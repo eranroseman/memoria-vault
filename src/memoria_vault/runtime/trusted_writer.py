@@ -110,7 +110,7 @@ def _write_edge_candidate_prompts(vault: Path, output_rels: set[str]) -> list[st
         if not source_path.is_file():
             continue
         frontmatter, body = split_frontmatter(source_path.read_text(encoding="utf-8"))
-        if frontmatter.get("type") not in {"note", "work", "hub", "project"}:
+        if frontmatter.get("type") not in {"note", "digest", "hub", "project"}:
             continue
         title = str(frontmatter.get("title") or Path(source_rel).stem)
         for match in TYPED_WIKILINK_RE.finditer(body):
@@ -651,8 +651,6 @@ def _write_checked(
         events.append(event)
     state.mark_checked(vault, target, output_sha256, payload_text)
     write_frontmatter_doc(output_path, frontmatter, body, create_parent=True)
-    if frontmatter.get("type") == "source":
-        state.upsert_catalog_source(vault, target, frontmatter)
     return events[0]
 
 

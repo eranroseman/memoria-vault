@@ -832,7 +832,7 @@ def upsert_catalog_record(
             ),
         )
         concept_id = f"catalog/sources/{stable_work_id}"
-        _upsert_concept_mirror_conn(conn, concept_id, "source", "db")
+        _upsert_concept_mirror_conn(conn, concept_id, "work", "db")
         _set_concept_verdict_conn(conn, concept_id, _check_status(check_status))
 
 
@@ -1208,7 +1208,7 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
 
 def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
     concept_type = frontmatter.get("type")
-    if concept_type not in {"note", "work", "hub"}:
+    if concept_type not in {"note", "digest", "hub"}:
         return []
     refs = _source_refs(frontmatter)
     if not refs:

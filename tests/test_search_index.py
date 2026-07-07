@@ -192,7 +192,7 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
                 "source_provider": "openalex",
             },
             {
-                "relation_type": "source",
+                "relation_type": "published_in",
                 "target_id": "1234-5678",
                 "target_title": "Journal of Testable Systems",
                 "source_provider": "openalex",

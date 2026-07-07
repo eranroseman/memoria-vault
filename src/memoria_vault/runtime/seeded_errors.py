@@ -25,7 +25,6 @@ from memoria_vault.runtime.integrity import (
 )
 from memoria_vault.runtime.knowledge import emit_note_candidates
 from memoria_vault.runtime.operations import compile_source_digest
-from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.trusted_writer import (
     commit_writer_changes,
     promote_checked,
@@ -180,7 +179,6 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
     contradiction_digest = _checked_contradiction_digest(vault)
     false_link_note = _checked_false_link_note(vault)
     conflicting_doi_source = _checked_conflicting_doi_source(vault)
-    ambiguous_entity_source = _checked_ambiguous_entity_source(vault)
     notes = emit_note_candidates(
         vault,
         "seed-source",
@@ -260,7 +258,6 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
         "contradiction_digest": contradiction_digest,
         "false_link_note": false_link_note,
         "conflicting_doi_source": conflicting_doi_source,
-        "ambiguous_entity_source": ambiguous_entity_source,
         "notes": notes,
     }
 
@@ -443,83 +440,6 @@ def _checked_conflicting_doi_source(vault: Path) -> dict[str, Any]:
         citekey="conflict2026",
         machine="seeded-source",
     )
-
-
-def _checked_ambiguous_entity_source(vault: Path) -> dict[str, Any]:
-    entity = "catalog/entities/person-ambiguous-river.md"
-    entity_path = vault / entity
-    entity_path.parent.mkdir(parents=True, exist_ok=True)
-    entity_path.write_text(
-        concept_text(
-            {
-                "type": "entity",
-                "title": "Ambiguous River",
-                "description": "Injected catalog identity ambiguity.",
-                "canonical_name": "Ambiguous River",
-                "external_ids": {"orcid": "0000-0001-0000-0001"},
-                "metadata": {
-                    "identity_status": "ambiguous",
-                    "identity_conflicts": [
-                        {
-                            "field": "orcid",
-                            "existing": "0000-0001-0000-0001",
-                            "incoming": "0000-0002-0000-0002",
-                        }
-                    ],
-                },
-            },
-            "Ambiguous River",
-            "This checked entity intentionally carries conflicting identity metadata.",
-        ),
-        encoding="utf-8",
-    )
-    state.record_observed_file_edit(
-        vault,
-        output_id=entity,
-        concept_type="person",
-        output_sha256=sha256_file(entity_path),
-    )
-    state.set_concept_verdict(vault, entity, "checked")
-    source = capture_source(
-        vault,
-        "ambiguous-entity",
-        "Seeded ambiguous entity source",
-        "Injected source linked to ambiguous catalog identity.",
-        "This checked source intentionally links to an ambiguous catalog entity.",
-        resource="https://doi.org/10.1000/ambiguous-entity",
-        identifiers={"doi": "10.1000/ambiguous-entity"},
-        csl_json={
-            "id": "ambiguousEntity2026",
-            "type": "article-journal",
-            "title": "Seeded ambiguous entity source",
-            "author": [
-                {
-                    "family": "River",
-                    "given": "Ambiguous",
-                    "ORCID": "0000-0002-0000-0002",
-                }
-            ],
-            "issued": {"date-parts": [[2026]]},
-            "DOI": "10.1000/ambiguous-entity",
-            "memoria": {"links": {"authors": [entity]}},
-        },
-        provider_coverage="full",
-        citekey="ambiguousEntity2026",
-        machine="seeded-source",
-    )
-    commit = commit_writer_changes(
-        vault,
-        "seed ambiguous entity source",
-        [entity],
-        machine="seeded-source",
-    )
-    return {
-        "source_path": source["source_path"],
-        "entity_path": entity,
-        "entity_checked": {"target_id": entity, "status": "checked"},
-        "source": source,
-        "commit": commit,
-    }
 
 
 def run_seeded_error_verdict(

@@ -5,9 +5,7 @@ bundle_roots: [works, sources, notes, hubs, projects]
 
 # type → folder-home (relative to the vault root)
 homes:
-  work: works
   digest: works
-  source-note: sources
   note: notes
   hub: hubs
   project: projects

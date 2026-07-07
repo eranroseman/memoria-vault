@@ -34,7 +34,6 @@ def test_seeded_error_bundle_is_frozen_contract() -> None:
         "missing-contradiction-target",
         "false-link-target",
         "conflicting-doi-metadata",
-        "ambiguous-entity-identity",
         "stale-as-current",
         "unwarranted-claim",
         "crafted-injection",
@@ -145,7 +144,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     digest_target = "works/seeded-missing-digest-evidence/digest.md"
     false_link_target = "notes/seeded-false-link.md"
     conflicting_doi_target = "catalog/sources/conflicting-doi"
-    ambiguous_entity_target = "catalog/sources/ambiguous-entity"
     stale_target = "notes/seeded-stale-as-current.md"
     claim_target = "notes/seeded-unwarranted-claim.md"
     injection_target = "notes/seeded-crafted-injection.md"
@@ -163,14 +161,14 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     assert result["verdict_key"].startswith("sha256:")
     assert result["bar_failures"] == []
     assert result["metrics"] == {
-        "expected_errors": 13,
-        "detected_errors": 13,
+        "expected_errors": 12,
+        "detected_errors": 12,
         "false_positives": 0,
-        "rolled_back_errors": 13,
+        "rolled_back_errors": 12,
         "residual_errors": 0,
-        "no_checks_residual_errors": 13,
-        "residual_reduction_errors": 13,
-        "checkpoint_value_errors": 13,
+        "no_checks_residual_errors": 12,
+        "residual_reduction_errors": 12,
+        "checkpoint_value_errors": 12,
         "recall": 1.0,
         "false_positive_rate": 0.0,
         "rollback_completeness": 1.0,
@@ -196,7 +194,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         contradiction_target,
         digest_target,
         false_link_target,
-        ambiguous_entity_target,
         conflicting_doi_target,
         stale_target,
         claim_target,
@@ -207,7 +204,7 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     }
     assert (
         result["detection_timing_by_error_class"]["structural:source-metadata"]["detected_errors"]
-        == 2
+        == 1
     )
     assert (
         result["detection_timing_by_error_class"]["structural:source-metadata"]["max_detection_ms"]
@@ -248,7 +245,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         "checkpoint_value_rate": 1.0,
     }
     assert result["detected"] == [
-        ambiguous_entity_target,
         conflicting_doi_target,
         poisoned_target,
         injection_target,
@@ -263,7 +259,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         digest_target,
     ]
     assert result["rolled_back"] == [
-        ambiguous_entity_target,
         conflicting_doi_target,
         poisoned_target,
         injection_target,
@@ -283,7 +278,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     assert not (tmp_path / contradiction_target).exists()
     assert not (tmp_path / digest_target).exists()
     assert not (tmp_path / false_link_target).exists()
-    assert not (tmp_path / ambiguous_entity_target).exists()
     assert not (tmp_path / conflicting_doi_target).exists()
     assert not (tmp_path / stale_target).exists()
     assert not (tmp_path / claim_target).exists()
@@ -296,7 +290,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     assert (tmp_path / ".memoria/quarantine" / contradiction_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / digest_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / false_link_target).is_file()
-    assert (tmp_path / ".memoria/quarantine" / ambiguous_entity_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / conflicting_doi_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / stale_target).is_file()
     assert (tmp_path / ".memoria/quarantine" / claim_target).is_file()

@@ -42,9 +42,7 @@ TRANSIENT_PREFIXES = (".memoria/staging/", ".memoria/quarantine/", "system/logs/
 # skips both so it never flags those moves.
 MISPLACED_SKIP_PREFIXES = TRANSIENT_PREFIXES
 TYPE_HOME = {
-    "work": "works/",
     "digest": "works/",
-    "source-note": "sources/",
     "note": "notes/",
     "hub": "hubs/",
     "project": "projects/",
@@ -78,7 +76,6 @@ LEFTOVER_PATTERNS = [
     )
 ]
 REQUIRED_FIELDS = {
-    "work": ["id", "title", "tags", "links", "work_id"],
     "note": ["id", "title", "tags", "links"],
     "hub": ["id", "title", "tags", "links", "tag"],
     "project": ["id", "title", "tags", "links"],

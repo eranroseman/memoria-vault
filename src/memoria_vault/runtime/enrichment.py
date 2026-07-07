@@ -975,7 +975,7 @@ def _first_order_work_graph(
             continue
         raw = dict(location_source)
         raw["location"] = {key: value for key, value in location.items() if key != "source"}
-        _add_graph_row(rows, "source", target_id, title or target_id, "", "openalex", raw)
+        _add_graph_row(rows, "published_in", target_id, title or target_id, "", "openalex", raw)
 
     for relation_type, field in (("references", "referenced_works"), ("related", "related_works")):
         values = openalex.get(field)

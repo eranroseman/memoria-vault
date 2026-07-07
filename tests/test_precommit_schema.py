@@ -49,13 +49,13 @@ def test_generated_note_provenance_fields_pass(tmp_path):
     assert precommit_check.check_paths(vault, ["notes/n.md"]) == []
 
 
-def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
+def test_generated_digest_and_hub_provenance_fields_pass(tmp_path):
     vault = _vault(tmp_path)
     (vault / "works/source-alpha").mkdir(parents=True)
     (vault / "hubs").mkdir(parents=True)
-    (vault / "works/source-alpha/record.md").write_text(
+    (vault / "works/source-alpha/digest.md").write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
         "title: Digest\n"
         "tags: []\n"
@@ -88,7 +88,7 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
     assert (
         precommit_check.check_paths(
             vault,
-            ["works/source-alpha/record.md", "hubs/topic.md"],
+            ["works/source-alpha/digest.md", "hubs/topic.md"],
         )
         == []
     )

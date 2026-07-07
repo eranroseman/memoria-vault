@@ -24,7 +24,7 @@ from memoria_vault.runtime.vaultio import (
 from memoria_vault.runtime.worker import enqueue_operation, run_request
 
 JOURNAL_OPERATION_ALIASES = {"work.digest": ("compile-source-digest",)}
-CONCEPT_TYPES = {"note", "work", "digest", "source-note", "hub", "project"}
+CONCEPT_TYPES = {"note", "digest", "hub", "project"}
 CONCEPT_HOMES = {
     "note": "notes",
     "hub": "hubs",

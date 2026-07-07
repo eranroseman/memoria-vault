@@ -48,9 +48,8 @@ CREATE TABLE IF NOT EXISTS concepts (
     concept_id TEXT PRIMARY KEY,
     concept_type TEXT NOT NULL
         CHECK (concept_type IN (
-            'source', 'source-note', 'work', 'digest', 'note', 'hub', 'capability',
-            'operation', 'skill', 'adapter', 'workflow', 'person',
-            'organization', 'venue', 'project'
+            'work', 'digest', 'note', 'hub', 'project', 'capability',
+            'operation', 'skill', 'adapter', 'workflow'
         )),
     store TEXT NOT NULL CHECK (store IN ('db', 'file'))
 );
@@ -170,7 +169,7 @@ CREATE TABLE IF NOT EXISTS work_graph_edges (
     relation_type TEXT NOT NULL CHECK (
         relation_type IN (
             'references', 'related', 'topic', 'keyword',
-            'authorship', 'institution', 'source'
+            'authorship', 'institution', 'published_in'
         )
     ),
     target_id TEXT NOT NULL,
