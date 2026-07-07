@@ -1768,7 +1768,7 @@ def _workspace_plan(workspace: Path) -> list[str]:
         "hubs",
         "projects",
         "digests",
-        "fulltext",
+        "fulltexts",
         "system",
         "system/incidents",
         "system/metrics",
@@ -1782,7 +1782,7 @@ def _workspace_plan(workspace: Path) -> list[str]:
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
         ".memoria/staging/digests",
-        ".memoria/staging/fulltext",
+        ".memoria/staging/fulltexts",
         ".memoria/templates",
     ]
 

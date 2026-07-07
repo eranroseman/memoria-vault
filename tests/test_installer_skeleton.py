@@ -51,13 +51,13 @@ def test_alpha16_fresh_package_contract_is_shipped():
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
         ".memoria/staging/digests",
-        ".memoria/staging/fulltext",
+        ".memoria/staging/fulltexts",
         "inbox",
         "notes",
         "hubs",
         "projects",
         "digests",
-        "fulltext",
+        "fulltexts",
         "system/incidents",
         "system/metrics",
     }
@@ -86,7 +86,7 @@ def test_alpha16_fresh_package_contract_is_shipped():
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
         ".memoria/staging/digests",
-        ".memoria/staging/fulltext",
+        ".memoria/staging/fulltexts",
     ):
         assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
     assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()

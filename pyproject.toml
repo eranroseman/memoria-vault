@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "memoria-vault"
-version = "0.1.0a18"
+version = "0.1.0a19"
 description = "Memoria vault runtime and tooling"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.27"]
+vector = ["sqlite-vec>=0.1.6"]
 
 [project.scripts]
 memoria = "memoria_vault.cli:main"

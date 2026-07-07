@@ -20,7 +20,7 @@ navigation.
 | --- | --- | --- | --- |
 | Queue | Inbox | `inbox/` | Daily attention queue (`projection: attention`), surfaced by the request/attention commands. |
 | Maintenance | Maintenance | `system/dashboards/` | Weekly structural-debt collection: drift watch, loose ends, queue state, and new-this-week digest. |
-| Corpus | Library | `digests/`, `fulltext/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
+| Corpus | Library | `digests/`, `fulltexts/`, `bibliography.bib` | Source intake, checked digests, generated full text, and bibliography projection. |
 | Corpus | Knowledge | `notes/`, `hubs/` | Synthesis status, open questions, contradictions, hubs, and patterns. |
 | Corpus | Project | `projects/` | Project steering: active projects, refutation-stamp gate, saturation, and project gaps. |
 | Maintenance support | Board state | `system/dashboards/board-state.md` | Queue and attention projections for debugging worker state and PI-facing prompts. |

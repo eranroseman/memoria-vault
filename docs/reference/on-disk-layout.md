@@ -31,7 +31,7 @@ Where every file lives.
 ├── hubs/                    topic hubs with human salience
 ├── projects/<slug>/         project.md, outline.md, draft.md, evidence/gap/export artifacts
 ├── digests/<work_id>.md     checked source digests
-├── fulltext/<work_id>.md    generated full-text reproductions
+├── fulltexts/<work_id>.md    generated full-text reproductions
 ├── inbox/                   transient attention projections, not Concepts
 └── system/                  visible infrastructure
     ├── vocabulary.md          controlled vocabularies
@@ -73,7 +73,7 @@ Hidden runtime infrastructure; everything agents and operations need, shipped in
 ├── design-system.md
 ```
 
-Alpha.18 deliberately does **not** ship hidden operation-package homes, installed
+Alpha.19 deliberately does **not** ship hidden operation-package homes, installed
 profile packages, lane override packages, or profile tool registries. Operation
 manifests live under `memoria_vault.product.capabilities.operations`; operation
 code lives in the installed `memoria_vault` package.

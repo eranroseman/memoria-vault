@@ -20,14 +20,14 @@ SKELETON_DIRS=(
   .memoria/staging/hubs
   .memoria/staging/projects
   .memoria/staging/digests
-  .memoria/staging/fulltext
+  .memoria/staging/fulltexts
   .memoria/templates
   inbox
   notes
   hubs
   projects
   digests
-  fulltext
+  fulltexts
   system
   system/incidents
   system/metrics

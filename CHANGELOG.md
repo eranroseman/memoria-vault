@@ -14,6 +14,36 @@ versions are minted until the first real release is cut. The earlier
 `v0.1.0`–`v0.3.2` tags were release-please artifacts, not real releases, and have
 been removed.
 
+## [0.1.0a19] - 2026-07-07
+
+Alpha.19 is a source-install checkpoint, not a formal tag or GitHub Release.
+It adds the first runnable query/code substrate while keeping BM25 as the
+default answer path and code execution fail-closed without a proven sandbox.
+
+### Changed
+
+- Renamed the generated full-text bundle root from `fulltext/` to `fulltexts/`
+  while keeping `type: fulltext` as the document schema label.
+- Bumped the runtime SQLite schema to `user_version = 8`; alpha DB v7 is
+  rejected and should be rebuilt from markdown/catalog state.
+- Added derived `passages`, `passage_fts`, `passage_vec`, `file_index_state`,
+  and `concept_edges` tables with query-time stale passage refresh and
+  same-transaction verdict/status cascade.
+- Added optional `[vector]` packaging for `sqlite-vec`; core installs and
+  `scripts/install.sh` still do not install vector dependencies.
+- Added `code-artifact` markdown records plus `code_artifacts` and `code_runs`
+  ledgers. The single runner gate remains unavailable until the local `bwrap`
+  sandbox proof passes.
+- Added `computed` evidence and `code-warrant` items; computed evidence is
+  complete only when the referenced code run and output hash still verify.
+
+### Release management
+
+- `release-please` remains `workflow_dispatch`-only and was not dispatched for
+  this checkpoint; no tag or GitHub Release is cut.
+- Formal release-please versioning, generated release notes, tags, and GitHub
+  Releases remain deferred until the first real release.
+
 ## [0.1.0a18] - 2026-07-07
 
 Alpha.18 is a source-install checkpoint, not a formal tag or GitHub Release.
@@ -44,4 +74,5 @@ the implemented checkpoint.
   Releases remain deferred until the first real release.
 
 [Unreleased]: https://github.com/eranroseman/memoria-vault/commits/main
+[0.1.0a19]: https://github.com/eranroseman/memoria-vault/compare/d9394c7a4caae20f3e5cbfa62b00cd8308373ef7...main
 [0.1.0a18]: https://github.com/eranroseman/memoria-vault/compare/b650483f2c9236e6484365f6e43f14f15865d3d5...main

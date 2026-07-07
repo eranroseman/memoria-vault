@@ -13,8 +13,8 @@ from tests.helpers import ROOT
 
 def test_alpha18_schema_lands_at_user_version_7(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        assert state.SCHEMA_VERSION == 7
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert state.SCHEMA_VERSION == 8
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 8
 
 
 def test_alpha18_rejects_v6_without_migration(tmp_path: Path) -> None:

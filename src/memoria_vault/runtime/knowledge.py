@@ -1611,7 +1611,7 @@ def _discovery_candidate_rel(work_id: str, edge: dict[str, Any]) -> str:
 def _retrieval_bucket(source: dict[str, Any]) -> str:
     path = str(source.get("path") or "")
     item_type = source.get("type")
-    if path.startswith(("graph-neighborhoods/", "catalog/sources/", "fulltext/")):
+    if path.startswith(("graph-neighborhoods/", "catalog/sources/", "fulltexts/")):
         return "sources"
     if path.startswith("digests/") or item_type == "digest":
         return "digests"
@@ -1632,7 +1632,7 @@ def _work_id_from_path(path: str) -> str:
     rel = normalize_path(path)
     if rel.startswith("digests/") and rel.endswith(".md"):
         return Path(rel).stem
-    if rel.startswith("fulltext/") and rel.endswith(".md"):
+    if rel.startswith("fulltexts/") and rel.endswith(".md"):
         return Path(rel).stem
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
@@ -3040,7 +3040,7 @@ def _draft_work_id(value: str) -> str:
         return ""
     if text.startswith("catalog/sources/"):
         return text.rsplit("/", 1)[-1]
-    if text.startswith(("digests/", "fulltext/", "graph-neighborhoods/")):
+    if text.startswith(("digests/", "fulltexts/", "graph-neighborhoods/")):
         return _work_id_from_path(text)
     if "/" not in text:
         return text
@@ -3235,7 +3235,7 @@ def _concept_rel(path: str) -> str:
             raise ValueError(f"source must be a catalog source row ref: {rel}")
     elif not rel.endswith(".md"):
         rel += ".md"
-    if not rel.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltext/")):
+    if not rel.startswith(("catalog/sources/", "notes/", "hubs/", "digests/", "fulltexts/")):
         raise ValueError(f"unsupported note link target: {rel}")
     return rel
 

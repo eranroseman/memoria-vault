@@ -19,6 +19,7 @@ bitwarden
 bleu
 borrowable
 browsable
+bwrap
 chatbots
 checkpointed
 checksummed
@@ -48,6 +49,7 @@ diffable
 disambiguator
 diátaxis
 dogfood
+embedder
 epistemics
 eprint
 eranroseman
@@ -65,6 +67,7 @@ flippable
 footgun
 frontmatter
 fulltext
+fulltexts
 fullmatch
 gameable
 gantt

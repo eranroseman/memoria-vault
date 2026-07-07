@@ -214,11 +214,11 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     manifest = rebuild_checked_search_index(vault)
 
     assert [row["path"] for row in manifest["documents"]] == [
-        "fulltext/source-alpha.md",
+        "fulltexts/source-alpha.md",
         "graph-neighborhoods/source-alpha.md",
         "notes/checked.md",
     ]
-    work = vault / ".memoria/index/search/checked/fulltext/source-alpha.md"
+    work = vault / ".memoria/index/search/checked/fulltexts/source-alpha.md"
     graph = vault / ".memoria/index/search/checked/graph-neighborhoods/source-alpha.md"
     assert "full text rarealpha" in work.read_text(encoding="utf-8")
     assert "coordination-aspect interviews" in work.read_text(encoding="utf-8")
@@ -235,10 +235,10 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     assert filter_checked_results(vault, [{"file": graph.as_posix()}]) == [
         {"file": graph.as_posix()}
     ]
-    assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "fulltext/source-alpha.md"
+    assert answer_query(vault, "rarealpha")["sources"][0]["path"] == "fulltexts/source-alpha.md"
     assert (
         answer_query(vault, "coordination-aspect")["sources"][0]["path"]
-        == "fulltext/source-alpha.md"
+        == "fulltexts/source-alpha.md"
     )
     concept_only = [
         (path.relative_to(vault).as_posix(), _tokens(path.read_text(encoding="utf-8")))

@@ -4,7 +4,7 @@ This directory is the durable design-history record for released Memoria design.
 It preserves facts about what each alpha release claimed, changed, removed, and
 implemented.
 
-Latest completed checkpoint: `alpha.18`
+Latest completed checkpoint: `alpha.19`
 
 ## Rules
 
@@ -24,5 +24,5 @@ Latest completed checkpoint: `alpha.18`
 
 ## Files
 
-- `00-origins.md` through `18-alpha.18.md`: frozen release-history chapters.
+- `00-origins.md` through `19-alpha.19.md`: frozen release-history chapters.
 - `arcs.md`: maintained cross-release synthesis and current/pending state.

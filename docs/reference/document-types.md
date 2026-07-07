@@ -17,14 +17,15 @@ Each type schema declares its category, folder home, initial read state, require
 fields, optional fields, and enum-backed fields. The linter, pre-commit hook,
 trusted writer, and tests read those YAML files directly.
 
-The current schema defines 5 document types: `digest`, `fulltext`, `hub`,
-`note`, and `project`.
+The current schema defines 6 document types: `code-artifact`, `digest`,
+`fulltext`, `hub`, `note`, and `project`.
 
 For field grammar and validation behavior, see [Frontmatter fields](frontmatter.md).
 
-Project `outline.md` and `draft.md` are project artifacts, not new Concept
-types. Evidence-set markers inside drafts derive SQLite `evidence_sets` rows;
-the marker/DB contract is documented in [Evidence sets](evidence-sets.md).
+Project `outline.md`, `draft.md`, and `code-artifact` records are project
+artifacts, not new human knowledge Concept types. Evidence-set markers inside
+drafts derive SQLite `evidence_sets` rows; the marker/DB contract is documented
+in [Evidence sets](evidence-sets.md).
 
 ## Related
 

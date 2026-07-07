@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

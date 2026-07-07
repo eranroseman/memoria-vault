@@ -39,13 +39,13 @@ plugin.
 **3. Inspect the durable roots.**
 
 ```bash
-ls notes hubs projects digests fulltext .memoria
+ls notes hubs projects digests fulltexts .memoria
 memoria list --workspace . --type note
 memoria list --workspace . --type work
 ```
 
 The durable file-backed Concept types are `note`, `hub`, `project`, `digest`,
-and `fulltext`. Source catalog state lives in SQLite and blobs, not as source
+and `fulltexts`. Source catalog state lives in SQLite and blobs, not as source
 Markdown files.
 
 ## What you should have seen

@@ -541,7 +541,7 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
     assert gap["gap_type"] == "undigested"
     _assert_gap_contract(gap, "undigested")
     assert gap["retrieval_engine"] == "bm25"
-    assert gap["retrieval_sources"][0]["path"] == "fulltext/source-alpha.md"
+    assert gap["retrieval_sources"][0]["path"] == "fulltexts/source-alpha.md"
     citation_gap = {row["topic"]: row for row in result["gaps"]}[
         "Citation neighborhood: Alpha Source"
     ]

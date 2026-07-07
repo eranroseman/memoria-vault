@@ -9,13 +9,13 @@ nav_order: 1
 
 The vault is where durable knowledge lives. Everything else in Memoria - the
 CLI, worker, operations, dashboards, and optional adapters - exists to serve it.
-This page explains the alpha.18 workspace shape, Concept homes, and write boundary.
+This page explains the alpha.19 workspace shape, Concept homes, and write boundary.
 
 ---
 
 ## Bundle roots
 
-The top level has alpha.18 bundle roots plus workspace-level state.
+The top level has alpha.19 bundle roots plus workspace-level state.
 The knowledge graph is a network, not a pipeline: direction lives in `steering.md`,
 project framing, typed links, and `check_status`, not in lifecycle folders.
 
@@ -23,7 +23,7 @@ project framing, typed links, and `check_status`, not in lifecycle folders.
 <vault-root>/
 ├── steering.md     ← PI-authored program memory
 ├── digests/        ← Checked source digests
-├── fulltext/       ← Generated full-text reproductions
+├── fulltexts/       ← Generated full-text reproductions
 ├── notes/          ← Claim and question notes
 ├── hubs/           ← Curated topic hubs
 ├── projects/       ← Project bundles

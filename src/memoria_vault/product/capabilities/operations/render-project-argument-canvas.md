@@ -7,7 +7,7 @@ allowed_tools:
 - projection_writer
 allowed_paths:
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

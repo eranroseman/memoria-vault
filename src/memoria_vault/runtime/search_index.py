@@ -13,7 +13,7 @@ from typing import Any
 
 import yaml
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import indexing, state
 from memoria_vault.runtime.paths import safe_filename
 from memoria_vault.runtime.policy.audit import sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -60,6 +60,7 @@ def rebuild_checked_search_index(
     manifest_path = vault / SEARCH_MANIFEST
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+    indexing.rebuild_passage_index(vault)
     return manifest
 
 
@@ -145,7 +146,7 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
 
 
 def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
-    if not rel.startswith(("fulltext/", "graph-neighborhoods/")):
+    if not rel.startswith(("fulltexts/", "graph-neighborhoods/")):
         return False
     work_id = _work_id_from_generated_path(rel)
     if not work_id:
@@ -164,6 +165,7 @@ def answer_query(
 ) -> dict[str, Any]:
     """Return a deterministic Ask/Query contract over checked retrieval hits."""
     vault = Path(vault)
+    indexing.refresh_stale_passages(vault)
     docs = [
         (document["path"], document["text"], document["frontmatter"])
         for document in checked_search_documents(vault, include_stale=include_stale)
@@ -187,6 +189,7 @@ def search_checked_index(
 ) -> list[dict[str, Any]]:
     """Return BM25 hits over checked retrieval documents."""
     vault = Path(vault)
+    indexing.refresh_stale_passages(vault)
     docs = checked_search_documents(vault, include_stale=include_stale)
     by_path = {str(document["path"]): document for document in docs}
     tokenized = [(str(document["path"]), _tokens(str(document["text"]))) for document in docs]
@@ -416,7 +419,7 @@ def _bundle_roots(vault: Path) -> list[str]:
     return [
         normalize_path(root)
         for root in folders.get("bundle_roots") or []
-        if normalize_path(root) in {"notes", "hubs", "projects", "digests", "fulltext"}
+        if normalize_path(root) in {"notes", "hubs", "projects", "digests", "fulltexts"}
     ]
 
 
@@ -439,7 +442,7 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
         }
         docs.append(
             _generated_doc(
-                f"fulltext/{safe_filename(work_id)}.md",
+                f"fulltexts/{safe_filename(work_id)}.md",
                 work_frontmatter,
                 [
                     f"# {source['title']}",
@@ -482,7 +485,7 @@ def _work_id_from_generated_path(rel: str) -> str:
     rel = normalize_path(rel)
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
-    if rel.startswith("fulltext/"):
+    if rel.startswith("fulltexts/"):
         parts = rel.split("/")
         if len(parts) == 2 and parts[1].endswith(".md"):
             return Path(parts[1]).stem

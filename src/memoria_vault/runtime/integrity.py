@@ -1665,7 +1665,7 @@ def _link_ref(value: str) -> str:
     if raw.startswith("[[") and raw.endswith("]]"):
         raw = raw[2:-2].split("|", 1)[0].strip()
     rel = _concept_rel(raw)
-    if rel.startswith(("notes/", "hubs/", "projects/", "digests/", "fulltext/")) and not (
+    if rel.startswith(("notes/", "hubs/", "projects/", "digests/", "fulltexts/")) and not (
         rel.endswith(".md")
     ):
         rel = f"{rel}.md"

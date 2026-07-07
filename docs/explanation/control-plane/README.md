@@ -8,7 +8,7 @@ permalink: /explanation/control-plane/
 
 # The request control plane
 
-The alpha.18 control plane is the operation request table in
+The alpha.19 control plane is the operation request table in
 `.memoria/memoria.sqlite`, surfaced through the `memoria request`,
 `memoria workspace`, and `memoria attention` commands. A CLI command, an
 observed file change, or an operator-managed scheduled job creates the same kind

@@ -9,7 +9,7 @@ allowed_paths:
 - index.md
 - catalog/
 - digests/
-- fulltext/
+- fulltexts/
 - notes/
 - hubs/
 - projects/

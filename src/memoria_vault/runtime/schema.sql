@@ -192,11 +192,144 @@ CREATE TABLE IF NOT EXISTS work_aspects (
     updated_at TEXT NOT NULL,
     PRIMARY KEY (work_id, aspect_type)
 );
+CREATE TABLE IF NOT EXISTS passages (
+    passage_id TEXT PRIMARY KEY,
+    origin TEXT NOT NULL CHECK (origin IN ('file', 'generated')),
+    concept_id TEXT NOT NULL DEFAULT '',
+    work_id TEXT NOT NULL DEFAULT '',
+    path TEXT NOT NULL,
+    anchor TEXT NOT NULL DEFAULT '',
+    page TEXT NOT NULL DEFAULT '',
+    byte_start INTEGER NOT NULL DEFAULT 0,
+    byte_end INTEGER NOT NULL DEFAULT 0,
+    text_sha256 TEXT NOT NULL,
+    text TEXT NOT NULL,
+    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    mode TEXT NOT NULL DEFAULT '',
+    question_status TEXT NOT NULL DEFAULT '',
+    source_mtime_ns INTEGER NOT NULL DEFAULT 0,
+    indexed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_passages_path_status
+    ON passages(path, check_status);
+CREATE INDEX IF NOT EXISTS idx_passages_work_status
+    ON passages(work_id, check_status);
+CREATE VIRTUAL TABLE IF NOT EXISTS passage_fts
+USING fts5(passage_id UNINDEXED, text);
+CREATE TABLE IF NOT EXISTS passage_vec (
+    passage_id TEXT PRIMARY KEY,
+    text_sha256 TEXT NOT NULL,
+    embedding_model_id TEXT NOT NULL,
+    vector_dim INTEGER NOT NULL,
+    distance_metric TEXT NOT NULL DEFAULT 'cosine' CHECK (distance_metric = 'cosine'),
+    vector_json TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (passage_id) REFERENCES passages(passage_id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS file_index_state (
+    path TEXT PRIMARY KEY,
+    source_mtime_ns INTEGER NOT NULL DEFAULT 0,
+    source_sha256 TEXT NOT NULL DEFAULT '',
+    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    indexed_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS concept_edges (
+    source_concept_id TEXT NOT NULL,
+    relation_type TEXT NOT NULL CHECK (
+        relation_type IN ('supports', 'contradicts', 'extends', 'tension')
+    ),
+    target_concept_id TEXT NOT NULL,
+    check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    source_path TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (source_concept_id, relation_type, target_concept_id)
+);
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_insert
+AFTER INSERT ON concept_verdicts
+BEGIN
+    UPDATE passages
+    SET check_status = NEW.check_status
+    WHERE concept_id = NEW.concept_id
+       OR path = NEW.concept_id
+       OR ('catalog/sources/' || work_id) = NEW.concept_id;
+END;
+CREATE TRIGGER IF NOT EXISTS concept_verdicts_passage_cascade_update
+AFTER UPDATE OF check_status ON concept_verdicts
+BEGIN
+    UPDATE passages
+    SET check_status = NEW.check_status
+    WHERE concept_id = NEW.concept_id
+       OR path = NEW.concept_id
+       OR ('catalog/sources/' || work_id) = NEW.concept_id;
+END;
+CREATE TRIGGER IF NOT EXISTS catalog_sources_passage_cascade_update
+AFTER UPDATE OF check_status ON catalog_sources
+BEGIN
+    UPDATE passages
+    SET check_status = NEW.check_status
+    WHERE work_id = NEW.work_id
+       OR concept_id = ('catalog/sources/' || NEW.work_id);
+END;
+CREATE TRIGGER IF NOT EXISTS passage_fts_insert
+AFTER INSERT ON passages
+BEGIN
+    INSERT INTO passage_fts(rowid, passage_id, text)
+    VALUES (NEW.rowid, NEW.passage_id, NEW.text);
+END;
+CREATE TRIGGER IF NOT EXISTS passage_fts_delete
+AFTER DELETE ON passages
+BEGIN
+    DELETE FROM passage_fts WHERE rowid = OLD.rowid;
+END;
+CREATE TRIGGER IF NOT EXISTS passage_fts_update
+AFTER UPDATE OF text, passage_id ON passages
+BEGIN
+    DELETE FROM passage_fts WHERE rowid = OLD.rowid;
+    INSERT INTO passage_fts(rowid, passage_id, text)
+    VALUES (NEW.rowid, NEW.passage_id, NEW.text);
+END;
+CREATE TABLE IF NOT EXISTS code_artifacts (
+    artifact_id TEXT PRIMARY KEY,
+    project_path TEXT NOT NULL,
+    record_path TEXT NOT NULL UNIQUE,
+    source_dir TEXT NOT NULL,
+    output_dir TEXT NOT NULL,
+    purpose TEXT NOT NULL CHECK (purpose IN ('warrant', 'deliverable', 'both')),
+    approved_command_json TEXT NOT NULL DEFAULT '[]',
+    declared_inputs_json TEXT NOT NULL DEFAULT '[]',
+    declared_outputs_json TEXT NOT NULL DEFAULT '[]',
+    dependency_notes TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL CHECK (status IN ('draft', 'ready', 'failed', 'retired')),
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS code_runs (
+    run_id TEXT PRIMARY KEY,
+    artifact_id TEXT NOT NULL REFERENCES code_artifacts(artifact_id) ON DELETE CASCADE,
+    command_json TEXT NOT NULL,
+    cwd TEXT NOT NULL,
+    sanitized_env_json TEXT NOT NULL DEFAULT '[]',
+    input_hashes_json TEXT NOT NULL DEFAULT '{}',
+    output_hashes_json TEXT NOT NULL DEFAULT '{}',
+    stdout_sha256 TEXT NOT NULL DEFAULT '',
+    stderr_sha256 TEXT NOT NULL DEFAULT '',
+    stdout_path TEXT NOT NULL DEFAULT '',
+    stderr_path TEXT NOT NULL DEFAULT '',
+    exit_status INTEGER,
+    timeout_result TEXT NOT NULL DEFAULT '',
+    sandbox_backend TEXT NOT NULL DEFAULT '',
+    sandbox_profile_hash TEXT NOT NULL DEFAULT '',
+    state TEXT NOT NULL CHECK (state IN ('pending', 'running', 'succeeded', 'failed', 'unavailable')),
+    started_at TEXT NOT NULL,
+    ended_at TEXT
+);
 CREATE TABLE IF NOT EXISTS evidence_sets (
     id TEXT PRIMARY KEY,
     block_ref TEXT NOT NULL,
     items_json TEXT NOT NULL DEFAULT '[]',
-    type TEXT NOT NULL CHECK (type IN ('single-span', 'multi-span', 'multi-hop', 'implicit')),
+    type TEXT NOT NULL CHECK (
+        type IN ('single-span', 'multi-span', 'multi-hop', 'implicit', 'computed')
+    ),
     state TEXT NOT NULL CHECK (state IN ('complete', 'evidence-incomplete')),
     review_required INTEGER NOT NULL CHECK (review_required IN (0, 1)),
     run_id TEXT NOT NULL DEFAULT ''
@@ -217,4 +350,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 7;
+PRAGMA user_version = 8;
