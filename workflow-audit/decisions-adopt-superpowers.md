@@ -469,3 +469,23 @@ edited in place" literally true, keeps all cross-skill rules in one place
 grilling/caveman/improve rules added to steps 11–12. Decided by the user
 (2026-07-07) after they corrected the framing: "the fact that we can edit them
 doesn't mean we should — the question is do we have to."
+
+**Y: Drop the rethink edits too — use `rethink` as-is; fold its one needed
+carve-out into the CLAUDE.md / Codex AGENTS.md rethink rule. The plan now
+edits ZERO components.**
+Because: the necessity test that removed the grilling/caveman/improve edits
+applies equally to `rethink`, the user's own plugin. The only thing rethink's
+directive edit did was narrow its "active every response for design" trigger
+so it wouldn't fire on new-build work that belongs to `brainstorming` — but
+that is a routing/precedence rule, and CLAUDE.md/AGENTS.md already carry
+exactly it (the `rethink / rethink-audit vs. brainstorming + writing-plans`
+bullet, now also folding `rethink-audit`'s `migrate:` output → `writing-plans`
+before any code). With nothing left that *requires* editing rethink, the plan
+edits **zero components** (third-party or your own), so §1's requirement is
+literally true and every cross-skill rule stays in one place. This supersedes
+the rethink-release procedure and the Codex `plugin marketplace upgrade
+rethink` refresh from the earlier CLI-corrections entry — there is no rethink
+release to cut, so that step is gone, and step 1's backup no longer captures
+the two rethink marketplace clones. Steps renumbered 1–14 (old rethink step 10
+deleted; former steps 11–15 → 10–14; repo sub-parts 13a–13i → 12a–12i).
+Decided by the user (2026-07-07): "Can we drop the changes in rethink as well?"

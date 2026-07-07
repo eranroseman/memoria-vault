@@ -12,7 +12,7 @@
   file is execution only — commands, exact insert-text, verification.
 - **Worktree / branch:** the `~/.claude/` and `~/.codex/` changes are
   per-user tool config, not repo content — no worktree needed. The
-  `memoria-vault`-tracked changes (Layer 2/3, step 13) go through the normal
+  `memoria-vault`-tracked changes (Layer 2/3, step 12) go through the normal
   worktree → branch → PR flow. This plan file lives on the `scratch` branch
   under `scratch/workflow-audit/`.
 - **Related issues / milestone:** — (personal tooling + repo-doc
@@ -40,7 +40,7 @@ Requirements this plan must satisfy (traced in §5):
 4. Capability gaps superpowers doesn't cover are filled (frontend/UI,
    deep security, technical writing, API design).
 5. No contradictory guidance when skills fire together.
-6. Third-party plugin files are never edited in place.
+6. No plugin or skill component is edited in place — third-party or your own.
 7. `AGENTS.md`'s own Skills table names only things that actually exist.
 
 ## 2. Context (facts an executor needs)
@@ -57,15 +57,16 @@ Requirements this plan must satisfy (traced in §5):
   `~/.claude/skills/<name>/` and `~/.codex/skills/<name>/` and are loaded by
   folder presence. This is the fallback when a source has no `.codex-plugin`
   manifest.
-- **Never edit any third-party component in place** — not the marketplace
-  plugins (`ponytail`, `superpowers`, `codex-security`, `interface-design`,
-  `frontend-design`, `pr-review-toolkit`, `security-guidance`), and not the
-  loose vendored/cherry-picked skills either (`threat-modeling`,
-  `the-elements-of-style`, `api-design-principles`, `obsidian-skills`, and the
-  MIT cherry-picks `grilling` / `caveman` / `codebase-design` / `improve`).
-  Editing them isn't *necessary*: every needed rule (routing, precedence,
-  exemption) goes in `~/.claude/CLAUDE.md` / `~/.codex/AGENTS.md` instead. The
-  **only** component this plan edits is `rethink` — your own published plugin.
+- **Never edit any plugin or skill component in place** — not the marketplace
+  plugins (`ponytail`, `rethink`, `superpowers`, `codex-security`,
+  `interface-design`, `frontend-design`, `pr-review-toolkit`,
+  `security-guidance`), and not the loose vendored/cherry-picked skills either
+  (`threat-modeling`, `the-elements-of-style`, `api-design-principles`,
+  `obsidian-skills`, and the MIT cherry-picks `grilling` / `caveman` /
+  `codebase-design` / `improve`). Editing them isn't *necessary*: every needed
+  rule (routing, precedence, exemption) goes in `~/.claude/CLAUDE.md` /
+  `~/.codex/AGENTS.md` instead. **This plan edits zero components** — including
+  `rethink` (your own published plugin), which is used as-is.
 - **Already installed** — Claude: `ponytail`, `rethink`, `pr-review-toolkit`,
   `security-guidance`, `obsidian-skills`, `grilling`, `codebase-design`,
   `improve`, `caveman`, `tdd`, `grill-me`. Codex: `ponytail`, `rethink`,
@@ -82,15 +83,14 @@ Requirements this plan must satisfy (traced in §5):
 - **Layer 1 install** (steps 1–8): superpowers, the-elements-of-style,
   api-design-principles, threat-modeling, codex-security, interface-design +
   frontend-design, obsidian-skills.
-- **Layer 1 retire + edit rethink** (steps 9–10): retire tdd + grill-me; edit
-  rethink (your own plugin). No third-party component is edited —
-  grilling/caveman/improve are used as-is; their routing rules go in
-  CLAUDE.md/AGENTS.md (steps 11–12).
-- **Layer 1 precedence notes** (steps 11–12): `~/.claude/CLAUDE.md`,
+- **Layer 1 retire** (step 9): retire tdd + grill-me. No component is edited —
+  grilling/caveman/improve/rethink are all used as-is; their routing rules go
+  in CLAUDE.md/AGENTS.md (steps 10–11).
+- **Layer 1 precedence notes** (steps 10–11): `~/.claude/CLAUDE.md`,
   `~/.codex/AGENTS.md` — all cross-skill routing lives here.
-- **Layer 2 + 3 repo edits** (step 13): one worktree; no PR until step 15.
-- **Verify** (step 14).
-- **Document + merge repo work** (step 15): author `.agents/toolkit.md`, then
+- **Layer 2 + 3 repo edits** (step 12): one worktree; no PR until step 14.
+- **Verify** (step 13).
+- **Document + merge repo work** (step 14): author `.agents/toolkit.md`, then
   open and merge the single repo PR.
 
 **Parity ledger** (the R3 answer — Claude | Codex):
@@ -117,7 +117,7 @@ equivalent — active `codex-security` scans instead). Two invocation-surface
 differences remain, not capability gaps: interface-design's slash-commands
 (Claude-only; Codex runs the review inline) and `frontend-design` being an
 Anthropic plugin on Claude vs. a community skill + native model on Codex.
-Both tools get the same precedence + vocabulary rules (steps 11–12).
+Both tools get the same precedence + vocabulary rules (steps 10–11).
 
 **Declined (never install):** the official Anthropic `code-review`
 marketplace plugin; `coderabbit@openai-curated`. **Left unedited** (repo
@@ -139,7 +139,6 @@ Back up everything this plan edits or deletes, so any step is recoverable:
 tar czf ~/toolkit-backup-$(date +%Y%m%d-%H%M%S).tgz \
   ~/.claude/skills ~/.codex/skills ~/.claude/CLAUDE.md ~/.codex/AGENTS.md \
   ~/.claude/settings.json ~/.codex/config.toml \
-  ~/.claude/plugins/marketplaces/rethink ~/.codex/.tmp/marketplaces/rethink \
   || { echo "BACKUP FAILED — stop; do not run any later rm -rf"; exit 1; }
 ls -lh ~/toolkit-backup-*.tgz | tail -1
 gh auth status || { echo "GH AUTH FAILED — run: gh auth refresh -h github.com"; exit 1; }
@@ -155,7 +154,7 @@ claude plugin details superpowers@superpowers
 Expect: a backup tarball listed in `~/` (the `||` aborts if `tar` fails —
 fail closed before any deletion); `gh auth status` succeeds with `repo` scope
 (if not, `gh auth refresh -h github.com`, `gh auth login`, or route the
-step-18 PR through the GitHub connector);
+step-14 PR through the GitHub connector);
 `details` prints **14 skill files** — the **13 usable workflow skills** plus
 the `using-superpowers` dispatcher (a SessionStart bootstrap/reminder, not a
 skill you invoke for a task) — plus 1 SessionStart hook and a projected
@@ -298,102 +297,9 @@ rm -rf ~/.claude/skills/tdd ~/.codex/skills/tdd ~/.claude/skills/grill-me
 
 Verify: none of the three paths exist. (`grill-me` was never on Codex.)
 
-### Step 10 — Reconcile, edit, release rethink; update both tools
+### Step 10 — Amend the loader rule + add precedence + vocabulary to `~/.claude/CLAUDE.md`
 
-rethink is your own plugin (`eranroseman/rethink`). **Preflight — the source
-is currently messy, don't treat this as clean future work:** `claude plugin
-list` reports rethink **1.0.1 installed on both tools**, but the Claude
-marketplace clone at `~/.claude/plugins/marketplaces/rethink/` is **dirty**
-(uncommitted edits to `plugins/rethink/{hooks/directive.md,
-.claude-plugin/plugin.json,.codex-plugin/plugin.json}`, its plugin.json
-already bumped to 1.1.0) and **1 commit ahead** of `origin/master`; the Codex
-clone is at 1.0.1. Inspect it first:
-
-```bash
-git -C ~/.claude/plugins/marketplaces/rethink status --short --branch
-git -C ~/.claude/plugins/marketplaces/rethink log --oneline origin/master..HEAD
-git -C ~/.claude/plugins/marketplaces/rethink diff -- plugins/rethink
-```
-
-That unreleased 1.1.0 work is earlier-session rethink editing. Do **not**
-layer the edits below onto the dirty clone blindly — work from a clean
-`eranroseman/rethink` checkout, fold the existing 1.1.0 changes together with
-the narrowing edits below into one coherent release, then push + tag + update
-both tools. Make these edits (in the source):
-
-In `hooks/directive.md`, replace the Persistence section:
-
-```
-ACTIVE EVERY RESPONSE for design and architecture questions. No drift back to "here's how to tweak the current code." Still active if unsure.
-```
-
-with:
-
-```
-ACTIVE EVERY RESPONSE for design and architecture questions — except creating a new feature, building a new component, or adding new functionality from scratch: that territory belongs to obra/superpowers' brainstorming skill, which this plugin is designed to pair with. Rethink still governs narrower tactical-but-architectural questions (e.g. "async or sync," "how should this API be shaped"). No drift back to "here's how to tweak the current code." Still active if unsure. Off only: "stop rethink" / "normal mode".
-```
-
-In `skills/rethink-audit/SKILL.md`, add under `## Boundaries`:
-
-```
-- **Yield to gated design flows:** if a loaded skill hard-gates a finished design behind interactive requirements-gathering and user approval (e.g. brainstorming) for a new-build request, don't emit a standalone recommendation for it. This audit's niche (clean-slate redesign of an EXISTING subsystem) is distinct from new-build design.
-```
-
-and at the end of `## Output`:
-
-```
-migrate: is a sequencing sketch, not an implementation plan — no file-level structure, task interfaces, or test steps. Before any code, route the target design + gap to superpowers:writing-plans (or brainstorming first if requirements are unclear); do not execute migrate: steps directly.
-```
-
-Append to the `description` field in `.claude-plugin/plugin.json`,
-`.codex-plugin/plugin.json`, and `skills/rethink/SKILL.md` frontmatter:
-
-```
- — designed to pair with obra/superpowers' brainstorming skill for new-feature/component design; rethink covers first-principles reasoning for narrower architectural questions.
-```
-
-Set one release version in both `.claude-plugin/plugin.json` and
-`.codex-plugin/plugin.json` — e.g. `1.2.0`; pick a single clean number and
-make both files agree.
-
-**Exact release procedure** (the dirty local edits are already backed up in
-step 1's tarball, so nothing is lost; work from a fresh authoritative
-checkout so a fresh executor can't publish a partial release):
-
-```bash
-# 1. See what the existing unreleased work is (the ahead-1 commit + uncommitted 1.1.0 edits)
-cd ~/.claude/plugins/marketplaces/rethink
-git log --oneline origin/master..HEAD          # the unpushed commit(s)
-git diff -- plugins/rethink                     # the uncommitted 1.1.0 edits
-git stash list                                  # anything already stashed?
-
-# 2. Fresh checkout to release from (SSH auth per `gh auth status`)
-git clone git@github.com:eranroseman/rethink ~/rethink-release
-cd ~/rethink-release
-#   If the ahead-1 commit above is wanted in the release, cherry-pick it here after review:
-#   git cherry-pick <sha>
-#   Apply the directive.md / rethink-audit / description / version edits from this step.
-
-# 3. Verify EVERY change before publishing, then commit + tag + push
-git diff                                         # review all edits; nothing unexpected
-git add -A && git commit -m "rethink 1.2.0: narrow to pair with superpowers brainstorming"
-git tag v1.2.0
-git push origin master --tags
-
-# 4. Update both installs off the pushed release
-claude plugin marketplace update rethink && claude plugin update rethink@rethink
-# Codex has no `plugin update` — refresh the marketplace snapshot, then remove + re-add:
-codex plugin marketplace upgrade rethink && codex plugin remove rethink@rethink && codex plugin add rethink@rethink
-```
-
-Verify: both tools report the **same** new version (no longer 1.0.1), the
-marketplace clones are clean (`git status` empty, not ahead), and each tool's
-loaded `hooks/directive.md` shows the narrowed Persistence
-trigger.
-
-### Step 11 — Amend the loader rule + add precedence + vocabulary to `~/.claude/CLAUDE.md`
-
-**First, a policy amendment (decided: keep the loader bridge).** The step-13a
+**First, a policy amendment (decided: keep the loader bridge).** The step-12a
 `main/CLAUDE.md` links to `AGENTS.md` only (`@AGENTS.md`) — a pure loader with
 no instructions of its own. `~/.claude/CLAUDE.md` rule 1 says "no local
 CLAUDE.md files"; amend it so a link-only loader is explicitly allowed (it
@@ -412,7 +318,7 @@ no local CLAUDE.md files (exception: a repo-root CLAUDE.md whose entire content 
 
 - **Plan Mode:** this harness's native Plan Mode workflow governs entering plan mode. `using-superpowers`'s "brainstorm before plan mode" mandate does not apply here.
 - **ponytail vs. brainstorming:** route to brainstorming's design gate only when the request needs a new dependency (fails ponytail's rung 4) or spans multiple independent subsystems or has genuine ambiguity about purpose/constraints/success criteria. Everything else — single-function changes, config tweaks, stdlib/native/existing-dependency solutions — stays on ponytail's fast path.
-- **rethink vs. brainstorming:** new-feature/component/from-scratch design → brainstorming's gated flow. Narrower tactical-but-architectural questions (sync vs. async, API shape) → rethink.
+- **rethink / rethink-audit vs. brainstorming + writing-plans:** new-feature/component/from-scratch design → brainstorming's gated flow, not rethink (rethink's own directive stays "active every response for design"; this rule carves out new-build). Narrower tactical-but-architectural questions (sync vs. async, API shape) → rethink. `rethink-audit`'s `migrate:` output is a sequencing sketch, not an executable plan — route it to `superpowers:writing-plans` before any code; don't execute its steps directly.
 - **TDD vs. ponytail:** when `superpowers:test-driven-development` is in effect, its test-first ordering wins over ponytail's code-first default; ponytail still governs size/shape once a test exists.
 - **threat-modeling vs. a single finding:** answer a follow-up about one already-flagged finding directly, scoped to it — do NOT launch threat-modeling's 8-phase run. Invoke threat-modeling only for a deliberate whole-codebase audit. (Its own SKILL.md has an upstream; keep this rule here, not there.)
 - **caveman scope:** caveman compresses live chat only — never persisted files (code, commits, PRs, docs, specs, plans, reports, UI strings). `the-elements-of-style` governs the quality of those durable artifacts.
@@ -426,9 +332,9 @@ no local CLAUDE.md files (exception: a repo-root CLAUDE.md whose entire content 
 - Before writing a RED test (`superpowers:test-driven-development`), name and confirm the test's seam (per `codebase-design`) first; test only at pre-agreed seams.
 ```
 
-### Step 12 — Write `~/.codex/AGENTS.md` (currently empty)
+### Step 11 — Write `~/.codex/AGENTS.md` (currently empty)
 
-Codex gets the same precedence + vocabulary rules as Claude (step 11),
+Codex gets the same precedence + vocabulary rules as Claude (step 10),
 adapted for Codex's toolset, plus the Codex-only security routing.
 
 ```markdown
@@ -436,7 +342,7 @@ adapted for Codex's toolset, plus the Codex-only security routing.
 
 - **Planning:** your own planning workflow governs; `using-superpowers`'s "brainstorm before planning" mandate does not override it.
 - **ponytail vs. brainstorming:** route to brainstorming's design gate only when the request needs a new dependency (fails ponytail's rung 4) or spans multiple independent subsystems or has genuine ambiguity about purpose/constraints/success criteria. Everything else — single-function changes, config tweaks, stdlib/native/existing-dependency solutions — stays on ponytail's fast path.
-- **rethink vs. brainstorming:** new-feature/component/from-scratch design → brainstorming's gated flow. Narrower tactical-but-architectural questions (sync vs. async, API shape) → rethink.
+- **rethink / rethink-audit vs. brainstorming + writing-plans:** new-feature/component/from-scratch design → brainstorming's gated flow, not rethink. Narrower tactical-but-architectural questions (sync vs. async, API shape) → rethink. `rethink-audit`'s `migrate:` output is a sequencing sketch, not an executable plan — route it to `superpowers:writing-plans` before any code; don't execute its steps directly.
 - **TDD vs. ponytail:** when `superpowers:test-driven-development` is in effect, its test-first ordering wins over ponytail's code-first default; ponytail still governs size/shape once a test exists.
 - **threat-modeling vs. a single finding:** answer a follow-up about one already-flagged finding (including a codex-security finding) directly, scoped to it — do NOT launch threat-modeling's 8-phase run. Invoke threat-modeling only for a deliberate whole-codebase audit.
 - **caveman scope:** caveman compresses live chat only — never persisted files (code, commits, PRs, docs, specs, plans, reports, UI strings). `the-elements-of-style` governs the quality of those durable artifacts.
@@ -459,7 +365,7 @@ Known asymmetry: Claude Code's `security-guidance` runs passive, automatic check
 Known friction: `codex-security`'s `deep-security-scan` requires agent depth ≥ 2 at `block` severity; this machine's `agents.max_depth = 1` trips a remediation dialogue for that one scan mode. `security-scan`/`security-diff-scan` are unaffected.
 ```
 
-### Step 13 — Repo edits (Layer 2 + 3), one worktree, no PR yet
+### Step 12 — Repo edits (Layer 2 + 3), one worktree, no PR yet
 
 ```bash
 git fetch origin
@@ -467,14 +373,14 @@ git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/adopt-superpo
 cd ~/memoria-vault/worktrees/adopt-superpowers
 ```
 
-**13a — new file `CLAUDE.md` at repo root** — links to `AGENTS.md` only
-(enabled by step 11's rule-1 carve-out). Its entire content is:
+**12a — new file `CLAUDE.md` at repo root** — links to `AGENTS.md` only
+(enabled by step 10's rule-1 carve-out). Its entire content is:
 
 ```markdown
 @AGENTS.md
 ```
 
-**13b — `AGENTS.md`: replace the entire Skills table** with:
+**12b — `AGENTS.md`: replace the entire Skills table** with:
 
 ```markdown
 | Stage | Skill | Use when |
@@ -499,7 +405,7 @@ security tool with the tool it runs on: `security-guidance` (Claude,
 passive), `codex-security` (Codex, active), `threat-modeling` (both, on
 demand) — so a reader knows which apply to the tool they're using.
 
-**13c — `.agents/playbooks/code-review.md`.** After "## 1. Establish scope",
+**12c — `.agents/playbooks/code-review.md`.** After "## 1. Establish scope",
 new final paragraph:
 
 ```
@@ -512,13 +418,13 @@ At the end of "## 4. Report", new bullet:
 - After presenting findings, apply `superpowers:receiving-code-review`'s discipline: fix Critical immediately, Important before proceeding, note Minor for later, and push back (with reasoning) on a finding that looks wrong.
 ```
 
-**13d — `.agents/playbooks/verify-change.md`.** One line appended at the end:
+**12d — `.agents/playbooks/verify-change.md`.** One line appended at the end:
 
 ```
 *(If `superpowers:verification-before-completion` is installed, its claim-honesty discipline complements this playbook. These steps remain authoritative regardless.)*
 ```
 
-**13e — `.agents/playbooks/exec-plan.md`.** New item 5 in "## Authoring":
+**12e — `.agents/playbooks/exec-plan.md`.** New item 5 in "## Authoring":
 
 ```
 5. Size tasks using `superpowers:writing-plans`' right-sizing rule (each task independently testable and revertable) — but the deliverable still lands in this file's own template, never a new `docs/superpowers/plans/` file.
@@ -532,14 +438,14 @@ New section after "## Running", before "## Validating":
 An ExecPlan's Concrete steps may be executed via `superpowers:subagent-driven-development` (per-task implementer + two-stage reviewer) or `superpowers:executing-plans` (separate-session handoff). This file's own Validation, Progress, Execution log, and Surprises sections remain authoritative — neither technique's plan-file or recovery ledger substitutes for this file's record.
 ```
 
-**13f — `.agents/templates/exec-plan.md`.** One line in the "Concrete steps"
+**12f — `.agents/templates/exec-plan.md`.** One line in the "Concrete steps"
 guidance comment:
 
 ```
 See ../playbooks/exec-plan.md → "Authoring" item 5 and "Reusing superpowers execution techniques" for optional sizing/execution engines.
 ```
 
-**13g — `.agents/templates/handoff.md`.** New section appended at the end:
+**12g — `.agents/templates/handoff.md`.** New section appended at the end:
 
 ```
 ## Result
@@ -551,14 +457,14 @@ See ../playbooks/exec-plan.md → "Authoring" item 5 and "Reusing superpowers ex
 <!-- What was actually done, any deviation from Expected outputs, and why. -->
 ```
 
-**13h — `.agents/playbooks/docs-review.md`.** One line at the end of
+**12h — `.agents/playbooks/docs-review.md`.** One line at the end of
 "## 4. Check terminology and claims":
 
 ```
 If `the-elements-of-style` is installed, apply its `writing-clearly-and-concisely` rules (active voice, omit needless words) as a prose-clarity pass over changed pages — complementary to this section's terminology and citation checks.
 ```
 
-**13i — `.agents/playbooks/security-review.md`.** New section appended:
+**12i — `.agents/playbooks/security-review.md`.** New section appended:
 
 ```
 ## 5. Escalate to a full audit
@@ -566,7 +472,7 @@ If `the-elements-of-style` is installed, apply its `writing-clearly-and-concisel
 This playbook is scoped to the current diff. If review surfaces something beyond one change — systemic exposure, unclear trust boundaries, or a request for a standalone assessment — and the `threat-modeling` skill is installed, it runs a full 8-phase STRIDE model as a separate, deliberately-requested activity. Do not reach for it to answer single-finding follow-ups here — resolve those per section 4.
 ```
 
-Do not commit or open the PR yet. Step 15 adds `.agents/toolkit.md` in this
+Do not commit or open the PR yet. Step 14 adds `.agents/toolkit.md` in this
 same worktree and opens one PR containing both `AGENTS.md`'s toolkit reference
 and the file it points to.
 
@@ -574,15 +480,15 @@ and the file it points to.
 git status --short
 ```
 
-### Step 14 — Verify (fresh sessions)
+### Step 13 — Verify (fresh sessions)
 
 Run §5 in a fresh Claude Code session and a fresh Codex session (plugin and
 skill changes need a restart to load).
 
-### Step 15 — Author the toolkit stack document (last step)
+### Step 14 — Author the toolkit stack document (last step)
 
-Once the stack is installed and verified (steps 1–14), document the whole
-thing at **`.agents/toolkit.md`** in the **same step-13 worktree** — the repo's
+Once the stack is installed and verified (steps 1–13), document the whole
+thing at **`.agents/toolkit.md`** in the **same step-12 worktree** — the repo's
 agent-guidance home, so it's durable, discoverable, and PR-reviewed;
 `AGENTS.md` stays the authority/policy, `toolkit.md` is the "what's available
 and how to use it" map.
@@ -712,7 +618,7 @@ Repo PR:
   single repo PR is merged, and `~/memoria-vault/main` fast-forwards cleanly to
   `origin/main`.
 
-Toolkit doc (step 15):
+Toolkit doc (step 14):
 
 - `.agents/toolkit.md` exists and lists every Layer-1 plugin/skill, every
   Layer-2 playbook/template/system-map/domain-skill, and the parity ledger —
@@ -725,15 +631,15 @@ Toolkit doc (step 15):
   `rm -rf` **before** the `git clone`/`cp -a`, so a re-run is clean — no
   "clone fails, dir exists" and no stale-content merge. Marketplace
   add/install are idempotent. The `rm -rf` in step 9 is safe to re-run. The
-  file edits (steps 10–13) and doc authoring (step 15) overwrite cleanly
+  file edits (steps 10–12) and doc authoring (step 14) overwrite cleanly
   when re-applied.
 - **Rollback:** step 1 writes a full backup tarball
   (`~/toolkit-backup-*.tgz`, covering both `skills/` dirs,
   `~/.claude/CLAUDE.md`, `~/.codex/AGENTS.md`, `~/.claude/settings.json`,
-  `~/.codex/config.toml`, and both rethink marketplace clones) — restore from
-  it to undo any local change. Also: `claude plugin uninstall` / `codex plugin
-  remove` reverse the installs; every file edit's exact pre-edit text is in
-  §4. The repo PR reverts by closing unmerged or reverting the squash commit.
+  `~/.codex/config.toml`) — restore from it to undo any local change. Also:
+  `claude plugin uninstall` / `codex plugin remove` reverse the installs;
+  every file edit's exact pre-edit text is in §4. The repo PR reverts by
+  closing unmerged or reverting the squash commit.
 
 ## 7. Progress
 
@@ -746,12 +652,11 @@ Toolkit doc (step 15):
 - [ ] 7 — interface-design installed (Claude plugin + Codex loose) + frontend-design enabled
 - [ ] 8 — obsidian-skills ported to Codex
 - [ ] 9 — tdd + grill-me retired
-- [ ] 10 — rethink reconciled, edited, released, both tools updated
-- [ ] 11 — `~/.claude/CLAUDE.md` precedence + vocabulary added (incl. grilling/caveman/improve routing)
-- [ ] 12 — `~/.codex/AGENTS.md` written (same rules + security routing)
-- [ ] 13 — repo worktree, CLAUDE.md + AGENTS.md + 8 `.agents/` files staged for same-branch doc work
-- [ ] 14 — §5 validated in fresh sessions, transcripts in §11
-- [ ] 15 — `.agents/toolkit.md` authored (entire stack), single repo PR merged, worktree cleaned up
+- [ ] 10 — `~/.claude/CLAUDE.md` precedence + vocabulary added (incl. grilling/caveman/improve routing)
+- [ ] 11 — `~/.codex/AGENTS.md` written (same rules + security routing)
+- [ ] 12 — repo worktree, CLAUDE.md + AGENTS.md + 8 `.agents/` files staged for same-branch doc work
+- [ ] 13 — §5 validated in fresh sessions, transcripts in §11
+- [ ] 14 — `.agents/toolkit.md` authored (entire stack), single repo PR merged, worktree cleaned up
 
 ## 8. Execution log
 
@@ -774,13 +679,13 @@ Toolkit doc (step 15):
 
 ## 10. Interfaces & dependencies
 
-- **Edited in place:** `rethink` only (your own plugin, its marketplace repo).
+- **Edited in place:** none — this plan edits zero plugin/skill components.
 - **Used as-is, no file edit — routing/precedence goes in CLAUDE.md/AGENTS.md:**
-  every third-party component, including the loose MIT cherry-picks
-  `grilling` / `caveman` / `improve` / `codebase-design`, and the marketplace/
-  vendored ones `ponytail`, `superpowers`, `threat-modeling`, `codex-security`,
-  `interface-design`, `frontend-design`, `the-elements-of-style`,
-  `obsidian-skills`, `api-design-principles`.
+  every component, including `rethink` (your own plugin), the loose MIT
+  cherry-picks `grilling` / `caveman` / `improve` / `codebase-design`, and the
+  marketplace/vendored ones `ponytail`, `superpowers`, `threat-modeling`,
+  `codex-security`, `interface-design`, `frontend-design`,
+  `the-elements-of-style`, `obsidian-skills`, `api-design-principles`.
 - **New tool-config files:** `~/.codex/AGENTS.md` (was empty).
 - **Installed/vendored:** superpowers (both), the-elements-of-style (Claude
   plugin + Codex loose), api-design-principles (loose both), threat-modeling
@@ -788,7 +693,7 @@ Toolkit doc (step 15):
   (Claude plugin + Codex loose), frontend-design (Claude enable + Codex
   `am-will/codex-skills` loose, unlicensed/personal-use), obsidian-skills
   (Codex loose copy).
-- **Repo files (one PR, steps 13 + 15):** new `CLAUDE.md`, `AGENTS.md`,
+- **Repo files (one PR, steps 12 + 14):** new `CLAUDE.md`, `AGENTS.md`,
   `.agents/playbooks/{code-review,verify-change,exec-plan,docs-review,
   security-review}.md`, `.agents/templates/{exec-plan,handoff}.md`, and new
   `.agents/toolkit.md` documenting the whole stack — all in one worktree,
