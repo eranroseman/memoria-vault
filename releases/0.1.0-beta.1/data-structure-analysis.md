@@ -140,43 +140,46 @@ Rules that fall out of this and explain most of the design:
 
 ## 2. Layer A — the OKF knowledge bundle (files *inside* a bundle)
 
-**OKF = Open Knowledge Format** (Google Cloud's interchange spec). A *Concept* is a
+**OKF = Open Knowledge Format** (per the attached v0.1 draft). A *Concept* is a
 typed markdown document; a *Concept ID* is its path minus `.md`; a *Knowledge Bundle*
 is a runtime-independent set of Concept files. Memoria is a **strict producer,
 permissive consumer** — it emits schema-valid typed content but only tolerates OKF's
 "consumers MUST NOT reject" permissiveness at the *ingest* boundary (the gate, not
-OKF's rule, governs what reaches a canonical surface). OKF's prose-typed relationships
-are the *inverse* of Memoria's typed edges, so OKF is a **boundary format, never the
-core** (full import/export is ADR-107, still deferred). What ships in alpha.16 is the
-OKF *bundle-root nouns* and *OKF-style projections*, not a full OKF pipeline.
+OKF's rule, governs what reaches a canonical surface). Memoria's typed edges can
+remain internal validation metadata, but OKF-readable relationships still need
+standard Markdown links plus prose describing the relation. What ships in alpha.16
+is the OKF *bundle-root nouns* and *OKF-style projections*, not a conformant OKF
+bundle.
 
-**So: is Memoria's knowledge bundle actually OKF-compliant? No — and that's by a stupid
-design mistake that we should learn not to repeat, not a gap.** "Boundary format, never
-the core" means exactly this: Memoria's *internal*
-bundle borrows OKF's **nouns** (Concept = typed markdown doc, Concept ID = path minus
-`.md`, the bundle-root convention, an `index.md` manifest) but deliberately **violates
-OKF's core rule** — OKF requires relationships to be **prose-typed** ("the specific kind
-of relationship is conveyed by the surrounding prose, not by the link itself"); Memoria's
-`links:` are **typed edges** (`supports`/`contradicts`/`extends` as structured frontmatter
-keys), the polar opposite, adopted on purpose (ADR-126: typed edges over prose-typing).
-The reserved OKF headings (`# Schema`/`# Examples`/`# Citations`) aren't implemented
-either — confirmed absent from every shipped template. A generic OKF consumer opening
-`works/`/`notes`/`hubs`/`projects` today would find well-formed typed markdown (the
-Concept-as-file idea holds) but would not find the relationship semantics its own spec
-promises.
+**Alpha.16 as-built compliance status — not the beta.1 target.** This subsection
+describes Part 1's as-built alpha.16 template/code state only. It is superseded for
+the beta.1 target by Part 8 and `0.1.0-beta.1-design.md` §12.
 
-The genuinely OKF-compliant artifact would be a **different, not-yet-built thing**: the
-lossy *export* ADR-107 describes — a conversion pass where typed `links:` collapse down
-to untyped prose-typed markdown links, `check_status`/lifecycle survive only as ignorable
-custom frontmatter, and the result carries no gate/Linter/MCP, making it standalone-
-consumable by any OKF tool. That conversion is **proposed and deferred**, not shipped —
-so today there is no OKF-compliant artifact anywhere in the system, only an OKF-*inspired*
-internal one plus a documented plan for producing a real one on export. Three distinct
-things worth not conflating: (1) the internal bundle — OKF-inspired, not compliant, by
-design; (2) the hypothetical export — would be genuinely OKF-compliant, unbuilt; (3) OKF
-as an *ingest* boundary (accepting a foreign OKF bundle as an import source) — a third,
-separate concern, gated through Memoria's normal strict validation before anything is
-trusted, not a "be permissive like OKF says" posture applied to Memoria's own content.
+Against the attached OKF v0.1 draft, the hard conformance bar is narrower than
+earlier wording here implied: every non-reserved `.md` file needs parseable YAML
+frontmatter and a non-empty `type`, while reserved `index.md`/`log.md` files follow
+their own structures. OKF body sections are explicitly not required; `# Schema`,
+`# Examples`, and `# Citations` are conventional `SHOULD`s when applicable. OKF also
+tells consumers to tolerate unknown frontmatter keys. So Memoria's typed
+frontmatter `links:` are not, by themselves, an OKF conformance failure; they are
+Memoria metadata. What OKF consumers can understand as relationships still needs
+standard Markdown links whose relation kind is conveyed in surrounding prose.
+
+The verified alpha.16 problem is simpler: the shipped `vault-template/` is not a
+conformant OKF bundle because non-reserved Markdown files such as `home.md`,
+`troubleshooting.md`, `system/vocabulary.md`, and `system/dashboards/*.md` have no
+`type` field. `index.md` is reserved and correctly type-less. The existing
+note/hub/project templates' `links:` frontmatter and the absence of conventional
+body headings are strict-producer/readability issues, not OKF §9 conformance
+blockers unless a claim-bearing body omits needed citation prose.
+
+Therefore this is not a beta.1 decision to build a lossy OKF converter. beta.1's
+target is the opposite: ship additive fixes so the live/export markdown layer is
+already OKF-compliant and can be copied as a bundle without transformation. Three
+distinct things worth not conflating: (1) the alpha.16 as-built bundle — incomplete
+against OKF §9; (2) the beta.1 target bundle — intended to be genuinely conformant;
+(3) OKF as an *ingest* boundary — a separate concern, gated through Memoria's normal
+strict validation before anything is trusted.
 
 ### Can the bundle become a strict superset of OKF instead?
 
@@ -275,8 +278,9 @@ But that's a secondary, opt-in use case, not what "detachable" was describing.
 - **Nested bundles are explicitly contemplated either way.** §3: "A bundle is a
   directory tree of markdown files. The directory structure is independent of the
   domain." The reserved `index.md`/`log.md` conventions (§6/§7) "MAY appear in any
-  directory, including the bundle root" — so a `projects/<slug>/` folder *could* carry
-  its own local `index.md` if the standalone-sharing case is ever wanted.
+  directory, including the bundle root" — so a `projects/<slug>/` folder
+  *could* carry its own local `index.md` if the standalone-sharing case is ever
+  wanted.
 - **What's a genuine (optional) enhancement, not a requirement:** that per-project local
   `index.md` — worth adding for quality if standalone project-sharing matters, not
   required for the erasure-safety property, which needs nothing beyond the one-way link
@@ -286,26 +290,15 @@ But that's a secondary, opt-in use case, not what "detachable" was describing.
   a recipient gets supporting context, not just dangling pointers) — a usefulness
   decision, independent of OKF, compliant either way per the tolerance rule.
 
-**`<slug>` vs `<project_id>` for the folder itself — resolved: `<slug>`.** Unlike
-notes/digests, this didn't inherit a free fix, so the choice was made deliberately
-rather than by default:
-The free fix that resolved notes' identity fork (`Show inline title` off + the
-template's own heading) covers reading/editing *inside Obsidian* — but project folders
-are plausibly handled *outside* Obsidian far more than individual notes (attaching a
-draft, terminal work, sharing the folder with a collaborator, opening `draft.md`
-elsewhere), where that setting provides zero help. So this doesn't inherit the
-"basically free" verdict notes got:
-- **`<project_id>` (ULID):** full path=identity consistency, rename-safe as scope
-  evolves over a project's (often long) lifetime — but a real, uncompensated legibility
-  cost on every surface outside Obsidian's editor pane.
-- **`<slug>`:** legible everywhere, including outside Obsidian entirely — at the cost of
-  a one-axis, deliberate non-compliance (`project.md`'s `id:` ≠ its path-derived OKF
-  identity) and no rename-safety unless the folder is simply never renamed post-creation.
-- **Independent of either choice:** the erasure-safety property above depends only on
-  the one-way link direction, not on how the folder is named — so `<slug>` doesn't put
-  that guarantee at risk. **Decision: `<slug>`**, accepting the localized
-  non-compliance, since the property that actually matters here doesn't require the ID
-  match — but this is a real trade-off, not a settled call.
+**`<slug>` vs `<project_id>` for the folder itself — resolved for beta.1:
+`<slug>` is OKF-compliant.** Verification against OKF v0.1: a Concept ID is
+the file path minus `.md`, and conformance requires parseable frontmatter plus a
+non-empty `type` for every non-reserved `.md` file. OKF does not require a ULID
+folder name and explicitly allows subdirectories and subdirectory bundles. So
+`projects/my-topic/project.md` has OKF Concept ID
+`projects/my-topic/project`; a Memoria-internal `id` field, if present, is only
+producer-defined metadata. The erasure-safety property above still depends only
+on one-way link direction, not on the folder name.
 
 ### The export mechanism, once this is a real superset: copy-paste, not a conversion pipeline
 
@@ -357,8 +350,9 @@ rather than left open:
    be **described in docs but never actually written** by any current code path (the real
    text lives in the gitignored `.memoria/blobs/` instead). A copy-paste export today
    would carry evidence markers with **no resolvable target** — every citation would be
-   a dangling span reference. **This doesn't cut against materializing `fulltext.md` as a
-   real bundle file — it's the strongest reason yet to actually build it**, not treat its
+   a dangling span reference. **This doesn't cut against materializing
+   `fulltexts/<work_id>.md` as a real bundle file — it's the strongest reason
+   yet to actually build it**, not treat its
    absence as acceptable: the raw/original blob (PDF, HTML) still doesn't need to travel
    (it's provenance, not knowledge), but the extracted, block-ref-anchored plain text
    does, precisely so a copied bundle is self-contained and its citations verifiable
@@ -403,7 +397,7 @@ rather than left open:
    lacking `type:` doesn't exempt it from that classification, it just makes it a
    non-conformant one.** There is no such thing as a "plain, non-Concept `.md` file"
    living inside an OKF-compliant bundle — that category doesn't exist in the spec.
-   This lands squarely on `fulltext/<work_id>.md` (categorized earlier in this analysis
+   This lands squarely on `fulltexts/<work_id>.md` (categorized earlier in this analysis
    as "a plain file, not a Concept" — wrong under this reading) and on every loose `.md`
    file this analysis had been treating as outside the compliance question entirely:
    the root-level docs (`home.md`, `steering.md`, `AGENTS.md`/`AGENTS.override.md`,
@@ -414,7 +408,7 @@ rather than left open:
    of it is missing its one required field. **Resolved by adding `type:`, not by
    re-scoping the export unit** — cheaper and more honest than trying to argue any of
    this out of "the bundle":
-   - `fulltext/<work_id>.md` → `type: fulltext`. Concept ID becomes `work_id` itself,
+   - `fulltexts/<work_id>.md` → `type: fulltext`. Concept ID becomes `work_id` itself,
      the same identity pattern already settled for `digests/<work_id>.md` — the two are
      siblings in this respect, not fulltext being the odd one out.
    - Root-level docs and `system/vocabulary.md`, `system/patterns/_preamble.md` →
@@ -466,7 +460,8 @@ rather than left open:
    as the implicit precondition rather than assuming a copy mid-background-enrichment is safe.
 
 **Net:** every issue a literal copy-paste export creates is resolvable by things this
-analysis was already going to recommend (materialize `fulltext.md`, ship the reserved
+analysis was already going to recommend (materialize `fulltexts/<work_id>.md`,
+ship the reserved
 headings, build a real `index.md`) plus two small, cheap additions (a prose-narration
 linter check; an explicit statement of the export unit's boundary). None of it requires
 building the ADR-107 conversion pipeline — that pipeline becomes unnecessary scope to
@@ -494,7 +489,7 @@ not by drift:
   to this outer, optional layer — **purely an OKF-conformance courtesy for an
   external reader**, explicitly *not* added to `concepts.concept_type`'s CHECK
   or any new `.memoria/schemas/types/*.yaml` (item 7's own closing sentence:
-  "decoupled from Memoria's own internal Concept-hood"). `fulltext/<work_id>.md`
+  "decoupled from Memoria's own internal Concept-hood"). `fulltexts/<work_id>.md`
   is the one exception worth naming: it *is* bundle-scoped (lives under a
   bundle root), which is why, unlike `system`/`template`/`eval-task`/
   `dashboard`, Part 5 gives it a real field table alongside the other Concept
@@ -505,18 +500,19 @@ not by drift:
 
 | Bundle root | Holds | Concept type(s) | Authored / generated |
 |---|---|---|---|
-| `works/<work_id>/` | Objective work record, full text, machine digest, raw source | `work`, `digest` | Machine-owned (capture), PI-observed |
-| `sources/` | Human source-notes bridging Works into the notes graph (thesis, findings, critique) | `source-note` | PI-authored judgment layer |
-| `notes/` | Atomic claim & question notes | `note` | PI-authored or machine-*proposed* |
+| `notes/` | Atomic claim/question/definition notes and `mode: work` notes | `note` | PI-authored or machine-*proposed* |
 | `hubs/` | Topic hubs with human salience (framing / curating / planning) | `hub` | PI-curated |
-| `projects/<slug>/` | `project.md` (Concept) + `outline.md`, `draft.md`, `argument.canvas` (artifacts) | `project` | PI-authored |
+| `projects/<slug>/` | Nested OKF knowledge bundle: `project.md`, `outline.md`, `draft.md`, plus `argument.canvas` companion artifact | `project`, `outline`, `draft` | PI-authored / machine-assisted |
+| `digests/` | Machine-produced work digests | `digest` | Machine-owned (capture), PI-observed |
+| `fulltexts/` | Extracted full text for citable work spans | `fulltext` | Machine-owned (capture), PI-observed |
 
 Notes on the boundary:
-- **6 Concept types map onto 5 roots** — `work` and `digest` both home in `works/`.
+- **5 Concept families map onto 5 roots** — `work` is the catalog row, not a
+  markdown Concept type; `source-note` folds into `note` as `mode: work`.
 - **Folder membership ≠ Concept-hood.** Non-Concept files live inside roots too:
-  `works/<id>/` full-text/raw source, and `projects/<slug>/` outline/draft/canvas are
-  project *artifacts*, not new Concept types. **Correction**: an earlier pass of this
-  analysis named these `evidence.md`/`gaps.md` — neither exists in the real code
+  project `.canvas` files and raw source blobs are companion artifacts, not
+  markdown Concept types. **Correction**: an earlier pass of this analysis named
+  `evidence.md`/`gaps.md` — neither exists in the real code
   (`knowledge.py`'s `_project_outline_rel`/`_project_draft_rel`/`_project_canvas_rel`
   confirm `outline.md`/`draft.md`/`argument.canvas` instead); gap-analysis and evidence
   checks are query-time reports, never persisted as project-folder files. Fixed
@@ -874,11 +870,12 @@ one currently earns its keep.
   markdown must be authoritative *now*, continuously, or every edit forks against a
   primary store elsewhere. This alone is sufficient to require markdown-primacy for the
   content that's actually hand-edited.
-- **Portability/longevity (currently NOT earning its keep):** this is the justification
-  that cites Kleppmann/Ink & Switch and "tool-independent plain text." But Part 1 §2
-  just established that Memoria's bundle is **not** OKF-compliant — it borrows OKF's
-  nouns without its relationship semantics or identity model. So "these files are
-  portable to any tool" is **not currently true**. Counting portability as a reason the
+- **Portability/longevity (alpha.16 as-built NOT earning its keep yet):** this is the
+  justification that cites Kleppmann/Ink & Switch and "tool-independent plain text."
+  But Part 1 §2 just established that the alpha.16 template is **not** OKF-conformant
+  as shipped: some non-reserved Markdown lacks `type`, and OKF-readable relationship
+  prose is not consistently generated. So "these files are portable to any OKF tool"
+  is **not true of the alpha.16 as-built state**. Counting portability as a reason the
   architecture is earning its cost today is treating an aspiration as a present fact —
   exactly the mistake it's fair to call out. Keeping content in files "to be portable"
   when (a) portability isn't needed at every moment and (b) the portability you'd get
@@ -887,12 +884,12 @@ one currently earns its keep.
 **What this changes:** the honest boundary for markdown-primacy today is narrower than
 originally framed — it's earned *only* by live-editing, not by longevity. Given the
 zero-migration-cost standing principle (§5), the correct response isn't to keep
-gesturing at portability — it's to **actually build the compliant OKF export now**
-(Part 1 §2's superset analysis already worked out how: mostly additive, one identity
-fork resolved at the export boundary). That's the only way "portability" stops being a
-borrowed justification and becomes a real, present-tense property. Until that export
-ships, don't cite portability as a reason anything is designed the way it is — cite only
-live-editing, and treat the rest of the "keep-test" framing as a target, not a fact.
+gesturing at portability — it's to **make the live/export markdown layer OKF-conformant
+now** (Part 1 §2's superset analysis already worked out how: mostly additive fixes).
+That's the only way "portability" stops being a borrowed justification and becomes a
+real, present-tense property. Until that target ships, don't cite portability as a reason
+anything is designed the way it is — cite only live-editing, and treat the rest of the
+"keep-test" framing as a target, not a fact.
 
 Where it flips to (B) entirely: **if the PI never edited in a markdown tool (CLI-only),
 SQLite-primary + markdown-as-export would be the simpler correct design, full stop** —
@@ -1068,17 +1065,17 @@ its conclusion.**
   machine-authored reading of one immutable source. ADR-126's mode-vs-type test asks
   whether something is "a flippable state and role" on a human-authored artifact; a
   digest isn't a PI epistemic move at all, it's a derived machine artifact analogous to
-  `fulltext.md` or `record.md` — so it doesn't fit the mode collapse the same way
+  `fulltexts/<work_id>.md` or `record.md` — so it doesn't fit the mode collapse the same way
   `source-note` does. Open question as originally posed here (both since resolved,
   documented where each was settled — see below): does `digest` need independent
   Concept-hood (its own `id`, linkable target) at all, or could it be a plain artifact
-  like `fulltext.md`, referenced only by `work_id#^pNNNN` span?
+  like `fulltexts/<work_id>.md`, referenced only by `work_id#^pNNNN` span?
   **Resolved, twice over, elsewhere in this document — and the framing above turned out
   backwards on one point:** `digest` stays a Concept (`work_id` as its own Concept ID,
-  no separate ULID — Part 4). And `fulltext.md` was never actually the "plain,
+  no separate ULID — Part 4). And `fulltexts/<work_id>.md` was never actually the "plain,
   non-Concept" alternative this passage poses it as: per the §3.1 correction (Part 1
   §2), every `.md` file except `index.md` already *is* an OKF concept document, so
-  `fulltext.md` gets `type: fulltext` and the identical `work_id`-as-Concept-ID pattern
+  `fulltexts/<work_id>.md` gets `type: fulltext` and the identical `work_id`-as-Concept-ID pattern
   as `digest` — the two aren't examples of opposite choices, they're the same choice.
   The real, still-relevant distinction this passage was reaching for isn't
   Concept-hood-per-se — it's that neither needs a `concepts` DB row / `check_status`
@@ -1450,7 +1447,7 @@ reconciliation note.
 │   ├── draft.md               real (`_project_draft_rel`), written by
 │   │                         `compose-project-draft`: composed prose from the outline,
 │   │                         carrying `%%ev%%` evidence markers that cite *into*
-│   │                         checked notes/`fulltext/` (the direction runs draft →
+│   │                         checked notes/`fulltexts/` (the direction runs draft →
 │   │                         evidence, not the reverse — draft.md is never itself an
 │   │                         evidence-marker *target*). `verify-project-draft` checks
 │   │                         those markers resolve; `promote-draft-passage` extracts a
@@ -1478,7 +1475,7 @@ reconciliation note.
 │                             *reference*-level bridge — a separately-identified Concept
 │                             that points at `work_id` via a field). Its own bundle root
 │                             now, not nested under a leftover `works/` folder.
-├── fulltext/<work_id>.md     `type: fulltext` — a real OKF concept document (§3.1
+├── fulltexts/<work_id>.md    `type: fulltext` — a real OKF concept document (§3.1
 │                             correction: every .md file besides index.md already is
 │                             one; this analysis previously miscalled it "plain, not a
 │                             Concept," backwards from the spec). Concept ID = `work_id`
@@ -1514,7 +1511,7 @@ reconciliation note.
 │                             it connotes a partial excerpt, the opposite of "the
 │                             complete, citable-at-any-span text" this file promises.
 │                             One loose end: the DB enum spells it `full-text` (hyphenated),
-│                             the folder is `fulltext` (no separator) — cosmetic, but
+│                             the folder is `fulltexts` (no separator) — cosmetic, but
 │                             worth naming so it doesn't read as accidental drift later.
 ├── works/                    GONE — nothing left to hold once digest and fulltext each
 │                             get their own folder (`record.md` was already confirmed
@@ -1562,7 +1559,7 @@ previous pass treated as "outside the Concept question" into category 1. Once `t
 is added everywhere per the resolution above, the accurate three-way split is:
 
 1. **OKF concept documents** (every `.md` file except `index.md`, once `type:` is
-   added): `notes/`, `hubs/`, `projects/`, `digests/`, `fulltext/` — and now also every
+   added): `notes/`, `hubs/`, `projects/`, `digests/`, `fulltexts/` — and now also every
    root-level doc and everything under `system/`. This is a much larger set than "the
    four knowledge-bearing bundle roots" the previous pass drew the line at; OKF's
    classification doesn't distinguish "content the PI reasons about" from "operator
@@ -1646,7 +1643,7 @@ Memoria and the PI doesn't also make an OKF-compliance claim.
 │                              cron
 ├── blobs/
 │   ├── provider-payloads/       unchanged
-│   └── source-content/          unchanged — still holds the RAW bytes; fulltext.md
+│   └── source-content/          unchanged — still holds the RAW bytes; `fulltexts/<work_id>.md`
 │                              above is the new addressable projection of this
 ├── index/search/, staging/, quarantine/, state/, audit/
 │                              gitignored runtime/disposable state, confirmed against
@@ -1942,7 +1939,7 @@ per-type tables only imply.** Both are machine-generated, identified by
 being the exception" — resolved once, for both, not independently). Concretely:
 `id: str` (not `ulid` — `schema.py`'s `is_ulid()` check would reject a
 non-ULID-shaped `work_id`), and its value is the same `work_id` the file is
-named after (`digests/<work_id>.md`, `fulltext/<work_id>.md`) — the frontmatter
+named after (`digests/<work_id>.md`, `fulltexts/<work_id>.md`) — the frontmatter
 `id:` key stays present on every type, per OKF/schema uniformity, but its
 *kind* and *value source* differ for these two.
 
@@ -2137,7 +2134,7 @@ equivalent), matching OKF's own SHOULD-not-MUST stance on reserved headings.
    `mode: work` (G0-continued, already planned) — drop `citekey`/`project` per the
    table above rather than carrying them forward unreconciled.
 4. Add `fulltext.yaml` (`type: fulltext`, universal core only) alongside materializing
-   `fulltext/<work_id>.md` for real (already planned, Part 4).
+   `fulltexts/<work_id>.md` for real (already planned, Part 4).
 5. Document (not schema-enforce) the per-type body conventions above in
    `system/vocabulary.md` or wherever body conventions are already documented today.
 6. Build the Links-section-correspondence linter detector — proposed earlier in this
@@ -2239,7 +2236,7 @@ Two passes at this, worth showing rather than silently collapsing into one:
    doesn't need to touch.** Filing something a PI edits weekly under "the runtime
    layer" is a category error even when it's technically functional — the same kind of
    miscategorization this document has spent this whole exchange correcting elsewhere
-   (mislabeling `fulltext.md` as non-Concept, inventing `type: eval-fixture` instead of
+   (mislabeling `fulltexts/<work_id>.md` as non-Concept, inventing `type: eval-fixture` instead of
    checking the real `eval-task` value). "Nothing breaks" was never sufficient
    justification on its own; it has to be paired with "and nothing human depends on it
    living here."
@@ -2280,7 +2277,7 @@ still worth keeping — it's no longer emptied out, just thinned to its genuinel
 human-facing contents. **Vault root, final:** `index.md`, `AGENTS.md`,
 `AGENTS.override.md`, `bibliography.bib`, `troubleshooting.md`, `home.md`, `_nav.md`,
 `steering.md`, `system/{vocabulary.md, dashboards/}`, the bundle-root folders
-(`notes/`, `hubs/`, `projects/`, `digests/`, `fulltext/`), `inbox/`, and `.memoria/`
+(`notes/`, `hubs/`, `projects/`, `digests/`, `fulltexts/`), `inbox/`, and `.memoria/`
 itself (now also holding `templates/`, `eval/`, `patterns/_preamble.md`, `journal/`).
 
 ---
@@ -2593,7 +2590,7 @@ name here would collide two unrelated things in one document):
   `passages` rows, tag each row's `anchor` with the real page number straight
   from that existing per-page structure — not by writing new inline markup
   into the file, and not by regex-parsing `## Page N` back out of it.
-  `## Page N` headings stay in the persisted `fulltext/<work_id>.md` file
+  `## Page N` headings stay in the persisted `fulltexts/<work_id>.md` file
   purely as a human-reading convenience (Part 5's design), fully decoupled
   from how citation resolution actually works, matching how Docling/marker-
   style tools treat their Markdown export. Indexing these page-tagged rows
@@ -3415,12 +3412,12 @@ target shape.
    this document had not previously enumerated — named explicitly here rather
    than assumed to follow automatically from the schema/frontmatter edits
    above.** Part 4/6/7's target layout drops `works/`/`sources/` and adds
-   `digests/`/`fulltext/` as bundle roots in their own right (notes absorb
+   `digests/`/`fulltexts/` as bundle roots in their own right (notes absorb
    `source-note` per step 5). Every code site that hardcodes the *old* five —
    confirmed by direct grep this session, not assumed — must move in lockstep,
    or the schema/type rename lands while the file layer silently keeps writing
    to the old folders:
-   - `runtime/projections.py:13`'s `BUNDLE_ROOTS = ("works", "sources", "notes", "hubs", "projects")` → `("notes", "hubs", "projects", "digests", "fulltext")`.
+   - `runtime/projections.py:13`'s `BUNDLE_ROOTS = ("works", "sources", "notes", "hubs", "projects")` → `("notes", "hubs", "projects", "digests", "fulltexts")`.
    - `.memoria/schemas/folders.yaml`'s `bundle_roots:`/`categories:` — the second
      of the two source-of-truth places this document's own Part 1 names for the
      bundle boundary — same update, kept identical to `projections.py` per that
@@ -3429,7 +3426,7 @@ target shape.
      folder names from `folders.yaml` against its **own separate, hardcoded**
      inline set `{"works", "sources", "notes", "hubs", "projects"}` — updating
      `folders.yaml` alone does not reach this site; missing it would silently
-     filter `digests`/`fulltext` back out of search scope even after every
+     filter `digests`/`fulltexts` back out of search scope even after every
      other change above lands correctly.
    - `runtime/operations.py`'s digest-path construction (confirmed ~line 448,
      `digest_rel = f"works/{source_id}/digest.md"`) hardcodes the *old* nested

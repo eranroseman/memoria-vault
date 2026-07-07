@@ -1,9 +1,11 @@
 # 0.1.0-beta.1 Decisions
 
 This ledger captures release-time decisions as dated Y-statements. Historical
-notes, ADRs, and design documents are evidence; the implemented system and this
-release ledger are the decision-time record until the release closes into
-`design-history/`.
+notes, ADRs, design documents, and files under `resources/` are context only,
+not source of truth or justification. A decision is load-bearing only when the
+fact basis is stated here or in an active top-level release file. The
+implemented system and this release ledger are the decision-time record until
+the release closes into `design-history/`.
 
 ## 2026-07-05 - Living design history replaces ADRs
 
@@ -16,7 +18,7 @@ moved. Frozen release chapters preserve the facts, while `arcs.md` states the
 current released line and pending unreleased work.
 
 Pointers:
-- Evidence: `scratch/design-history/memoria-design-history-alpha.1-to-alpha.15.md`
+- Context: `scratch/design-history/memoria-design-history-alpha.1-to-alpha.15.md`
 - Implementation target: `design-history/`
 - Workflow target: `AGENTS.md`, `.agents/`
 
@@ -50,22 +52,44 @@ the wrapped command, unconditionally; (3) adversarial validation of the
 sandbox is an adaptive red-team process (attacks that adapt to the specific
 defense), not a one-time static attack-list pass.
 
-Because: independently-verified research found a real, named agent-sandbox
-escape defeated by exactly a path-alias bypassing a denylist match; found
-CVE-2024-32462 was caused by exactly the missing `--` delimiter in a
-different bwrap-wrapping caller (Flatpak); and found peer-reviewed evidence
-(NAACL 2025 Findings) that adaptive attacks defeat all eight tested static
-defenses against indirect prompt injection, so static-only validation would
-give false confidence.
+Because: Anthropic's Claude Code sandboxing write-up says effective agent
+sandboxing needs both filesystem and network isolation and names Linux
+`bubblewrap` plus macOS Seatbelt as OS-level primitives. CmdNeedle documents
+command-denylist fragility in terminal-agent settings, so Memoria's
+approved-command boundary must be a positive allowlist resolved to canonical
+paths. CVE-2024-32462 shows a real Flatpak/bubblewrap option-injection escape
+fixed by inserting `--` before attacker-controlled command arguments. Apple's
+own `sandbox-exec` man page marks it deprecated. The NAACL 2025 adaptive-attack
+paper bypassed all eight tested indirect-prompt-injection defenses, so
+static-only validation would give false confidence.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-sandbox-backend-research.md` (Findings:
-  the named path-alias escape; the CVE-2024-32462 root-cause finding; the
-  adaptive-attacks finding)
+- Primary/evidentiary sources:
+  [Anthropic Claude Code sandboxing](https://www.anthropic.com/engineering/claude-code-sandboxing);
+  [CmdNeedle](https://arxiv.org/abs/2606.15549);
+  [Flatpak CVE-2024-32462 advisory](https://github.com/flatpak/flatpak/security/advisories/GHSA-phv6-cpc2-2fgj);
+  [Apple `sandbox-exec` man page](https://keith.github.io/xcode-man-pages/sandbox-exec.1.html);
+  [Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents](https://arxiv.org/abs/2503.00061)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-sandbox-backend-research.md`
 - Implementation target: design.md §2.3 (the minimal sandbox), design §8 Q1
 - Workflow target: none yet — implementation not started
 
-Status: proposed, not yet ratified.
+Status: ratified for beta.1.
+
+## 2026-07-07 - Full text bundle root uses plural `fulltexts/`
+
+Y: The beta.1 full-text bundle root is `fulltexts/`, not `fulltext/`.
+
+Because: bundle roots use plural nouns (`notes/`, `hubs/`, `projects/`,
+`digests/`). The Concept type remains singular `fulltext`; only the folder root
+changes.
+
+Pointers:
+- Implementation target: `0.1.0-beta.1-design.md` §12.1/§12.3;
+  `data-structure-analysis.md` target layout and bundle-root sections
+
+Status: ratified for beta.1.
 
 ## 2026-07-06 - Coherent-slice policy confirmed with independent evidence (design §1.4)
 
@@ -82,11 +106,14 @@ directly confirming a budget-gated choice between the two, rather than a
 blanket preference either way, is the evidence-backed shape.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-coherent-slice-research.md` (Findings 1-2)
+- Primary/evidentiary source:
+  [SCAR: Semantic Continuity-Aware Retrieval for Efficient Context Expansion in RAG](https://arxiv.org/abs/2606.16661)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-coherent-slice-research.md` (Findings 1-2)
 - Implementation target: design.md §1.4
 - Workflow target: none — no change to the shipped policy
 
-Status: proposed, not yet ratified.
+Status: ratified for beta.1.
 
 ## 2026-07-06 - Exploration/diversity algorithm choice reconciled, not forked (design §4)
 
@@ -95,29 +122,34 @@ Y: The existing alpha.17 decision (`0.1.0-alpha.17/decisions.md`, 2026-07-06:
 **confirmed**, not superseded, by independent beta.1-scoped research. No
 competing beta.1 decision is created. One addition: the exploration
 channel's *value* (whether users act on diversity-surfaced candidates at
-all) is flagged as equally open as the algorithm choice, since no confirmed
-evidence anywhere in the literature shows users prefer diversity-oriented
-surfacing over pure relevance for exploration.
+all) is flagged as equally open as the algorithm choice, since the only direct
+user-preference evidence found in the original MMR paper is a five-user pilot,
+not a generalizable product claim.
 
-Because: independently-verified research confirms each leg of the existing
-call — MMR's cheapness and its original authors' own explore-then-focus
-workflow support it as baseline; facility-location's formal (1−1/e) coverage
-guarantee supports keeping it as the next tier behind a fixture gate, since
-the only evidence it beats MMR at surfacing overlooked material is one
-unreplicated single-author preprint; DPP's real computational cost relative
-to the other two remains unresolved in the literature itself, supporting
-deferral. A 1998 MMR user-study claim of user preference for diversity
-surfacing was explicitly refuted on adversarial review — no replacement
-evidence for that claim was found.
+Because: MMR's original paper defines a cheap user-tunable relevance/novelty
+tradeoff and explicitly recommends low-λ exploration followed by higher-λ
+focus. Facility-location inherits the classic greedy guarantee for monotone
+submodular maximization, but still needs a Memoria fixture win before adoption.
+DPPs are valid diversity models, but heavier than needed for the first
+beta.1 channel. The original MMR user study is only five users, so acted-on
+rate remains a measured beta.1 value question.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-exploration-diversity-research.md`
+- Primary/evidentiary sources:
+  [Carbonell & Goldstein 1998 MMR paper](https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf);
+  [Nemhauser, Wolsey & Fisher 1978](https://doi.org/10.1007/BF01588971);
+  [Kulesza & Taskar 2012](https://arxiv.org/abs/1207.6083)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-exploration-diversity-research.md`
   (Findings 1, 2, 5, 6; refuted claim #3)
 - Implementation target: alpha.17 PR-F design; design.md §7 (exploration
   acted-on rate measurement)
 - Workflow target: none yet — implementation not started
 
-Status: proposed, not yet ratified.
+Status: ratified as a gated beta.1 decision. MMR is the baseline;
+facility-location stays behind the fixture gate; DPP stays deferred; whether
+the researcher acts on the exploration channel remains a measured beta.1 value
+question.
 
 ## 2026-07-06 - Negation named as an explicit verification-check risk (design §4)
 
@@ -127,73 +159,155 @@ prose-plus-typed-evidence-set architecture (draft.md stays human-authored
 prose; the evidence-set marker is the structured layer) is confirmed as the
 right shape rather than an extraction-first pipeline.
 
-Because: independently-verified research found negation is a specific,
-repeated failure point for rigid/schema-driven methods across three
-independent domains (formal semantic parsing, NLG factuality metrics,
-clinical NLP) — the single most-replicated finding of this research round —
-and found that AlignScore's own authors, from an unrelated domain,
-independently recommend exactly Memoria's existing shape: structured/
-extractive components as a post-hoc explanation layer, not the substrate for
-composition or truth-judgment.
+Because: FactCC explicitly includes sentence-negation transformations in
+factual-consistency training data and reports that source/summary span
+extraction helps human verification. AlignScore supports chunk-level
+context/claim-sentence alignment as a factual-consistency checking pattern.
+NegBio treats negation and uncertainty as specialized extraction targets in
+clinical/radiology text. These sources support Memoria's shape: free prose
+remains the composition substrate; structured evidence sets verify and explain
+afterward.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-extract-compose-boundary-research.md`
+- Primary/evidentiary sources:
+  [FactCC](https://arxiv.org/abs/1910.12840);
+  [AlignScore](https://arxiv.org/abs/2305.16739);
+  [NegBio](https://arxiv.org/abs/1712.05898)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-extract-compose-boundary-research.md`
   (Findings 1, 5)
 - Implementation target: design.md §4 (verification checks, not yet
   specified in detail)
 - Workflow target: none yet — implementation not started
 
-Status: proposed, not yet ratified.
+Status: ratified for beta.1.
 
 ## 2026-07-06 - Seed-corpus licensing mechanics settled; source list still open (design §7)
 
 Y: Any seed-corpus source drawn from PMC will be filtered to the
 "Commercial Use Allowed" license tier specifically (never PMC's own
-`cc0[filter]`, which mixes in unrelated public-domain content, without a
-per-article check); any source drawn from arXiv will be included only if the
-author selected a redistribution-permissive license (CC BY or CC0)
+`cc0[filter]`, which is not the same decision as verifying a paper's own
+license statement); any source drawn from arXiv will be included only if the
+author selected a redistribution-permissive license (CC BY, CC BY-SA, or CC0)
 specifically — arXiv hosting a paper is never itself sufficient permission.
 The actual ~8 source list remains an open follow-up, not resolved by this
 decision.
 
-Because: independently-verified research confirmed these licensing
-mechanics directly against PMC's and arXiv's own primary documentation, but
-found no specific candidate papers, and found DOAJ and Semantic Scholar were
-never reached (both dedicated search angles failed outright on rate limits)
-— the mechanics are settled enough to constrain a future selection pass, but
-the pass itself has not happened.
+Because: PMC says the Open Access Subset has three terms-of-use groups,
+including Commercial Use Allowed for CC0, CC BY, CC BY-SA, and CC BY-ND, and
+that license terms vary by article. PMC's copyright notice says users are
+responsible for article-level license compliance. arXiv says submitters choose
+the article license; except for CC0, original copyright holders retain ownership
+after posting, and arXiv's non-exclusive distribution license grants arXiv
+distribution rights while limiting reuse by others. The mechanics are settled
+enough to constrain a future selection pass, but the source-selection pass
+itself has not happened.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-seed-corpus-licensing-research.md`
+- Primary/evidentiary sources:
+  [PMC Open Access Subset](https://pmc.ncbi.nlm.nih.gov/tools/openftlist/);
+  [PMC Copyright Notice](https://pmc.ncbi.nlm.nih.gov/about/copyright/);
+  [arXiv License Information](https://info.arxiv.org/help/license/index.html);
+  [arXiv non-exclusive distribution license](https://arxiv.org/licenses/nonexclusive-distrib/1.0/license.html)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-seed-corpus-licensing-research.md`
 - Implementation target: design.md §7 (the ~8-source corpus)
 - Workflow target: a follow-up research pass naming specific candidates,
   not yet scheduled
 
-Status: proposed, not yet ratified.
+Status: ratified for licensing mechanics only. The actual seed-source list
+remains open.
 
-## 2026-07-06 - Retrieval-fusion decision deferred to a spike, not a literature verdict (requirements §6 Q5)
+## 2026-07-06 - Retrieval-fusion default deferred to a spike, not a literature verdict (requirements §6 Q5)
 
-Y: Memoria will not decide dense/hybrid retrieval adoption from literature
-review. A runnable spike protocol is committed instead, with a concrete,
-pre-registered adoption bar to be fixed *before* the spike runs, not fit to
-its results afterward. The dense-vs-BM25-only verdict itself is explicitly
-deferred to that spike's outcome.
+Y: Memoria will not decide dense/hybrid retrieval *default activation* from
+literature review. The query substrate may be built per
+`query-mechanism-analysis.md`, but replacing the BM25 default requires a
+runnable spike with a concrete, pre-registered adoption bar fixed *before* the
+spike runs, not fit to its results afterward. The dense-vs-BM25-only default
+verdict itself is explicitly deferred to that spike's outcome.
 
-Because: independently-verified research found the literature contains no
-verified, direct, quantified comparison of hybrid dense+sparse RRF fusion
-against BM25-only — every claim attempting that specific comparison was
-refuted on adversarial review — while confirming BM25 is independently a
-strong, hard-to-beat zero-shot baseline. This question is empirical, not
-resolvable by more research, matching the project's existing "each tier
-must beat a declared cheap baseline or it is disabled" discipline.
+Because: BEIR supports BM25 as a robust zero-shot baseline and shows
+reranking/late-interaction methods can outperform it on average at higher
+computational cost, but it is not a Memoria-corpus result and does not settle
+sqlite-vec/RRF activation here. This question is empirical, matching the
+project's existing "each tier must beat a declared cheap baseline or it is
+disabled" discipline.
 
 Pointers:
-- Evidence: `resources/0.1.0-beta.1-retrieval-fusion-research.md`;
-  protocol: `resources/0.1.0-beta.1-retrieval-fusion-spike-protocol.md`
+- Governing query mechanics: `query-mechanism-analysis.md`
+- Primary/evidentiary source:
+  [BEIR](https://arxiv.org/abs/2104.08663)
+- Reference archive, non-authoritative:
+  `resources/0.1.0-beta.1-retrieval-fusion-research.md`;
+  `resources/0.1.0-beta.1-retrieval-fusion-spike-protocol.md`
 - Implementation target: `main/src/memoria_vault/runtime/retrieval_substrate.py`
   (`SELECTED_RETRIEVAL_SUBSTRATE`, `RETRIEVAL_SUBSTRATE_VERDICT`)
 - Workflow target: the spike itself — not yet run
 
-Status: proposed, not yet ratified.
+Status: ratified as a spike/activation gate. BM25 remains the default until the
+pre-registered spike clears the adoption bar.
 
-Status: accepted for the workflow-audit implementation.
+## 2026-07-07 - Project slug folders are OKF-compliant nested bundles
+
+Y: beta.1 may keep `projects/<slug>/` as the project folder shape. Each project
+subfolder is a nested OKF knowledge bundle; the slug participates in the
+path-derived OKF Concept ID and is not an OKF exception.
+
+Because: the OKF v0.1 draft defines a Concept ID as the concept file path within
+the bundle minus `.md`, allows bundles to be subdirectories, and allows
+`index.md` at any directory level. Its conformance bar requires parseable YAML
+frontmatter and a non-empty `type` for non-reserved `.md` files; it does not
+require ULID folder names. Therefore `projects/my-topic/project.md` is
+OKF-compliant with Concept ID `projects/my-topic/project`. Any Memoria-internal
+`id` field is producer-defined metadata, not the OKF identity.
+
+Pointers:
+- OKF v0.1 draft: Concept ID definition, bundle distribution, nested
+  `index.md`, conformance §9
+- Implementation target: `0.1.0-beta.1-design.md` §8/§9/§12;
+  `data-structure-analysis.md` project-folder sections
+
+Status: ratified for beta.1.
+
+## 2026-07-07 - LLM API call sites require empirical eval gates
+
+Y: Every production-affecting LLM API call site in beta.1 must have a versioned
+call-site contract and an empirical eval gate before it can be enabled or
+changed. The contract records `call_site_id`, purpose, prompt template version,
+model/provider, provider profile, runtime mode, decoding settings,
+context/retrieval policy, tool permissions, schema/validator, and cost/latency
+budget. Memoria has two LLM runtime modes: `production`, which may use only the
+promoted production profile and may write to the real workspace; and `test`,
+which uses an isolated workspace plus a local API endpoint or budget-capped cheap
+remote profile. Candidate prompt/model/config changes remain shadow-only until a
+frozen eval suite compares them to the active baseline and an explicit promotion
+record accepts the result.
+
+Because: official and open evaluation references converge on task-specific test
+inputs, criteria/metrics, version comparison, and result inspection before
+promotion. Prompt wording, model choice, context construction, and sampling
+settings materially affect observed LLM behavior, so treating them as untested
+configuration would violate beta.1's facts-only and empirical-gate discipline.
+LLM-as-judge may be useful for scalable diagnostics, but published work names
+position, verbosity, and self-enhancement biases, so it cannot be the sole
+promotion authority for truth, grounding, or blocker metrics. The
+production/test split follows the same config discipline: deploy-varying values
+belong in runtime configuration, not hard-coded behavior. Test-mode local or
+cheap remote runs make regression checks cheap; they are production-quality
+evidence only when the same provider profile is the intended production target
+and the promotion gate passes.
+
+Pointers:
+- Primary/evidentiary sources:
+  [OpenAI evals guide](https://platform.openai.com/docs/guides/evals);
+  [Anthropic evaluation tool](https://docs.anthropic.com/en/docs/test-and-evaluate/eval-tool);
+  [Google model evaluation docs](https://cloud.google.com/vertex-ai/generative-ai/docs/models/evaluate-models);
+  [OpenAI simple-evals](https://github.com/openai/simple-evals);
+  [Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685);
+  [The Twelve-Factor App: Config](https://12factor.net/config)
+- Implementation target: `0.1.0-beta.1-design.md` §6, §7, §8.2, §8.4, §11.7;
+  `0.1.0-beta.1-requirements.md` §4, §5, §6, §7
+- Workflow target: eval runner and ledger schema — not yet implemented
+
+Status: ratified for beta.1.
