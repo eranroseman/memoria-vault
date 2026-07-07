@@ -217,4 +217,4 @@ WHERE check_status = 'checked'
     store = 'db'
     OR (store = 'file' AND materialization_status = 'materialized')
   );
-PRAGMA user_version = 6;
+PRAGMA user_version = 7;

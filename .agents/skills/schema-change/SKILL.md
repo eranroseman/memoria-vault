@@ -48,6 +48,10 @@ Read:
    - Proposal, verification, and work-prompt card shapes remain distinct.
 5. Decide whether migration is needed. A breaking schema or folder change
    requires a release decision entry, migration guidance, and tests for old vault state.
+   Once installed vaults may contain durable rows, every table-shape change to
+   existing rows ships as a numbered `ALTER` migration; delete-and-rebuild is
+   allowed only when the release decision explicitly records no durable vault
+   data must be preserved.
 6. Run focused schema tests from `test-selection.md`, relevant component tests,
    and the full gate before PR handoff.
 

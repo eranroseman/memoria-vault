@@ -3,28 +3,27 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 
 
-def test_evidence_sets_schema_lands_at_user_version_6(tmp_path: Path) -> None:
+def test_evidence_sets_schema_lands_at_current_user_version(tmp_path: Path) -> None:
     with state.connect(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
         assert conn.execute(
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'evidence_sets'"
         ).fetchone()
 
 
-def test_v5_schema_accepts_additive_evidence_sets_table(tmp_path: Path) -> None:
+def test_legacy_v5_schema_is_unsupported(tmp_path: Path) -> None:
     db = tmp_path / state.DB_REL
     db.parent.mkdir(parents=True)
     with sqlite3.connect(db) as conn:
         conn.execute("PRAGMA user_version = 5")
 
-    with state.connect(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 6
-        assert conn.execute(
-            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'evidence_sets'"
-        ).fetchone()
+    with pytest.raises(RuntimeError, match="unsupported Memoria DB schema version: 5"):
+        state.connect(tmp_path)
 
 
 def test_rebuild_evidence_sets_derives_rows_from_markers(tmp_path: Path) -> None:
