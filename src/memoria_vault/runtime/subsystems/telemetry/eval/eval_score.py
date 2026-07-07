@@ -81,7 +81,7 @@ def catalog_citekeys(vault: Path) -> set[str]:
             keys.add(p.parent.name)
         else:
             keys.add(p.stem)
-        for field in ("citekey", "source_id"):
+        for field in ("citekey", "work_id"):
             value = fm.get(field)
             if value:
                 keys.add(str(value))

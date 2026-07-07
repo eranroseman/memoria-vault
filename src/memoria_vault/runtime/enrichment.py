@@ -55,7 +55,7 @@ def provider_allowlist_issues(config: dict[str, Any], policy: dict[str, Any]) ->
 
 def enrich_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     *,
     policy: dict[str, Any],
     provider_payloads: dict[str, Any] | None = None,
@@ -63,9 +63,9 @@ def enrich_source(
     run_id: str | None = None,
 ) -> dict[str, Any]:
     vault = Path(vault)
-    source = state.catalog_source(vault, source_id)
+    source = state.catalog_source(vault, work_id)
     if source is None:
-        raise ValueError(f"unknown catalog source: {source_id}")
+        raise ValueError(f"unknown catalog source: {work_id}")
     doi = _doi(source)
     if not doi:
         raise ValueError("enrich-source requires a DOI catalog identifier")
@@ -74,14 +74,14 @@ def enrich_source(
     issues = provider_allowlist_issues(config, policy)
     if issues:
         raise PermissionError("; ".join(issues))
-    run_id = run_id or f"enrich-source:{source['source_id']}:{_hash_text(doi)}"
+    run_id = run_id or f"enrich-source:{source['work_id']}:{_hash_text(doi)}"
     fixture_payloads = provider_payloads if isinstance(provider_payloads, dict) else {}
     required = _required_providers(config, "doi")
     optional = _optional_providers(config, "doi", fixture_payloads)
     state.start_enrichment_run(
         vault,
         run_id=run_id,
-        source_id=source["source_id"],
+        work_id=source["work_id"],
         required_provider_policy={"branch": "doi", "required": required, "optional": optional},
     )
     append_journal_event(
@@ -140,7 +140,7 @@ def enrich_source(
         state.finish_enrichment_run(vault, run_id, "needs_human")
         finding = record_integrity_check(
             vault,
-            f"catalog/sources/{source['source_id']}",
+            f"catalog/sources/{source['work_id']}",
             check="source-enrichment",
             status="failed",
             reason=reason,
@@ -157,7 +157,7 @@ def enrich_source(
         )
         commit = commit_writer_changes(
             vault,
-            f"flag source enrichment {source['source_id']}",
+            f"flag source enrichment {source['work_id']}",
             [attention_path],
             machine=machine,
         )
@@ -171,9 +171,9 @@ def enrich_source(
 
     canonical = _merge_doi_source(source, payloads, payload_hashes)
     state.replace_external_ids(vault, canonical["external_ids"])
-    state.replace_field_provenance(vault, source["source_id"], canonical["provenance"])
-    graph_edges = _first_order_work_graph(source["source_id"], payloads)
-    state.replace_work_graph_edges(vault, source["source_id"], graph_edges)
+    state.replace_field_provenance(vault, source["work_id"], canonical["provenance"])
+    graph_edges = _first_order_work_graph(source["work_id"], payloads)
+    state.replace_work_graph_edges(vault, source["work_id"], graph_edges)
     text_status = str(source.get("text_status") or "metadata-only")
     content_hash = str(source.get("normalized_text_sha256") or "")
     content_path = str(source.get("content_path") or "")
@@ -183,7 +183,7 @@ def enrich_source(
             acquired_text = _fetch_discovered_full_text(policy, payloads)
         if acquired_text:
             content_hash, content_path = _write_acquired_text_blob(
-                vault, source["source_id"], acquired_text
+                vault, source["work_id"], acquired_text
             )
             text_status = "full-text"
     blocked_status = _blocked_status(canonical)
@@ -194,7 +194,7 @@ def enrich_source(
     provider_coverage = _provider_coverage(canonical)
     state.upsert_catalog_record(
         vault,
-        source_id=source["source_id"],
+        work_id=source["work_id"],
         title=canonical["title"],
         description=source.get("description", ""),
         concept_path=source["concept_path"],
@@ -213,7 +213,7 @@ def enrich_source(
     )
     state.replace_work_aspects(
         vault,
-        source["source_id"],
+        source["work_id"],
         derive_work_aspect_rows(
             canonical["csl_json"],
             _source_content_text(vault, content_path),
@@ -226,7 +226,7 @@ def enrich_source(
         check = "source-retraction" if blocked_status == "contested" else "source-enrichment"
         finding = record_integrity_check(
             vault,
-            f"catalog/sources/{source['source_id']}",
+            f"catalog/sources/{source['work_id']}",
             check=check,
             status="failed",
             reason=canonical["block_reason"],
@@ -243,7 +243,7 @@ def enrich_source(
         )
         commit = commit_writer_changes(
             vault,
-            f"flag source enrichment {source['source_id']}",
+            f"flag source enrichment {source['work_id']}",
             [attention_path],
             machine=machine,
         )
@@ -259,7 +259,7 @@ def enrich_source(
         state.finish_enrichment_run(vault, run_id, "needs_human")
         finding = record_integrity_check(
             vault,
-            f"catalog/sources/{source['source_id']}",
+            f"catalog/sources/{source['work_id']}",
             check="source-full-text",
             status="failed",
             reason=full_text_block,
@@ -275,7 +275,7 @@ def enrich_source(
         )
         commit = commit_writer_changes(
             vault,
-            f"flag source full text {source['source_id']}",
+            f"flag source full text {source['work_id']}",
             [attention_path],
             machine=machine,
         )
@@ -314,7 +314,7 @@ def enrich_source(
     )
     commit = commit_writer_changes(
         vault,
-        f"enrich source {source['source_id']}",
+        f"enrich source {source['work_id']}",
         [references_path, *candidate_paths],
         machine=machine,
     )
@@ -335,7 +335,7 @@ def replay_enrichment_run(vault: Path, run_id: str) -> dict[str, Any]:
     vault = Path(vault)
     with state.connect(vault) as conn:
         run = conn.execute(
-            "SELECT source_id FROM enrichment_runs WHERE run_id = ?",
+            "SELECT work_id FROM enrichment_runs WHERE run_id = ?",
             (run_id,),
         ).fetchone()
         rows = conn.execute(
@@ -349,14 +349,14 @@ def replay_enrichment_run(vault: Path, run_id: str) -> dict[str, Any]:
         ).fetchall()
     if run is None:
         raise RuntimeError(f"unknown enrichment run: {run_id}")
-    source = state.catalog_source(vault, str(run["source_id"]))
+    source = state.catalog_source(vault, str(run["work_id"]))
     if source is None:
-        raise RuntimeError(f"unknown catalog source: {run['source_id']}")
+        raise RuntimeError(f"unknown catalog source: {run['work_id']}")
     payloads = {str(row["provider"]): _read_provider_blob(vault, dict(row)) for row in rows}
     if not payloads:
         raise RuntimeError(f"no provider payload blobs recorded for run: {run_id}")
     return {
-        "source_id": source["source_id"],
+        "work_id": source["work_id"],
         "provider_payloads": payloads,
         "normalized": {
             provider: _normalize_provider(provider, payload)
@@ -367,7 +367,7 @@ def replay_enrichment_run(vault: Path, run_id: str) -> dict[str, Any]:
             payloads,
             {str(row["provider"]): str(row["raw_hash"]) for row in rows},
         ),
-        "graph_edges": _first_order_work_graph(source["source_id"], payloads),
+        "graph_edges": _first_order_work_graph(source["work_id"], payloads),
     }
 
 
@@ -414,11 +414,11 @@ def _write_attention_flag(
     finding: str,
     evidence: str,
 ) -> str:
-    source_id = str(source["source_id"])
-    title = f"Enrichment blocked for {source_id}"
-    target = f"catalog/sources/{source_id}"
+    work_id = str(source["work_id"])
+    title = f"Enrichment blocked for {work_id}"
+    target = f"catalog/sources/{work_id}"
     rel = normalize_path(
-        f"inbox/flag-enrichment-{safe_filename(source_id)}-{safe_filename(check)}.md"
+        f"inbox/flag-enrichment-{safe_filename(work_id)}-{safe_filename(check)}.md"
     )
     path = vault / rel
     if path.exists():
@@ -453,7 +453,7 @@ def _write_discovery_candidate(
     target_title = str(edge.get("target_title") or target_id)
     rel = normalize_path(
         "inbox/candidate-work-"
-        f"{safe_filename(str(source['source_id']))}-"
+        f"{safe_filename(str(source['work_id']))}-"
         f"{safe_filename(str(edge['relation_type']))}-"
         f"{safe_filename(target_id)}.md"
     )
@@ -466,7 +466,7 @@ def _write_discovery_candidate(
             "projection": "attention",
             "attention_kind": "candidate",
             "attention_status": "open",
-            "target": f"catalog/sources/{source['source_id']}",
+            "target": f"catalog/sources/{source['work_id']}",
             "discovered_work_id": target_id,
             "relation_type": str(edge["relation_type"]),
             "raised_by": raised_by,
@@ -475,7 +475,7 @@ def _write_discovery_candidate(
         },
         (
             f"# Candidate Work\n\n{target_title}\n\n# Evidence\n\n"
-            f"{source['source_id']} {edge['relation_type']} this Work in provider metadata.\n"
+            f"{source['work_id']} {edge['relation_type']} this Work in provider metadata.\n"
         ),
     )
     write_text_durable(path, text, create_parent=True)
@@ -731,12 +731,12 @@ def _location_value(payload: dict[str, Any], key: str) -> Any:
     return None
 
 
-def _write_acquired_text_blob(vault: Path, source_id: str, text: str) -> tuple[str, str]:
+def _write_acquired_text_blob(vault: Path, work_id: str, text: str) -> tuple[str, str]:
     normalized = text.strip() + "\n"
     content_hash = _hash_text(normalized)
     rel = normalize_path(
         ".memoria/blobs/source-content/"
-        f"{safe_filename(source_id)}/full-text/{content_hash.removeprefix('sha256:')}.txt"
+        f"{safe_filename(work_id)}/full-text/{content_hash.removeprefix('sha256:')}.txt"
     )
     path = vault / rel
     if not path.exists():
@@ -767,7 +767,7 @@ def _merge_doi_source(
     openalex_title = str(openalex.get("title") or "").strip()
     title_conflict = _title_conflict(title, openalex)
     csl_json = {
-        "id": source.get("citekey") or source["source_id"],
+        "id": source.get("citekey") or source["work_id"],
         "type": crossref.get("type") or "article-journal",
         "title": title,
         "author": _crossref_authors(crossref),
@@ -828,9 +828,9 @@ def _merge_doi_source(
         ),
     ]
     external_ids = [
-        _external_id("source", source["source_id"], "doi", doi, "crossref"),
+        _external_id("source", source["work_id"], "doi", doi, "crossref"),
         *(
-            [_external_id("source", source["source_id"], "openalex", openalex_id, "openalex")]
+            [_external_id("source", source["work_id"], "openalex", openalex_id, "openalex")]
             if openalex_id
             else []
         ),
@@ -838,7 +838,7 @@ def _merge_doi_source(
             [
                 _external_id(
                     "source",
-                    source["source_id"],
+                    source["work_id"],
                     "semanticscholar",
                     semantic_scholar_id,
                     "semanticscholar",
@@ -866,7 +866,7 @@ def _merge_doi_source(
 
 
 def _first_order_work_graph(
-    source_id: str, payloads: dict[str, dict[str, Any]]
+    work_id: str, payloads: dict[str, dict[str, Any]]
 ) -> list[dict[str, Any]]:
     rows: dict[tuple[str, str], dict[str, Any]] = {}
     crossref = _crossref_message(payloads.get("crossref", {}))
@@ -991,7 +991,7 @@ def _first_order_work_graph(
                     target_id.rsplit("/", 1)[-1],
                     "",
                     "openalex",
-                    {"id": target_id, "source_work": source_id},
+                    {"id": target_id, "source_work": work_id},
                 )
 
     semantic_scholar = payloads.get("semanticscholar", {})

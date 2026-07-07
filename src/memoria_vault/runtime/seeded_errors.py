@@ -196,7 +196,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
                 "description": "Injected structural error.",
                 "body": "This note intentionally points at a missing source.",
                 "claim_text": "This claim lacks resolving evidence.",
-                "source_id": "catalog/sources/missing-source",
+                "work_id": "catalog/sources/missing-source",
                 "evidence_set": ["catalog/sources/missing-source"],
             },
             {
@@ -204,7 +204,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
                 "description": "Injected structural error.",
                 "body": "This note intentionally points at an unchecked source.",
                 "claim_text": "This claim cites evidence that is not checked.",
-                "source_id": "catalog/sources/unchecked-source",
+                "work_id": "catalog/sources/unchecked-source",
                 "evidence_set": ["catalog/sources/unchecked-source"],
             },
             {
@@ -212,7 +212,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
                 "description": "Injected blind-class error.",
                 "body": "This note intentionally treats a retracted source as current evidence.",
                 "claim_text": "This claim presents stale evidence as current.",
-                "source_id": "catalog/sources/stale-source",
+                "work_id": "catalog/sources/stale-source",
                 "evidence_set": ["catalog/sources/stale-source"],
             },
             {
@@ -236,7 +236,7 @@ def prepare_seeded_error_fixture(vault: Path, template_root: Path) -> dict[str, 
                 "description": "Injected provenance/risk checkpoint case.",
                 "body": "This note depends on a fresh checked source that is not corroborated yet.",
                 "claim_text": "The fresh source may change the project direction.",
-                "source_id": "catalog/sources/fresh-uncorroborated",
+                "work_id": "catalog/sources/fresh-uncorroborated",
                 "evidence_set": ["catalog/sources/fresh-uncorroborated"],
             },
             {
@@ -313,11 +313,11 @@ def _checked_poisoned_source(vault: Path) -> dict[str, Any]:
     )
 
 
-def _set_catalog_check_status(vault: Path, source_id: str, check_status: str) -> None:
+def _set_catalog_check_status(vault: Path, work_id: str, check_status: str) -> None:
     with state.connect(vault) as conn:
         conn.execute(
-            "UPDATE catalog_sources SET check_status = ? WHERE source_id = ?",
-            (check_status, source_id),
+            "UPDATE catalog_sources SET check_status = ? WHERE work_id = ?",
+            (check_status, work_id),
         )
         conn.execute(
             """
@@ -325,16 +325,16 @@ def _set_catalog_check_status(vault: Path, source_id: str, check_status: str) ->
             VALUES (?, ?)
             ON CONFLICT(concept_id) DO UPDATE SET check_status = excluded.check_status
             """,
-            (f"catalog/sources/{source_id}", check_status),
+            (f"catalog/sources/{work_id}", check_status),
         )
 
 
-def _set_catalog_stale(vault: Path, source_id: str) -> None:
-    if state.catalog_source(vault, source_id) is None:
+def _set_catalog_stale(vault: Path, work_id: str) -> None:
+    if state.catalog_source(vault, work_id) is None:
         return
     state.set_concept_flag(
         vault,
-        f"catalog/sources/{source_id}",
+        f"catalog/sources/{work_id}",
         "stale",
         reason="seeded retraction fixture",
     )
@@ -353,7 +353,6 @@ def _checked_broken_digest(vault: Path) -> dict[str, Any]:
                 "work_id": "missing-digest-source",
                 "tags": [],
                 "links": {},
-                "source_id": "catalog/sources/missing-digest-source",
                 "evidence_set": ["catalog/sources/missing-digest-source"],
             },
             "Seeded missing digest evidence",
@@ -381,7 +380,6 @@ def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
                 "work_id": "seed-source",
                 "tags": [],
                 "links": {},
-                "source_id": "catalog/sources/seed-source",
                 "evidence_set": ["catalog/sources/seed-source"],
                 "contradictions": ["works/missing-contradiction-target/digest.md"],
             },
@@ -410,7 +408,7 @@ def _checked_false_link_note(vault: Path) -> dict[str, Any]:
                 "title": "Seeded false link",
                 "description": "Injected structural Link target error.",
                 "tags": [],
-                "source_id": "catalog/sources/seed-source",
+                "work_id": "catalog/sources/seed-source",
                 "links": {"supports": ["notes/missing-linked-note.md"]},
             },
             "Seeded false link",

@@ -13,7 +13,7 @@ optional:
   archived: bool
   citekey: str
   description: str
-  source_type: str
+  item_type: str
   topic: list
   project: list
   x: map

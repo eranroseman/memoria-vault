@@ -299,7 +299,7 @@ def _project_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) 
     promote.add_argument("project_path")
     promote.add_argument("--title", required=True)
     promote.add_argument("--passage", required=True)
-    promote.add_argument("--source-id", default="")
+    promote.add_argument("--work-id", default="")
     promote.set_defaults(handler=_cmd_project_promote)
     export = project_sub.add_parser("export")
     _common(export)
@@ -773,10 +773,10 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
         return _emit(_enqueue_and_run(args, "capture-url-source", payload), args)
     if args.pdf:
         path = Path(args.pdf)
-        source_id = path.stem
+        work_id = path.stem
         payload = {
-            "source_id": source_id,
-            "title": args.title or source_id,
+            "work_id": work_id,
+            "title": args.title or work_id,
             "description": args.description or f"Captured PDF: {path.name}",
             "raw_pdf_base64": base64.b64encode(path.read_bytes()).decode(),
             "raw_filename": path.name,
@@ -789,7 +789,7 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
     raw_text = None
     raw_filename = "source.txt"
     resource = args.url or (f"https://doi.org/{args.doi}" if args.doi else "")
-    source_id = _work_id(args)
+    work_id = _work_id(args)
     identifiers = {"doi": args.doi} if args.doi else {}
     if args.file:
         path = Path(args.file)
@@ -804,7 +804,7 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
             args,
             "capture-source",
             {
-                "source_id": source_id,
+                "work_id": work_id,
                 "title": title,
                 "description": description,
                 "content_text": text,
@@ -812,7 +812,7 @@ def _cmd_work_add(args: argparse.Namespace) -> int:
                 "raw_filename": raw_filename,
                 "resource": resource,
                 "identifiers": identifiers,
-                "csl_json": _csl_json(source_id, title, args.doi, resource),
+                "csl_json": _csl_json(work_id, title, args.doi, resource),
                 "text_status": text_status,
             },
         ),
@@ -856,7 +856,7 @@ def _cmd_work_import(args: argparse.Namespace) -> int:
 
 
 def _cmd_work_enrich(args: argparse.Namespace) -> int:
-    payload: dict[str, Any] = {"source_id": args.work_id}
+    payload: dict[str, Any] = {"work_id": args.work_id}
     if args.provider_replay:
         payload["provider_payloads"] = _read_provider_replay(Path(args.provider_replay))
     return _emit(_enqueue_and_run(args, "enrich-source", payload), args)
@@ -868,7 +868,7 @@ def _cmd_work_digest(args: argparse.Namespace) -> int:
             args,
             "compile-source-digest",
             {
-                "source_id": args.work_id,
+                "work_id": args.work_id,
                 "hub_topics": args.hub_topic or DEFAULT_DIGEST_TOPICS,
                 "mode": args.mode,
             },
@@ -892,7 +892,7 @@ def _cmd_work_update(args: argparse.Namespace) -> int:
     workspace = _workspace(args)
     if state.catalog_source(workspace, args.work_id) is None:
         return _fail(f"work not found: {args.work_id}", json_output=args.json)
-    payload = {"source_id": args.work_id, **_present_updates(args)}
+    payload = {"work_id": args.work_id, **_present_updates(args)}
     return _emit(_enqueue_and_run(args, "update-work", payload), args)
 
 
@@ -1046,7 +1046,7 @@ def _cmd_project_promote(args: argparse.Namespace) -> int:
                 "project_path": args.project_path,
                 "title": args.title,
                 "passage": args.passage,
-                "source_id": args.source_id,
+                "work_id": args.work_id,
             },
         ),
         args,
@@ -1646,17 +1646,17 @@ def _queue_import_enrichment(
         return None
     if not payload_doi(payload):
         return None
-    source_id = str(result.get("source_id") or "").strip()
-    if not source_id:
+    work_id = str(result.get("work_id") or "").strip()
+    if not work_id:
         return None
     workspace = _workspace(args)
     return enqueue_operation(
         workspace,
         "enrich-source",
-        payload={"source_id": source_id},
-        idempotency_key=f"enrich-{source_id}",
-        input_refs=[{"id": source_id, "kind": "catalog_source"}],
-        primary_target=f"catalog/sources/{source_id}",
+        payload={"work_id": work_id},
+        idempotency_key=f"enrich-{work_id}",
+        input_refs=[{"id": work_id, "kind": "catalog_source"}],
+        primary_target=f"catalog/sources/{work_id}",
         causal_refs=[str(output["job"]["job_id"])],
         provenance={"surface": "memoria-cli", "command": "work-import"},
         schedule_id=args.schedule_id,
@@ -2025,8 +2025,8 @@ def _work_id(args: argparse.Namespace) -> str:
     return path.stem
 
 
-def _csl_json(source_id: str, title: str, doi: str | None, resource: str) -> dict[str, Any]:
-    row = {"id": source_id, "type": "article-journal", "title": title}
+def _csl_json(work_id: str, title: str, doi: str | None, resource: str) -> dict[str, Any]:
+    row = {"id": work_id, "type": "article-journal", "title": title}
     if doi:
         row["DOI"] = doi
     if resource:
@@ -2068,7 +2068,7 @@ def _operation_payload(args: argparse.Namespace) -> dict[str, Any]:
 
 def _interview_payload(args: argparse.Namespace) -> dict[str, Any]:
     payload = {
-        "source_id": args.work_id,
+        "work_id": args.work_id,
         "prompt": args.prompt,
         "response": args.response or "",
         "project_id": args.project_id,
@@ -2252,13 +2252,11 @@ def _workspace_export_payload(workspace: Path) -> dict[str, Any]:
                 "SELECT concept_type, COUNT(*) AS count FROM concepts GROUP BY concept_type"
             )
         }
-        journal_events = conn.execute("SELECT COUNT(*) AS count FROM journal_events").fetchone()[
-            "count"
-        ]
+        event_log = conn.execute("SELECT COUNT(*) AS count FROM event_log").fetchone()["count"]
     return {
         "requests": requests,
         "concepts": concepts,
-        "journal_events": journal_events,
+        "event_log": event_log,
         "operations": len(engine_api.read_operations(workspace)["operations"]),
         "attention_open": len(
             [

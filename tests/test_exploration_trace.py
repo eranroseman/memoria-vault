@@ -30,7 +30,7 @@ def test_gap_and_project_argument_operations_are_read_only_capabilities() -> Non
 def test_exploration_channel_items_carry_traceable_why(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
     )

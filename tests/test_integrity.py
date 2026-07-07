@@ -80,24 +80,24 @@ def sync_file_verdicts(vault: Path) -> None:
             state.set_concept_verdict(vault, rel, str(status))
 
 
-def catalog_db_source(vault: Path, source_id: str, content_text: str) -> str:
-    content_rel = f".memoria/blobs/source-content/{source_id}/content.txt"
+def catalog_db_source(vault: Path, work_id: str, content_text: str) -> str:
+    content_rel = f".memoria/blobs/source-content/{work_id}/content.txt"
     content_path = vault / content_rel
     content_path.parent.mkdir(parents=True, exist_ok=True)
     content_path.write_text(f"{content_text.strip()}\n", encoding="utf-8")
     state.upsert_catalog_record(
         vault,
-        source_id=source_id,
+        work_id=work_id,
         title="DB Source",
         description="A SQLite-only checked source.",
-        citekey=f"{source_id}2026",
-        csl_json={"id": f"{source_id}2026", "title": "DB Source"},
+        citekey=f"{work_id}2026",
+        csl_json={"id": f"{work_id}2026", "title": "DB Source"},
         provider_coverage="full",
         text_status="full-text",
         check_status="checked",
         content_path=content_rel,
     )
-    return f"catalog/sources/{source_id}"
+    return f"catalog/sources/{work_id}"
 
 
 def test_integrity_check_routes_shadow_before_active_flags(tmp_path: Path) -> None:
@@ -140,7 +140,7 @@ def test_evidence_integrity_flags_seeded_missing_source(tmp_path: Path) -> None:
         "type: note\n"
         "check_status: checked\n"
         "title: Bad evidence\n"
-        "source_id: catalog/sources/missing\n"
+        "work_id: catalog/sources/missing\n"
         "evidence_set:\n"
         "  - catalog/sources/missing\n"
         "---\n"
@@ -170,7 +170,7 @@ def test_evidence_integrity_rejects_removed_source_markdown_without_catalog_row(
         "type: source\n"
         "check_status: checked\n"
         "title: Removed Source\n"
-        "source_id: removed\n"
+        "work_id: removed\n"
         "---\n"
         "# Removed Source\n",
         encoding="utf-8",
@@ -208,7 +208,7 @@ def test_evidence_integrity_accepts_checked_db_work_id_source(tmp_path: Path) ->
         "type: note\n"
         "check_status: checked\n"
         "title: DB evidence\n"
-        f"source_id: {source_ref}\n"
+        f"work_id: {source_ref}\n"
         "evidence_set:\n"
         f"  - {source_ref}\n"
         "---\n"
@@ -227,7 +227,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="retracted",
+        work_id="retracted",
         title="Retracted",
         description="Retracted source.",
         citekey="retracted2026",
@@ -247,7 +247,7 @@ def test_evidence_integrity_flags_retracted_checked_source(tmp_path: Path) -> No
         "type: note\n"
         "check_status: checked\n"
         "title: Stale\n"
-        "source_id: catalog/sources/retracted\n"
+        "work_id: catalog/sources/retracted\n"
         "---\n"
         "# Stale\n",
         encoding="utf-8",
@@ -365,7 +365,7 @@ def test_provenance_checkpoint_flags_synthesis_from_partial_source(tmp_path: Pat
         "type: note\n"
         "check_status: checked\n"
         "title: Partial source note\n"
-        "source_id: catalog/sources/partial-source\n"
+        "work_id: catalog/sources/partial-source\n"
         "evidence_set:\n"
         "  - catalog/sources/partial-source\n"
         "---\n"
@@ -401,7 +401,7 @@ def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path
         "type: note\n"
         "check_status: checked\n"
         "title: Wrong extraction\n"
-        "source_id: catalog/sources/anchor-source\n"
+        "work_id: catalog/sources/anchor-source\n"
         "claim_text: The appendix reported a mortality benefit.\n"
         "quote: The appendix reported a mortality benefit.\n"
         "---\n"
@@ -413,7 +413,7 @@ def test_quote_anchor_support_flags_quote_absent_from_source_text(tmp_path: Path
         "type: note\n"
         "check_status: checked\n"
         "title: Anchored\n"
-        "source_id: catalog/sources/anchor-source\n"
+        "work_id: catalog/sources/anchor-source\n"
         "claim_text: The study measured survey response rates.\n"
         "quote: The study measured survey response rates.\n"
         "---\n"
@@ -445,7 +445,7 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
         "type: note\n"
         "check_status: checked\n"
         "title: DB wrong extraction\n"
-        f"source_id: {source_ref}\n"
+        f"work_id: {source_ref}\n"
         "quote: The appendix reported a mortality benefit.\n"
         "---\n"
         "# DB wrong extraction\n",
@@ -456,7 +456,7 @@ def test_quote_anchor_support_reads_db_work_id_content(tmp_path: Path) -> None:
         "type: note\n"
         "check_status: checked\n"
         "title: DB anchored\n"
-        f"source_id: {source_ref}\n"
+        f"work_id: {source_ref}\n"
         "quote: The measured endpoint was survey response, not mortality.\n"
         "---\n"
         "# DB anchored\n",
@@ -476,7 +476,7 @@ def test_source_metadata_check_flags_incomplete_checked_source(tmp_path: Path) -
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="bad",
+        work_id="bad",
         title="Bad Metadata",
         description="Missing citekey.",
         resource="https://example.test/bad",
@@ -506,7 +506,7 @@ def test_source_metadata_check_flags_conflicting_doi(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="conflict",
+        work_id="conflict",
         title="Conflicting DOI",
         description="Mismatched identifier metadata.",
         citekey="conflict2026",
@@ -539,7 +539,7 @@ def test_source_metadata_check_routes_duplicate_source_external_ids_to_attention
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="source-one",
+        work_id="source-one",
         title="First External ID Source",
         description="A fixture source.",
         resource="https://doi.org/10.1000/external.one",
@@ -559,7 +559,7 @@ def test_source_metadata_check_routes_duplicate_source_external_ids_to_attention
     )
     state.upsert_catalog_record(
         vault,
-        source_id="source-two",
+        work_id="source-two",
         title="Second External ID Source",
         description="A fixture source.",
         resource="https://doi.org/10.1000/external.two",
@@ -636,20 +636,20 @@ def test_source_metadata_check_routes_string_block_duplicates_to_attention(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    for source_id, title, doi in (
+    for work_id, title, doi in (
         ("source-one", "Neural Retrieval in Memory Systems", "10.1000/block.one"),
         ("source-two", "Neural retrieval in memory systems!", "10.1000/block.two"),
     ):
         state.upsert_catalog_record(
             vault,
-            source_id=source_id,
+            work_id=work_id,
             title=title,
             description="A fixture source.",
             resource=f"https://doi.org/{doi}",
             identifiers={"doi": doi},
-            citekey=f"{source_id}2026",
+            citekey=f"{work_id}2026",
             csl_json={
-                "id": f"{source_id}2026",
+                "id": f"{work_id}2026",
                 "type": "article-journal",
                 "title": title,
                 "DOI": doi,
@@ -752,20 +752,20 @@ def test_source_metadata_check_routes_duplicate_entity_name_blocks_to_attention(
     tmp_path: Path,
 ) -> None:
     vault = workspace(tmp_path)
-    for source_id, title, doi, author in (
+    for work_id, title, doi, author in (
         ("source-one", "First Authorship Fixture", "10.1000/entity.one", "One"),
         ("source-two", "Second Authorship Fixture", "10.1000/entity.two", "Two"),
     ):
         state.upsert_catalog_record(
             vault,
-            source_id=source_id,
+            work_id=work_id,
             title=title,
             description="A fixture source.",
             resource=f"https://doi.org/{doi}",
             identifiers={"doi": doi},
-            citekey=f"{source_id}2026",
+            citekey=f"{work_id}2026",
             csl_json={
-                "id": f"{source_id}2026",
+                "id": f"{work_id}2026",
                 "type": "article-journal",
                 "title": title,
                 "DOI": doi,
@@ -915,7 +915,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "check_status: checked\n"
         "title: Other\n"
         "description: Other digest.\n"
-        "source_id: catalog/sources/other\n"
+        "work_id: catalog/sources/other\n"
         "---\n"
         "# Other\n",
         encoding="utf-8",
@@ -926,7 +926,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "check_status: checked\n"
         "title: Bad contradiction\n"
         "description: Missing contradiction target.\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
         "  - works/missing/digest.md\n"
         "---\n"
@@ -939,7 +939,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "check_status: checked\n"
         "title: Good contradiction\n"
         "description: Resolving contradiction target.\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
         "  - works/other/digest.md\n"
         "---\n"

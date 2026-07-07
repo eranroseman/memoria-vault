@@ -13,7 +13,7 @@ from memoria_vault.runtime.policy.audit import sha256_file
 def test_exploration_channel_surfaces_uncaptured_citation_candidate(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
     )
@@ -43,7 +43,7 @@ def test_exploration_channel_surfaces_uncaptured_citation_candidate(tmp_path: Pa
     assert result["empty"] is False
     assert result["items"] == [
         {
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "source_title": "Alpha",
             "candidate_work_id": "https://openalex.org/W999",
             "candidate_title": "Uncaptured Work",
@@ -74,7 +74,7 @@ def test_exploration_channel_honestly_returns_empty_without_candidates(
 ) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
     )
@@ -123,7 +123,7 @@ def test_exploration_channel_surfaces_nli_refuted_contrary_candidate(
 def test_cli_project_explore_returns_channel(tmp_path: Path, capsys: object) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
     )

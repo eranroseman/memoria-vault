@@ -19,7 +19,7 @@ allowed_network:
 - https://api.semanticscholar.org/
 prompt_version: enrich-source.v1
 io_schema:
-  input: staged_source_id
+  input: staged_work_id
   output: enriched_source
 risk_class: medium
 required_checks:

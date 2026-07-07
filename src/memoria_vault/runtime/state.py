@@ -265,14 +265,14 @@ def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | N
     with connect(vault) as conn:
         conn.execute("BEGIN IMMEDIATE")
         last = conn.execute(
-            "SELECT event_id, row_hash FROM journal_events ORDER BY event_id DESC LIMIT 1"
+            "SELECT event_id, row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
         ).fetchone()
         prev_hash = "GENESIS" if last is None else str(last["row_hash"])
         event_id = 1 if last is None else int(last["event_id"]) + 1
         row_hash = _journal_hash(event_id, timestamp, event_type, machine_name, payload, prev_hash)
         conn.execute(
             """
-            INSERT INTO journal_events(
+            INSERT INTO event_log(
                 event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
             )
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -284,7 +284,7 @@ def append_journal_event(vault: Path, event: dict[str, Any], *, machine: str | N
 def journal_head(vault: Path) -> str:
     with connect(vault) as conn:
         row = conn.execute(
-            "SELECT row_hash FROM journal_events ORDER BY event_id DESC LIMIT 1"
+            "SELECT row_hash FROM event_log ORDER BY event_id DESC LIMIT 1"
         ).fetchone()
     return "" if row is None else str(row["row_hash"])
 
@@ -553,7 +553,7 @@ def note_curation_status(vault: Path, concept_id: str) -> str:
         return ""
     status = ""
     with connect(vault) as conn:
-        rows = conn.execute("SELECT payload_json FROM journal_events ORDER BY event_id").fetchall()
+        rows = conn.execute("SELECT payload_json FROM event_log ORDER BY event_id").fetchall()
     # ponytail: journal scan is fine for alpha.16; project if candidate volume matters.
     for row in rows:
         try:
@@ -713,9 +713,9 @@ def recover_pending_materializations(vault: Path) -> list[str]:
 
 
 def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, Any]) -> None:
-    source_id = str(frontmatter.get("source_id") or "").strip()
-    if not source_id:
-        raise ValueError("catalog source requires source_id")
+    work_id = str(frontmatter.get("work_id") or "").strip()
+    if not work_id:
+        raise ValueError("catalog source requires work_id")
     identifiers = (
         frontmatter.get("identifiers") if isinstance(frontmatter.get("identifiers"), dict) else {}
     )
@@ -723,10 +723,10 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
     doi = str(identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
     upsert_catalog_record(
         vault,
-        source_id=source_id,
+        work_id=work_id,
         concept_path=source_rel,
         doi=doi,
-        title=str(frontmatter.get("title") or source_id),
+        title=str(frontmatter.get("title") or work_id),
         description=str(frontmatter.get("description") or ""),
         resource=str(frontmatter.get("resource") or ""),
         item_type=str(frontmatter.get("item_type") or csl_json.get("type") or "article"),
@@ -746,7 +746,7 @@ def upsert_catalog_source(vault: Path, source_rel: str, frontmatter: dict[str, A
 def upsert_catalog_record(
     vault: Path,
     *,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str = "",
     concept_path: str = "",
@@ -764,7 +764,7 @@ def upsert_catalog_record(
     content_path: str = "",
     raw_path: str = "",
 ) -> None:
-    stable_source_id = _source_id(source_id)
+    stable_work_id = _work_id(work_id)
     identifiers = dict(identifiers or {})
     csl_json = dict(csl_json or {})
     stable_doi = str(doi or identifiers.get("doi") or csl_json.get("DOI") or "").strip() or None
@@ -772,7 +772,7 @@ def upsert_catalog_record(
         conn.execute(
             """
             INSERT INTO catalog_sources(
-                source_id,
+                work_id,
                 concept_path,
                 doi,
                 title,
@@ -791,7 +791,7 @@ def upsert_catalog_record(
                 raw_path
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(source_id) DO UPDATE SET
+            ON CONFLICT(work_id) DO UPDATE SET
                 concept_path = excluded.concept_path,
                 doi = excluded.doi,
                 title = excluded.title,
@@ -810,12 +810,12 @@ def upsert_catalog_record(
                 raw_path = excluded.raw_path
             """,
             (
-                stable_source_id,
+                stable_work_id,
                 normalize_path(concept_path)
                 if concept_path
-                else f"catalog/sources/{stable_source_id}",
+                else f"catalog/sources/{stable_work_id}",
                 stable_doi,
-                title or stable_source_id,
+                title or stable_work_id,
                 description,
                 resource,
                 item_type or "article",
@@ -831,7 +831,7 @@ def upsert_catalog_record(
                 normalize_path(raw_path) if raw_path else "",
             ),
         )
-        concept_id = f"catalog/sources/{stable_source_id}"
+        concept_id = f"catalog/sources/{stable_work_id}"
         _upsert_concept_mirror_conn(conn, concept_id, "source", "db")
         _set_concept_verdict_conn(conn, concept_id, _check_status(check_status))
 
@@ -839,11 +839,11 @@ def upsert_catalog_record(
 def catalog_source(vault: Path, source_ref: str) -> dict[str, Any] | None:
     if not db_path(vault).is_file():
         return None
-    source_id = _source_id(source_ref)
+    work_id = _work_id(source_ref)
     with connect(vault) as conn:
         row = conn.execute(
-            "SELECT * FROM catalog_sources WHERE source_id = ?",
-            (source_id,),
+            "SELECT * FROM catalog_sources WHERE work_id = ?",
+            (work_id,),
         ).fetchone()
     return _source_row(row) if row is not None else None
 
@@ -858,7 +858,7 @@ def catalog_sources(vault: Path, *, checked_only: bool = True) -> list[dict[str,
                 SELECT *
                 FROM catalog_sources
                 WHERE check_status = 'checked'
-                ORDER BY source_id
+                ORDER BY work_id
                 """
             ).fetchall()
         else:
@@ -866,7 +866,7 @@ def catalog_sources(vault: Path, *, checked_only: bool = True) -> list[dict[str,
                 """
                 SELECT *
                 FROM catalog_sources
-                ORDER BY source_id
+                ORDER BY work_id
                 """
             ).fetchall()
     return [_source_row(row) for row in rows]
@@ -876,7 +876,7 @@ def start_enrichment_run(
     vault: Path,
     *,
     run_id: str,
-    source_id: str,
+    work_id: str,
     required_provider_policy: dict[str, Any],
     request_id: str = "",
 ) -> None:
@@ -885,7 +885,7 @@ def start_enrichment_run(
             """
             INSERT INTO enrichment_runs(
                 run_id,
-                source_id,
+                work_id,
                 enrichment_status,
                 required_provider_policy_json,
                 started_at,
@@ -899,7 +899,7 @@ def start_enrichment_run(
                 finished_at = NULL,
                 request_id = excluded.request_id
             """,
-            (run_id, _source_id(source_id), _json(required_provider_policy), now_iso(), request_id),
+            (run_id, _work_id(work_id), _json(required_provider_policy), now_iso(), request_id),
         )
 
 
@@ -968,17 +968,17 @@ def store_provider_payload(
 
 def replace_field_provenance(
     vault: Path,
-    source_id: str,
+    work_id: str,
     rows: Iterable[dict[str, Any]],
 ) -> None:
-    stable_source_id = _source_id(source_id)
+    stable_work_id = _work_id(work_id)
     with connect(vault) as conn:
-        conn.execute("DELETE FROM field_provenance WHERE source_id = ?", (stable_source_id,))
+        conn.execute("DELETE FROM field_provenance WHERE work_id = ?", (stable_work_id,))
         for row in rows:
             conn.execute(
                 """
                 INSERT INTO field_provenance(
-                    source_id,
+                    work_id,
                     field_path,
                     value_hash,
                     winning_provider,
@@ -990,7 +990,7 @@ def replace_field_provenance(
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    stable_source_id,
+                    stable_work_id,
                     str(row["field_path"]),
                     str(row["value_hash"]),
                     str(row["winning_provider"]),
@@ -1042,7 +1042,7 @@ def replace_external_ids(vault: Path, rows: Iterable[dict[str, Any]]) -> None:
 
 
 def replace_work_graph_edges(vault: Path, work_id: str, rows: Iterable[dict[str, Any]]) -> None:
-    stable_work_id = _source_id(work_id)
+    stable_work_id = _work_id(work_id)
     with connect(vault) as conn:
         conn.execute("DELETE FROM work_graph_edges WHERE work_id = ?", (stable_work_id,))
         for row in rows:
@@ -1074,9 +1074,9 @@ def replace_work_graph_edges(vault: Path, work_id: str, rows: Iterable[dict[str,
 
 
 def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, Any]]) -> None:
-    source_id = _source_id(source_ref)
+    work_id = _work_id(source_ref)
     with connect(vault) as conn:
-        conn.execute("DELETE FROM work_aspects WHERE source_id = ?", (source_id,))
+        conn.execute("DELETE FROM work_aspects WHERE work_id = ?", (work_id,))
         for row in rows:
             aspect_text = str(row.get("aspect_text") or "").strip()
             if not aspect_text:
@@ -1085,7 +1085,7 @@ def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, 
             conn.execute(
                 """
                 INSERT INTO work_aspects(
-                    source_id,
+                    work_id,
                     aspect_type,
                     aspect_text,
                     anchor_text,
@@ -1096,7 +1096,7 @@ def replace_work_aspects(vault: Path, source_ref: str, rows: Iterable[dict[str, 
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    source_id,
+                    work_id,
                     aspect_type,
                     aspect_text,
                     str(row.get("anchor_text") or "").strip(),
@@ -1162,17 +1162,17 @@ def rebuild_evidence_sets_from_markers(vault: Path, *, run_id: str = "") -> dict
 def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
     if not db_path(vault).is_file():
         return []
-    source_id = _source_id(source_ref)
+    work_id = _work_id(source_ref)
     with connect(vault) as conn:
         rows = conn.execute(
             """
-            SELECT source_id, aspect_type, aspect_text, anchor_text, check_status,
+            SELECT work_id, aspect_type, aspect_text, anchor_text, check_status,
                    source_provider, updated_at
             FROM work_aspects
-            WHERE source_id = ?
+            WHERE work_id = ?
             ORDER BY aspect_type
             """,
-            (source_id,),
+            (work_id,),
         ).fetchall()
     return [dict(row) for row in rows]
 
@@ -1180,11 +1180,11 @@ def work_aspects(vault: Path, source_ref: str) -> list[dict[str, Any]]:
 def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     if not db_path(vault).is_file():
         return {}
-    source_id = _source_id(source_ref)
+    work_id = _work_id(source_ref)
     with connect(vault) as conn:
         row = conn.execute(
-            "SELECT * FROM catalog_sources WHERE source_id = ?",
-            (source_id,),
+            "SELECT * FROM catalog_sources WHERE work_id = ?",
+            (work_id,),
         ).fetchone()
     if row is None:
         return {}
@@ -1192,7 +1192,7 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     csl = source.get("csl_json") if isinstance(source.get("csl_json"), dict) else {}
     identifiers = source.get("identifiers") if isinstance(source.get("identifiers"), dict) else {}
     citation: dict[str, Any] = {
-        "source_id": f"catalog/sources/{source_id}",
+        "work_id": f"catalog/sources/{work_id}",
         "title": source["title"],
         "authors": _csl_authors(csl),
         "issued": _csl_issued(csl),
@@ -1202,7 +1202,7 @@ def compact_citation(vault: Path, source_ref: str) -> dict[str, Any]:
     elif url := str(source.get("resource") or csl.get("URL") or "").strip():
         citation["url"] = url
     else:
-        citation["citekey"] = str(source.get("citekey") or source_id)
+        citation["citekey"] = str(source.get("citekey") or work_id)
     return citation
 
 
@@ -1217,7 +1217,7 @@ def check_citation_payload(frontmatter: dict[str, Any]) -> list[str]:
     if not isinstance(citations, list):
         return ["missing citations payload"]
     by_source = {
-        str(row.get("source_id") or "").rstrip("/")
+        str(row.get("work_id") or "").rstrip("/")
         for row in citations
         if isinstance(row, dict)
         and row.get("title")
@@ -1307,7 +1307,7 @@ def _set_request_state(vault: Path, request_id: str, status: str, job: dict[str,
 
 def _source_row(row: sqlite3.Row) -> dict[str, Any]:
     return {
-        "source_id": row["source_id"],
+        "work_id": row["work_id"],
         "concept_path": row["concept_path"],
         "title": row["title"],
         "description": row["description"],
@@ -1415,16 +1415,14 @@ def _evidence_items_resolve(
 def _source_span_pages(vault: Path) -> dict[str, set[str]]:
     spans: dict[str, set[str]] = {}
     for source in catalog_sources(vault, checked_only=False):
-        source_id = str(source["source_id"])
+        work_id = str(source["work_id"])
         content_path = Path(vault) / normalize_path(str(source.get("content_path") or ""))
         if not content_path.is_file():
-            spans[source_id] = set()
+            spans[work_id] = set()
             continue
         text = content_path.read_text(encoding="utf-8")
-        spans[source_id] = set(re.findall(r"\^p\d{4,}", text))
-    return {
-        source_id: {page.removeprefix("^") for page in pages} for source_id, pages in spans.items()
-    }
+        spans[work_id] = set(re.findall(r"\^p\d{4,}", text))
+    return {work_id: {page.removeprefix("^") for page in pages} for work_id, pages in spans.items()}
 
 
 def _evidence_block_ref(rel: str, evidence_id: str) -> str:
@@ -1479,18 +1477,18 @@ def _work_aspect_type(value: str) -> str:
     return aspect_type
 
 
-def _source_id(value: str) -> str:
+def _work_id(value: str) -> str:
     rel = normalize_path(value)
     rel = rel.removeprefix("catalog/sources/").removesuffix("/source.md")
-    source_id = safe_filename(rel.strip("/")).strip("._-")
-    if not source_id:
-        raise ValueError("source_id is required")
-    return source_id
+    work_id = safe_filename(rel.strip("/")).strip("._-")
+    if not work_id:
+        raise ValueError("work_id is required")
+    return work_id
 
 
 def _source_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs: set[str] = set()
-    _collect_source_refs(refs, frontmatter.get("source_id"))
+    _collect_source_refs(refs, frontmatter.get("work_id"))
     _collect_source_refs(refs, frontmatter.get("evidence_set"))
     _collect_source_refs(refs, frontmatter.get("members"))
     _collect_source_refs(refs, frontmatter.get("links"))
@@ -1500,7 +1498,7 @@ def _source_refs(frontmatter: dict[str, Any]) -> list[str]:
 def _collect_source_refs(refs: set[str], value: Any) -> None:
     if isinstance(value, str):
         if value.startswith("catalog/sources/"):
-            refs.add(f"catalog/sources/{_source_id(value)}")
+            refs.add(f"catalog/sources/{_work_id(value)}")
         return
     if isinstance(value, list):
         for item in value:

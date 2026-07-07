@@ -123,8 +123,8 @@ def test_worker_runs_queued_trusted_write_through_writer_and_commits(tmp_path: P
     assert state.concept_check_status(vault, "notes/worker.md") == "checked"
     assert not (vault / ".memoria/staging/notes/worker.md").exists()
 
-    journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
-    assert [event["event"] for event in journal_events] == ["derived", "check-fired"]
+    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    assert [event["event"] for event in event_log] == ["derived", "check-fired"]
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, "notes/worker.md"}
 
@@ -299,7 +299,7 @@ def test_worker_runs_integrity_operation_jobs(tmp_path: Path) -> None:
         "title: Bad evidence\n"
         "tags: []\n"
         "links: {}\n"
-        "source_id: catalog/sources/missing\n"
+        "work_id: catalog/sources/missing\n"
         "---\n"
         "# Bad evidence\n",
         encoding="utf-8",
@@ -371,7 +371,7 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
     content.write_text("The study measured survey response rates.\n", encoding="utf-8")
     state.upsert_catalog_record(
         vault,
-        source_id="anchor",
+        work_id="anchor",
         title="Anchor source",
         description="Source text.",
         citekey="anchor2026",
@@ -389,7 +389,7 @@ def test_worker_runs_quote_anchor_integrity_operation_jobs(tmp_path: Path) -> No
         "title: Bad anchor\n"
         "tags: []\n"
         "links: {}\n"
-        "source_id: catalog/sources/anchor\n"
+        "work_id: catalog/sources/anchor\n"
         "claim_text: The appendix reported mortality benefit.\n"
         "quote: The appendix reported mortality benefit.\n"
         "---\n"
@@ -453,7 +453,7 @@ def test_worker_runs_source_metadata_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="bad",
+        work_id="bad",
         title="Bad Metadata",
         description="Missing citekey.",
         resource="https://example.test/bad",
@@ -493,7 +493,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
         vault,
         "capture-source",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "title": "Alpha Source",
             "description": "A fixture source.",
             "content_text": "Extracted alpha text.",
@@ -510,7 +510,7 @@ def test_worker_runs_capture_source_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "source-alpha"
+    assert done["work_id"] == "source-alpha"
     assert done["check_status"] == "unchecked"
     assert done["content_path"] == ".memoria/blobs/source-content/source-alpha/content.txt"
     assert done["raw_path"] == ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
@@ -541,7 +541,7 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
         vault,
         "capture-pdf-source",
         payload={
-            "source_id": "pdf-source",
+            "work_id": "pdf-source",
             "title": "PDF Source",
             "description": "A fixture PDF source.",
             "raw_pdf_base64": base64.b64encode(b"%PDF fixture\n").decode(),
@@ -555,7 +555,7 @@ def test_worker_runs_capture_pdf_source_operation_jobs(tmp_path: Path, monkeypat
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "pdf-source"
+    assert done["work_id"] == "pdf-source"
     assert done["check_status"] == "unchecked"
     assert done["content_path"] == ".memoria/blobs/source-content/pdf-source/content.txt"
     assert done["raw_path"] == ".memoria/blobs/source-content/pdf-source/raw/paper.pdf"
@@ -574,7 +574,7 @@ def test_worker_capture_pdf_source_fails_before_partial_write(tmp_path: Path, mo
         vault,
         "capture-pdf-source",
         payload={
-            "source_id": "pdf-missing-selector",
+            "work_id": "pdf-missing-selector",
             "title": "PDF Missing Selector",
             "description": "A fixture PDF source.",
             "raw_pdf_base64": base64.b64encode(b"%PDF fixture\n").decode(),
@@ -614,7 +614,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "doi-10.1000_harness.2026"
+    assert done["work_id"] == "doi-10.1000_harness.2026"
     assert done["check_status"] == "unchecked"
     assert done["raw_path"].endswith("/raw/harness2026.bib")
     assert (
@@ -624,7 +624,7 @@ def test_worker_runs_capture_bibtex_source_operation_jobs(tmp_path: Path) -> Non
     assert not (vault / "bibliography.bib").exists()
     with state.connect(vault) as conn:
         source = conn.execute(
-            "SELECT citekey, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
+            "SELECT citekey, check_status, identifiers_json FROM catalog_sources WHERE work_id = ?",
             ("doi-10.1000_harness.2026",),
         ).fetchone()
         enrich = conn.execute(
@@ -665,7 +665,7 @@ def test_worker_runs_capture_url_source_operation_jobs(tmp_path: Path, monkeypat
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "url-example.test-path-page"
+    assert done["work_id"] == "url-example.test-path-page"
     assert done["check_status"] == "unchecked"
     assert not (vault / "catalog/sources/url-example.test-path-page/source.md").exists()
     source = state.catalog_source(vault, "url-example.test-path-page")
@@ -718,7 +718,7 @@ def test_worker_runs_contradiction_integrity_operation_jobs(tmp_path: Path) -> N
         "description: Missing contradiction target.\n"
         "tags: []\n"
         "links: {}\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
         "  - works/missing/digest.md\n"
         "---\n"
@@ -908,7 +908,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
         vault,
         "compile-source-digest",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "hub_topics": ["Framing", "Methods", "Outcomes", "Gaps", "Impact"],
             "run_id": "compile-alpha",
             "mode": "live",
@@ -963,7 +963,7 @@ def test_worker_runs_digest_and_note_construction_operation_jobs(tmp_path: Path)
     assert state.concept_check_status(vault, note_rel) == "checked"
     assert "status" not in note_fm
     assert state.note_curation_status(vault, note_rel) == "candidate"
-    assert note_fm["source_id"] == "catalog/sources/source-alpha"
+    assert note_fm["work_id"] == "catalog/sources/source-alpha"
 
     curate_job = enqueue_operation(
         vault,
@@ -1019,7 +1019,7 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
         vault,
         "record-copi-interview",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "prompt": "What matters?",
             "response": "The PI cares about the methods caveat.",
             "project_id": "projects/project-alpha/project.md",
@@ -1031,11 +1031,11 @@ def test_worker_records_copi_interview_operation_jobs(tmp_path: Path) -> None:
     assert queued["kind"] == "operation"
     assert done is not None
     assert done["status"] == "done"
-    assert done["source_id"] == "source-alpha"
+    assert done["work_id"] == "source-alpha"
     assert done["turn_id"].startswith("journal:copi-interview:")
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert events[-1]["event"] == "copi-interview"
-    assert events[-1]["source_id"] == "source-alpha"
+    assert events[-1]["work_id"] == "source-alpha"
     assert events[-1]["response"] == "The PI cares about the methods caveat."
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL}
@@ -1057,7 +1057,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     )
     state.upsert_catalog_record(
         vault,
-        source_id="db-alpha",
+        work_id="db-alpha",
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
@@ -1065,7 +1065,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
     )
     state.upsert_catalog_record(
         vault,
-        source_id="metadata-only",
+        work_id="metadata-only",
         title="Metadata Only",
         text_status="metadata-only",
         check_status="checked",
@@ -1078,7 +1078,7 @@ def test_worker_runs_gap_analysis_operation_jobs(tmp_path: Path) -> None:
         "description: Alpha\n"
         "tags: [sleep]\n"
         "links: {}\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "---\n"
         "Neural retrieval improves durable memory systems.\n"
         "Neural retrieval also changes review timing.\n",
@@ -1538,8 +1538,8 @@ def test_worker_runs_observe_pi_edits_operation_jobs(tmp_path: Path) -> None:
     assert done["paths"] == ["notes/pi.md"]
     assert "check_status" not in read_frontmatter(vault / "notes/pi.md")
     assert state.concept_check_status(vault, "notes/pi.md") == "unchecked"
-    journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
-    assert journal_events[-1]["event"] == "observed_external_edit"
+    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    assert event_log[-1]["event"] == "observed_external_edit"
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status FROM outputs WHERE output_id = 'notes/pi.md'"
@@ -1611,18 +1611,18 @@ def test_observe_pi_edits_propagates_scan_side_demotion(tmp_path: Path) -> None:
     answer = answer_query(vault, "depthtwomarker", include_stale=True)
     assert [source["path"] for source in answer["sources"]] == [depth_two_rel]
     assert answer["staleness"] == [{"path": depth_two_rel, "field": "stale", "value": True}]
-    journal_events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    event_log = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
     assert any(
         event.get("check") == "scan-demotion-propagation"
         and event.get("target_id") == direct_rel
         and event.get("route") == "act"
-        for event in journal_events
+        for event in event_log
     )
     assert any(
         event.get("check") == "cascade-rollback"
         and event.get("target_id") == pi_rel
         and event.get("route") == "ask"
-        for event in journal_events
+        for event in event_log
     )
 
 
@@ -1687,7 +1687,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     state.upsert_catalog_record(
         vault,
-        source_id="alpha",
+        work_id="alpha",
         title="Original",
         description="Original description",
         identifiers={"doi": "10.1000/original"},
@@ -1699,7 +1699,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
         vault,
         "update-work",
         payload={
-            "source_id": "alpha",
+            "work_id": "alpha",
             "title": "Updated",
             "standing": "archived",
             "research_area": ["personal-informatics"],
@@ -1720,7 +1720,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
         row = conn.execute(
             """
             SELECT payload_json
-            FROM journal_events
+            FROM event_log
             WHERE event_type = 'work_updated'
             ORDER BY event_id DESC
             LIMIT 1
@@ -1732,7 +1732,7 @@ def test_worker_runs_update_work_operation_jobs(tmp_path: Path) -> None:
     assert event["override_log"] == ".memoria/overrides.jsonl"
     [override] = list(iter_jsonl(vault / ".memoria/overrides.jsonl"))
     assert override["operation"] == "update-work"
-    assert override["source_id"] == "alpha"
+    assert override["work_id"] == "alpha"
     assert override["updates"]["standing"] == "archived"
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, ".memoria/overrides.jsonl"}
@@ -1789,7 +1789,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
         "title: Bad evidence\n"
         "tags: []\n"
         "links: {}\n"
-        "source_id: catalog/sources/missing\n"
+        "work_id: catalog/sources/missing\n"
         "---\n"
         "# Bad evidence\n",
         idempotency_key="write-bad-evidence-before-sweep",

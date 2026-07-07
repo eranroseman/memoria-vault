@@ -68,7 +68,7 @@ def _fallback_text_status(content_text: str | None, abstract: str | None) -> str
 
 def stage_catalog_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str,
     content_text: str,
@@ -89,14 +89,14 @@ def stage_catalog_source(
 ) -> dict[str, Any]:
     """Stage a source as a DB catalog row plus immutable blob payloads."""
     vault = Path(vault)
-    source_id = _source_id(source_id)
+    work_id = _work_id(work_id)
     if not title.strip() or not description.strip():
         raise ValueError("title and description are required")
     if not content_text.strip():
         raise ValueError("content_text is required")
     text_status = _normalize_text_status(text_status)
     check_status = _normalize_check_status(check_status)
-    existing = state.catalog_source(vault, source_id)
+    existing = state.catalog_source(vault, work_id)
     if existing:
         identifiers = _merge_mapping(existing.get("identifiers"), identifiers)
         csl_json = _merge_mapping(existing.get("csl_json"), csl_json)
@@ -108,14 +108,14 @@ def stage_catalog_source(
         if item_type == "article":
             item_type = str(existing.get("item_type") or item_type)
         citekey = citekey or str(existing.get("citekey") or "")
-    run_id = run_id or f"capture:{source_id}"
+    run_id = run_id or f"capture:{work_id}"
 
     started = append_journal_event(
         vault,
         {"event": "run", "run_id": run_id, "workflow": workflow, "status": "started"},
         machine=machine,
     )
-    root = vault / ".memoria/blobs/source-content" / source_id
+    root = vault / ".memoria/blobs/source-content" / work_id
     raw_path = root / "raw" / safe_filename(raw_filename or "source.txt")
     content_path = root / "content.txt"
     raw_sha = _write_immutable(
@@ -126,10 +126,10 @@ def stage_catalog_source(
     content_rel = content_path.relative_to(vault).as_posix()
     state.upsert_catalog_record(
         vault,
-        source_id=source_id,
+        work_id=work_id,
         title=title,
         description=description,
-        concept_path=f"catalog/sources/{source_id}",
+        concept_path=f"catalog/sources/{work_id}",
         doi=str((identifiers or {}).get("doi") or (csl_json or {}).get("DOI") or "") or None,
         resource=resource,
         item_type=item_type,
@@ -146,11 +146,11 @@ def stage_catalog_source(
     )
     state.replace_work_aspects(
         vault,
-        source_id,
+        work_id,
         derive_work_aspect_rows(csl_json, content_text, check_status=check_status),
     )
     if _has_reference_metadata(csl_json):
-        _replace_import_reference_edges(vault, source_id, _reference_edges(csl_json))
+        _replace_import_reference_edges(vault, work_id, _reference_edges(csl_json))
     finished = append_journal_event(
         vault,
         {
@@ -158,17 +158,17 @@ def stage_catalog_source(
             "run_id": run_id,
             "workflow": workflow,
             "status": "done",
-            "source_id": source_id,
+            "work_id": work_id,
             "outputs": [content_rel, raw_rel],
             "raw": raw_rel,
         },
         machine=machine,
     )
-    commit = commit_writer_changes(vault, f"stage source {source_id}", [], machine=machine)
+    commit = commit_writer_changes(vault, f"stage source {work_id}", [], machine=machine)
     return {
         "run_id": run_id,
-        "source_id": source_id,
-        "source_path": f"catalog/sources/{source_id}",
+        "work_id": work_id,
+        "source_path": f"catalog/sources/{work_id}",
         "content_path": content_rel,
         "raw_path": raw_rel,
         "raw_sha256": raw_sha,
@@ -183,7 +183,7 @@ def stage_catalog_source(
 
 def capture_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str,
     content_text: str,
@@ -204,7 +204,7 @@ def capture_source(
     """Capture one source as a checked SQLite catalog row plus blob payloads."""
     return stage_catalog_source(
         vault,
-        source_id,
+        work_id,
         title,
         description,
         content_text,
@@ -298,7 +298,7 @@ def capture_bibtex_source(
     bibtex: str,
     *,
     content_text: str | None = None,
-    source_id: str | None = None,
+    work_id: str | None = None,
     description: str | None = None,
     machine: str | None = None,
     run_id: str | None = None,
@@ -307,7 +307,7 @@ def capture_bibtex_source(
     payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
-        source_id=source_id,
+        work_id=work_id,
         description=description,
     )
     citekey = str(payload.get("citekey") or "")
@@ -325,7 +325,7 @@ def bibtex_capture_payload(
     bibtex: str,
     *,
     content_text: str | None = None,
-    source_id: str | None = None,
+    work_id: str | None = None,
     description: str | None = None,
 ) -> dict[str, Any]:
     """Build a capture-source payload from one BibTeX entry."""
@@ -342,7 +342,7 @@ def bibtex_capture_payload(
         if (value := fields.get(key))
     }
     return {
-        "source_id": source_id or _bibtex_default_source_id(fields, citekey),
+        "work_id": work_id or _bibtex_default_work_id(fields, citekey),
         "title": title,
         "description": description or abstract or f"BibTeX {entry['entry_type']} source.",
         "content_text": content_text or abstract or title,
@@ -363,7 +363,7 @@ def csl_capture_payload(
     *,
     raw_text: str,
     content_text: str | None = None,
-    source_id: str | None = None,
+    work_id: str | None = None,
     description: str | None = None,
 ) -> dict[str, Any]:
     """Build a capture-source payload from one CSL-JSON item."""
@@ -375,9 +375,9 @@ def csl_capture_payload(
     url = str(csl_json.get("URL") or "").strip()
     abstract = str(csl_json.get("abstract") or "")
     identifiers = {key: value for key, value in {"doi": doi, "isbn": isbn}.items() if value}
-    stable_id = source_id or str(csl_json.get("id") or doi or isbn or url or title)
+    stable_id = work_id or str(csl_json.get("id") or doi or isbn or url or title)
     return {
-        "source_id": stable_id,
+        "work_id": stable_id,
         "title": title,
         "description": description or abstract or f"CSL {title} source.",
         "content_text": content_text or abstract or title,
@@ -405,7 +405,7 @@ def stage_capture_payload(
     raw_text = payload.get("raw_text")
     return stage_catalog_source(
         vault,
-        str(payload["source_id"]),
+        str(payload["work_id"]),
         str(payload["title"]),
         str(payload["description"]),
         str(payload["content_text"]),
@@ -488,19 +488,19 @@ def _store_url_source(
     raw_bytes = _read_url_bytes(resource, timeout)
     extracted_title, content_text = _html_text(raw_bytes)
     final_title = title or extracted_title or resource
-    source_id = _url_source_id(resource)
+    work_id = _url_work_id(resource)
     return stage_catalog_source(
         vault,
-        source_id,
+        work_id,
         final_title,
         description or f"URL snapshot captured from {resource}.",
         content_text,
         raw_bytes=raw_bytes,
-        raw_filename=f"{safe_filename(source_id)}.html",
+        raw_filename=f"{safe_filename(work_id)}.html",
         resource=resource,
         item_type="webpage",
         csl_json={
-            "id": source_id,
+            "id": work_id,
             "type": "webpage",
             "title": final_title,
             "URL": resource,
@@ -516,7 +516,7 @@ def _store_url_source(
 
 def capture_pdf_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str,
     raw_bytes: bytes,
@@ -534,7 +534,7 @@ def capture_pdf_source(
     """Capture a PDF raw blob and extracted page text."""
     return _store_pdf_source(
         vault,
-        source_id,
+        work_id,
         title,
         description,
         raw_bytes,
@@ -553,7 +553,7 @@ def capture_pdf_source(
 
 def stage_pdf_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str,
     raw_bytes: bytes,
@@ -571,7 +571,7 @@ def stage_pdf_source(
     """Stage a PDF raw blob and extracted text as an unchecked DB row."""
     return _store_pdf_source(
         vault,
-        source_id,
+        work_id,
         title,
         description,
         raw_bytes,
@@ -590,7 +590,7 @@ def stage_pdf_source(
 
 def _store_pdf_source(
     vault: Path,
-    source_id: str,
+    work_id: str,
     title: str,
     description: str,
     raw_bytes: bytes,
@@ -606,14 +606,14 @@ def _store_pdf_source(
     run_id: str | None,
     check_status: str,
 ) -> dict[str, Any]:
-    stable_source_id = _source_id(source_id)
+    stable_work_id = _work_id(work_id)
     pdf_raw_filename = raw_filename or "source.pdf"
     pages = _extract_pdf_pages(raw_bytes)
     _validate_pdf_text_coherence(pages)
     content_text = _pdf_content_text(pages)
     return stage_catalog_source(
         vault,
-        stable_source_id,
+        stable_work_id,
         title,
         description,
         content_text,
@@ -627,7 +627,7 @@ def _store_pdf_source(
         text_status="full-text",
         citekey=citekey,
         machine=machine,
-        run_id=run_id or f"capture-pdf:{stable_source_id}",
+        run_id=run_id or f"capture-pdf:{stable_work_id}",
         workflow="capture_pdf_source",
         check_status=check_status,
     )
@@ -707,19 +707,19 @@ def check_references_bib(vault: Path, *, output_path: str = "bibliography.bib") 
     return path.is_file() and path.read_text(encoding="utf-8") == render_references_bib(vault)
 
 
-def _source_id(value: str) -> str:
-    source_id = safe_filename(value).strip("._-")
-    if not source_id:
-        raise ValueError("source_id is required")
-    return source_id
+def _work_id(value: str) -> str:
+    work_id = safe_filename(value).strip("._-")
+    if not work_id:
+        raise ValueError("work_id is required")
+    return work_id
 
 
-def _bibtex_default_source_id(fields: dict[str, str], citekey: str) -> str:
+def _bibtex_default_work_id(fields: dict[str, str], citekey: str) -> str:
     doi = fields.get("doi", "").strip().lower()
     if doi:
         return f"doi-{doi}"
     if url := fields.get("url", "").strip():
-        return _url_source_id(url)
+        return _url_work_id(url)
     return citekey
 
 
@@ -933,7 +933,7 @@ def _has_reference_metadata(csl_json: dict[str, Any] | None) -> bool:
 
 
 def _replace_import_reference_edges(
-    vault: Path, source_id: str, import_edges: list[dict[str, Any]]
+    vault: Path, work_id: str, import_edges: list[dict[str, Any]]
 ) -> None:
     with state.connect(vault) as conn:
         rows = conn.execute(
@@ -944,7 +944,7 @@ def _replace_import_reference_edges(
               AND source_provider != 'import'
             ORDER BY relation_type, target_id
             """,
-            (source_id,),
+            (work_id,),
         ).fetchall()
     preserved = []
     for row in rows:
@@ -961,7 +961,7 @@ def _replace_import_reference_edges(
         for edge in import_edges
         if (edge["relation_type"], edge["target_id"]) not in preserved_keys
     ]
-    state.replace_work_graph_edges(vault, source_id, [*preserved, *new_edges])
+    state.replace_work_graph_edges(vault, work_id, [*preserved, *new_edges])
 
 
 def _reference_edges(csl_json: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -1066,7 +1066,7 @@ def _html_text(raw_bytes: bytes) -> tuple[str, str]:
     return parser.title.strip(), text
 
 
-def _url_source_id(url: str) -> str:
+def _url_work_id(url: str) -> str:
     parsed = urlparse(url)
     host = parsed.netloc or "url"
     path = parsed.path.strip("/") or "index"

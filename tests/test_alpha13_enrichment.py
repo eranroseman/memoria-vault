@@ -67,7 +67,7 @@ def allow_example_full_text(monkeypatch) -> None:
 
 def doi_payload() -> dict:
     return {
-        "source_id": "source-alpha",
+        "work_id": "source-alpha",
         "title": "Alpha Source",
         "description": "A fixture DOI source.",
         "content_text": "Extracted alpha text.",
@@ -217,7 +217,7 @@ def test_capture_source_stages_doi_unchecked_without_references(tmp_path: Path) 
     assert done is not None
     assert done["status"] == "done"
     assert done["check_status"] == "unchecked"
-    assert done["source_id"] == "source-alpha"
+    assert done["work_id"] == "source-alpha"
     assert done["text_status"] == "full-text"
     assert done["content_path"].startswith(".memoria/blobs/source-content/source-alpha/")
     assert not (vault / "catalog/sources/source-alpha/source.md").exists()
@@ -303,7 +303,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
         vault,
         "enrich-source",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "provider_payloads": {
                 key: value for key, value in provider_payloads().items() if key != "unpaywall"
             },
@@ -317,7 +317,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
     assert done["enrichment_status"] == "needs_human"
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status FROM catalog_sources WHERE source_id = 'source-alpha'"
+            "SELECT check_status FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert row["check_status"] == "unchecked"
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
@@ -347,7 +347,7 @@ def test_enrich_source_replays_optional_semantic_scholar_payload(tmp_path: Path)
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": payloads},
+        payload={"work_id": "source-alpha", "provider_payloads": payloads},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -394,7 +394,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -432,7 +432,7 @@ def test_enrich_source_writes_payloads_provenance_and_references(tmp_path: Path)
             """
         ).fetchall()
         discovered = conn.execute(
-            "SELECT check_status FROM catalog_sources WHERE source_id IN ('W888', 'W999')"
+            "SELECT check_status FROM catalog_sources WHERE work_id IN ('W888', 'W999')"
         ).fetchall()
 
     assert source["check_status"] == "checked"
@@ -490,7 +490,7 @@ def test_enrich_source_replays_provider_payload_blobs(tmp_path: Path) -> None:
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -531,7 +531,7 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
         vault,
         "enrich-source",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "provider_payloads": provider_payloads(title="Crossref Disagreement"),
         },
         idempotency_key="enrich-alpha",
@@ -542,14 +542,14 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
     assert done["attention_path"] == "inbox/flag-enrichment-source-alpha-source-enrichment.md"
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status, provider_coverage FROM catalog_sources WHERE source_id = ?",
+            "SELECT check_status, provider_coverage FROM catalog_sources WHERE work_id = ?",
             ("source-alpha",),
         ).fetchone()
         title_provenance = conn.execute(
             """
             SELECT evidence_payload_id, alternatives_json, conflict_status
             FROM field_provenance
-            WHERE source_id = ? AND field_path = 'title'
+            WHERE work_id = ? AND field_path = 'title'
             """,
             ("source-alpha",),
         ).fetchone()
@@ -575,7 +575,7 @@ def test_enrich_source_conflict_degrades_without_human_checked_bypass(tmp_path: 
         vault,
         "update-work",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "provider_coverage": "degraded",
             "check_status": "checked",
         },
@@ -601,7 +601,7 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -611,7 +611,7 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
     assert "full-text acquisition failed" in done["finding"]["reason"]
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status, text_status FROM catalog_sources WHERE source_id = 'source-alpha'"
+            "SELECT check_status, text_status FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert tuple(row) == ("unchecked", "abstract-only")
     assert not (vault / "bibliography.bib").exists()
@@ -633,7 +633,7 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
         vault,
         "enrich-source",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "provider_payloads": provider_payloads(full_text=full_text),
         },
         idempotency_key="enrich-alpha",
@@ -647,7 +647,7 @@ def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
     with state.connect(vault) as conn:
         row = conn.execute(
             "SELECT check_status, text_status, content_path FROM catalog_sources "
-            "WHERE source_id = 'source-alpha'"
+            "WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert tuple(row) == ("checked", "full-text", done["content_path"])
 
@@ -690,7 +690,7 @@ def test_enrich_source_fetches_allowed_open_access_text(tmp_path: Path, monkeypa
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": provider_payloads()},
+        payload={"work_id": "source-alpha", "provider_payloads": provider_payloads()},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -744,7 +744,7 @@ def test_enrich_source_tries_next_open_access_text_url(tmp_path: Path, monkeypat
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -799,7 +799,7 @@ def test_enrich_source_fetches_open_access_locations_list(tmp_path: Path, monkey
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -864,7 +864,7 @@ def test_enrich_source_fetches_openalex_open_access_location(tmp_path: Path, mon
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -925,7 +925,7 @@ def test_enrich_source_fetches_crossref_full_text_link(tmp_path: Path, monkeypat
     enqueue_operation(
         vault,
         "enrich-source",
-        payload={"source_id": "source-alpha", "provider_payloads": providers},
+        payload={"work_id": "source-alpha", "provider_payloads": providers},
         idempotency_key="enrich-alpha",
     )
     done = run_next_job(vault, machine="test-machine")
@@ -948,7 +948,7 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
         vault,
         "enrich-source",
         payload={
-            "source_id": "source-alpha",
+            "work_id": "source-alpha",
             "provider_payloads": provider_payloads(retracted=True),
         },
         idempotency_key="enrich-alpha",
@@ -960,7 +960,7 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
     assert done["enrichment_status"] == "contested"
     with state.connect(vault) as conn:
         row = conn.execute(
-            "SELECT check_status, provider_coverage FROM catalog_sources WHERE source_id = 'source-alpha'"
+            "SELECT check_status, provider_coverage FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert tuple(row) == ("unchecked", "full")
     events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))

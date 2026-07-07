@@ -52,7 +52,7 @@ RUNNER_PROVIDER_NAMES = ("local", "gateway")
 
 def record_copi_interview_turn(
     vault: Path,
-    source_id: str,
+    work_id: str,
     response: str,
     *,
     prompt: str = "What matters about this source?",
@@ -62,21 +62,21 @@ def record_copi_interview_turn(
 ) -> dict[str, Any]:
     """Record one PI interview turn for later source synthesis."""
     vault = Path(vault)
-    source_id = _source_id(source_id)
-    source_ref = _source_ref(source_id)
+    work_id = _work_id(work_id)
+    source_ref = _source_ref(work_id)
     _checked_source(vault, source_ref)
     answer = response.strip()
     if not answer:
         raise ValueError("response is required")
     question = prompt.strip() or "What matters about this source?"
-    body = f"{source_id}\n{project_id.strip()}\n{question}\n{answer}"
+    body = f"{work_id}\n{project_id.strip()}\n{question}\n{answer}"
     turn_sha = _sha256_text(body)
     event = append_journal_event(
         vault,
         {
             "event": "copi-interview",
-            "run_id": run_id or f"copi-interview:{source_id}",
-            "source_id": source_id,
+            "run_id": run_id or f"copi-interview:{work_id}",
+            "work_id": work_id,
             "project_id": project_id.strip(),
             "prompt": question,
             "response": answer,
@@ -88,7 +88,7 @@ def record_copi_interview_turn(
     )
     commit = commit_writer_changes(
         vault,
-        f"record copi interview {source_id}",
+        f"record copi interview {work_id}",
         [],
         machine=machine,
     )
@@ -416,7 +416,7 @@ def run_operation_model_text(
 
 def compile_source_digest(
     vault: Path,
-    source_id: str,
+    work_id: str,
     hub_topics: Iterable[str],
     *,
     operation_id: str = "compile-source-digest",
@@ -431,12 +431,12 @@ def compile_source_digest(
     _require_tool(policy, "trusted_writer")
     promotion_checks = required_promotion_checks(policy)
 
-    source_id = _source_id(source_id)
+    work_id = _work_id(work_id)
     topics = [_topic_title(topic) for topic in hub_topics]
     if not 5 <= len(topics) <= 15:
         raise ValueError("hub_topics must contain 5 to 15 topics")
 
-    source_ref = _source_ref(source_id)
+    source_ref = _source_ref(work_id)
     source_fm = _checked_source(vault, source_ref)
     _require_digestable_text(vault, source_fm, machine=machine)
     citation = state.compact_citation(vault, source_ref)
@@ -445,14 +445,14 @@ def compile_source_digest(
     if not content_path.is_file():
         raise FileNotFoundError(content_path)
 
-    digest_rel = f"works/{source_id}/digest.md"
+    digest_rel = f"works/{work_id}/digest.md"
     require_policy_path(policy, source_ref)
     require_policy_path(policy, content_rel)
     require_policy_path(policy, digest_rel)
     for topic in topics:
         require_policy_path(policy, f"hubs/{_topic_slug(topic)}.md")
 
-    run_id = run_id or f"{operation_id}:{source_id}"
+    run_id = run_id or f"{operation_id}:{work_id}"
     started = append_journal_event(
         vault,
         {"event": "run", "run_id": run_id, "workflow": operation_id, "status": "started"},
@@ -460,7 +460,7 @@ def compile_source_digest(
     )
 
     content = safe_read(content_path)
-    interviews = _source_interviews(vault, source_id)
+    interviews = _source_interviews(vault, work_id)
     digest_prompt = _digest_prompt(source_fm, content, topics, interviews)
     digest_text = _run_digest_model(policy, runner, source_fm, content, topics, interviews)
     model_call = append_journal_event(
@@ -490,7 +490,7 @@ def compile_source_digest(
         "type": "digest",
         "title": f"Digest: {source_fm['title']}",
         "description": source_fm["description"],
-        "work_id": source_id,
+        "work_id": work_id,
         "tags": topics,
         "links": {},
         "evidence_set": [source_ref],
@@ -576,7 +576,7 @@ def compile_source_digest(
         machine=machine,
     )
     commit = commit_writer_changes(
-        vault, f"compile digest {source_id}", [digest_rel, *hub_paths], machine=machine
+        vault, f"compile digest {work_id}", [digest_rel, *hub_paths], machine=machine
     )
     return {
         "run_id": run_id,
@@ -607,7 +607,7 @@ def _checked_source(vault: Path, source_ref: str) -> dict[str, Any]:
         "check_status": row["check_status"],
         "title": row["title"],
         "description": row.get("description") or row["title"],
-        "source_id": f"catalog/sources/{row['source_id']}",
+        "work_id": f"catalog/sources/{row['work_id']}",
         "content_path": row["content_path"],
         "identifiers": row.get("identifiers") or {},
         "citekey": row.get("citekey") or "",
@@ -635,13 +635,13 @@ def _require_digestable_text(
 def _write_digest_text_attention(
     vault: Path, source_fm: dict[str, Any], text_status: str, *, machine: str | None
 ) -> str:
-    source_ref = _source_ref(str(source_fm["source_id"]))
-    source_id = _source_id(source_ref)
-    rel = f"inbox/flag-digest-full-text-{safe_filename(source_id)}.md"
+    source_ref = _source_ref(str(source_fm["work_id"]))
+    work_id = _work_id(source_ref)
+    rel = f"inbox/flag-digest-full-text-{safe_filename(work_id)}.md"
     path = vault / rel
     if path.exists():
         return rel
-    title = f"Digest needs full text for {source_id}"
+    title = f"Digest needs full text for {work_id}"
     finding = (
         "Digest compilation is blocked because the source has "
         f"`text_status: {text_status}` instead of `full-text`."
@@ -682,7 +682,7 @@ def _write_digest_text_attention(
         },
         machine=machine,
     )
-    commit_writer_changes(vault, f"flag digest full text {source_id}", [rel], machine=machine)
+    commit_writer_changes(vault, f"flag digest full text {work_id}", [rel], machine=machine)
     return rel
 
 
@@ -774,16 +774,16 @@ def _require_tool(policy: dict[str, Any], tool: str) -> None:
         raise PermissionError(f"operation {policy['operation_id']} does not allow {tool}")
 
 
-def _source_id(value: str) -> str:
+def _work_id(value: str) -> str:
     text = normalize_path(value).removeprefix("catalog/sources/").removesuffix("/source.md")
-    source_id = safe_filename(text.strip("/")).strip("._-")
-    if not source_id:
-        raise ValueError("source_id is required")
-    return source_id
+    work_id = safe_filename(text.strip("/")).strip("._-")
+    if not work_id:
+        raise ValueError("work_id is required")
+    return work_id
 
 
 def _source_ref(value: str) -> str:
-    return f"catalog/sources/{_source_id(value)}"
+    return f"catalog/sources/{_work_id(value)}"
 
 
 def _topic_title(value: str) -> str:
@@ -798,15 +798,15 @@ def _topic_slug(value: str) -> str:
 
 
 def _source_interviews(vault: Path, source_ref: str) -> list[dict[str, Any]]:
-    source_id = _source_id(source_ref)
+    work_id = _work_id(source_ref)
     rows: list[dict[str, Any]] = []
     for path in sorted((vault / "journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
-            event_source = event.get("source_id")
+            event_source = event.get("work_id")
             if event.get("event") != "copi-interview" or not isinstance(event_source, str):
                 continue
             try:
-                matches_source = _source_id(event_source) == source_id
+                matches_source = _work_id(event_source) == work_id
             except ValueError:
                 matches_source = False
             if not matches_source:

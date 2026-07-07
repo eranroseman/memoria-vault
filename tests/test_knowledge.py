@@ -99,7 +99,7 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert state.concept_check_status(vault, note_rel) == "checked"
     assert "status" not in fm
     assert state.note_curation_status(vault, note_rel) == "candidate"
-    assert fm["source_id"] == "catalog/sources/source-alpha"
+    assert fm["work_id"] == "catalog/sources/source-alpha"
     assert fm["evidence_set"] == ["catalog/sources/source-alpha"]
     assert fm["claim_text"] == "Framing changes which outcomes matter."
 
@@ -136,7 +136,7 @@ def test_emit_note_candidates_preserves_pdf_annotation_selector(tmp_path: Path) 
         machine="digest-machine",
     )
     annotation_ref = {
-        "source_id": "catalog/sources/pdf-source",
+        "work_id": "catalog/sources/pdf-source",
         "raw_copy_path": ".memoria/blobs/source-content/pdf-source/raw/paper.pdf",
         "page": 3,
         "text_quote": "anchored finding",
@@ -336,7 +336,7 @@ def _vault_root(path: Path) -> Path:
 def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
         text_status="full-text",
@@ -345,7 +345,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     _md(
         tmp_path / "works/source-alpha/digest.md",
         "type: digest\ncheck_status: checked\ntitle: Alpha digest\nwork_id: source-alpha\n"
-        "description: Alpha\nsource_id: catalog/sources/source-alpha\ntags: [sleep]\n",
+        "description: Alpha\nwork_id: catalog/sources/source-alpha\ntags: [sleep]\n",
     )
     for idx in range(2):
         _md(
@@ -354,7 +354,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="balanced",
+        work_id="balanced",
         title="Balanced",
         check_status="checked",
         text_status="full-text",
@@ -366,7 +366,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="thin",
+        work_id="thin",
         title="Thin",
         check_status="checked",
         text_status="full-text",
@@ -374,7 +374,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="unchecked",
+        work_id="unchecked",
         title="Unchecked",
         check_status="unchecked",
         text_status="full-text",
@@ -382,7 +382,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
     )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="retracted",
+        work_id="retracted",
         title="Retracted",
         check_status="checked",
         text_status="full-text",
@@ -426,7 +426,7 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
 def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="db-alpha",
+        work_id="db-alpha",
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
@@ -434,7 +434,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="db-archived",
+        work_id="db-archived",
         title="DB Archived",
         text_status="full-text",
         check_status="checked",
@@ -442,7 +442,7 @@ def test_analyze_gaps_counts_checked_sqlite_catalog_source_terms(tmp_path: Path)
     )
     state.upsert_catalog_record(
         tmp_path,
-        source_id="db-unchecked",
+        work_id="db-unchecked",
         title="DB Unchecked",
         text_status="full-text",
         check_status="unchecked",
@@ -573,7 +573,7 @@ def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) ->
         "tags: []\n"
         "links: {}\n"
         "work_id: source-alpha\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "---\n"
         "Neural retrieval improves durable memory systems.\n"
         "Neural retrieval also changes review timing.\n"
@@ -606,7 +606,7 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search
     vault = workspace(tmp_path / "vault")
     state.upsert_catalog_record(
         vault,
-        source_id="db-alpha",
+        work_id="db-alpha",
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
@@ -630,7 +630,7 @@ def test_analyze_gaps_proposes_candidates_from_sqlite_source_gaps_without_search
 
     gap = {row["topic"]: row for row in result["gaps"]}["catalog-only"]
     _assert_gap_contract(gap, "undigested")
-    assert gap["source_ids"] == ["db-alpha"]
+    assert gap["work_ids"] == ["db-alpha"]
     assert gap["discovery_candidate_paths"] == [
         "inbox/candidate-work-db-alpha-related-https___openalex.org_W777.md"
     ]
@@ -654,7 +654,7 @@ def test_analyze_gaps_ranks_discovery_candidates_against_steering(tmp_path: Path
     )
     state.upsert_catalog_record(
         vault,
-        source_id="db-alpha",
+        work_id="db-alpha",
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
@@ -702,14 +702,14 @@ def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     state.upsert_catalog_record(
         vault,
-        source_id="unchecked-metadata",
+        work_id="unchecked-metadata",
         title="Unchecked Metadata",
         text_status="metadata-only",
         check_status="unchecked",
     )
     state.upsert_catalog_record(
         vault,
-        source_id="metadata-only",
+        work_id="metadata-only",
         title="Metadata Only",
         text_status="metadata-only",
         check_status="checked",
@@ -720,7 +720,7 @@ def test_analyze_gaps_reports_missing_full_text(tmp_path: Path) -> None:
     assert result["full_text_gap_count"] == 1
     gap = result["gaps"][0]
     _assert_gap_contract(gap, "full-text-missing")
-    assert gap["source_id"] == "metadata-only"
+    assert gap["work_id"] == "metadata-only"
     assert "unchecked-metadata" not in json.dumps(result["gaps"])
     assert result["full_text_attention_paths"] == ["inbox/flag-gap-full-text-metadata-only.md"]
     attention = vault / result["full_text_attention_paths"][0]
