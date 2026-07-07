@@ -96,22 +96,6 @@ def gated_prefixes(folders: dict) -> list[str]:
     return list(folders.get("gated_prefixes", []))
 
 
-# Dependency-free fallback for the structural review gate. The schema no longer
-# declares gated prefixes; machine writes route through worker staging,
-# promotion, and quarantine instead.
-FALLBACK_GATED_PREFIXES = ("notes/", "hubs/")
-
-
-def load_gated_prefixes(schemas_dir: Path | None = None) -> tuple[str, ...]:
-    """Return structural review-gated prefixes."""
-    try:
-        return (
-            tuple(load_folders(schemas_dir).get("gated_prefixes") or ()) or FALLBACK_GATED_PREFIXES
-        )
-    except (OSError, yaml.YAMLError, KeyError):
-        return FALLBACK_GATED_PREFIXES
-
-
 def bundle_roots(folders: dict) -> tuple[str, ...]:
     return tuple(folders.get("bundle_roots") or folders.get("categories") or ())
 

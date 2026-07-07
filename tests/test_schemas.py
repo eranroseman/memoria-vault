@@ -250,5 +250,4 @@ def test_schema_has_no_gated_prefixes_while_review_gate_keeps_fallback():
     from memoria_vault.runtime.policy import REVIEW_GATED_PREFIXES
 
     assert schema.gated_prefixes(schema.load_folders()) == []
-    assert schema.load_gated_prefixes() == schema.FALLBACK_GATED_PREFIXES
-    assert schema.FALLBACK_GATED_PREFIXES == REVIEW_GATED_PREFIXES
+    assert REVIEW_GATED_PREFIXES == ("notes/", "hubs/")

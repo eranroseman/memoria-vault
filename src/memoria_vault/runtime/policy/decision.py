@@ -16,20 +16,11 @@ AUTO_FIX_ALLOWED_CLASSES = frozenset({"safe-and-unambiguous", "authorized-target
 AUTO_FIX_DRY_RUN_CLASSES = frozenset({"schema-content"})
 AUTO_FIX_DENY_CLASSES = frozenset({"review-gated-edit"})
 
-_gated_prefix_cache: tuple[str, ...] = ()
-
-
-def set_gated_prefixes(prefixes: tuple[str, ...]) -> None:
-    """Set the schema-derived review-gated prefixes for this process."""
-    global _gated_prefix_cache
-    _gated_prefix_cache = prefixes
-
 
 def is_review_gated(path: str) -> bool:
     """Return whether ``path`` is under a review-gated prefix."""
     return any(
-        path == prefix.rstrip("/") or path.startswith(prefix)
-        for prefix in (_gated_prefix_cache or REVIEW_GATED_PREFIXES)
+        path == prefix.rstrip("/") or path.startswith(prefix) for prefix in REVIEW_GATED_PREFIXES
     )
 
 

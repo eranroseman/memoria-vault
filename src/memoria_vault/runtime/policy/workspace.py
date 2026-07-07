@@ -1,4 +1,4 @@
-"""Workspace policy loading and gated-prefix discovery."""
+"""Workspace policy loading."""
 
 from __future__ import annotations
 
@@ -7,20 +7,8 @@ from pathlib import Path
 import yaml
 
 from .model import ActorPolicy
-from .paths import REVIEW_GATED_PREFIXES
 
 POLICY_CONFIG_RELPATH = ".memoria/config/policy.yaml"
-
-
-def load_gated_prefixes(workspace: Path) -> tuple[str, ...]:
-    """Load review-gated prefixes, with a stdlib fallback."""
-    try:
-        path = Path(workspace) / ".memoria" / "schemas" / "folders.yaml"
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        prefixes = tuple(data.get("gated_prefixes") or ())
-        return prefixes or REVIEW_GATED_PREFIXES
-    except Exception:  # noqa: BLE001 -- schema load with import-inside-try; degrade to default prefixes
-        return REVIEW_GATED_PREFIXES
 
 
 def _auto_fix_classes(block: dict, key: str) -> list[str]:

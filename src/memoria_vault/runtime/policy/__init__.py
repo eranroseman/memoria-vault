@@ -15,7 +15,6 @@ from .decision import (
     compose_skill_deny,
     decide,
     is_review_gated,
-    set_gated_prefixes,
 )
 from .engine import PolicyEngine
 from .model import ActorPolicy, Decision
@@ -31,7 +30,6 @@ from .paths import (
 from .workspace import (
     POLICY_CONFIG_RELPATH,
     load_actor_policy,
-    load_gated_prefixes,
     load_policy_map,
 )
 
@@ -56,11 +54,9 @@ __all__ = [
     "glob_to_regex",
     "is_review_gated",
     "load_actor_policy",
-    "load_gated_prefixes",
     "load_policy_map",
     "normalize_path",
     "path_matches",
-    "set_gated_prefixes",
     "sha256_file",
     "within_scope",
 ]
