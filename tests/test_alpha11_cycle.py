@@ -170,7 +170,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         },
         key="compile-digest",
     )
-    assert digest["digest_path"] == "works/doi-10.1000_cycle.2026/digest.md"
+    assert digest["digest_path"] == "digests/doi-10.1000_cycle.2026.md"
     assert len(digest["hub_paths"]) == 5
 
     notes = run_operation(
@@ -244,7 +244,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     manifest = run_operation(vault, "rebuild-checked-search-index", key="rebuild-search")
     indexed_paths = {row["path"] for row in manifest["documents"]}
-    assert f"works/{work_id}/fulltext.md" in indexed_paths
+    assert f"fulltext/{work_id}.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
     assert note_path in indexed_paths
 
@@ -259,7 +259,9 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     assert {edge["label"] for edge in canvas_data["edges"]} == {"supports"}
 
     events = [
-        event for path in sorted((vault / "journal").glob("*.jsonl")) for event in iter_jsonl(path)
+        event
+        for path in sorted((vault / ".memoria/journal").glob("*.jsonl"))
+        for event in iter_jsonl(path)
     ]
     assert any(event.get("event") == "model_call" for event in events)
     assert any(event.get("operation") == "curate-note-link" for event in events)

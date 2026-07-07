@@ -48,8 +48,8 @@ the CLI or observed file edits, the engine owns request/write/recovery state,
 and adapters are presentation layers over the same contracts. The older
 seven-layer architecture is historical context in [the standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
 
-**Workspace** — the runtime vault root containing `works/`, `sources/`,
-`notes/`, `hubs/`, `projects/`, `inbox/`, `system/`, and `.memoria/`.
+**Workspace** — the runtime vault root containing `notes/`, `hubs/`,
+`projects/`, `digests/`, `fulltext/`, `inbox/`, `system/`, and `.memoria/`.
 Optional editors open this root; the top-level bundle roots are the checked
 corpus homes.
 
@@ -63,7 +63,7 @@ corpus homes.
 queue** (your Inbox queue) and **Drift** (open integrity flags).
 
 **Places** — the rail's lower band over durable corpus homes: Library
-(`works/`, `sources/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
+(`digests/`, `fulltext/`, `bibliography.bib`), Knowledge (`notes/`, `hubs/`), and
 Project (`projects/`).
 
 **Space** — historical name for the Library, Knowledge, and Project navigation
@@ -115,7 +115,7 @@ sweep in Bases.
 
 **Attention projection** — a generated Inbox row (`candidate`, `gap`, `flag`,
 `alert`, `work-prompt`) carrying PI-facing work. It is not a durable Concept;
-the owning state is journal/check/queue data.
+the owning state is `.memoria/journal/`, check, and queue data.
 
 **Hub** — a checked `hub` Concept in `hubs/` aggregating a topic's
 members and links. Machine-curated hub changes are suggestions until the PI

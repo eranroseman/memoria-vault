@@ -1,3 +1,8 @@
+---
+type: system
+title: Memoria workspace instructions
+---
+
 # How to work in this Memoria workspace
 
 This is the shared instruction layer for any human, local tool, or delegated
@@ -21,9 +26,9 @@ check/verdict state before anything becomes readable as checked knowledge.
 
 ## Where things live
 
-`works/` source records, full text, raw files, and digests · `sources/`
-source-notes · `notes/` claims/questions · `hubs/` topic hubs · `projects/`
-project evidence and gaps · `inbox/` transient attention projections · `system/`
+`notes/` claims/questions · `hubs/` topic hubs · `projects/`
+project evidence and gaps · `digests/` generated work digests · `fulltext/`
+generated full-text reproductions · `inbox/` transient attention projections · `system/`
 visible manifests, incidents, metrics, templates, and eval fixtures. Product
 operation manifests live in the installed `memoria_vault` package, not in a
 workspace `capabilities/` tree.

@@ -320,7 +320,7 @@ def test_enrich_source_requires_all_doi_providers(tmp_path: Path) -> None:
             "SELECT check_status FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert row["check_status"] == "unchecked"
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[-1]["event"] == "check-fired"
     assert "missing required provider: unpaywall" in events[-1]["reason"]
     assert done["attention_path"].startswith("inbox/flag-enrichment-source-alpha-")
@@ -615,7 +615,7 @@ def test_enrich_source_blocks_abstract_only_text_without_acquired_full_text(
         ).fetchone()
     assert tuple(row) == ("unchecked", "abstract-only")
     assert not (vault / "bibliography.bib").exists()
-    assert not (vault / "works/source-alpha/digest.md").exists()
+    assert not (vault / "digests/source-alpha.md").exists()
 
 
 def test_enrich_source_acquires_replayed_full_text(tmp_path: Path) -> None:
@@ -963,7 +963,7 @@ def test_enrich_source_blocks_retracted_doi(tmp_path: Path) -> None:
             "SELECT check_status, provider_coverage FROM catalog_sources WHERE work_id = 'source-alpha'"
         ).fetchone()
     assert tuple(row) == ("unchecked", "full")
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[-1]["event"] == "check-fired"
     assert events[-1]["check"] == "source-retraction"
     assert done["attention_path"] == "inbox/flag-enrichment-source-alpha-source-retraction.md"

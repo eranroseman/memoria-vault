@@ -6,7 +6,7 @@ operation_id: resolve-attention
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- journal/
+- .memoria/journal/
 - .memoria/index/
 allowed_network: []
 prompt_version: resolve-attention.v1

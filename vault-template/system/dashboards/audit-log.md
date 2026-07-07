@@ -1,3 +1,8 @@
+---
+type: dashboard
+title: Audit log
+---
+
 # Audit log
 
 Policy-gate write decisions, from `system/logs/audit.jsonl`. Open when a write didn't happen as expected, a worker looks off, or after an overnight run. Contract: [Policy gate](https://eranroseman.github.io/memoria-vault/reference/policy-mcp) · rationale: [dashboard rationale](https://eranroseman.github.io/memoria-vault/explanation/dashboards/operational-health/#audit-log).

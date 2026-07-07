@@ -7,12 +7,12 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
-- journal/
+- .memoria/journal/
 - .memoria/quarantine/
 allowed_network: []
 prompt_version: cascade-rollback.v1

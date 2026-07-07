@@ -334,7 +334,7 @@ def _set_catalog_stale(vault: Path, work_id: str) -> None:
 
 
 def _checked_broken_digest(vault: Path) -> dict[str, Any]:
-    target = "works/seeded-missing-digest-evidence/digest.md"
+    target = "digests/seeded-missing-digest-evidence.md"
     stage = stage_concept(
         vault,
         target,
@@ -360,7 +360,7 @@ def _checked_broken_digest(vault: Path) -> dict[str, Any]:
 
 
 def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
-    target = "works/seeded-missing-contradiction/digest.md"
+    target = "digests/seeded-missing-contradiction.md"
     stage = stage_concept(
         vault,
         target,
@@ -372,7 +372,7 @@ def _checked_contradiction_digest(vault: Path) -> dict[str, Any]:
                 "work_id": "seed-source",
                 "tags": [],
                 "links": {},
-                "contradictions": ["works/missing-contradiction-target/digest.md"],
+                "contradictions": ["digests/missing-contradiction-target.md"],
             },
             "Seeded missing contradiction",
             "This checked digest intentionally points at a missing contradiction target.",

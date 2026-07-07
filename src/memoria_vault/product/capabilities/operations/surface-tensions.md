@@ -9,8 +9,8 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - inbox/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/

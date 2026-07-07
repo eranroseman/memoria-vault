@@ -1,3 +1,8 @@
+---
+type: system
+title: Memoria voice preamble
+---
+
 # Memoria voice — the shared pattern preamble
 
 Prepended to every pattern run. Non-negotiable, regardless of the pattern:

@@ -33,7 +33,7 @@ not prompt patterns and are listed through `memoria operation list`.
 | --- | --- | --- | --- | --- | --- | --- |
 | `analyze-claims` | Analyze claims | peer-reviewer | analyze | both | selection-or-note | `.memoria/staging/notes/` |
 | `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `.memoria/staging/notes/` |
-| `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/works/` |
+| `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/digests/` |
 | `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/notes/` |
 | `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `.memoria/staging/notes/` |
 | `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/notes/` |
@@ -61,7 +61,7 @@ The body is the prompt; `{{input}}` is the one substitution token.
 | `mode` | `library` \| `project` \| `knowledge` \| `both` | Which picker view the operation appears in. |
 | `action` | str | The operation verb. |
 | `input` | str | Expected input shape; documentation for the caller, not enforced. |
-| `output_target` | path | Where the run's product is meant to land; shipped prompt operations stage under `.memoria/staging/notes/` or `.memoria/staging/works/`. |
+| `output_target` | path | Where the run's product is meant to land; shipped prompt operations stage under `.memoria/staging/notes/` or `.memoria/staging/digests/`. |
 | `runner` | map | Required `test` and `live` branches; each branch pins `{provider, model, temperature}` and may include other runner params. |
 | `untrusted_fields` | list | Raw user/provider text fields that must be sealed before entering a model prompt. |
 | `version` | str | Logged with every run for provenance. |

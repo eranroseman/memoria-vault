@@ -30,7 +30,7 @@ DEFAULT_DIGEST_TOPICS = ["Framing", "Methods", "Findings", "Gaps", "Implications
 SEED_TREES = (
     ("vault-template/.memoria/schemas", ".memoria/schemas"),
     ("vault-template/.memoria/config", ".memoria/config"),
-    ("vault-template/system/eval", "system/eval"),
+    ("vault-template/.memoria/eval", ".memoria/eval"),
 )
 SEED_FILES = (
     ("vault-template/.gitignore", ".gitignore"),
@@ -1672,7 +1672,7 @@ def _workspace(args: argparse.Namespace) -> Path:
 
 
 def _seeded_error_bundle_path(workspace: Path) -> Path:
-    path = workspace / "system/eval/alpha15-seeded-errors.json"
+    path = workspace / ".memoria/eval/alpha15-seeded-errors.json"
     if path.is_file():
         return path
     raise FileNotFoundError(path)
@@ -1764,23 +1764,26 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
 def _workspace_plan(workspace: Path) -> list[str]:
     return [
         "inbox",
-        "works",
-        "sources",
         "notes",
         "hubs",
         "projects",
+        "digests",
+        "fulltext",
         "system",
         "system/incidents",
-        "system/eval",
         "system/metrics",
         ".memoria/blobs",
         ".memoria/config",
+        ".memoria/eval",
         ".memoria/index/search/checked",
-        ".memoria/staging/works",
-        ".memoria/staging/sources",
+        ".memoria/journal",
+        ".memoria/patterns",
         ".memoria/staging/notes",
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
+        ".memoria/staging/digests",
+        ".memoria/staging/fulltext",
+        ".memoria/templates",
     ]
 
 
@@ -1908,7 +1911,7 @@ def _copy_alpha15_projects(source: Path, workspace: Path) -> list[str]:
 
 def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
     from memoria_vault.runtime.paths import safe_filename
-    from memoria_vault.runtime.vaultio import new_ulid, split_frontmatter
+    from memoria_vault.runtime.vaultio import split_frontmatter
 
     root = source / "knowledge/works"
     if not root.is_dir():
@@ -1919,10 +1922,9 @@ def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
         work_id = safe_filename(str(frontmatter.get("work_id") or path.stem)).strip("._-")
         if not work_id:
             work_id = path.stem
-        work_dir = workspace / "works" / work_id
-        digest_path = work_dir / "digest.md"
+        digest_path = workspace / "digests" / f"{work_id}.md"
         digest = dict(frontmatter)
-        digest.update({"type": "digest", "id": new_ulid(), "work_id": work_id})
+        digest.update({"type": "digest", "id": work_id, "work_id": work_id})
         digest.setdefault("title", str(frontmatter.get("title") or path.stem))
         digest.setdefault("tags", [])
         digest.setdefault("links", {})

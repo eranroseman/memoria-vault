@@ -7,7 +7,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - .memoria/blobs/source-content/
-- journal/
+- .memoria/journal/
 allowed_network:
 - http://
 - https://

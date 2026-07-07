@@ -9,9 +9,9 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - inbox/
-- journal/
-- works/
-- sources/
+- .memoria/journal/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/

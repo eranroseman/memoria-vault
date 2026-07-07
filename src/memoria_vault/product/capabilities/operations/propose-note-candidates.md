@@ -7,7 +7,7 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/sources/
-- works/
+- digests/
 - notes/
 allowed_network: []
 prompt_version: propose-note-candidates.v1
@@ -34,5 +34,5 @@ links: {}
 
 From the checked digest identified by {{input}}, propose atomic notes grounded in
 the digest's source evidence. The note candidates are machine-authored; candidate
-state lives in journal/SQLite state, and the PI decides whether to accept, edit,
+state lives in `.memoria/journal/` and SQLite state, and the PI decides whether to accept, edit,
 reject, or link them.

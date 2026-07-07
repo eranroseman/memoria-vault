@@ -331,7 +331,7 @@ def _fake_seeded_verdict(monkeypatch: pytest.MonkeyPatch, workspace: Path) -> No
     ) -> dict[str, object]:
         assert vault != workspace
         assert template_root == workspace
-        assert bundle_path == workspace / "system/eval/alpha15-seeded-errors.json"
+        assert bundle_path == workspace / ".memoria/eval/alpha15-seeded-errors.json"
         assert operation_id == "run-seeded-error-verdict"
         assert runner["mode"] == "test"
         assert machine == "memoria-cli"

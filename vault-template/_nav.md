@@ -1,4 +1,5 @@
 ---
+type: system
 title: Navigator
 cssclasses: memoria-nav
 ---
@@ -13,15 +14,15 @@ cssclasses: memoria-nav
 
 **Places**
 
-`works/`
-
-`sources/`
-
 `notes/`
 
 `hubs/`
 
 `projects/`
+
+`digests/`
+
+`fulltext/`
 
 ---
 

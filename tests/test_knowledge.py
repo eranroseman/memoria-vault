@@ -104,7 +104,7 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert "citations" not in fm
     assert fm["claim_text"] == "Framing changes which outcomes matter."
 
-    events = list(iter_jsonl(vault / "journal/note-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/note-machine.jsonl"))
     assert [event["event"] for event in events] == [
         "run",
         "model_call",
@@ -203,7 +203,7 @@ def test_curate_note_candidate_accepts_checked_candidate_with_journal(tmp_path: 
     assert "status" not in read_frontmatter(vault / note_rel)
     assert state.note_curation_status(vault, note_rel) == "accepted"
     assert "The body stays intact." in (vault / note_rel).read_text(encoding="utf-8")
-    event = list(iter_jsonl(vault / "journal/curator.jsonl"))[-1]
+    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
     assert event["event"] == "resolved"
     assert event["operation"] == "curate-note-candidate"
     assert event["target_id"] == note_rel
@@ -301,7 +301,7 @@ def test_curate_note_link_records_typed_link_on_checked_note(tmp_path: Path) -> 
     assert result["target_path"] == "notes/target.md"
     assert result["link_type"] == "supports"
     assert result["changed"] is True
-    event = list(iter_jsonl(vault / "journal/curator.jsonl"))[-1]
+    event = list(iter_jsonl(vault / ".memoria/journal/curator.jsonl"))[-1]
     assert event["event"] == "resolved"
     assert event["operation"] == "curate-note-link"
     assert event["linked_id"] == "notes/target.md"
@@ -329,7 +329,14 @@ def _md(path: Path, frontmatter: str) -> None:
 
 def _vault_root(path: Path) -> Path:
     for parent in path.parents:
-        if parent.name in {"works", "sources", "notes", "hubs", "projects", "capabilities"}:
+        if parent.name in {
+            "notes",
+            "hubs",
+            "projects",
+            "digests",
+            "fulltext",
+            "capabilities",
+        }:
             return parent.parent
     return path.parent
 
@@ -344,9 +351,9 @@ def test_analyze_gaps_names_mismatches_and_seed_terms(tmp_path: Path) -> None:
         csl_json={"memoria": {"tags": ["sleep"]}},
     )
     _md(
-        tmp_path / "works/source-alpha/digest.md",
-        "type: digest\ncheck_status: checked\ntitle: Alpha digest\nwork_id: source-alpha\n"
-        "description: Alpha\nwork_id: catalog/sources/source-alpha\ntags: [sleep]\n",
+        tmp_path / "digests/source-alpha.md",
+        "type: digest\ncheck_status: checked\nid: source-alpha\ntitle: Alpha digest\n"
+        "description: Alpha\nwork_id: source-alpha\ntags: [sleep]\nlinks: {}\n",
     )
     for idx in range(2):
         _md(
@@ -534,7 +541,7 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
     assert gap["gap_type"] == "undigested"
     _assert_gap_contract(gap, "undigested")
     assert gap["retrieval_engine"] == "bm25"
-    assert gap["retrieval_sources"][0]["path"] == "works/source-alpha/fulltext.md"
+    assert gap["retrieval_sources"][0]["path"] == "fulltext/source-alpha.md"
     citation_gap = {row["topic"]: row for row in result["gaps"]}[
         "Citation neighborhood: Alpha Source"
     ]
@@ -563,7 +570,7 @@ def test_analyze_gaps_uses_search_graph_for_discovery_candidates(tmp_path: Path)
 def test_analyze_gaps_emits_unchecked_tag_candidate_attention(tmp_path: Path) -> None:
     vault = workspace(tmp_path / "vault")
     shutil.copytree(ROOT / "vault-template/system", vault / "system")
-    work_rel = "works/source-alpha/digest.md"
+    work_rel = "digests/source-alpha.md"
     work = vault / work_rel
     work.parent.mkdir(parents=True, exist_ok=True)
     work.write_text(

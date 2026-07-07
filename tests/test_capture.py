@@ -66,7 +66,7 @@ def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     assert not (vault / "catalog/sources/source-alpha/source.md").exists()
     assert not (vault / "references.bib").exists()
 
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert [event["event"] for event in events] == ["run", "run"]
     assert events[0]["status"] == "started"
     assert events[-1]["status"] == "done"
@@ -121,7 +121,7 @@ def test_capture_source_rejects_removed_required_check_argument(
         )
 
     assert not (vault / "catalog/sources/source-alpha").exists()
-    assert not (vault / "journal/test-machine.jsonl").exists()
+    assert not (vault / ".memoria/journal/test-machine.jsonl").exists()
 
 
 def test_capture_source_refuses_to_replace_existing_raw(tmp_path: Path) -> None:
@@ -187,7 +187,7 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     assert source["text_status"] == "full-text"
     assert source["raw_path"] == ".memoria/blobs/source-content/pdf-source/raw/paper.pdf"
     assert not (vault / "catalog/sources/pdf-source/source.md").exists()
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_pdf_source"
     assert events[-1]["workflow"] == "capture_pdf_source"
 
@@ -214,7 +214,7 @@ def test_capture_pdf_source_rejects_incoherent_parser_text(tmp_path: Path, monke
     else:
         raise AssertionError("incoherent PDF extraction should fail")
 
-    assert not (vault / "journal").exists()
+    assert not (vault / ".memoria/journal").exists()
     assert not (vault / "catalog/sources/bad-pdf").exists()
 
 
@@ -228,7 +228,7 @@ def test_capture_source_validates_before_journaling(tmp_path: Path) -> None:
     else:
         raise AssertionError("empty content should fail")
 
-    assert not (vault / "journal").exists()
+    assert not (vault / ".memoria/journal").exists()
     assert not (vault / "catalog/sources/bad").exists()
 
 
@@ -281,7 +281,7 @@ def test_capture_bibtex_source_maps_metadata_and_raw(tmp_path: Path) -> None:
     assert not (vault / "catalog/entities").exists()
     assert not (vault / "references.bib").exists()
 
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_bibtex_source"
     assert events[-1]["workflow"] == "capture_bibtex_source"
 
@@ -580,7 +580,7 @@ def test_capture_url_source_fetches_from_loopback_http_server(tmp_path: Path) ->
     assert source["resource"].endswith("/source")
     assert "Live local fetch text." in (vault / result["content_path"]).read_text(encoding="utf-8")
     assert b"Live local fetch text." in (vault / result["raw_path"]).read_bytes()
-    events = list(iter_jsonl(vault / "journal/test-machine.jsonl"))
+    events = list(iter_jsonl(vault / ".memoria/journal/test-machine.jsonl"))
     assert events[0]["workflow"] == "capture_url_source"
     assert events[-1]["status"] == "done"
 

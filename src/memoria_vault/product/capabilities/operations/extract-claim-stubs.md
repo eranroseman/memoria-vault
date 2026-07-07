@@ -7,8 +7,8 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/

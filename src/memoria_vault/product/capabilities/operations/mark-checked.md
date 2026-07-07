@@ -7,13 +7,13 @@ allowed_tools:
 - trusted_writer
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
 - capabilities/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: mark-checked.v1
 io_schema:

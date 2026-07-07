@@ -7,14 +7,14 @@ allowed_tools:
 - evaluator
 - trusted_writer
 allowed_paths:
-- system/eval/
+- .memoria/eval/
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: run-seeded-error-verdict.v1
 io_schema:

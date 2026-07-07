@@ -9,11 +9,12 @@ from memoria_vault.runtime.subsystems.lib import schema
 
 SCHEMA_TYPES = {
     "digest",
+    "fulltext",
     "note",
     "hub",
     "project",
 }
-CONCEPT_ROOTS = {"works", "sources", "notes", "hubs", "projects"}
+CONCEPT_ROOTS = {"notes", "hubs", "projects", "digests", "fulltext"}
 
 
 def _md(path: Path, frontmatter: dict, body: str = "Body.\n") -> None:
@@ -38,7 +39,7 @@ def _empty_workspace(root: Path) -> Path:
 def _m0_schema_reset_fixture(root: Path) -> Path:
     _empty_workspace(root)
     _md(
-        root / "works/source-alpha/digest.md",
+        root / "digests/source-alpha.md",
         {
             "type": "digest",
             "title": "Alpha digest",
@@ -99,12 +100,13 @@ def test_portable_fields_declared():
         required = sc.get("required") or {}
         optional = sc.get("optional") or {}
         assert required["title"] == "str", name
-        assert required["id"] == ("str" if name == "digest" else "ulid"), name
+        assert required["id"] == ("str" if name in {"digest", "fulltext"} else "ulid"), name
         assert required["tags"] == "list", name
         assert required["links"] == "links", name
         assert optional.get("archived") == "bool", name
-        assert optional.get("x") == "map", name
+    assert optional.get("x") == "map", name
     assert types["digest"]["required"]["work_id"] == "str"
+    assert types["fulltext"]["required"]["work_id"] == "str"
     assert types["hub"]["required"]["tag"] == "str"
 
 
@@ -211,7 +213,7 @@ def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
 def test_memoria_workspace_rejects_malformed_concept(tmp_path):
     root = _empty_workspace(tmp_path)
     _md(
-        root / "works/bad/digest.md",
+        root / "digests/bad.md",
         {"type": "digest", "title": "Bad"},
     )
     errors = schema.validate_memoria_workspace(root)

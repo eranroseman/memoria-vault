@@ -145,7 +145,7 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
 
 
 def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
-    if not rel.startswith(("works/", "graph-neighborhoods/")):
+    if not rel.startswith(("fulltext/", "graph-neighborhoods/")):
         return False
     work_id = _work_id_from_generated_path(rel)
     if not work_id:
@@ -416,7 +416,7 @@ def _bundle_roots(vault: Path) -> list[str]:
     return [
         normalize_path(root)
         for root in folders.get("bundle_roots") or []
-        if normalize_path(root) in {"works", "sources", "notes", "hubs", "projects"}
+        if normalize_path(root) in {"notes", "hubs", "projects", "digests", "fulltext"}
     ]
 
 
@@ -430,7 +430,8 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
         if not content_path.is_file():
             continue
         work_frontmatter = {
-            "type": "work",
+            "type": "fulltext",
+            "id": work_id,
             "title": source["title"],
             "work_id": work_id,
             "tags": [],
@@ -438,7 +439,7 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
         }
         docs.append(
             _generated_doc(
-                f"works/{safe_filename(work_id)}/fulltext.md",
+                f"fulltext/{safe_filename(work_id)}.md",
                 work_frontmatter,
                 [
                     f"# {source['title']}",
@@ -481,10 +482,8 @@ def _work_id_from_generated_path(rel: str) -> str:
     rel = normalize_path(rel)
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
-    if rel.startswith("works/"):
+    if rel.startswith("fulltext/"):
         parts = rel.split("/")
-        if len(parts) == 3 and parts[2] == "fulltext.md":
-            return parts[1]
         if len(parts) == 2 and parts[1].endswith(".md"):
             return Path(parts[1]).stem
     return ""

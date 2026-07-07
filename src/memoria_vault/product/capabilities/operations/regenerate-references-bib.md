@@ -9,7 +9,7 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - bibliography.bib
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: regenerate-references-bib.v1
 io_schema:

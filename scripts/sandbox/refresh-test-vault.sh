@@ -96,12 +96,12 @@ for rel in \
   .memoria/plugins \
   .memoria/schemas \
   .memoria/scripts \
+  .memoria/eval \
+  .memoria/patterns \
+  .memoria/templates \
   system/dashboards \
-  system/eval \
   system/incidents \
-  system/metrics \
-  system/patterns \
-  system/templates
+  system/metrics
 do
   sync_dir "$rel"
 done

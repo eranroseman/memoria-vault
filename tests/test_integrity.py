@@ -61,7 +61,15 @@ def _stage_checked_note(vault: Path, rel: str, title: str, body: str) -> None:
 
 
 def sync_file_verdicts(vault: Path) -> None:
-    for root in ("catalog", "knowledge", "works", "sources", "notes", "hubs", "projects"):
+    for root in (
+        "catalog",
+        "knowledge",
+        "notes",
+        "hubs",
+        "projects",
+        "digests",
+        "fulltext",
+    ):
         base = vault / root
         if not base.exists():
             continue
@@ -797,9 +805,9 @@ def test_db_capture_does_not_create_entity_identity_findings(
 
 def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = "works/bad-contradiction/digest.md"
-    control = "works/good-contradiction/digest.md"
-    good_target = "works/other/digest.md"
+    target = "digests/bad-contradiction.md"
+    control = "digests/good-contradiction.md"
+    good_target = "digests/other.md"
     (vault / target).parent.mkdir(parents=True, exist_ok=True)
     (vault / control).parent.mkdir(parents=True, exist_ok=True)
     (vault / good_target).parent.mkdir(parents=True, exist_ok=True)
@@ -822,7 +830,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "description: Missing contradiction target.\n"
         "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - works/missing/digest.md\n"
+        "  - digests/missing.md\n"
         "---\n"
         "# Bad contradiction\n",
         encoding="utf-8",
@@ -835,7 +843,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
         "description: Resolving contradiction target.\n"
         "work_id: catalog/sources/source-alpha\n"
         "contradictions:\n"
-        "  - works/other/digest.md\n"
+        "  - digests/other.md\n"
         "---\n"
         "# Good contradiction\n",
         encoding="utf-8",
@@ -847,7 +855,7 @@ def test_contradiction_links_flag_missing_targets(tmp_path: Path) -> None:
     [finding] = result["findings"]
     assert finding["check"] == "contradiction-link"
     assert finding["target_id"] == target
-    assert finding["reason"] == "unresolved contradiction target: works/missing/digest.md"
+    assert finding["reason"] == "unresolved contradiction target: digests/missing.md"
     assert finding["route"] == "ask"
 
 
@@ -1192,7 +1200,7 @@ def test_cascade_rollback_reverts_machine_descendants_and_flags_pi_notes(
     )
     assert state.concept_check_status(vault, notes["note_paths"][0]) == "quarantined"
 
-    rollback_events = list(iter_jsonl(vault / "journal/integrity-machine.jsonl"))
+    rollback_events = list(iter_jsonl(vault / ".memoria/journal/integrity-machine.jsonl"))
     assert [event["event"] for event in rollback_events].count("resolved") == len(
         result["reverted"]
     )
@@ -1243,7 +1251,7 @@ def test_cascade_rollback_restores_previous_file_version_with_git(tmp_path: Path
     assert result["reverted"] == [target]
     assert "Version one" in (vault / target).read_text(encoding="utf-8")
     assert "Version two" in (vault / ".memoria/quarantine" / target).read_text(encoding="utf-8")
-    rollback_events = list(iter_jsonl(vault / "journal/integrity-machine.jsonl"))
+    rollback_events = list(iter_jsonl(vault / ".memoria/journal/integrity-machine.jsonl"))
     resolved = next(event for event in rollback_events if event["event"] == "resolved")
     assert resolved["restore_source"]
     committed = set(git(vault, "show", "--name-only", "--format=", result["commit"]).splitlines())

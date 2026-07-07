@@ -443,7 +443,7 @@ def compile_source_digest(
     if not content_path.is_file():
         raise FileNotFoundError(content_path)
 
-    digest_rel = f"works/{work_id}/digest.md"
+    digest_rel = f"digests/{work_id}.md"
     require_policy_path(policy, source_ref)
     require_policy_path(policy, content_rel)
     require_policy_path(policy, digest_rel)
@@ -720,7 +720,7 @@ def _checked_prompt_input(vault: Path, relpath: str) -> tuple[str, dict[str, str
 
 def _prompt_text(vault: Path, policy: dict[str, Any], pattern: str, input_text: str) -> str:
     _require_untrusted_fields(str(policy.get("operation_id") or "<unknown>"), policy, ["input"])
-    preamble_path = vault / "system/patterns/_preamble.md"
+    preamble_path = vault / ".memoria/patterns/_preamble.md"
     preamble = preamble_path.read_text(encoding="utf-8") if preamble_path.is_file() else ""
     prompt = pattern.replace(
         "{{input}}",
@@ -793,7 +793,7 @@ def _topic_slug(value: str) -> str:
 def _source_interviews(vault: Path, source_ref: str) -> list[dict[str, Any]]:
     work_id = _work_id(source_ref)
     rows: list[dict[str, Any]] = []
-    for path in sorted((vault / "journal").glob("*.jsonl")):
+    for path in sorted((vault / ".memoria/journal").glob("*.jsonl")):
         for event in iter_jsonl(path):
             event_source = event.get("work_id")
             if event.get("event") != "copi-interview" or not isinstance(event_source, str):

@@ -9,7 +9,7 @@ allowed_tools:
 allowed_paths:
 - catalog/sources/
 - .memoria/blobs/source-content/
-- works/
+- digests/
 - hubs/
 allowed_network: []
 prompt_version: compile-source-digest.v1
@@ -27,7 +27,7 @@ posture: co-pi
 mode: knowledge
 action: synthesize
 input: checked-work
-output_target: .memoria/staging/works/
+output_target: .memoria/staging/digests/
 version: '1.0'
 created: 2026-06-29
 id: operations/compile-source-digest

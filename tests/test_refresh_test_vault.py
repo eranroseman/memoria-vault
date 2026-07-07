@@ -34,7 +34,7 @@ def test_refresh_helper_updates_source_owned_surfaces():
         "system/incidents",
         "system/metrics",
         "system/scripts",
-        "system/templates",
+        ".memoria/templates",
         ".git/hooks/pre-commit",
         "PYTHONPATH_VALUE",
         "index.md",

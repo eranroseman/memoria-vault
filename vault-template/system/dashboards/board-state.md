@@ -1,3 +1,8 @@
+---
+type: dashboard
+title: Board State
+---
+
 # Board State
 
 Request and attention state for debugging the local worker. Attention items are

@@ -13,8 +13,8 @@ from typing import Any
 import yaml
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
-UNIVERSAL_CONCEPT_BUNDLES = frozenset({"works", "sources", "notes", "hubs", "projects"})
-UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "digest", "hub", "project"})
+UNIVERSAL_CONCEPT_BUNDLES = frozenset({"notes", "hubs", "projects", "digests", "fulltext"})
+UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "digest", "hub", "project", "fulltext"})
 ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 RETIRED_FRONTMATTER_FIELDS = frozenset(
     {
@@ -100,7 +100,7 @@ def apply_universal_concept_frontmatter(
     if len(parts) != 2 or parts[0] not in UNIVERSAL_CONCEPT_BUNDLES:
         return frontmatter
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
-        if frontmatter.get("type") == "digest":
+        if frontmatter.get("type") in {"digest", "fulltext"}:
             frontmatter.setdefault("id", frontmatter.get("work_id") or new_ulid())
         else:
             frontmatter.setdefault("id", new_ulid())
@@ -118,7 +118,9 @@ def universal_concept_frontmatter_errors(frontmatter: dict[str, Any], rel_path: 
         return []
     errors: list[str] = []
     if frontmatter.get("type") in UNIVERSAL_CONCEPT_TYPES:
-        if frontmatter.get("type") != "digest" and not is_ulid(str(frontmatter.get("id") or "")):
+        if frontmatter.get("type") not in {"digest", "fulltext"} and not is_ulid(
+            str(frontmatter.get("id") or "")
+        ):
             errors.append("id must be a ULID")
         if not isinstance(frontmatter.get("links"), dict):
             errors.append("links must be a map")

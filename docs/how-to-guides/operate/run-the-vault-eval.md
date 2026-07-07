@@ -53,7 +53,7 @@ Add `--k <n>` to change the recall window (default 3) and `--dry-run` to compute
 - `system/metrics/eval/runs.jsonl` has a new line (timestamp, quarter, k, per-task records, per-metric aggregates) — written only when at least one result payload is reported
 - The eval-trend dashboard shows the run, with `recall@k` / `support-rate` / `FAMA-clean` per task
 - A task with no machine-readable result shows as **unscored** — never a faked score
-- `system/eval/last-run.md` reflects the dispatch you just ran
+- `.memoria/eval/last-run.md` reflects the dispatch you just ran
 
 ## Scheduled equivalent
 

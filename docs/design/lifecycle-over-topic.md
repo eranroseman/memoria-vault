@@ -10,7 +10,7 @@ nav_order: 20
 Two organizational decisions shape the vault: **a Concept's position in the
 system is its type, never its topic**, and **read state is record state, not a
 folder**. Folders encode one thing only: the category and type home declared in
-`folders.yaml` (`works/`, `sources/`, `notes/`, `hubs/`, and `projects/`, with
+`folders.yaml` (`notes/`, `hubs/`, `projects/`, `digests/`, and `fulltext/`, with
 SQLite-backed catalog state). Where a record stands for reading is
 `check_status`, not a path move.
 
@@ -20,8 +20,8 @@ SQLite-backed catalog state). Where a record stands for reading is
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of checked bundle this is.
-Alpha.16 file-backed Concepts are work, digest, source-note, note, hub, and
-project; catalog source records live in SQLite with blob-backed source content.
+Alpha.18 file-backed bundle roots are notes, hubs, projects, digests, and
+fulltext; catalog source records live in SQLite with blob-backed source content.
 Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
 foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-foundations.html#luhmanns-zettelkasten).

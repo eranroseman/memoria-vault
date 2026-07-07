@@ -42,18 +42,22 @@ def test_alpha16_fresh_package_contract_is_shipped():
     required_dirs = {
         ".memoria/index/search",
         ".memoria/config",
+        ".memoria/eval",
+        ".memoria/journal",
+        ".memoria/patterns",
         ".memoria/quarantine",
-        ".memoria/staging/works",
-        ".memoria/staging/sources",
+        ".memoria/templates",
         ".memoria/staging/notes",
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
+        ".memoria/staging/digests",
+        ".memoria/staging/fulltext",
         "inbox",
-        "works",
-        "sources",
         "notes",
         "hubs",
         "projects",
+        "digests",
+        "fulltext",
         "system/incidents",
         "system/metrics",
     }
@@ -74,12 +78,15 @@ def test_alpha16_fresh_package_contract_is_shipped():
         assert (ROOT / "vault-template" / rel).is_file(), rel
     for rel in (
         ".memoria/index/search",
+        ".memoria/journal",
+        ".memoria/patterns",
         ".memoria/quarantine",
-        ".memoria/staging/works",
-        ".memoria/staging/sources",
+        ".memoria/templates",
         ".memoria/staging/notes",
         ".memoria/staging/hubs",
         ".memoria/staging/projects",
+        ".memoria/staging/digests",
+        ".memoria/staging/fulltext",
     ):
         assert (ROOT / "vault-template" / rel / ".gitkeep").is_file(), rel
     assert not (ROOT / "vault-template/.memoria/memoria.bib").exists()

@@ -6,12 +6,12 @@ operation_id: integrity-link-target-check
 allowed_tools:
 - integrity_checker
 allowed_paths:
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: integrity-link-target-check.v1
 io_schema:

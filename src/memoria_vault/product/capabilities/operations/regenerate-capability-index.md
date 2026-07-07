@@ -7,7 +7,7 @@ allowed_tools:
 - projection_writer
 allowed_paths:
 - .memoria/index/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: regenerate-capability-index.v1
 io_schema:

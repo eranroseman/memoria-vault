@@ -31,7 +31,7 @@ provider, scope, lifespan, backing store, and contents.
 | --- | --- |
 | Program memory is the PI's steering | The PI authors `steering.md`; every operation can read it; it never archives. |
 | Project memory is the per-project channel | Anything that must survive across operations within one project. Archives with the project. |
-| Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own journal/model-call evidence. |
+| Audit memory is append-only | The policy gate writes an entry at every decision; operations append their own `.memoria/journal/` and model-call evidence. |
 | Request memory is per-request, not global | When work resumes, the request row and journal provide the durable handoff. |
 | Adapter memory is never authoritative | External chat/session history can inform a human but cannot replace checked workspace state. |
 | Working memory is not shared | One operation's in-session reasoning never bleeds into another's. |
@@ -49,7 +49,7 @@ provider, scope, lifespan, backing store, and contents.
 | The PI's preferences and style | Program memory (`steering.md`) or checked preference notes | Adapter chat/session history |
 | Cross-session retrieval | search + SQLite over checked workspace state | Adapter memory (not authoritative) |
 | Audit trail of all decisions | Audit memory (`system/logs/audit.jsonl`) | Working memory (wrong granularity) |
-| Durable synthesized knowledge | Checked Concepts under `notes/`, `hubs/`, `works/`, `sources/`, and `projects/` | Any of the above |
+| Durable synthesized knowledge | Checked Concepts under `notes/`, `hubs/`, `projects/`, `digests/`, and `fulltext/` | Any of the above |
 
 ---
 

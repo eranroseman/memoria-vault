@@ -21,7 +21,7 @@ navigate.
 
 **1. Create the note from the template.**
 
-In `hubs/`, create a new note from `system/templates/hub.md`:
+In `hubs/`, create a new note from `.memoria/templates/hub.md`:
 
 ```yaml
 type: hub

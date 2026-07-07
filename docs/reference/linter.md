@@ -8,7 +8,7 @@ nav_order: 6
 # Linter: detectors and auto-fix
 
 The Linter is an **operation, not an agent** ([standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md));
-its schema contract comes from [the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md).
+its schema contract comes from the YAML schemas under `.memoria/schemas/`.
 
 | Question | Answer |
 | --- | --- |
@@ -26,13 +26,13 @@ its schema contract comes from [the four-type Concept model with meaning-only fr
 | Detector | Severity | Catches |
 | --- | --- | --- |
 | `schema-check` | MEDIUM | A typed document failing its schema in `.memoria/schemas/types/` (missing `type`, unknown type, undeclared field, bad field kind/enum, bad nested `links:` shape). |
-| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). Catalog Work evidence is checked by catalog and citation sweeps instead. |
-| `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `system/templates/`, `system/dashboards/`, and `system/patterns/` is skipped). |
-| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside `catalog · knowledge · spaces · system`. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
+| `frontmatter-link` | MEDIUM | A frontmatter wikilink that resolves to no note — every link in the `links:` map must resolve. Catalog source evidence is checked by catalog and citation sweeps instead. |
+| `broken-wikilink` | MEDIUM | A body wikilink resolving to no note (scaffolding under `.memoria/templates/`, `system/dashboards/`, and `.memoria/patterns/` is skipped). |
+| `misplaced-note` | MEDIUM / LOW | A typed document outside its `folders.yaml` home, or a stray vault-root folder outside the declared bundle roots and infrastructure roots. Skips hidden implementation folders (`.githooks/`, `.git`, `.memoria`, `node_modules`) and runtime/work-in-flight zones declared in the skeleton. |
 | `audit-unpaired-writes` | MEDIUM | A mutating allow in `system/logs/audit.jsonl` with no paired `write_complete` record after an hour — the per-write hash pair is incomplete and the write's after-state can no longer be pinned. |
 | `vault-hash-drift` | CRITICAL | A path whose latest `write_complete` `after_hash` in `system/logs/audit.jsonl` no longer matches the on-disk SHA-256 — an out-of-band change ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). A legitimate human edit in Obsidian surfaces here too, by design: the finding means the audit trail no longer pins that file's state. A completed delete records the empty-bytes hash, so a deleted-and-still-absent file matches and stays silent. |
 | `skeleton-drift` | MEDIUM | A directory from the installer skeleton (the `skeleton` list in `.memoria/schemas/folders.yaml`) missing from the vault — rerun the installer/refresh helper or create it. Checked only in installed vaults (`.git` present); the repo's `vault-template/` ships no empty dirs. |
-| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md), Tier 1; report-only, never auto-created). |
+| `hub-threshold` | LOW | A topic with >= 15 checked notes and no covering `hub` Concept — consider creating one; report-only, never auto-created. |
 | `audit-log-size` | LOW | `system/logs/audit.jsonl` over the 50 MB advisory threshold. The log is append-only forever — never rotated ([quarantine-and-verify with durable, audit-logged crash recovery](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)) — so growth is surfaced here instead of staying silent. |
 | `dashboard-field-drift` | HIGH | A dashboard Dataview query referencing a frontmatter field no template declares. |
 | `design-system-drift` | MEDIUM / LOW | Visual-discipline drift from `.memoria/design-system.md`: off-palette colors, font sizes outside the scale, emoji in note titles, ad-hoc/rainbow callout variants, and terminology/capitalization drift. |
@@ -54,7 +54,7 @@ python3 -m memoria_vault.runtime.subsystems.integrity.linter.hub_handoff --vault
 
 ## The pre-commit hook
 
-The pre-commit hook ([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): the installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
+The installer wires `vault-template/.githooks/pre-commit` into the deployed vault's `.git/hooks/pre-commit`. On every commit it passes the staged `.md` paths to `memoria_vault.runtime.subsystems.integrity.linter.precommit_check`, which validates each typed document against its schema via the shared loader (`memoria_vault.runtime.subsystems.lib.schema`). Any error blocks the commit (exit 1). Exempt: untyped `system/` infrastructure, vault-root nav pages, and paths outside the vault.
 
 ---
 

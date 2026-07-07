@@ -6,7 +6,7 @@ operation_id: acknowledge-attention
 allowed_tools:
 - trusted_writer
 allowed_paths:
-- journal/
+- .memoria/journal/
 - .memoria/index/
 allowed_network: []
 prompt_version: acknowledge-attention.v1

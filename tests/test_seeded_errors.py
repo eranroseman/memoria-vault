@@ -18,7 +18,7 @@ from memoria_vault.runtime.seeded_errors import (
 from memoria_vault.runtime.vaultio import read_frontmatter
 
 ROOT = Path(__file__).resolve().parent.parent
-BUNDLE = ROOT / "vault-template/system/eval/alpha15-seeded-errors.json"
+BUNDLE = ROOT / "vault-template/.memoria/eval/alpha15-seeded-errors.json"
 
 
 def test_seeded_error_bundle_is_frozen_contract() -> None:
@@ -140,8 +140,8 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
 
     target = "notes/seeded-missing-evidence.md"
     unchecked_target = "notes/seeded-unchecked-evidence.md"
-    contradiction_target = "works/seeded-missing-contradiction/digest.md"
-    digest_target = "works/seeded-missing-digest-evidence/digest.md"
+    contradiction_target = "digests/seeded-missing-contradiction.md"
+    digest_target = "digests/seeded-missing-digest-evidence.md"
     false_link_target = "notes/seeded-false-link.md"
     conflicting_doi_target = "catalog/sources/conflicting-doi"
     stale_target = "notes/seeded-stale-as-current.md"
@@ -247,6 +247,8 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
     assert result["detected"] == [
         conflicting_doi_target,
         poisoned_target,
+        contradiction_target,
+        digest_target,
         injection_target,
         false_link_target,
         target,
@@ -255,12 +257,12 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         unchecked_target,
         claim_target,
         extraction_target,
-        contradiction_target,
-        digest_target,
     ]
     assert result["rolled_back"] == [
         conflicting_doi_target,
         poisoned_target,
+        contradiction_target,
+        digest_target,
         injection_target,
         false_link_target,
         target,
@@ -269,8 +271,6 @@ def test_seeded_error_verdict_detects_and_rolls_back_structural_case(
         unchecked_target,
         claim_target,
         extraction_target,
-        contradiction_target,
-        digest_target,
     ]
     assert result["false_positives"] == []
     assert not (tmp_path / target).exists()

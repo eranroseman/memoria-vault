@@ -72,9 +72,8 @@ Failure recipes live in [Export a draft](../how-to-guides/project/export-a-draft
 ## Export target folder
 
 Drafts live under the project folder in `projects/<project>/`, and
-every export lands beside them under `exports/` — the project is self-contained
-([the four-type Concept model with meaning-only frontmatter](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)). There is no separate
-top-level deliverables tree.
+every export lands beside them under `exports/` — the project is
+self-contained. There is no separate top-level deliverables tree.
 
 | Artifact | Folder |
 | --- | --- |

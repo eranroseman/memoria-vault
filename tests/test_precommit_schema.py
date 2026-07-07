@@ -46,9 +46,9 @@ def test_generated_note_fields_pass(tmp_path):
 
 def test_generated_digest_and_hub_fields_pass(tmp_path):
     vault = _vault(tmp_path)
-    (vault / "works/source-alpha").mkdir(parents=True)
+    (vault / "digests").mkdir(parents=True)
     (vault / "hubs").mkdir(parents=True)
-    (vault / "works/source-alpha/digest.md").write_text(
+    (vault / "digests/source-alpha.md").write_text(
         "---\n"
         "type: digest\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FAV\n"
@@ -75,7 +75,7 @@ def test_generated_digest_and_hub_fields_pass(tmp_path):
     assert (
         precommit_check.check_paths(
             vault,
-            ["works/source-alpha/digest.md", "hubs/topic.md"],
+            ["digests/source-alpha.md", "hubs/topic.md"],
         )
         == []
     )
@@ -166,7 +166,7 @@ def test_hook_script_ships_executable():
 
 def test_hidden_runtime_exempt(tmp_path):
     vault = _vault(tmp_path)
-    (vault / ".memoria/staging/system/templates").mkdir(parents=True)
-    tpl = vault / ".memoria/staging/system/templates/note.md"
+    (vault / ".memoria/staging/templates").mkdir(parents=True)
+    tpl = vault / ".memoria/staging/templates/note.md"
     tpl.write_text("---\ntype: note\ncreated: {{DATE}}\n---\n", encoding="utf-8")
-    assert precommit_check.check_paths(vault, [".memoria/staging/system/templates/note.md"]) == []
+    assert precommit_check.check_paths(vault, [".memoria/staging/templates/note.md"]) == []

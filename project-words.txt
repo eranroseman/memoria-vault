@@ -64,6 +64,7 @@ flesch
 flippable
 footgun
 frontmatter
+fulltext
 fullmatch
 gameable
 gantt

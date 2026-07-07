@@ -7,12 +7,12 @@ allowed_tools:
 - integrity_checker
 allowed_paths:
 - catalog/
-- works/
-- sources/
+- digests/
+- fulltext/
 - notes/
 - hubs/
 - projects/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: integrity-provenance-checkpoint.v1
 io_schema:

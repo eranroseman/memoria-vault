@@ -7,10 +7,10 @@ nav_order: 3
 
 # Note body structure
 
-The main prose-facing knowledge types — works, notes, hubs, and projects — have
-distinct body structures because they answer different questions and serve
-different epistemic purposes. Understanding why each section exists helps
-explain what makes a note function as knowledge rather than as accumulated text.
+The main prose-facing knowledge types — digests, notes, hubs, and projects —
+have distinct body structures because they answer different questions and serve
+different epistemic purposes. Understanding why each section exists helps explain
+what makes a note function as knowledge rather than as accumulated text.
 
 For the frontmatter fields, templates, and field-by-field reference, see [Document types](../../reference/document-types.md).
 
@@ -24,11 +24,11 @@ The mechanical layer is the catalog source row: capture populates bibliographic
 facts, identifiers, hashes, source text paths, and source-derived aspects. These
 are derivable from the source metadata and existing corpus without PI judgment.
 
-The knowledge layer is checked `work`, `digest`, `source-note`, `note`, `hub`,
-and `project` Concepts under the alpha.16 corpus roots. Work records and digests
-hold machine-owned source summaries; source-notes, notes, hubs, and project
-curation carry PI judgment. A useful note captures the thesis, the key findings
-that will actually be cited, and the source's relevance to the research
+The knowledge layer is checked `digest`, `fulltext`, `note`, `hub`, and
+`project` documents under the alpha.18 corpus roots. Digests and generated
+full text hold source-derived material keyed by `work_id`; notes, hubs, and
+project curation carry PI judgment. A useful note captures the thesis, the key
+findings that will actually be cited, and the source's relevance to the research
 direction.
 
 The Critique section is where source work earns its place in a knowledge system

@@ -25,14 +25,14 @@
     {
       "id": "missing-digest-evidence",
       "error_class": "structural:evidence-resolves",
-      "target_id": "works/seeded-missing-digest-evidence/digest.md",
+      "target_id": "digests/seeded-missing-digest-evidence.md",
       "expected_check": "evidence-resolves",
       "rollback": "include-target"
     },
     {
       "id": "missing-contradiction-target",
       "error_class": "structural:contradiction-link",
-      "target_id": "works/seeded-missing-contradiction/digest.md",
+      "target_id": "digests/seeded-missing-contradiction.md",
       "expected_check": "contradiction-link",
       "rollback": "include-target"
     },

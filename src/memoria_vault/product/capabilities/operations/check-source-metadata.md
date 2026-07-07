@@ -8,7 +8,7 @@ allowed_tools:
 allowed_paths:
 - catalog/
 - inbox/
-- journal/
+- .memoria/journal/
 allowed_network: []
 prompt_version: check-source-metadata.v1
 io_schema:
