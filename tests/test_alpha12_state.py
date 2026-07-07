@@ -3,6 +3,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import pytest
+
 from memoria_vault.runtime import state
 from memoria_vault.runtime.capture import capture_source, check_references_bib, write_references_bib
 from memoria_vault.runtime.integrity import check_citation_survival
@@ -37,7 +39,7 @@ def test_sqlite_schema_uses_wal_and_user_version(tmp_path: Path) -> None:
         assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
 
 
-def test_sqlite_schema_migrates_v4_concepts_to_alpha16_types(tmp_path: Path) -> None:
+def test_sqlite_schema_rejects_legacy_user_version(tmp_path: Path) -> None:
     db = tmp_path / state.DB_REL
     db.parent.mkdir(parents=True)
     with sqlite3.connect(db) as conn:
@@ -71,12 +73,8 @@ def test_sqlite_schema_migrates_v4_concepts_to_alpha16_types(tmp_path: Path) -> 
             """
         )
 
-    with state.connect(tmp_path) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == state.SCHEMA_VERSION
-        conn.execute(
-            "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
-            ("digests/source-alpha.md", "digest", "file"),
-        )
+    with pytest.raises(RuntimeError, match="unsupported Memoria DB schema version: 4"):
+        state.connect(tmp_path)
 
 
 def note_text(title: str = "Alpha note") -> str:

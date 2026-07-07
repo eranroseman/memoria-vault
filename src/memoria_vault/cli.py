@@ -703,7 +703,7 @@ def _cmd_migrate(args: argparse.Namespace) -> int:
         return _fail("migrate requires a separate alpha.16 workspace", json_output=args.json)
     if not (workspace / ".memoria/schemas/folders.yaml").is_file():
         _initialize_workspace_files(workspace)
-    result = _migrate_alpha15_workspace(source, workspace)
+    result = _import_alpha15_workspace(source, workspace)
     return _emit({"ok": True, "workspace": str(workspace), **result}, args)
 
 
@@ -1863,7 +1863,7 @@ def _initialize_workspace_files(workspace: Path, *, overwrite: bool = False) -> 
     _ensure_git(workspace)
 
 
-def _migrate_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
+def _import_alpha15_workspace(source: Path, workspace: Path) -> dict[str, Any]:
     copied: list[str] = []
     copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/notes", "notes"))
     copied.extend(_copy_alpha15_tree(source, workspace, "knowledge/hubs", "hubs"))
