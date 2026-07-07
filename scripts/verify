@@ -25,6 +25,7 @@ L0_COMMANDS = [
     ["pre-commit", "run", "ruff", "--all-files"],
     ["pre-commit", "run", "ruff-format", "--all-files"],
     ["python3", "scripts/checks/docs_doctor.py", "docs"],
+    ["python3", "scripts/checks/schema_doc_drift.py"],
     ["python3", "scripts/checks/alpha14_negative_gate.py"],
     ["python3", "scripts/checks/checked_terminology_gate.py"],
     ["python3", "scripts/checks/docs_doctor.py", "--vault-links"],
