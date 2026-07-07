@@ -7,7 +7,7 @@ nav_order: 8
 
 # Policy gate
 
-The alpha.16 write boundary is the standalone CLI/engine: operation manifests,
+The alpha.18 write boundary is the standalone CLI/engine: operation manifests,
 request rows, staging, checks, promotion, and journal entries control machine
 mutations. Optional adapters may call
 `memoria_vault.runtime.policy.hook` before and after tool calls so external writes

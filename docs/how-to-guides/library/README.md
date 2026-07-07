@@ -9,7 +9,7 @@ permalink: /how-to-guides/library/
 # Library
 
 Work sources in: capture, discuss, review systematically, and archive
-the literature the vault is built from. Alpha.16 routes worker source jobs
+the literature the vault is built from. Alpha.18 routes worker source jobs
 through the standalone CLI.
 
 | Guide | What it covers |

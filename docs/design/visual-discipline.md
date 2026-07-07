@@ -46,7 +46,7 @@ Knowledge, and Project — rather than to saved Obsidian workspaces
 diff, lint, link, and restore. A workspace is pane state. Treating every mode as pane
 state made navigation heavier than the job required.
 
-Alpha.16 ships no saved Obsidian workspace. Daily mode switching happens through
+Alpha.18 ships no saved Obsidian workspace. Daily mode switching happens through
 Markdown space notes and CLI/read-API commands. The exact boundary is reference
 material: Obsidian workspaces.
 

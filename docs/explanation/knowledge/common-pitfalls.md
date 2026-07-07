@@ -33,7 +33,13 @@ The root cause is that Better BibTeX treats citekeys as derived from metadata, n
 
 ## Vocabulary drift
 
-The same concept gets two names across notes — `topics: receptivity-detection` on one claim, `topics: opportune-moments` on another — so a query returns half the corpus and the PI infers thin coverage that isn't real. The failure is invisible because it produces no errors, only incomplete results, and the Linter cannot catch it until a canonical vocabulary exists. The full scenario, why consolidation is deliberately deferred, and how the failure compounds are in [Vocabulary discipline](vocabulary-discipline.md).
+The same concept gets two names across notes — `topics: receptivity-detection`
+on one claim-bearing note, `topics: opportune-moments` on another — so a query
+returns half the corpus and the PI infers thin coverage that isn't real. The
+failure is invisible because it produces no errors, only incomplete results, and
+the Linter cannot catch it until a canonical vocabulary exists. The full
+scenario, why consolidation is deliberately deferred, and how the failure
+compounds are in [Vocabulary discipline](vocabulary-discipline.md).
 
 ## Summary without synthesis
 
@@ -54,15 +60,23 @@ the note before reviewing that proposal means missing those connections, because
 the classification pass is also when the system discovers what the Work has to
 do with your existing graph.
 
-The deeper reason: classification (automated, audited, correctable) is how the system integrates a source into the existing graph. Bypassing it produces a claim that cites a paper but isn't connected to the web of context that would have been visible from the review.
+The deeper reason: classification (automated, audited, correctable) is how the
+system integrates a source into the existing graph. Bypassing it produces a
+claim-bearing note that cites a paper but is not connected to the web of context
+that would have been visible from the review.
 
 ## Queue accumulation
 
 The Inbox grows week over week. Source rows sit unchecked for months. Candidate
 attention accumulates without triage. The dashboards show activity - sources are
-being catalogued - but the claim layer is not growing.
+being catalogued - but claim-bearing notes are not growing.
 
-This is a systemic failure because the Inbox and the reading queue are processing surfaces, not storage. The vault is compounding only when sources move through reading into claims. A queue that grows without shrinking is capture without synthesis — a sophisticated reading list, not a knowledge system. The weekly review exists precisely to catch this before it hardens into months of backlog.
+This is a systemic failure because the Inbox and the reading queue are
+processing surfaces, not storage. The vault is compounding only when sources
+move through reading into checked synthesis notes. A queue that grows without
+shrinking is capture without synthesis — a sophisticated reading list, not a
+knowledge system. The weekly review exists precisely to catch this before it
+hardens into months of backlog.
 
 ## Hub-as-folder-dump
 

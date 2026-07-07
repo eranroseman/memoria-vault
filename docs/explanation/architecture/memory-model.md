@@ -34,7 +34,7 @@ in-context reasoning).
 
 What each substrate holds, its scope and lifespan, and where it is stored is tabulated in [Memory substrates](https://eranroseman.github.io/memoria-vault/reference/memory-substrates.html); the rest of this page explains *why* each has the scope it does.
 
-**Why the workspace carries durable memory.** Alpha.16 makes the standalone
+**Why the workspace carries durable memory.** Alpha.18 makes the standalone
 workspace the authority. Optional adapters can have chat memory, but anything
 durable must become checked workspace state, request/journal evidence, or a
 project record. Operation runs ground on request input refs and checked

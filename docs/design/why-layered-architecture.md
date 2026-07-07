@@ -11,7 +11,7 @@ Memoria separates orchestration, execution, and settled knowledge into distinct
 layers. This is not a layering convention; it is the mechanism that makes
 retries safe, handoffs lossless, and review enforceable. The
 [standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
-decision records the older layered version of this rule; alpha.16 implements the same separation
+decision records the older layered version of this rule; alpha.18 implements the same separation
 through the standalone CLI, SQLite request table, worker operations, and checked
 workspace.
 
@@ -60,7 +60,7 @@ Unrelated systems, different architectures, one finding: long-horizon agent work
 The original three-layer framing separated board, workers, and vault, but
 conflated two distinctions: *where* things live (structure) and *who* acts
 (actor-kind). [The standalone engine with operations as product code, no agent tools](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) decision pulled them apart
-into the seven-layer stack. Alpha.16 keeps the boundary but replaces the board,
+into the seven-layer stack. The current standalone baseline keeps the boundary but replaces the board,
 MCP, and installed-profile mechanics with CLI/API requests, runtime policy, and
 operation manifests.
 
@@ -74,7 +74,7 @@ Each refinement carries the same argument further:
 - Deterministic work lives in **operations** — reproducible mechanism that needs
   no installed profile or background lane.
 - The **Interface** and the **PI** were named as layers because the strict
-  layering claim had to be scoped honestly: in alpha.16 it binds the machine
+  layering claim had to be scoped honestly: in the standalone baseline it binds the machine
   write path from CLI/API request envelope through engine, runtime policy,
   operations, storage, and vault materialization. PI edits and operator-managed
   scheduled jobs are direct edges that the engine observes or executes through

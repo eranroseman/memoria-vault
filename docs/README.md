@@ -79,11 +79,11 @@ PI-directed and policy-gated.
 
 ---
 
-## New here? Start with the current path
+## New here? Start with the tutorial path
 
-The current alpha line does not ship a tutorial arc. Start with
-[Quickstart](how-to-guides/setup/quickstart.md), then use the current
-CLI, Library, Knowledge, and Project task guides below.
+Start with [Quickstart](how-to-guides/setup/quickstart.md), then walk through
+the [Tutorials](tutorials/README.md). The tutorials use the current standalone
+CLI/runtime path and point to task guides when you need more detail.
 
 ---
 
@@ -114,7 +114,8 @@ Design Book foundations, then the Explanation pages in this order.
 **Then learn it by doing**
 
 16. [Quickstart](how-to-guides/setup/quickstart.md) — install Memoria when you're ready to use your own corpus
-17. [Current task guides](how-to-guides/README.md) — work from the implemented CLI surfaces
+17. [Tutorials](tutorials/README.md) — learn the current workflow in order
+18. [Current task guides](how-to-guides/README.md) — work from the implemented CLI surfaces
 
 ---
 
@@ -177,7 +178,7 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 ## Browse the docs
 
-[**Tutorials**](tutorials/README.md) — No current tutorial arc; use Quickstart and current task guides.
+[**Tutorials**](tutorials/README.md) — Guided first workflow over the current CLI/runtime.
 
 [**How-to guides**](how-to-guides/README.md) — Task recipes.
 

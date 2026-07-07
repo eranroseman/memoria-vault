@@ -64,7 +64,7 @@ to keep.
 
 ## Step 3 — Rename a term safely
 
-Renaming a vocabulary value across a fresh alpha.16 sandbox is a
+Renaming a vocabulary value across a fresh standalone workspace is a
 git-disciplined manual pass: commit, enumerate, edit, lint, and commit. The two
 vocabulary-specific points:
 
