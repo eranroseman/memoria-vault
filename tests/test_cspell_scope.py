@@ -58,7 +58,7 @@ def test_precommit_hook_triggers_on_any_markdown():
     assert hook["files"] == r"\.md$", (
         "pre-commit must trigger on any .md, not a docs/src/root allow-list"
     )
-    assert "PATH=node_modules/.bin:$PATH" in hook["entry"]
+    assert hook["entry"].startswith("scripts/dev/run-node-tool.sh cspell ")
     assert "cspell lint --no-progress --no-must-find-files" in hook["entry"]
     assert "npx" not in hook["entry"]
 

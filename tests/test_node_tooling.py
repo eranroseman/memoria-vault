@@ -1,6 +1,8 @@
 """Guards repo-local tooling used by required checks."""
 
 import json
+import os
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -15,6 +17,7 @@ CSPELL_WORKFLOW = ROOT / ".github/workflows/cspell.yml"
 MARKDOWNLINT_WORKFLOW = ROOT / ".github/workflows/markdownlint.yml"
 CONTRACT = ROOT / ".github/ruleset-contract.yaml"
 DOCS_CONFIG = ROOT / "docs" / "_config.yml"
+NODE_TOOL_WRAPPER = ROOT / "scripts" / "dev" / "run-node-tool.sh"
 
 
 def _hook(hook_id: str) -> dict:
@@ -75,14 +78,31 @@ def test_runtime_package_declares_yaml_dependency():
 
 
 def test_precommit_node_hooks_fail_fast_without_network_downloads():
+    wrapper = "scripts/dev/run-node-tool.sh"
     for hook_id, command in (
         ("cspell", "cspell lint --no-progress --no-must-find-files"),
         ("markdownlint-structural", "markdownlint --config .markdownlint.json"),
     ):
         entry = _hook(hook_id)["entry"]
-        assert "PATH=node_modules/.bin:$PATH" in entry
+        assert entry.startswith(f"{wrapper} ")
         assert command in entry
         assert "npx" not in entry
+
+    assert os.access(NODE_TOOL_WRAPPER, os.X_OK)
+
+
+def test_node_tool_wrapper_fails_with_setup_hint(tmp_path):
+    result = subprocess.run(
+        [str(NODE_TOOL_WRAPPER), "cspell", "--version"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 127
+    assert "Run npm ci in this worktree" in result.stderr
+    assert "SKIP=cspell" in result.stderr
 
 
 def test_local_precommit_python_hooks_use_python3():
