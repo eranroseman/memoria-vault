@@ -436,6 +436,7 @@ def analyze_gaps(
     retrieval: dict[str, dict[str, Any]] = {}
     _add_catalog_source_gap_terms(vault, counts, seen, labels)
     _add_graph_topic_gap_terms(vault, counts, seen, labels)
+    _add_graph_entity_gap_terms(vault, counts, seen, labels)
     if project_argument is not None:
         _add_project_gap_terms(vault, project_argument, counts, seen, labels)
     for rel, frontmatter in _checked_concepts(vault):
@@ -811,6 +812,57 @@ def _graph_topic_terms(row: dict[str, Any]) -> list[str]:
             if display := _raw_display_name(raw.get(field)):
                 terms.append(display)
     return sorted(set(terms))
+
+
+def _add_graph_entity_gap_terms(
+    vault: Path,
+    counts: dict[str, dict[str, int]],
+    seen: dict[str, dict[str, set[str]]],
+    labels: dict[str, str],
+) -> None:
+    work_ids = [
+        str(source["work_id"])
+        for source in state.catalog_sources(vault)
+        if _is_current_catalog_source(source)
+    ]
+    if not work_ids:
+        return
+    with state.connect(vault) as conn:
+        for work_id in work_ids:
+            rows = conn.execute(
+                """
+                SELECT relation_type, target_id, target_title, raw_json
+                FROM work_graph_edges
+                WHERE work_id = ?
+                  AND relation_type IN ('authorship', 'institution', 'published_in')
+                ORDER BY relation_type, target_id
+                """,
+                (work_id,),
+            ).fetchall()
+            identity = _gap_identity(f"catalog/sources/{work_id}", "sources")
+            for row in rows:
+                edge = dict(row)
+                target_id = str(edge.get("target_id") or "").strip()
+                if not target_id:
+                    continue
+                key = f"graph-entity:{edge['relation_type']}:{target_id}".lower()
+                if identity not in seen[key]["sources"]:
+                    seen[key]["sources"].add(identity)
+                    counts[key]["sources"] += 1
+                labels.setdefault(key, _graph_entity_label(edge))
+
+
+def _graph_entity_label(row: dict[str, Any]) -> str:
+    if title := str(row.get("target_title") or "").strip():
+        return title
+    try:
+        raw = json.loads(str(row.get("raw_json") or "{}"))
+    except json.JSONDecodeError:
+        raw = {}
+    if isinstance(raw, dict):
+        if display := _raw_display_name(raw):
+            return display
+    return str(row.get("target_id") or "").strip()
 
 
 def _raw_display_name(value: object) -> str:
