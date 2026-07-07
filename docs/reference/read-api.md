@@ -26,6 +26,7 @@ CLI, [local HTTP transport](local-http-transport.md), and
 | `read_journal(...)` / `read_journal_event(...)` | Reads journal rows with operation, request, path, decision, date, and scope filters. |
 | `run_operation(workspace, operation_id, payload, ...)` | Queues and runs one request-envelope operation. |
 | `write_new_concept(...)` | Queues a PI or CLI-agent `note`, `hub`, or `project` Concept creation request. |
+| `resolve_attention(...)` | Queues and runs one attention disposition request. |
 
 ## Project WRITE views
 
