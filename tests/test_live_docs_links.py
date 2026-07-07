@@ -43,3 +43,27 @@ def test_live_docs_checker_reports_missing_fragment_and_local_github_target(tmp_
     assert any("GitHub blob target missing locally" in error for error in result.errors)
     assert result.bad_internal_fragments == 1
     assert result.broken_external_targets == 1
+
+
+def test_live_docs_checker_checks_queued_external_targets(tmp_path):
+    checker = LiveDocsChecker(
+        "https://example.invalid/memoria-vault/",
+        tmp_path,
+        timeout=1,
+        external_workers=1,
+    )
+    checker._fetch_html = lambda url: '<a href="https://docs.example.invalid/missing">x</a>'  # type: ignore[method-assign]
+
+    def fake_external(url, source):
+        return [], [f"{source}: external HTTP 404 {url}"], 1
+
+    checker._check_external_target = fake_external  # type: ignore[method-assign]
+
+    result = checker.run()
+
+    assert result.external_targets_checked == 1
+    assert result.broken_external_targets == 1
+    assert result.errors == [
+        "https://example.invalid/memoria-vault/: external HTTP 404 "
+        "https://docs.example.invalid/missing"
+    ]
