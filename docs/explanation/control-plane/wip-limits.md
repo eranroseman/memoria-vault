@@ -10,7 +10,7 @@ nav_order: 5
 Back-pressure exists to make overload visible before it becomes
 rubber-stamping. In the standalone engine, request concurrency and review-queue
 limits protect auditability, human review, and synthesis quality. The current
-alpha.16 reference records that Hermes board WIP caps are not a baseline control:
+reference records that Hermes board WIP caps are not a baseline control:
 [Control plane reference](../../reference/control-plane.md#wip-limits).
 
 ## One active request per collision domain

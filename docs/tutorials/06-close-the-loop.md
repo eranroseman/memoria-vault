@@ -2,15 +2,57 @@
 title: "Tutorial 06: Close the loop"
 parent: Tutorials
 nav_order: 6
-status: deferred
 ---
 
 # Tutorial 06: Close the loop
 
-> **Status: deferred.** This alpha.10 walkthrough is preserved as a placeholder
-> while the tutorial arc is rewritten.
+Memoria is useful only if work returns to a visible, reviewable state. This
+tutorial closes requests, refreshes projections, and commits the workspace.
 
-This walkthrough is not current operating guidance. It depended on
-deleted delegation commands and the old sample-vault gap-card workflow.
+## Steps
 
-Use the current [Tutorials](README.md) index for entry points.
+**1. Inspect active requests and attention.**
+
+```bash
+memoria request list --workspace .
+memoria attention list --workspace .
+memoria attention worklist --workspace .
+```
+
+Requests are operation state. Attention items are PI-facing work. They are
+different surfaces over the same control plane.
+
+**2. Resolve attention items you have handled.**
+
+```bash
+memoria attention resolve --workspace . <attention-path> --apply --reason "Handled"
+```
+
+Use `--reject` or `--defer` when that is the true disposition.
+
+**3. Refresh projections before you commit.**
+
+```bash
+memoria workspace scan --workspace .
+memoria workspace rebuild --workspace . --search
+memoria status --workspace .
+```
+
+**4. Commit the vault state.**
+
+```bash
+git status --short
+git add <changed-checked-files>
+git commit -m "Update Memoria workspace"
+```
+
+Stage only the paths you intentionally changed. Do not commit raw provider
+secrets or unrelated local files.
+
+## What you should have seen
+
+- Requests, attention, projections, and Git commits close different parts of the loop.
+- The engine observes and checks direct edits before they become trusted read state.
+- The durable handoff is the workspace commit, not the chat transcript.
+
+Next: [Make it your own](07-make-it-your-own.md).

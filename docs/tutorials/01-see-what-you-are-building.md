@@ -2,16 +2,56 @@
 title: "Tutorial 01: See what you're building"
 parent: Tutorials
 nav_order: 1
-status: deferred
 ---
 
 # Tutorial 01: See what you're building
 
-> **Status: deferred.** This alpha.10 walkthrough is preserved as a placeholder
-> while the tutorial arc is rewritten.
+This first pass is read-only. You will inspect the workspace shape, the CLI
+surface, and the checked-read boundary before adding research material.
 
-This walkthrough is not current operating guidance. It depended on the
-bundled sample vault and the removed `Memoria: load sample vault`, `Memoria:
-start project`, and `Memoria: map corpus` commands.
+## Prerequisites
 
-Use the current [Tutorials](README.md) index for entry points.
+- A fresh workspace from [Quickstart](../how-to-guides/setup/quickstart.md).
+- A shell opened at the workspace root.
+
+## Steps
+
+**1. Confirm the runtime can see the workspace.**
+
+```bash
+memoria status --workspace .
+memoria doctor bundle --workspace .
+```
+
+`status` is the quick health read. `doctor bundle` checks the local runtime and
+prints the backup contract without requiring Hermes, Obsidian, or Zotero.
+
+**2. Rebuild the checked search projection.**
+
+```bash
+memoria workspace rebuild --workspace . --search
+```
+
+An empty index is normal in a new vault. The command is still useful because it
+shows that checked-read projections are rebuilt by the engine, not by an editor
+plugin.
+
+**3. Inspect the durable roots.**
+
+```bash
+ls notes hubs projects digests fulltext .memoria
+memoria list --workspace . --type note
+memoria list --workspace . --type work
+```
+
+The durable file-backed Concept types are `note`, `hub`, `project`, `digest`,
+and `fulltext`. Source catalog state lives in SQLite and blobs, not as source
+Markdown files.
+
+## What you should have seen
+
+- The CLI is the product surface.
+- The workspace is local and git-backed.
+- Checked reads come from engine projections over checked Concepts and catalog rows.
+
+Next: [Bring in your first source](02-bring-in-your-first-source.md).

@@ -36,12 +36,18 @@ Before that, the cost of false consolidation — deciding two concepts are the
 same when they're not — is higher than the cost of deferring.
 
 This is also why source metadata corrections go through explicit Work updates:
-catalog terms should land only when they match the controlled vocabulary. Claim
-`topics` are human-extended, and that is where the discipline below applies.
+catalog terms should land only when they match the controlled vocabulary.
+Claim-bearing note `topics` are human-extended, and that is where the discipline
+below applies.
 
 ## Why drift fails silently
 
-Vocabulary drift — the same concept appearing as `topics: receptivity-detection` in some claims and `topics: opportune-moments` in others — produces incomplete query results even when the YAML is valid. The PI infers thin coverage when coverage is adequate; research directions are shaped by a false gap signal. The failure is invisible until `schema-check` or a vocabulary audit runs.
+Vocabulary drift — the same concept appearing as `topics: receptivity-detection`
+in some claim-bearing notes and `topics: opportune-moments` in others —
+produces incomplete query results even when the YAML is valid. The PI infers
+thin coverage when coverage is adequate; research directions are shaped by a
+false gap signal. The failure is invisible until `schema-check` or a vocabulary
+audit runs.
 
 This is the class of failure the Linter's `schema-check` pass is designed to catch, but only after the canonical vocabulary is defined. Before the canonical list exists, drift is entirely silent. See [Common pitfalls](common-pitfalls.md) for the concrete failure scenario and how it compounds over time.
 

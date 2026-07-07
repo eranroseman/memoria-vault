@@ -21,7 +21,7 @@ provider, scope, lifespan, backing store, and contents.
 | **Audit memory** | Memoria — vault files | Whole vault | Indefinite; append-only | `system/logs/` + `system/metrics/` | Audit trail, pattern provenance, request projections, and metrics. |
 | **Request memory** (payload) | Memoria — SQLite | One operation request | Request-bound | `.memoria/memoria.sqlite` | Input refs, output intents, precondition hashes, status, error, and provenance. |
 | **Working memory** | Runner/session | One operation run | Session-bound | In-context/runtime process | Current goal, recent tool results, and in-flight reasoning. |
-| **Adapter memory** | Optional external adapter | Adapter-defined | Adapter-defined | Outside the core workspace | Not authoritative in alpha.16; adapters must call the CLI/engine and may not replace workspace state. |
+| **Adapter memory** | Optional external adapter | Adapter-defined | Adapter-defined | Outside the core workspace | Not authoritative in the standalone baseline; adapters must call the CLI/engine and may not replace workspace state. |
 
 ---
 

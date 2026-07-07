@@ -7,7 +7,7 @@ nav_order: 25
 
 # Bootstrap installer
 
-The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, and wire local integrity hooks. Alpha.16 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
+The bootstrap installers take a user from nothing to a runnable Memoria install in one command. [`scripts/install.sh`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.sh) and [`scripts/install.ps1`](https://github.com/eranroseman/memoria-vault/blob/main/scripts/install.ps1) scaffold and populate the vault from `vault-template/`, install the `memoria` package into the vault-local venv, and wire local integrity hooks. Alpha.18 does not install external search tooling, Hermes profiles, Hermes crons, Obsidian setup, or live Zotero integration.
 
 This page explains *why* the installer is shaped the way it is. The concrete inventories — platform matrix, install-flow steps, the component checklist, the secrets and skills tables — are reference material in [Installer (bootstrap)](../reference/installer.md).
 
@@ -29,7 +29,7 @@ Ordered steps and the component checklist are owned by [Installer (bootstrap)](.
 
 One installer-specific sequencing choice worth calling out: Zotero deliberately
 *left* the installer — it is an optional import/export adapter, not core
-provisioning, so its setup moved to the tutorial. Hermes likewise left the
+provisioning, so its setup lives in the dedicated Zotero how-to. Hermes likewise left the
 installer baseline: optional adapters may wrap the CLI/engine later, but this
 bootstrap path is standalone.
 

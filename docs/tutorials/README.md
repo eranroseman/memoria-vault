@@ -7,26 +7,21 @@ permalink: /tutorials/
 
 # Tutorials
 
-The tutorial arc is **deferred** for the current alpha line. The alpha.10 walkthrough pages
-remain as deferred placeholders because they depended on the bundled
-Mediterranean-diet sample vault and QuickAdd commands that no longer ship.
+This tutorial arc walks through the current standalone CLI/runtime path. It uses
+the same operations as the how-to guides, but in learning order.
 
-Use the current setup and task guides against a fresh vault:
+Start with a fresh vault from [Quickstart](../how-to-guides/setup/quickstart.md),
+then move through the pages in order.
 
-| Need | Start here |
+| Tutorial | You will learn |
 | --- | --- |
-| Install the system | [Quickstart](../how-to-guides/setup/quickstart.md) |
-| Use Obsidian as an editor | [Using Obsidian](../how-to-guides/using-obsidian/README.md) |
-| Understand current types | [Document types](../reference/document-types.md) |
+| [Tutorial 01: See what you're building](01-see-what-you-are-building.md) | The workspace, command surface, and checked-read boundary |
+| [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) | Capture, catalog rows, source blobs, and digests |
+| [Tutorial 03: Build notes and connect them](03-build-claims-and-connect-them.md) | Atomic notes, checks, and typed links |
+| [Tutorial 04: Draft a section from your notes](04-draft-a-section-from-your-claims.md) | Project slicing, outlines, draft composition, and verification |
+| [Tutorial 05: Verify it holds](05-verify-it-holds.md) | Evidence review and fixing verification findings |
+| [Tutorial 06: Close the loop](06-close-the-loop.md) | Attention, worklists, projection refresh, and commits |
+| [Tutorial 07: Make it your own](07-make-it-your-own.md) | Optional adapters, vocabulary, steering, and workspace habits |
 
-## Deferred tutorial arc
-
-| Tutorial | Status |
-| --- | --- |
-| [Tutorial 01: See what you're building](01-see-what-you-are-building.md) | Deferred |
-| [Tutorial 02: Bring in your first source](02-bring-in-your-first-source.md) | Deferred |
-| [Tutorial 03: Build claims and connect them](03-build-claims-and-connect-them.md) | Deferred |
-| [Tutorial 04: Draft a section from your claims](04-draft-a-section-from-your-claims.md) | Deferred |
-| [Tutorial 05: Verify it holds](05-verify-it-holds.md) | Deferred |
-| [Tutorial 06: Close the loop](06-close-the-loop.md) | Deferred |
-| [Tutorial 07: Make it your own](07-make-it-your-own.md) | Deferred |
+For exact command flags, use the [CLI reference](../reference/cli.md). For task
+recipes outside the tutorial path, use the [How-to guides](../how-to-guides/README.md).

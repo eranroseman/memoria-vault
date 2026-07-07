@@ -44,7 +44,7 @@ payloads.
 **4. Decide per affected claim.** Three honest options:
 
 - **Soften** — rewrite to hedge: "X was suggested by [author], though the paper was subsequently retracted."
-- **Supersede** — find a cleaner source, write a new claim on it, set `superseded_by` on the old one and archive it.
+- **Supersede** — find a cleaner source, write a new claim-bearing note on it, set `superseded_by` on the old one and archive it.
 - **Accept with a caveat** — if the specific finding wasn't part of the retraction, note the retraction in the claim body and keep it.
 
 No claim is rewritten automatically. The judgment is always yours.
