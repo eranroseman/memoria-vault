@@ -11,6 +11,8 @@ check_link_text = _m.check_link_text
 check_links = _m.check_links
 check_readmes = _m.check_readmes
 check_reference_readme_index = _m.check_reference_readme_index
+check_reference_rosters = _m.check_reference_rosters
+check_reference_source_contract = _m.check_reference_source_contract
 check_site_excluded_targets = _m.check_site_excluded_targets
 check_site_local_links = _m.check_site_local_links
 check_site_nav_hierarchy = _m.check_site_nav_hierarchy
@@ -464,9 +466,9 @@ def test_heading_slugs_collects_markdown_headings_and_html_ids(tmp_path):
 
 def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
     repo = tmp_path
-    (repo / "src" / "system").mkdir(parents=True)
+    (repo / "vault-template" / "system").mkdir(parents=True)
     (repo / "docs" / "reference").mkdir(parents=True)
-    (repo / "src" / "system" / "vocabulary.md").write_text(
+    (repo / "vault-template" / "system" / "vocabulary.md").write_text(
         "## research_area\n\n- alpha — A\n\n## methodology\n\n- beta — B\n",
         encoding="utf-8",
     )
@@ -481,3 +483,81 @@ def test_check_vocabulary_reference_mirror_compares_source_terms(tmp_path):
 
     assert len(errs) == 1
     assert "methodology vocabulary mirror differs" in errs[0]
+
+
+def test_reference_source_contract_requires_guard_checks_and_generated_markers(tmp_path):
+    repo = tmp_path
+    ref = repo / "docs" / "reference"
+    ref.mkdir(parents=True)
+    (ref / "README.md").write_text(
+        "| File | What | Source |\n"
+        "| --- | --- | --- |\n"
+        "| [A](a.md) | A | Manual |\n"
+        "| [B](b.md) | B | Guarded mirror |\n"
+        "| [C](c.md) | C | Generated |\n",
+        encoding="utf-8",
+    )
+    (ref / "a.md").write_text("# A\n", encoding="utf-8")
+    (ref / "b.md").write_text("# B\n", encoding="utf-8")
+    (ref / "c.md").write_text("# C\n", encoding="utf-8")
+    (ref / "_sources.yml").write_text(
+        "pages:\n"
+        "  a.md:\n"
+        "    status: Manual\n"
+        "    owner: docs/reference/a.md\n"
+        "  b.md:\n"
+        "    status: Guarded mirror\n"
+        "    owner: src/b.py\n"
+        "  c.md:\n"
+        "    status: Generated\n"
+        "    owner: scripts/c.py\n",
+        encoding="utf-8",
+    )
+
+    errs: list[str] = []
+    check_reference_source_contract(repo, errs)
+
+    assert any("b.md guarded mirror must name a drift check" in err for err in errs)
+    assert any("c.md: source status is Generated" in err for err in errs)
+
+
+def test_reference_rosters_compare_docs_to_source_rosters(tmp_path):
+    repo = tmp_path
+    ref = repo / "docs" / "reference"
+    ref.mkdir(parents=True)
+    (repo / "src" / "memoria_vault" / "engine").mkdir(parents=True)
+    (repo / "src" / "memoria_vault" / "runtime").mkdir(parents=True)
+    ops = repo / "src" / "memoria_vault" / "product" / "capabilities" / "operations"
+    ops.mkdir(parents=True)
+    (repo / "src" / "memoria_vault" / "engine" / "api.py").write_text(
+        "def read_status(workspace):\n    pass\ndef _helper():\n    pass\n",
+        encoding="utf-8",
+    )
+    (repo / "src" / "memoria_vault" / "runtime" / "http_transport.py").write_text(
+        'if path == "/status":\n    pass\n',
+        encoding="utf-8",
+    )
+    (repo / "src" / "memoria_vault" / "runtime" / "mcp_transport.py").write_text(
+        "@app.tool()\ndef status():\n    pass\n",
+        encoding="utf-8",
+    )
+    (ops / "capture-source.md").write_text(
+        "---\noperation_id: capture-source\n---\n# Operation\n",
+        encoding="utf-8",
+    )
+    for name in (
+        "system-actions.md",
+        "prompt-operations.md",
+        "read-api.md",
+        "local-http-transport.md",
+        "mcp-transport.md",
+    ):
+        (ref / name).write_text("# Empty\n", encoding="utf-8")
+
+    errs: list[str] = []
+    check_reference_rosters(repo, errs)
+
+    assert any("operation manifest roster omits: capture-source" in err for err in errs)
+    assert any("engine API roster omits: read_status" in err for err in errs)
+    assert any("HTTP endpoint roster omits: /status" in err for err in errs)
+    assert any("MCP tool roster omits: status" in err for err in errs)

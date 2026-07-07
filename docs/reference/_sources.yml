@@ -1,0 +1,154 @@
+# Source-status contract for docs/reference. Keep statuses aligned with README.md.
+pages:
+  agents-and-control.md:
+    status: Manual
+    owner: docs/reference/agents-and-control.md
+  bibliography.md:
+    status: Manual
+    owner: docs/reference/bibliography.md
+  calibration.md:
+    status: Source-owned
+    owner: vault-template/.memoria/schemas/calibration.yaml
+  cli.md:
+    status: Manual
+    owner: docs/reference/cli.md
+  clustering.md:
+    status: Manual
+    owner: docs/reference/clustering.md
+  configuration.md:
+    status: Manual
+    owner: docs/reference/configuration.md
+  control-plane.md:
+    status: Manual
+    owner: docs/reference/control-plane.md
+  dashboards.md:
+    status: Manual
+    owner: docs/reference/dashboards.md
+  diagnostics.md:
+    status: Manual
+    owner: docs/reference/diagnostics.md
+  document-types.md:
+    status: Source-owned
+    owner: vault-template/.memoria/schemas/types/*.yaml
+    check: check_document_type_reference_mirror
+  evidence-sets.md:
+    status: Manual
+    owner: docs/reference/evidence-sets.md
+  export.md:
+    status: Manual
+    owner: docs/reference/export.md
+  failure-modes.md:
+    status: Manual
+    owner: docs/reference/failure-modes.md
+  frontmatter.md:
+    status: Source-owned
+    owner: vault-template/.memoria/schemas/types/*.yaml
+    check: check_document_type_reference_mirror
+  glossary.md:
+    status: Manual
+    owner: docs/reference/glossary.md
+  inbox-card-fields.md:
+    status: Manual
+    owner: docs/reference/inbox-card-fields.md
+  ingest.md:
+    status: Manual
+    owner: docs/reference/ingest.md
+  installer.md:
+    status: Manual
+    owner: docs/reference/installer.md
+  integrations.md:
+    status: Manual
+    owner: docs/reference/integrations.md
+  linter.md:
+    status: Manual
+    owner: docs/reference/linter.md
+  local-http-transport.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/http_transport.py
+    check: check_reference_rosters
+  mcp-transport.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/mcp_transport.py
+    check: check_reference_rosters
+  memory-substrates.md:
+    status: Manual
+    owner: docs/reference/memory-substrates.md
+  obsidian-and-zotero.md:
+    status: Manual
+    owner: docs/reference/obsidian-and-zotero.md
+  on-disk-layout.md:
+    status: Manual
+    owner: docs/reference/on-disk-layout.md
+  operations.md:
+    status: Manual
+    owner: src/memoria_vault/product/capabilities/operations/*.md
+  pattern-provenance.md:
+    status: Manual
+    owner: docs/reference/pattern-provenance.md
+  pipelines-and-io.md:
+    status: Manual
+    owner: docs/reference/pipelines-and-io.md
+  policy-audit-log.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/policy/audit.py
+  policy-auto-fix.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/policy/decision.py
+  policy-mcp.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/policy/
+  project-structural-impact.md:
+    status: Manual
+    owner: docs/reference/project-structural-impact.md
+  prompt-operations.md:
+    status: Manual
+    owner: src/memoria_vault/product/capabilities/operations/*.md
+    check: check_reference_rosters
+  read-api.md:
+    status: Manual
+    owner: src/memoria_vault/engine/api.py
+    check: check_reference_rosters
+  retrieval-and-analysis-methods.md:
+    status: Manual
+    owner: docs/reference/retrieval-and-analysis-methods.md
+  search.md:
+    status: Manual
+    owner: src/memoria_vault/runtime/search_index.py
+  sweeps.md:
+    status: Manual
+    owner: docs/reference/sweeps.md
+  system-actions.md:
+    status: Guarded mirror
+    owner: src/memoria_vault/product/capabilities/operations/*.md
+    check: check_reference_rosters
+  system-and-infrastructure.md:
+    status: Manual
+    owner: docs/reference/system-and-infrastructure.md
+  system-artifacts.md:
+    status: Manual
+    owner: docs/reference/system-artifacts.md
+  telemetry-logs.md:
+    status: Manual
+    owner: docs/reference/telemetry-logs.md
+  telemetry.md:
+    status: Manual
+    owner: docs/reference/telemetry.md
+  vault-data-model.md:
+    status: Manual
+    owner: docs/reference/vault-data-model.md
+  vault-eval.md:
+    status: Manual
+    owner: docs/reference/vault-eval.md
+  vocabulary.md:
+    status: Guarded mirror
+    owner: vault-template/system/vocabulary.md
+    check: check_vocabulary_reference_mirror
+  wikilink-and-link-conventions.md:
+    status: Manual
+    owner: docs/reference/wikilink-and-link-conventions.md
+  worklists.md:
+    status: Manual
+    owner: docs/reference/worklists.md
+  zotero-plugins.md:
+    status: Manual
+    owner: docs/reference/zotero-plugins.md

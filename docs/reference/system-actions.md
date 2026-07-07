@@ -15,7 +15,20 @@ page is authoritative for the details — this catalog is the map.
 
 This page is a guarded mirror, not the source of truth. Action implementation
 lives in the referenced Python modules, capability manifests, and linked
-reference pages; docs checks keep the mirror linked.
+reference pages; `docs_doctor.py` `check_reference_rosters` keeps the packaged
+operation manifest roster linked.
+
+## Operation manifest roster
+
+Package-owned operation manifests currently ship these operation IDs:
+
+- `acknowledge-attention`, `analyze-claims`, `analyze-gaps`, `analyze-project-argument`, `answer-query`, `capture-bibtex-source`, `capture-pdf-source`, `capture-source`
+- `capture-url-source`, `cascade-rollback`, `check-falsifiability`, `check-source-metadata`, `compare-and-contrast`, `compile-source-digest`, `compose-project-draft`, `create-concept`
+- `curate-note-candidate`, `curate-note-link`, `enrich-source`, `eval-run`, `export-project`, `extract-claim-stubs`, `frame-paper`, `integrity-citation-survival-check`
+- `integrity-claim-quote-check`, `integrity-contradiction-check`, `integrity-evidence-check`, `integrity-link-target-check`, `integrity-prompt-injection-check`, `integrity-provenance-checkpoint`, `integrity-quote-anchor-check`, `mark-checked`
+- `observe-pi-edits`, `promote-draft-passage`, `propose-note-candidates`, `rebuild-checked-search-index`, `record-copi-interview`, `red-team-argument`, `regenerate-capability-index`, `regenerate-indexes`
+- `regenerate-references-bib`, `regenerate-tracked-projections`, `render-project-argument-canvas`, `resolve-attention`, `run-seeded-error-verdict`, `summarize-for-recall`, `surface-tensions`, `trace-integrity-scan`
+- `update-work`, `verify-project-draft`, `write-project-slice`
 
 ## Deterministic operations
 
