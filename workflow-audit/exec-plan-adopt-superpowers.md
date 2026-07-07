@@ -42,6 +42,10 @@ Requirements this plan must satisfy (traced in §5):
 5. No contradictory guidance when skills fire together.
 6. No plugin or skill component is edited in place — third-party or your own.
 7. `AGENTS.md`'s own Skills table names only things that actually exist.
+8. Agents use the Memoria Issue Tracker as the work-state loop, not only as an
+   output sink: before work, identify the owning issue or explicit exception;
+   during/after work, update Project state; close only when resolved,
+   obsolete, or fully subsumed.
 
 ## 2. Context (facts an executor needs)
 
@@ -89,6 +93,8 @@ Requirements this plan must satisfy (traced in §5):
 - **Layer 1 precedence notes** (steps 10–11): `~/.claude/CLAUDE.md`,
   `~/.codex/AGENTS.md` — all cross-skill routing lives here.
 - **Layer 2 + 3 repo edits** (step 12): one worktree; no PR until step 14.
+  This includes the issue-tracker operating loop and the PR/template/checker
+  guardrails that make it hard for agents to over-close issues.
 - **Verify** (step 13).
 - **Document + merge repo work** (step 14): author `.agents/toolkit.md`, then
   open and merge the single repo PR.
@@ -405,7 +411,59 @@ security tool with the tool it runs on: `security-guidance` (Claude,
 passive), `codex-security` (Codex, active), `threat-modeling` (both, on
 demand) — so a reader knows which apply to the tool they're using.
 
-**12c — `.agents/playbooks/code-review.md`.** After "## 1. Establish scope",
+Add a new subsection near "Work routing" named `### Issue tracker loop`:
+
+```markdown
+### Issue tracker loop
+
+The Memoria Issue Tracker is the live work-state owner, not an after-the-fact
+log. For any non-trivial bug, enhancement, documentation change, release task,
+or design decision:
+
+1. **Before work:** identify the owning issue. If none exists, either create one
+   or state explicitly why the work is too small or too local to track.
+2. **During work:** update only Project `Status` and `Readiness`; do not create
+   ad-hoc labels or milestones. Labels stay minimal, and milestones are release
+   scope only.
+3. **In PRs:** use `Refs #NN` for partial, preparatory, folded, or follow-up
+   work. Use `Closes #NN` only when the PR fully satisfies that issue's close
+   condition.
+4. **At close:** close an issue only when it is resolved by merged work,
+   explicitly obsolete, or fully subsumed by another open issue with no
+   independent decision left. Leave folded-but-unresolved issues open until the
+   absorbing issue lands the actual decision or implementation.
+5. **Final report:** say which issue state changed, or state `Issue tracker:
+   no change` when no tracker update was needed.
+```
+
+**12c — `.github/pull_request_template.md`.** Replace the Related issues
+section with:
+
+```markdown
+## Related issues
+
+Refs #<!-- issue number -->
+
+<!-- Use "Closes #..." only when this PR fully satisfies the issue's close condition.
+For partial, folded, preparatory, or design-only work, use "Refs #..." and leave
+the issue open. -->
+
+Issue tracker updated: <!-- yes / no / N/A, with reason -->
+```
+
+**12d — `scripts/checks/github_doctor.py` + `tests/test_github_doctor.py`.**
+Extend `github-doctor` with one small PR-template guard:
+
+- fail if `.github/pull_request_template.md` is missing;
+- fail if the template contains `Closes #` but no `Refs #`;
+- fail if it does not mention `Issue tracker updated`.
+
+Add one focused test that builds a temporary `.github/pull_request_template.md`
+with only `Closes #` alongside otherwise-valid issue-template/dependabot
+fixtures, then asserts the new error fires. Reuse the existing
+`github_doctor.check()` pattern; do not add a new checker.
+
+**12e — `.agents/playbooks/code-review.md`.** After "## 1. Establish scope",
 new final paragraph:
 
 ```
@@ -418,13 +476,13 @@ At the end of "## 4. Report", new bullet:
 - After presenting findings, apply `superpowers:receiving-code-review`'s discipline: fix Critical immediately, Important before proceeding, note Minor for later, and push back (with reasoning) on a finding that looks wrong.
 ```
 
-**12d — `.agents/playbooks/verify-change.md`.** One line appended at the end:
+**12f — `.agents/playbooks/verify-change.md`.** One line appended at the end:
 
 ```
 *(If `superpowers:verification-before-completion` is installed, its claim-honesty discipline complements this playbook. These steps remain authoritative regardless.)*
 ```
 
-**12e — `.agents/playbooks/exec-plan.md`.** New item 5 in "## Authoring":
+**12g — `.agents/playbooks/exec-plan.md`.** New item 5 in "## Authoring":
 
 ```
 5. Size tasks using `superpowers:writing-plans`' right-sizing rule (each task independently testable and revertable) — but the deliverable still lands in this file's own template, never a new `docs/superpowers/plans/` file.
@@ -438,14 +496,33 @@ New section after "## Running", before "## Validating":
 An ExecPlan's Concrete steps may be executed via `superpowers:subagent-driven-development` (per-task implementer + two-stage reviewer) or `superpowers:executing-plans` (separate-session handoff). This file's own Validation, Progress, Execution log, and Surprises sections remain authoritative — neither technique's plan-file or recovery ledger substitutes for this file's record.
 ```
 
-**12f — `.agents/templates/exec-plan.md`.** One line in the "Concrete steps"
-guidance comment:
+**12h — `.agents/templates/exec-plan.md`.** Update the metadata line so
+`Related issues / milestone` records the intended issue disposition, not just
+issue numbers:
+
+```markdown
+- **Related issues / milestone:** {{ #NN + intended disposition:
+  refs/closes/folded into #NN/no tracker change; 0.1.0 or — }}
+```
+
+Add one line in the "Concrete steps" guidance comment:
 
 ```
 See ../playbooks/exec-plan.md → "Authoring" item 5 and "Reusing superpowers execution techniques" for optional sizing/execution engines.
 ```
 
-**12g — `.agents/templates/handoff.md`.** New section appended at the end:
+**12i — `.agents/templates/handoff.md`.** Add a `## Tracker` section after
+`## Scope`:
+
+```markdown
+## Tracker
+
+Owning issue: <!-- #NN or N/A with reason -->
+Intended disposition: <!-- refs / closes / folded into #NN / no tracker change -->
+Close condition: <!-- observable condition for closing, or N/A -->
+```
+
+Append a `## Result` section at the end:
 
 ```
 ## Result
@@ -457,14 +534,14 @@ See ../playbooks/exec-plan.md → "Authoring" item 5 and "Reusing superpowers ex
 <!-- What was actually done, any deviation from Expected outputs, and why. -->
 ```
 
-**12h — `.agents/playbooks/docs-review.md`.** One line at the end of
+**12j — `.agents/playbooks/docs-review.md`.** One line at the end of
 "## 4. Check terminology and claims":
 
 ```
 If `the-elements-of-style` is installed, apply its `writing-clearly-and-concisely` rules (active voice, omit needless words) as a prose-clarity pass over changed pages — complementary to this section's terminology and citation checks.
 ```
 
-**12i — `.agents/playbooks/security-review.md`.** New section appended:
+**12k — `.agents/playbooks/security-review.md`.** New section appended:
 
 ```
 ## 5. Escalate to a full audit
@@ -536,9 +613,9 @@ GitHub connector):
 
 ```bash
 gh auth status || { echo "GH AUTH FAILED — run: gh auth refresh -h github.com"; exit 1; }
-git add CLAUDE.md AGENTS.md .agents/toolkit.md .agents/playbooks/code-review.md .agents/playbooks/verify-change.md .agents/playbooks/exec-plan.md .agents/templates/exec-plan.md .agents/templates/handoff.md .agents/playbooks/docs-review.md .agents/playbooks/security-review.md
+git add CLAUDE.md AGENTS.md .agents/toolkit.md .agents/playbooks/code-review.md .agents/playbooks/verify-change.md .agents/playbooks/exec-plan.md .agents/templates/exec-plan.md .agents/templates/handoff.md .agents/playbooks/docs-review.md .agents/playbooks/security-review.md .github/pull_request_template.md scripts/checks/github_doctor.py tests/test_github_doctor.py
 git diff --cached --name-only
-git commit -m "docs: adopt superpowers into AGENTS.md + .agents/ conventions"
+git commit -m "docs: adopt superpowers and tracker-loop conventions"
 git push -u origin docs/adopt-superpowers
 gh pr create --base main --fill
 pr_number=$(gh pr view --json number -q .number)
@@ -614,9 +691,16 @@ Behavior (paste transcripts):
 
 Repo PR:
 
-- `pr-policy` / `lint` / `cspell` / `markdownlint` pass (docs-only change), the
+- `pr-policy` / `lint` / `cspell` / `markdownlint` pass, the
   single repo PR is merged, and `~/memoria-vault/main` fast-forwards cleanly to
   `origin/main`.
+- `python3 -m pytest tests/test_github_doctor.py` passes, and
+  `python3 scripts/checks/github_doctor.py` passes with the updated PR template.
+- The PR body uses `Refs #...` by default and records whether the issue tracker
+  was updated; no template text nudges agents to close partial work.
+- `AGENTS.md`, `.agents/templates/handoff.md`, and
+  `.agents/templates/exec-plan.md` all require an owning issue or explicit
+  no-tracker reason for non-trivial work.
 
 Toolkit doc (step 14):
 
@@ -654,7 +738,7 @@ Toolkit doc (step 14):
 - [ ] 9 — tdd + grill-me retired
 - [ ] 10 — `~/.claude/CLAUDE.md` precedence + vocabulary added (incl. grilling/caveman/improve routing)
 - [ ] 11 — `~/.codex/AGENTS.md` written (same rules + security routing)
-- [ ] 12 — repo worktree, CLAUDE.md + AGENTS.md + 8 `.agents/` files staged for same-branch doc work
+- [ ] 12 — repo worktree, CLAUDE.md + AGENTS.md + `.agents/` files + PR-template/github-doctor tracker loop staged for same-branch doc work
 - [ ] 13 — §5 validated in fresh sessions, transcripts in §11
 - [ ] 14 — `.agents/toolkit.md` authored (entire stack), single repo PR merged, worktree cleaned up
 
@@ -695,9 +779,10 @@ Toolkit doc (step 14):
   (Codex loose copy).
 - **Repo files (one PR, steps 12 + 14):** new `CLAUDE.md`, `AGENTS.md`,
   `.agents/playbooks/{code-review,verify-change,exec-plan,docs-review,
-  security-review}.md`, `.agents/templates/{exec-plan,handoff}.md`, and new
-  `.agents/toolkit.md` documenting the whole stack — all in one worktree,
-  one PR.
+  security-review}.md`, `.agents/templates/{exec-plan,handoff}.md`,
+  `.github/pull_request_template.md`, `scripts/checks/github_doctor.py`,
+  `tests/test_github_doctor.py`, and new `.agents/toolkit.md` documenting the
+  whole stack — all in one worktree, one PR.
 - **Retired:** `~/.claude/skills/{tdd,grill-me}`, `~/.codex/skills/tdd`.
 - **Declined, never installed:** official Anthropic `code-review` plugin;
   `coderabbit@openai-curated`.
