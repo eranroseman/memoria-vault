@@ -750,9 +750,10 @@ Toolkit doc (step 14):
 - [x] 2026-07-07 16:15 CDT — 12 — repo worktree edits completed and merged via
       PR #1310.
 - [ ] 2026-07-07 16:15 CDT — 13 — installed-state and repo/CI validation
-      completed; fresh external Claude/Codex behavior-prompt transcripts were
-      not run because the approval reviewer rejected transmitting repo guidance
-      to an external model service.
+      completed; Codex fresh prompt context was verified locally with
+      `codex debug prompt-input`; Claude behavior-prompt transcript remains
+      blocked because the approval reviewer rejected transmitting repo guidance
+      to an external model service and Claude exposes no local prompt renderer.
 - [x] 2026-07-07 16:15 CDT — 14 — `.agents/toolkit.md` authored, PR #1310
       merged, `main` fast-forwarded to `528ddf6c`, and
       `worktrees/adopt-superpowers` removed.
@@ -773,6 +774,11 @@ Toolkit doc (step 14):
 - 2026-07-07 — A fresh Claude `-p` smoke prompt was rejected by the approval
   reviewer because it would transmit private repo guidance to an external model
   service; retained safer local/plugin/CI validation only.
+- 2026-07-07 — Used `codex debug prompt-input` from `main` as a local-only fresh
+  Codex context check. The rendered model-visible input contained
+  `superpowers:brainstorming`, `codex-security:security-scan`,
+  `interface-design`, global `## Skill precedence`, the repo worktree-first
+  rule, and `### Issue tracker loop`.
 
 ## 9. Surprises & discoveries
 
@@ -830,6 +836,12 @@ Toolkit doc (step 14):
   `pr-review-toolkit@claude-code-plugins`, `security-guidance@claude-code-plugins`,
   `ponytail@ponytail`, and `rethink@rethink`; `codex plugin list` shows
   `superpowers@openai-curated` and `codex-security@openai-curated` installed.
+- Claude local plugin details: `claude plugin details superpowers@superpowers-dev`
+  reports 14 skills and one SessionStart hook; interface-design and
+  frontend-design details report their expected skill inventories.
+- Codex local fresh-context check: `codex debug prompt-input` rendered
+  model-visible context containing the new Codex skills, global precedence
+  rules, and repo `AGENTS.md` work-routing/tracker rules without model access.
 - Focused checks: `python3 -m pytest tests/test_github_doctor.py` passed
   (`3 passed`); `python3 scripts/checks/github_doctor.py` printed
   `github-doctor: ok`.
@@ -848,9 +860,10 @@ Toolkit doc (step 14):
   `.agents/toolkit.md`, PR-template tracker guardrails, and
   `github_doctor` validation. PR #1310 is merged and `main` is fast-forwarded to
   `origin/main`.
-- **Still open:** optional fresh-session behavior transcripts from §5 require
-  explicit approval to send repo guidance to external Claude/Codex model
-  services. No issue tracker state changed.
+- **Still open:** the Claude fresh-session behavior transcript from §5 requires
+  explicit approval to send repo guidance to an external Claude model service.
+  Codex fresh context was verified locally with `codex debug prompt-input`. No
+  issue tracker state changed.
 - **Lessons:** prefer verifying marketplace manifest shape before promising a
   Claude plugin install path; record actual installed ids (`superpowers-dev`,
   loose Elements of Style) in durable docs.
