@@ -20,8 +20,9 @@ SQLite-backed catalog state). Where a record stands for reading is
 
 Topics are many-to-many; a folder is one location. Memoria therefore reserves
 folders for the one fact that is one-to-one: what kind of checked bundle this is.
-Alpha.18 file-backed bundle roots are notes, hubs, projects, digests, and
-fulltext; catalog Work records live in SQLite with blob-backed source content.
+Alpha.19 file-backed bundle roots are `notes/`, `hubs/`, `projects/`,
+`digests/`, and `fulltexts/`; catalog Work records live in SQLite with
+blob-backed source content.
 Topics live in catalog metadata, Concept frontmatter facets, and authored links, following the
 Zettelkasten link-first inheritance described in [Intellectual
 foundations](https://eranroseman.github.io/memoria-vault/design/intellectual-foundations.html#luhmanns-zettelkasten).

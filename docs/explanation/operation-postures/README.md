@@ -12,7 +12,7 @@ Operation postures are the current replacement for the old installed-profile
 language — drafting and review stances the CLI and its operations adopt. The
 old profile language maps to them this way:
 
-| Old profile concept | Alpha.18 replacement |
+| Old profile concept | Alpha.19 replacement |
 | --- | --- |
 | Co-PI profile | `memoria ask` / `memoria project ask` query flow |
 | Background lane profile | Checked operation manifest plus request row |

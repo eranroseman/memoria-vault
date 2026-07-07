@@ -7,7 +7,7 @@ nav_order: 2
 
 # Fix a stuck card
 
-Alpha.18 tracks CLI/engine work as operation requests. If old docs or adapters
+Alpha.19 tracks CLI/engine work as operation requests. If old docs or adapters
 call this a "card", diagnose the corresponding request.
 
 ## Detect

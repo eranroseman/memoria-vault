@@ -162,7 +162,13 @@ The shape of the series: alpha.1-6 build out the Hermes-era product; alpha.7 res
 
 **The single sentence that ties all ten arcs together:** every flip moves a guarantee from something a human or agent *does* (approve a write, choose a folder, set a status field, run a profile, host a UI, trust a reference manager) to something the system *structurally enforces* (a trace, a type-home, a DB verdict, a deterministic operation, a scoped read API, an in-house enriched catalog) — because the design's founding thesis is that when "the human directs but does not author or approve each change," integrity "rests on a tamper-evident derivation graph + continuous structural checks + cascade rollback, with a human gate only where an action is irreversible" (`0.1.0-alpha.11-design.md` §0, §2).
 
-Key source files: `/home/eranr/memoria-vault/scratch/releases/0.1.0-alpha.{11,12,13,14,15,16,18,19}/*-design.md`; `/home/eranr/memoria-vault/scratch/releases/0.1.0-alpha.16/0.1.0-alpha.16-requirements.md`; `/home/eranr/memoria-vault/scratch/releases/0.1.0-alpha.15/0.1.0-alpha.15-exec-plan.md`; `/home/eranr/memoria-vault/main/design-history/17-alpha.17.md`; `/home/eranr/memoria-vault/main/design-history/18-alpha.18.md`; `/home/eranr/memoria-vault/main/design-history/19-alpha.19.md`; `/home/eranr/memoria-vault/main/docs/adr/{107,122,123,124,125,126}-*.md`; `/home/eranr/memoria-vault/main/docs/design/{why-not-autonomous,why-specialist-postures,why-review-gate-is-structural,lifecycle-over-topic,hubs-and-navigation,why-pattern-provenance,intellectual-foundations,design-principles,what-memoria-is}.md`; `/home/eranr/memoria-vault/main/_notes/{REVIEW-SUMMARY,REVIEW-REFUTATIONS,ai-research-systems-survey,docs-exports/adr-full}.md`; and the historical release READMEs under `docs/releasing/0.1.0-alpha.{1..10}/` (recoverable via git; deletion commit `846d8439`).
+Key durable sources for this synthesis are the frozen chapters in
+`design-history/`, especially `17-alpha.17.md`, `18-alpha.18.md`, and
+`19-alpha.19.md`; the current design pages under `docs/design/`; and the
+superseded ADRs under `docs/adr/`. Older scratch design and release files were
+working inputs, not permanent records; deleted scratch or `docs/releasing/`
+material is historical evidence recoverable from git, not a current source to
+follow.
 
 ### (j) Decision-record mechanism — ADRs -> living design history
 
@@ -172,6 +178,6 @@ Key source files: `/home/eranr/memoria-vault/scratch/releases/0.1.0-alpha.{11,12
 
 **Why:** The alpha history shows repeated architectural reversals. A live ADR set made older opinions look authoritative after the implementation and product thesis had moved on. The safer mechanism is a dated release decision with typed pointers to implementation, tests, and evidence, followed by a frozen release chapter.
 
-**Current (as of alpha.19):** Alpha.19 is the current closed checkpoint technical baseline; release close requires a frozen chapter, updated arcs, an updated latest-checkpoint marker in `design-history/README.md`, and deletion of the scratch release workspace after durable routing.
+**Current (as of alpha.19):** Alpha.19 is the current closed checkpoint technical baseline. Its close-out durable record is the frozen chapter, updated arcs, updated latest-checkpoint marker in `design-history/README.md`, and retired scratch release workspace.
 
 **Pending (unreleased):** The beta.1 release workspace must carry open Y-statement decisions until they are implemented, rejected, or folded into the next frozen chapter.
