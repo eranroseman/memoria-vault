@@ -1,9 +1,42 @@
 # Memoria — data structure: as-built map + clean-slate rethink
 
-> **Two parts.** **Part 1** is the exhaustive *as-built* map (what the data
-> structure is today). **Part 2** is a *first-principles rethink* — the design
-> derived independently from requirements, then measured against Part 1. Read Part 1
-> for "what is," Part 2 for "what it should be and where it diverges."
+> **Eight parts, in the order they were worked.** Part 1 is the exhaustive
+> *as-built* map — read it for "what is." Parts 2, 5, 7 and Part 4's embedded
+> sub-rethink are first-principles redesigns, each following the same
+> Requirements → Prior art → Design → Trade-offs → Migration shape. Part 3 is a
+> narrower terminology audit; Part 4 projects every accepted recommendation onto
+> one on-disk tree; Part 6 is exploratory working notes that Part 7 formalizes;
+> Part 8 inverts the companion query-design document
+> (`query-mechanism-analysis.md`) into concrete schema deltas. **Two cross-part
+> questions were resolved after this document was first written, both logged
+> in Part 8's "Open questions":** (1) delete the markdown `work` Concept type
+> and fold `source-note` into `note` as `mode: work`, per the project owner's
+> direction; (2) `^pNNNN` source-span anchors are not written by extraction and
+> shouldn't be — page identity travels as structured `passages` metadata
+> instead, matching real PDF/RAG citation-grounding practice (PyMuPDF4LLM,
+> Docling), not as inline markup. Part 8 was updated to match both.
+
+## Contents
+
+1. [Part 1 — The as-built map (alpha.16)](#part-1--the-as-built-map-alpha16) —
+   what exists today; no design opinion.
+2. [Part 2 — Rethink: the clean-slate design](#part-2--rethink-the-clean-slate-design)
+   — requirements, prior art, the SSOT-collapse (G0), trade-offs, migration.
+3. [Part 3 — OpenAlex terminology audit](#part-3--openalex-terminology-audit) —
+   an earlier, narrower collision audit and rename plan; **superseded by
+   Part 8** where the two differ, see its reconciliation note.
+4. [Part 4 — Projected on-disk structure, all recommendations applied](#part-4--projected-on-disk-structure-all-recommendations-applied)
+   — the synthesis tree, a `concept_type` roster, and an embedded
+   person/institution/source entity-resolution rethink.
+5. [Part 5 — Rethink: required/optional frontmatter and body structure](#part-5--rethink-requiredoptional-frontmatter-and-body-structure-per-concept-type)
+   — per-type field tables, building on Part 1 §5/6.
+6. [Part 6 — What can move from the vault into `.memoria/`](#part-6--what-can-move-from-the-vault-into-memoria)
+   — exploratory working notes; input to Part 7, not a template itself.
+7. [Part 7 — Rethink: a first-principles taxonomy for `.memoria/`, `system/`, and root](#part-7--rethink-a-first-principles-taxonomy-for-memoria-system-and-root)
+   — formalizes Part 6 into four categories.
+8. [Part 8 — Schema Deltas for the Query Architecture](#part-8--schema-deltas-for-the-query-architecture)
+   — inverts `query-mechanism-analysis.md` into real schema changes; the
+   comprehensive OpenAlex-collision fix; logs the one remaining open question.
 
 ---
 
@@ -188,7 +221,7 @@ retitling or moving a file never breaks an existing reference (confirmed:
 `knowledge.py:3233-3234` derives the actual filename from a **title-slug**, never the
 ULID). The first pass here treated freezing filenames to `<id>.md` as costing "human
 legible filenames" — that overstated the cost. **Verified core Obsidian mechanism:
-`Settings → Appearance → Show inline title`, toggled off.** With it off, Obsidian
+[`Settings → Appearance → Show inline title`](https://help.obsidian.md/settings#Appearance), toggled off.** With it off, Obsidian
 doesn't render the filename as a heading at all; the note's own `# ` heading in the
 body — which Memoria's templates already write (`# {{VALUE:title}}`) — is what the PI
 sees, in both edit and reading view. So renaming files to `<id>.md` costs **nothing** on
@@ -196,15 +229,15 @@ the single most important surface: the PI reading and editing the note itself. T
 zero-dependency, single-settings-toggle fix, not a plugin or a workaround.
 
 What that setting does **not** cover (unverified whether any core mechanism reaches
-these — the long-standing 2020 Obsidian feature request "use H1 or YAML title as display
+these — [the long-standing 2020 Obsidian feature request](https://forum.obsidian.md/t/use-h1-or-yaml-property-title-instead-of-or-in-addition-to-filename-as-display-name/687) "use H1 or YAML title as display
 name... everywhere: links, backlinks, graph view, search" is still open, which implies it
 doesn't): the file-explorer sidebar list, tab-bar titles, graph-view node labels, and
 quick-switcher/search results would likely still surface the raw `<id>.md` filename.
 That's a real but much narrower and lower-stakes gap than "the PI has to work with ugly
 filenames" — it affects *finding* a note by browsing, not *reading or writing* one. If it
-matters, the community plugin **Front Matter Title** (not core) closes it by rendering a
+matters, the community plugin [**Front Matter Title**](https://github.com/snezhig/obsidian-front-matter-title) (not core) closes it by rendering a
 frontmatter-sourced title across those remaining surfaces without renaming the file; a
-different plugin, *File Title Updater* (2025), does the opposite — it *syncs*
+different plugin, [*File Title Updater*](https://github.com/wenlzhang/obsidian-file-title-updater) (2025), does the opposite — it *syncs*
 filename/frontmatter/heading together rather than decoupling them, so it wouldn't help
 here specifically.
 
@@ -351,7 +384,7 @@ rather than left open:
    link-target-validity check): every frontmatter `links:` target must be referenced in
    the Links section prose in language that names its relation — flag it the same way
    other structural link issues are already flagged.
-6. **Correction, checked against the real OKF spec (GoogleCloudPlatform/knowledge-catalog
+6. **Correction, checked against the real [OKF spec](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) (GoogleCloudPlatform/knowledge-catalog
    `okf/SPEC.md`, v0.1) rather than Memoria's paraphrase of it:** the reserved headings
    are genuinely optional — §4.2: "There are no required body sections... SHOULD be used
    when applicable," not a compliance requirement. **`index.md` stays
@@ -439,10 +472,36 @@ linter check; an explicit statement of the export unit's boundary). None of it r
 building the ADR-107 conversion pipeline — that pipeline becomes unnecessary scope to
 retire, not scope to eventually build.
 
-**Exact boundary rule (code):** a vault path is part of the bundle **iff its top-level
-segment is one of the five bundle roots.** Declared identically in two source-of-truth
-places — `runtime/projections.py` `BUNDLE_ROOTS = ("works","sources","notes","hubs","projects")`
-and `.memoria/schemas/folders.yaml` (`bundle_roots:` == `categories:`).
+**Exact boundary rule (code) — for *the bundle* specifically, a narrower scope
+than the export unit above; the two are not the same thing and this doesn't
+re-narrow item 7's export-unit claim.** A vault path is part of **the bundle**
+**iff its top-level segment is one of the five bundle roots.** Declared
+identically in two source-of-truth places — `runtime/projections.py`
+`BUNDLE_ROOTS = ("works","sources","notes","hubs","projects")` and
+`.memoria/schemas/folders.yaml` (`bundle_roots:` == `categories:`). **Stated
+explicitly since a reader could otherwise read this as re-litigating item 7's
+"every `.md` file in the export unit... is an OKF concept document" claim:**
+it doesn't. Two genuinely different, already-named scopes coexist by design,
+not by drift:
+- **The bundle** (this rule) — the 5 folders Memoria's own schema/registry
+  machinery enforces (`schema.py::_concept_files`, `concepts.concept_type`'s
+  CHECK, `.memoria/schemas/types/*.yaml`). `type:` values here are validated
+  and DB-tracked.
+- **The export unit** (item 1 above) — vault root minus `.memoria/`: the
+  bundle plus `bibliography.bib`, `index.md`, and (item 1's own wording)
+  *optionally* root-level docs and `system/` "if wanted, neither load-bearing."
+  Item 7's `type: system`/`template`/`eval-task`/`dashboard` labels apply only
+  to this outer, optional layer — **purely an OKF-conformance courtesy for an
+  external reader**, explicitly *not* added to `concepts.concept_type`'s CHECK
+  or any new `.memoria/schemas/types/*.yaml` (item 7's own closing sentence:
+  "decoupled from Memoria's own internal Concept-hood"). `fulltext/<work_id>.md`
+  is the one exception worth naming: it *is* bundle-scoped (lives under a
+  bundle root), which is why, unlike `system`/`template`/`eval-task`/
+  `dashboard`, Part 5 gives it a real field table alongside the other Concept
+  types, not just a label. Before implementing the `type:` additions: nothing
+  here changes which folders Memoria's own code treats as the bundle — only
+  which *optional* files, if a PI chooses to include them in a full vault-root
+  copy, get a courtesy label so they don't misclassify under OKF's own rule.
 
 | Bundle root | Holds | Concept type(s) | Authored / generated |
 |---|---|---|---|
@@ -851,7 +910,7 @@ original framing implied, not harder.
 | **SQLite as an application/archival file format** (sqlite.org) | The counter-case (B) that makes the keep-test a *choice*, not an axiom — and the justification for putting working state in one embedded DB. |
 | **Datomic** (accretion-only log, "as-of") | The append-only, hash-chained audit ledger lineage. |
 | **W3C PROV** (entity/activity/agent) | The provenance graph: per-field winning-provider records + input→output derivation edges. |
-| **CSL-JSON** (Citation Style Language) | The catalog's interchange representation for bibliographic records. |
+| **[CSL-JSON](https://github.com/citation-style-language/schema)** (Citation Style Language) | The catalog's interchange representation for bibliographic records. |
 | **BibTeX** (entry travels with the document) | The **survival-copy** pattern: denormalize the minimal citation into the markdown so it stands alone. |
 | **Zettelkasten / Luhmann** | Atomic notes + dense **typed** links as the knowledge-graph shape. Also the direct precedent for the project/corpus split (§2, on `projects/`): Zettelkasten's own permanent slip-box vs. project-specific reference collection — the slip-box never depends on or links into a project's working notes, so the project can be discarded when finished without touching the permanent graph. Same one-way structure, same reason it's safe to erase. |
 | **W3C Web Annotation / TextQuoteSelector** | Anchoring quotes/evidence as selectors over source text rather than as note *types* or frontmatter fields. |
@@ -978,7 +1037,13 @@ its conclusion.**
   atomic, densely linked, evolving — just doing different intellectual work
   (interpreting a source vs. asserting a claim). It fits the *mode* bucket, not the
   *type* bucket, by the schema's own stated test. Concretely: extend
-  `enums.mode` to `[claim, question, hypothesis, tension, definition, work]` — **naming
+  `enums.mode` to `[claim, question, hypothesis, tension, definition, work]` — **this
+  six-mode list is itself superseded later in this document:** Part 5's dedicated
+  mode-collapse rethink re-runs the mode-vs-type test against all six and finds
+  `hypothesis`/`tension` don't survive as separate modes (`hypothesis` folds into
+  `claim` + `certainty: hypothesized`; `tension` folds into `claim` +
+  `links.contradicts`), landing on four real modes — `claim`, `question`,
+  `definition`, `work`. Treat Part 5's table as the target, not this list. **Naming
   corrected from an earlier pass** (see Part 3): the original proposal used
   `mode: source`/`mode: concept`, which is exactly the terminology collision Part 3
   audits against — `source` is OpenAlex's word for a *venue*, and `concept` collides
@@ -998,7 +1063,7 @@ its conclusion.**
     (unchecked, singular) look like the same idea with two names and two behaviors —
     reconcile which one survives the merge; don't carry both forward silently.
 - **`digest` stays a separate type — it's genuinely different-in-kind, not a mode.**
-  Cross-referencing the wiki-LLM digest pattern you linked (Karpathy's gist): that
+  Cross-referencing the wiki-LLM digest pattern you linked ([Karpathy's gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)): that
   pattern's "write a summary" sub-step is exactly Memoria's `digest` — a compressed,
   machine-authored reading of one immutable source. ADR-126's mode-vs-type test asks
   whether something is "a flippable state and role" on a human-authored artifact; a
@@ -1290,13 +1355,28 @@ the CHECK until they are.
 Zero-migration-cost (per the standing project-stage rule in §5) — every rename below
 ships directly, no phased aliasing.
 
+**Three rows below are superseded — flagged inline, not silently left stale.**
+The `organization`/`person` rows propose rename-and-keep; Part 4's later,
+dedicated entity-resolution rethink (run through requirements → prior art →
+design, not just asserted) instead drops `organization`/`person`/`venue` from
+`concept_type` entirely, and Part 5 already assumes that outcome — treat those
+two rows as superseded, not live. The `source`/`source-note`/`relation_type=
+'source'` rows depend on G0 deleting the markdown `work` type first; Part 8
+initially re-derived this same ground independently and reached a different
+resolution (`catalog-record`/`catalog-note`), but that alternative has since
+been retired — the project owner confirmed this plan (delete-and-fold, not
+rename-and-keep both types) once checked that nothing deployed today actually
+uses either type, removing the migration-size concern that motivated Part 8's
+alternative. Part 8 now implements exactly the rows below; see its
+reconciliation note.
+
 | Current | Issue | Recommended rename | Depends on |
 |---|---|---|---|
-| `concept_type='source'` (catalog row, DB) | Means "document" where OpenAlex's Source means "venue"; docs already call this row "Work" | → `'work'` | G0 deleting the markdown `work` type first (frees the name) |
-| `source-note` type, `sources/` folder | Same document-sense collision, at the markdown layer | Dissolves — folds into `note` `mode: work` per G0-continued (§5); no folder/type survives to rename | G0-continued |
+| `concept_type='source'` (catalog row, DB) | Means "document" where OpenAlex's Source means "venue"; docs already call this row "Work" | → `'work'` | G0 deleting the markdown `work` type first (frees the name) — **adopted by Part 8, see above** |
+| `source-note` type, `sources/` folder | Same document-sense collision, at the markdown layer | Dissolves — folds into `note` `mode: work` per G0-continued (§5); no folder/type survives to rename | G0-continued — **adopted by Part 8, see above** |
 | `work_graph_edges.relation_type='source'` | Already means venue (correct!), but shares a word with the above | Rename to `'venue'` once `concept_type='source'` is renamed away, **or** leave as `'source'` and adopt OpenAlex's own word fully once the document-sense is gone — pick one, don't leave both spellings live | The `concept_type` rename above |
-| `concept_type='organization'` | Synonym for OpenAlex's Institution | → `'institution'` (matches `relation_type='institution'`, already correct) | none — safe now |
-| `concept_type='person'` | Synonym for OpenAlex's Author | → `'author'` | none — safe now |
+| `concept_type='organization'` | Synonym for OpenAlex's Institution | ~~→ `'institution'`~~ **superseded — dropped entirely instead, see Part 4's entity-resolution rethink and Part 5** | none — safe now |
+| `concept_type='person'` | Synonym for OpenAlex's Author | ~~→ `'author'`~~ **superseded — dropped entirely instead, see Part 4's entity-resolution rethink and Part 5** | none — safe now |
 | `relation_type='authorship'` | Only half the object (author, not institutions) | Keep the name (it's correct); either fold `institution` edges into a richer `authorship` payload matching OpenAlex's real object, or explicitly document that Memoria splits it into two edges by design | Judgment call, not a rename |
 | `source-note.topic` (singular, unchecked) vs `note.topics` (plural, checked) | Same idea, two names/behaviors | Reconcile to one — likely `topics`, carried over when source-note folds into `note` | G0-continued |
 | `work_graph_edges.relation_type='topic'` merging 4 taxonomies | Information loss, not just naming | Split into distinct edge types (e.g. `topic`, `mesh`, `sdg`; decide whether the deprecated OpenAlex Concepts taxonomy is worth its own bucket or should be dropped since OpenAlex itself no longer maintains it) | Independent of the type-roster changes above |
@@ -1347,8 +1427,10 @@ ships directly, no phased aliasing.
 ├── troubleshooting.md       + `type: system`, same reason
 ├── bibliography.bib         THE portable knowledge artifact (§1 rule 3) — renderer
 │                             extended to emit `memoria_work_id` on every entry
-├── notes/<id>.md            note Concepts — mode: [claim, question, hypothesis,
-│                             tension, definition, work]. `mode: work` absorbs what
+├── notes/<id>.md            note Concepts — mode: [claim, question, definition,
+│                             work] (Part 5's mode-collapse: `hypothesis`/`tension`
+│                             are not separate modes — see there, not the earlier
+│                             six-mode draft above). `mode: work` absorbs what
 │                             source-note used to be (G0-continued); filenames are
 │                             `<ulid>.md` (identity fork resolved, §2), readable via
 │                             Obsidian's "Show inline title" off + the template's own
@@ -1408,12 +1490,16 @@ ships directly, no phased aliasing.
 │                             `search_index.py::_checked_work_documents` (title + compact
 │                             citation + full text) but only in-memory for the disposable
 │                             BM25 corpus — the fix is to persist that generator's
-│                             output, not invent new logic. Still needs `^pNNNN`
-│                             block-ref anchors inserted at extraction time, which no
-│                             code does yet — persisting as-is is necessary but not
-│                             sufficient for evidence-marker resolution. Belongs in the
-│                             bundle, not the DB (block-refs only resolve within a real
-│                             vault file Obsidian indexes). Raw original bytes (PDF/HTML)
+│                             output, not invent new logic. **Revised by Part 8's
+│                             resolution of the source-span anchor question:** this
+│                             previously said the file still needs `^pNNNN` block-ref
+│                             anchors inserted at extraction time — Part 8, checked
+│                             against real PDF/RAG citation-grounding practice, found
+│                             page identity belongs in `passages` as structured
+│                             metadata instead; this file stays whatever extraction
+│                             already produces (`## Page N` headings), a human-reading
+│                             convenience only, not an evidence-marker resolution
+│                             mechanism. Raw original bytes (PDF/HTML)
 │                             stay in `.memoria/blobs/` — provenance, not knowledge.
 │                             **Naming, checked against real precedent, not preference:**
 │                             `fulltext` is right — `catalog_sources.text_status`
@@ -1587,23 +1673,39 @@ not one blanket answer.
 
 ## Database `concept_type` roster (schema.sql)
 
+**Updated to match this Part's own later resolution, not left as first drafted.**
+The `person`/`organization`/`venue` rows below were originally proposed as
+rename-and-keep (`→ author`/`→ institution`/`→ source`); the embedded
+"Rethink: `person`/`institution`/`source` entity resolution" immediately below
+this table re-derives that specific question from requirements and lands
+somewhere stricter — drop all three from `concept_type` entirely, since nothing
+ever writes them and the free-join design that rethink adopts gives them no job
+to do. Part 5 (§ "Types deliberately out of this table's scope") already assumes
+that stricter outcome. The table here is corrected to match, so a reader hitting
+the roster first doesn't get the superseded answer.
+
 | Before (15 values) | After | Why |
 |---|---|---|
 | `work` (markdown type) | **deleted** | G0 — redundant SSOT |
-| `source` (catalog/document row) | → **`work`** | frees the name for the catalog row the docs already call "Work"; resolves the internal `source`/`source` self-collision (Part 3) |
-| `source-note` | **deleted** | folds into `note` + `mode: work` |
-| `venue` | → **`source`** | now free (old `source` moved to `work`) — lets Memoria adopt OpenAlex's actual word for the venue entity, fully resolving Part 3's central tension |
-| `organization` | → **`institution`** | matches OpenAlex's real entity name; also matches the already-correct `relation_type='institution'` |
-| `person` | → **`author`** | matches OpenAlex's real entity name |
+| `source` (catalog/document row) | → **`work`** | frees the name for the catalog row the docs already call "Work"; resolves the internal `source`/`source` self-collision (Part 3) — **adopted by Part 8**, which initially proposed `catalog-record` instead, then adopted this plan once confirming nothing deployed today uses either type |
+| `source-note` | **deleted** | folds into `note` + `mode: work` — **adopted by Part 8**, same reconciliation |
+| `venue` | **dropped entirely** | zero writers ever ("declared but dead," G2); see the entity-resolution rethink below — a free join on `work_graph_edges.target_id` delivers the real requirements without a dedicated Concept type |
+| `organization` | **dropped entirely** | same reasoning as `venue` |
+| `person` | **dropped entirely** | same reasoning as `venue` |
 | `digest`, `note`, `hub`, `project` | unchanged | digest resolved: stays a Concept |
 | `capability`, `operation`, `skill`, `adapter`, `workflow` | unchanged | product/system registry, separate population, not research content |
 
-Net: **12–13 values** (depending on `digest`), down from 15, with the internal
-self-collision gone and full OpenAlex alignment on every entity name. `person`/
-`organization`(→`institution`)/`venue`(→`source`) remain **unwired** (no writer ever
-creates these rows — the "declared but dead" finding, G2) unless the open question on
-building the `catalog/entities/*.md` writer path is resolved toward "build it" rather
-than "drop it" — this analysis surfaced the choice but didn't make it.
+Net: **10 values** (`work`, `digest`, `note`, `hub`, `project`, `capability`,
+`operation`, `skill`, `adapter`, `workflow`), down from 15 — the "depending on
+`digest`" hedge in an earlier draft of this row is stale: `digest`'s
+Concept-hood is settled two paragraphs below ("What's explicitly still open,
+not decided here," item 1) and the row above already says so ("digest
+resolved: stays a Concept"); there is no remaining scenario where the count is
+9. `person`/`organization`/`venue` removed rather than renamed, per the
+entity-resolution rethink's decision to take the free-join path instead of
+building a dedicated, unwired entity type. The `source`/`source-note` → `work`
+rename is now **adopted document-wide, including by Part 8** — see its
+reconciliation note.
 
 ## What's explicitly still open, not decided here
 
@@ -1833,7 +1935,16 @@ Zettelkasten's lineage, so atomicity wins where they conflict — Toulmin inform
 ## Design: frontmatter, per type
 
 Universal required core, unchanged and re-confirmed: `type` (literal), `id` (ulid),
-`title` (str), `tags` (list), `links` (links) — on every type below.
+`title` (str), `tags` (list), `links` (links) — on every type below **except
+`digest` and `fulltext`, named here rather than left as a silent exception the
+per-type tables only imply.** Both are machine-generated, identified by
+`work_id` itself, not a separately-generated ULID (Part 4: "siblings, not one
+being the exception" — resolved once, for both, not independently). Concretely:
+`id: str` (not `ulid` — `schema.py`'s `is_ulid()` check would reject a
+non-ULID-shaped `work_id`), and its value is the same `work_id` the file is
+named after (`digests/<work_id>.md`, `fulltext/<work_id>.md`) — the frontmatter
+`id:` key stays present on every type, per OKF/schema uniformity, but its
+*kind* and *value source* differ for these two.
 
 ### `note` — first, a mode-collapse finding, not just a field table
 
@@ -1871,7 +1982,8 @@ this rethink pass adds.
 | `work_id` | yes, on `source-note` today | **conditionally required** when `mode: work` (migrating from `source-note`'s current unconditional-required) | |
 | `citekey`, `project` (list) | on `source-note` today | **drop, don't carry forward** | `citekey` duplicates `bibliography.bib` (G0 already resolved catalog data to be catalog-only); `project` duplicates what a project's own `links`/backlinks already surface — carrying both is the same survival-copy mistake G0 fixed elsewhere |
 | `topics` vs `topic` | both exist today, unreconciled (note vs. source-note) | optional | reconcile to one name (`topics`, vocab-checked) — the wrinkle this document already flagged, not new |
-| `quote`, `source_id`, `temporal_scope`, `tense`, `qualifier`, `evidence_set`, `anchors`, `annotation_ref`, `extraction_confidence`, `reading`, `superseded`, `aliases`, `archived`, `description`, `citations`, `x` | yes | optional | unchanged from current schema |
+| `quote`, `source_id`, `temporal_scope`, `tense`, `qualifier`, `anchors`, `annotation_ref`, `extraction_confidence`, `reading`, `superseded`, `aliases`, `archived`, `description`, `x` | yes | optional | unchanged from current schema |
+| `evidence_set`, `citations` | yes, today | **removed, not unchanged** | Part 2's G4 retires `evidence_set:` frontmatter (marker+table pair is the durable source; this field becomes a marker-derived DB row, not a type); G0 retires `citations:` (the baked-in compact-citation survival copy — keep only the live `source_id`/`work_id` pointer, per the export-completeness check replacing it). This table's "unchanged from current schema" row above previously listed both alongside fields G0/G4 don't touch — corrected here to match the already-decided target rather than the as-built inventory. |
 
 **Conditional-required, resolved:** neither of the two mechanisms this document
 previously left open (a new schema primitive vs. linter-level enforcement) has a real
@@ -1894,7 +2006,8 @@ already-existing.
 | Field | Required? | Notes |
 |---|---|---|
 | `tag` | required (unchanged — the one canonical tag this hub pages for) | |
-| `salience`, `aliases`, `citations`, `description`, `archived`, `x` | optional (unchanged) | |
+| `salience`, `aliases`, `description`, `archived`, `x` | optional (unchanged) | |
+| `citations` | optional today | **removed, not unchanged** | G0 retires this field document-wide (see the `note` table above) — a hub is not exempt. |
 
 No changes derived — the current shape already matches what a hub needs to do
 (page one tag, optionally aliased/salient).
@@ -1913,23 +2026,34 @@ not an oversight.
 
 | Field | Required? | Notes |
 |---|---|---|
+| `id` | required — `str`, not `ulid`; value is the same `work_id` the file is named after (see the universal-core exception above) | |
 | `work_id` | required (unchanged) | |
-| `anchors`, `evidence_set`, `description`, `citations`, `archived`, `x` | optional (unchanged) | |
+| `anchors`, `description`, `archived`, `x` | optional (unchanged) | |
+| `evidence_set`, `citations` | optional today | **removed, not unchanged** | Same G0/G4 retirement as the `note` table above — a digest is not exempt. |
 
 No changes derived — machine-owned, smallest optional surface already, matches the
 Karpathy pattern's "compressed, regenerable summary" shape.
 
-### `fulltext` (new this pass — added per the §3.1 correction, Part 4)
+### `fulltext` (new this pass — added per the §3.1 correction, Part 1 §2, applied to this type in Part 4)
 
 | Field | Required? | Notes |
 |---|---|---|
 | `type: fulltext` | required | new — this is what makes it an OKF-conformant concept document |
-| universal core (`id`/`title`/`tags`/`links`) | required, same as every type | `links` will typically be empty (`{}`) — a mechanical text reproduction has no PI-authored relationships to declare, but the field stays present for schema uniformity rather than special-cased away |
+| `id` | required — `str`, not `ulid`; value is the `work_id` the file is named after, same exception as `digest` (see the universal-core note above, not independently decided here) | |
+| `title`/`tags`/`links` | required, same as every type | `links` will typically be empty (`{}`) — a mechanical text reproduction has no PI-authored relationships to declare, but the field stays present for schema uniformity rather than special-cased away |
 | everything else | none needed | it's a reproduction, not authored content |
 
-**Body isn't "structural markdown" in the heading sense at all** — its structure is
-paragraph-level `^pNNNN` block-ref anchors, not `##` headings. Worth naming explicitly:
-this is the one type where the question "what body sections" doesn't really apply.
+**Body isn't "structural markdown" in the heading sense at all** — its
+structure is `## Page N` headings, one per extracted page, a human-reading
+convenience only. **Revised by Part 8's resolution of the source-span anchor
+question:** this originally said the structure was paragraph-level `^pNNNN`
+block-ref anchors instead; Part 8, checked against real PDF/RAG
+citation-grounding practice (PyMuPDF4LLM, Docling), found that page identity
+belongs in `passages` as structured metadata, not as inline markup in this
+file at all — so `fulltext`'s body stays whatever `capture.py` already
+produces (`## Page N`), decoupled from how citations resolve. Worth naming
+explicitly either way: this is the one type where the question "what body
+sections" doesn't really apply.
 
 ### Types deliberately out of this table's scope, named rather than dropped silently
 
@@ -2297,26 +2421,51 @@ an argument for or against a design choice.
 **A naming note, so the sections below can be read in the order requested without
 forward-reference confusion:** every table/column/value name used in "The schema
 design" is given in its *target* (post-fix) form already — `work_id` rather than
-`source_id`, `catalog-record`/`catalog-note` rather than `source`/`source-note`,
-`published_in` rather than the bare `source` relation, `event_log` rather than
-`journal_events`. The dedicated OpenAlex-collision subsection at the end of that
-section supplies the justification and the exact old→new mapping for each; the real,
-currently-shipped names appear verbatim only in the Gap/Migration sketch, where the
-distinction between old and new is the entire point.
+`source_id`, `concept_type='work'` (the catalog row, once the markdown `work`
+type below it is deleted) rather than `source`, `note.yaml`'s `mode: work`
+rather than a surviving `source-note` type, `published_in` rather than the bare
+`source` relation, `event_log` rather than `journal_events`. The dedicated
+OpenAlex-collision subsection at the end of that section supplies the
+justification and the exact old→new mapping for each; the real,
+currently-shipped names appear verbatim only in the Gap/Migration sketch, where
+the distinction between old and new is the entire point.
 
-**A reconciliation this Part owes the rest of the document:** Part 3's own earlier
-rename plan proposed `concept_type='source'` → `'work'` and
-`relation_type='source'` → `'venue'`, contingent on Part 2's clean-slate deletion of
-the markdown `work` Concept type first freeing the word "work." This Part does not
-carry that precondition forward — it grounds in the real, currently-shipped
-`schema.sql`/`work.yaml` (re-read directly this session), where `concept_type='work'`
-and a live `work.yaml` schema both already exist and are therefore *not* available to
-reuse. The resolution below (`catalog-record`/`catalog-note`, `published_in`) was
-independently re-derived against the live files rather than assuming Part 2's
-hypothetical deletion had happened, and supersedes Part 3's plan for exactly the
-`source`/`source-note`/`work_graph_edges.relation_type='source'` triad. Part 3's other
-findings (the `Concept` collision, the `organization`/`institution` duplication, the
-merged `topic` edge taxonomy) are untouched by this Part and stand as Part 3 left them.
+**Decided, per the project owner's direction: Part 2/4/5's plan, not this Part's
+earlier alternative.** This Part originally proposed a different end state
+(`concept_type='source'` → `'catalog-record'`, `source-note` kept and renamed
+`catalog-note`) rather than carrying forward Part 2's G0 — delete the markdown
+`work` Concept type, fold `source-note` into `note` as `mode: work`, and let
+`concept_type='source'` (the catalog row) take the word "work" once it's freed
+— on the grounds that `concept_type='work'` and `work.yaml` both already exist
+in the live schema and aren't available to reuse for free. Reconsidered and
+checked directly rather than left as a standing hedge: a repo-wide grep this
+session (`grep -rl "^type: work$"`, `"^type: source-note$"` across every `.md`
+file) found **zero** files of either type anywhere in the repository — only the
+empty `works/`/`sources/` scaffolding folders exist, no real content. So the
+"bigger, riskier migration" concern that motivated this Part's alternative
+doesn't hold: per the standing zero-migration-cost rule
+(`query-mechanism-analysis.md` §1/Q11), there is nothing deployed to migrate
+either way, which removes the one reason this Part had for not simply adopting
+Part 2's already-thorough, independently-checked plan (own grep of
+`capture.py`/`operations.py`/`knowledge.py` finding no code path that
+*requires* `works/<work_id>/record.md` to exist), converged on by three
+separate parts (2, 4, 5) of this document.
+
+**What this Part now builds toward, in place of the retired `catalog-record`/
+`catalog-note` naming:** `concept_type='source'` → `'work'` (the markdown `work`
+Concept type and `work.yaml` schema are deleted outright, not renamed —
+`concept_type='work'` becomes the sole surviving name, now meaning the catalog
+row); `concept_type='source-note'` is deleted, its fields folded into
+`note.yaml` as `mode: work`, `source-note.yaml` removed; `venue` stays retired
+per Part 4's entity-resolution rethink (dropped from `concept_type` entirely,
+never renamed — this Part's schema below is corrected to match, since its
+CHECK list previously still carried `person`/`organization`/`venue` unchanged,
+a leftover this Part hadn't caught up on either). Every section below is
+written in these final terms; where the earlier `catalog-record`/`catalog-note`
+names would have appeared, the migration sketch's superseded-step note explains
+what changed and why. Part 3's other findings (the `Concept` collision, the
+merged `topic` edge taxonomy) are untouched by this decision and stand as Part
+3 left them.
 
 ## Requirements, by pointer
 
@@ -2382,9 +2531,27 @@ CREATE TABLE passages (
     anchor TEXT NOT NULL DEFAULT '',
     text TEXT NOT NULL,
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
+    mode TEXT NOT NULL DEFAULT '',
+    question_status TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL
 );
 ```
+
+**`mode`/`question_status`, added per `query-mechanism-analysis.md` §4.11's
+own correction, not part of this table's first draft.** Q1's own example
+("open questions about X still uncited") is a *structural* filter — is this a
+question, is it still open — not a lexical/semantic match on "X" alone.
+Without these two columns, answering it as one statement would need a
+query-time join back to each row's frontmatter (`note.yaml`'s `mode`/
+`question_status` fields), which no table mirrors — exactly the same shape of
+gap `concept_edges` closes for `links:`, just for these two fields instead.
+`mode` mirrors `note.yaml`'s `mode` enum (`claim`/`question`/`definition`/
+`work`) for `note-body`-origin rows, empty for the other three origins (none
+of which have a `mode`); `question_status` mirrors `note.yaml`'s own field,
+populated only when `mode='question'`, empty otherwise. Both refresh at the
+same query-time mtime-gated reindex pass (§4.2) that already keeps
+`check_status` current on every row — one more column kept in sync by a
+mechanism already built, not a second one.
 
 Four origins, `origin` distinguishing them (deliberately not the prerequisite
 analysis's own illustrative `source_kind` name for this column, §4.1 — reusing that
@@ -2392,12 +2559,53 @@ name here would collide two unrelated things in one document):
 
 - **`note-body`** — markdown body text from `notes/`, `hubs/`, `projects/`, `digests/`
   parsed into passage-sized spans (§4.1's first origin).
-- **`source-span`** — the `^pNNNN` page-anchors already written into every catalog
-  work's full-text file today (the same anchors `runtime/evidence.py`'s
-  `_SOURCE_SPAN_RE` and `runtime/state.py`'s `_source_span_pages` already parse to
-  validate `evidence_sets.items_json`). Indexing these is what makes an
-  `evidence_sets` pointer resolve to something retrievable for the first time —
-  closing the gap identified above without touching `evidence_sets` itself.
+- **`source-span`** — **correction, then resolved against real industry
+  practice, not just patched:** `^pNNNN` anchors are *not* actually written
+  into any real catalog work's full-text file today, matching Part 1/Part 4's
+  finding (Part 4: "Still needs `^pNNNN` block-ref anchors inserted at
+  extraction time, which no code does yet"), not this Part's original claim.
+  Checked concretely: `capture.py::_pdf_content_text` formats extracted PDF
+  pages as Markdown `## Page {n}` headings, never `^pNNNN` block-refs;
+  `runtime/evidence.py`'s `_SOURCE_SPAN_RE` and `runtime/state.py`'s
+  `_source_span_pages` only *parse/scan for* that syntax, and would match zero
+  real spans against a real extracted file; `knowledge.py`'s
+  `_draft_evidence_items` hard-codes a fake `#^p0001` placeholder for every
+  draft regardless of the source's actual content.
+
+  **Resolution, sourced rather than invented:** neither "start writing real
+  `^pNNNN` anchors" nor "key off `## Page N` instead" is what page-aware
+  citation grounding actually does elsewhere. [PyMuPDF4LLM](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/api.html) (the same PyMuPDF/
+  `fitz` library `capture.py` already uses) tracks page identity as
+  **structured per-chunk metadata** (`page_chunks=True` → a list of
+  `{"page": n, "text": ...}` dicts), not inline text markup; [Docling's](https://github.com/docling-project/docling)
+  `HybridChunker` (its [page-provenance-through-chunking behavior discussed here](https://github.com/docling-project/docling/discussions/1012)) and general RAG citation-grounding practice do the same —
+  page number (and often bounding box) travels as metadata on the retrievable
+  chunk, because export to Markdown/HTML is lossy and re-deriving page
+  identity from exported text is exactly the fragile step that practice
+  avoids. [Obsidian's `^blockid` syntax](https://help.obsidian.md/Linking+notes+and+files/Internal+links), which `^pNNNN` repurposes, has no
+  page-numbering semantics of its own — it's a human link-target convention,
+  not a provenance mechanism, and was never a page-anchor standard to begin
+  with. Concretely, and cheaply: `capture.py::_extract_pdf_pages` **already
+  computes** the real page number per page (`[{"page": page_number, "text":
+  text}, ...]`) before `_pdf_content_text` flattens it into `## Page N`
+  headings for the persisted file. Nothing today carries that already-known
+  page number any further. The fix: when chunking a catalog work's text into
+  `passages` rows, tag each row's `anchor` with the real page number straight
+  from that existing per-page structure — not by writing new inline markup
+  into the file, and not by regex-parsing `## Page N` back out of it.
+  `## Page N` headings stay in the persisted `fulltext/<work_id>.md` file
+  purely as a human-reading convenience (Part 5's design), fully decoupled
+  from how citation resolution actually works, matching how Docling/marker-
+  style tools treat their Markdown export. Indexing these page-tagged rows
+  into `passages` is what makes an `evidence_sets` pointer resolve to
+  something retrievable for the first time — that part of the original claim
+  stands; only "already written… today," and the assumption that inline
+  markup was the right target at all, were wrong. **A trade-off worth naming
+  explicitly:** this gives up the original ambition's paragraph-level
+  precision for page-level precision — `_extract_pdf_pages` knows what page
+  text came from, not what paragraph within it — matching the granularity
+  most real citation-grounding systems actually ship at, not a compromise
+  invented for this document.
 - **`work-aspect`** — one `passages` row mirrors each `work_aspects` row; `anchor`
   reuses that row's `aspect_type` value, so a `key_idea` facet becomes independently
   lexically/semantically retrievable without a second place to author it.
@@ -2409,12 +2617,24 @@ name here would collide two unrelated things in one document):
 `concept_id` holds a `concepts.concept_id` for `note-body`/`db-mirror` rows, and a
 catalog `work_id` (the catalog table's own primary key — see "Applying the
 OpenAlex-collision fixes" below for why that column is `work_id` and not `source_id`)
-for `source-span`/`work-aspect` rows. `anchor` is the `^pNNNN` value for
-`source-span`, the `aspect_type` value for `work-aspect`, a parse-time-derived
-heading/paragraph locator for `note-body` (Memoria does not write per-paragraph
-block-ref ids into note bodies today, so this is computed at parse time, not new
-authoring-time markup), and empty for `db-mirror` (the row's identity is `concept_id`
-alone).
+for `source-span`/`work-aspect` rows. `anchor` is the plain page number (e.g.
+`"42"`) for `source-span` — structured metadata carried straight from
+`capture.py::_extract_pdf_pages`'s already-computed per-page result at
+chunking time, per the resolution above, not `^pNNNN` markup and not a
+regex-parse of `## Page N` — the `aspect_type` value for `work-aspect`, a
+parse-time-derived heading/paragraph locator for `note-body` (Memoria does not
+write per-paragraph block-ref ids into note bodies today, so this is computed
+at parse time, not new authoring-time markup), and empty for `db-mirror` (the
+row's identity is `concept_id` alone). `evidence_sets.items_json`'s existing
+`work_id#^pNNNN` pointer *string* format is unaffected — it stays the
+PI/system-facing citation-reference syntax `runtime/evidence.py`'s
+`_SOURCE_SPAN_RE` already parses (e.g. `work_id#^p0042`); what changes is how
+it resolves: against `passages` (`concept_id = work_id AND anchor = '0042'`),
+not by scanning the work's raw file text for a literal `^p0042` substring the
+way `_source_span_pages` does today. That scan becomes dead code once
+`passages` exists and should be retired in favor of the table lookup — named
+here, sized in the migration sketch below, not performed by this schema
+change alone.
 
 `passages.text` is, for the `work-aspect`/`source-span` origins, a copy of text whose
 authority lives elsewhere (`work_aspects.aspect_text`, or the markdown file itself) —
@@ -2431,29 +2651,71 @@ needed. Noted here for gap-measurement only, not as justification for the column
 `concept_verdicts` and the catalog table's own `check_status`, so a derived per-row
 table holding its own copy of the gate is not a new shape for `schema.sql` to contain.
 
+**A real gap this copy introduces, not yet closed by anything named above:** a
+value copied "at index time" only reflects the truth at that moment. If a
+concept is later demoted, quarantined, or rechecked — `trusted_writer.py`'s
+`mark_checked`/`_write_checked` or `integrity.py`'s cascade/quarantine writers
+changing `concept_verdicts`/`catalog_sources.check_status`/
+`work_aspects.check_status` — without a corresponding write to every
+`passages` row derived from that same `concept_id`/`work_id`, those rows keep
+serving their stale, now-wrong `check_status` until the next full reparse
+(which is not required to happen soon, or ever, under the query-time
+mtime-gated lazy reindex design — a verdict change touches no file, so no
+mtime changes, so nothing triggers a reparse). This is a real, unclosed gap,
+not something "extends unchanged" the way the pre-existing cascade/quarantine
+machinery does for `concept_verdicts` itself. **Fix, decided here rather than
+left implicit:** every write path that changes a check_status value
+(`mark_checked`, `_write_checked`, the quarantine cascade) must, in the same
+transaction, also `UPDATE passages SET check_status = ? WHERE concept_id = ?`
+(or the equivalent `work_id`-keyed update for `source-span`/`work-aspect`
+origins) — a same-transaction cascade, not a query-time join against live
+verdict state (which would reintroduce the per-origin, mixed-namespace join
+Q1's single-table `passages.check_status` design exists specifically to
+avoid). This is new work this Part adds to the checked-gate mechanism, not a
+restatement of something already built.
+
 `PRIMARY KEY passage_id TEXT` follows every other keyed table in `schema.sql`
 (`concepts`, `catalog_sources`, `evidence_sets`); an implicit integer rowid still
 exists underneath (no table in `schema.sql` declares `WITHOUT ROWID`), which is what
 lets the FTS5 table below reference it directly.
 
-**A named, not-built, adjacent gap:** `query-mechanism-analysis.md` §4.6's
-local-level graph expansion wants "notes sharing a wiki-link" as a traversal edge
-alongside `work_graph_edges`. A Concept's `links:` frontmatter map is not mirrored
-into any table in `schema.sql` today, and no such mirror is proposed here — this
-Part's requested list of changes does not include one. Without it, §4.6's local-level
-expansion over "wiki-links" resolves only through `work_graph_edges` (the
-catalog/bibliographic graph); a note-to-note `links:` hop needs a query-time
-frontmatter parse outside SQL, breaking Q1's one-statement requirement for exactly
-that edge type. Flagged as an addressable gap against §4.6, left for a future pass —
-not resolved by the schema changes in this Part.
+**A gap named against an earlier draft of this Part, now closed, not left
+open:** `query-mechanism-analysis.md` §4.6's local-level graph expansion wants
+"notes sharing a wiki-link" as a traversal edge alongside `work_graph_edges`. A
+Concept's `links:` frontmatter map was not mirrored into any table in
+`schema.sql` in this Part's first pass — see `concept_edges`, below, which
+mirrors it (`supports`/`contradicts`/`extends`) and also gives `tension` its
+correctly-scoped home. §4.6's local-level expansion over "wiki-links" now
+resolves through `concept_edges` in the same one-statement query as
+`work_graph_edges`, closing the Q1 gap this note originally flagged rather than
+deferring it.
 
-### `work_graph_edges`: the CHECK-constraint migration — `tension`, and `source` → `published_in`
+### `work_graph_edges`: the CHECK-constraint migration — `source` → `published_in` only
 
+**Correction: `tension` does not belong in this table — moved to a new
+`concept_edges` table below, not added here as originally proposed.**
 `query-mechanism-analysis.md` §4.11 answers Q0(b)'s "can the schema represent a
-tension today" — no — and names the fix: extend `relation_type`'s CHECK constraint
-with `tension`, written only once a journaled `surface_tensions`/`_compare_claims`
-candidate is PI-confirmed — edge existence is the confirmation signal, never a
-provisional row (§4.11).
+tension today" — no — and originally named the fix as extending
+`work_graph_edges.relation_type`'s CHECK constraint with `tension`. Checked
+against what this table's rows actually are: every existing `relation_type`
+(`references`, `related`, `topic`, `keyword`, `authorship`, `institution`,
+`published_in`) is a **bibliographic** edge — `work_id` is always a catalog
+work, `target_id` a catalog work or an OpenAlex entity ID, and the non-key
+columns (`target_title`, `target_doi`, `source_provider`, `raw_json`) are
+OpenAlex-provenance-shaped. A tension is an edge between two **claims** —
+ordinarily two `mode: claim` notes, whose id is a `concept_id` (Part 1's
+"Concept ID is its path minus `.md`"), a different id space entirely, with no
+use for any of those four provenance columns. Storing a `concept_id` in
+`work_id`/`target_id` would work mechanically (both are unconstrained `TEXT`)
+but overloads a table whose every other row, join, and column assumes
+catalog-work identity — exactly the kind of accidental-looking coincidence
+this document's own OpenAlex audit exists to remove, just one column-shape
+level down instead of one word-spelling level down. **Resolution:** `tension`
+is not added to `work_graph_edges` at all; it lives in a new `concept_edges`
+table (below), whose id space actually matches what a tension edge connects.
+The confirmation discipline itself is unchanged — edge existence remains the
+confirmation signal, never a provisional row (§4.11) — only which table holds
+it changes.
 
 Separately, the OpenAlex collision audit's C3c flagged `relation_type='source'` as
 the one place in the table where "recommend a targeted code check before deciding" was
@@ -2467,15 +2729,17 @@ Memoria's document-sense of "source." This is **not a collision** — it is the 
 edge value in the table that already agrees with OpenAlex — but leaving the literal
 spelling `'source'` in place, right where every other value already means what
 OpenAlex means, is exactly the kind of accidental-looking coincidence this whole audit
-exists to remove. Since both `catalog-record` and `catalog-note` (below) free the word
-"source" from Memoria's document-sense in the same migration, and `'venue'` is already
-taken by `concept_type`, the clean, unambiguous name is `published_in` — read
-unambiguously as "`target_id` is the venue this `work_id` was published in" — not
-`'source'` (still readable as the older document-sense by anyone who hasn't read this
-audit) and not `'venue'` (would create a same-schema, cross-table homonym with
-`concept_type='venue'`). Because this is the same table, the same column, and the same
-CHECK-rebuild mechanic as the `tension` addition, both changes are made in one rebuild,
-not two.
+exists to remove. Since `concept_type='source'` renaming to `'work'` (below) frees the word
+"source" from Memoria's document-sense in the same migration, and
+`concept_type='venue'` is dropped entirely rather than kept (Part 4's
+entity-resolution rethink), no homonym actually blocks `relation_type='venue'`
+here — but `published_in` is still the better name on its own terms: every
+other surviving `relation_type` value already reads as a relationship phrase
+(`references`, `related`, `authorship`, `institution`), not a bare noun, and
+`published_in` states the direction of the relationship (`target_id` is the
+venue this `work_id` was published in) the way a bare `'venue'` wouldn't.
+This is now the *only* change to this table — a single-value CHECK-list rename,
+no widening — since `tension` moved to `concept_edges` below.
 
 ```sql
 CREATE TABLE work_graph_edges (
@@ -2483,7 +2747,7 @@ CREATE TABLE work_graph_edges (
     relation_type TEXT NOT NULL CHECK (
         relation_type IN (
             'references', 'related', 'topic', 'keyword',
-            'authorship', 'institution', 'published_in', 'tension'
+            'authorship', 'institution', 'published_in'
         )
     ),
     target_id TEXT NOT NULL,
@@ -2497,30 +2761,16 @@ CREATE TABLE work_graph_edges (
 ```
 
 SQLite has no `ALTER TABLE ... ADD CHECK`/`ALTER CONSTRAINT`; the rebuild mechanic
-(rename old, create new with the extended/edited CHECK, copy rows, drop old) is
-specified in the migration sketch below, not repeated here. Three things the rebuild
-alone doesn't settle — gap-measurement against the real write path, not an argument
-against making the change:
-
-**A required write-path guard, narrow in scope.** `replace_work_graph_edges`
-(`runtime/state.py:1003–1029`) deletes every row for a `work_id` before reinserting
-(`DELETE FROM work_graph_edges WHERE work_id = ?`, `state.py:1006`) — the mechanism a
-work's OpenAlex re-enrichment already uses to refresh its edges. Whatever writes a
-confirmed `tension` row must keep that delete scoped to exclude
-`relation_type = 'tension'`, or a confirmed tension is silently destroyed the next
-time its `work_id` happens to be re-enriched.
-
-**A documented, not hidden, namespace widening.** Every existing `relation_type`'s
-`work_id`/`target_id` is normalized to a bare catalog `work_id` — the table's
-non-key column set (`target_title`, `target_doi`, `source_provider`, `raw_json`) is
-OpenAlex-provenance-shaped. A tension between two claims is ordinarily a tension
-between two notes (`mode: claim`), whose id is a `concept_id` (Part 1's "Concept ID is
-its path minus `.md`") — a different id space than every other row in this table
-uses. Nothing mechanically prevents storing a `concept_id` in `work_id`/`target_id`
-(both are unconstrained `TEXT`), and `target_doi`/`source_provider`/`raw_json` simply
-go unused (`''`/`'{}'` defaults) for `tension` rows — a real, first-of-its-kind
-widening of what those two columns hold, worth documenting as such rather than
-assumed compatible because the column types happen to allow it.
+(rename old, create new with the edited CHECK, copy rows, drop old) is
+specified in the migration sketch below, not repeated here. Because `tension`
+no longer lands in this table, neither does the write-path risk it would have
+created: `replace_work_graph_edges` (`runtime/state.py:1003–1029`) keeps
+deleting every row for a `work_id` before reinserting
+(`DELETE FROM work_graph_edges WHERE work_id = ?`, `state.py:1006`) on every
+OpenAlex re-enrichment, unguarded and unchanged — there is no confirmed-tension
+row in this table for that delete to ever silently destroy, since tension rows
+live in `concept_edges` (below), a table `replace_work_graph_edges` never
+touches. This removes a real, named risk rather than merely documenting it.
 
 **The `published_in` rename's companion code edits, found by direct grep, not
 inferred.** `integrity.py:675-679`'s `relation_types` dict key `"source"` must become
@@ -2528,6 +2778,59 @@ inferred.** `integrity.py:675-679`'s `relation_types` dict key `"source"` must b
 'source')` must become `('authorship', 'institution', 'published_in')`. Not
 exhaustively re-audited beyond these two confirmed sites — sized fully in the
 migration sketch below, not here.
+
+### `concept_edges`: a new table for concept-to-concept relations — `tension`, and the `links:` mirror
+
+**Why a new table, not `work_graph_edges` and not leaving `links:` unmirrored:**
+two separate gaps converge on the same missing piece. First, `tension` (above)
+needs a home whose id space is `concept_id`, not catalog `work_id` — a note's
+own `id` (Part 1: "Concept ID is its path minus `.md`"), since a tension is
+ordinarily between two `mode: claim` notes. Second,
+`query-mechanism-analysis.md` §4.6 names, but does not build, "notes sharing a
+wiki-link" as a local-level graph-expansion edge — its own text states plainly
+that a Concept's `links:` frontmatter map "is not mirrored into any table in
+`schema.sql` today, and no such mirror is proposed here," which means that hop
+can only be computed by a query-time frontmatter parse outside SQL, breaking
+Q1's one-statement requirement for exactly that edge type. Both gaps are the
+same shape — a concept-to-concept graph edge with no SQL representation — and
+one table closes both:
+
+```sql
+CREATE TABLE concept_edges (
+    concept_id TEXT NOT NULL,
+    relation_type TEXT NOT NULL CHECK (
+        relation_type IN ('supports', 'contradicts', 'extends', 'tension')
+    ),
+    target_concept_id TEXT NOT NULL,
+    discovered_at TEXT NOT NULL,
+    PRIMARY KEY (concept_id, relation_type, target_concept_id)
+);
+```
+
+Two different provenances share this table, not one — worth stating plainly
+rather than leaving it implicit:
+
+- **`supports`/`contradicts`/`extends`** mirror `note.yaml`'s (and every other
+  type's) `links:` frontmatter map — `schema.py`'s own `LINK_RELATIONS`
+  (`{"supports", "contradicts", "extends"}`) is the exact, already-shipped
+  vocabulary, confirmed directly against `runtime/subsystems/lib/schema.py`.
+  This is a **derived mirror**, same rule as `passages`/FTS5/`vec0`: the
+  markdown file's `links:` map is the source of truth, `concept_edges` rows
+  for these three values are rebuilt from it under the same query-time
+  mtime-gated lazy reindex (§4.2) that already reparses a changed file's
+  `passages` — one more derived table populated in the same pass, not a
+  second reindex mechanism.
+- **`tension`** is *not* a mirror of anything — no frontmatter field holds it.
+  It is written directly, once, by `surface_tensions`'s PI-confirmation step
+  (§4.11) — edge existence is the confirmation signal, never a provisional
+  row, exactly as originally specified for this value; only the table
+  changed.
+
+This directly closes the gap `query-mechanism-analysis.md` §4.6 named and left
+open: local-level graph expansion (4.6) now traverses `concept_edges` alongside
+`work_graph_edges`, giving "notes sharing a wiki-link" a real, one-statement
+SQL join instead of a query-time frontmatter parse — Q1's one-statement
+requirement now holds for this edge type too, where it previously did not.
 
 ### FTS5 and `vec0`: what's indexed, and over which column
 
@@ -2566,17 +2869,22 @@ CREATE TABLE file_index_state (
 `subject_id` is a `concept_id` for `note-body` origins (Part 1's concept-id-is-the-
 path convention resolves it to exactly one file) or a catalog `work_id` for
 `source-span`/`work-aspect` origins (resolves to that work's full-text content path,
-one file backing potentially many `^pNNNN` spans and up to six `work_aspects` rows,
+one file backing potentially many page-anchored `source-span` passages and up to six `work_aspects` rows,
 all invalidated together when it changes). `db-mirror`-origin `passages` rows need no
 entry here at all: the database row is its own source of truth and resyncs on write
 via an ordinary trigger, not by comparison against an external file's mtime — there is
 no external file to go stale relative to.
 
-### Frontmatter: `todo` on all six type schemas, and `source_type` → `item_type`
+### Frontmatter: `todo` on the surviving type schemas, and `source_type` → `item_type`
 
-**`todo`, on all six type schemas.** Add `todo: list` to `optional:` in `note.yaml`,
-`work.yaml`, `source-note.yaml`, `hub.yaml`, `project.yaml`, and `digest.yaml` — the
-pending-action-items field requested for every Concept type. `schema.py`'s field-kind
+**`todo`, on the four surviving Concept type schemas.** Add `todo: list` to
+`optional:` in `note.yaml`, `hub.yaml`, `project.yaml`, and `digest.yaml` — the
+pending-action-items field requested for every Concept type. **Only four, not
+six, per the delete-and-fold decision above:** `work.yaml` is deleted outright
+(no schema survives to add the field to); `source-note.yaml`'s equivalent need
+is already covered once its fields — and this one — land on `note.yaml`
+instead (a `mode: work` note gets `todo` the same way any other note does, no
+separate addition needed). `schema.py`'s field-kind
 grammar (`runtime/subsystems/lib/schema.py`, module docstring) is `str | int | bool |
 date | list | map | links | ulid | literal:<value> | enum:<name>` — no union kind
 exists, so "list or str" isn't literally expressible; `list` is the reasoned
@@ -2584,8 +2892,15 @@ single-kind choice, not a silent narrowing — every other repeatable free-text
 optional field already in these schemas (`aliases`, `topics`, `citations`) is `list`,
 not a str/list union, and a single todo item is simply a one-element list.
 
-**`source_type` → `item_type`, on `work.yaml` and `source-note.yaml` — closing a
-real, already-discovered doc-vs-code drift, not new scope.**
+**`source_type` → `item_type`, landing on `note.yaml` — closing a
+real, already-discovered doc-vs-code drift, not new scope.** Originally a fix to
+`work.yaml`/`source-note.yaml`; both are gone under the delete-and-fold decision
+above, so the fix travels with `source-note`'s fields into `note.yaml`, where it
+applies to `mode: work` notes (the field has no meaning for `claim`/`question`/
+`definition` notes — Part 5's mode-collapse, not restated here, already reduced
+the mode enum to these four plus `work`; `hypothesis`/`tension` are not separate
+modes, per that finding — the same conditional-relevance shape `source-note`'s
+other catalog-facing fields already have once folded in).
 `design-history/memoria-design-history-alpha.1-to-alpha.15.md:1441` documents
 "`source_type` became an enum (`[paper, dataset, repository, web-page, report]`, was
 free `str`)" as landed in alpha.10; both real files today still have `source_type:
@@ -2676,7 +2991,7 @@ hypothetical one.
 ### Applying the OpenAlex-collision-audit fixes: every rename, in the real schema
 
 The comprehensive OpenAlex collision audit run this session (against the real, live
-`schema.sql` and all six YAMLs, plus OpenAlex's own current OpenAPI schema) found six
+`schema.sql` and all six YAMLs, plus [OpenAlex's own current OpenAPI schema](https://developers.openalex.org/api-reference/openapi.json)) found six
 distinct collisions, `source_type`/`item_type` above being one (C1). The remaining
 five resolve as follows — each stated as a concrete schema edit, not a restatement of
 the audit's prose:
@@ -2709,52 +3024,86 @@ rebuild-copy-drop mechanic; SQLite's `ALTER TABLE ... RENAME COLUMN` (present in
 SQLite version bundled with Python ≥3.10) suffices, updating the column's own
 `PRIMARY KEY` position in place.
 
-**C3a/C3b — `concept_type` values `'source'`/`'source-note'` → `'catalog-record'`/
-`'catalog-note'`.** Both are the document-sense of "source" (a captured Work), the
-opposite of OpenAlex's `Source` (a venue). `'source'` is DB-store-only — confirmed by
-grep: its only writer is `state.py:794`'s literal `_upsert_concept_mirror_conn(conn,
-concept_id, "source", "db")`, never derived from any markdown frontmatter (no
-`source.yaml` schema exists to author it from) — so this rename costs nothing in
-already-authored vault content, only the literal string in code and the CHECK list.
-`'source-note'`, by contrast, is written from real frontmatter (`type: source-note` in
-every `sources/*.md` file), so renaming it to `'catalog-note'` does carry a real
-content-migration step for any already-authored `source-note` files, sized in the
-migration sketch below (though, per the same Q11-style rule the prerequisite document
-applies to itself, there is nothing deployed today whose content actually needs
-rewriting — this is a build-sequencing description, not a live data conversion).
-`source-note.yaml`'s own `type: source-note` line becomes `type: catalog-note`;
-its `category: sources` line becomes `category: catalog` — verified this session that
-`category:` is schema-definition metadata only (grepped `schema.py` and every runtime
-consumer for any read of a `"category"` key: zero hits), never a per-file frontmatter
-value, so *that* half of the edit is a schema-file-only change with no content
-migration at all, unlike `type:`.
+**C3a/C3b — `concept_type='source'` (the catalog row) → `'work'`, once the markdown
+`work` Concept type is deleted; `concept_type='source-note'` deleted, folded into
+`note.yaml` as `mode: work`.** Both `'source'` and `'source-note'` carry the
+document-sense of "source" (a captured Work), the opposite of OpenAlex's `Source`
+(a venue) — that's the collision. Per Part 2's G0 (re-derived from the SSOT-collapse
+requirement, not asserted) and the project owner's direction above, the fix isn't a
+parallel rename (`catalog-record`/`catalog-note`) that leaves both types standing —
+it's collapsing the redundant SSOT: the markdown `work` Concept type
+(`work.yaml`, `works/<work_id>/record.md`) is deleted outright, which frees the
+word "work" for `concept_type='source'` — the catalog row — to take; and
+`source-note`'s entire field surface moves into `note.yaml` under a new
+`mode: work` value (Part 5's mode-collapse, per ADR-126's own "flippable
+declared intent" test), so no `source-note`/`catalog-note` type survives to
+rename at all.
+
+`concept_type='source'` is DB-store-only — confirmed by grep: its only writer is
+`state.py:794`'s literal `_upsert_concept_mirror_conn(conn, concept_id, "source",
+"db")`, never derived from any markdown frontmatter (no `source.yaml` schema
+exists to author it from) — so renaming it to `'work'` costs nothing in
+already-authored vault content, only the literal string in code and the CHECK
+list. `concept_type='source-note'`, by contrast, is written from real frontmatter
+(`type: source-note` in every `sources/*.md` file today), so folding it into
+`note` does carry a real content-migration shape for any already-authored
+`source-note` files (rewrite `type: source-note` → `type: note` plus
+`mode: work`, move the file under `notes/`), sized in the migration sketch below
+— though, confirmed by a repo-wide grep this session (`grep -rl "^type:
+source-note$"` across every `.md` file, zero hits, only the empty `sources/`
+scaffolding folder exists), there is nothing deployed today whose content
+actually needs rewriting. `source-note.yaml` itself is deleted, not renamed —
+its `required`/`optional` fields (`work_id`, `citekey`, `source_type` →
+`item_type`, `topic`, `project`, etc.) become additions to `note.yaml`'s own
+schema, reconciling `source-note.topic` (singular, unchecked) with
+`note.topics` (plural, checked) in favor of the latter, per Part 3's own
+finding.
 
 ```sql
 CREATE TABLE concepts (
     concept_id TEXT PRIMARY KEY,
     concept_type TEXT NOT NULL
         CHECK (concept_type IN (
-            'catalog-record', 'catalog-note', 'work', 'digest', 'note', 'hub', 'capability',
-            'operation', 'skill', 'adapter', 'workflow', 'person',
-            'organization', 'venue', 'project'
+            'work', 'digest', 'note', 'hub', 'project', 'capability',
+            'operation', 'skill', 'adapter', 'workflow'
         )),
     store TEXT NOT NULL CHECK (store IN ('db', 'file'))
 );
 ```
 
+Ten values, down from the original fifteen: `source`→`work` (renamed, now
+meaning the catalog row rather than the deleted markdown type), `source-note`
+(deleted, folded into `note`), and `person`/`organization`/`venue` (deleted —
+Part 4's entity-resolution rethink; carried into this Part's own CHECK list
+above, which had not previously been updated to match). **A meaning change to
+flag explicitly, not just a spelling change:** `concept_type='work'` denoted
+the markdown type before this rename and denotes the catalog row after it —
+the string survives across the migration, but a code path that special-cased
+`concept_type == "work"` under the old meaning (e.g. `knowledge.py:2605`'s
+`_bucket()`, which currently buckets `{"work", "digest"}` rows found under a
+`works/` path into "digests") is reading old-meaning `work` rows, and must be
+re-checked against the new meaning, not assumed to keep working unchanged —
+named here as a call-site risk, not resolved, per this Part's own scope limit
+on code-level audits.
+
 Companion code edits found by grep, not exhaustively re-audited beyond these:
-`state.py:794`'s literal `"source"` → `"catalog-record"`; `vaultio.py:17`'s
-`UNIVERSAL_CONCEPT_TYPES` frozenset entry `"source-note"` → `"catalog-note"`.
-`state.py:1213`, inside the *existing* `_migrate_v4_to_v5` function, keeps its
-literal `'source', 'source-note', ...` list exactly as-is — that function is pinned
-to what the v5 CHECK list correctly was at the time, and editing it would corrupt the
-one migration path a real v4 database still depends on; only `schema.sql`'s current
-`CREATE TABLE concepts` and the new `_migrate_v6_to_v7` (below) carry the renamed
-values. **Left named but not resolved here, since it's a separate convention from the
-`concept_type` value:** the `concept_id` string prefix `catalog/sources/<id>`
-(`state.py:775`, `integrity.py:222`) is independent of `concept_type` itself — whether
-it should also become e.g. `catalog/records/<id>` for naming consistency is not
-answered by the OpenAlex audit and is not decided here.
+`state.py:794`'s literal `"source"` → `"work"`; `vaultio.py:17`'s
+`UNIVERSAL_CONCEPT_TYPES` frozenset drops its `"source-note"` entry entirely
+(no replacement — `note` already covers the folded-in case); its existing
+`"work"` entry needs no textual edit but now refers to the catalog row, not the
+deleted markdown type, matching the meaning-change flag above. `state.py:1213`
+(inside `_migrate_v4_to_v5`) is **deleted along with the whole function**, per
+Part 2's G3 and the migration-sketch correction below — not preserved: G3
+already established that no real v4 database exists anywhere to depend on it,
+so there is no migration path this rename would corrupt by touching it.
+`schema.sql`'s `CREATE TABLE concepts` is edited directly to the renamed CHECK
+list — see the migration sketch below for why no new numbered migration
+function is built either. **Left named but not resolved here, since
+it's a separate convention from the `concept_type` value:** the `concept_id`
+string prefix `catalog/sources/<id>` (`state.py:775`, `integrity.py:222`) is
+independent of `concept_type` itself — whether it should also become e.g.
+`catalog/works/<id>` for naming consistency is not answered by the OpenAlex
+audit and is not decided here.
 
 **A separate, related finding from this session's grep, flagged rather than folded
 in:** `integrity.py:235,330,1976,2005` check — via equality, inequality, or set
@@ -2774,11 +3123,16 @@ turning into a full code audit.
 vs. OpenAlex's own, deprecated `Concept` entity.** No schema fix — see Open Questions.
 
 **C5 — `concept_type='venue'` vs. OpenAlex's deprecated `host_venue` alias of
-`Source`.** Not a collision — `'venue'` is already the one term in the schema that
-correctly matches OpenAlex's venue sense. No rename. The binding constraint this adds
-to C3a/C3b above: neither rename may free "source" for reuse at the journal/publisher
-level — confirmed satisfied, since neither `catalog-record` nor `catalog-note` nor
-`published_in` reintroduces the bare word at that level.
+`Source`.** Not a naming collision — `'venue'` already matched OpenAlex's venue
+sense correctly. Superseded here anyway: Part 4's entity-resolution rethink
+drops `concept_type='venue'` (along with `person`/`organization`) from the
+schema entirely, since nothing ever writes these rows and a free join on
+`work_graph_edges.target_id` delivers the real cross-paper-recognition and
+gap-discovery requirements without a dedicated, unwired entity type — see that
+rethink for the full derivation. The binding constraint this still adds to
+C3a/C3b above: the `work`/`published_in` renames may not reintroduce the bare
+word "source" at the journal/publisher level — confirmed satisfied, since
+neither rename does.
 
 **C6 — `journal_events` → `event_log`; `enrichment_runs.journal_id` → `event_id`.**
 In a citation/catalog codebase, "journal" defaults to meaning an academic periodical
@@ -2825,19 +3179,21 @@ this Part's), out of scope here.
 - **`work_aspects` stays bounded and unchanged** — gives up a single unified
   "everything is a passage" model in exchange for keeping the deterministic six-facet
   extraction queryable on its own small, clean shape.
-- **`tension` and `published_in` are bundled into one `work_graph_edges` rebuild** —
-  cheap (one rebuild instead of two, since both are CHECK-list edits on the same
-  table) but coupled: if the `tension` feature were ever deferred independently, the
-  `published_in` rename would need to be split back out into its own rebuild rather
-  than riding along.
-- **`published_in` gives up column-semantic cleanliness for `tension` rows**
-  (`target_doi`/`source_provider`/`raw_json` unused when `relation_type='tension'`)
-  and requires the write-path guard above, in exchange for reusing every existing
-  local-level traversal query (§4.6) against one edge table rather than teaching
-  retrieval about a second one.
+- **`concept_edges` and `work_graph_edges` are now two graph tables, not one** —
+  local-level traversal (§4.6) must query and fuse both, rather than one table
+  covering every edge type; the cost of correctly-scoped id spaces (no
+  catalog-work columns overloaded with `concept_id` values, no unused
+  provenance columns on `tension` rows) is a second table to join, not zero
+  cost. Given both tables are cheap CTEs over small row counts at Q7's scale,
+  this trades a small query-authoring cost for schema correctness — the
+  direction this document's own OpenAlex-collision discipline already argued
+  for elsewhere (don't let a convenient reuse quietly conflate two different
+  things).
 - **Existence-based tension gating** (no status column, per §4.11) — a
   disconfirmed/retracted tension has no soft "retracted" state, only outright row
-  deletion; simpler, but loses the history a status column would have kept.
+  deletion; simpler, but loses the history a status column would have kept. This
+  is unchanged by the table move: the same trade-off applies to a `tension` row
+  in `concept_edges` as it would have in `work_graph_edges`.
 - **`file_index_state.subject_id` shares one column across two id namespaces**
   (`concept_id`, catalog `work_id`) — a deliberate one-table simplification over two
   parallel, more type-clean tables.
@@ -2849,12 +3205,15 @@ this Part's), out of scope here.
   CSL-passthrough) — the naming collision and the name/name drift are both closed,
   but a reader who assumes "same column name across layers implies same allowed
   values" will be wrong here; stated explicitly above so it isn't a silent trap.
-- **`concept_type='source-note'` → `'catalog-note'` is not free the way
-  `'source'` → `'catalog-record'` is** — the latter is pure code+DB (zero
-  vault-content cost), the former is frontmatter-authored and would require rewriting
-  `type: source-note` in every already-existing `source-note` file, a real cost sized
-  in the migration sketch (though nothing deployed today actually carries that cost,
-  per Q11).
+- **Folding `source-note` into `note` is not free the way `'source'` → `'work'`
+  is** — the latter is pure code+DB (zero vault-content cost), the former is
+  frontmatter-authored and would require rewriting `type: source-note` →
+  `type: note` plus `mode: work` (and moving the file under `notes/`) in every
+  already-existing `source-note` file, a real cost sized in the migration
+  sketch (though nothing deployed today actually carries that cost, per Q11).
+  It also gives up a dedicated `sources/` folder as a visually distinct place
+  to browse catalog-facing notes — everything lives under `notes/` afterward,
+  distinguished only by `mode: work` in frontmatter, not by folder.
 - **C4 (Memoria's `Concept` vs. OpenAlex's) is documented, not eliminated** — the
   collision persists permanently in Memoria's single most pervasive term; see Open
   Questions.
@@ -2880,39 +3239,77 @@ Q11): there is currently nothing deployed to migrate — no external vault depen
 today's shape. The steps below are build/sequencing steps for constructing the v7
 schema, not a data-preserving conversion of production content; where a step below
 would, hypothetically, need to rewrite already-authored vault content (the
-`source-note` → `catalog-note` `type:` value), that is named as a future mechanism,
+`source-note` → `note`/`mode: work` conversion), that is named as a future mechanism,
 not a present-tense migration this Part performs.
 
-1. **Schema-version plumbing, before any table rebuild.** Bump `SCHEMA_VERSION`
-   (`state.py:29`, today `6`) to `7`; change `schema.sql`'s trailing `PRAGMA
-   user_version = 6` to `7`; add a new `_migrate_v6_to_v7` function modeled directly
-   on the existing `_migrate_v4_to_v5` (`state.py:1204–1233`); extend `_init`'s
-   tolerance set (`state.py:1196`, today `current not in {0, 5, SCHEMA_VERSION}`) to
-   route a v6 database through it. `schema.sql`'s `CREATE TABLE IF NOT EXISTS` is a
-   no-op against a table that already exists in its old shape — confirmed by why
-   `_migrate_v4_to_v5` exists at all — so none of the CHECK-list edits below can land
-   through a `schema.sql` edit alone.
-2. **Inside `_migrate_v6_to_v7`, rebuild `concepts`** (rename `'source'` →
-   `'catalog-record'`, `'source-note'` → `'catalog-note'` in the CHECK list and in
-   every existing row, via `CASE concept_type WHEN 'source' THEN 'catalog-record'
-   WHEN 'source-note' THEN 'catalog-note' ELSE concept_type END` in the `INSERT ...
-   SELECT`) using the same four-step shape (`DROP VIEW concept_status` → `RENAME TO
-   concepts_v6` → `CREATE TABLE concepts` with the new CHECK → `INSERT ... SELECT`
-   with the `CASE` remap → `DROP TABLE concepts_v6` → recreate `concept_status`)
-   `state.py:1204–1233` already used once for this exact table. In the same
-   transaction, **rebuild `work_graph_edges`** (add `'tension'`, rename `'source'` →
-   `'published_in'` via an analogous `CASE relation_type WHEN 'source' THEN
-   'published_in' ELSE relation_type END`); patch `replace_work_graph_edges`'s delete
-   (`state.py:1006`) to `DELETE FROM work_graph_edges WHERE work_id = ? AND
-   relation_type != 'tension'`; wire `surface_tensions`'s PI-confirmation step to
-   write the row instead of only closing the journal entry; update
-   `integrity.py:675-679`'s `relation_types` dict key `"source"` → `"published_in"`
-   and `integrity.py:687`'s IN-list to match; update `state.py:794`'s literal
-   `"source"` → `"catalog-record"` and `vaultio.py:17`'s `UNIVERSAL_CONCEPT_TYPES`
-   entry `"source-note"` → `"catalog-note"`. Leave `state.py:1213` (inside
-   `_migrate_v4_to_v5`) untouched, per the reasoning above.
-3. **Also inside `_migrate_v6_to_v7`, the plain renames (no CHECK involved, no
-   rebuild needed):**
+**A migration-mechanism conflict this Part owes the rest of the document, caught
+late and corrected here rather than left standing:** the three steps below
+originally built a numbered `_migrate_v6_to_v7` function modeled on
+`_migrate_v4_to_v5`, and explicitly preserved `_migrate_v4_to_v5` itself on the
+claim "a real v4 database still depends on it." That directly contradicts
+Part 2's own G3 finding — `_migrate_v4_to_v5` is dead code protecting a
+database that has never existed in the wild (no vault has ever been
+installed), G3's fix is to **delete** it outright, and G3 explicitly says
+**not** to pre-build a migration-ladder framework (a new numbered function
+like `_migrate_v6_to_v7`) speculatively — "that machinery earns its cost only
+once a real installed base exists to protect." Nothing about this Part's own
+scope changes that fact: the same zero-deployment status Part 8 relies on
+throughout (Q11) applies here too. Corrected below: no `_migrate_v6_to_v7`,
+`_migrate_v4_to_v5` deleted per G3, `schema.sql` edited directly to its final
+target shape.
+
+1. **Collapse `schema.sql` directly to the target shape — no migration
+   function, per G3.** Since no real installed vault exists, every `.sqlite`
+   file that exists anywhere today (a developer's local or CI test fixture) is
+   disposable and gets deleted and recreated fresh from `_init` running the
+   edited `schema.sql`, not migrated in place. Concretely: delete
+   `_migrate_v4_to_v5` (`state.py:1204–1233`) and simplify `_init`'s version
+   handling (`state.py:1196`) to no longer special-case an old version at all;
+   edit `schema.sql`'s `CREATE TABLE concepts`/`CREATE TABLE work_graph_edges`
+   statements directly to their final CHECK lists (below) rather than writing
+   an `INSERT ... SELECT`/`CASE`-remap rebuild — there are no existing rows
+   anywhere to remap. Bump `schema.sql`'s trailing `PRAGMA user_version` to `7`
+   as a version label (harmless and still useful for whenever a real
+   migration-ladder becomes necessary), without building any migration
+   function to justify it. Per G3's own "what to add now, cheaply" guidance:
+   write down the rule — a schema change to an existing table with real
+   installed rows always ships as an explicit numbered migration with `ALTER`,
+   never a bare `CREATE IF NOT EXISTS` edit — so the ladder gets built
+   correctly *when* the first real installed vault makes it necessary, not
+   before.
+2. **`concepts`' target CHECK list** (rename `'source'` → `'work'`; drop
+   `'source-note'`, `'person'`, `'organization'`, `'venue'` entirely — none
+   renamed, none surviving) and **`work_graph_edges`'s target CHECK list**
+   (rename `'source'` → `'published_in'` only — `'tension'` does **not** land
+   here, see step 2b) land as direct edits to
+   `schema.sql`'s `CREATE TABLE` statements, per step 1 — no rebuild, no `CASE`
+   remap, since nothing exists to remap. Companion code edits, same as before:
+   update `integrity.py:675-679`'s `relation_types`
+   dict key `"source"` → `"published_in"` and `integrity.py:687`'s IN-list to
+   match, and drop its `"institution": "organization"`/`"authorship": "person"`
+   entries along with the `catalog/entities/*.md` path builder they fed (Part
+   4's entity-resolution rethink); update `state.py:794`'s literal `"source"` →
+   `"work"` and `vaultio.py:17`'s `UNIVERSAL_CONCEPT_TYPES` frozenset, dropping
+   its `"source-note"` entry (no replacement) — its existing `"work"` entry
+   needs no textual edit but now refers to the catalog row, not the deleted
+   markdown type; re-check `knowledge.py:2605`'s `_bucket()` against that
+   meaning change (flagged, not resolved, above). `work.yaml`/`source-note.yaml`
+   deletion is a frontmatter-only change, sequenced in step 5 below, not part
+   of this schema edit.
+2b. **Add `concept_edges`** as a new `CREATE TABLE IF NOT EXISTS` (no rebuild —
+   nothing to migrate, the table doesn't exist in any shape yet). Wire
+   `surface_tensions`'s PI-confirmation step to write a `concept_edges` row
+   (`relation_type='tension'`) instead of only closing the journal entry —
+   `work_graph_edges` needs no corresponding write-path change at all, since
+   tension never lands there. One-time backfill and ongoing sync for the
+   `supports`/`contradicts`/`extends` rows: parse every concept's `links:`
+   frontmatter map at the same query-time mtime-gated reindex pass (§4.2) that
+   already reparses `passages` for a changed file, writing/replacing that
+   concept's `concept_edges` rows in the same pass — one more derived table
+   kept in sync by the mechanism already built for `passages`, not a second
+   reindex path.
+3. **The plain renames, also direct `schema.sql` edits (no CHECK involved,
+   still no rebuild needed):**
    ```sql
    ALTER TABLE catalog_sources RENAME COLUMN source_id TO work_id;
    ALTER TABLE enrichment_runs RENAME COLUMN source_id TO work_id;
@@ -2927,39 +3324,123 @@ not a present-tense migration this Part performs.
    CREATE TRIGGER event_log_no_delete BEFORE DELETE ON event_log
    BEGIN SELECT RAISE(ABORT, 'journal is append-only'); END;
    ```
-   Whether SQLite's table-level `RENAME TO` re-points a bound trigger's `ON <table>`
-   clause automatically varies enough across versions that the explicit
-   drop-and-recreate above is the safer statement to ship, not an assumption. Every
-   application-code call site keyed to the old column/table names must move in
-   lockstep — confirmed by grep to be a large, mechanical surface (representative
-   sites: `state.py:675-1446`, roughly fifty `source_id`-keyed lines (67 occurrences,
-   by direct grep count);
-   `integrity.py:685`; `enrichment.py`, `search_index.py`, `capture.py`,
-   `knowledge.py`, each holding at least one `work_graph_edges`/`catalog_sources`
-   join or dict-key reference) — sized here as a scope estimate, not exhaustively
-   enumerated, since a full call-site inventory is a code task, not a schema one.
+   These statements describe the target `schema.sql` shape directly (the
+   `RENAME COLUMN`/`RENAME TO` verbs describe the *diff* from today's
+   `schema.sql`, useful for review, not statements literally executed against
+   a live database — per step 1, `schema.sql`'s own `CREATE TABLE`/`CREATE
+   TRIGGER` statements are simply edited to already reflect the new names).
+   Every application-code call site keyed to the old column/table names must
+   move in lockstep — confirmed by grep to be a large, mechanical surface
+   (representative sites: `state.py:675-1446`, roughly fifty `source_id`-keyed
+   lines (67 occurrences, by direct grep count); `integrity.py:685`;
+   `enrichment.py`, `search_index.py`, `capture.py`, `knowledge.py`, each
+   holding at least one `work_graph_edges`/`catalog_sources` join or dict-key
+   reference) — sized here as a scope estimate, not exhaustively enumerated,
+   since a full call-site inventory is a code task, not a schema one.
 4. **Add `passages`, `passages_fts`, `passages_vec`, and `file_index_state`** to
    `schema.sql` as new `CREATE TABLE IF NOT EXISTS`/`CREATE VIRTUAL TABLE`
    statements — no rebuild needed, since none of these exist in any shape yet.
    One-time backfill: parse the four `passages` origins (note-body markdown under
-   `notes/`/`hubs/`/`projects/`/`digests/`, source-span `^pNNNN` anchors under every
-   catalog work's full-text path, one row per existing `work_aspects` row, db-mirror
-   text from the catalog table/`work_graph_edges`), compute embeddings, populate
-   `file_index_state` for every file-backed origin.
+   `notes/`/`hubs/`/`projects/`/`digests/`; for source-span, chunk each catalog
+   work's text and tag each chunk's `anchor` with the real page number carried
+   directly from `capture.py::_extract_pdf_pages`'s per-page result — not by
+   scanning the persisted `## Page N` file for markers, per the resolved
+   `source-span` design above; one row per existing `work_aspects` row;
+   db-mirror text from the catalog table/`work_graph_edges`), compute
+   embeddings, populate `file_index_state` for every file-backed origin. Retire
+   `runtime/state.py`'s `_source_span_pages` raw-text-scan function in the same
+   pass — once `passages` exists, evidence-span validation is a table lookup,
+   not a regex scan of file content.
 5. **Frontmatter-only changes** — no `schema.sql`/DB migration, validated instead by
    `schema.py::validate_frontmatter` at write time:
-   - Add `todo: list` to `optional:` in `note.yaml`, `work.yaml`, `source-note.yaml`,
-     `hub.yaml`, `project.yaml`, `digest.yaml`.
-   - On `work.yaml` and `source-note.yaml`: remove `source_type: str` from
-     `optional:`; add the `item_type` enum block (`[paper, dataset, repository,
-     web-page, report]`) and `optional: item_type: enum:item_type`.
-   - On `source-note.yaml`: `type: literal:source-note` → `type:
-     literal:catalog-note`; `category: sources` → `category: catalog`. If any
-     already-authored vault markdown carries `type: source-note`, rewrite that key's
-     value in place as part of this step — a content migration, not a schema-file-only
-     edit; whether any such files currently exist in a given vault is not established
-     here, per Q11.
-   - On `note.yaml`: `source_id: str` → `work_id: str`.
+   - Delete `work.yaml` and `source-note.yaml` outright (no successor schema
+     file for either — `work.yaml`'s remaining surface was a bare identity
+     wrapper the catalog row's `work_id` already covers; `source-note.yaml`'s
+     fields move onto `note.yaml`, below).
+   - On `note.yaml`: extend `enums.mode` to include `work` (alongside `claim`/
+     `question`/`definition` — **not** `hypothesis`/`tension`, which Part 5's
+     own mode-collapse (§ "note — first, a mode-collapse finding") already
+     rejected as separate modes: a hypothesis is `mode: claim` +
+     `certainty: hypothesized` (a new `certainty` enum value, added here too,
+     alongside `reported`/`contested`/`unknown`), and a tension is `mode: claim`
+     + `links: {contradicts: [...]}` — reintroducing them as modes here would
+     silently reverse an already-settled design decision, not a fresh choice
+     this step gets to make independently); add `source-note.yaml`'s
+     `required.work_id: str` field and `optional.description` field,
+     relevant only when `mode: work` — **not** `citekey`/`project`,
+     which Part 5's own field table (the `note` design table) says to **drop,
+     don't carry forward**, when folding `source-note` in: `citekey` duplicates
+     `bibliography.bib` (G0 already resolved catalog data to be catalog-only)
+     and `project` duplicates what a project's own `links`/backlinks already
+     surface — carrying either forward here would silently reintroduce the
+     same survival-copy duplication G0 eliminated elsewhere. `item_type`,
+     addressed separately below, is **not** in this dropped set — checked
+     against G0's actual test (is this a *copy of* catalog data, or a PI
+     *input to* it?) rather than assumed to be one or the other by pattern-
+     matching against `citekey`/`project`. Reconcile
+     `source-note.yaml`'s `optional.topic: list` (singular, unchecked) into
+     `note.yaml`'s existing `optional.topics: list` (plural, checked) rather
+     than keeping both names, per Part 3's finding; add `todo: list` to
+     `optional:` alongside them (folding in the field this Part originally
+     specified separately for `source-note.yaml`); rename `source_id: str` →
+     `work_id: str` (already planned above, now the same field `mode: work`
+     needs anyway).
+   - Add `todo: list` to `optional:` in `hub.yaml`, `project.yaml`, and
+     `digest.yaml` (three of the original six schemas — `note.yaml` picks it up
+     above, `work.yaml`/`source-note.yaml` no longer exist to add it to).
+   - Add the `item_type` enum block (`[paper, dataset, repository, web-page,
+     report]`) to `note.yaml`, replacing the `source_type: str` it inherits
+     from `source-note.yaml` above — not to `work.yaml`, which is deleted.
+     **Checked against G0 explicitly, not assumed exempt:** G0's actual test is
+     whether a field is a *copy of* catalog data that could instead be reached
+     live via `work_id` (a DB→file duplicate, the thing G0 deletes) — not
+     whether a field happens to describe catalog-adjacent facts at all.
+     `item_type` fails that test in the *other* direction: `state.py:691`
+     (confirmed this session) populates `catalog_sources.item_type` as
+     `frontmatter.get("item_type") or csl_json.get("type") or "article"` — the
+     frontmatter value, when a PI sets it, **overrides** the catalog row, it
+     doesn't copy from it. This is a PI-judgment input (correcting OpenAlex/CSL's
+     auto-classification, e.g. "this is actually a dataset, not an article") in
+     the same category as any other hand-authored field, not a survival copy in
+     the category `csl_json`/`identifiers`/`source_sha256` were. It stays.
+   - Any already-authored vault markdown carrying `type: source-note` must be
+     rewritten to `type: note` plus `mode: work` and moved under `notes/` as
+     part of this step, *before* the `concepts` table rebuild in step 2 runs
+     against it (a `source-note` row with no migration path in that rebuild's
+     `CASE` expression) — a content migration, not a schema-file-only edit;
+     confirmed by a repo-wide grep this session that no such files currently
+     exist in this repository, per Q11, though a given deployed vault would
+     need this step run for real before upgrading.
+5b. **The bundle-root folder rename is a real, separate path-surface migration
+   this document had not previously enumerated — named explicitly here rather
+   than assumed to follow automatically from the schema/frontmatter edits
+   above.** Part 4/6/7's target layout drops `works/`/`sources/` and adds
+   `digests/`/`fulltext/` as bundle roots in their own right (notes absorb
+   `source-note` per step 5). Every code site that hardcodes the *old* five —
+   confirmed by direct grep this session, not assumed — must move in lockstep,
+   or the schema/type rename lands while the file layer silently keeps writing
+   to the old folders:
+   - `runtime/projections.py:13`'s `BUNDLE_ROOTS = ("works", "sources", "notes", "hubs", "projects")` → `("notes", "hubs", "projects", "digests", "fulltext")`.
+   - `.memoria/schemas/folders.yaml`'s `bundle_roots:`/`categories:` — the second
+     of the two source-of-truth places this document's own Part 1 names for the
+     bundle boundary — same update, kept identical to `projections.py` per that
+     existing "declared identically in two places" invariant.
+   - `runtime/search_index.py`'s `_bundle_roots()` (confirmed ~line 412) filters
+     folder names from `folders.yaml` against its **own separate, hardcoded**
+     inline set `{"works", "sources", "notes", "hubs", "projects"}` — updating
+     `folders.yaml` alone does not reach this site; missing it would silently
+     filter `digests`/`fulltext` back out of search scope even after every
+     other change above lands correctly.
+   - `runtime/operations.py`'s digest-path construction (confirmed ~line 448,
+     `digest_rel = f"works/{source_id}/digest.md"`) hardcodes the *old* nested
+     shape; the target is `digests/{work_id}.md` as its own bundle-root file,
+     not a path nested under `works/`.
+   - **Not exhaustively enumerated beyond these four confirmed sites** — a full
+     call-site inventory (every `"works/"`/`"sources/"` string literal or
+     folder-name-membership check across the codebase) is a code task, not a
+     schema one, per this document's own standing limit on how far a
+     schema-scoped pass audits call sites; these four are verified, real
+     starting points, not a claim of completeness.
 6. **Add the C4 glossary note** — a header comment in `schema.sql` above `CREATE
    TABLE concepts` ("Memoria's 'Concept' is unrelated to OpenAlex's deprecated
    Concept entity — a legacy Wikidata-derived subject taxonomy, superseded by Topic;
@@ -2975,18 +3456,62 @@ not a present-tense migration this Part performs.
 
 ## Open questions
 
-**Only item that qualifies: C4, Memoria's `Concept` vs. OpenAlex's deprecated
-`Concept` entity.** The audit's own conclusion is that no clean rename exists — the
-word is Memoria's single most pervasive architectural noun (`concepts` table,
-`concept_id`, `concept_type`, `concept_verdicts`, `concept_flags`, the
-`concept_status` view, `concept_path`, the whole `.memoria/schemas/types/`
-directory), and renaming it would be a disproportionate rewrite relative to the
-problem, which is purely lexical (Part 3 already confirmed no semantic bleed:
-OpenAlex's `concepts` field maps to Memoria's `topic` edges, never to Memoria's own
-"Concept" noun). The glossary-note mitigation specified in the migration sketch above
-contains the confusion for a reader who knows to look for it; it does not remove the
-underlying naming collision, which remains permanent. No rename is proposed here, and
-none should be invented to manufacture a resolution this audit didn't find.
+**1. C4, Memoria's `Concept` vs. OpenAlex's deprecated `Concept` entity.** The
+audit's own conclusion is that no clean rename exists — the word is Memoria's
+single most pervasive architectural noun (`concepts` table, `concept_id`,
+`concept_type`, `concept_verdicts`, `concept_flags`, the `concept_status` view,
+`concept_path`, the whole `.memoria/schemas/types/` directory), and renaming it
+would be a disproportionate rewrite relative to the problem, which is purely
+lexical (Part 3 already confirmed no semantic bleed: OpenAlex's `concepts` field
+maps to Memoria's `topic` edges, never to Memoria's own "Concept" noun). The
+glossary-note mitigation specified in the migration sketch above contains the
+confusion for a reader who knows to look for it; it does not remove the
+underlying naming collision, which remains permanent. No rename is proposed
+here, and none should be invented to manufacture a resolution this audit didn't
+find.
+
+**2. ~~Delete-and-fold (Parts 2/4/5) vs. rename-in-place (this Part) for
+`source`/`source-note`/`work`~~ — resolved: delete-and-fold.** Per the project
+owner's direction: delete the markdown `work` Concept type entirely (its
+remaining surface, once G0's mirror fields are stripped, is a bare identity
+wrapper) and `work.yaml` with it; fold `source-note` into `note` as
+`mode: work`, deleting `source-note.yaml`; rename catalog
+`concept_type='source'` → `'work'` (now free); `venue`/`organization`/`person`
+dropped entirely, per Part 4's entity-resolution rethink, not renamed. This
+Part's earlier alternative (`catalog-record`/`catalog-note`, keeping both types
+as they shipped) is retired — the reason it existed (avoiding what looked like
+a bigger, riskier migration than a rename) doesn't hold once checked: a
+repo-wide grep this session found zero files anywhere using `type: work` or
+`type: source-note` today, so there is nothing deployed either plan would need
+to convert, per the standing zero-migration-cost rule. Every section of this
+Part above is now written in the resolved terms (`concept_type='work'` meaning
+the catalog row, no surviving `source-note`/`catalog-note` type); see the
+reconciliation note at the top of this Part for the full reasoning.
+
+**3. ~~Whether `^pNNNN` source-span anchors get written by extraction, or
+`passages` keys off the `## Page N` structure extraction actually produces~~ —
+resolved: neither.** Corrected above (the "`source-span`" origin bullet): no
+code writes `^pNNNN` anchors into real full-text files today, contradicting
+this Part's original claim and matching Part 1/Part 4's finding. Checked
+against real practice rather than picked between the two options this
+question originally posed: [PyMuPDF4LLM](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/api.html) (the same PyMuPDF/`fitz` library
+`capture.py` already uses) and [Docling](https://github.com/docling-project/docling) both track page identity as structured
+per-chunk metadata, not inline text markup, because export to Markdown is
+lossy and re-deriving page identity from it is exactly the fragile step real
+tooling avoids; [Obsidian's `^blockid`](https://help.obsidian.md/Linking+notes+and+files/Internal+links) was never a page-anchor standard to
+begin with. `capture.py::_extract_pdf_pages` already computes the real page
+number per page before discarding it into a `## Page N` heading — the fix is
+to carry that already-known number into `passages.anchor` directly at
+chunking time, not to write new inline markup or parse it back out of
+rendered text. `## Page N` headings stay in the persisted file as a
+human-reading convenience only. `evidence_sets`'s existing `work_id#^pNNNN`
+pointer *string* format is unaffected; only its resolution mechanism moves
+from scanning raw file text to a `passages` table lookup. This is now a
+concrete design decision, not an open question — the remaining work
+(threading `_extract_pdf_pages`'s page number through to `passages` at
+backfill/index time, and retiring `_source_span_pages`'s raw-text scan) is
+real but scoped, sized in the migration sketch above, not a further undesigned
+fork.
 
 ## Resolved or out-of-scope items, logged for cross-reference (not open questions)
 
