@@ -362,3 +362,34 @@ six-dimension ↔ Codex-native-review mapping, the parity ledger, and the
 sourcing caveats (including the `am-will` licensing note). Alternative
 considered: `scratch/workflow-audit/` alongside the plan — rejected as less
 durable/discoverable for a reference meant to outlive this initiative.
+
+**Y: Resolve the `main/CLAUDE.md` bridge vs. the global "no local CLAUDE.md
+files" rule by amending the global rule with a loader carve-out (not by
+dropping the bridge).**
+Because: `~/.claude/CLAUDE.md` rule 1 forbids local CLAUDE.md files to prevent
+instruction fragmentation. The `main/CLAUDE.md` = `@AGENTS.md` bridge carries
+zero instructions — it only makes Claude Code read the repo's `AGENTS.md`
+(which the same rule already endorses: "checks its own folder for context"),
+since Claude Code doesn't read `AGENTS.md` natively (Codex does). So the
+bridge serves the rule's intent while tripping its letter. Resolution: a
+one-line carve-out to rule 1 permitting a repo-root CLAUDE.md whose entire
+content is `@AGENTS.md`. This is the user's own global policy — flagged as
+their call; the alternative (drop the bridge, accept a Claude-side Layer-3
+gap) is recorded in exec-plan step 14. Surfaced by external review.
+
+**Y: Pin third-party clone installs to reviewed commit SHAs; take a backup
+before any destructive step; make every clone/copy step remove-then-install.**
+Because: external review flagged three execution-safety gaps — (1) the plan
+cloned live default branches, so a later run could install different code
+than was reviewed → pin `fr33d3m0n/threat-modeling` `a0962b73`,
+`Dammyjay93/interface-design` `2f9be320`, `obra/the-elements-of-style`
+`6099c505`, `wshobson/agents` `5cc2549a`, `am-will/codex-skills` `e3437156`
+(reviewed 2026-07-07); Claude marketplace-plugin installs can't be pinned via
+the mechanism, so review-after-install is noted instead; (2) idempotence was
+falsely claimed (git clone fails into an existing dir; cp merges stale
+content) → every clone/copy step now `rm -rf`s its target first; (3) no
+backup before `rm -rf` → step 1 writes a full backup tarball. Also corrected:
+`rethink` is installed at 1.0.1 on *both* tools (not 1.1.0 on Claude), with
+the Claude marketplace clone dirty + 1 commit ahead — step 13 now reconciles
+that before editing. `gh auth` preflight added for the PR steps. Evidence:
+`gh api` SHA fetches; `claude plugin list`; `git -C ...rethink status`.

@@ -127,16 +127,38 @@ release}.md`, `.agents/templates/review-report.md`, `.agents/system/*`
 Each step is self-contained: run it with only the text in that step. Steps
 are contiguous and run in order.
 
-### Step 1 — Pre-flight: add superpowers marketplace, read cost
+### Step 1 — Pre-flight: back up, check auth, read cost
+
+Back up everything this plan edits or deletes, so any step is recoverable:
+
+```bash
+tar czf ~/toolkit-backup-$(date +%Y%m%d-%H%M%S).tgz \
+  ~/.claude/skills ~/.codex/skills ~/.claude/CLAUDE.md \
+  ~/.claude/plugins/marketplaces/rethink ~/.codex/.tmp/marketplaces/rethink \
+  2>/dev/null; echo "backup written to ~/"
+gh auth status   # must show an account with 'repo' scope for steps 16/18
+```
+
+Then add the marketplace and read the cost:
 
 ```bash
 claude plugin marketplace add obra/superpowers
 claude plugin details superpowers@superpowers
 ```
 
-Expect: marketplace registers; `details` prints 14 skills + 1 SessionStart
-hook and a projected always-on token cost. If the always-on cost is
-surprising, stop and reconsider before step 2.
+Expect: backup tarball in `~/`; `gh auth status` shows `repo` scope (if not,
+`gh auth login` or route the step-16/18 PRs through the GitHub connector);
+`details` prints 14 skills + 1 SessionStart hook and a projected always-on
+token cost — if the cost is surprising, stop before step 2.
+
+**Pinned revisions** (reviewed 2026-07-07; the clone steps below check these
+out so execution installs exactly what was reviewed, not a later HEAD):
+`fr33d3m0n/threat-modeling` `a0962b73`, `Dammyjay93/interface-design`
+`2f9be320`, `obra/the-elements-of-style` `6099c505`, `wshobson/agents`
+`5cc2549a`, `am-will/codex-skills` `e3437156`. The Claude-side *marketplace
+plugin* installs (superpowers, the-elements-of-style, interface-design) pull
+marketplace-latest, which the plugin mechanism can't pin — skim each
+installed SKILL.md before relying on it.
 
 ### Step 2 — Install superpowers (both tools)
 
@@ -157,8 +179,10 @@ Claude has a `.claude-plugin` manifest; Codex has none → vendor loose.
 claude plugin marketplace add obra/the-elements-of-style
 claude plugin install the-elements-of-style@the-elements-of-style
 
-git clone --depth 1 https://github.com/obra/the-elements-of-style ~/.codex/skills/.eos-src
-cp -r ~/.codex/skills/.eos-src/skills/writing-clearly-and-concisely ~/.codex/skills/
+rm -rf ~/.codex/skills/writing-clearly-and-concisely ~/.codex/skills/.eos-src
+git clone https://github.com/obra/the-elements-of-style ~/.codex/skills/.eos-src
+git -C ~/.codex/skills/.eos-src checkout 6099c505
+cp -a ~/.codex/skills/.eos-src/skills/writing-clearly-and-concisely ~/.codex/skills/
 rm -rf ~/.codex/skills/.eos-src
 ```
 
@@ -170,9 +194,11 @@ Do NOT install the whole `backend-development` plugin (it bundles 9 skills +
 TDD-orchestration that conflict with the tdd retirement).
 
 ```bash
-git clone --depth 1 https://github.com/wshobson/agents ~/.claude/skills/.api-src
-cp -r ~/.claude/skills/.api-src/plugins/backend-development/skills/api-design-principles ~/.claude/skills/
-cp -r ~/.claude/skills/.api-src/plugins/backend-development/skills/api-design-principles ~/.codex/skills/
+rm -rf ~/.claude/skills/api-design-principles ~/.codex/skills/api-design-principles ~/.claude/skills/.api-src
+git clone https://github.com/wshobson/agents ~/.claude/skills/.api-src
+git -C ~/.claude/skills/.api-src checkout 5cc2549a
+cp -a ~/.claude/skills/.api-src/plugins/backend-development/skills/api-design-principles ~/.claude/skills/
+cp -a ~/.claude/skills/.api-src/plugins/backend-development/skills/api-design-principles ~/.codex/skills/
 rm -rf ~/.claude/skills/.api-src
 ```
 
@@ -185,8 +211,11 @@ Mirror the same skill to both tools (identical end states — chosen over
 Codex's native `security-threat-model`, which is a different skill).
 
 ```bash
+rm -rf ~/.claude/skills/threat-modeling ~/.codex/skills/threat-modeling
 git clone https://github.com/fr33d3m0n/threat-modeling ~/.claude/skills/threat-modeling
+git -C ~/.claude/skills/threat-modeling checkout a0962b73
 git clone https://github.com/fr33d3m0n/threat-modeling ~/.codex/skills/threat-modeling
+git -C ~/.codex/skills/threat-modeling checkout a0962b73
 ```
 
 Verify: `ls ~/.claude/skills/threat-modeling/SKILL.md
@@ -216,12 +245,16 @@ Codex — vendor both skills loose (no `.codex-plugin` manifests). interface-des
 `frontend-design` as the Codex counterpart to Anthropic's frontend-design:
 
 ```bash
-git clone --depth 1 https://github.com/Dammyjay93/interface-design ~/.codex/skills/.ifd-src
-cp -r ~/.codex/skills/.ifd-src/.claude/skills/interface-design ~/.codex/skills/
+rm -rf ~/.codex/skills/interface-design ~/.codex/skills/.ifd-src
+git clone https://github.com/Dammyjay93/interface-design ~/.codex/skills/.ifd-src
+git -C ~/.codex/skills/.ifd-src checkout 2f9be320
+cp -a ~/.codex/skills/.ifd-src/.claude/skills/interface-design ~/.codex/skills/
 rm -rf ~/.codex/skills/.ifd-src
 
-git clone --depth 1 https://github.com/am-will/codex-skills ~/.codex/skills/.fd-src
-cp -r ~/.codex/skills/.fd-src/skills/frontend-design ~/.codex/skills/
+rm -rf ~/.codex/skills/frontend-design ~/.codex/skills/.fd-src
+git clone https://github.com/am-will/codex-skills ~/.codex/skills/.fd-src
+git -C ~/.codex/skills/.fd-src checkout e3437156
+cp -a ~/.codex/skills/.fd-src/skills/frontend-design ~/.codex/skills/
 rm -rf ~/.codex/skills/.fd-src
 ```
 
@@ -237,11 +270,10 @@ Verify: `claude plugin list` shows `interface-design` + `frontend-design`;
 ### Step 8 — Port obsidian-skills to Codex
 
 ```bash
-cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-cli ~/.codex/skills/
-cp -r ~/.claude/skills/obsidian-skills/skills/json-canvas ~/.codex/skills/
-cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-bases ~/.codex/skills/
-cp -r ~/.claude/skills/obsidian-skills/skills/defuddle ~/.codex/skills/
-cp -r ~/.claude/skills/obsidian-skills/skills/obsidian-markdown ~/.codex/skills/
+for s in obsidian-cli json-canvas obsidian-bases defuddle obsidian-markdown; do
+  rm -rf ~/.codex/skills/$s
+  cp -a ~/.claude/skills/obsidian-skills/skills/$s ~/.codex/skills/
+done
 ```
 
 Verify: `ls ~/.codex/skills/` lists all five. (`defuddle` needs
@@ -290,14 +322,28 @@ add to the Hard Rules (or Invocation-variants) section:
 Precedence: a single already-identified audit finding → this skill's own `execute` (one dispatch, disposable review worktree, human decides whether to apply the diff). A spec-derived multi-task implementation plan → superpowers:subagent-driven-development (multi-task, two-stage review, mergeable branch) instead.
 ```
 
-### Step 13 — Edit rethink + release 1.2.0, update both tools
+### Step 13 — Reconcile, edit, release rethink; update both tools
 
-rethink is your own plugin (`eranroseman/rethink`) — make these edits in its
-**source**, release 1.2.0, then update both installs. The two tools are
-already version-skewed (Claude 1.1.0, Codex 1.0.1), and each loads its own
-copy — editing one cache would leave the other stale. Local source checkouts
-live at the marketplace clones `~/.claude/plugins/marketplaces/rethink/
-plugins/rethink/` and `~/.codex/.tmp/marketplaces/rethink/plugins/rethink/`.
+rethink is your own plugin (`eranroseman/rethink`). **Preflight — the source
+is currently messy, don't treat this as clean future work:** `claude plugin
+list` reports rethink **1.0.1 installed on both tools**, but the Claude
+marketplace clone at `~/.claude/plugins/marketplaces/rethink/` is **dirty**
+(uncommitted edits to `plugins/rethink/{hooks/directive.md,
+.claude-plugin/plugin.json,.codex-plugin/plugin.json}`, its plugin.json
+already bumped to 1.1.0) and **1 commit ahead** of `origin/master`; the Codex
+clone is at 1.0.1. Inspect it first:
+
+```bash
+git -C ~/.claude/plugins/marketplaces/rethink status --short --branch
+git -C ~/.claude/plugins/marketplaces/rethink log --oneline origin/master..HEAD
+git -C ~/.claude/plugins/marketplaces/rethink diff -- plugins/rethink
+```
+
+That unreleased 1.1.0 work is earlier-session rethink editing. Do **not**
+layer the edits below onto the dirty clone blindly — work from a clean
+`eranroseman/rethink` checkout, fold the existing 1.1.0 changes together with
+the narrowing edits below into one coherent release, then push + tag + update
+both tools. Make these edits (in the source):
 
 In `hooks/directive.md`, replace the Persistence section:
 
@@ -330,21 +376,41 @@ Append to the `description` field in `.claude-plugin/plugin.json`,
  — designed to pair with obra/superpowers' brainstorming skill for new-feature/component design; rethink covers first-principles reasoning for narrower architectural questions.
 ```
 
-Bump the version in `.claude-plugin/plugin.json` and
-`.codex-plugin/plugin.json` (→ 1.2.0). Commit and push to
-`eranroseman/rethink`, then update both installs:
+Set one release version in both `.claude-plugin/plugin.json` and
+`.codex-plugin/plugin.json` — `1.2.0` if you keep the existing dirty edits as
+the (never-released) 1.1.0 content and this narrowing as 1.2.0; pick a single
+clean number and make both files agree. Commit, push, and tag on
+`eranroseman/rethink`, then update both installs off the pushed release:
 
 ```bash
 claude plugin marketplace update rethink && claude plugin update rethink@rethink
 codex plugin marketplace update rethink && codex plugin update rethink@rethink
 ```
 
-Verify: both tools report rethink 1.2.0, and each tool's loaded
-`hooks/directive.md` shows the narrowed Persistence trigger.
+Verify: both tools report the **same** new version (no longer 1.0.1 vs.
+1.1.0), the marketplace clones are clean (`git status` empty, not ahead), and
+each tool's loaded `hooks/directive.md` shows the narrowed Persistence
+trigger.
 
-### Step 14 — Add precedence + vocabulary to `~/.claude/CLAUDE.md`
+### Step 14 — Amend the loader rule + add precedence + vocabulary to `~/.claude/CLAUDE.md`
 
-One edit — append both sections:
+**First, a policy amendment (your call — it changes your own global rule).**
+`~/.claude/CLAUDE.md` rule 1 says "no local CLAUDE.md files," which the
+step-16a `main/CLAUDE.md` bridge would violate. But that bridge is a pure
+loader (`@AGENTS.md`) — it carries no instructions and doesn't fragment them;
+it just makes Claude Code read the project's `AGENTS.md` (which the same rule
+already says to do: "checks its own folder for context"). Amend rule 1's
+"no local CLAUDE.md files" to:
+
+```
+no local CLAUDE.md files (exception: a repo-root CLAUDE.md whose entire content is `@AGENTS.md` — a loader so Claude Code reads the project's AGENTS.md, since it doesn't read AGENTS.md natively; it holds no instructions of its own)
+```
+
+If you'd rather not touch the global rule, drop step 16a instead and accept
+that Claude Code won't auto-load `AGENTS.md` in this repo (Codex still does,
+natively) — a documented Layer-3 gap.
+
+**Then**, append both sections:
 
 ```markdown
 ## Skill precedence
@@ -402,7 +468,9 @@ git -C ~/memoria-vault/main worktree add ~/memoria-vault/worktrees/adopt-superpo
 cd ~/memoria-vault/worktrees/adopt-superpowers
 ```
 
-**16a — new file `CLAUDE.md` at repo root**, containing exactly:
+**16a — new file `CLAUDE.md` at repo root** (depends on step 14's global-rule
+amendment; skip this sub-step if you chose not to amend the rule), containing
+exactly:
 
 ```markdown
 @AGENTS.md
@@ -415,8 +483,8 @@ cd ~/memoria-vault/worktrees/adopt-superpowers
 |---|---|---|
 | Whole-docs audit | [`docs-audit`](.agents/playbooks/docs-audit.md) | Fresh Diátaxis, consistency, generated-reference, terminology, coverage, and live-link audit across `docs/` |
 | Any docs PR | [`docs-review`](.agents/playbooks/docs-review.md), plus `the-elements-of-style` for prose clarity | Before opening — quadrant fit, links, indexing, terminology, sentence-level clarity |
-| Any PR | [`code-review`](.agents/playbooks/code-review.md); it may invoke `superpowers:requesting-code-review` and `pr-review-toolkit:code-reviewer` independently (they cover different lenses — don't substitute one for the other) | Before opening — bugs, compliance, plan alignment, production-readiness |
-| Deeper review on a dimension | `pr-review-toolkit` agents: `silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer` | After the above — probe one lens. Ask for the lens you want |
+| Any PR | [`code-review`](.agents/playbooks/code-review.md), which invokes `superpowers:requesting-code-review` (both tools) plus, **on Claude**, `pr-review-toolkit:code-reviewer`, and **on Codex**, native review — run independently, don't substitute one for another | Before opening — bugs, compliance, plan alignment, production-readiness |
+| Deeper review on a dimension | **Claude:** `pr-review-toolkit` agents (`silent-failure-hunter`, `pr-test-analyzer`, `code-simplifier`, `comment-analyzer`, `type-design-analyzer`). **Codex:** native review covers the same six dimensions (see `.agents/toolkit.md` for the mapping) | After the above — probe one lens |
 | Sensitive-path changes | [`security-review`](.agents/playbooks/security-review.md), plus `security-guidance` (passive) and `threat-modeling` (full audit, only when escalation is warranted) | PRs touching `scripts/`, `.github/`, `vault-template/.memoria/`, `design-history/`, `AGENTS.md`, or agent guidance |
 | Confirming a fix | [`verify-change`](.agents/playbooks/verify-change.md), plus `superpowers:verification-before-completion` | After a change — confirm actual behavior |
 | New or cut release | [`release`](.agents/playbooks/release.md) | Scaffolds the release folder/plan, milestone, and parent issue; release-please owns version/notes |
@@ -500,9 +568,11 @@ If `the-elements-of-style` is installed, apply its `writing-clearly-and-concisel
 This playbook is scoped to the current diff. If review surfaces something beyond one change — systemic exposure, unclear trust boundaries, or a request for a standalone assessment — and the `threat-modeling` skill is installed, it runs a full 8-phase STRIDE model as a separate, deliberately-requested activity. Do not reach for it to answer single-finding follow-ups here — resolve those per section 4.
 ```
 
-Then open the PR:
+Then open the PR (re-confirm auth first — `gh auth status` must show `repo`
+scope, or route creation through the GitHub connector):
 
 ```bash
+gh auth status
 git add CLAUDE.md AGENTS.md .agents/playbooks/code-review.md .agents/playbooks/verify-change.md .agents/playbooks/exec-plan.md .agents/templates/exec-plan.md .agents/templates/handoff.md .agents/playbooks/docs-review.md .agents/playbooks/security-review.md
 git commit -m "docs: adopt superpowers into AGENTS.md + .agents/ conventions"
 git push -u origin docs/adopt-superpowers
@@ -627,15 +697,19 @@ Toolkit doc (step 18):
 
 ## 6. Idempotence and recovery
 
-- **Re-runnable:** marketplace-add / install / `cp -r` / `git clone` into an
-  existing path are safe to re-run (or a no-op after a `rm -rf` of the
-  target first). The `rm -rf` in step 9 is safe to re-run. The text edits
-  (steps 10–16) and the doc authoring (step 18) are no-op / overwrite when
-  re-applied with the same target text.
-- **Rollback:** `claude plugin uninstall` / `codex plugin remove` reverse the
-  installs; `rm -rf` the vendored/cloned skill folders; restore each edited
-  file's pre-edit text (every edit's exact text is in §4). The repo PRs
-  (steps 16, 18) revert by closing unmerged or reverting the squash commit.
+- **Re-runnable:** every clone/copy step (3–8) removes its target with
+  `rm -rf` **before** the `git clone`/`cp -a`, so a re-run is clean — no
+  "clone fails, dir exists" and no stale-content merge. Marketplace
+  add/install are idempotent. The `rm -rf` in step 9 is safe to re-run. The
+  text edits (steps 10–16) and doc authoring (step 18) overwrite cleanly
+  when re-applied.
+- **Rollback:** step 1 writes a full backup tarball
+  (`~/toolkit-backup-*.tgz`, covering both `skills/` dirs, `~/.claude/CLAUDE.md`,
+  and both rethink marketplace clones) — restore from it to undo any
+  local change. Also: `claude plugin uninstall` / `codex plugin remove`
+  reverse the installs; every file edit's exact pre-edit text is in §4. The
+  repo PRs (steps 16, 18) revert by closing unmerged or reverting the squash
+  commit.
 
 ## 7. Progress
 
