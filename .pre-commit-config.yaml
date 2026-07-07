@@ -94,7 +94,7 @@ repos:
       - id: markdownlint-structural
         name: markdownlint-structural
         language: system
-        entry: bash -lc 'PATH=node_modules/.bin:$PATH markdownlint --config .markdownlint.json "$@"' --
+        entry: scripts/dev/run-node-tool.sh markdownlint --config .markdownlint.json
         files: ^docs/.*\.md$
         exclude: (^|/)tmp/   # scratch dirs: tracked, not linted (see .markdownlintignore)
         pass_filenames: true
@@ -106,7 +106,7 @@ repos:
       - id: cspell
         name: cspell
         language: system
-        entry: bash -lc 'PATH=node_modules/.bin:$PATH cspell lint --no-progress --no-must-find-files "$@"' --
+        entry: scripts/dev/run-node-tool.sh cspell lint --no-progress --no-must-find-files
         files: \.md$
         pass_filenames: true
 
