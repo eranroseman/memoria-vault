@@ -35,7 +35,7 @@ Citation Keys tab → Citation key formula:
 This produces keys in the `mamykina2010sense` shape — lowercase author, year,
 and the first significant title word (`shorttitle(1,0)`) — which keeps Zotero
 aliases stable for imports, citations, and exports. Memoria's durable source
-identity remains the SQLite `source_id`/`work_id`; citekeys are aliases. This
+identity remains the SQLite `work_id`; citekeys are aliases. This
 matches the canonical formula per [standalone catalog is the citation authority](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md) (`auth.lower + year + shorttitle(1,0)`); do not substitute `condense:N`, which takes a fixed character count rather than the first whole word and yields a different key.
 
 **3. Leave bibliography generation to Memoria.**

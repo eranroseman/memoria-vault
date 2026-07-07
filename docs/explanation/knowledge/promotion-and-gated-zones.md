@@ -7,10 +7,10 @@ nav_order: 4
 
 # Promotion and the write boundary
 
-Promotion is the act of making content readable as checked knowledge. In
-alpha.16, that means a worker-owned transition to DB/read API `check_status = checked`
-with a journal row. The PI still decides what claims, links, and hub curation
-mean; the worker owns the mechanical write boundary.
+Promotion is the act of making content readable as checked knowledge. In the
+standalone runtime, that means a worker-owned transition to DB/read API
+`check_status = checked` with a journal row. The PI still decides what claims,
+links, and hub curation mean; the worker owns the mechanical write boundary.
 
 ---
 
@@ -44,11 +44,12 @@ low-value finding without interrupting work.
 
 ## Notes Replace Claim Maturity
 
-The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.16 uses one
-`note` type with optional `claim_text`, `source_id`, `evidence_set`, compact
-`citations`, `topics`, and typed links. A note is safe to read when it is
-checked; whether the claim is important is represented by evidence, links, and
-hub/project context.
+The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.18 uses one
+`note` type with optional `claim_text`, `work_id`, `topics`, and typed links.
+Evidence sets live as body markers and SQLite rows, while compact citation
+payloads support bibliography survival outside frontmatter. A note is safe to
+read when it is checked; whether the claim is important is represented by
+evidence, links, and hub/project context.
 
 ---
 

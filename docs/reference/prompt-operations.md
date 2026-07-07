@@ -24,7 +24,7 @@ contract.
 
 Eight prompt-operation patterns ship as package-owned operation manifests and
 are runnable when manifest validation passes. Each file stem is its
-`pattern_id`. Deterministic alpha.17 project WRITE operations such as
+`pattern_id`. Deterministic project WRITE operations such as
 `write-project-slice`, `compose-project-draft`, `verify-project-draft`, and
 `promote-draft-passage` are also packaged capability manifests, but they are
 not prompt patterns and are listed through `memoria operation list`.
@@ -35,7 +35,7 @@ not prompt patterns and are listed through `memoria operation list`.
 | `check-falsifiability` | Check falsifiability | peer-reviewer | check | both | selection-or-note | `.memoria/staging/notes/` |
 | `compile-source-digest` | Compile source digest | co-pi | synthesize | knowledge | checked-source | `.memoria/staging/digests/` |
 | `compare-and-contrast` | Compare and contrast | librarian | compare | both | two-or-more-notes | `.memoria/staging/notes/` |
-| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | source-note | `.memoria/staging/notes/` |
+| `extract-claim-stubs` | Extract claim stubs | librarian | extract | library | checked Work or digest | `.memoria/staging/notes/` |
 | `propose-note-candidates` | Propose note candidates | co-pi | distill | knowledge | checked-digest | `.memoria/staging/notes/` |
 | `red-team-argument` | Red-team an argument | peer-reviewer | check | project | draft-or-claim | `.memoria/staging/notes/` |
 | `summarize-for-recall` | Summarize for recall | librarian | summarize | both | selection-or-note | `.memoria/staging/notes/` |
@@ -84,10 +84,10 @@ declared `runner.test` or `runner.live` branch; the runner cannot choose an
 undeclared provider or model.
 
 The result stages one unchecked `note` report under `.memoria/staging/notes/`
-with an `evidence_set` pointing at the checked inputs and request/journal rows
-for the run, model call, derived output, and note-candidate status. The canonical
-`notes/...` target is not materialized or checked until the normal
-promotion path accepts it. `model_call` rows include resolved
+with request/event-log rows that point at the checked inputs, model call,
+derived output, and note-candidate status. The canonical `notes/...` target is
+not materialized or checked until the normal promotion path accepts it.
+`model_call` rows include resolved
 mode/provider/model/params and a prompt hash.
 
 ---
@@ -104,9 +104,9 @@ per-file headings. Supplying both refs and raw text is allowed; raw text wins as
 the sealed substitution text while the checked refs remain attached as evidence.
 
 The product reaches canonical notes only through the normal promotion path. A
-run stages an unchecked report, records the checked inputs in the report
-`evidence_set`, appends journal rows for the run/model-call/derived-output
-events, and commits those staged writer changes.
+run stages an unchecked report, records checked-input provenance in the
+request/event log, appends rows for the run/model-call/derived-output events,
+and commits those staged writer changes.
 
 ---
 

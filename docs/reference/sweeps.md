@@ -26,6 +26,6 @@ not directly promote Concept files.
 
 ## Related
 
-- The capture stage that creates the source records these sweeps monitor: [Ingest routing](ingest.md)
+- The capture stage that creates the Work records these sweeps monitor: [Ingest routing](ingest.md)
 - Scheduler wiring boundary: [Installer (bootstrap)](installer.md)
 - The retired Inbox card contract: [Inbox card fields](inbox-card-fields.md)

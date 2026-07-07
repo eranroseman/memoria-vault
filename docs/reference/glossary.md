@@ -16,18 +16,18 @@ For the short version of the core terms, see [Home](../README.md).
 ## System
 
 **ACP** (Agent Client Protocol) — an optional editor-level protocol for external
-chat adapters. Alpha.16 does not ship an ACP/Hermes profile setup.
+chat adapters. The standalone runtime does not ship an ACP/Hermes profile setup.
 
-**Co-PI** — the research-partner role exposed in alpha.16 through the
-standalone `memoria ask` / `memoria project ask` commands. Older designs mapped
-this role to a Hermes profile; alpha.16 does not ship that profile.
+**Co-PI** — the research-partner role exposed through the standalone
+`memoria ask` / `memoria project ask` commands. Older designs mapped this role
+to a Hermes profile; the standalone runtime does not ship that profile.
 
 **Operation** — a checked capability manifest plus runner behavior invoked by
 the CLI/engine. Operations compute and propose; the PI decides. The shipped
 operations are listed in [Operations](operations.md).
 
 **Hermes** — an optional external agent runtime that may wrap the CLI/engine in
-future adapter work. It is not required by alpha.16.
+future adapter work. It is not required by the standalone runtime.
 
 **Memoria** — the whole system: the OKF knowledge bundles, capability manifests,
 standalone CLI/engine, policy/audit layer, workspace DB, and `.memoria/`
@@ -37,7 +37,7 @@ runtime state.
 every triage, disposition, and promotion decision. Single-user by design.
 (Older pages say "the human".)
 
-**Agent** — a model-backed process doing work. Alpha.16 exposes agents through
+**Agent** — a model-backed process doing work. Memoria exposes agents through
 the standalone CLI/engine and optional adapters; it does not ship installed
 profile packages or lane assignments.
 
@@ -67,8 +67,8 @@ queue** (your Inbox queue) and **Drift** (open integrity flags).
 Project (`projects/`).
 
 **Space** — historical name for the Library, Knowledge, and Project navigation
-surfaces. Alpha.16 stores their content directly in the corpus roots instead of
-shipping `spaces/*.md` dashboard notes.
+surfaces. The standalone runtime stores their content directly in the corpus
+roots instead of shipping `spaces/*.md` dashboard notes.
 
 **Queue** — the **Inbox** (`projection: queue`): the daily attention surface
 reached from **Now -> Action queue**. It shows in-process Activity, then
@@ -95,7 +95,7 @@ Maintenance.
 **Ceiling** — the maximum write scope an optional adapter policy grants. Request
 payloads may narrow that scope, but never widen it.
 
-**Dispatcher** — alpha.16 dispatcher behavior lives in the local worker queue:
+**Dispatcher** — dispatcher behavior lives in the local worker queue:
 CLI commands, scans, and scheduled tasks create request rows, and the worker runs
 pending jobs.
 
@@ -145,7 +145,7 @@ SQLite. Prefer the precise field name over a bare "state".
 
 **Audit log** — the append-only JSONL trail of every policy decision at `system/logs/audit.jsonl`. Feeds the audit-log dashboard.
 
-**Extraction-uncertainty flag** — the near-tie rule ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): when cross-source identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
+**Extraction-uncertainty flag** — the near-tie rule ([machine judgments are layered proposals, never authorities](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)): when cross-Work identity agreement falls below the calibration floor (0.85), ingest raises an Inbox `flag` instead of merging silently.
 
 **Policy gate** — optional adapter decision shim: returns `allow` /
 `allow_with_log` / `deny` / `dry_run`, appends to the audit log, and fails

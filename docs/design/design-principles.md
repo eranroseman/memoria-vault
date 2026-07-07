@@ -43,8 +43,8 @@ is a vault where the human doesn't know what they actually believe.
 **5. Provenance everywhere.**
 
 Every claim-bearing note traces back to checked Work evidence through
-`source_id`, `evidence_set`, compact `citations`, typed `links`, and journal/read
-API state. Every agent action traces back to an audit log entry. Untraceable
+`work_id`, evidence markers, compact citation payloads, typed `links`, and
+event/read-API state. Every agent action traces back to an audit log entry. Untraceable
 content is not knowledge — it is a liability that will fail when cited. The
 [Policy gate](../reference/policy-mcp.md), trusted writer, per-write SHA-256 hash
 pairing, and SQLite journal/read model all enforce this.

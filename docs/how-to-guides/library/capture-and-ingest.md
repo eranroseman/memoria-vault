@@ -40,7 +40,7 @@ memoria work export --workspace <vault> <work-id>
 
 The output includes `check_status`, `text_status`, `content_path`, `raw_path`,
 `normalized_text_sha256`, and `raw_text_sha256`. Paths are workspace-relative
-and live under `.memoria/blobs/source-content/<source_id>/`.
+and live under `.memoria/blobs/source-content/<work_id>/`.
 
 **4. Confirm the trace.**
 
