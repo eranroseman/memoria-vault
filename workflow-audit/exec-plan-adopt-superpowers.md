@@ -749,11 +749,10 @@ Toolkit doc (step 14):
 - [x] 2026-07-07 16:15 CDT — 11 — `~/.codex/AGENTS.md` written.
 - [x] 2026-07-07 16:15 CDT — 12 — repo worktree edits completed and merged via
       PR #1310.
-- [ ] 2026-07-07 16:15 CDT — 13 — installed-state and repo/CI validation
+- [x] 2026-07-07 16:15 CDT — 13 — installed-state and repo/CI validation
       completed; Codex fresh prompt context was verified locally with
-      `codex debug prompt-input`; Claude behavior-prompt transcript remains
-      blocked because the approval reviewer rejected transmitting repo guidance
-      to an external model service and Claude exposes no local prompt renderer.
+      `codex debug prompt-input`; Claude fresh-session smoke transcript
+      completed after explicit user approval for the external model call.
 - [x] 2026-07-07 16:15 CDT — 14 — `.agents/toolkit.md` authored, PR #1310
       merged, `main` fast-forwarded to `528ddf6c`, and
       `worktrees/adopt-superpowers` removed.
@@ -779,6 +778,10 @@ Toolkit doc (step 14):
   `superpowers:brainstorming`, `codex-security:security-scan`,
   `interface-design`, global `## Skill precedence`, the repo worktree-first
   rule, and `### Issue tracker loop`.
+- 2026-07-07 — User explicitly approved the Claude external smoke prompt. The
+  first run with `--max-budget-usd 0.05` failed before producing a transcript;
+  reran with `--max-budget-usd 0.25` and Claude cited the AGENTS-only worktree
+  rule.
 
 ## 9. Surprises & discoveries
 
@@ -842,6 +845,11 @@ Toolkit doc (step 14):
 - Codex local fresh-context check: `codex debug prompt-input` rendered
   model-visible context containing the new Codex skills, global precedence
   rules, and repo `AGENTS.md` work-routing/tracker rules without model access.
+- Claude fresh-session smoke transcript:
+  `claude -p --max-budget-usd 0.25 --no-session-persistence --permission-mode dontAsk
+  "In one short sentence, what does this project require before editing repo files?"`
+  returned: "The worktree-per-session rule (§1) — create your own git worktree
+  and feature branch before touching any file, never edit on `main`."
 - Focused checks: `python3 -m pytest tests/test_github_doctor.py` passed
   (`3 passed`); `python3 scripts/checks/github_doctor.py` printed
   `github-doctor: ok`.
@@ -860,10 +868,7 @@ Toolkit doc (step 14):
   `.agents/toolkit.md`, PR-template tracker guardrails, and
   `github_doctor` validation. PR #1310 is merged and `main` is fast-forwarded to
   `origin/main`.
-- **Still open:** the Claude fresh-session behavior transcript from §5 requires
-  explicit approval to send repo guidance to an external Claude model service.
-  Codex fresh context was verified locally with `codex debug prompt-input`. No
-  issue tracker state changed.
+- **Still open:** none for this plan. No issue tracker state changed.
 - **Lessons:** prefer verifying marketplace manifest shape before promising a
   Claude plugin install path; record actual installed ids (`superpowers-dev`,
   loose Elements of Style) in durable docs.
