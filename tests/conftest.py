@@ -35,6 +35,7 @@ TEST_LEVELS = {
     "test_alpha18_frontmatter.py": "contract",
     "test_alpha18_gap_freejoin.py": "contract",
     "test_alpha18_renames.py": "contract",
+    "test_alpha18_schema_doc_lint.py": "static",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",
