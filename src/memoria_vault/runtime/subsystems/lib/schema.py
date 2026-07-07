@@ -92,16 +92,8 @@ def home_for(type_name: str, folders: dict) -> str | None:
     return folders.get("homes", {}).get(type_name)
 
 
-def gated_prefixes(folders: dict) -> list[str]:
-    return list(folders.get("gated_prefixes", []))
-
-
 def bundle_roots(folders: dict) -> tuple[str, ...]:
     return tuple(folders.get("bundle_roots") or folders.get("categories") or ())
-
-
-def check_status_for(schema: dict) -> list[str]:
-    return list(schema.get("enums", {}).get("check_status", []))
 
 
 def _check_kind(value, kind: str, enums: dict) -> str | None:
