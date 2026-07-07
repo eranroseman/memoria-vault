@@ -8,7 +8,8 @@ nav_order: 22
 # Engine read API
 
 `memoria_vault.engine.api` is the host-neutral read/write boundary used by the
-CLI and optional HTTP/MCP transports. It returns verdict-tagged payloads with
+CLI, [local HTTP transport](local-http-transport.md), and
+[MCP transport](mcp-transport.md). It returns verdict-tagged payloads with
 `api_version: engine-read-api.v1` and view data in `view-spec.v1`.
 
 ## Core reads and writes
@@ -37,4 +38,5 @@ CLI and optional HTTP/MCP transports. It returns verdict-tagged payloads with
 | `promote_draft_passage(...)` | Queues `promote-draft-passage`. |
 | `read_exploration(...)` | Reads the relevance-independent exploration channel. |
 
-Adapters should call this API instead of opening SQLite or files directly.
+Adapters should call this API, or one of the thin transports over it, instead
+of opening SQLite or files directly.

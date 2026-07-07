@@ -23,9 +23,9 @@ through `--workspace <path>` and does not require Hermes, Obsidian, or Zotero.
 | `memoria doctor self-test` | Run local runtime self-tests. |
 | `memoria ask` | Answer a question from checked workspace retrieval. |
 | `memoria serve --watch` | Run the on-demand file-watch loop over the same scan engine. |
-| `memoria serve --http` | Run the token-authenticated loopback HTTP transport over `engine/api`. |
+| `memoria serve --http` | Run the token-authenticated [local HTTP transport](local-http-transport.md) over `engine/api`. |
 | `memoria migrate --from-alpha15 <path>` | Import an alpha.15 vault into the current root layout. |
-| `memoria mcp --workspace <path> --read-scope <path>` | Run the optional FastMCP stdio transport with a required engine read scope. |
+| `memoria mcp --workspace <path> --read-scope <path>` | Run the optional [FastMCP stdio transport](mcp-transport.md) with a required engine read scope. |
 | `memoria eval select-models [--operation <id>] [--mode test\|live]` | Run the seeded-error bar against manifest-declared runner pins and report the selected passing runner. |
 
 ## Work
