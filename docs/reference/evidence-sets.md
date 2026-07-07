@@ -1,8 +1,7 @@
 ---
 title: Evidence sets
-parent: Agents and control
-grand_parent: Reference
-nav_order: 21
+parent: Reference
+nav_order: 14
 ---
 
 # Evidence sets

@@ -1,7 +1,7 @@
 ---
 title: Zotero plugins
-parent: Obsidian and Zotero
-grand_parent: Reference
+parent: Reference
+nav_order: 43
 ---
 
 # Zotero plugins

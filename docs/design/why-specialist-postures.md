@@ -1,7 +1,6 @@
 ---
 title: Why operation postures, not a generalist agent
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 11
 ---
 

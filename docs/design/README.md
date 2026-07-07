@@ -1,18 +1,17 @@
 ---
-title: Design Book
-parent: Developers
+title: Design
 nav_order: 1
 has_children: true
 permalink: /design/
 ---
 
-# Design Book
+# Design
 
-The Design Book carries Memoria's maintained arguments: what the system is, which
+The design pages carry Memoria's maintained arguments: what the system is, which
 ideas it borrows from, which alternatives it rejects, and why the architecture is
 bounded the way it is.
 
-> **Design Book vs. design history.** A Design Book page holds the maintained
+> **Design vs. design history.** A design page holds the maintained
 > argument; [design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md)
 > holds the dated release record. When both cover the same ground, each links to
 > the other rather than restating it. Change the reasoning here; record reversals

@@ -9,14 +9,14 @@ permalink: /reference/
 
 Lookup material for Memoria — fields, values, commands, schemas, folder paths,
 and runtime contracts. For design rationale and decision history, see
-[Developers](../developers.md); for operational explanations, see
+[Design](../design/README.md); for operational explanations, see
 [Explanation](../explanation/).
 
-The reference pages are grouped by domain in the site navigation. Pages that
-summarize schema-owned contracts name the owning source rather than mirroring
-every field and count.
+The site navigation lists reference pages flat; this index groups them by
+domain. Pages that summarize schema-owned contracts name the owning source
+rather than mirroring every field and count.
 
-## [Vault data model](vault-data-model.md)
+## Vault data model
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ every field and count.
 | [Control plane reference](control-plane.md) | Request-control commands and state | Manual |
 | [Glossary](glossary.md) | Term definitions, alphabetical | Manual |
 
-## [Agents and control](agents-and-control.md)
+## Agents and control
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ every field and count.
 | [Prompt operations](prompt-operations.md) | Shipped prompt operations, manifest schema, and runner contract | Manual |
 | [Clustering](clustering.md) | Graph retrieval baseline and non-shipped heavy clustering boundary | Manual |
 
-## [Pipelines and I/O](pipelines-and-io.md)
+## Pipelines and I/O
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ every field and count.
 | [Telemetry log schemas](telemetry-logs.md) | Exact JSONL schemas for current runtime logs | Manual |
 | [Diagnostics](diagnostics.md) | Local diagnostics location, redaction, raw-capture, and support-bundle contract | Manual |
 
-## [System and infrastructure](system-and-infrastructure.md)
+## System and infrastructure
 
 | File | What it covers | Source |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ every field and count.
 | [Pattern provenance table](pattern-provenance.md) | Borrow/adapt/reference/ignore judgments for surveyed AI-research-system patterns | Manual |
 | [Bibliography](bibliography.md) | Works cited across the docs in ACM author-date style | Manual |
 
-## [Obsidian and Zotero](obsidian-and-zotero.md)
+## Obsidian and Zotero
 
 | File | What it covers | Source |
 | --- | --- | --- |

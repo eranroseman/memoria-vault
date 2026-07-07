@@ -1,8 +1,7 @@
 ---
 title: Project structural impact
-parent: Agents and control
-grand_parent: Reference
-nav_order: 4
+parent: Reference
+nav_order: 15
 ---
 
 # Project structural impact

@@ -1,7 +1,6 @@
 ---
 title: Why the architecture is layered
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 10
 ---
 

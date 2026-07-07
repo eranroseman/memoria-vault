@@ -1,8 +1,7 @@
 ---
 title: Vault eval
-parent: Agents and control
-grand_parent: Reference
-nav_order: 7
+parent: Reference
+nav_order: 18
 ---
 
 # Vault eval

@@ -1,8 +1,7 @@
 ---
 title: Failure modes
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 6
+parent: Reference
+nav_order: 40
 ---
 
 # Failure modes

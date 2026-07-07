@@ -1,8 +1,7 @@
 ---
 title: System artifacts
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 4
+parent: Reference
+nav_order: 38
 ---
 
 # System artifacts

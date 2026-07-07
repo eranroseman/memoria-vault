@@ -13,7 +13,7 @@ provides history and recovery; it is not treated as a live sync bus.
 
 For operational steps see the [setup how-to guides](../how-to-guides/setup/README.md),
 for exact inventories see [Installer (bootstrap)](../reference/installer.md),
-and for maintained rationale see the Design Book links below.
+and for maintained rationale see the design links below.
 
 ## Current operating model
 

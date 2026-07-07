@@ -1,7 +1,6 @@
 ---
 title: Control plane reference
-parent: Vault data model
-grand_parent: Reference
+parent: Reference
 nav_order: 6
 ---
 

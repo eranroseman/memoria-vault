@@ -16,7 +16,7 @@ For each published page, choose exactly one Diátaxis purpose:
 - How-to guide: accomplish a task
 - Reference: look up exact information
 - Explanation: understand how the system works
-- Design Book: understand why a design choice was made
+- Design: understand why a design choice was made
 
 Flag mixed-purpose pages for splitting. How-to titles must be concise and must
 match their filename and index link text.

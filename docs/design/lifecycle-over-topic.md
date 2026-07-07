@@ -1,7 +1,6 @@
 ---
 title: Lifecycle, not topic — and state, not folders
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 20
 ---
 

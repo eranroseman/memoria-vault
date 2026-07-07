@@ -72,7 +72,7 @@ PI-directed and policy-gated.
 | **Do something specific**                   | [How-to guides](how-to-guides/README.md)                                                          |
 | **Look up a field, command, or schema**     | [Reference](reference/README.md)                                                                  |
 | **Understand how the system fits together** | [Explanation](explanation/README.md)                                                              |
-| **Understand why it is designed this way** | [Design Book](design/README.md)                                                                   |
+| **Understand why it is designed this way** | [Design](design/README.md)                                                                        |
 | **Fix something broken**                    | [Failure modes](reference/failure-modes.md) · [Troubleshooting](how-to-guides/troubleshooting/README.md) |
 
 ---
@@ -89,7 +89,7 @@ CLI/runtime path and point to task guides when you need more detail.
 
 The sections below are organized by what you're trying to do, not as a syllabus.
 If you'd rather understand the system before touching it, read the model above, the
-Design Book foundations, then the Explanation pages in this order.
+Design foundations, then the Explanation pages in this order.
 
 **Understand the system (read in order)**
 
@@ -107,7 +107,7 @@ Design Book foundations, then the Explanation pages in this order.
 12. [Decision points](explanation/control-plane/decision-points.md) — how approvals, prompts, worklists, and triggers differ
 13. [The knowledge cycle](explanation/knowledge/knowledge-cycle.md) — the loop that makes the vault compound
 14. [Obsidian — the human surface](explanation/obsidian/README.md) — where you actually work
-15. [Design Book](design/README.md) — why each major decision went the way it did
+15. [Design](design/README.md) — why each major decision went the way it did
 
 **Then learn it by doing**
 
@@ -184,4 +184,4 @@ Throughout the docs, unshipped capabilities are marked *planned* or *deferred*; 
 
 [**Explanation**](explanation/README.md) — Architecture, workflows, and conceptual model.
 
-[**Developers**](developers.md) — Design Book, decision records, and root contribution workflow.
+[**Design**](design/README.md) — Maintained arguments and links to decision history.

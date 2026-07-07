@@ -1,8 +1,7 @@
 ---
 title: Ingest routing
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 1
+parent: Reference
+nav_order: 27
 ---
 
 # Ingest routing

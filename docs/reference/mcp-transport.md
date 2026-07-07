@@ -1,8 +1,7 @@
 ---
 title: MCP transport
-parent: Agents and control
-grand_parent: Reference
-nav_order: 24
+parent: Reference
+nav_order: 13
 ---
 
 # MCP transport

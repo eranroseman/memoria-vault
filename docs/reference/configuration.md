@@ -1,8 +1,7 @@
 ---
 title: Memoria configuration
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 2
+parent: Reference
+nav_order: 36
 ---
 
 # Memoria configuration

@@ -1,8 +1,5 @@
 # Source-status contract for docs/reference. Keep statuses aligned with README.md.
 pages:
-  agents-and-control.md:
-    status: Manual
-    owner: docs/reference/agents-and-control.md
   bibliography.md:
     status: Manual
     owner: docs/reference/bibliography.md
@@ -73,9 +70,6 @@ pages:
   memory-substrates.md:
     status: Manual
     owner: docs/reference/memory-substrates.md
-  obsidian-and-zotero.md:
-    status: Manual
-    owner: docs/reference/obsidian-and-zotero.md
   on-disk-layout.md:
     status: Manual
     owner: docs/reference/on-disk-layout.md
@@ -85,9 +79,6 @@ pages:
   pattern-provenance.md:
     status: Manual
     owner: docs/reference/pattern-provenance.md
-  pipelines-and-io.md:
-    status: Manual
-    owner: docs/reference/pipelines-and-io.md
   policy-audit-log.md:
     status: Manual
     owner: src/memoria_vault/runtime/policy/audit.py
@@ -121,9 +112,6 @@ pages:
     status: Guarded mirror
     owner: src/memoria_vault/product/capabilities/operations/*.md
     check: check_reference_rosters
-  system-and-infrastructure.md:
-    status: Manual
-    owner: docs/reference/system-and-infrastructure.md
   system-artifacts.md:
     status: Manual
     owner: docs/reference/system-artifacts.md
@@ -133,9 +121,6 @@ pages:
   telemetry.md:
     status: Manual
     owner: docs/reference/telemetry.md
-  vault-data-model.md:
-    status: Manual
-    owner: docs/reference/vault-data-model.md
   vault-eval.md:
     status: Manual
     owner: docs/reference/vault-eval.md

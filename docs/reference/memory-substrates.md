@@ -1,8 +1,7 @@
 ---
 title: Memory substrates
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 5
+parent: Reference
+nav_order: 31
 ---
 
 # Memory substrates

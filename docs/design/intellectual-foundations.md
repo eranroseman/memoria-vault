@@ -1,7 +1,6 @@
 ---
 title: Intellectual foundations
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 2
 ---
 
