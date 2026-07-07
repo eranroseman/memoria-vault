@@ -1,8 +1,7 @@
 ---
 title: Bibliography
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 8
+parent: Reference
+nav_order: 42
 ---
 
 # Bibliography

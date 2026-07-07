@@ -1,8 +1,7 @@
 ---
 title: Retrieval and analysis methods
-parent: Agents and control
-grand_parent: Reference
-nav_order: 11
+parent: Reference
+nav_order: 22
 ---
 
 # Retrieval and analysis methods

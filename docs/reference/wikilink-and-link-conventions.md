@@ -1,7 +1,6 @@
 ---
 title: Wikilink and link conventions
-parent: Vault data model
-grand_parent: Reference
+parent: Reference
 nav_order: 5
 ---
 

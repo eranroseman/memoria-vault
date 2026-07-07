@@ -1,8 +1,7 @@
 ---
 title: "Linter: detectors and auto-fix"
-parent: Agents and control
-grand_parent: Reference
-nav_order: 6
+parent: Reference
+nav_order: 17
 ---
 
 # Linter: detectors and auto-fix

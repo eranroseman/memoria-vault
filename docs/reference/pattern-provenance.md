@@ -1,8 +1,7 @@
 ---
 title: Pattern provenance table
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 7
+parent: Reference
+nav_order: 41
 ---
 
 # Pattern provenance table

@@ -1,8 +1,7 @@
 ---
 title: Search
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 3
+parent: Reference
+nav_order: 29
 ---
 
 # Search

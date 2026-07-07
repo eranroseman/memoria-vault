@@ -1,8 +1,7 @@
 ---
 title: Worklists
-parent: Agents and control
-grand_parent: Reference
-nav_order: 5
+parent: Reference
+nav_order: 16
 ---
 
 # Worklists

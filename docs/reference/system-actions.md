@@ -1,8 +1,7 @@
 ---
 title: System actions
-parent: Agents and control
-grand_parent: Reference
-nav_order: 1
+parent: Reference
+nav_order: 8
 ---
 
 # System actions

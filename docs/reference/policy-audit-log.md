@@ -1,8 +1,7 @@
 ---
 title: Policy audit log
-parent: Agents and control
-grand_parent: Reference
-nav_order: 9
+parent: Reference
+nav_order: 20
 ---
 
 # Policy audit log

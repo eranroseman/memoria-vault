@@ -1,8 +1,7 @@
 ---
 title: Prompt operations
-parent: Agents and control
-grand_parent: Reference
-nav_order: 14
+parent: Reference
+nav_order: 25
 ---
 
 # Prompt operations

@@ -1,8 +1,7 @@
 ---
 title: Local HTTP transport
-parent: Agents and control
-grand_parent: Reference
-nav_order: 23
+parent: Reference
+nav_order: 12
 ---
 
 # Local HTTP transport

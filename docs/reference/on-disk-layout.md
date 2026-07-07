@@ -1,8 +1,7 @@
 ---
 title: On-disk layout
-parent: System and infrastructure
-grand_parent: Reference
-nav_order: 3
+parent: Reference
+nav_order: 37
 ---
 
 # On-disk layout

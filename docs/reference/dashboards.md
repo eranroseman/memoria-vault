@@ -1,8 +1,7 @@
 ---
 title: Surfaces, Bases, and dashboards
-parent: Agents and control
-grand_parent: Reference
-nav_order: 13
+parent: Reference
+nav_order: 24
 ---
 
 # Surfaces, Bases, and dashboards

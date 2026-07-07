@@ -1,7 +1,6 @@
 ---
 title: Why Memoria doesn't pursue full autonomy
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 13
 ---
 

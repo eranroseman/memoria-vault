@@ -1,8 +1,7 @@
 ---
 title: Policy auto-fix
-parent: Agents and control
-grand_parent: Reference
-nav_order: 10
+parent: Reference
+nav_order: 21
 ---
 
 # Policy auto-fix

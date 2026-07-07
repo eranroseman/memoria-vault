@@ -23,7 +23,7 @@ Start with [Home](../README.md) if the basic vocabulary is unfamiliar. If you
 need to *do* something, see [How-to guides](../how-to-guides/). If you need exact
 values, field names, runtime contracts, or configuration formats, see
 [Reference](../reference/). If you want the maintained rationale and decision
-history, see [Developers](../developers.md).
+history, see [Design](../design/README.md).
 
 ## Reading map
 
@@ -42,18 +42,18 @@ history, see [Developers](../developers.md).
 
 **New to Memoria:** Read [Home](../README.md), then
 [Architecture](architecture/README.md), [Knowledge](knowledge/README.md), and
-[Request control plane](control-plane/README.md). The Design Book explains why those choices
+[Request control plane](control-plane/README.md). Design explains why those choices
 were made.
 
 **Coming from another agent system:** The key differences are checked request
 rows, operation ceilings, a structural human gate, and no reasoning orchestrator.
 Start with [Operation postures](operation-postures/README.md), [Request control plane](control-plane/README.md),
-then the Design Book pages on [operation postures](../design/why-specialist-postures.md)
+then the design pages on [operation postures](../design/why-specialist-postures.md)
 and [the review gate](../design/why-review-gate-is-structural.md).
 
 ## For decisions and direction
 
-The maintained arguments live in the [Design Book](../design/README.md). Dated
+The maintained arguments live in [Design](../design/README.md). Dated
 decisions live in [design history](https://github.com/eranroseman/memoria-vault/blob/main/design-history/arcs.md);
 forward-looking decisions live in the active release decision ledger until they
 are accepted, rejected, or closed into design history. Scheduling and readiness

@@ -1,7 +1,6 @@
 ---
 title: Why the write half is bounded
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 14
 ---
 

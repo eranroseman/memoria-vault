@@ -37,7 +37,7 @@ find the owning file, then fix the stale consumer rather than the source.
 | Release design scratch | `scratch` branch, under `releases/<version>/` while in progress | Release playbook, ExecPlan playbook |
 | Release scope/readiness | GitHub milestone, Memoria Issue Tracker, and "Release <version>" parent issue/sub-issues | Release playbook and release template |
 | Product decisions | Active release decision ledger, then `design-history/` | Current docs and implementation |
-| Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design Book |
+| Public system model | `docs/README.md` | Tutorials, how-to guides, Reference, Explanation, Design |
 | Public behavior documentation | Diátaxis pages under `docs/` | README and section indexes |
 
 ## Mirrors and Cached Views

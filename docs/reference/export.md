@@ -1,8 +1,7 @@
 ---
 title: Export routes and formats
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 4
+parent: Reference
+nav_order: 30
 ---
 
 # Export routes and formats

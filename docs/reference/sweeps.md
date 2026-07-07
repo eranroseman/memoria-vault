@@ -1,8 +1,7 @@
 ---
 title: Sweeps
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 2
+parent: Reference
+nav_order: 28
 ---
 
 # Sweeps

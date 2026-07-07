@@ -11,7 +11,7 @@ Task-oriented recipes for getting specific things done with Memoria. Each guide 
 know the system — if you're new, start with the [Quickstart](setup/quickstart.md).
 
 For operating explanations, see [Explanation](../explanation/). For the design
-rationale, see [Design Book](../design/README.md). For exact field names,
+rationale, see [Design](../design/README.md). For exact field names,
 schemas, and command flags, see [Reference](../reference/).
 
 ---

@@ -1,7 +1,6 @@
 ---
 title: Why deterministic methods
-parent: Design Book
-grand_parent: Developers
+parent: Design
 nav_order: 15
 ---
 

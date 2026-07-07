@@ -1,8 +1,7 @@
 ---
 title: Telemetry & logs
-parent: Pipelines and I/O
-grand_parent: Reference
-nav_order: 6
+parent: Reference
+nav_order: 32
 ---
 
 # Telemetry & logs

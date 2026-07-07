@@ -1,8 +1,7 @@
 ---
 title: Calibration
-parent: Agents and control
-grand_parent: Reference
-nav_order: 12
+parent: Reference
+nav_order: 23
 ---
 
 # Calibration
