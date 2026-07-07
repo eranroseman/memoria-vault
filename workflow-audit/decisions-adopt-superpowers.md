@@ -7,7 +7,7 @@ Rationale record for every retire/adopt/adapt/decline call in
 not release-scoped, so this file plays that role for it, on the same
 `scratch` branch, in the same `scratch/workflow-audit/` location as the
 plan it supports. Format follows `.agents/playbooks/design-history.md`'s
-dated Y-statement convention.
+Y-statement convention.
 
 ---
 
@@ -389,11 +389,15 @@ than was reviewed → pin `fr33d3m0n/threat-modeling` `a0962b73`,
 the mechanism, so review-after-install is noted instead; (2) idempotence was
 falsely claimed (git clone fails into an existing dir; cp merges stale
 content) → every clone/copy step now `rm -rf`s its target first; (3) no
-backup before `rm -rf` → step 1 writes a full backup tarball. Also corrected:
-`rethink` is installed at 1.0.1 on *both* tools (not 1.1.0 on Claude), with
-the Claude marketplace clone dirty + 1 commit ahead — step 13 now reconciles
-that before editing. `gh auth` preflight added for the PR steps. Evidence:
-`gh api` SHA fetches; `claude plugin list`; `git -C ...rethink status`.
+backup before `rm -rf` → step 1 writes a full backup tarball, now including
+the mutable plugin config files (`~/.claude/settings.json`,
+`~/.codex/config.toml`, `~/.codex/AGENTS.md`) as well as the skill dirs and
+rethink clones. Also corrected: `rethink` is installed at 1.0.1 on *both*
+tools (not 1.1.0 on Claude), with the Claude marketplace clone dirty + 1
+commit ahead — step 13 now reconciles that before editing. `gh auth`
+preflight added for the PR steps and now fails closed if the token is invalid.
+Evidence: `gh api` SHA fetches; `claude plugin list`;
+`git -C ...rethink status`; external review of backup coverage.
 
 **Y: `using-superpowers` is the SessionStart bootstrap/dispatcher, not a
 workflow skill you invoke — so the toolkit has 13 usable skills, 14 skill
@@ -420,3 +424,48 @@ verify→commit→tag→push→update-both procedure (was under-specified), and 
 1's backup fails closed (`|| exit 1`) instead of printing false success.
 Evidence: `codex plugin --help`, `codex plugin marketplace --help`, `claude
 plugin --help`, `claude plugin enable --help`, `claude plugin list`.
+
+**Y: Ship `AGENTS.md`'s `.agents/toolkit.md` reference and `.agents/toolkit.md`
+itself in one repo PR, opened only after validation.**
+Because: the previous two-PR sequencing let the `AGENTS.md` Skills table land
+with a link to `.agents/toolkit.md` before that file existed. Corrected plan:
+step 16 edits the repo docs in one worktree and deliberately does not open the
+PR; step 17 validates the installed toolkit; step 18 writes `.agents/toolkit.md`
+in the same worktree, then opens, checks, merges, and cleans up one PR. Evidence:
+external review finding; direct read of `AGENTS.md` PR flow.
+
+**Y: Make code-review routing explicitly per-tool in both `AGENTS.md` and
+`.agents/playbooks/code-review.md`.**
+Because: `pr-review-toolkit` is Claude-only in this plan, while Codex uses
+native review for the same role. The table already said that, but the planned
+playbook insert accidentally told every tool to run `pr-review-toolkit`. The
+fixed wording keeps `superpowers:requesting-code-review` common to both tools
+and routes the second reviewer to `pr-review-toolkit` on Claude or native
+review on Codex. Evidence: external review finding; `claude plugin list`;
+`codex plugin list`.
+
+**Y: Do not document optional `dataviz`, `artifact-design`, or Figma tooling as
+installed unless the local tool config proves it.**
+Because: external review found those names in the step-18 toolkit-doc scope but
+not in the current installed Claude/Codex plugin lists or Codex MCP config.
+The toolkit document should describe the actual installed stack, not cached or
+session-available possibilities. Evidence: `claude plugin list`,
+`codex plugin list`, `~/.codex/config.toml`.
+
+**Y: Edit zero third-party components — route the grilling / caveman /
+improve fixes through CLAUDE.md + Codex AGENTS.md, using the skills as-is.**
+Because: the test is necessity, not permission. Although grilling, caveman,
+and improve are MIT, already-adapted, no-resync-path local forks (so editing
+them is legally and technically safe), **none of the three edits is
+required** — each is a routing/precedence/exemption rule that CLAUDE.md
+carries just as it does for every other cross-skill pair (user instructions
+outrank skills). improve's edit was pure precedence (belongs in CLAUDE.md by
+definition); caveman's was a "don't-compress-persisted-files" exemption; and
+grilling's description edit was only *marginally* more robust than a CLAUDE.md
+routing rule for a trigger, not necessary. So the plan now edits **only
+`rethink`** (the user's own plugin). This makes §1's "third-party files never
+edited in place" literally true, keeps all cross-skill rules in one place
+(CLAUDE.md/AGENTS.md), and removes three steps. Steps renumbered 1–15;
+grilling/caveman/improve rules added to steps 11–12. Decided by the user
+(2026-07-07) after they corrected the framing: "the fact that we can edit them
+doesn't mean we should — the question is do we have to."
