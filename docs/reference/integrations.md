@@ -71,7 +71,7 @@ organization, and venue graph records.
 | Integration | Role |
 |---|---|
 | **`memoria` CLI** | Required workspace control surface. All mutating work enters through request envelopes and the engine lifecycle. |
-| **search** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the degraded fallback when search is not ready. |
+| **search** | Checked-only local search over retrieval documents: checked Concepts plus generated checked Work text and graph neighborhoods. Used by `memoria workspace rebuild --search`, `memoria ask`, project gap analysis, prompt operations, and integrity checks; deterministic BM25 is the selected answer path while derived passage/vector candidates remain evaluation substrate. |
 | **Optional editor adapters** | Future presentation surfaces may call the CLI/engine, but they do not own source authority, policy, checks, or state. |
 | **MarkDB-Connect** (Zotero add-on) | Not a standalone setup path. It assumes flat citekey-named note files, while Memoria's source authority is SQLite catalog state plus source-content blobs. |
 | **Telegram Bot API** | Optional urgent push channel for `loudness: alert` / `block` attention projections. Configure `MEMORIA_TELEGRAM_BOT_TOKEN` and `MEMORIA_TELEGRAM_CHAT_ID` in the local runtime environment if the push adapter is installed. |

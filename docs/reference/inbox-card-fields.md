@@ -7,7 +7,7 @@ nav_order: 2
 
 # Inbox card fields
 
-Alpha.18 has no durable Inbox card schemas in the vault skeleton. The source
+Alpha.19 has no durable Inbox card schemas in the vault skeleton. The source
 of truth remains `vault-template/.memoria/schemas/types/`; this page is kept as a
 stable reference target and now records that no Inbox card Concept family ships.
 

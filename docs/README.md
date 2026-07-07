@@ -23,8 +23,6 @@ checkpoint; the formal package/tag release gate remains open. ·
 [Install](https://github.com/eranroseman/memoria-vault#install) ·
 [Issues](https://github.com/eranroseman/memoria-vault/issues)
 
-<!-- SCREENSHOT: Replace this comment with ![Memoria vault](assets/screenshot.png) once the system is running. -->
-
 ---
 
 ## The model

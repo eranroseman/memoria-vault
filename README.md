@@ -12,11 +12,6 @@ The engine owns requests, records, verdicts, and recovery state in SQLite. The
 Markdown workspace stays human-readable, while machine writes go through the
 request envelope, checks, quarantine, and read barrier before they are trusted.
 
-<!-- SCREENSHOT: Add a screenshot or GIF here showing the CLI/runtime workspace in action.
-     Suggested path: assets/screenshot.png
-     To add: drop the image into an assets/ folder at the repo root, then replace this comment with:
-     ![Memoria vault](assets/screenshot.png)                                                          -->
-
 > **Status: v0.1 alpha source install.** No formal release has been cut yet; the install commands below run from current `main`. Alpha checkpoints are internal milestones. Check the [milestones](https://github.com/eranroseman/memoria-vault/milestones) and [open issues](https://github.com/eranroseman/memoria-vault/issues) for current checkpoint state before installing.
 
 ---

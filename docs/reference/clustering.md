@@ -7,7 +7,7 @@ nav_order: 15
 
 # Clustering
 
-Alpha.18 keeps graph-aware retrieval and gap analysis in the standalone runtime,
+Alpha.19 keeps graph-aware retrieval and gap analysis in the standalone runtime,
 but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 
 ## Current Baseline
@@ -17,9 +17,9 @@ but it does not ship a clustering adapter or a heavyweight topic-modeling stack.
 | First-order graph neighborhoods | `memoria_vault.runtime.search_index` builds checked search input documents from Concepts, acquired text, and SQLite graph rows. |
 | Project gap analysis | `memoria project gaps <project-path>` / worker operation `analyze-gaps` with optional `project_path`. |
 | Argument graph inspection | `memoria project trace` and `render-project-argument-canvas`. |
-| Retrieval ranking | search over checked retrieval documents, with deterministic BM25 fallback in `memoria_vault.runtime.search_index`. |
+| Retrieval ranking | BM25-selected search over checked retrieval documents, with the derived passage substrate in `memoria_vault.runtime.indexing` and `memoria_vault.runtime.retrieval`. |
 
-## Not Shipped In Alpha.18
+## Not Shipped In Alpha.19
 
 NetworkX community detection, BERTopic topic modeling, and generated cluster
 Canvas adapters are not baseline commands. If they return later, they should be

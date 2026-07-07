@@ -7,7 +7,7 @@ nav_order: 1
 
 # Document types and epistemic roles
 
-Alpha.18 treats durable knowledge files as **Concepts**. The folder root and
+Alpha.19 treats durable knowledge files as **Concepts**. The folder root and
 frontmatter say what kind of Concept the file is; SQLite/read-API verdict state
 says whether it is readable as checked knowledge.
 

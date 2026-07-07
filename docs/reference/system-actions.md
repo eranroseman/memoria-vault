@@ -53,7 +53,7 @@ reference pages; docs checks keep the mirror linked.
 | Action | Performer | What it does |
 | --- | --- | --- |
 | Rebuild checked search source | worker operation `rebuild-checked-search-index` + runtime helper (`rebuild_checked_search_index`) | Rebuilds `.memoria/index/search/checked/` from checked retrieval documents: current Concepts plus generated checked Work text and graph neighborhoods. |
-| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the search-backed or deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, contradictions, and project context when supplied. |
+| Answer query | worker operation `answer-query` + runtime helper (`answer_query`) | Returns the deterministic BM25 Ask/Query contract over checked retrieval documents: sources, unknowns, staleness, contradictions, and project context when supplied. |
 
 ### Knowledge construction (`memoria_vault.runtime.knowledge`)
 
@@ -114,7 +114,7 @@ The registered detectors (slugs, severities, and what each catches) live in [Lin
 | Policy decision | [Policy gate](policy-mcp.md) (`memoria_vault.runtime.policy`) | Decides allow / allow_with_log / deny / dry_run for optional adapter writes and runtime checks; fail-closed. |
 | Pre-tool gate | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Optional adapters call it before a tool runs; denied, dry-run, direct-file, terminal, browser, and unaudited egress tools are blocked. |
 | Post-tool pairing | runtime policy hook (`memoria_vault.runtime.policy.hook`) | Computes the `after_hash` and appends the paired reversibility record to `system/logs/audit.jsonl`. |
-| Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for search-backed ask and gap analysis. |
+| Build graph neighborhoods | runtime search/knowledge helpers | Builds checked retrieval documents and first-order graph-neighborhood text for BM25 ask and gap analysis. |
 | Render argument canvas | worker operation `render-project-argument-canvas` | Renders the project argument map as a JSON Canvas artifact from checked project graph state. |
 | Run prompt operations | `memoria operation run` / `engine_api.run_operation` | Runs package-owned prompt operations through the same request, runner, staging, and journal boundary as other worker operations. |
 | Loudness routing | shared operation helper (`memoria_vault.runtime.subsystems.lib.loudness`) | Sends/logs alert/block push attempts, keeps quiet/notice pull-only, and exposes open block attention items to delegation and policy gates. |

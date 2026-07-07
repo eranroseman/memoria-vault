@@ -7,7 +7,7 @@ nav_order: 5
 
 # Wikilink and link conventions
 
-Alpha.18 has file-backed document types for `digest`, `fulltext`, `note`,
+Alpha.19 has file-backed document types for `digest`, `fulltext`, `note`,
 `hub`, and `project`. Wikilinks and `links:` express authored PI relationships
 between Concept documents. Catalog Work rows live in SQLite and provider
 payloads; they are not `paper`, `person`, or `venue` Concept files.

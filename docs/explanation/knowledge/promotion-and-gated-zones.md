@@ -44,7 +44,7 @@ low-value finding without interrupting work.
 
 ## Notes Replace Claim Maturity
 
-The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.18 uses one
+The alpha.10 `claim` type and `maturity` ladder are retired. Alpha.19 uses one
 `note` type with optional `claim_text`, `work_id`, `topics`, and typed links.
 Evidence sets live as body markers and SQLite rows, while compact citation
 payloads support bibliography survival outside frontmatter. A note is safe to

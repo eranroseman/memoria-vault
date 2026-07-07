@@ -6,7 +6,7 @@ nav_order: 3
 
 # Tutorial 03: Build notes and connect them
 
-Alpha.18 has one durable `note` type. A note can carry `mode: claim`, but there
+Alpha.19 has one durable `note` type. A note can carry `mode: claim`, but there
 is no separate `claim` document type.
 
 ## Steps
