@@ -727,24 +727,52 @@ Toolkit doc (step 14):
 
 ## 7. Progress
 
-- [ ] 1 — pre-flight cost read
-- [ ] 2 — superpowers installed (both tools)
-- [ ] 3 — the-elements-of-style installed (Claude plugin, Codex loose)
-- [ ] 4 — api-design-principles vendored (both, one skill)
-- [ ] 5 — threat-modeling cloned to both tools (mirrored)
-- [ ] 6 — codex-security installed (Codex)
-- [ ] 7 — interface-design installed (Claude plugin + Codex loose) + frontend-design enabled
-- [ ] 8 — obsidian-skills ported to Codex
-- [ ] 9 — tdd + grill-me retired
-- [ ] 10 — `~/.claude/CLAUDE.md` precedence + vocabulary added (incl. grilling/caveman/improve routing)
-- [ ] 11 — `~/.codex/AGENTS.md` written (same rules + security routing)
-- [ ] 12 — repo worktree, CLAUDE.md + AGENTS.md + `.agents/` files + PR-template/github-doctor tracker loop staged for same-branch doc work
-- [ ] 13 — §5 validated in fresh sessions, transcripts in §11
-- [ ] 14 — `.agents/toolkit.md` authored (entire stack), single repo PR merged, worktree cleaned up
+- [x] 2026-07-07 16:15 CDT — 1 — pre-flight backup/auth/cost read completed.
+- [x] 2026-07-07 16:15 CDT — 2 — superpowers installed on both tools
+      (`superpowers@superpowers-dev` on Claude, `superpowers@openai-curated`
+      on Codex).
+- [x] 2026-07-07 16:15 CDT — 3 — the-elements-of-style installed as the loose
+      `writing-clearly-and-concisely` skill on both tools; Claude marketplace
+      install was unavailable (see §9).
+- [x] 2026-07-07 16:15 CDT — 4 — api-design-principles vendored to both tools
+      as one loose skill.
+- [x] 2026-07-07 16:15 CDT — 5 — threat-modeling cloned to both tools at
+      `a0962b7`.
+- [x] 2026-07-07 16:15 CDT — 6 — codex-security installed on Codex.
+- [x] 2026-07-07 16:15 CDT — 7 — interface-design installed on Claude and
+      vendored to Codex; frontend-design installed on Claude and vendored to
+      Codex.
+- [x] 2026-07-07 16:15 CDT — 8 — obsidian-skills ported to Codex.
+- [x] 2026-07-07 16:15 CDT — 9 — loose tdd + grill-me retired.
+- [x] 2026-07-07 16:15 CDT — 10 — `~/.claude/CLAUDE.md` precedence +
+      vocabulary added.
+- [x] 2026-07-07 16:15 CDT — 11 — `~/.codex/AGENTS.md` written.
+- [x] 2026-07-07 16:15 CDT — 12 — repo worktree edits completed and merged via
+      PR #1310.
+- [ ] 2026-07-07 16:15 CDT — 13 — installed-state and repo/CI validation
+      completed; fresh external Claude/Codex behavior-prompt transcripts were
+      not run because the approval reviewer rejected transmitting repo guidance
+      to an external model service.
+- [x] 2026-07-07 16:15 CDT — 14 — `.agents/toolkit.md` authored, PR #1310
+      merged, `main` fast-forwarded to `528ddf6c`, and
+      `worktrees/adopt-superpowers` removed.
 
 ## 8. Execution log
 
-- {{ filled while running }}
+- 2026-07-07 — Created backup
+  `~/toolkit-backup-20260707-155353.tgz` before any local tool-config edits.
+- 2026-07-07 — `obra/superpowers` registered in Claude as marketplace
+  `superpowers-dev`, so Claude installed `superpowers@superpowers-dev` instead
+  of the plan's `superpowers@superpowers` spelling. Codex installed
+  `superpowers@openai-curated`.
+- 2026-07-07 — `obra/the-elements-of-style` did not expose
+  `.claude-plugin/marketplace.json`; installed the reviewed
+  `writing-clearly-and-concisely` skill loose on Claude and Codex instead.
+- 2026-07-07 — Repo changes went through PR #1310 and squash-merged as
+  `528ddf6c docs: adopt superpowers and tracker-loop conventions (#1310)`.
+- 2026-07-07 — A fresh Claude `-p` smoke prompt was rejected by the approval
+  reviewer because it would transmit private repo guidance to an external model
+  service; retained safer local/plugin/CI validation only.
 
 ## 9. Surprises & discoveries
 
@@ -760,6 +788,12 @@ Toolkit doc (step 14):
   runs inline from the vendored skill (which its own text supports), not via
   a `/interface-design:design-review` command. Verify this holds if Codex
   gains a command mechanism later.
+- **superpowers Claude marketplace name drifted:** `claude plugin marketplace
+  add obra/superpowers` registered `superpowers-dev`; install/details use
+  `superpowers@superpowers-dev`.
+- **the-elements-of-style marketplace install unavailable:** the pinned repo had
+  `.claude-plugin/plugin.json` but no `.claude-plugin/marketplace.json`, so the
+  prose skill was installed loose on both tools.
 
 ## 10. Interfaces & dependencies
 
@@ -789,10 +823,34 @@ Toolkit doc (step 14):
 
 ## 11. Artifacts & notes
 
-- {{ command transcripts pasted here as the plan runs }}
+- Backup: `~/toolkit-backup-20260707-155353.tgz`.
+- Installed-state checks:
+  `claude plugin list` shows `superpowers@superpowers-dev`,
+  `interface-design@interface-design`, `frontend-design@claude-code-plugins`,
+  `pr-review-toolkit@claude-code-plugins`, `security-guidance@claude-code-plugins`,
+  `ponytail@ponytail`, and `rethink@rethink`; `codex plugin list` shows
+  `superpowers@openai-curated` and `codex-security@openai-curated` installed.
+- Focused checks: `python3 -m pytest tests/test_github_doctor.py` passed
+  (`3 passed`); `python3 scripts/checks/github_doctor.py` printed
+  `github-doctor: ok`.
+- Repo gate: `python3 scripts/verify pr` passed; final run reported
+  `107 passed, 533 deselected` for static tests and
+  `296 passed, 7 skipped, 337 deselected` for unit/contract tests.
+- Separate prose gates: `npm run spellcheck` passed with `0` issues;
+  `npm run markdownlint` passed.
+- GitHub checks on PR #1310 passed:
+  `pr-policy`, `lint`, `cspell`, `markdownlint`, `python-selftest`,
+  `gitleaks`, `lint-config`, `PSScriptAnalyzer`, and `shellcheck`.
 
 ## 12. Outcomes & retrospective
 
-- **Shipped:** {{ fill at close }}
-- **Still open:** {{ fill at close — including the step-5/step-7 decisions }}
-- **Lessons:** {{ fill at close }}
+- **Shipped:** Layer-1 toolkit installs/config updates, Layer-2/3 repo guidance,
+  `.agents/toolkit.md`, PR-template tracker guardrails, and
+  `github_doctor` validation. PR #1310 is merged and `main` is fast-forwarded to
+  `origin/main`.
+- **Still open:** optional fresh-session behavior transcripts from §5 require
+  explicit approval to send repo guidance to external Claude/Codex model
+  services. No issue tracker state changed.
+- **Lessons:** prefer verifying marketplace manifest shape before promising a
+  Claude plugin install path; record actual installed ids (`superpowers-dev`,
+  loose Elements of Style) in durable docs.
