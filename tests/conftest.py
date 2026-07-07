@@ -33,6 +33,7 @@ TEST_LEVELS = {
     "test_alpha18_bundle_roots.py": "contract",
     "test_alpha18_concept_types.py": "contract",
     "test_alpha18_frontmatter.py": "contract",
+    "test_alpha18_gap_freejoin.py": "contract",
     "test_alpha18_renames.py": "contract",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",
