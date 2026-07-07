@@ -37,7 +37,7 @@ def snapshot_workspace(workspace: Path) -> dict[str, Any]:
     checked_works = [
         row
         for row in works
-        if state.concept_check_status(workspace, f"catalog/sources/{row['source_id']}") == "checked"
+        if state.concept_check_status(workspace, f"catalog/sources/{row['work_id']}") == "checked"
     ]
     attention = engine_api.read_attention(workspace)["attention"]
     attention_counts = _status_counts(attention)
@@ -226,7 +226,7 @@ def _journal_event_count(workspace: Path, event_type: str) -> int:
         return 0
     with state.connect(workspace) as conn:
         row = conn.execute(
-            "SELECT COUNT(*) AS count FROM journal_events WHERE event_type = ?",
+            "SELECT COUNT(*) AS count FROM event_log WHERE event_type = ?",
             (event_type,),
         ).fetchone()
     return int(row["count"] if row is not None else 0)

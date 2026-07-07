@@ -16,7 +16,7 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -40,7 +40,7 @@ def test_compose_project_draft_writes_markers_and_rebuilds_evidence_sets(
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
         "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "links:\n  supports:\n    - notes/thesis.md\n",
         "note",
         body="The supporting claim is warranted by the catalog source.",
@@ -92,7 +92,7 @@ def test_compose_project_draft_requires_outline_members(tmp_path: Path) -> None:
         compose_project_draft(vault, "project-alpha")
 
 
-def _source_span(vault: Path, source_id: str) -> None:
-    path = vault / f".memoria/blobs/source-content/{source_id}.md"
+def _source_span(vault: Path, work_id: str) -> None:
+    path = vault / f".memoria/blobs/source-content/{work_id}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"{source_id} source span. ^p0001\n", encoding="utf-8")
+    path.write_text(f"{work_id} source span. ^p0001\n", encoding="utf-8")

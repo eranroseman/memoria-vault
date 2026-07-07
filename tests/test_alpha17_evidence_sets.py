@@ -31,14 +31,14 @@ def test_rebuild_evidence_sets_derives_rows_from_markers(tmp_path: Path) -> None
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
     )
     state.upsert_catalog_record(
         vault,
-        source_id="source-beta",
+        work_id="source-beta",
         title="Beta Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-beta.md",

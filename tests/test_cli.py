@@ -255,7 +255,7 @@ def test_cli_init_and_work_add_use_request_envelope_without_trigger_type(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["source_id"] == "doi-10.1000_alpha"
+    assert output["result"]["work_id"] == "doi-10.1000_alpha"
     assert not (workspace / ".memoria/index/search/manifest.json").exists()
     assert not (workspace / "catalog/sources/doi-10.1000_alpha/source.md").exists()
     assert (workspace / output["result"]["content_path"]).is_file()
@@ -374,13 +374,13 @@ def test_cli_work_import_bibtex_seeds_unchecked_db_work_without_markdown(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["source_id"] == "doi-10.1000_import.2026"
+    assert output["result"]["work_id"] == "doi-10.1000_import.2026"
     assert output["enrichment_job"]["operation_id"] == "enrich-source"
     assert output["enrichment_job"]["status"] == "pending"
     assert not (workspace / "catalog/sources/doi-10.1000_import.2026/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(
-            "SELECT title, check_status, content_path FROM catalog_sources WHERE source_id = ?",
+            "SELECT title, check_status, content_path FROM catalog_sources WHERE work_id = ?",
             ("doi-10.1000_import.2026",),
         ).fetchone()
         enrich = conn.execute(
@@ -420,7 +420,7 @@ def test_cli_work_add_file_stages_text_without_source_markdown(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert output["result"]["source_id"] == "work"
+    assert output["result"]["work_id"] == "work"
     assert not (workspace / "catalog/sources/work/source.md").exists()
     assert (workspace / output["result"]["content_path"]).read_text(encoding="utf-8") == (
         "Full text from the PI.\n"
@@ -455,9 +455,9 @@ def test_cli_work_add_url_fetches_text_without_source_markdown(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    source_id = output["result"]["source_id"]
+    work_id = output["result"]["work_id"]
     assert output["result"]["check_status"] == "unchecked"
-    assert not (workspace / f"catalog/sources/{source_id}/source.md").exists()
+    assert not (workspace / f"catalog/sources/{work_id}/source.md").exists()
     assert "Fetched full text." in (workspace / output["result"]["content_path"]).read_text(
         encoding="utf-8"
     )
@@ -493,7 +493,7 @@ def test_cli_work_add_pdf_extracts_text_without_source_markdown(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert output["result"]["source_id"] == "paper"
+    assert output["result"]["work_id"] == "paper"
     assert not (workspace / "catalog/sources/paper/source.md").exists()
     assert "Extracted PDF text." in (workspace / output["result"]["content_path"]).read_text(
         encoding="utf-8"
@@ -577,7 +577,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
         == 0
     )
     interview = json.loads(capsys.readouterr().out)
-    assert interview["result"]["source_id"] == "doi-10.1000_alpha"
+    assert interview["result"]["work_id"] == "doi-10.1000_alpha"
     assert interview["result"]["turn_id"].startswith("journal:copi-interview:")
 
     rc = main(
@@ -612,7 +612,7 @@ def test_cli_work_digest_compiles_checked_db_work_after_enrichment(
         ).fetchone()
     assert row["operation_id"] == "record-copi-interview"
     assert json.loads(row["args_json"]) == {
-        "source_id": "doi-10.1000_alpha",
+        "work_id": "doi-10.1000_alpha",
         "prompt": "What matters?",
         "response": "The PI cares about the methods caveat.",
         "project_id": "projects/project-alpha/project.md",
@@ -860,7 +860,7 @@ def test_cli_project_gaps_runs_gap_analysis_request(
     mark_file_status(workspace, "works/source-alpha/digest.md", "digest")
     state.upsert_catalog_record(
         workspace,
-        source_id="db-alpha",
+        work_id="db-alpha",
         title="DB Alpha",
         text_status="full-text",
         check_status="checked",
@@ -1601,7 +1601,7 @@ def test_cli_workspace_scan_marks_pi_edits_unchecked_until_promoted(
         event = conn.execute(
             """
             SELECT event_type
-            FROM journal_events
+            FROM event_log
             WHERE event_type = 'observed_external_edit'
             ORDER BY event_id DESC
             LIMIT 1
@@ -1931,7 +1931,7 @@ def test_cli_wires_alpha16_maintenance_and_pi_commands(
         == 0
     )
     imported = json.loads(capsys.readouterr().out)
-    assert imported["result"]["source_id"] == "portable-work"
+    assert imported["result"]["work_id"] == "portable-work"
 
     assert (
         main(
@@ -1993,7 +1993,7 @@ def test_cli_wires_alpha16_maintenance_and_pi_commands(
         "title: Hub seed\n"
         "description: Hub seed\n"
         "work_id: hub-seed\n"
-        "source_id: catalog/sources/ZOT1\n"
+        "work_id: catalog/sources/ZOT1\n"
         "tags: [personal-informatics]\n"
         "links: {}\n"
         "---\n"
@@ -2442,12 +2442,12 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
         == 0
     )
     captured = json.loads(capsys.readouterr().out)
-    source_id = captured["result"]["source_id"]
+    work_id = captured["result"]["work_id"]
     assert captured["result"]["text_status"] == "metadata-only"
     with state.connect(workspace) as conn:
         conn.execute(
-            "UPDATE catalog_sources SET check_status = 'checked' WHERE source_id = ?",
-            (source_id,),
+            "UPDATE catalog_sources SET check_status = 'checked' WHERE work_id = ?",
+            (work_id,),
         )
 
     assert (
@@ -2457,7 +2457,7 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
                 "digest",
                 "--workspace",
                 str(workspace),
-                source_id,
+                work_id,
                 "--json",
             ]
         )
@@ -2469,9 +2469,9 @@ def test_cli_work_digest_blocks_checked_metadata_only_source(
     assert output["result"]["status"] == "failed"
     assert "checked digest requires full-text source content" in output["result"]["error"]
     assert "attention_path is inbox/flag-digest-full-text-" in output["result"]["error"]
-    assert not (workspace / f"works/{source_id}/digest.md").exists()
-    attention = workspace / f"inbox/flag-digest-full-text-{source_id}.md"
-    assert read_frontmatter(attention)["target"] == f"catalog/sources/{source_id}"
+    assert not (workspace / f"works/{work_id}/digest.md").exists()
+    attention = workspace / f"inbox/flag-digest-full-text-{work_id}.md"
+    assert read_frontmatter(attention)["target"] == f"catalog/sources/{work_id}"
 
 
 def test_cli_journal_list_filters_by_request_path_decision_and_date(
@@ -2790,11 +2790,11 @@ def test_cli_work_import_csl_seeds_isbn_book_without_zotero(
 
     assert rc == 0
     assert output["ok"] is True
-    assert output["result"]["source_id"] == "book2026"
+    assert output["result"]["work_id"] == "book2026"
     assert not (workspace / "catalog/sources/book2026/source.md").exists()
     with state.connect(workspace) as conn:
         row = conn.execute(
-            "SELECT title, check_status, identifiers_json FROM catalog_sources WHERE source_id = ?",
+            "SELECT title, check_status, identifiers_json FROM catalog_sources WHERE work_id = ?",
             ("book2026",),
         ).fetchone()
         edge = conn.execute(

@@ -23,7 +23,7 @@ optional:
   mode: enum:mode
   question_status: enum:question_status
   quote: str
-  source_id: str
+  work_id: str
   temporal_scope: str
   tense: str
   topics: list

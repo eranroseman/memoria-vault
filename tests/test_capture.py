@@ -55,7 +55,7 @@ def test_capture_source_writes_catalog_db_row_and_blobs(tmp_path: Path) -> None:
     assert result["check_status"] == "checked"
     assert source is not None
     assert source["check_status"] == "checked"
-    assert source["source_id"] == "source-alpha"
+    assert source["work_id"] == "source-alpha"
     assert source["item_type"] == "article"
     assert source["raw_path"] == ".memoria/blobs/source-content/source-alpha/raw/alpha.txt"
     assert source["content_path"] == ".memoria/blobs/source-content/source-alpha/content.txt"
@@ -182,7 +182,7 @@ def test_capture_pdf_source_derives_content(tmp_path: Path, monkeypatch) -> None
     assert result["content_path"] == ".memoria/blobs/source-content/pdf-source/content.txt"
     assert result["text_status"] == "full-text"
     assert "## Page 3" in (vault / result["content_path"]).read_text(encoding="utf-8")
-    source = state.catalog_source(vault, result["source_id"])
+    source = state.catalog_source(vault, result["work_id"])
     assert source is not None
     assert source["text_status"] == "full-text"
     assert source["raw_path"] == ".memoria/blobs/source-content/pdf-source/raw/paper.pdf"
@@ -483,7 +483,7 @@ def test_recapturing_source_merges_existing_metadata(tmp_path: Path) -> None:
     assert not (vault / "catalog/sources/source-alpha/source.md").exists()
 
 
-def test_capture_bibtex_source_accepts_explicit_stable_source_id(tmp_path: Path) -> None:
+def test_capture_bibtex_source_accepts_explicit_stable_work_id(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     bibtex = """@article{temporary2026,
       title = {Stable Source Identity},
@@ -496,14 +496,14 @@ def test_capture_bibtex_source_accepts_explicit_stable_source_id(tmp_path: Path)
     result = capture_bibtex_source(
         vault,
         bibtex,
-        source_id="source-stable-identity",
+        work_id="source-stable-identity",
         machine="test-machine",
     )
-    source = state.catalog_source(vault, result["source_id"])
+    source = state.catalog_source(vault, result["work_id"])
 
     assert result["source_path"] == "catalog/sources/source-stable-identity"
     assert source is not None
-    assert source["source_id"] == "source-stable-identity"
+    assert source["work_id"] == "source-stable-identity"
     assert source["citekey"] == "temporary2026"
 
 
@@ -530,7 +530,7 @@ def test_capture_url_source_snapshots_html_text(tmp_path: Path, monkeypatch) -> 
 
     assert calls == [("https://example.test/path/page", 1.0)]
     assert result["source_path"] == "catalog/sources/url-example.test-path-page"
-    source = state.catalog_source(vault, result["source_id"])
+    source = state.catalog_source(vault, result["work_id"])
     assert source is not None
     assert source["title"] == "Harness URL"
     assert source["resource"] == "https://example.test/path/page"
@@ -572,7 +572,7 @@ def test_capture_url_source_fetches_from_loopback_http_server(tmp_path: Path) ->
         server.server_close()
         thread.join(timeout=5)
 
-    source = state.catalog_source(vault, result["source_id"])
+    source = state.catalog_source(vault, result["work_id"])
     assert source is not None
     assert source["check_status"] == "checked"
     assert source["title"] == "Loopback URL"
@@ -619,7 +619,7 @@ def test_references_bib_projection_from_checked_sources(tmp_path: Path) -> None:
     assert not check_references_bib(vault)
 
 
-def test_source_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
+def test_work_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
     capture_bibtex_source(
         vault,
@@ -630,7 +630,7 @@ def test_source_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
           journal = {Journal of Testable Systems},
           doi = {10.1000/stable.2026}
         }""",
-        source_id="source-stable-identity",
+        work_id="source-stable-identity",
         machine="test-machine",
     )
     capture_bibtex_source(
@@ -642,7 +642,7 @@ def test_source_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
           journal = {Journal of Testable Systems},
           doi = {10.1000/stable.2026}
         }""",
-        source_id="source-stable-identity",
+        work_id="source-stable-identity",
         machine="test-machine",
     )
 
@@ -650,7 +650,7 @@ def test_source_id_survives_pi_citekey_correction(tmp_path: Path) -> None:
     rendered = render_references_bib(vault)
 
     assert source is not None
-    assert source["source_id"] == "source-stable-identity"
+    assert source["work_id"] == "source-stable-identity"
     assert source["citekey"] == "corrected2026"
     assert "@article{corrected2026," in rendered
     assert "@article{draftkey2026," not in rendered

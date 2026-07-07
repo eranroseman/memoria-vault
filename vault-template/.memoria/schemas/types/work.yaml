@@ -17,6 +17,6 @@ optional:
   description: str
   evidence_set: list
   identifiers: map
-  source_type: str
+  item_type: str
   source_sha256: str
   x: map

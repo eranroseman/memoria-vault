@@ -237,7 +237,7 @@ def test_compile_source_digest_rejects_removed_source_markdown_without_catalog_r
         "check_status: checked\n"
         "title: Removed Source\n"
         "description: Should not be treated as a Work row.\n"
-        "source_id: removed\n"
+        "work_id: removed\n"
         "content_path: .memoria/blobs/source-content/removed/content.txt\n"
         "text_status: full-text\n"
         "---\n"
@@ -352,7 +352,7 @@ def test_copi_interview_turn_feeds_digest_inputs(tmp_path: Path) -> None:
     )
 
     digest = vault / result["digest_path"]
-    assert interview["event"]["source_id"] == "source-alpha"
+    assert interview["event"]["work_id"] == "source-alpha"
     assert result["interview_count"] == 1
     assert "The PI cares about the methods caveat." in digest.read_text(encoding="utf-8")
     assert interview["event"]["turn_sha256"] in {

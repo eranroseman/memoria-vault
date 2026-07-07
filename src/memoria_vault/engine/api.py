@@ -269,7 +269,7 @@ def promote_draft_passage(
     *,
     title: str,
     passage: str,
-    source_id: str = "",
+    work_id: str = "",
     idempotency_key: str | None = None,
     schedule_id: str | None = None,
     actor: str = "pi",
@@ -281,7 +281,7 @@ def promote_draft_passage(
             "project_path": project_path,
             "title": title,
             "passage": passage,
-            "source_id": source_id,
+            "work_id": work_id,
         },
         idempotency_key=idempotency_key,
         schedule_id=schedule_id,
@@ -303,7 +303,7 @@ def read_journal(
 ) -> dict[str, Any]:
     sql = """
         SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-        FROM journal_events
+        FROM event_log
     """
     clauses = []
     params: list[str] = []
@@ -355,7 +355,7 @@ def read_journal_event(
         row = conn.execute(
             """
             SELECT event_id, timestamp, event_type, machine, payload_json, prev_hash, row_hash
-            FROM journal_events
+            FROM event_log
             WHERE event_id = ?
             """,
             (event_id,),
@@ -771,10 +771,9 @@ def _request_paths(row: Any) -> list[str]:
     if isinstance(args, dict):
         for key in ("target_path", "target_id", "path"):
             paths.append(str(args.get(key) or ""))
-        for key in ("source_id", "work_id"):
-            value = str(args.get(key) or "").strip()
-            if value:
-                paths.extend([value, f"catalog/sources/{value}"])
+        work_id = str(args.get("work_id") or "").strip()
+        if work_id:
+            paths.extend([work_id, f"catalog/sources/{work_id}"])
     return [path for path in paths if path]
 
 

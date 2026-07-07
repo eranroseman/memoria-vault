@@ -398,7 +398,7 @@ def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> N
         "check_status: checked\n"
         "title: Missing citation\n"
         "description: Bad fixture.\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "---\n"
         "# Missing citation\n",
         encoding="utf-8",
@@ -440,9 +440,9 @@ def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:
     stage_concept(vault, "notes/journal.md", note_text("Journal"), machine="writer")
 
     with state.connect(vault) as conn:
-        first = conn.execute("SELECT event_id, prev_hash, row_hash FROM journal_events").fetchone()
+        first = conn.execute("SELECT event_id, prev_hash, row_hash FROM event_log").fetchone()
         try:
-            conn.execute("UPDATE journal_events SET payload_json = '{}' WHERE event_id = 1")
+            conn.execute("UPDATE event_log SET payload_json = '{}' WHERE event_id = 1")
         except sqlite3.DatabaseError as exc:
             blocked = str(exc)
         else:

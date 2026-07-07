@@ -75,15 +75,15 @@ def assert_offline_ingest(root: Path, vault: Path) -> None:
     result = capture_bibtex_source(
         vault,
         bib,
-        source_id="demo-work",
+        work_id="demo-work",
         content_text="Demo Work package-gate source.",
         machine="e2e",
     )
-    source = state.catalog_source(vault, result["source_id"])
+    source = state.catalog_source(vault, result["work_id"])
     assert result["source_path"] == "catalog/sources/demo-work"
     assert source is not None
     assert source["check_status"] == "checked"
-    assert source["source_id"] == "demo-work"
+    assert source["work_id"] == "demo-work"
     assert not (vault / "catalog/sources/demo-work/source.md").exists()
     assert (vault / result["content_path"]).is_file()
     assert (vault / result["raw_path"]).is_file()

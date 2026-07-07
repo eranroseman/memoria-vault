@@ -25,7 +25,7 @@ def _vault(tmp_path: Path) -> Path:
     )
     (ev / "verify-y.md").write_text(
         "---\ntype: eval-task\ntitle: Verify Y\nlifecycle: current\n"
-        "workflow: verify\neval_role: verify\nreferences:\n  - devlin2019bert\n---\n"
+        "workflow: verify\neval_role: verify\nreferences:\n  - devlinbert\n---\n"
         "## Input\nQ\n## Expected behavior\nE\n## Scoring rubric\nR\n",
         encoding="utf-8",
     )
@@ -33,7 +33,7 @@ def _vault(tmp_path: Path) -> Path:
     (sources / "vaswani2017attention").mkdir(parents=True)
     (sources / "vaswani2017attention/source.md").write_text(
         "---\ntype: source\ncheck_status: checked\ntitle: Attention\n"
-        "description: Fixture source.\nsource_id: vaswani2017attention\n"
+        "description: Fixture source.\nwork_id: vaswani2017attention\n"
         "citekey: vaswani2017attention\n---\n",
         encoding="utf-8",
     )
@@ -41,24 +41,24 @@ def _vault(tmp_path: Path) -> Path:
     (sources / "bert-paper").mkdir(parents=True)
     (sources / "bert-paper/source.md").write_text(
         "---\ntype: source\ncheck_status: checked\ntitle: BERT\n"
-        "description: Fixture source.\nsource_id: bert-paper\ncitekey: devlin2019bert\n---\n",
+        "description: Fixture source.\nwork_id: bert-paper\ncitekey: devlinbert\n---\n",
         encoding="utf-8",
     )
     notes = tmp_path / "notes"
     notes.mkdir(parents=True)
     (notes / "old-claim.md").write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: Old\nstatus: superseded\n"
-        "source_id: catalog/sources/x2020\n---\nold\n",
+        "work_id: catalog/sources/x2020\n---\nold\n",
         encoding="utf-8",
     )
     (notes / "replaced-claim.md").write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: Replaced\n"
-        "superseded_by: new-claim\nsource_id: catalog/sources/x2020\n---\nreplaced\n",
+        "superseded_by: new-claim\nwork_id: catalog/sources/x2020\n---\nreplaced\n",
         encoding="utf-8",
     )
     (notes / "good-claim.md").write_text(
         "---\ntype: note\ncheck_status: checked\ntitle: Good\n"
-        "source_id: catalog/sources/x2020\n---\ngood\n",
+        "work_id: catalog/sources/x2020\n---\ngood\n",
         encoding="utf-8",
     )
     return tmp_path
@@ -76,7 +76,7 @@ def _result_card(task: str, quarter: str, **fields) -> dict:
 def test_catalog_resolves_by_stem_and_by_frontmatter_citekey(tmp_path):
     v = _vault(tmp_path)
     keys = eval_score.catalog_citekeys(v)
-    assert {"vaswani2017attention", "devlin2019bert", "bert-paper"} <= keys
+    assert {"vaswani2017attention", "devlinbert", "bert-paper"} <= keys
 
 
 def test_superseded_claims_classification(tmp_path):
@@ -131,7 +131,7 @@ def test_support_rate_fraction_of_resolving_citations(tmp_path):
     v = _vault(tmp_path)
     m = eval_score.score_task(
         {"references": []},
-        {"cited": ["vaswani2017attention", "devlin2019bert", "ghost2099fake"]},
+        {"cited": ["vaswani2017attention", "devlinbert", "ghost2099fake"]},
         eval_score.catalog_citekeys(v),
         set(),
     )

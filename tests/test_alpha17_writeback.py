@@ -22,7 +22,7 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
         "project-alpha",
         title="Selected Claim",
         passage="Selected claim text.",
-        source_id="source-alpha",
+        work_id="source-alpha",
     )
 
     assert result["note_path"] == "notes/selected-claim.md"
@@ -31,7 +31,7 @@ def test_promote_draft_passage_creates_unchecked_note_and_links_draft(tmp_path: 
     frontmatter = read_frontmatter(note)
     assert frontmatter["type"] == "note"
     assert frontmatter["title"] == "Selected Claim"
-    assert frontmatter["source_id"] == "catalog/sources/source-alpha"
+    assert frontmatter["work_id"] == "catalog/sources/source-alpha"
     assert "check_status" not in frontmatter
     assert state.concept_check_status(vault, "notes/selected-claim.md") == "unchecked"
     draft_text = draft.read_text(encoding="utf-8")
@@ -58,7 +58,7 @@ def test_cli_project_promote_runs_writeback_operation(tmp_path: Path, capsys: ob
             "Selected Claim",
             "--passage",
             "Selected claim text.",
-            "--source-id",
+            "--work-id",
             "source-alpha",
             "--json",
             "--idempotency-key",

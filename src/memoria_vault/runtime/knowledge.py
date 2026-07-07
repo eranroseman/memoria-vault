@@ -227,18 +227,19 @@ def emit_note_candidates(
     staged = []
     checked = []
     note_paths = []
-    digest_source_ref = digest_fm.get("source_id") or (
-        f"catalog/sources/{digest_fm['work_id']}" if digest_fm.get("work_id") else None
-    )
+    digest_work_id = _draft_work_id(str(digest_fm.get("work_id") or ""))
+    digest_source_ref = f"catalog/sources/{digest_work_id}" if digest_work_id else None
     for row in rows:
         title = _required_text(row, "title")
         body = _required_text(row, "body")
         note_rel = _unique_note_rel(vault, title)
         require_policy_path(policy, note_rel)
+        row_work_id = _draft_work_id(str(row.get("work_id") or ""))
+        work_ref = f"catalog/sources/{row_work_id}" if row_work_id else digest_source_ref
         frontmatter = {
             "type": "note",
             "title": title,
-            "source_id": row.get("source_id") or digest_source_ref,
+            "work_id": work_ref,
             "evidence_set": row.get("evidence_set")
             or digest_fm.get("evidence_set")
             or ([digest_source_ref] if digest_source_ref else []),
@@ -505,8 +506,8 @@ def analyze_gaps(
             confidence=confidence,
             actionability=actionability,
         )
-        if source_ids := _source_ids_from_seen(seen[key]["sources"]):
-            gap["source_ids"] = source_ids
+        if work_ids := _work_ids_from_seen(seen[key]["sources"]):
+            gap["work_ids"] = work_ids
         if key in retrieval:
             gap["retrieval_engine"] = retrieval[key]["engine"]
             gap["retrieval_sources"] = retrieval[key]["sources"]
@@ -570,7 +571,7 @@ def exploration_channel(vault: Path, *, limit: int = 10) -> dict[str, Any]:
         for source in state.catalog_sources(vault)
         if source.get("check_status") == "checked" and _is_current_catalog_source(source)
     ]
-    source_by_id = {str(source["source_id"]): source for source in sources}
+    source_by_id = {str(source["work_id"]): source for source in sources}
     captured = _captured_work_ids(vault)
     candidates = []
     if source_by_id:
@@ -594,7 +595,7 @@ def exploration_channel(vault: Path, *, limit: int = 10) -> dict[str, Any]:
             title = str(edge.get("target_title") or edge["target_id"])
             candidates.append(
                 {
-                    "source_id": edge["work_id"],
+                    "work_id": edge["work_id"],
                     "source_title": source["title"],
                     "candidate_work_id": edge["target_id"],
                     "candidate_title": title,
@@ -737,7 +738,7 @@ def _add_catalog_source_gap_terms(
     for source in state.catalog_sources(vault):
         if not _is_current_catalog_source(source):
             continue
-        identity = _gap_identity(f"catalog/sources/{source['source_id']}", "sources")
+        identity = _gap_identity(f"catalog/sources/{source['work_id']}", "sources")
         for term in _catalog_source_terms(source):
             key = term.lower()
             if identity not in seen[key]["sources"]:
@@ -772,15 +773,15 @@ def _add_graph_topic_gap_terms(
     seen: dict[str, dict[str, set[str]]],
     labels: dict[str, str],
 ) -> None:
-    source_ids = [
-        str(source["source_id"])
+    work_ids = [
+        str(source["work_id"])
         for source in state.catalog_sources(vault)
         if _is_current_catalog_source(source)
     ]
-    if not source_ids:
+    if not work_ids:
         return
     with state.connect(vault) as conn:
-        for source_id in source_ids:
+        for work_id in work_ids:
             rows = conn.execute(
                 """
                 SELECT target_title, raw_json
@@ -789,9 +790,9 @@ def _add_graph_topic_gap_terms(
                   AND relation_type IN ('topic', 'keyword')
                 ORDER BY target_id
                 """,
-                (source_id,),
+                (work_id,),
             ).fetchall()
-            identity = _gap_identity(f"catalog/sources/{source_id}", "sources")
+            identity = _gap_identity(f"catalog/sources/{work_id}", "sources")
             for row in rows:
                 for term in _graph_topic_terms(dict(row)):
                     key = term.lower()
@@ -967,7 +968,7 @@ def _missing_full_text_gaps(vault: Path) -> list[dict[str, Any]]:
     for source in state.catalog_sources(vault):
         if source["text_status"] == "full-text" or not _is_current_catalog_source(source):
             continue
-        source_id = str(source["source_id"])
+        work_id = str(source["work_id"])
         text_status = str(source.get("text_status") or "missing")
         gaps.append(
             _gap_payload(
@@ -977,15 +978,14 @@ def _missing_full_text_gaps(vault: Path) -> list[dict[str, Any]]:
                     "digest_count": 0,
                     "note_count": 0,
                     "proposed_seed": "acquire full text or attach user-supplied text",
-                    "source_id": source_id,
-                    "source_ids": [source_id],
+                    "work_id": work_id,
+                    "work_ids": [work_id],
                     "text_status": text_status,
                 },
                 kind="full-text-missing",
-                target=f"catalog/sources/{source_id}",
+                target=f"catalog/sources/{work_id}",
                 why=(
-                    f"`catalog/sources/{source_id}` is checked but has "
-                    f"`text_status: {text_status}`."
+                    f"`catalog/sources/{work_id}` is checked but has `text_status: {text_status}`."
                 ),
                 next_actions=["acquire full text or attach user-supplied text"],
                 impact=2,
@@ -1006,18 +1006,18 @@ def _write_full_text_gap_attention(
         return [], ""
     paths = []
     for gap in gaps:
-        source_id = str(gap.get("source_id") or "").strip()
-        if not source_id:
+        work_id = str(gap.get("work_id") or "").strip()
+        if not work_id:
             continue
-        source = state.catalog_source(vault, source_id)
+        source = state.catalog_source(vault, work_id)
         if source is None:
             continue
-        rel = normalize_path(f"inbox/flag-gap-full-text-{safe_filename(source_id)}.md")
+        rel = normalize_path(f"inbox/flag-gap-full-text-{safe_filename(work_id)}.md")
         path = vault / rel
         if path.exists():
             continue
-        title = f"Full text needed for {source_id}"
-        target = f"catalog/sources/{source_id}"
+        title = f"Full text needed for {work_id}"
+        target = f"catalog/sources/{work_id}"
         text_status = str(source.get("text_status") or gap.get("text_status") or "missing")
         finding = (
             f"Gap analysis found `{target}` has `text_status: {text_status}`; "
@@ -1074,13 +1074,13 @@ def _write_gap_discovery_candidates(
 ) -> tuple[list[str], str]:
     if machine is None:
         return [], ""
-    source_ids = {
-        source_id
+    work_ids = {
+        work_id
         for gap in gaps
-        for source_id in _gap_source_ids(gap)
-        if state.catalog_source(vault, source_id)
+        for work_id in _gap_work_ids(gap)
+        if state.catalog_source(vault, work_id)
     }
-    edges_by_source = _candidate_edges(vault, source_ids)
+    edges_by_source = _candidate_edges(vault, work_ids)
     if not edges_by_source:
         return [], ""
     from memoria_vault.runtime.enrichment import _write_discovery_candidate
@@ -1089,14 +1089,14 @@ def _write_gap_discovery_candidates(
     steering_tokens = _steering_tokens(vault)
     relevance_by_path: dict[str, dict[str, Any]] = {}
     new_paths = []
-    for source_id in sorted(edges_by_source):
-        source = state.catalog_source(vault, source_id)
+    for work_id in sorted(edges_by_source):
+        source = state.catalog_source(vault, work_id)
         if source is None:
             continue
-        for edge in edges_by_source[source_id]:
+        for edge in edges_by_source[work_id]:
             if _edge_is_captured(edge, captured):
                 continue
-            rel = _discovery_candidate_rel(source_id, edge)
+            rel = _discovery_candidate_rel(work_id, edge)
             existed = (vault / rel).exists()
             path = _write_discovery_candidate(
                 vault,
@@ -1340,13 +1340,13 @@ def _tag_term_forms(term: str) -> set[str]:
     return {text, text.replace("-", " ")}
 
 
-def _candidate_edges(vault: Path, source_ids: Iterable[str]) -> dict[str, list[dict[str, Any]]]:
-    ids = sorted(set(source_ids))
+def _candidate_edges(vault: Path, work_ids: Iterable[str]) -> dict[str, list[dict[str, Any]]]:
+    ids = sorted(set(work_ids))
     if not ids or not state.db_path(vault).is_file():
         return {}
     rows = []
     with state.connect(vault) as conn:
-        for source_id in ids:
+        for work_id in ids:
             rows.extend(
                 conn.execute(
                     """
@@ -1357,7 +1357,7 @@ def _candidate_edges(vault: Path, source_ids: Iterable[str]) -> dict[str, list[d
                       AND relation_type IN ('references', 'related')
                     ORDER BY work_id, relation_type, target_id
                     """,
-                    (source_id,),
+                    (work_id,),
                 ).fetchall()
             )
     edges: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -1371,7 +1371,7 @@ def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[
         candidates,
         key=lambda row: (
             str(row["relation_type"]) != "references",
-            str(row["source_id"]),
+            str(row["work_id"]),
             str(row["candidate_work_id"]),
         ),
     )
@@ -1379,13 +1379,13 @@ def _coverage_round_robin(candidates: list[dict[str, Any]], limit: int) -> list[
     used_sources: set[str] = set()
     while remaining and len(selected) < limit:
         index = next(
-            (idx for idx, row in enumerate(remaining) if str(row["source_id"]) not in used_sources),
+            (idx for idx, row in enumerate(remaining) if str(row["work_id"]) not in used_sources),
             0,
         )
         row = remaining.pop(index)
         selected.append(row)
-        used_sources.add(str(row["source_id"]))
-        if len(used_sources) >= len({str(item["source_id"]) for item in remaining}):
+        used_sources.add(str(row["work_id"]))
+        if len(used_sources) >= len({str(item["work_id"]) for item in remaining}):
             used_sources.clear()
     return selected
 
@@ -1447,21 +1447,21 @@ def _nli_contrary_channel_items(vault: Path, *, limit: int) -> list[dict[str, st
     return rows[:limit]
 
 
-def _gap_source_ids(gap: dict[str, Any]) -> list[str]:
+def _gap_work_ids(gap: dict[str, Any]) -> list[str]:
     ids = []
-    if isinstance(gap.get("source_id"), str):
-        ids.append(str(gap["source_id"]))
-    source_ids = gap.get("source_ids")
-    if isinstance(source_ids, list):
-        ids.extend(str(source_id) for source_id in source_ids if str(source_id).strip())
+    if isinstance(gap.get("work_id"), str):
+        ids.append(str(gap["work_id"]))
+    work_ids = gap.get("work_ids")
+    if isinstance(work_ids, list):
+        ids.extend(str(work_id) for work_id in work_ids if str(work_id).strip())
     for source in gap.get("retrieval_sources") or []:
-        source_id = _source_id_from_path(str(source.get("path") or ""))
-        if source_id:
-            ids.append(source_id)
+        work_id = _work_id_from_path(str(source.get("path") or ""))
+        if work_id:
+            ids.append(work_id)
     return sorted(set(ids))
 
 
-def _source_ids_from_seen(identities: set[str]) -> list[str]:
+def _work_ids_from_seen(identities: set[str]) -> list[str]:
     return sorted(
         identity.removeprefix("sources:")
         for identity in identities
@@ -1474,9 +1474,9 @@ def _candidate_paths_for_gap(
     edges_by_source: dict[str, list[dict[str, Any]]],
 ) -> list[str]:
     return [
-        _discovery_candidate_rel(source_id, edge)
-        for source_id in _gap_source_ids(gap)
-        for edge in edges_by_source.get(source_id, [])
+        _discovery_candidate_rel(work_id, edge)
+        for work_id in _gap_work_ids(gap)
+        for edge in edges_by_source.get(work_id, [])
     ]
 
 
@@ -1484,21 +1484,21 @@ def _citation_neighborhood_gaps(vault: Path) -> list[dict[str, Any]]:
     sources = [
         source for source in state.catalog_sources(vault) if _is_current_catalog_source(source)
     ]
-    source_ids = [str(source["source_id"]) for source in sources]
-    edges_by_source = _candidate_edges(vault, source_ids)
+    work_ids = [str(source["work_id"]) for source in sources]
+    edges_by_source = _candidate_edges(vault, work_ids)
     if not edges_by_source:
         return []
     captured = _captured_work_ids(vault)
-    source_by_id = {str(source["source_id"]): source for source in sources}
+    source_by_id = {str(source["work_id"]): source for source in sources}
     gaps = []
-    for source_id in sorted(edges_by_source):
-        source = source_by_id.get(source_id)
+    for work_id in sorted(edges_by_source):
+        source = source_by_id.get(work_id)
         if source is None:
             continue
         candidate_ids = sorted(
             {
                 str(edge["target_id"])
-                for edge in edges_by_source[source_id]
+                for edge in edges_by_source[work_id]
                 if not _edge_is_captured(edge, captured)
             }
         )
@@ -1514,13 +1514,13 @@ def _citation_neighborhood_gaps(vault: Path) -> list[dict[str, Any]]:
                     "digest_count": 0,
                     "note_count": 0,
                     "proposed_seed": seed,
-                    "source_id": source_id,
-                    "source_ids": [source_id],
+                    "work_id": work_id,
+                    "work_ids": [work_id],
                 },
                 kind="citation-neighborhood",
-                target=f"catalog/sources/{source_id}",
+                target=f"catalog/sources/{work_id}",
                 why=(
-                    f"`catalog/sources/{source_id}` has {count} uncaptured "
+                    f"`catalog/sources/{work_id}` has {count} uncaptured "
                     "references or related Works in provider metadata."
                 ),
                 next_actions=[seed],
@@ -1536,7 +1536,7 @@ def _citation_neighborhood_gaps(vault: Path) -> list[dict[str, Any]]:
 def _captured_work_ids(vault: Path) -> set[str]:
     captured = set()
     for source in state.catalog_sources(vault):
-        captured.add(str(source["source_id"]).casefold())
+        captured.add(str(source["work_id"]).casefold())
         if source.get("doi"):
             captured.add(str(source["doi"]).casefold())
         identifiers = source.get("identifiers") or {}
@@ -1553,10 +1553,10 @@ def _edge_is_captured(edge: dict[str, Any], captured: set[str]) -> bool:
     )
 
 
-def _discovery_candidate_rel(source_id: str, edge: dict[str, Any]) -> str:
+def _discovery_candidate_rel(work_id: str, edge: dict[str, Any]) -> str:
     return normalize_path(
         "inbox/candidate-work-"
-        f"{safe_filename(source_id)}-"
+        f"{safe_filename(work_id)}-"
         f"{safe_filename(str(edge['relation_type']))}-"
         f"{safe_filename(str(edge['target_id']))}.md"
     )
@@ -1564,27 +1564,27 @@ def _discovery_candidate_rel(source_id: str, edge: dict[str, Any]) -> str:
 
 def _retrieval_bucket(source: dict[str, Any]) -> str:
     path = str(source.get("path") or "")
-    source_type = source.get("type")
+    item_type = source.get("type")
     if path.startswith(("graph-neighborhoods/", "catalog/sources/")) or (
         path.startswith("works/") and path.endswith("/fulltext.md")
     ):
         return "sources"
-    if path.startswith("works/") or source_type in {"work", "digest"}:
+    if path.startswith("works/") or item_type in {"work", "digest"}:
         return "digests"
-    if path.startswith("notes/") or source_type == "note":
+    if path.startswith("notes/") or item_type == "note":
         return "notes"
     return ""
 
 
 def _gap_identity(path: str, bucket: str) -> str:
     if bucket == "sources":
-        source_id = _source_id_from_path(path)
-        if source_id:
-            return f"sources:{source_id}"
+        work_id = _work_id_from_path(path)
+        if work_id:
+            return f"sources:{work_id}"
     return f"{bucket}:{path}"
 
 
-def _source_id_from_path(path: str) -> str:
+def _work_id_from_path(path: str) -> str:
     rel = normalize_path(path)
     if rel.startswith("works/") and rel.endswith(".md"):
         parts = rel.split("/")
@@ -2120,7 +2120,7 @@ def promote_draft_passage(
     *,
     title: str,
     passage: str,
-    source_id: str = "",
+    work_id: str = "",
     commit: bool = False,
     machine: str | None = None,
 ) -> dict[str, Any]:
@@ -2141,7 +2141,7 @@ def promote_draft_passage(
     if not note_title:
         raise ValueError("draft note title is required")
     note_rel = _unique_note_rel(vault, note_title)
-    note_source = _draft_source_id(source_id)
+    note_source = _draft_work_id(work_id)
     frontmatter: dict[str, Any] = {
         "type": "note",
         "title": note_title,
@@ -2149,7 +2149,7 @@ def promote_draft_passage(
         "links": {},
     }
     if note_source:
-        frontmatter["source_id"] = f"catalog/sources/{note_source}"
+        frontmatter["work_id"] = f"catalog/sources/{note_source}"
     apply_universal_concept_frontmatter(frontmatter, note_rel)
     content = frontmatter_doc(frontmatter, selected + "\n")
     run_id = f"draft-writeback:{draft_rel}:{Path(note_rel).stem}"
@@ -2178,7 +2178,7 @@ def promote_draft_passage(
             "run_id": run_id,
             "draft_path": draft_rel,
             "output_id": note_rel,
-            "source_id": frontmatter.get("source_id", ""),
+            "work_id": frontmatter.get("work_id", ""),
         },
         machine=machine,
     )
@@ -2195,7 +2195,7 @@ def promote_draft_passage(
         "draft_path": draft_rel,
         "note_path": note_rel,
         "check_status": state.concept_check_status(vault, note_rel),
-        "source_id": frontmatter.get("source_id", ""),
+        "work_id": frontmatter.get("work_id", ""),
         "stage": stage,
         "materialized": materialized,
         "event": event,
@@ -2971,36 +2971,35 @@ def _existing_evidence_ids(vault: Path, extractor: Any) -> set[str]:
 
 def _draft_evidence_items(vault: Path, frontmatter: dict[str, Any]) -> list[str]:
     items = []
-    for source_id in _draft_source_ids(frontmatter):
-        if state.catalog_source(vault, source_id):
-            items.append(f"{source_id}#^p0001")
+    for work_id in _draft_work_ids(frontmatter):
+        if state.catalog_source(vault, work_id):
+            items.append(f"{work_id}#^p0001")
     return sorted(set(items))
 
 
-def _draft_source_ids(frontmatter: dict[str, Any]) -> Iterable[str]:
-    for field in ("work_id", "source_id"):
-        value = frontmatter.get(field)
-        if isinstance(value, str):
-            source_id = _draft_source_id(value)
-            if source_id:
-                yield source_id
+def _draft_work_ids(frontmatter: dict[str, Any]) -> Iterable[str]:
+    value = frontmatter.get("work_id")
+    if isinstance(value, str):
+        work_id = _draft_work_id(value)
+        if work_id:
+            yield work_id
     evidence_set = frontmatter.get("evidence_set")
     values = evidence_set if isinstance(evidence_set, list) else [evidence_set]
     for value in values:
         if isinstance(value, str):
-            source_id = _draft_source_id(value)
-            if source_id:
-                yield source_id
+            work_id = _draft_work_id(value)
+            if work_id:
+                yield work_id
 
 
-def _draft_source_id(value: str) -> str:
+def _draft_work_id(value: str) -> str:
     text = value.strip().split("#", 1)[0].rstrip("/")
     if not text:
         return ""
     if text.startswith("catalog/sources/"):
         return text.rsplit("/", 1)[-1]
     if text.startswith(("works/", "graph-neighborhoods/")):
-        return _source_id_from_path(text)
+        return _work_id_from_path(text)
     if "/" not in text:
         return text
     return ""
@@ -3036,7 +3035,7 @@ def _disposed_evidence_ids(vault: Path) -> set[str]:
         rows = conn.execute(
             """
             SELECT json_extract(payload_json, '$.evidence_id') AS evidence_id
-            FROM journal_events
+            FROM event_log
             WHERE json_extract(payload_json, '$.operation') = 'resolve-evidence-review'
               AND json_extract(payload_json, '$.decision') IN ('accept', 'reject')
             """

@@ -146,7 +146,7 @@ def test_rebuild_checked_search_index_includes_checked_work_text_and_graph(
     content.write_text("full text rarealpha retrieval token", encoding="utf-8")
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Work",
         doi="10.1000/alpha",
         identifiers={"doi": "10.1000/alpha"},

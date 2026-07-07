@@ -29,10 +29,10 @@ def workspace(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def add_catalog_work(vault: Path, source_id: str = "db-source") -> str:
+def add_catalog_work(vault: Path, work_id: str = "db-source") -> str:
     state.upsert_catalog_record(
         vault,
-        source_id=source_id,
+        work_id=work_id,
         title="DB Source",
         description="A SQLite-only checked source.",
         citekey="db2026",
@@ -48,7 +48,7 @@ def add_catalog_work(vault: Path, source_id: str = "db-source") -> str:
         text_status="full-text",
         check_status="checked",
     )
-    return f"catalog/sources/{source_id}"
+    return f"catalog/sources/{work_id}"
 
 
 def test_shipped_workspace_indexes_are_current() -> None:
@@ -148,7 +148,7 @@ def test_references_bib_ignores_removed_source_markdown_without_catalog_row(
         "type: source\n"
         "check_status: checked\n"
         "title: Removed Source\n"
-        "source_id: removed\n"
+        "work_id: removed\n"
         "citekey: removed2026\n"
         "csl_json:\n"
         "  id: removed2026\n"

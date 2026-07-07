@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS operation_requests (
 CREATE INDEX IF NOT EXISTS idx_operation_requests_status
     ON operation_requests(status, created_at);
 
-CREATE TABLE IF NOT EXISTS journal_events (
+CREATE TABLE IF NOT EXISTS event_log (
     event_id INTEGER PRIMARY KEY,
     timestamp TEXT NOT NULL,
     event_type TEXT NOT NULL,
@@ -33,13 +33,13 @@ CREATE TABLE IF NOT EXISTS journal_events (
     prev_hash TEXT NOT NULL,
     row_hash TEXT NOT NULL UNIQUE
 );
-CREATE TRIGGER IF NOT EXISTS journal_events_no_update
-BEFORE UPDATE ON journal_events
+CREATE TRIGGER IF NOT EXISTS event_log_no_update
+BEFORE UPDATE ON event_log
 BEGIN
     SELECT RAISE(ABORT, 'journal is append-only');
 END;
-CREATE TRIGGER IF NOT EXISTS journal_events_no_delete
-BEFORE DELETE ON journal_events
+CREATE TRIGGER IF NOT EXISTS event_log_no_delete
+BEFORE DELETE ON event_log
 BEGIN
     SELECT RAISE(ABORT, 'journal is append-only');
 END;
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS materialization_payloads (
     payload_text TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS catalog_sources (
-    source_id TEXT PRIMARY KEY,
+    work_id TEXT PRIMARY KEY,
     concept_path TEXT NOT NULL,
     doi TEXT UNIQUE,
     title TEXT NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS external_ids (
 );
 CREATE TABLE IF NOT EXISTS enrichment_runs (
     run_id TEXT PRIMARY KEY,
-    source_id TEXT NOT NULL,
+    work_id TEXT NOT NULL,
     enrichment_status TEXT NOT NULL
         CHECK (
             enrichment_status IN (
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS enrichment_runs (
     started_at TEXT NOT NULL,
     finished_at TEXT,
     request_id TEXT NOT NULL DEFAULT '',
-    journal_id TEXT NOT NULL DEFAULT ''
+    event_id TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS provider_payloads (
     payload_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS provider_payloads (
     UNIQUE(run_id, provider, request_key, request_params_hash)
 );
 CREATE TABLE IF NOT EXISTS field_provenance (
-    source_id TEXT NOT NULL,
+    work_id TEXT NOT NULL,
     field_path TEXT NOT NULL,
     value_hash TEXT NOT NULL,
     winning_provider TEXT NOT NULL,
@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS field_provenance (
     alternatives_json TEXT NOT NULL DEFAULT '[]',
     confidence TEXT NOT NULL DEFAULT 'high',
     conflict_status TEXT NOT NULL DEFAULT 'none',
-    PRIMARY KEY (source_id, field_path)
+    PRIMARY KEY (work_id, field_path)
 );
 CREATE TABLE IF NOT EXISTS work_graph_edges (
     work_id TEXT NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS work_graph_edges (
     PRIMARY KEY (work_id, relation_type, target_id)
 );
 CREATE TABLE IF NOT EXISTS work_aspects (
-    source_id TEXT NOT NULL,
+    work_id TEXT NOT NULL,
     aspect_type TEXT NOT NULL CHECK (
         aspect_type IN ('context', 'key_idea', 'method', 'outcome', 'limitation', 'assumption')
     ),
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS work_aspects (
     check_status TEXT NOT NULL CHECK (check_status IN ('unchecked', 'checked', 'quarantined')),
     source_provider TEXT NOT NULL DEFAULT 'deterministic',
     updated_at TEXT NOT NULL,
-    PRIMARY KEY (source_id, aspect_type)
+    PRIMARY KEY (work_id, aspect_type)
 );
 CREATE TABLE IF NOT EXISTS evidence_sets (
     id TEXT PRIMARY KEY,

@@ -84,7 +84,7 @@ def _seed_checkpoint_workspace(vault: Path, required_operations: set[str]) -> No
     vault.mkdir(parents=True, exist_ok=True)
     state.upsert_catalog_record(
         vault,
-        source_id="work-alpha",
+        work_id="work-alpha",
         title="Work Alpha",
         description="Fixture work.",
         check_status="checked",

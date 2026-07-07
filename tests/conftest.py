@@ -30,6 +30,7 @@ TEST_LEVELS = {
     "test_alpha17_slice_outline.py": "runtime",
     "test_alpha17_verification.py": "runtime",
     "test_alpha17_writeback.py": "runtime",
+    "test_alpha18_renames.py": "contract",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",
     "test_capture.py": "contract",

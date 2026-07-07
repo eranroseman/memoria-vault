@@ -31,7 +31,7 @@ def test_generated_note_provenance_fields_pass(tmp_path):
         "links: {}\n"
         "title: T\n"
         "topics: [personal-informatics]\n"
-        "source_id: catalog/sources/source-alpha\n"
+        "work_id: catalog/sources/source-alpha\n"
         "evidence_set:\n"
         "  - catalog/sources/source-alpha\n"
         "extraction_confidence: medium\n"
@@ -40,7 +40,7 @@ def test_generated_note_provenance_fields_pass(tmp_path):
         "annotation_ref:\n"
         "  selector: paragraph-1\n"
         "citations:\n"
-        "  - source_id: catalog/sources/source-alpha\n"
+        "  - work_id: catalog/sources/source-alpha\n"
         "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",
@@ -64,7 +64,7 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
         "evidence_set:\n"
         "  - catalog/sources/source-alpha\n"
         "citations:\n"
-        "  - source_id: catalog/sources/source-alpha\n"
+        "  - work_id: catalog/sources/source-alpha\n"
         "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",
@@ -79,7 +79,7 @@ def test_generated_work_and_hub_provenance_fields_pass(tmp_path):
         "links: {}\n"
         "tag: topic\n"
         "citations:\n"
-        "  - source_id: catalog/sources/source-alpha\n"
+        "  - work_id: catalog/sources/source-alpha\n"
         "    citekey: alpha2026\n"
         "---\n"
         "Body.\n",

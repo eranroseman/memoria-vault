@@ -69,7 +69,7 @@ def test_bm25_verdict_matches_rebuild_manifest(tmp_path: Path) -> None:
 def test_exploration_channel_keeps_relevance_substrate_independent(tmp_path: Path) -> None:
     state.upsert_catalog_record(
         tmp_path,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha",
         check_status="checked",
     )

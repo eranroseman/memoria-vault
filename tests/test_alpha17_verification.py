@@ -18,7 +18,7 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -29,7 +29,7 @@ def test_verified_source_backed_draft_exports_without_internal_markers(tmp_path:
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nsource_id: catalog/sources/source-alpha\n",
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
         "note",
         body="This source-backed claim can be exported.",
     )
@@ -75,7 +75,7 @@ def test_draft_verification_flags_broken_structural_reference(tmp_path: Path) ->
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -86,7 +86,7 @@ def test_draft_verification_flags_broken_structural_reference(tmp_path: Path) ->
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nsource_id: catalog/sources/source-alpha\n",
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
         "note",
         body="This source-backed claim has a structural reference.",
     )
@@ -119,7 +119,7 @@ def test_draft_verification_flags_deterministic_number_mismatch(tmp_path: Path) 
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -130,7 +130,7 @@ def test_draft_verification_flags_deterministic_number_mismatch(tmp_path: Path) 
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nsource_id: catalog/sources/source-alpha\n",
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
         "note",
         body="This source-backed claim has a deterministic slice count.",
     )
@@ -165,7 +165,7 @@ def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
     vault = tmp_path
     state.upsert_catalog_record(
         vault,
-        source_id="source-alpha",
+        work_id="source-alpha",
         title="Alpha Source",
         check_status="checked",
         content_path=".memoria/blobs/source-content/source-alpha.md",
@@ -176,7 +176,7 @@ def test_draft_verification_routes_analysis_code_numbers_to_incomplete(
         vault,
         "notes/support.md",
         "type: note\ncheck_status: checked\ntitle: Support\n"
-        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nsource_id: catalog/sources/source-alpha\n",
+        "id: 01ARZ3NDEKTSV4RRFFQ69G5FA2\nwork_id: catalog/sources/source-alpha\n",
         "note",
         body="This source-backed claim is clean until analysis code is cited.",
     )
@@ -232,7 +232,7 @@ def _outline(vault: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _source_span(vault: Path, source_id: str) -> None:
-    path = vault / f".memoria/blobs/source-content/{source_id}.md"
+def _source_span(vault: Path, work_id: str) -> None:
+    path = vault / f".memoria/blobs/source-content/{work_id}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"{source_id} source span. ^p0001\n", encoding="utf-8")
+    path.write_text(f"{work_id} source span. ^p0001\n", encoding="utf-8")

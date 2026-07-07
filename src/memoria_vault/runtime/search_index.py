@@ -147,10 +147,10 @@ def is_checked_concept(vault: Path, relpath: str) -> bool:
 def _is_checked_generated_work_document(vault: Path, rel: str) -> bool:
     if not rel.startswith(("works/", "graph-neighborhoods/")):
         return False
-    source_id = _source_id_from_generated_path(rel)
-    if not source_id:
+    work_id = _work_id_from_generated_path(rel)
+    if not work_id:
         return False
-    source = state.catalog_source(vault, source_id)
+    source = state.catalog_source(vault, work_id)
     return bool(source and source.get("check_status") == "checked")
 
 
@@ -423,7 +423,7 @@ def _bundle_roots(vault: Path) -> list[str]:
 def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
     docs = []
     for source in state.catalog_sources(vault):
-        source_id = str(source["source_id"])
+        work_id = str(source["work_id"])
         if source.get("text_status") != "full-text":
             continue
         content_path = Path(vault) / normalize_path(str(source.get("content_path") or ""))
@@ -432,13 +432,13 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
         work_frontmatter = {
             "type": "work",
             "title": source["title"],
-            "work_id": source_id,
+            "work_id": work_id,
             "tags": [],
             "links": {},
         }
         docs.append(
             _generated_doc(
-                f"works/{safe_filename(source_id)}/fulltext.md",
+                f"works/{safe_filename(work_id)}/fulltext.md",
                 work_frontmatter,
                 [
                     f"# {source['title']}",
@@ -447,29 +447,29 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
                     "",
                     "```json",
                     json.dumps(
-                        state.compact_citation(vault, source_id),
+                        state.compact_citation(vault, work_id),
                         ensure_ascii=False,
                         sort_keys=True,
                         indent=2,
                     ),
                     "```",
                     "",
-                    *_work_aspect_body(vault, source_id),
+                    *_work_aspect_body(vault, work_id),
                     "## Full Text",
                     "",
                     safe_read(content_path),
                 ],
             )
         )
-        edges = _work_graph_edges(vault, source_id)
+        edges = _work_graph_edges(vault, work_id)
         if edges:
             docs.append(
                 _generated_doc(
-                    f"graph-neighborhoods/{safe_filename(source_id)}.md",
+                    f"graph-neighborhoods/{safe_filename(work_id)}.md",
                     {
                         "type": "graph-neighborhood",
                         "title": f"Graph neighborhood: {source['title']}",
-                        "source_id": source_id,
+                        "work_id": work_id,
                     },
                     _graph_neighborhood_body(source, edges),
                 )
@@ -477,7 +477,7 @@ def _checked_work_documents(vault: Path) -> list[dict[str, Any]]:
     return docs
 
 
-def _source_id_from_generated_path(rel: str) -> str:
+def _work_id_from_generated_path(rel: str) -> str:
     rel = normalize_path(rel)
     if rel.startswith("graph-neighborhoods/") and rel.endswith(".md"):
         return Path(rel).stem
@@ -490,8 +490,8 @@ def _source_id_from_generated_path(rel: str) -> str:
     return ""
 
 
-def _work_aspect_body(vault: Path, source_id: str) -> list[str]:
-    aspects = state.work_aspects(vault, source_id)
+def _work_aspect_body(vault: Path, work_id: str) -> list[str]:
+    aspects = state.work_aspects(vault, work_id)
     if not aspects:
         return []
     lines = ["## Work Aspects", ""]

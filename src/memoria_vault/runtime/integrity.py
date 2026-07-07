@@ -219,7 +219,7 @@ def check_prompt_injection_markers(
             findings.append(
                 record_integrity_check(
                     vault,
-                    f"catalog/sources/{row['source_id']}",
+                    f"catalog/sources/{row['work_id']}",
                     check="prompt-injection",
                     status="failed",
                     reason=f"prompt-injection marker: {marker}",
@@ -305,7 +305,7 @@ def check_source_metadata(
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
     for row in state.catalog_sources(vault, checked_only=False):
-        target_id = f"catalog/sources/{row['source_id']}"
+        target_id = f"catalog/sources/{row['work_id']}"
         if state.concept_check_status(vault, target_id) != "checked":
             continue
         frontmatter = _source_row_frontmatter(row)
@@ -414,12 +414,12 @@ def _duplicate_source_external_id_findings(
     machine: str | None,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    for namespace, value, source_ids in _duplicate_source_external_id_groups(vault):
-        for source_id in source_ids:
-            target_id = f"catalog/sources/{source_id}"
+    for namespace, value, work_ids in _duplicate_source_external_id_groups(vault):
+        for work_id in work_ids:
+            target_id = f"catalog/sources/{work_id}"
             if state.concept_check_status(vault, target_id) != "checked":
                 continue
-            others = [f"catalog/sources/{other}" for other in source_ids if other != source_id]
+            others = [f"catalog/sources/{other}" for other in work_ids if other != work_id]
             if not others:
                 continue
             findings.append(
@@ -447,7 +447,7 @@ def _duplicate_source_external_id_groups(vault: Path) -> list[tuple[str, str, li
             """
             SELECT e.namespace, e.value, e.owner_id
             FROM external_ids e
-            JOIN catalog_sources s ON s.source_id = e.owner_id
+            JOIN catalog_sources s ON s.work_id = e.owner_id
             WHERE e.owner_type = 'source'
             ORDER BY e.namespace, e.value, e.owner_id
             """
@@ -461,9 +461,9 @@ def _duplicate_source_external_id_groups(vault: Path) -> list[tuple[str, str, li
             continue
         groups.setdefault((namespace, value), set()).add(owner_id)
     return [
-        (namespace, value, sorted(source_ids))
-        for (namespace, value), source_ids in sorted(groups.items())
-        if len(source_ids) > 1
+        (namespace, value, sorted(work_ids))
+        for (namespace, value), work_ids in sorted(groups.items())
+        if len(work_ids) > 1
     ]
 
 
@@ -474,12 +474,12 @@ def _duplicate_source_string_block_findings(
     machine: str | None,
 ) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    for source_ids in _duplicate_source_string_block_groups(vault):
-        for source_id in source_ids:
-            target_id = f"catalog/sources/{source_id}"
+    for work_ids in _duplicate_source_string_block_groups(vault):
+        for work_id in work_ids:
+            target_id = f"catalog/sources/{work_id}"
             if state.concept_check_status(vault, target_id) != "checked":
                 continue
-            others = [f"catalog/sources/{other}" for other in source_ids if other != source_id]
+            others = [f"catalog/sources/{other}" for other in work_ids if other != work_id]
             if not others:
                 continue
             findings.append(
@@ -502,18 +502,16 @@ def _duplicate_source_string_block_findings(
 def _duplicate_source_string_block_groups(vault: Path) -> list[list[str]]:
     groups: dict[tuple[str, str, str], set[str]] = {}
     for row in state.catalog_sources(vault, checked_only=False):
-        source_id = str(row.get("source_id") or "").strip()
-        if not source_id:
+        work_id = str(row.get("work_id") or "").strip()
+        if not work_id:
             continue
-        if state.concept_check_status(vault, f"catalog/sources/{source_id}") != "checked":
+        if state.concept_check_status(vault, f"catalog/sources/{work_id}") != "checked":
             continue
         frontmatter = _source_row_frontmatter(row)
         key = _source_string_block_key(frontmatter)
         if key:
-            groups.setdefault(key, set()).add(source_id)
-    return [
-        sorted(source_ids) for _key, source_ids in sorted(groups.items()) if len(source_ids) > 1
-    ]
+            groups.setdefault(key, set()).add(work_id)
+    return [sorted(work_ids) for _key, work_ids in sorted(groups.items()) if len(work_ids) > 1]
 
 
 def _source_string_block_key(frontmatter: dict[str, Any]) -> tuple[str, str, str] | None:
@@ -682,7 +680,7 @@ def _duplicate_entity_name_block_groups(vault: Path) -> list[tuple[str, str, lis
             """
             SELECT e.relation_type, e.target_id, e.target_title
             FROM work_graph_edges e
-            JOIN catalog_sources s ON s.source_id = e.work_id
+            JOIN catalog_sources s ON s.work_id = e.work_id
             WHERE s.check_status = 'checked'
               AND e.relation_type IN ('authorship', 'institution', 'source')
             ORDER BY e.relation_type, e.target_title, e.target_id
@@ -1472,11 +1470,11 @@ def _quarantine_catalog_source(
     row = state.catalog_source(vault, source_ref)
     if row is None:
         return "", ""
-    source_id = str(row["source_id"])
+    work_id = str(row["work_id"])
     with state.connect(vault) as conn:
         conn.execute(
-            "UPDATE catalog_sources SET check_status = 'quarantined' WHERE source_id = ?",
-            (source_id,),
+            "UPDATE catalog_sources SET check_status = 'quarantined' WHERE work_id = ?",
+            (work_id,),
         )
         conn.execute(
             """
@@ -1537,10 +1535,10 @@ def _trace_aliases(vault: Path, target: str) -> set[str]:
     row = state.catalog_source(vault, target)
     if row is None:
         return aliases
-    source_id = str(row.get("source_id") or "").strip()
+    work_id = str(row.get("work_id") or "").strip()
     concept_path = str(row.get("concept_path") or "").strip()
-    if source_id:
-        aliases.add(f"catalog/sources/{source_id}")
+    if work_id:
+        aliases.add(f"catalog/sources/{work_id}")
     if concept_path:
         aliases.add(normalize_path(concept_path))
     return aliases
@@ -1571,7 +1569,7 @@ def _checked_tension_rows(vault: Path) -> list[dict[str, str]]:
         rows.append(
             {
                 "id": rel,
-                "canonical_id": str(frontmatter.get("id") or frontmatter.get("source_id") or rel),
+                "canonical_id": str(frontmatter.get("id") or frontmatter.get("work_id") or rel),
                 "title": title,
                 "text": text,
             }
@@ -1857,9 +1855,9 @@ def _stem_claim_term(term: str) -> str:
 
 def _evidence_refs(frontmatter: dict[str, Any]) -> list[str]:
     refs = set()
-    source_id = frontmatter.get("source_id")
-    if isinstance(source_id, str) and source_id.strip():
-        refs.add(_source_rel(source_id))
+    work_id = frontmatter.get("work_id")
+    if isinstance(work_id, str) and work_id.strip():
+        refs.add(_source_rel(work_id))
     evidence_set = frontmatter.get("evidence_set")
     if isinstance(evidence_set, list):
         for item in evidence_set:
@@ -1948,7 +1946,7 @@ def _frontmatter_status(frontmatter: dict[str, Any]) -> dict[str, str]:
 
 
 def _source_row_status(vault: Path, row: dict[str, Any]) -> dict[str, str]:
-    source_ref = f"catalog/sources/{row.get('source_id') or ''}"
+    source_ref = f"catalog/sources/{row.get('work_id') or ''}"
     if state.concept_check_status(vault, source_ref) != "checked":
         return {"status": "unchecked"}
     flags = state.concept_flags(vault, source_ref)
@@ -2015,7 +2013,7 @@ def _source_row_frontmatter(row: dict[str, Any]) -> dict[str, Any]:
         "check_status": row.get("check_status") or "",
         "title": row.get("title") or "",
         "description": row.get("description") or "",
-        "source_id": f"catalog/sources/{row.get('source_id') or ''}",
+        "work_id": f"catalog/sources/{row.get('work_id') or ''}",
         "citekey": row.get("citekey") or "",
         "provider_coverage": row.get("provider_coverage") or "",
         "text_status": row.get("text_status") or "",
@@ -2045,12 +2043,12 @@ def _source_ref(value: str) -> str:
     prefix = "catalog/sources/"
     if not rel.startswith(prefix):
         return ""
-    source_id = rel.removeprefix(prefix)
-    if source_id.endswith("/source.md"):
-        source_id = source_id.removesuffix("/source.md")
-    if not source_id or "/" in source_id:
+    work_id = rel.removeprefix(prefix)
+    if work_id.endswith("/source.md"):
+        work_id = work_id.removesuffix("/source.md")
+    if not work_id or "/" in work_id:
         return ""
-    return f"{prefix}{source_id}"
+    return f"{prefix}{work_id}"
 
 
 def _source_metadata_issues(frontmatter: dict[str, Any]) -> list[str]:

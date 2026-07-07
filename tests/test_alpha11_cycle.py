@@ -107,13 +107,13 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         },
         key="capture-source",
     )
-    source_id = capture["source_id"]
-    source_ref = f"catalog/sources/{source_id}"
-    assert source_id == "doi-10.1000_cycle.2026"
+    work_id = capture["work_id"]
+    source_ref = f"catalog/sources/{work_id}"
+    assert work_id == "doi-10.1000_cycle.2026"
     assert capture["check_status"] == "unchecked"
     assert capture["enrichment_job"]["operation_id"] == "enrich-source"
     assert not (vault / source_ref).exists()
-    source = state.catalog_source(vault, source_id)
+    source = state.catalog_source(vault, work_id)
     assert source is not None
     assert source["check_status"] == "unchecked"
     assert source["citekey"] == "cycle2026"
@@ -127,7 +127,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
     )
     state.upsert_catalog_record(
         vault,
-        source_id=source["source_id"],
+        work_id=source["work_id"],
         concept_path=source["concept_path"],
         doi=source["identifiers"]["doi"],
         title=source["title"],
@@ -149,7 +149,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         vault,
         "record-copi-interview",
         {
-            "source_id": "doi-10.1000_cycle.2026",
+            "work_id": "doi-10.1000_cycle.2026",
             "response": "The PI cares about recall evidence for the thesis.",
             "project_id": "projects/project-alpha/project.md",
         },
@@ -159,7 +159,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
         vault,
         "compile-source-digest",
         {
-            "source_id": "doi-10.1000_cycle.2026",
+            "work_id": "doi-10.1000_cycle.2026",
             "hub_topics": [
                 "Memory Consolidation",
                 "Sleep Methods",
@@ -244,7 +244,7 @@ def test_basic_knowledge_cycle_runs_through_worker_queue(tmp_path: Path) -> None
 
     manifest = run_operation(vault, "rebuild-checked-search-index", key="rebuild-search")
     indexed_paths = {row["path"] for row in manifest["documents"]}
-    assert f"works/{source_id}/fulltext.md" in indexed_paths
+    assert f"works/{work_id}/fulltext.md" in indexed_paths
     assert digest["digest_path"] in indexed_paths
     assert note_path in indexed_paths
 

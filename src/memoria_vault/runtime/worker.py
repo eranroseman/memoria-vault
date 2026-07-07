@@ -380,17 +380,17 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "compile-source-digest":
         from memoria_vault.runtime.operations import compile_source_digest
 
-        source_id = str(payload.get("source_id") or "").strip()
+        work_id = str(payload.get("work_id") or "").strip()
         hub_topics = payload.get("hub_topics")
-        if not source_id:
-            raise ValueError("compile-source-digest requires source_id")
+        if not work_id:
+            raise ValueError("compile-source-digest requires work_id")
         if not isinstance(hub_topics, list) or not all(
             isinstance(topic, str) and topic.strip() for topic in hub_topics
         ):
             raise ValueError("compile-source-digest requires hub_topics")
         result = compile_source_digest(
             vault,
-            source_id,
+            work_id,
             [topic.strip() for topic in hub_topics],
             mode=str(payload.get("mode") or "test"),
             machine=machine,
@@ -406,15 +406,15 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
     if operation_id == "record-copi-interview":
         from memoria_vault.runtime.operations import record_copi_interview_turn
 
-        source_id = str(payload.get("source_id") or "").strip()
+        work_id = str(payload.get("work_id") or "").strip()
         response = str(payload.get("response") or "").strip()
-        if not source_id:
-            raise ValueError("record-copi-interview requires source_id")
+        if not work_id:
+            raise ValueError("record-copi-interview requires work_id")
         if not response:
             raise ValueError("record-copi-interview requires response")
         result = record_copi_interview_turn(
             vault,
-            source_id,
+            work_id,
             response,
             prompt=str(payload.get("prompt") or "What matters about this source?"),
             project_id=str(payload.get("project_id") or ""),
@@ -424,7 +424,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         return {
             "commit": result["commit"],
             "turn_id": result["event"]["turn_id"],
-            "source_id": result["event"]["source_id"],
+            "work_id": result["event"]["work_id"],
         }
     if operation_id == "propose-note-candidates":
         from memoria_vault.runtime.knowledge import emit_note_candidates
@@ -697,7 +697,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             project_path,
             title=str(payload.get("title") or ""),
             passage=str(payload.get("passage") or ""),
-            source_id=str(payload.get("source_id") or ""),
+            work_id=str(payload.get("work_id") or ""),
             commit=True,
             machine=machine,
         )
@@ -707,7 +707,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             "draft_path": result["draft_path"],
             "note_path": result["note_path"],
             "check_status": result["check_status"],
-            "source_id": result["source_id"],
+            "work_id": result["work_id"],
         }
     if operation_id == "export-project":
         from memoria_vault.runtime.knowledge import write_project_export
@@ -929,12 +929,12 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             run_id=str(job["job_id"]),
         )
     if operation_id == "update-work":
-        source_id = str(payload.get("source_id") or "").strip()
-        if not source_id:
-            raise ValueError("update-work requires source_id")
-        source = state.catalog_source(vault, source_id)
+        work_id = str(payload.get("work_id") or "").strip()
+        if not work_id:
+            raise ValueError("update-work requires work_id")
+        source = state.catalog_source(vault, work_id)
         if source is None:
-            raise ValueError(f"work not found: {source_id}")
+            raise ValueError(f"work not found: {work_id}")
 
         identifiers = dict(source["identifiers"])
         csl_json = dict(source["csl_json"])
@@ -972,7 +972,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
 
         state.upsert_catalog_record(
             vault,
-            source_id=source["source_id"],
+            work_id=source["work_id"],
             concept_path=source["concept_path"],
             doi=identifiers.get("doi"),
             title=str(payload.get("title") or source["title"]),
@@ -991,11 +991,11 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             content_path=source["content_path"],
             raw_path=source["raw_path"],
         )
-        updated = state.catalog_source(vault, source["source_id"])
+        updated = state.catalog_source(vault, source["work_id"])
         updates = {
             key: value
             for key, value in payload.items()
-            if key != "source_id" and value not in (None, [], "")
+            if key != "work_id" and value not in (None, [], "")
         }
         append_jsonl(
             vault / OVERRIDE_LOG_REL,
@@ -1003,7 +1003,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
                 {
                     "timestamp": now_iso(),
                     "operation": "update-work",
-                    "source_id": source["source_id"],
+                    "work_id": source["work_id"],
                     "updates": updates,
                 }
             ],
@@ -1013,7 +1013,7 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
             {
                 "event": "work_updated",
                 "operation": "update-work",
-                "source_id": source["source_id"],
+                "work_id": source["work_id"],
                 "updates": updates,
                 "override_log": OVERRIDE_LOG_REL,
             },
@@ -1021,12 +1021,12 @@ def _run_operation_job(vault: Path, job: dict[str, Any], machine: str | None) ->
         )
         commit = commit_writer_changes(
             vault,
-            f"update work {source['source_id']}",
+            f"update work {source['work_id']}",
             [OVERRIDE_LOG_REL],
             machine=machine,
         )
         return {
-            "source_id": source["source_id"],
+            "work_id": source["work_id"],
             "work": updated,
             "override_log": OVERRIDE_LOG_REL,
             "commit": commit,
@@ -1102,7 +1102,7 @@ def _run_integrity_finding_operation(
 def _source_result(result: dict[str, Any]) -> dict[str, Any]:
     return {
         "commit": result["commit"],
-        "source_id": result["source_id"],
+        "work_id": result["work_id"],
         "content_path": result["content_path"],
         "raw_path": result["raw_path"],
         "text_status": result["text_status"],
@@ -1115,12 +1115,12 @@ def _run_capture_source_operation(
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_capture_payload
 
-    source_id = str(payload.get("source_id") or "").strip()
+    work_id = str(payload.get("work_id") or "").strip()
     title = str(payload.get("title") or "").strip()
     description = str(payload.get("description") or "").strip()
     content_text = str(payload.get("content_text") or "").strip()
-    if not source_id:
-        raise ValueError("capture-source requires source_id")
+    if not work_id:
+        raise ValueError("capture-source requires work_id")
     if not title:
         raise ValueError("capture-source requires title")
     if not description:
@@ -1139,7 +1139,7 @@ def _run_capture_source_operation(
         vault,
         {
             **payload,
-            "source_id": source_id,
+            "work_id": work_id,
             "title": title,
             "description": description,
             "content_text": content_text,
@@ -1157,15 +1157,15 @@ def _run_enrich_source_operation(
 ) -> dict[str, Any]:
     from memoria_vault.runtime.enrichment import enrich_source
 
-    source_id = str(payload.get("source_id") or "").strip()
-    if not source_id:
-        raise ValueError("enrich-source requires source_id")
+    work_id = str(payload.get("work_id") or "").strip()
+    if not work_id:
+        raise ValueError("enrich-source requires work_id")
     provider_payloads = payload.get("provider_payloads")
     if provider_payloads is not None and not isinstance(provider_payloads, dict):
         raise ValueError("enrich-source provider_payloads must be an object")
     return enrich_source(
         vault,
-        source_id,
+        work_id,
         policy=policy,
         provider_payloads=provider_payloads,
         machine=machine,
@@ -1191,11 +1191,11 @@ def _run_capture_bibtex_source_operation(
     content_text = payload.get("content_text")
     if content_text is not None and not isinstance(content_text, str):
         raise ValueError("capture-bibtex-source content_text must be a string")
-    source_id = payload.get("source_id")
+    work_id = payload.get("work_id")
     description = payload.get("description")
     run_id = payload.get("run_id")
-    if source_id is not None and not isinstance(source_id, str):
-        raise ValueError("capture-bibtex-source source_id must be a string")
+    if work_id is not None and not isinstance(work_id, str):
+        raise ValueError("capture-bibtex-source work_id must be a string")
     if description is not None and not isinstance(description, str):
         raise ValueError("capture-bibtex-source description must be a string")
     if run_id is not None and not isinstance(run_id, str):
@@ -1203,7 +1203,7 @@ def _run_capture_bibtex_source_operation(
     capture_payload = bibtex_capture_payload(
         bibtex,
         content_text=content_text,
-        source_id=source_id or None,
+        work_id=work_id or None,
         description=description or None,
     )
     if run_id:
@@ -1220,10 +1220,10 @@ def _run_capture_bibtex_source_operation(
         output["enrichment_job"] = enqueue_operation(
             vault,
             "enrich-source",
-            payload={"source_id": result["source_id"]},
-            idempotency_key=f"enrich-{result['source_id']}",
-            input_refs=[{"id": result["source_id"], "kind": "catalog_source"}],
-            primary_target=f"catalog/sources/{result['source_id']}",
+            payload={"work_id": result["work_id"]},
+            idempotency_key=f"enrich-{result['work_id']}",
+            input_refs=[{"id": result["work_id"], "kind": "catalog_source"}],
+            primary_target=f"catalog/sources/{result['work_id']}",
             causal_refs=[str(job["job_id"])],
             actor="operation",
             provenance={"surface": "worker", "command": "capture-bibtex-source"},
@@ -1261,12 +1261,12 @@ def _run_capture_pdf_source_operation(
 ) -> dict[str, Any]:
     from memoria_vault.runtime.capture import stage_pdf_source
 
-    source_id = str(payload.get("source_id") or "").strip()
+    work_id = str(payload.get("work_id") or "").strip()
     title = str(payload.get("title") or "").strip()
     description = str(payload.get("description") or "").strip()
     raw_pdf_base64 = str(payload.get("raw_pdf_base64") or "").strip()
-    if not source_id:
-        raise ValueError("capture-pdf-source requires source_id")
+    if not work_id:
+        raise ValueError("capture-pdf-source requires work_id")
     if not title:
         raise ValueError("capture-pdf-source requires title")
     if not description:
@@ -1281,7 +1281,7 @@ def _run_capture_pdf_source_operation(
         raise ValueError("capture-pdf-source csl_json must be an object")
     result = stage_pdf_source(
         vault,
-        source_id,
+        work_id,
         title,
         description,
         base64.b64decode(raw_pdf_base64),

@@ -447,7 +447,7 @@ def test_hub_threshold(tmp_path):
         _topic_note(v, f"sleep-{i}", "[Sleep]")
     state.upsert_catalog_record(
         v,
-        source_id="p1",
+        work_id="p1",
         title="P1",
         check_status="checked",
         csl_json={"memoria": {"research_area": ["sleep"]}},
