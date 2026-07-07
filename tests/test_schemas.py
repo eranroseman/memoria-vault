@@ -99,7 +99,7 @@ def test_portable_fields_declared():
         required = sc.get("required") or {}
         optional = sc.get("optional") or {}
         assert required["title"] == "str", name
-        assert required["id"] == "ulid", name
+        assert required["id"] == ("str" if name == "digest" else "ulid"), name
         assert required["tags"] == "list", name
         assert required["links"] == "links", name
         assert optional.get("archived") == "bool", name
@@ -130,7 +130,7 @@ def test_skeleton_contains_every_home_and_barrier_root():
 def test_validate_frontmatter_round_trip():
     digest = schema.load_types()["digest"]
     good = {
-        "id": "01KBN6V6KX0000000000000001",
+        "id": "source-alpha",
         "type": "digest",
         "title": "T",
         "tags": [],
@@ -139,7 +139,7 @@ def test_validate_frontmatter_round_trip():
     }
     assert schema.validate_frontmatter(good, digest) == []
     assert any("work_id" in e for e in schema.validate_frontmatter({"type": "digest"}, digest))
-    assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), digest))
+    assert any("id" in e for e in schema.validate_frontmatter(dict(good, id=123), digest))
 
 
 def test_schema_accepts_undeclared_meaning_fields_during_alpha16_migration():

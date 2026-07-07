@@ -234,7 +234,8 @@ def test_worker_runs_prompt_operation_manifest_jobs(tmp_path: Path) -> None:
     assert "check_status" not in fm
     assert state.concept_check_status(vault, done["output_path"]) == "unchecked"
     assert "status" not in fm
-    assert fm["evidence_set"] == ["notes/claim.md"]
+    assert "evidence_set" not in fm
+    assert "citations" not in fm
     assert "Alpha reduces beta" in staged.read_text(encoding="utf-8")
     committed = set(git(vault, "show", "--name-only", "--format=", done["commit"]).splitlines())
     assert committed == {state.JOURNAL_HEAD_REL, done["staging_id"]}
@@ -1825,7 +1826,7 @@ def test_scheduled_integrity_sweep_is_daily_idempotent(tmp_path: Path) -> None:
     assert by_operation["integrity-quote-anchor-check"]["finding_count"] == 0
     assert by_operation["integrity-claim-quote-check"]["finding_count"] == 0
     assert by_operation["integrity-prompt-injection-check"]["finding_count"] == 0
-    assert by_operation["integrity-citation-survival-check"]["finding_count"] == 1
+    assert by_operation["integrity-citation-survival-check"]["finding_count"] == 0
     assert by_operation["integrity-provenance-checkpoint"]["finding_count"] == 0
     assert by_operation["integrity-contradiction-check"]["finding_count"] == 0
     assert by_operation["integrity-link-target-check"]["finding_count"] == 0
@@ -1858,5 +1859,5 @@ def test_worker_marks_invalid_job_failed_without_bundle_write(tmp_path: Path) ->
 
     assert failed is not None
     assert failed["status"] == "failed"
-    assert "missing required field 'title'" in failed["error"]
+    assert "missing required field: title" in failed["error"]
     assert not (vault / "notes/bad.md").exists()

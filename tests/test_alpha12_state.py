@@ -384,51 +384,49 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
     assert committed == {state.JOURNAL_HEAD_REL}
 
 
-def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:
+def test_citation_survival_check_flags_missing_bibliography_export(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "works/missing-citation/digest.md"
-    target.parent.mkdir(parents=True)
-    target.write_text(
-        "---\n"
-        "type: digest\n"
-        "check_status: checked\n"
-        "title: Missing citation\n"
-        "description: Bad fixture.\n"
-        "work_id: catalog/sources/source-alpha\n"
-        "---\n"
-        "# Missing citation\n",
-        encoding="utf-8",
-    )
-    mark_file_verdict(vault, "works/missing-citation/digest.md", "digest", "checked")
+    _capture_bibliography_source(vault)
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "works/missing-citation/digest.md"
+    assert result["findings"][0]["target_id"] == "bibliography.bib"
+    assert "missing or stale" in result["findings"][0]["reason"]
 
 
-def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> None:
+def test_citation_survival_check_flags_stale_bibliography_export(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "hubs/source-linked.md"
-    target.parent.mkdir(parents=True)
-    target.write_text(
-        "---\n"
-        "type: hub\n"
-        "check_status: checked\n"
-        "title: Source linked\n"
-        "description: Bad fixture.\n"
-        "members:\n"
-        "  - catalog/sources/source-alpha/source.md\n"
-        "---\n"
-        "# Source linked\n",
-        encoding="utf-8",
-    )
-    mark_file_verdict(vault, "hubs/source-linked.md", "hub", "checked")
+    _capture_bibliography_source(vault)
+    (vault / "bibliography.bib").write_text("stale\n", encoding="utf-8")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "hubs/source-linked.md"
+    assert result["findings"][0]["target_id"] == "bibliography.bib"
+
+
+def _capture_bibliography_source(vault: Path) -> None:
+    capture_source(
+        vault,
+        "source-alpha",
+        "Alpha Source",
+        "A fixture source.",
+        "Alpha content.",
+        resource="https://doi.org/10.1000/alpha",
+        identifiers={"doi": "10.1000/alpha"},
+        csl_json={
+            "id": "alpha2026",
+            "type": "article-journal",
+            "title": "Alpha Source",
+            "author": [{"family": "River", "given": "Ada"}],
+            "issued": {"date-parts": [[2026]]},
+            "DOI": "10.1000/alpha",
+        },
+        citekey="alpha2026",
+        provider_coverage="full",
+        machine="capture",
+    )
 
 
 def test_sqlite_journal_is_append_only_and_hash_chained(tmp_path: Path) -> None:

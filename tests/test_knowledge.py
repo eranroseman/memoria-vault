@@ -100,7 +100,8 @@ def test_emit_note_candidates_promotes_checked_candidate_notes(tmp_path: Path) -
     assert "status" not in fm
     assert state.note_curation_status(vault, note_rel) == "candidate"
     assert fm["work_id"] == "catalog/sources/source-alpha"
-    assert fm["evidence_set"] == ["catalog/sources/source-alpha"]
+    assert "evidence_set" not in fm
+    assert "citations" not in fm
     assert fm["claim_text"] == "Framing changes which outcomes matter."
 
     events = list(iter_jsonl(vault / "journal/note-machine.jsonl"))

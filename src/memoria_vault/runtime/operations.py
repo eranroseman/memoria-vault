@@ -332,7 +332,6 @@ def run_prompt_operation(
         "type": "note",
         "title": f"{policy['title']} report",
         "description": str(policy.get("description") or policy["title"]),
-        "evidence_set": [row["id"] for row in inputs],
         "tags": ["prompt-operation", operation_id],
     }
     stage = stage_concept(
@@ -439,7 +438,6 @@ def compile_source_digest(
     source_ref = _source_ref(work_id)
     source_fm = _checked_source(vault, source_ref)
     _require_digestable_text(vault, source_fm, machine=machine)
-    citation = state.compact_citation(vault, source_ref)
     content_rel = normalize_path(str(source_fm.get("content_path") or ""))
     content_path = vault / content_rel
     if not content_path.is_file():
@@ -493,10 +491,7 @@ def compile_source_digest(
         "work_id": work_id,
         "tags": topics,
         "links": {},
-        "evidence_set": [source_ref],
     }
-    if citation:
-        digest_frontmatter["citations"] = [citation]
     digest_stage = stage_concept(
         vault,
         digest_rel,
@@ -538,8 +533,6 @@ def compile_source_digest(
             "tags": ["suggestion"],
             "links": {},
         }
-        if citation:
-            hub_frontmatter["citations"] = [citation]
         stage = stage_concept(
             vault,
             hub_rel,

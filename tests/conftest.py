@@ -31,6 +31,7 @@ TEST_LEVELS = {
     "test_alpha17_verification.py": "runtime",
     "test_alpha17_writeback.py": "runtime",
     "test_alpha18_concept_types.py": "contract",
+    "test_alpha18_frontmatter.py": "contract",
     "test_alpha18_renames.py": "contract",
     "test_bases.py": "contract",
     "test_capabilities.py": "contract",

@@ -240,9 +240,6 @@ def emit_note_candidates(
             "type": "note",
             "title": title,
             "work_id": work_ref,
-            "evidence_set": row.get("evidence_set")
-            or digest_fm.get("evidence_set")
-            or ([digest_source_ref] if digest_source_ref else []),
             "extraction_confidence": str(row.get("extraction_confidence") or "medium"),
             "tags": _string_list(row.get("tags")),
         }
@@ -254,9 +251,6 @@ def emit_note_candidates(
             frontmatter["quote"] = str(row["quote"])
         if isinstance(row.get("annotation_ref"), dict):
             frontmatter["annotation_ref"] = dict(row["annotation_ref"])
-        citations = row.get("citations") or digest_fm.get("citations")
-        if isinstance(citations, list):
-            frontmatter["citations"] = [dict(item) for item in citations if isinstance(item, dict)]
 
         stage = stage_concept(
             vault,

@@ -3,7 +3,7 @@ category: works
 gated: false
 required:
   type: literal:digest
-  id: ulid
+  id: str
   title: str
   tags: list
   links: links
@@ -11,7 +11,7 @@ required:
 optional:
   anchors: list
   archived: bool
-  citations: list
   description: str
-  evidence_set: list
+  todo: list
   x: map
+forbidden: [citations, evidence_set]

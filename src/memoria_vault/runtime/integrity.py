@@ -11,7 +11,7 @@ from collections import deque
 from pathlib import Path
 from typing import Any
 
-from memoria_vault.runtime import state
+from memoria_vault.runtime import capture, state
 from memoria_vault.runtime.jsonl import iter_jsonl
 from memoria_vault.runtime.policy.audit import EMPTY_SHA256, sha256_file
 from memoria_vault.runtime.policy.paths import normalize_path
@@ -555,28 +555,21 @@ def check_citation_survival(
     machine: str | None = None,
     commit: bool = False,
 ) -> dict[str, Any]:
-    """Flag checked keep-set Concepts whose source references lack survival citations."""
+    """Flag a missing or stale generated bibliography.bib projection."""
     vault = Path(vault)
     findings: list[dict[str, Any]] = []
-    for path in iter_markdown(vault):
-        rel = path.relative_to(vault).as_posix()
-        frontmatter = read_frontmatter(path)
-        if not _is_checked_concept(vault, rel):
-            continue
-        if frontmatter.get("type") not in {"digest", "note", "hub"}:
-            continue
-        for reason in state.check_citation_payload(frontmatter):
-            findings.append(
-                record_integrity_check(
-                    vault,
-                    rel,
-                    check="citation-survival",
-                    status="failed",
-                    reason=reason,
-                    shadow=shadow,
-                    machine=machine,
-                )
+    if capture.render_references_bib(vault) and not capture.check_references_bib(vault):
+        findings.append(
+            record_integrity_check(
+                vault,
+                "bibliography.bib",
+                check="citation-survival",
+                status="failed",
+                reason="bibliography.bib is missing or stale for checked catalog sources",
+                shadow=shadow,
+                machine=machine,
             )
+        )
     commit_hash = ""
     if findings and commit:
         commit_hash = commit_writer_changes(

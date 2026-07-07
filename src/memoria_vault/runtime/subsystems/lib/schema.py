@@ -10,6 +10,7 @@ so a schema change is a one-file edit, never a hunt across hardcoded lists.
 
 Field kinds: str | int | bool | date | list | map | links | ulid | literal:<value> | enum:<name>.
 `required_any` lists field names of which at least one must be present.
+`required_when` maps a field to {field, equals}; `forbidden` lists retired fields.
 """
 
 from __future__ import annotations
@@ -36,6 +37,10 @@ SCHEMAS_DIR = _default_schemas_dir()
 UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
 VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
 LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
+
+
+def _present(value) -> bool:
+    return value not in (None, "", [])
 
 
 def _schemas_dir(schemas_dir: Path | None = None) -> Path:
@@ -188,6 +193,9 @@ def validate_frontmatter(
     """
     errors: list[str] = []
     enums = schema.get("enums", {})
+    for field in schema.get("forbidden") or []:
+        if field in fm:
+            errors.append(f"{field}: field is retired")
     for field, kind in (schema.get("required") or {}).items():
         if field not in fm or fm[field] in (None, ""):
             errors.append(f"missing required field: {field}")
@@ -203,6 +211,13 @@ def validate_frontmatter(
     any_of = schema.get("required_any") or []
     if any_of and not any(fm.get(f) not in (None, "") for f in any_of):
         errors.append(f"at least one of {any_of} is required")
+    for field, rule in (schema.get("required_when") or {}).items():
+        if not isinstance(rule, dict):
+            errors.append(f"required_when.{field}: expected map")
+            continue
+        controller = str(rule.get("field") or "")
+        if fm.get(controller) == rule.get("equals") and not _present(fm.get(field)):
+            errors.append(f"{field}: required when {controller} is {rule.get('equals')!r}")
     gate = schema.get("promotion_gate")
     if gate and fm.get("lifecycle") == gate and fm.get("promoted_at") in (None, ""):
         errors.append(f"lifecycle {gate!r} requires promoted_at promotion provenance")

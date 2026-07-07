@@ -132,7 +132,7 @@ def _new_commands(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     body = note.add_mutually_exclusive_group(required=True)
     body.add_argument("--body")
     body.add_argument("--file")
-    note.add_argument("--mode", choices=("claim", "question"), default="claim")
+    note.add_argument("--mode", choices=("claim", "question", "definition"))
     note.add_argument("--tag", action="append", default=[])
     note.set_defaults(handler=_cmd_new_note)
 
@@ -708,16 +708,20 @@ def _cmd_migrate(args: argparse.Namespace) -> int:
 
 
 def _cmd_new_note(args: argparse.Namespace) -> int:
+    body = args.body if args.body is not None else Path(args.file).read_text(encoding="utf-8")
+    extra = {"mode": args.mode}
+    if args.mode == "claim":
+        extra["claim_text"] = body.strip()
+    elif args.mode == "question":
+        extra["question_status"] = "open"
     return _emit(
         engine_api.write_new_concept(
             _workspace(args),
             "note",
             args.title,
-            body=args.body
-            if args.body is not None
-            else Path(args.file).read_text(encoding="utf-8"),
+            body=body,
             tags=args.tag,
-            extra={"mode": args.mode},
+            extra=extra,
             idempotency_key=args.idempotency_key,
             schedule_id=args.schedule_id,
             actor=args.actor,
