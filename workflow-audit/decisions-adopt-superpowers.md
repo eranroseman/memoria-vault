@@ -394,3 +394,29 @@ backup before `rm -rf` → step 1 writes a full backup tarball. Also corrected:
 the Claude marketplace clone dirty + 1 commit ahead — step 13 now reconciles
 that before editing. `gh auth` preflight added for the PR steps. Evidence:
 `gh api` SHA fetches; `claude plugin list`; `git -C ...rethink status`.
+
+**Y: `using-superpowers` is the SessionStart bootstrap/dispatcher, not a
+workflow skill you invoke — so the toolkit has 13 usable skills, 14 skill
+files on disk.**
+Because: the plugin ships 14 SKILL.md files, but `using-superpowers`'s entire
+job is to fire at SessionStart and remind the agent to invoke the applicable
+*other* skills — it isn't itself invoked for a task. So `claude plugin
+details` counts 14; the skill reminder lists 13 invocable `superpowers:`
+skills; validation checks 13. Wording aligned across step 1, validation, and
+this ledger. (Answers the reviewer's open question.)
+
+**Y: Corrected two invalid CLI commands and one wrong install verb, verified
+against the installed CLIs.**
+Because: external review caught that (1) `codex plugin` has no `update`
+subcommand and its marketplace verb is `upgrade`, not `update` — step 13's
+Codex refresh is now `codex plugin marketplace upgrade rethink && codex plugin
+remove rethink@rethink && codex plugin add rethink@rethink` (Claude's `plugin
+update`/`marketplace update` are valid and unchanged); (2) `frontend-design`
+is not installed, and `claude plugin enable` only enables an
+already-installed disabled plugin — step 7 now `claude plugin install
+frontend-design@claude-code-plugins` (it's in both official marketplaces).
+Also: step 13's rethink release is now a concrete preserve→fresh-checkout→
+verify→commit→tag→push→update-both procedure (was under-specified), and step
+1's backup fails closed (`|| exit 1`) instead of printing false success.
+Evidence: `codex plugin --help`, `codex plugin marketplace --help`, `claude
+plugin --help`, `claude plugin enable --help`, `claude plugin list`.

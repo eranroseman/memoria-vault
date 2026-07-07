@@ -135,7 +135,8 @@ Back up everything this plan edits or deletes, so any step is recoverable:
 tar czf ~/toolkit-backup-$(date +%Y%m%d-%H%M%S).tgz \
   ~/.claude/skills ~/.codex/skills ~/.claude/CLAUDE.md \
   ~/.claude/plugins/marketplaces/rethink ~/.codex/.tmp/marketplaces/rethink \
-  2>/dev/null; echo "backup written to ~/"
+  || { echo "BACKUP FAILED — stop; do not run any later rm -rf"; exit 1; }
+ls -lh ~/toolkit-backup-*.tgz | tail -1
 gh auth status   # must show an account with 'repo' scope for steps 16/18
 ```
 
@@ -146,10 +147,13 @@ claude plugin marketplace add obra/superpowers
 claude plugin details superpowers@superpowers
 ```
 
-Expect: backup tarball in `~/`; `gh auth status` shows `repo` scope (if not,
+Expect: a backup tarball listed in `~/` (the `||` aborts if `tar` fails —
+fail closed before any deletion); `gh auth status` shows `repo` scope (if not,
 `gh auth login` or route the step-16/18 PRs through the GitHub connector);
-`details` prints 14 skills + 1 SessionStart hook and a projected always-on
-token cost — if the cost is surprising, stop before step 2.
+`details` prints **14 skill files** — the **13 usable workflow skills** plus
+the `using-superpowers` dispatcher (a SessionStart bootstrap/reminder, not a
+skill you invoke for a task) — plus 1 SessionStart hook and a projected
+always-on token cost. If the cost is surprising, stop before step 2.
 
 **Pinned revisions** (reviewed 2026-07-07; the clone steps below check these
 out so execution installs exactly what was reviewed, not a later HEAD):
@@ -237,7 +241,7 @@ Claude — plugin install (skill + both commands):
 ```bash
 claude plugin marketplace add Dammyjay93/interface-design
 claude plugin install interface-design@interface-design
-claude plugin enable frontend-design@claude-plugins-official
+claude plugin install frontend-design@claude-code-plugins   # it's in the marketplace but not installed; install (then `claude plugin enable frontend-design@claude-code-plugins` only if it lands disabled)
 ```
 
 Codex — vendor both skills loose (no `.codex-plugin` manifests). interface-design
@@ -377,19 +381,42 @@ Append to the `description` field in `.claude-plugin/plugin.json`,
 ```
 
 Set one release version in both `.claude-plugin/plugin.json` and
-`.codex-plugin/plugin.json` — `1.2.0` if you keep the existing dirty edits as
-the (never-released) 1.1.0 content and this narrowing as 1.2.0; pick a single
-clean number and make both files agree. Commit, push, and tag on
-`eranroseman/rethink`, then update both installs off the pushed release:
+`.codex-plugin/plugin.json` — e.g. `1.2.0`; pick a single clean number and
+make both files agree.
+
+**Exact release procedure** (the dirty local edits are already backed up in
+step 1's tarball, so nothing is lost; work from a fresh authoritative
+checkout so a fresh executor can't publish a partial release):
 
 ```bash
+# 1. See what the existing unreleased work is (the ahead-1 commit + uncommitted 1.1.0 edits)
+cd ~/.claude/plugins/marketplaces/rethink
+git log --oneline origin/master..HEAD          # the unpushed commit(s)
+git diff -- plugins/rethink                     # the uncommitted 1.1.0 edits
+git stash list                                  # anything already stashed?
+
+# 2. Fresh checkout to release from (SSH auth per `gh auth status`)
+git clone git@github.com:eranroseman/rethink ~/rethink-release
+cd ~/rethink-release
+#   If the ahead-1 commit above is wanted in the release, cherry-pick it here after review:
+#   git cherry-pick <sha>
+#   Apply the directive.md / rethink-audit / description / version edits from this step.
+
+# 3. Verify EVERY change before publishing, then commit + tag + push
+git diff                                         # review all edits; nothing unexpected
+git add -A && git commit -m "rethink 1.2.0: narrow to pair with superpowers brainstorming"
+git tag v1.2.0
+git push origin master --tags
+
+# 4. Update both installs off the pushed release
 claude plugin marketplace update rethink && claude plugin update rethink@rethink
-codex plugin marketplace update rethink && codex plugin update rethink@rethink
+# Codex has no `plugin update` — refresh the marketplace snapshot, then remove + re-add:
+codex plugin marketplace upgrade rethink && codex plugin remove rethink@rethink && codex plugin add rethink@rethink
 ```
 
-Verify: both tools report the **same** new version (no longer 1.0.1 vs.
-1.1.0), the marketplace clones are clean (`git status` empty, not ahead), and
-each tool's loaded `hooks/directive.md` shows the narrowed Persistence
+Verify: both tools report the **same** new version (no longer 1.0.1), the
+marketplace clones are clean (`git status` empty, not ahead), and each tool's
+loaded `hooks/directive.md` shows the narrowed Persistence
 trigger.
 
 ### Step 14 — Amend the loader rule + add precedence + vocabulary to `~/.claude/CLAUDE.md`
@@ -633,8 +660,10 @@ Presence:
 
 - **superpowers loads (both tools):** fresh Claude session — `claude plugin
   list` shows `superpowers@superpowers` enabled and the skill reminder lists
-  13 `superpowers:` skills; fresh Codex session — `codex plugin list` shows
-  `superpowers@openai-curated` enabled.
+  the 13 usable `superpowers:` workflow skills (`using-superpowers` is the
+  SessionStart dispatcher — it fires as a reminder, not a separately-listed
+  invocable skill, so 13 here, 14 skill files on disk); fresh Codex session —
+  `codex plugin list` shows `superpowers@openai-curated` enabled.
 - **gap plugins present:** `ls` confirms
   `~/.claude/skills/{threat-modeling,api-design-principles}`,
   `~/.codex/skills/{writing-clearly-and-concisely,api-design-principles,
