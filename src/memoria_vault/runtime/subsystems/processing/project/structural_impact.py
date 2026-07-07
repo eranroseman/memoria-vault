@@ -289,7 +289,7 @@ def analyze(vault: Path, project_arg: str = "") -> dict[str, Any]:
     rows_by_key: dict[str, dict[str, Any]] = {}
     high_open_gaps = 0
     for note in sorted(notes.values(), key=lambda n: n.path):
-        if note.note_type not in {"note", "source", "hub"}:
+        if note.note_type not in {"note", "hub"}:
             continue
         on_path = note.key in on_path_nodes
         degree = len(graph.get(note.key, set()) & on_path_nodes) if on_path else 0

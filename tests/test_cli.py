@@ -318,19 +318,17 @@ def test_cli_migrate_alpha15_imports_root_level_alpha16_contract(
     output = json.loads(capsys.readouterr().out)
 
     assert rc == 0
-    assert output["imported_count"] == 6
+    assert output["imported_count"] == 5
     assert (workspace / "notes/claim.md").is_file()
     assert (workspace / "hubs/topic.md").is_file()
     assert (workspace / "projects/review/project.md").is_file()
     assert (workspace / "bibliography.bib").read_text(encoding="utf-8") == (
         "@article{alpha,title={Alpha}}\n"
     )
-    record = read_frontmatter(workspace / "works/source-alpha/record.md")
     digest = read_frontmatter(workspace / "works/source-alpha/digest.md")
-    assert record["type"] == "work"
-    assert record["work_id"] == "source-alpha"
     assert digest["type"] == "digest"
     assert digest["work_id"] == "source-alpha"
+    assert not (workspace / "works/source-alpha/record.md").exists()
     assert "Digest body." in (workspace / "works/source-alpha/digest.md").read_text(
         encoding="utf-8"
     )

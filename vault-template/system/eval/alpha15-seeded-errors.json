@@ -51,13 +51,6 @@
       "rollback": "include-target"
     },
     {
-      "id": "ambiguous-entity-identity",
-      "error_class": "structural:source-metadata",
-      "target_id": "catalog/sources/ambiguous-entity",
-      "expected_check": "source-metadata",
-      "rollback": "include-target"
-    },
-    {
       "id": "stale-as-current",
       "error_class": "blind:stale-as-current",
       "target_id": "notes/seeded-stale-as-current.md",

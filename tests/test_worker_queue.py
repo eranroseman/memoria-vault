@@ -1368,8 +1368,8 @@ def test_worker_runs_seeded_error_verdict_in_disposable_fixture(tmp_path: Path) 
     assert done["operation_id"] == "compile-source-digest"
     assert done["non_sandbox_licensed"] is True
     assert done["verdict_key"].startswith("sha256:")
-    assert done["metrics"]["expected_errors"] == 13
-    assert done["metrics"]["detected_errors"] == 13
+    assert done["metrics"]["expected_errors"] == 12
+    assert done["metrics"]["detected_errors"] == 12
     assert done["metrics"]["residual_errors"] == 0
     assert not (vault / "catalog/sources/seed-source/source.md").exists()
 

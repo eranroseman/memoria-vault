@@ -2602,7 +2602,7 @@ def _checked_notes_by_path(vault: Path) -> dict[str, dict[str, Any]]:
 
 def _bucket(relpath: str, frontmatter: dict[str, Any]) -> str:
     concept_type = frontmatter.get("type")
-    if relpath.startswith("works/") and concept_type in {"work", "digest"}:
+    if relpath.startswith("works/") and concept_type == "digest":
         return "digests"
     if relpath.startswith("notes/") and concept_type == "note":
         return "notes"

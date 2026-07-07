@@ -34,10 +34,7 @@ def _default_schemas_dir() -> Path:
 SCHEMAS_DIR = _default_schemas_dir()
 
 UNIVERSAL_LIFECYCLE = ["proposed", "provisional", "current", "retracted", "archived"]
-VOCABULARY_FIELDS = {
-    "source": {"research_area": "research_area", "methodology": "methodology"},
-    "note": {"topics": "topics"},
-}
+VOCABULARY_FIELDS = {"note": {"topics": "topics"}}
 LINK_RELATIONS = frozenset({"supports", "contradicts", "extends"})
 
 

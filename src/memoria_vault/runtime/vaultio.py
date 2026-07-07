@@ -14,7 +14,7 @@ import yaml
 
 DEFAULT_SKIP_DIRS = frozenset({".git", ".memoria", ".obsidian", "node_modules"})
 UNIVERSAL_CONCEPT_BUNDLES = frozenset({"works", "sources", "notes", "hubs", "projects"})
-UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "work", "digest", "source-note", "hub", "project"})
+UNIVERSAL_CONCEPT_TYPES = frozenset({"note", "digest", "hub", "project"})
 ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 RETIRED_FRONTMATTER_FIELDS = frozenset(
     {

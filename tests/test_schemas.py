@@ -1,4 +1,4 @@
-"""The canonical alpha.16 schema home: every consumer reads .memoria/schemas/."""
+"""The canonical schema home: every consumer reads .memoria/schemas/."""
 
 import shutil
 from pathlib import Path
@@ -7,11 +7,9 @@ import yaml
 
 from memoria_vault.runtime.subsystems.lib import schema
 
-ALPHA16_TYPES = {
+SCHEMA_TYPES = {
     "digest",
     "note",
-    "source-note",
-    "work",
     "hub",
     "project",
 }
@@ -40,28 +38,11 @@ def _empty_workspace(root: Path) -> Path:
 def _m0_schema_reset_fixture(root: Path) -> Path:
     _empty_workspace(root)
     _md(
-        root / "works/source-alpha/record.md",
-        {
-            "type": "work",
-            "title": "Alpha digest",
-            "description": "Per-source synthesis.",
-            "work_id": "source-alpha",
-        },
-    )
-    _md(
         root / "works/source-alpha/digest.md",
         {
             "type": "digest",
             "title": "Alpha digest",
             "description": "Per-source synthesis.",
-            "work_id": "source-alpha",
-        },
-    )
-    _md(
-        root / "sources/source-alpha.md",
-        {
-            "type": "source-note",
-            "title": "Alpha source note",
             "work_id": "source-alpha",
         },
     )
@@ -92,9 +73,9 @@ def _m0_schema_reset_fixture(root: Path) -> Path:
     return root
 
 
-def test_alpha16_concept_types_load():
+def test_concept_types_load():
     types = schema.load_types()
-    assert set(types) == ALPHA16_TYPES
+    assert set(types) == SCHEMA_TYPES
 
 
 def test_frontmatter_has_no_verdict_or_standing_fields():
@@ -112,7 +93,7 @@ def test_type_field_matches_filename_literal():
         assert sc["required"]["type"] == f"literal:{name}"
 
 
-def test_alpha16_portable_fields_declared():
+def test_portable_fields_declared():
     types = schema.load_types()
     for name, sc in types.items():
         required = sc.get("required") or {}
@@ -123,13 +104,11 @@ def test_alpha16_portable_fields_declared():
         assert required["links"] == "links", name
         assert optional.get("archived") == "bool", name
         assert optional.get("x") == "map", name
-    assert types["work"]["required"]["work_id"] == "str"
     assert types["digest"]["required"]["work_id"] == "str"
-    assert types["source-note"]["required"]["work_id"] == "str"
     assert types["hub"]["required"]["tag"] == "str"
 
 
-def test_folder_map_covers_every_alpha16_type():
+def test_folder_map_covers_every_type():
     types = schema.load_types()
     folders = schema.load_folders()
     for name in types:
@@ -149,18 +128,18 @@ def test_skeleton_contains_every_home_and_barrier_root():
 
 
 def test_validate_frontmatter_round_trip():
-    work = schema.load_types()["work"]
+    digest = schema.load_types()["digest"]
     good = {
         "id": "01KBN6V6KX0000000000000001",
-        "type": "work",
+        "type": "digest",
         "title": "T",
         "tags": [],
         "links": {},
         "work_id": "source-alpha",
     }
-    assert schema.validate_frontmatter(good, work) == []
-    assert any("work_id" in e for e in schema.validate_frontmatter({"type": "work"}, work))
-    assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), work))
+    assert schema.validate_frontmatter(good, digest) == []
+    assert any("work_id" in e for e in schema.validate_frontmatter({"type": "digest"}, digest))
+    assert any("id" in e for e in schema.validate_frontmatter(dict(good, id="not-a-ulid"), digest))
 
 
 def test_schema_accepts_undeclared_meaning_fields_during_alpha16_migration():
@@ -232,8 +211,8 @@ def test_okf_core_requires_universal_concept_frontmatter(tmp_path):
 def test_memoria_workspace_rejects_malformed_concept(tmp_path):
     root = _empty_workspace(tmp_path)
     _md(
-        root / "works/bad/record.md",
-        {"type": "work", "title": "Bad"},
+        root / "works/bad/digest.md",
+        {"type": "digest", "title": "Bad"},
     )
     errors = schema.validate_memoria_workspace(root)
     assert any("work_id" in err for err in errors)

@@ -77,10 +77,6 @@ def test_sqlite_schema_migrates_v4_concepts_to_alpha16_types(tmp_path: Path) -> 
             "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
             ("works/source-alpha/digest.md", "digest", "file"),
         )
-        conn.execute(
-            "INSERT INTO concepts(concept_id, concept_type, store) VALUES (?, ?, ?)",
-            ("sources/source-alpha.md", "source-note", "file"),
-        )
 
 
 def note_text(title: str = "Alpha note") -> str:
@@ -390,11 +386,11 @@ def test_capture_source_updates_sqlite_catalog_and_references_bib(tmp_path: Path
 
 def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> None:
     vault = workspace(tmp_path)
-    target = vault / "works/missing-citation/record.md"
+    target = vault / "works/missing-citation/digest.md"
     target.parent.mkdir(parents=True)
     target.write_text(
         "---\n"
-        "type: work\n"
+        "type: digest\n"
         "check_status: checked\n"
         "title: Missing citation\n"
         "description: Bad fixture.\n"
@@ -403,12 +399,12 @@ def test_citation_survival_check_flags_missing_note_payload(tmp_path: Path) -> N
         "# Missing citation\n",
         encoding="utf-8",
     )
-    mark_file_verdict(vault, "works/missing-citation/record.md", "work", "checked")
+    mark_file_verdict(vault, "works/missing-citation/digest.md", "digest", "checked")
 
     result = check_citation_survival(vault, shadow=False, machine="integrity")
 
     assert result["findings"][0]["check"] == "citation-survival"
-    assert result["findings"][0]["target_id"] == "works/missing-citation/record.md"
+    assert result["findings"][0]["target_id"] == "works/missing-citation/digest.md"
 
 
 def test_citation_survival_check_flags_hub_member_payload(tmp_path: Path) -> None:

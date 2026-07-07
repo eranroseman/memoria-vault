@@ -1740,9 +1740,7 @@ def _resolve_concept_path(workspace: Path, target: str) -> Path | None:
         frontmatter = read_frontmatter(path)
         if frontmatter.get("type") not in {
             "note",
-            "work",
             "digest",
-            "source-note",
             "hub",
             "project",
         }:
@@ -1918,32 +1916,14 @@ def _copy_alpha15_works(source: Path, workspace: Path) -> list[str]:
         if not work_id:
             work_id = path.stem
         work_dir = workspace / "works" / work_id
-        record_path = work_dir / "record.md"
         digest_path = work_dir / "digest.md"
-        record = {
-            "type": "work",
-            "id": new_ulid(),
-            "title": str(frontmatter.get("title") or path.stem),
-            "tags": list(frontmatter.get("tags") or []),
-            "links": dict(frontmatter.get("links") or {}),
-            "work_id": work_id,
-        }
-        for key in ("citekey", "description", "evidence_set", "citations"):
-            if frontmatter.get(key) not in (None, ""):
-                record[key] = frontmatter[key]
         digest = dict(frontmatter)
         digest.update({"type": "digest", "id": new_ulid(), "work_id": work_id})
-        digest.setdefault("title", record["title"])
+        digest.setdefault("title", str(frontmatter.get("title") or path.stem))
         digest.setdefault("tags", [])
         digest.setdefault("links", {})
-        _write_no_overwrite(record_path, record, f"# {record['title']}\n\n")
         _write_no_overwrite(digest_path, digest, body)
-        copied.extend(
-            [
-                record_path.relative_to(workspace).as_posix(),
-                digest_path.relative_to(workspace).as_posix(),
-            ]
-        )
+        copied.append(digest_path.relative_to(workspace).as_posix())
     return copied
 
 

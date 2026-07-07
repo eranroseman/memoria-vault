@@ -15,8 +15,7 @@ The frontmatter contract for every typed document. The single source is
 `src/memoria_vault/runtime/subsystems/lib/schema.py`; the linter, pre-commit hook,
 and installer-skeleton tests all read it.
 
-Per-type schemas currently exist for `digest`, `hub`, `note`, `project`,
-`source-note`, and `work`.
+Per-type schemas currently exist for `digest`, `hub`, `note`, and `project`.
 
 ## The field-kind grammar
 
